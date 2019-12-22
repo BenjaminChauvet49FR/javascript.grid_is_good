@@ -1,2 +1,0 @@
-const SPACE_COUNT_H = 10;
-const SPACE_COUNT_Y = 10;

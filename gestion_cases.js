@@ -1,6 +1,6 @@
 //Stuff
-var height_grid = 20; 
-var width_grid = 25;
+var heightGrid = 5; 
+var widthGrid = 5;
 
 //Loop variables
 var ix,iy;
@@ -8,73 +8,79 @@ var ix,iy;
 // ON START
 // Generate a clear border grid 
 var borderGrid = [];
-for(iy=0;iy<height_grid;iy++){
+for(iy=0;iy<heightGrid;iy++){
 	borderGrid.push([]);
-	for(ix=0;ix<width_grid;ix++){
+	for(ix=0;ix<widthGrid;ix++){
 		borderGrid[iy].push({wallD:WALL_OPEN,wallR:WALL_OPEN});
 	}
 }
 
 //--------
 // Draws the spaces
-function drawTheMaze(){
+function drawGrid(){
 	var canevas = document.getElementById("canevas");
 	var context = canevas.getContext("2d");
-	context.clearRect(0, 0, PIX_CANVAS_WIDTH, PIX_CANVAS_HEIGHT);
-	var drawX = PIX_SIDE_CASE;
-	var drawY = PIX_SIDE_CASE;
-	for(iy = 0;iy < height_grid; iy++){
-		for(ix = 0;ix < width_grid;ix++){
-			if (iy <= height_grid-2){
+	
+	//Where it should be drawn
+	const pixStartXVert = PIX.SIDE_SPACE-PIX.BORDER_SPACE;  
+	const pixStartXHoriz = PIX.BORDER_SPACE;  
+	var pixDrawXHoriz = pixStartXHoriz;	
+	var pixDrawYHoriz = PIX.SIDE_SPACE-PIX.BORDER_SPACE;
+	var pixDrawXVert = pixStartXVert;
+	var pixDrawYVert = PIX.BORDER_SPACE;
+	
+	//Rectangle dimensions
+	const pixLength = PIX.SIDE_SPACE-2*PIX.BORDER_SPACE;
+	const pixThickness = 2*PIX.BORDER_SPACE;
+	
+	//Go !
+	context.clearRect(0, 0, PIX.CANVAS_WIDTH, PIX.CANVAS_HEIGHT);
+	for(iy = 0;iy < heightGrid; iy++){
+		for(ix = 0;ix < widthGrid;ix++){
+			//Draw down wall
+			if (iy <= heightGrid-2){ 
 				context.fillStyle= wallToColor(borderGrid[iy][ix].wallD);
-				context.fillRect(drawX-PIX_SIDE_CASE,drawY,PIX_SIDE_CASE,2);
-			}
-			
-			if (ix <= width_grid-2){
+				context.fillRect(pixDrawXHoriz,pixDrawYHoriz,pixLength,pixThickness);
+			}	
+			//Draw right wall
+			if (ix <= widthGrid-2){
 				context.fillStyle= wallToColor(borderGrid[iy][ix].wallR);
-				context.fillRect(drawX,drawY-PIX_SIDE_CASE,2,PIX_SIDE_CASE);
+				context.fillRect(pixDrawXVert,pixDrawYVert,pixThickness,pixLength);
 			}
-			
-			drawX += PIX_SIDE_CASE;
+			//Draw pillar
+			if((ix <= widthGrid-2) && (iy <= heightGrid-2)){
+				if(borderGrid[iy][ix].wallR == WALL_CLOSED || borderGrid[iy][ix].wallD == WALL_CLOSED
+				|| borderGrid[iy+1][ix].wallR == WALL_CLOSED || borderGrid[iy][ix+1].wallD == WALL_CLOSED)
+				{
+					context.fillStyle= wallToColor(WALL_CLOSED);
+				} 
+				else{
+					context.fillStyle= wallToColor(WALL_OPEN);
+				}
+				context.fillRect(pixDrawXVert,pixDrawYHoriz,pixThickness,pixThickness);
+			}
+			pixDrawXHoriz += PIX.SIDE_SPACE;
+			pixDrawXVert += PIX.SIDE_SPACE;
 		}
-		drawY += PIX_SIDE_CASE;
-		drawX = PIX_SIDE_CASE;
+		pixDrawYHoriz += PIX.SIDE_SPACE;
+		pixDrawYVert += PIX.SIDE_SPACE;		
+		pixDrawXHoriz = pixStartXHoriz;
+		pixDrawXVert = pixStartXVert;
 	}
 	
 	//Draws the borders
-	var pix_total_width = width_grid*PIX_SIDE_CASE;
-	var pix_total_height = height_grid*PIX_SIDE_CASE;
+	const pixTotalWidth = widthGrid*PIX.SIDE_SPACE;
+	const pixTotalHeight = heightGrid*PIX.SIDE_SPACE;
 	context.fillStyle= colors.edge_walls;
-	context.fillRect(0,0,1,pix_total_height);
-	context.fillRect(0,0,pix_total_width,1);
-	context.fillRect(pix_total_width,0,1,pix_total_height);
-	context.fillRect(0,pix_total_height,pix_total_width+1,1);
+	context.fillRect(0,0,PIX.BORDER_SPACE,pixTotalHeight);
+	context.fillRect(0,0,pixTotalWidth,PIX.BORDER_SPACE);
+	context.fillRect(pixTotalWidth,0,PIX.BORDER_SPACE,pixTotalHeight);
+	context.fillRect(0,pixTotalHeight,pixTotalWidth,PIX.BORDER_SPACE);
 }
 
 
 
-//--------
-// Capturing the mouse
-// https://stackoverflow.com/questions/43172115/get-the-mouse-coordinates-when-clicking-on-canvas
-canevas.addEventListener('click', function(event) {
-    var rect = canevas.getBoundingClientRect();
-    var pix_mouseX = event.clientX - rect.left;
-    var pix_mouseY = event.clientY - rect.top;
-	var spaceIndexX = Math.floor(pix_mouseX/PIX_SIDE_CASE); //index of the space, calculated from the (x,y) position
-	var spaceIndexY = Math.floor(pix_mouseY/PIX_SIDE_CASE); //same
-    if ((pix_mouseX % PIX_SIDE_CASE) >= (PIX_SIDE_CASE-4)){
-		switchR(borderGrid[spaceIndexY][spaceIndexX]);
-	}
-	if ((pix_mouseX % PIX_SIDE_CASE <= 3) && spaceIndexX > 0){
-		switchR(borderGrid[spaceIndexY][spaceIndexX-1]);
-	}
-	if ((pix_mouseY % PIX_SIDE_CASE) >= (PIX_SIDE_CASE-4)){
-		switchD(borderGrid[spaceIndexY][spaceIndexX]);
-	}
-	if ((pix_mouseY % PIX_SIDE_CASE <= 3) && spaceIndexY > 0){
-		switchD(borderGrid[spaceIndexY-1][spaceIndexX]);
-	}
-}, false);
+
 
 /**Switches the state of the right wall of a space*/
 function switchR(p_space){
@@ -96,6 +102,5 @@ function switchD(p_space){
 
 //The main function (at start)
 function drawCanvas(){
-	drawTheMaze();
+	drawGrid();
 }
-setInterval(drawCanvas,30);

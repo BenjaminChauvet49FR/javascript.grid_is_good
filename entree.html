@@ -6,16 +6,20 @@
     </head>
     <body>
 		<!-- Le fameux canevas -->
-		<canvas id="canevas" width="800" height="800">
+		<canvas id="canevas" width="800" height="500">
             Message pour les navigateurs ne supportant pas encore canvas.
         </canvas></br>
-	
-		<script src="constants_colors.js"></script>
-		<script src="constants_enum.js"></script>
-		<script src="constants_numeric.js"></script>
-		<script src="constants_px.js"></script>
 		
+		
+		<input type="submit" id="submit_save_grid" value="Sauver"></input></br>
+		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
+
+	
+		<script src="constants_enum.js"></script>
+		<script src="constants_scene.js"></script>
 		<script src="draw_utils.js"></script>
 		<script src="gestion_cases.js"></script>
+		<script src="input_management.js"></script>
+		<script src="start.js"></script>
 	</body>
 </html>
