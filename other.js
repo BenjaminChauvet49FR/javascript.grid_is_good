@@ -10,15 +10,15 @@ function wallGridToString(p_grid){
 	var valueSpace;
 	for(var iy = 0;iy < yLength;iy++)
 		for(var ix = 0;ix < xLength;ix++){
-			if (!p_grid[iy][ix]){
+			if (p_grid[iy][ix].state == CLOSED){
 				answer+='X';
 			}
 			else{
 				valueSpace=0;
-				if (p_grid[iy][ix].wallR == WALL_CLOSED){
+				if (p_grid[iy][ix].wallR == CLOSED){
 					valueSpace+=1;
 				}
-				if (p_grid[iy][ix].wallD == WALL_CLOSED){
+				if (p_grid[iy][ix].wallD == CLOSED){
 					valueSpace+=2;
 				}
 				answer+=valueSpace;
@@ -55,11 +55,15 @@ function wallGridToRegionGrid(p_wallGrid){
 	var regionGridAnswer = [];
 	var yLength = p_wallGrid.length;
 	var xLength = p_wallGrid[0].length;
-	//Clean grid
+	//Create the grid with banned and uncharted spaces
 	for(var iy=0;iy<yLength;iy++){
 		regionGridAnswer.push([]);
 		for(var ix=0;ix<xLength;ix++){
-			regionGridAnswer[iy].push(-1);
+			if (p_wallGrid[iy][ix].state == CLOSED){
+				regionGridAnswer[iy].push(BANNED);
+			}else{
+				regionGridAnswer[iy].push(UNCHARTED);
+			}
 		}
 	}
 	//Region parting :
@@ -69,9 +73,10 @@ function wallGridToRegionGrid(p_wallGrid){
 	var spacesThatBelong = [];
 	var spaceToPut;
 	var x,y;
+	//Then, go for all non-banned spaces
 	while(firstY < yLength){
 		firstX = 0;
-		while ((firstX < xLength) && (regionGridAnswer[firstY][firstX] != -1)){ //le dernier true sera à changer quand je ferai des cases destinées à rester à -1
+		while ((firstX < xLength) && (regionGridAnswer[firstY][firstX] != UNCHARTED)){ //le dernier true sera à changer quand je ferai des cases destinées à rester à -1
 			firstX++;
 		}
 		if (firstX < xLength){
@@ -81,16 +86,16 @@ function wallGridToRegionGrid(p_wallGrid){
 				x = spaceToPut.sx;
 				y = spaceToPut.sy;
 				regionGridAnswer[y][x] = regionIndex;
-				if((y > 0) && (regionGridAnswer[y-1][x] == -1) && (p_wallGrid[y-1][x].wallD == WALL_OPEN)){
+				if((y > 0) && (regionGridAnswer[y-1][x] == UNCHARTED) && (p_wallGrid[y-1][x].wallD == OPEN)){
 					spacesThatBelong.push({sx:x,sy:y-1});
 				}
-				if((x > 0) && (regionGridAnswer[y][x-1] == -1) && (p_wallGrid[y][x-1].wallR == WALL_OPEN)){
+				if((x > 0) && (regionGridAnswer[y][x-1] == UNCHARTED) && (p_wallGrid[y][x-1].wallR == OPEN)){
 					spacesThatBelong.push({sx:x-1,sy:y});
 				}
-				if((y <= yLength-2) && (regionGridAnswer[y+1][x] == -1) && (p_wallGrid[y][x].wallD == WALL_OPEN)){
+				if((y <= yLength-2) && (regionGridAnswer[y+1][x] == UNCHARTED) && (p_wallGrid[y][x].wallD == OPEN)){
 					spacesThatBelong.push({sx:x,sy:y+1});
 				}
-				if((x <= xLength-2) && (regionGridAnswer[y][x+1] == -1) && (p_wallGrid[y][x].wallR == WALL_OPEN)){
+				if((x <= xLength-2) && (regionGridAnswer[y][x+1] == UNCHARTED) && (p_wallGrid[y][x].wallR == OPEN)){
 					spacesThatBelong.push({sx:x+1,sy:y});
 				}
 			}
@@ -112,11 +117,11 @@ p_char : the desired char
 */
 function charToSpace(p_char){
 	switch(p_char){
-		case('0'): return {wallD:WALL_OPEN,wallR:WALL_OPEN};break;
-		case('1'): return {wallD:WALL_OPEN,wallR:WALL_CLOSED};break;
-		case('2'): return {wallD:WALL_CLOSED,wallR:WALL_OPEN};break;
-		case('3'): return {wallD:WALL_CLOSED,wallR:WALL_CLOSED};break;
-		default : return {wallD:WALL_OPEN,wallR:WALL_OPEN};break;
+		case('0'): return {state:OPEN,wallD:OPEN,wallR:OPEN};break;
+		case('1'): return {state:OPEN,wallD:OPEN,wallR:CLOSED};break;
+		case('2'): return {state:OPEN,wallD:CLOSED,wallR:OPEN};break;
+		case('3'): return {state:OPEN,wallD:CLOSED,wallR:CLOSED};break;
+		default : return {state:CLOSED,wallD:OPEN,wallR:OPEN};break;
 	}
 }
 
@@ -145,10 +150,9 @@ function generateGridWall(p_widthGrid, p_heightGrid){
 	for(var iy=0;iy<p_heightGrid;iy++){
 		answer.push([]);
 		for(var ix=0;ix<p_widthGrid;ix++){
-			answer[iy].push({wallD:WALL_OPEN,wallR:WALL_OPEN});
+			answer[iy].push({state:OPEN,wallD:OPEN,wallR:OPEN});
 		}
 	}
-	console.log("Generate grid wall : généré "+p_widthGrid+" "+p_heightGrid);
 	return answer;
 }
 

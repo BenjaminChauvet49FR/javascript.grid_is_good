@@ -34,19 +34,23 @@ function drawGridUltimate(p_context,p_pix,p_colors,p_global){
 			}
 			//Draw pillar
 			if((ix <= p_global.xLength-2) && (iy <= p_global.yLength-2)){
-				if(p_global.borderGrid[iy][ix].wallR == WALL_CLOSED || p_global.borderGrid[iy][ix].wallD == WALL_CLOSED
-				|| p_global.borderGrid[iy+1][ix].wallR == WALL_CLOSED || p_global.borderGrid[iy][ix+1].wallD == WALL_CLOSED)
+				if(p_global.borderGrid[iy][ix].wallR == CLOSED || p_global.borderGrid[iy][ix].wallD == CLOSED
+				|| p_global.borderGrid[iy+1][ix].wallR == CLOSED || p_global.borderGrid[iy][ix+1].wallD == CLOSED)
 				{
-					p_context.fillStyle= wallToColor(WALL_CLOSED);
+					p_context.fillStyle= wallToColor(CLOSED);
 				} 
 				else{
-					p_context.fillStyle= wallToColor(WALL_OPEN);
+					p_context.fillStyle= wallToColor(OPEN);
 				}
 				p_context.fillRect(pixDrawXVert,pixDrawYHoriz,pixThickness,pixThickness);
 			}
 			//Draw inner space
+
 			if(p_global.regionGrid){
 				p_context.fillStyle= indexRainbow(p_global.regionGrid[iy][ix]);
+				p_context.fillRect(pixDrawXHoriz,pixDrawYVert,pixLength,pixLength);
+			} else if (p_global.borderGrid[iy][ix].state == CLOSED){
+				p_context.fillStyle= indexRainbow(-2);
 				p_context.fillRect(pixDrawXHoriz,pixDrawYVert,pixLength,pixLength);
 			}
 			pixDrawXHoriz += p_pix.sideSpace;
@@ -75,9 +79,9 @@ Gives the correct wall color from a wall type (a #RRGGBB string)
 
 function wallToColor( p_wallType){
 	switch(p_wallType){
-		case (WALL_OPEN):
+		case (OPEN):
 			return (colors.open_wall);break;
-		case (WALL_CLOSED):
+		case (CLOSED):
 			return (colors.closed_wall);break;
 	}
 	return "#ffffff";
@@ -86,7 +90,7 @@ function wallToColor( p_wallType){
 //TODO some sort of rainbow color
 function indexRainbow(p_index){
 	if (p_index < 0){
-		return "#000000";
+		return "#666666";
 	}
 	switch(p_index % 12){
 		case 0:return "#6666ff";break;
