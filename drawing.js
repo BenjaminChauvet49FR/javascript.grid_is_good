@@ -104,13 +104,3 @@ function indexRainbow(p_index){
 	}
 }
 
-//------------------
-
-/**
-Adapts canvas to actual scene
-*/
-function adaptCanvas(p_canvas, p_pix,p_global){
-	p_canvas.width = p_global.xLength*p_pix.sideSpace+20;
-	p_canvas.height = p_global.yLength*p_pix.sideSpace+20;
-	p_global.regionGrid = null;
-}

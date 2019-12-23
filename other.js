@@ -148,5 +148,7 @@ function generateGridWall(p_widthGrid, p_heightGrid){
 			answer[iy].push({wallD:WALL_OPEN,wallR:WALL_OPEN});
 		}
 	}
+	console.log("Generate grid wall : généré "+p_widthGrid+" "+p_heightGrid);
 	return answer;
 }
+

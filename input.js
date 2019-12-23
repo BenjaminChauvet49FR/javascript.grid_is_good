@@ -46,12 +46,12 @@ function switchD(p_space){
 
 /** Saves a walled grid into local storage */
 saveAction = function(p_global,p_name) {
-	localStorage.setItem(p_name, wallGridToString(p_global.borderGrid))
+	localStorage.setItem("grid_is_good_"+p_name, wallGridToString(p_global.borderGrid))
 }
 
 /** Loads a walled grid from local storage */
 loadAction = function(p_canvas,p_pix,p_global,p_name){
-	var grid = stringToWallGrid(localStorage.getItem(p_name));
+	var grid = stringToWallGrid(localStorage.getItem("grid_is_good_"+p_name));
 	p_global.borderGrid = grid;
 	p_global.xLength = grid[0].length;
 	p_global.yLength = grid.length;
@@ -61,4 +61,28 @@ loadAction = function(p_canvas,p_pix,p_global,p_name){
 /** Read the region grid as it is*/
 readRegionGrid = function(p_global){
 	p_global.regionGrid = wallGridToRegionGrid(p_global.borderGrid);
+}
+
+//----------------------
+
+/**
+Restarts the grid
+*/
+function restartGrid(p_canvas, p_pix, p_global, p_width, p_height){
+	p_global.xLength=p_width;
+	p_global.yLength=p_height;
+	p_global.borderGrid=generateGridWall(p_width,p_height);
+	p_global.regionGrid=null;
+	adaptCanvas(p_canvas, p_pix,p_global);
+}
+
+//------------------
+
+/**
+Adapts canvas to actual scene
+*/
+function adaptCanvas(p_canvas, p_pix,p_global){
+	p_canvas.width = p_global.xLength*p_pix.sideSpace+20;
+	p_canvas.height = p_global.yLength*p_pix.sideSpace+20;
+	p_global.regionGrid = null;
 }
