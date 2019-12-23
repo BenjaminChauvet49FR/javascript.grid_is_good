@@ -2,28 +2,24 @@
 var ix,iy;
 
 /**
-p_wallGrid : the wall grid to be drawn
-p_regionGrid : the region grid to be drawn
-p_width : the width of both grids
-p_height : the height of both grids
+Draw the grid on-screen on p_context, with p_global informations, with p_pix and p_colors information for pixels and colors
 */
-//function drawGridUltimate(p_wallGrid, p_regionGrid, p_xLength, p_yLength){
-function drawGridUltimate(p_context,p_global){
+function drawGridUltimate(p_context,p_pix,p_colors,p_global){
 	
 	//Upper-left pixel of the horizontal walls (Horiz) and vertical walls (Vert) ; pillars aren't part of walls (meeting of 4 walls)
-	const pixStartXVert = PIX.SIDE_SPACE-PIX.BORDER_SPACE;  
-	const pixStartXHoriz = PIX.BORDER_SPACE;  
+	const pixStartXVert = p_pix.sideSpace-p_pix.borderSpace;  
+	const pixStartXHoriz = p_pix.borderSpace;  
 	var pixDrawXHoriz = pixStartXHoriz;	
-	var pixDrawYHoriz = PIX.SIDE_SPACE-PIX.BORDER_SPACE;
+	var pixDrawYHoriz = p_pix.sideSpace-p_pix.borderSpace;
 	var pixDrawXVert = pixStartXVert;
-	var pixDrawYVert = PIX.BORDER_SPACE;
+	var pixDrawYVert = p_pix.borderSpace;
 	
 	//Rectangle dimensions
-	const pixLength = PIX.SIDE_SPACE-2*PIX.BORDER_SPACE;
-	const pixThickness = 2*PIX.BORDER_SPACE;
+	const pixLength = p_pix.sideSpace-2*p_pix.borderSpace;
+	const pixThickness = 2*p_pix.borderSpace;
 	
 	//Go !
-	p_context.clearRect(0, 0, PIX.CANVAS_WIDTH, PIX.CANVAS_HEIGHT);
+	p_context.clearRect(0, 0, p_pix.canvasWidth, p_pix.canvasHeight);
 	for(iy = 0;iy < p_global.yLength; iy++){
 		for(ix = 0;ix < p_global.xLength;ix++){
 			//Draw down wall
@@ -53,23 +49,23 @@ function drawGridUltimate(p_context,p_global){
 				p_context.fillStyle= indexRainbow(p_global.regionGrid[iy][ix]);
 				p_context.fillRect(pixDrawXHoriz,pixDrawYVert,pixLength,pixLength);
 			}
-			pixDrawXHoriz += PIX.SIDE_SPACE;
-			pixDrawXVert += PIX.SIDE_SPACE;
+			pixDrawXHoriz += p_pix.sideSpace;
+			pixDrawXVert += p_pix.sideSpace;
 		}
-		pixDrawYHoriz += PIX.SIDE_SPACE;
-		pixDrawYVert += PIX.SIDE_SPACE;		
+		pixDrawYHoriz += p_pix.sideSpace;
+		pixDrawYVert += p_pix.sideSpace;		
 		pixDrawXHoriz = pixStartXHoriz;
 		pixDrawXVert = pixStartXVert;
 	}
 	
 	//Draws the borders
-	const pixTotalWidth = p_global.xLength*PIX.SIDE_SPACE;
-	const pixTotalHeight = p_global.yLength*PIX.SIDE_SPACE;
+	const pixTotalWidth = p_global.xLength*p_pix.sideSpace;
+	const pixTotalHeight = p_global.yLength*p_pix.sideSpace;
 	p_context.fillStyle= colors.edge_walls;
-	p_context.fillRect(0,0,PIX.BORDER_SPACE,pixTotalHeight);
-	p_context.fillRect(0,0,pixTotalWidth,PIX.BORDER_SPACE);
-	p_context.fillRect(pixTotalWidth-PIX.BORDER_SPACE,0,PIX.BORDER_SPACE,pixTotalHeight);
-	p_context.fillRect(0,pixTotalHeight-PIX.BORDER_SPACE,pixTotalWidth,PIX.BORDER_SPACE);
+	p_context.fillRect(0,0,p_pix.borderSpace,pixTotalHeight);
+	p_context.fillRect(0,0,pixTotalWidth,p_pix.borderSpace);
+	p_context.fillRect(pixTotalWidth-p_pix.borderSpace,0,p_pix.borderSpace,pixTotalHeight);
+	p_context.fillRect(0,pixTotalHeight-p_pix.borderSpace,pixTotalWidth,p_pix.borderSpace);
 }
 
 /**
@@ -113,8 +109,8 @@ function indexRainbow(p_index){
 /**
 Adapts canvas to actual scene
 */
-function adaptCanvas(p_canvas, p_global){
-	p_canvas.width = p_global.xLength*PIX.SIDE_SPACE+20;
-	p_canvas.height = p_global.yLength*PIX.SIDE_SPACE+20;
+function adaptCanvas(p_canvas, p_pix,p_global){
+	p_canvas.width = p_global.xLength*p_pix.sideSpace+20;
+	p_canvas.height = p_global.yLength*p_pix.sideSpace+20;
 	p_global.regionGrid = null;
 }
