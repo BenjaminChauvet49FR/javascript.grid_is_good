@@ -3,24 +3,24 @@
 /**
  When you click on the canvas
 */
-function clickCanvas(event) {
-    var rect = canevas.getBoundingClientRect();
+function clickCanvas(event,p_canvas,p_global) {
+    var rect = p_canvas.getBoundingClientRect();
     var pixMouseX = event.clientX - rect.left;
     var pixMouseY = event.clientY - rect.top;
 	var spaceIndexX = Math.floor(pixMouseX/PIX.SIDE_SPACE); //index of the space, calculated from the (x,y) position
 	var spaceIndexY = Math.floor(pixMouseY/PIX.SIDE_SPACE); //same
-	regionGrid = null;
+	p_global.regionGrid = null; 
     if ((pixMouseX % PIX.SIDE_SPACE) >= (PIX.SIDE_SPACE-PIX.BORDER_CLICK_DETECTION)){
-		switchR(borderGrid[spaceIndexY][spaceIndexX]);
+		switchR(p_global.borderGrid[spaceIndexY][spaceIndexX]);
 	}
 	if ((pixMouseX % PIX.SIDE_SPACE <= PIX.BORDER_CLICK_DETECTION-1) && spaceIndexX > 0){
-		switchR(borderGrid[spaceIndexY][spaceIndexX-1]);
+		switchR(p_global.borderGrid[spaceIndexY][spaceIndexX-1]);
 	}
 	if ((pixMouseY % PIX.SIDE_SPACE) >= (PIX.SIDE_SPACE-PIX.BORDER_CLICK_DETECTION)){
-		switchD(borderGrid[spaceIndexY][spaceIndexX]);
+		switchD(p_global.borderGrid[spaceIndexY][spaceIndexX]);
 	}
 	if ((pixMouseY % PIX.SIDE_SPACE <= PIX.BORDER_CLICK_DETECTION-1) && spaceIndexY > 0){
-		switchD(borderGrid[spaceIndexY-1][spaceIndexX]);
+		switchD(p_global.borderGrid[spaceIndexY-1][spaceIndexX]);
 	}
 }
 
@@ -42,30 +42,23 @@ function switchD(p_space){
 	p_space.wallD = WALL_CLOSED;
 }
 
-//----------------
+//----------------------
 
 /** Saves into local storage */
-saveString = function(event) {
-	localStorage.setItem('saved_grid_is_good', wallGridToString(borderGrid))
+saveString = function(p_global) {
+	localStorage.setItem('saved_grid_is_good', wallGridToString(p_global.borderGrid))
 }
 
 /** Loads from local storage */
-loadString = function(event){
-	borderGrid = stringToWallGrid(localStorage.getItem('saved_grid_is_good'));
+loadString = function(p_canvas,p_global){
+	var grid = stringToWallGrid(localStorage.getItem('saved_grid_is_good'));
+	p_global.borderGrid = grid;
+	p_global.xLength = grid[0].length;
+	p_global.yLength = grid.length;
+	adaptCanvas(p_canvas,p_global);
 }
 
 /** Read the region grid as it is*/
-readRegionGrid = function(event){
-	/*const regionGrid = wallGridToRegionGrid(borderGrid);
-	const yLength = regionGrid.length;
-	const xLength = regionGrid[0].length;
-	var answer = "";
-	for(var iy = 0;iy < yLength;iy++){
-		for(var ix = 0;ix < xLength;ix++){
-			answer += (regionGrid[iy][ix] % 10) //TODO Le "mod 10" c'est pas top
-		}
-		answer += "\n"
-	}
-	console.log(answer); TODO Extraire le code de ce commentaire, y'a moyen de faire une super fonction toString*/
-	regionGrid =  wallGridToRegionGrid(borderGrid);
+readRegionGrid = function(p_global){
+	p_global.regionGrid = wallGridToRegionGrid(p_global.borderGrid);
 }

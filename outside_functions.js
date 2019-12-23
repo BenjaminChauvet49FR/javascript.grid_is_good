@@ -75,7 +75,6 @@ function wallGridToRegionGrid(p_wallGrid){
 			firstX++;
 		}
 		if (firstX < xLength){
-			console.log("push "+firstX+" "+firstY);
 			spacesThatBelong.push({sx:firstX,sy:firstY});
 			while(spacesThatBelong.length > 0){
 				spaceToPut = spacesThatBelong.pop();
@@ -94,8 +93,6 @@ function wallGridToRegionGrid(p_wallGrid){
 				if((x <= xLength-2) && (regionGridAnswer[y][x+1] == -1) && (p_wallGrid[y][x].wallR == WALL_OPEN)){
 					spacesThatBelong.push({sx:x+1,sy:y});
 				}
-				console.log("Just analysed "+x+" "+y);
-				console.log(spacesThatBelong.length);
 			}
 			regionIndex++;
 			firstX++;
@@ -121,4 +118,35 @@ function charToSpace(p_char){
 		case('3'): return {wallD:WALL_CLOSED,wallR:WALL_CLOSED};break;
 		default : return {wallD:WALL_OPEN,wallR:WALL_OPEN};break;
 	}
+}
+
+
+/**
+Returns a region grid from a wall grid
+*/
+function regionGridToString(p_regionGrid){
+	const yLength = p_regionGrid.length;
+	const xLength = p_regionGrid[0].length;
+	var answer = "";
+	for(var iy = 0;iy < yLength;iy++){
+		for(var ix = 0;ix < xLength;ix++){
+			answer += (p_regionGrid[iy][ix] % 10) //TODO Le "mod 10" c'est pas top
+		}
+		answer += "\n"
+	}
+	return answer;
+}
+
+/**
+Generates a clean grid wall with desired width and height
+*/
+function generateGridWall(p_widthGrid, p_heightGrid){
+	var answer = [];
+	for(var iy=0;iy<p_heightGrid;iy++){
+		answer.push([]);
+		for(var ix=0;ix<p_widthGrid;ix++){
+			answer[iy].push({wallD:WALL_OPEN,wallR:WALL_OPEN});
+		}
+	}
+	return answer;
 }

@@ -3,22 +3,30 @@
 // ON START
 // Generate a clear border grid 
 //TODO make these variables more "global" AND interchangeable
-var heightGrid = 12;
-var widthGrid = 14;
-var borderGrid = [];
-for(iy=0;iy<heightGrid;iy++){
-	borderGrid.push([]);
-	for(ix=0;ix<widthGrid;ix++){
-		borderGrid[iy].push({wallD:WALL_OPEN,wallR:WALL_OPEN});
-	}
+
+var widthGrid = 6;
+var heightGrid = 10;
+
+var global = {
+	xLength: widthGrid,
+	yLength: heightGrid,
+	borderGrid : generateGridWall(widthGrid,heightGrid),
+	regionGrid : null
 }
-var regionGrid = null;
 
 var canevas = document.getElementById("canevas");
-var context = canevas.getContext("2d");
+var	context = canevas.getContext("2d");
+adaptCanvas(canevas,global);
 
-document.getElementById("submit_save_grid").addEventListener('click',saveString);
-document.getElementById("submit_load_grid").addEventListener('click',loadString);
-document.getElementById("submit_show_region_grid").addEventListener('click',readRegionGrid);
-canevas.addEventListener('click', clickCanvas,false);
+
+
+//The main draw function (at start)
+function drawCanvas(){
+	drawGridUltimate(context,global);
+}
+
+document.getElementById("submit_save_grid").addEventListener('click',function(event){saveString(global)});
+document.getElementById("submit_load_grid").addEventListener('click',function(event){loadString(canevas,global)});
+document.getElementById("submit_show_region_grid").addEventListener('click',function(event){readRegionGrid(global)});
+canevas.addEventListener('click', function(event){clickCanvas(event,canevas,global)},false);
 setInterval(drawCanvas,30);
