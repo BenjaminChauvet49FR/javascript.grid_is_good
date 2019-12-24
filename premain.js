@@ -11,7 +11,8 @@ var global = {
 	xLength: widthGrid,
 	yLength: heightGrid,
 	borderGrid : generateGridWall(widthGrid,heightGrid),
-	regionGrid : null
+	regionGrid : null,
+	mode:{colorRegionIfPossible : false}
 }
 
 // All the pixel measurements
@@ -36,6 +37,11 @@ var	context = canevas.getContext("2d");
 var colors={
 	closed_wall:'#222222',
 	open_wall:'#dddddd',
-	edge_walls:'#000000'
+	edge_walls:'#000000',
+	bannedSpace:'#666666',
+	rainbowSpaces:["#6666ff","#ff6666","#66ff66",
+	"#66ffff","#ffff66","#ff66ff",
+	"#cc66ff","#ffcc66","#66ffcc",
+	"#ff00cc","#00ccff","#ccff00"]
 }
 

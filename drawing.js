@@ -46,11 +46,11 @@ function drawGridUltimate(p_context,p_pix,p_colors,p_global){
 			}
 			//Draw inner space
 
-			if(p_global.regionGrid){
-				p_context.fillStyle= indexRainbow(p_global.regionGrid[iy][ix]);
+			if((p_global.mode.colorRegionIfPossible == true) && p_global.regionGrid){
+				p_context.fillStyle= indexRainbow((p_global.regionGrid[iy][ix])%12,p_colors.rainbowSpaces,p_colors.bannedSpace);
 				p_context.fillRect(pixDrawXHoriz,pixDrawYVert,pixLength,pixLength);
 			} else if (p_global.borderGrid[iy][ix].state == CLOSED){
-				p_context.fillStyle= indexRainbow(-2);
+				p_context.fillStyle= indexRainbow(-2,null,p_colors.bannedSpace);
 				p_context.fillRect(pixDrawXHoriz,pixDrawYVert,pixLength,pixLength);
 			}
 			pixDrawXHoriz += p_pix.sideSpace;
@@ -90,24 +90,17 @@ function wallToColor( p_wallType){
 }
 
 //TODO some sort of rainbow color
-function indexRainbow(p_index){
+function indexRainbow(p_index,p_rainbow,p_negative){
 	if (p_index < 0){
+		if (p_negative){
+			return p_negative;
+		}
 		return "#666666";
 	}
-	switch(p_index % 12){
-		case 0:return "#6666ff";break;
-		case 1:return "#ff6666";break;
-		case 2:return "#66ff66";break;
-		case 3:return "#66ffff";break;
-		case 4:return "#ffff66";break;
-		case 5:return "#ff66ff";break;
-		case 6:return "#cc66ff";break;
-		case 7:return "#ffcc66";break;
-		case 8:return "#66ffcc";break;
-		case 9:return "#ff00cc";break;
-		case 10:return "#00ccff";break;
-		case 11:return "#ccff00";break;
-	}
+	if (p_rainbow.length > p_index)
+		return p_rainbow[p_index];
+	return "#666666";
+
 }
 
 //--------------
