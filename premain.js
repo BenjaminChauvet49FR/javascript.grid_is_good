@@ -20,7 +20,13 @@ var pix={
 	borderSpace : 2, //Inner border
 	borderClickDetection : 5, //How many pixels from the side of a space can you click to trigger the border ?
 	canvasWidth : 800,
-	canvasHeight: 800
+	canvasHeight: 800,
+	marginGrid : {
+		left:0,
+		up:0,
+		right:0,
+		down:0
+	}
 }
 
 var canevas = document.getElementById("canevas");

@@ -7,12 +7,12 @@ Draw the grid on-screen on p_context, with p_global informations, with p_pix and
 function drawGridUltimate(p_context,p_pix,p_colors,p_global){
 	
 	//Upper-left pixel of the horizontal walls (Horiz) and vertical walls (Vert) ; pillars aren't part of walls (meeting of 4 walls)
-	const pixStartXVert = p_pix.sideSpace-p_pix.borderSpace;  
-	const pixStartXHoriz = p_pix.borderSpace;  
+	const pixStartXVert = p_pix.marginGrid.left+p_pix.sideSpace-p_pix.borderSpace;  
+	const pixStartXHoriz = p_pix.marginGrid.left+p_pix.borderSpace;  
 	var pixDrawXHoriz = pixStartXHoriz;	
-	var pixDrawYHoriz = p_pix.sideSpace-p_pix.borderSpace;
+	var pixDrawYHoriz = p_pix.marginGrid.up+p_pix.sideSpace-p_pix.borderSpace;
 	var pixDrawXVert = pixStartXVert;
-	var pixDrawYVert = p_pix.borderSpace;
+	var pixDrawYVert = p_pix.marginGrid.up+p_pix.borderSpace;
 	
 	//Rectangle dimensions
 	const pixLength = p_pix.sideSpace-2*p_pix.borderSpace;
@@ -66,10 +66,12 @@ function drawGridUltimate(p_context,p_pix,p_colors,p_global){
 	const pixTotalWidth = p_global.xLength*p_pix.sideSpace;
 	const pixTotalHeight = p_global.yLength*p_pix.sideSpace;
 	p_context.fillStyle= colors.edge_walls;
-	p_context.fillRect(0,0,p_pix.borderSpace,pixTotalHeight);
-	p_context.fillRect(0,0,pixTotalWidth,p_pix.borderSpace);
-	p_context.fillRect(pixTotalWidth-p_pix.borderSpace,0,p_pix.borderSpace,pixTotalHeight);
-	p_context.fillRect(0,pixTotalHeight-p_pix.borderSpace,pixTotalWidth,p_pix.borderSpace);
+	p_context.fillRect(p_pix.marginGrid.left,p_pix.marginGrid.up,		p_pix.borderSpace,pixTotalHeight);
+	p_context.fillRect(p_pix.marginGrid.left,p_pix.marginGrid.up,		pixTotalWidth,p_pix.borderSpace);
+	p_context.fillRect(p_pix.marginGrid.left+pixTotalWidth-p_pix.borderSpace,p_pix.marginGrid.up,
+	p_pix.borderSpace,pixTotalHeight);
+	p_context.fillRect(p_pix.marginGrid.left,p_pix.marginGrid.up+pixTotalHeight-p_pix.borderSpace,
+	pixTotalWidth,p_pix.borderSpace);
 }
 
 /**
@@ -108,3 +110,13 @@ function indexRainbow(p_index){
 	}
 }
 
+//--------------
+
+/**
+Adapts canvas to actual scene
+*/
+function adaptCanvas(p_canvas, p_pix,p_global){
+	p_canvas.width = p_global.xLength*p_pix.sideSpace+20+p_pix.marginGrid.left+p_pix.marginGrid.right;
+	p_canvas.height = p_global.yLength*p_pix.sideSpace+20+p_pix.marginGrid.up+p_pix.marginGrid.down;
+	p_global.regionGrid = null;
+}
