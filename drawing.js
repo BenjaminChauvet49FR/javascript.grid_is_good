@@ -95,11 +95,11 @@ function indexRainbow(p_index,p_rainbow,p_negative){
 		if (p_negative){
 			return p_negative;
 		}
-		return "#666666";
+		return "";
 	}
 	if (p_rainbow.length > p_index)
 		return p_rainbow[p_index];
-	return "#666666";
+	return "";
 
 }
 

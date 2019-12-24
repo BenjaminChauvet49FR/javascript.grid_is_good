@@ -5,7 +5,7 @@
 */
 function clickCanvas(event,p_canvas,p_pix,p_global) {
     var rect = p_canvas.getBoundingClientRect();
-    var pixMouseX = event.clientX - rect.left;
+    var pixMouseX = event.clientX - rect.left; //TODO : WARNING ! Offset not taken into account yet !
     var pixMouseY = event.clientY - rect.top;
 	var spaceIndexX = Math.floor(pixMouseX/p_pix.sideSpace); //index of the space, calculated from the (x,y) position
 	var spaceIndexY = Math.floor(pixMouseY/p_pix.sideSpace); //same
