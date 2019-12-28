@@ -1,19 +1,6 @@
 //This script is where all functions are launched at start !
 
 // ON START
-// Generate a clear border grid 
-//TODO make these variables more "global" AND interchangeable
-
-var widthGrid = 6;
-var heightGrid = 10;
-
-var global = {
-	xLength: widthGrid,
-	yLength: heightGrid,
-	borderGrid : generateGridWall(widthGrid,heightGrid),
-	regionGrid : null,
-	mode:{colorRegionIfPossible : false}
-}
 
 // All the pixel measurements
 var pix={
@@ -30,6 +17,7 @@ var pix={
 	}
 }
 
+var global = new Global(6,6);
 var canevas = document.getElementById("canevas");
 var	context = canevas.getContext("2d");
 

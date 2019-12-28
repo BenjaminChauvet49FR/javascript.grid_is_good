@@ -24,18 +24,18 @@ function drawGridUltimate(p_context,p_pix,p_colors,p_global){
 		for(ix = 0;ix < p_global.xLength;ix++){
 			//Draw down wall
 			if (iy <= p_global.yLength-2){ 
-				p_context.fillStyle= wallToColor(p_global.borderGrid[iy][ix].wallD);
+				p_context.fillStyle= wallToColor(p_global.getWallD(ix,iy));
 				p_context.fillRect(pixDrawXHoriz,pixDrawYHoriz,pixLength,pixThickness);
 			}	
 			//Draw right wall
 			if (ix <= p_global.xLength-2){
-				p_context.fillStyle= wallToColor(p_global.borderGrid[iy][ix].wallR);
+				p_context.fillStyle= wallToColor(p_global.getWallR(ix,iy));
 				p_context.fillRect(pixDrawXVert,pixDrawYVert,pixThickness,pixLength);
 			}
 			//Draw pillar
 			if((ix <= p_global.xLength-2) && (iy <= p_global.yLength-2)){
-				if(p_global.borderGrid[iy][ix].wallR == CLOSED || p_global.borderGrid[iy][ix].wallD == CLOSED
-				|| p_global.borderGrid[iy+1][ix].wallR == CLOSED || p_global.borderGrid[iy][ix+1].wallD == CLOSED)
+				if (p_global.getWallR(ix,iy) == CLOSED || p_global.getWallD(ix,iy) == CLOSED ||
+					p_global.getWallR(ix,iy+1) == CLOSED || p_global.getWallD(ix+1,iy) == CLOSED)
 				{
 					p_context.fillStyle= wallToColor(CLOSED);
 				} 
@@ -45,12 +45,11 @@ function drawGridUltimate(p_context,p_pix,p_colors,p_global){
 				p_context.fillRect(pixDrawXVert,pixDrawYHoriz,pixThickness,pixThickness);
 			}
 			//Draw inner space
-
-			if((p_global.mode.colorRegionIfPossible == true) && p_global.regionGrid){
-				p_context.fillStyle= indexRainbow((p_global.regionGrid[iy][ix])%12,p_colors.rainbowSpaces,p_colors.bannedSpace);
+			if(p_global.mode.colorRegionIfValid && p_global.isRegionGridValid){
+				p_context.fillStyle= indexRainbow((p_global.getRegion(ix,iy)%12),p_colors.rainbowSpaces,p_colors.bannedSpace);
 				p_context.fillRect(pixDrawXHoriz,pixDrawYVert,pixLength,pixLength);
-			} else if (p_global.borderGrid[iy][ix].state == CLOSED){
-				p_context.fillStyle= indexRainbow(-2,null,p_colors.bannedSpace);
+			} else if (p_global.getState(ix,iy) == CLOSED){
+				p_context.fillStyle= indexRainbow(BANNED,null,p_colors.bannedSpace);
 				p_context.fillRect(pixDrawXHoriz,pixDrawYVert,pixLength,pixLength);
 			}
 			pixDrawXHoriz += p_pix.sideSpace;
@@ -78,7 +77,6 @@ function drawGridUltimate(p_context,p_pix,p_colors,p_global){
 Gives the correct wall color from a wall type (a #RRGGBB string) 
 @p_wallType : a type of wall between 2 spaces
 */
-
 function wallToColor( p_wallType){
 	switch(p_wallType){
 		case (OPEN):
@@ -89,17 +87,22 @@ function wallToColor( p_wallType){
 	return "#ffffff";
 }
 
-//TODO some sort of rainbow color
-function indexRainbow(p_index,p_rainbow,p_negative){
+/**
+Returns something from an array or for a negative value. 
+p_index : the index of the thing to return
+p_array : the array of possible things
+p_negative : the thing to return in case p_index is negative
+*/
+function indexRainbow(p_index,p_array,p_negative){
 	if (p_index < 0){
 		if (p_negative){
 			return p_negative;
 		}
-		return "";
+		return null;
 	}
-	if (p_rainbow.length > p_index)
-		return p_rainbow[p_index];
-	return "";
+	if (p_array.length > p_index)
+		return p_array[p_index];
+	return null;
 
 }
 
@@ -111,5 +114,4 @@ Adapts canvas to actual scene
 function adaptCanvas(p_canvas, p_pix,p_global){
 	p_canvas.width = p_global.xLength*p_pix.sideSpace+20+p_pix.marginGrid.left+p_pix.marginGrid.right;
 	p_canvas.height = p_global.yLength*p_pix.sideSpace+20+p_pix.marginGrid.up+p_pix.marginGrid.down;
-	p_global.regionGrid = null;
 }
