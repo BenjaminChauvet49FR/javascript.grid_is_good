@@ -112,6 +112,6 @@ function indexRainbow(p_index,p_array,p_negative){
 Adapts canvas to actual scene
 */
 function adaptCanvas(p_canvas, p_pix,p_global){
-	p_canvas.width = p_global.xLength*p_pix.sideSpace+20+p_pix.marginGrid.left+p_pix.marginGrid.right;
-	p_canvas.height = p_global.yLength*p_pix.sideSpace+20+p_pix.marginGrid.up+p_pix.marginGrid.down;
+	p_canvas.width = p_global.xLength*p_pix.sideSpace+p_pix.marginGrid.left+p_pix.marginGrid.right;
+	p_canvas.height = p_global.yLength*p_pix.sideSpace+p_pix.marginGrid.up+p_pix.marginGrid.down;
 }
