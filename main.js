@@ -3,6 +3,24 @@ function drawCanvas(){
 	drawGridUltimate(context,pix,colors,global);
 }
 
+// All the main variables
+var pix=new Pix();
+var global = new Global(6,6);
+var canevas = document.getElementById("canevas");
+var	context = canevas.getContext("2d");
+
+//All the colors used in the scenery
+var colors={
+	closed_wall:'#222222',
+	open_wall:'#dddddd',
+	edge_walls:'#000000',
+	bannedSpace:'#666666',
+	rainbowSpaces:["#6666ff","#ff6666","#66ff66",
+	"#66ffff","#ffff66","#ff66ff",
+	"#cc66ff","#ffcc66","#66ffcc",
+	"#ff00cc","#00ccff","#ccff00"]
+}
+
 var fieldName = document.getElementById("input_grid_name");
 var fieldWidth = document.getElementById("input_number_width");
 var fieldHeight = document.getElementById("input_number_height");
