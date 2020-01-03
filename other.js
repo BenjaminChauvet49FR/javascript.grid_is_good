@@ -80,4 +80,9 @@ function regionGridToString(p_regionGrid){
 	return answer;
 }
 
-
+/**
+Returns a name to store into / load from local storage
+*/
+function getLocalStorageName(p_name){
+	return "grid_is_good_"+p_name;
+}

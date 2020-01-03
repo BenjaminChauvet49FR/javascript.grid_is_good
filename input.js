@@ -8,8 +8,8 @@
 */
 function clickCanvas(event,p_canvas,p_pix,p_global) {
     var rect = p_canvas.getBoundingClientRect();
-    var pixMouseX = event.clientX - rect.left; //TODO : WARNING ! Offset not taken into account yet !
-    var pixMouseY = event.clientY - rect.top;
+    var pixMouseX = event.clientX - rect.left - p_pix.marginGrid.left; 
+    var pixMouseY = event.clientY - rect.top - p_pix.marginGrid.up;
 	var spaceIndexX = Math.floor(pixMouseX/p_pix.sideSpace); //index of the space, calculated from the (x,y) position
 	var spaceIndexY = Math.floor(pixMouseY/p_pix.sideSpace); //same
 	p_global.regionGrid = null; 
@@ -40,7 +40,15 @@ p_global : the Global item
 p_detachedName : the detached name (without the prefix) to store into local storage
 */
 saveAction = function(p_global,p_detachedName) {
-	localStorage.setItem("grid_is_good_"+p_detachedName, wallGridToString(p_global.wallGrid));
+	var localStorageName = getLocalStorageName(p_detachedName);
+	if (localStorage.hasOwnProperty(localStorageName)){
+		if (confirm("Le stockage local a déjà une propriété nommée '"+localStorageName+"'. L'écraser ?")){
+			localStorage.setItem(localStorageName, wallGridToString(p_global.wallGrid));
+		}
+	}
+	else{
+		localStorage.setItem(localStorageName, wallGridToString(p_global.wallGrid));
+	}
 }
 
 /** Loads a walled grid from local storage 
@@ -50,9 +58,16 @@ p_global : the Global item
 p_detachedName : the detached name (without the prefix) to load from local storage
 */
 loadAction = function(p_canvas,p_pix,p_global,p_detachedName){
-	var wallGrid = stringToWallGrid(localStorage.getItem("grid_is_good_"+p_detachedName));
-	p_global.loadGrid(wallGrid);
-	adaptCanvas(p_canvas,p_pix,p_global);
+	var localStorageName = getLocalStorageName(p_detachedName);
+	if (localStorage.hasOwnProperty(localStorageName)){
+		if (confirm("Charger la grille "+localStorageName+" ?")){
+			var wallGrid = stringToWallGrid(localStorage.getItem(localStorageName));
+			p_global.loadGrid(wallGrid);
+			adaptCanvas(p_canvas,p_pix,p_global);	
+		}
+	} else{
+		alert("Le stockage local n'a pas de propriété nommée '"+localStorageName+"'.");
+	}
 }
 
 /** 
@@ -72,8 +87,10 @@ p_xLength : horizontal dimension
 p_yLength : vertical dimension
 */
 restartAction = function(p_canvas, p_pix, p_global, p_xLength, p_yLength){
-	p_global.restartGrid(p_xLength,p_yLength);
-	adaptCanvas(p_canvas, p_pix,p_global);
+	if (confirm("Redémarrer la grille ?")){
+		p_global.restartGrid(p_xLength,p_yLength);
+		adaptCanvas(p_canvas, p_pix,p_global);	
+	}
 }
 
 /**

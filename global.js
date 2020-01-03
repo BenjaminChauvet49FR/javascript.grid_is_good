@@ -3,13 +3,8 @@ This file contains the "global" object definition and all objects that could be 
 */
 
 function Global(p_xLength,p_yLength) {
-	/*this.xLength = p_xLength;
-	this.yLength = p_yLength*/
 	this.loadGrid(generateWallGrid(p_xLength,p_yLength));
 	this.mode = {colorRegionIfValid : false};	
-	/*this.wallGrid = generateWallGrid(p_xLength,p_yLength);
-	this.regionGrid = null;
-	this.isRegionGridValid = false;*/
 }
 
 Global.prototype.loadGrid = function(p_wallGrid){
