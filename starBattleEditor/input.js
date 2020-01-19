@@ -28,31 +28,32 @@ function clickCanvas(event,p_canvas,p_drawer,p_global){
 p_global : the Global item
 p_detachedName : the detached name (without the prefix) to store into local storage
 */
-saveAction = function(p_global,p_detachedName, p_starsNumber) {
+saveAction = function(p_global,p_detachedName,p_numberStars) {
 	var localStorageName = getLocalStorageName(p_detachedName);
+	var letsSave = true;
 	if (localStorage.hasOwnProperty(localStorageName)){
-		if (confirm("Le stockage local a déjà une propriété nommée '"+localStorageName+"'. L'écraser ?")){
-			localStorage.setItem(localStorageName, wallGridToString(p_global.wallGrid));
+		if (!confirm("Le stockage local a déjà une propriété nommée '"+localStorageName+"'. L'écraser ?")){
+			letsSave = false;
 		}
 	}
-	else{
-		localStorage.setItem(localStorageName, wallGridToString(p_global.wallGrid));
+	if(letsSave){
+		localStorage.setItem(localStorageName, starBattlePuzzleToString(p_global.wallGrid,p_numberStars));
 	}
 }
 
 /** Loads a walled grid from local storage 
-p_canvas : the canvas (it should be redimensioned)
-p_pix : the Pix item 
-p_global : the Global item
 p_detachedName : the detached name (without the prefix) to load from local storage
 */
-loadAction = function(p_canvas,p_pix,p_global,p_detachedName){
+loadAction = function(p_canvas,p_drawer,p_global,p_detachedName,p_sizeField,p_numberStarsField){
 	var localStorageName = getLocalStorageName(p_detachedName);
 	if (localStorage.hasOwnProperty(localStorageName)){
 		if (confirm("Charger la grille "+localStorageName+" ?")){
-			var wallGrid = stringToWallGrid(localStorage.getItem(localStorageName));
-			p_global.loadGrid(wallGrid);
-			adaptCanvas(p_canvas,p_pix,p_global);	
+			var answer = stringToStarBattlePuzzle(localStorage.getItem(localStorageName));
+			p_global.loadGrid(answer.grid);
+			adaptCanvas(p_canvas,p_drawer,p_global);	
+			p_numberStarsField.value = answer.starNumber;
+			p_sizeField.value = answer.grid.length;
+
 		}
 	} else{
 		alert("Le stockage local n'a pas de propriété nommée '"+localStorageName+"'.");
