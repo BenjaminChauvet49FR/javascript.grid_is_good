@@ -145,8 +145,8 @@ Drawer.prototype.wallToColor = function( p_wallType){
 If a click is done on a space, otherwise return null
 */
 Drawer.prototype.getClickSpace = function(event,p_canvas,p_global){
-    var indexX = Math.floor(getPixXWithinGrid(event,p_canvas)/this.pix.sideSpace); 
-    var indexY = Math.floor(getPixYWithinGrid(event,p_canvas)/this.pix.sideSpace);
+    var indexX = Math.floor(this.getPixXWithinGrid(event,p_canvas)/this.pix.sideSpace); 
+    var indexY = Math.floor(this.getPixYWithinGrid(event,p_canvas)/this.pix.sideSpace);
 	if (indexX < 0 || indexX >= p_global.xLength || indexY < 0 || indexY >= p_global.yLength){
 		return null;		
 	}

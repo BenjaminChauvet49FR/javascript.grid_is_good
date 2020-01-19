@@ -1,17 +1,16 @@
 //TODO do something with that
 
 /**
-Returns the string to wallGrid format to be contained in local storage (must be rectangular and non-empty)
+Returns the string to be contained in local storage (must be rectangular and non-empty) from the SB puzzle
 X-empty ; 0 sides right and down open ; 1 side right closed ; 2 side down closed ; 3 side down closed.
 p_grid : the grid to be stringed
 */
-function wallGridToString(p_grid){
-	var yLength = p_grid.length;
-	var xLength = p_grid[0].length;
-	var answer = yLength+" "+xLength+" ";
+function starBattlePuzzleToString(p_grid,p_starBattleNumber){
+	var xyLength = p_grid.length; //TODO on s'assure que la dimension en X est égale à celle en Y n'est ce pas ?
+	var answer = xyLength+" "+p_starBattleNumber+" ";
 	var valueSpace;
-	for(var iy = 0;iy < yLength;iy++)
-		for(var ix = 0;ix < xLength;ix++){
+	for(var iy = 0;iy < xyLength;iy++)
+		for(var ix = 0;ix < xyLength;ix++){
 			if (p_grid[iy][ix].state == CLOSED){
 				answer+='X';
 			}
@@ -30,22 +29,21 @@ function wallGridToString(p_grid){
 }
 
 /**
-Returns the wallGrid from the string if it was previously serialized with the appropriate function gridToString
-p_string : the string to be turned into a grid
+Returns elements for the SB puzzle (grid + number of stars)
 */
-function stringToWallGrid(p_string){
+function stringToStarBattlePuzzle(p_string){
 	var stringArray = p_string.split(' ');
-	var yLength = stringArray[0];
-	var xLength = stringArray[1];
+	var xyLength = stringArray[0];
+	var stars= stringArray[1];
 	var fieldString = stringArray[2];
 	var answer = [];
-	for(iy=0;iy<yLength;iy++){
+	for(iy=0;iy<xyLength;iy++){
 		answer.push([]);
-		for(ix=0;ix<xLength;ix++){
-			answer[iy].push(charToSpace(fieldString.charAt(ix+iy*xLength)));
+		for(ix=0;ix<xyLength;ix++){
+			answer[iy].push(charToSpace(fieldString.charAt(ix+iy*xyLength)));
 		}
 	}
-	return answer;
+	return {grid:answer,starNumber:stars};
 }
 
 
@@ -63,23 +61,6 @@ function charToSpace(p_char){
 		case('3'): return {state:OPEN,wallD:CLOSED,wallR:CLOSED};break;
 		default : return {state:CLOSED,wallD:OPEN,wallR:OPEN};break;
 	}
-}
-
-
-/**
-Returns a region grid from a wall grid
-*/
-function regionGridToString(p_regionGrid){
-	const yLength = p_regionGrid.length;
-	const xLength = p_regionGrid[0].length;
-	var answer = "";
-	for(var iy = 0;iy < yLength;iy++){
-		for(var ix = 0;ix < xLength;ix++){
-			answer += (p_regionGrid[iy][ix] % 10) //TODO Le "mod 10" c'est pas top
-		}
-		answer += "\n"
-	}
-	return answer;
 }
 
 /**
