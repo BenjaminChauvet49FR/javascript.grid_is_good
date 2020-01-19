@@ -134,24 +134,6 @@ Drawer.prototype.wallToColor = function( p_wallType){
 	return "#ffffff";
 }
 
-/**
-Returns something from an array or for a negative value. 
-p_index : the index of the thing to return
-p_array : the array of possible things
-p_negative : the thing to return in case p_index is negative
-*/
-/*function indexRainbow(p_index,p_array,p_negative){
-	if (p_index < 0){
-		if (p_negative){
-			return p_negative;
-		}
-		return null;
-	}
-	if (p_array.length > p_index)
-		return p_array[p_index];
-	return null;
-
-}*/
 
 
 //---------------------
@@ -163,9 +145,8 @@ p_negative : the thing to return in case p_index is negative
 If a click is done on a space, otherwise return null
 */
 Drawer.prototype.getClickSpace = function(event,p_canvas,p_global){
-	var rect = p_canvas.getBoundingClientRect();
-    var indexX = Math.floor((event.clientX - rect.left - this.pix.marginGrid.left)/this.pix.sideSpace); 
-    var indexY = Math.floor((event.clientY - rect.top - this.pix.marginGrid.up)/this.pix.sideSpace);
+    var indexX = Math.floor(getPixXWithinGrid(event,p_canvas)/this.pix.sideSpace); 
+    var indexY = Math.floor(getPixYWithinGrid(event,p_canvas)/this.pix.sideSpace);
 	if (indexX < 0 || indexX >= p_global.xLength || indexY < 0 || indexY >= p_global.yLength){
 		return null;		
 	}
@@ -176,9 +157,8 @@ Drawer.prototype.getClickSpace = function(event,p_canvas,p_global){
 If a click is done when mouse is a right wall, returns the index of the corresponding space, otherwise return null
 */
 Drawer.prototype.getClickWallR = function(event,p_canvas,p_global){
-	var rect = p_canvas.getBoundingClientRect();
-	var pixX = (event.clientX - rect.left - this.pix.marginGrid.left); 
-    var pixY = (event.clientY - rect.top - this.pix.marginGrid.up);
+	var pixX = this.getPixXWithinGrid(event,p_canvas); 
+    var pixY = this.getPixYWithinGrid(event,p_canvas); 
 	var pixXModulo = (pixX+this.pix.borderClickDetection)%this.pix.sideSpace;
 	if (pixXModulo < 2*this.pix.borderClickDetection){
 		var answer = {
@@ -196,9 +176,8 @@ Drawer.prototype.getClickWallR = function(event,p_canvas,p_global){
 Same as above with down walls
 */
 Drawer.prototype.getClickWallD = function(event,p_canvas,p_global){
-	var rect = p_canvas.getBoundingClientRect();
-	var pixX = (event.clientX - rect.left - this.pix.marginGrid.left); 
-    var pixY = (event.clientY - rect.top - this.pix.marginGrid.up);
+	var pixX = this.getPixXWithinGrid(event,p_canvas); 
+    var pixY = this.getPixYWithinGrid(event,p_canvas); 
 	var pixYModulo = (pixY+this.pix.borderClickDetection)%this.pix.sideSpace;
 	if (pixYModulo < 2*this.pix.borderClickDetection){
 		var answer = {
@@ -210,4 +189,14 @@ Drawer.prototype.getClickWallD = function(event,p_canvas,p_global){
 		}
 	}  
 	return null;
+}
+
+//--------------------
+// Private functions
+Drawer.prototype.getPixXWithinGrid = function(event,p_canvas){
+	return (event.clientX - p_canvas.getBoundingClientRect().left - this.pix.marginGrid.left);
+}
+
+Drawer.prototype.getPixYWithinGrid = function(event,p_canvas){
+	return (event.clientY - p_canvas.getBoundingClientRect().top - this.pix.marginGrid.up);
 }

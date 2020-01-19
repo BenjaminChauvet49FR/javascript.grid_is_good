@@ -25,35 +25,6 @@ function clickCanvas(event,p_canvas,p_drawer,p_global){
 	}
 }
 
-/*function clickCanvas(event,p_canvas,p_pix,p_global) {
-    var rect = p_canvas.getBoundingClientRect();
-    var pixMouseX = event.clientX - rect.left - p_pix.marginGrid.left; 
-    var pixMouseY = event.clientY - rect.top - p_pix.marginGrid.up;
-	var spaceIndexX = Math.floor(pixMouseX/p_pix.sideSpace); //index of the space, calculated from the (x,y) position
-	var spaceIndexY = Math.floor(pixMouseY/p_pix.sideSpace); //same
-	p_global.regionGrid = null; 
-	var needToSwitchSpace = true;
-    if ((pixMouseX % p_pix.sideSpace) >= (p_pix.sideSpace-p_pix.borderClickDetection)){
-		p_global.switchWallR(spaceIndexX,spaceIndexY);
-		needToSwitchSpace = false;
-	}
-	if ((pixMouseX % p_pix.sideSpace <= p_pix.borderClickDetection-1) && spaceIndexX > 0){
-		p_global.switchWallR(spaceIndexX-1,spaceIndexY);
-		needToSwitchSpace = false;
-	}
-	if ((pixMouseY % p_pix.sideSpace) >= (p_pix.sideSpace-p_pix.borderClickDetection)){
-		p_global.switchWallD(spaceIndexX,spaceIndexY);
-		needToSwitchSpace = false;
-	}
-	if ((pixMouseY % p_pix.sideSpace <= p_pix.borderClickDetection-1) && spaceIndexY > 0){
-		p_global.switchWallD(spaceIndexX,spaceIndexY-1);
-		needToSwitchSpace = false;
-	}
-	if (needToSwitchSpace && (spaceIndexY >= 0) && (spaceIndexX >= 0) && (spaceIndexY <= p_global.yLength-1) && (spaceIndexX <= p_global.xLength-1)){
-		p_global.switchState(spaceIndexX,spaceIndexY);
-	}
-}*/
-
 /** Saves a walled grid into local storage 
 p_global : the Global item
 p_detachedName : the detached name (without the prefix) to store into local storage
