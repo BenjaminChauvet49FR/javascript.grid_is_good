@@ -2,11 +2,30 @@
 
 /**
  When you click on the canvas
- event : the clicking event
- p_pix : the Pix item
- o_global : the Global item
 */
-function clickCanvas(event,p_canvas,p_pix,p_global) {
+function clickCanvas(event,p_canvas,p_drawer,p_global){
+	var wallOK = false;
+	var indexWallR = p_drawer.getClickWallR(event,p_canvas,p_global);
+	var indexWallD = p_drawer.getClickWallD(event,p_canvas,p_global);
+	if (indexWallR != null){
+		p_global.switchWallR(indexWallR.x,indexWallR.y);
+		wallOK = true;
+	}
+	if (indexWallD != null){
+		p_global.switchWallD(indexWallD.x,indexWallD.y);
+		wallOK = true;
+	}
+	if (wallOK){
+		return;
+	}
+	var indexSpaces = p_drawer.getClickSpace(event,p_canvas,p_global);
+	console.log(indexSpaces);
+	if (indexSpaces != null){
+		p_global.switchState(indexSpaces.x,indexSpaces.y);
+	}
+}
+
+/*function clickCanvas(event,p_canvas,p_pix,p_global) {
     var rect = p_canvas.getBoundingClientRect();
     var pixMouseX = event.clientX - rect.left - p_pix.marginGrid.left; 
     var pixMouseY = event.clientY - rect.top - p_pix.marginGrid.up;
@@ -33,7 +52,7 @@ function clickCanvas(event,p_canvas,p_pix,p_global) {
 	if (needToSwitchSpace && (spaceIndexY >= 0) && (spaceIndexX >= 0) && (spaceIndexY <= p_global.yLength-1) && (spaceIndexX <= p_global.xLength-1)){
 		p_global.switchState(spaceIndexX,spaceIndexY);
 	}
-}
+}*/
 
 /** Saves a walled grid into local storage 
 p_global : the Global item
@@ -86,10 +105,10 @@ p_global : the Global item
 p_xLength : horizontal dimension
 p_yLength : vertical dimension
 */
-restartAction = function(p_canvas, p_pix, p_global, p_xLength, p_yLength){
+restartAction = function(p_canvas, p_drawer, p_global, p_xLength, p_yLength){
 	if (confirm("Redémarrer la grille ?")){
 		p_global.restartGrid(p_xLength,p_yLength);
-		adaptCanvas(p_canvas, p_pix,p_global);	
+		adaptCanvas(p_canvas, p_drawer,p_global);	
 	}
 }
 
@@ -99,7 +118,7 @@ p_canvas : the canvas to adapt
 p_pix : the Pix item to calculate coordinates
 p_global : the Global item the canvas should be adapted to
 */
-function adaptCanvas(p_canvas, p_pix,p_global){
-	p_canvas.width = p_global.xLength*p_pix.sideSpace+p_pix.marginGrid.left+p_pix.marginGrid.right;
-	p_canvas.height = p_global.yLength*p_pix.sideSpace+p_pix.marginGrid.up+p_pix.marginGrid.down;
+function adaptCanvas(p_canvas, p_drawer,p_global){
+	p_canvas.width = p_global.xLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.left+p_drawer.pix.marginGrid.right;
+	p_canvas.height = p_global.yLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.up+p_drawer.pix.marginGrid.down;
 }
