@@ -134,12 +134,32 @@ Drawer.prototype.wallToColor = function( p_wallType){
 	return "#ffffff";
 }
 
-
+//---------------------
+// Gets the leftmost/upmost/rightmost/downmost pixels of the inner of a desired space ;
+// May also get out of the bounds of the grid for, who knows, margin
+Drawer.prototype.getInnerXLeft = function(p_xIndex){
+	return this.pix.marginGrid.left+p_xIndex*this.pix.sideSpace+this.pix.borderSpace;
+}
+Drawer.prototype.getInnerYUp = function(p_yIndex){
+	return this.pix.marginGrid.up+p_yIndex*this.pix.sideSpace+this.pix.borderSpace;
+}
+Drawer.prototype.getInnerXRight = function(p_xIndex){
+	return this.pix.marginGrid.left+(p_xIndex+1)*this.pix.sideSpace-this.pix.borderSpace;
+}
+Drawer.prototype.getInnerYDown = function(p_yIndex){
+	return this.pix.marginGrid.up+(p_yIndex+1)*this.pix.sideSpace-this.pix.borderSpace;
+}
+Drawer.prototype.getCenterX = function(p_xIndex){
+	return this.pix.marginGrid.up+(p_xIndex+0.5)*this.pix.sideSpace;
+}
+Drawer.prototype.getCenterY = function(p_yIndex){
+	return this.pix.marginGrid.up+(p_yIndex+0.5)*this.pix.sideSpace;
+}
 
 //---------------------
 // All input functions
 
-//TODO improve me this !
+//Return coordinates of an element with the form {x: ... , y: ...} (space, wall ; upper-left = 0,0)
 
 /**
 If a click is done on a space, otherwise return null
