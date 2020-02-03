@@ -137,23 +137,26 @@ Drawer.prototype.wallToColor = function( p_wallType){
 //---------------------
 // Gets the leftmost/upmost/rightmost/downmost pixels of the inner of a desired space ;
 // May also get out of the bounds of the grid for, who knows, margin
-Drawer.prototype.getInnerXLeft = function(p_xIndex){
+Drawer.prototype.getPixInnerXLeft = function(p_xIndex){
 	return this.pix.marginGrid.left+p_xIndex*this.pix.sideSpace+this.pix.borderSpace;
 }
-Drawer.prototype.getInnerYUp = function(p_yIndex){
+Drawer.prototype.getPixInnerYUp = function(p_yIndex){
 	return this.pix.marginGrid.up+p_yIndex*this.pix.sideSpace+this.pix.borderSpace;
 }
-Drawer.prototype.getInnerXRight = function(p_xIndex){
+Drawer.prototype.getPixInnerXRight = function(p_xIndex){
 	return this.pix.marginGrid.left+(p_xIndex+1)*this.pix.sideSpace-this.pix.borderSpace;
 }
-Drawer.prototype.getInnerYDown = function(p_yIndex){
+Drawer.prototype.getPixInnerYDown = function(p_yIndex){
 	return this.pix.marginGrid.up+(p_yIndex+1)*this.pix.sideSpace-this.pix.borderSpace;
 }
-Drawer.prototype.getCenterX = function(p_xIndex){
+Drawer.prototype.getPixCenterX = function(p_xIndex){
 	return this.pix.marginGrid.up+(p_xIndex+0.5)*this.pix.sideSpace;
 }
-Drawer.prototype.getCenterY = function(p_yIndex){
+Drawer.prototype.getPixCenterY = function(p_yIndex){
 	return this.pix.marginGrid.up+(p_yIndex+0.5)*this.pix.sideSpace;
+}
+Drawer.prototype.getPixInnerSide = function(){
+	return this.pix.sideSpace-2*this.pix.borderSpace;
 }
 
 //---------------------
