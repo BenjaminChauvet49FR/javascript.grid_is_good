@@ -4,13 +4,18 @@ Draws the region indications within a space in each.
 function drawInsideIndications(p_context,p_drawer,p_colorDigits,p_global){
 	const fontSize = p_drawer.pix.sideSpace/3;
 	p_context.font = fontSize+"px Arial";
-	p_context.fillStyle = p_colorDigits.regionIndication;
 	var indexXFirstRegionSpace,indexYFirstRegionSpace;
 	var pixLeft,pixUp;
 	var textToWrite;
 	var firstRegionSpace;
 	for(var i=0;i<p_global.getRegionsNumber();i++){
 		firstRegionSpace = p_global.getFirstSpaceRegion(i);
+		if (p_global.getAnswer(firstRegionSpace.x,firstRegionSpace.y) == FILLING.YES){
+			p_context.fillStyle = p_colorDigits.insideIndicationsOnFilled;
+		}
+		else{
+			p_context.fillStyle = p_colorDigits.insideIndicationsOnWhite;			
+		}
 		pixLeft = p_drawer.getPixInnerXLeft(firstRegionSpace.x);
 		pixDown = p_drawer.getPixInnerYUp(firstRegionSpace.y)+fontSize;
 		textToWrite = p_global.getOsRemainRegion(i)+" "+p_global.getXsRemainRegion(i);

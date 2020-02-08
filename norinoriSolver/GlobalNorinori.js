@@ -97,8 +97,8 @@ GlobalNorinori.prototype.getAnswer = function(p_x,p_y){
 	return this.answerGrid[p_y][p_x];
 }
 
-GlobalNorinori.prototype.getOsRemain = function(p_i){return this.notPlacedYetByRegion[p_i].Os;}
-GlobalNorinori.prototype.getXsRemain = function(p_i){return this.notPlacedYetByRegion[p_i].Xs;}
+GlobalNorinori.prototype.getOsRemainRegion = function(p_i){return this.notPlacedYetByRegion[p_i].Os;}
+GlobalNorinori.prototype.getXsRemainRegion = function(p_i){return this.notPlacedYetByRegion[p_i].Xs;}
 GlobalNorinori.prototype.getFirstSpaceRegion = function(p_i){return this.spacesByRegion[p_i][0];}
 GlobalNorinori.prototype.getRegionsNumber = function(){return this.spacesByRegion.length;}
 

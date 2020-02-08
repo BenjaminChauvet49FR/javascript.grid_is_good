@@ -13,7 +13,9 @@ var colors={
 	edge_walls:'#000000',
 	bannedSpace:'#666666',
 	validSquare:'#000088',
-	rainbowSpaces:[]
+	rainbowSpaces:[],
+	insideIndicationsOnWhite:'#008800',
+	insideIndicationsOnFilled:'#00ff00',
 }
 
 //--------------------

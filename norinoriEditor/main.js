@@ -10,8 +10,6 @@ function drawCanvas(){
 	drawer.drawGrid(context,global);
 }
 
-
-
 var fieldName = document.getElementById("input_grid_name");
 var fieldX = document.getElementById("input_number_xLength");
 var fieldY = document.getElementById("input_number_yLength");
