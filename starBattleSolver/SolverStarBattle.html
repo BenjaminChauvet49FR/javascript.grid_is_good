@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    	<link rel="icon">
+		<link rel="icon" 
+		  type="image/png" 
+		  href="star.png">
+        <title>Star Battle solver !!!</title>
+		<link rel="stylesheet" type="text/css" href="../javascript.grid_is_good/style.css">
+    </head>
+    <body>
+		<img id="img_star" src="star.png" style="display:none">
+		<img id="img_x" src="x.png" style="display:none">
+				<!--img id="img_star" src="star.png">
+		<img id="img_x" src="x.png"-->
+		<canvas id="canevas" width="800" height="500">
+            Message pour les navigateurs ne supportant pas encore canvas.
+        </canvas></br>
+		Etoiles : <span id="span_stars"></span></br>
+		
+		Grille à charger : <input type="text" id="input_grid_name" value="SternenSchlacht15"></input> 
+		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
+		Action à réaliser : <span id="text_canvas_action"></span></br>
+		<input type="submit" id="submit_put_star" value="Placer ETOILE"></input></br>
+		<input type="submit" id="submit_put_X" value="Placer X"></input></br>
+		<input type="submit" id="submit_pass_region" value="Passe sur région"></input></br>
+		<input type="submit" id="submit_pass_row" value="Passe sur ligne"></input></br>
+		<input type="submit" id="submit_pass_column" value="Passe sur colonne"></input></br>
+		
+		Multipasse :
+		<input type="submit" id="submit_multiPass" value="Multi passe"></input></br>
+		
+		Résolution : 
+		<input type="submit" id="submit_solve" value="Résolution"></input></br>
+		
+		<input type="submit" id="submit_undo" value="Annuler"></input></br>	
+		
+
+        Afficher données : <input type="checkbox" id="checkbox_drawIndications" value="false"></span></br>
+		<textarea id="textarea_happened" style="width:100px; height:200px"></textarea> <!-- TODO ce sont des valeurs en dur-->
+		
+		<script src="../constants.js"></script>
+		<script src="../Drawer.js"></script>
+		<script src="../other.js"></script>
+		<script src="../starBattleEditor/saveLoad.js"></script>
+		<script src="../Global.js"></script>
+		<script src="constants.js"></script>
+		<script src="SpaceEvent.js"></script>
+		<script src="GlobalStarBattle.js"></script>
+		<script src="drawing.js"></script>
+		<script src="input.js"></script>
+		<script src="main.js"></script>
+	</body>
+</html>

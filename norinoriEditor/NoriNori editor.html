@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>En construction</title>
+		<link rel="stylesheet" type="text/css" href="../style.css">
+    </head>
+    <body>
+		<!-- Le fameux canevas -->
+		<canvas id="canevas" width="800" height="500">
+            Message pour les navigateurs ne supportant pas encore canvas.
+        </canvas></br>
+		
+		<input type="submit" id="submit_show_region_grid" value="Donner les régions de la grille"></input></br>
+		Grille à sauver/charger : <input type="text" id="input_grid_name" value="default"></input>
+		<input type="submit" id="submit_save_grid" value="Sauver"></input>
+		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
+		
+		Largeur : <input type="number" id="input_number_xLength" value="10"></input>
+		Hauteur : <input type="number" id="input_number_yLength" value="10"></input>
+
+		<input type="submit" id="submit_new_grid" value="Nouvelle grille"></input></br>
+
+	
+		<script src="../constants.js"></script>
+		<script src="../Global.js"></script>
+		<script src="../Drawer.js"></script>
+		<script src="input.js"></script>
+		<script src="saveLoad.js"></script>
+		<script src="main.js"></script>
+	</body>
+</html>
