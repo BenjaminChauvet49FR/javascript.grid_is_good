@@ -202,7 +202,82 @@ GlobalNorinori.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 		ok = (putNewResult != RESULT.ERROR);
 		if (putNewResult == RESULT.SUCCESS){
 			r = this.getRegion(x,y); //(y,x) might be out of bounds, if so the putNewResult isn't supposed to be RESULT.SUCCESS. Hence the check only here.
-			//Faire l'intelligence !
+			//Final alert on region
+			if (this.notPlacedYetByRegion[r].Os == 0){
+				var spaceInRegion;
+				for(var si=0;si< this.spacesByRegion[r].length;si++){
+					spaceInRegion = this.spacesByRegion[r][si];
+					if (this.answerGrid[spaceInRegion.y][spaceInRegion.x] == FILLING.UNDECIDED){
+						eventsToAdd.push(loggedSpaceEvent(FILLING.NO,spaceInRegion.x,spaceInRegion.y));
+					}
+				}
+			}
+			if (this.notPlacedYetByRegion[r].Xs == 0){
+				var spaceInRegion;
+				for(var si=0;si< this.spacesByRegion[r].length;si++){
+					spaceInRegion = this.spacesByRegion[r][si];
+					if (this.answerGrid[spaceInRegion.y][spaceInRegion.x] == FILLING.UNDECIDED){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,spaceInRegion.x,spaceInRegion.y)));
+					}
+				}
+			}
+			if (symbol == FILLING.YES){
+				//Alert on diagonally adjacent colored space && formed domino (down & up)
+				if (y > 0){
+					if ((x > 0 && this.answerGrid[y-1][x-1]) == FILLING.YES){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y-1)));
+					}
+					if ((x < this.xLength-1 && this.answerGrid[y-1][x+1]) == FILLING.YES){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y-1)));
+					}
+					if (this.answerGrid[y-1][x] == FILLING.YES){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y-2)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y+1)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y-1)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y-1)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y)));
+					}
+					
+				}
+				if (y < this.yLength-1){
+					if ((x > 0 && this.answerGrid[y+1][x-1]) == FILLING.YES){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y+1)));
+					}
+					if ((x < this.xLength-1 && this.answerGrid[y+1][x+1]) == FILLING.YES){						
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y+1)));
+					}
+					if (this.answerGrid[y+1][x] == FILLING.YES){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y+2)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y-1)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y+1)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y+1)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y)));
+					}
+				}
+				//Formed domino (left & right)
+				if (x < this.xLength-1 && (this.answerGrid[y][x+1] == FILLING.YES)){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+2,y)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y-1)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y+1)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y-1)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y+1)));
+				}
+				if (x > 0 && (this.answerGrid[y][x-1] == FILLING.YES)){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-2,y)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y-1)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y+1)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y-1)));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y+1)));
+				}
+			}
 			eventsApplied.push(spaceEventToApply);
 		} // if RESULT.SUCCESS
 	}
@@ -240,6 +315,14 @@ GlobalNorinori.prototype.undoList = function(p_list){
 		spaceEventToUndo = p_list.pop();
 		this.remove(spaceEventToUndo.x,spaceEventToUndo.y);
 	}
+}
+
+/**
+Logs that a space event is pushed into a list (in the calling function !) and returns the space event !
+*/
+function loggedSpaceEvent(spaceEvt){
+	debugTryToPutNew("Event pushed : "+spaceEvt.toString());
+	return spaceEvt
 }
 
 //--------------
