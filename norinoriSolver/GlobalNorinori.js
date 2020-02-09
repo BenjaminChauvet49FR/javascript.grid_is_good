@@ -4,6 +4,7 @@ function GlobalNorinori(p_wallGrid){
 	this.answerGrid = [];
 	this.spacesByRegion =  [];
 	this.notPlacedYetByRegion = [];
+	this.neighborsGrid = [];
 	this.happenedEvents = [];	
 	this.loadIntelligence(); 
 }
@@ -20,6 +21,7 @@ GlobalNorinori.prototype.loadIntelligence = function(){
 	this.listSpacesByRegion(); //spacesByRegion
 	this.buildPossibilities(); //notPlacedYetByRegion
 	this.buildAnswerGrid(); //answerGrid
+	this.buildNeighborsGrid(); //neighborsGrid
 	this.purifyAnswerGrid(); 
 	this.happenedEvents = [];
 }
@@ -37,6 +39,7 @@ GlobalNorinori.prototype.buildAnswerGrid = function(){
 	}
 }
 
+//TODO update this description
 /**
 Puts NOs into the answerGrid corresponding to banned spaces 
 Precondition : both spacesByRegion and notPlacedYetByRegion have been refreshed and answerGrid is ok.
@@ -52,6 +55,33 @@ GlobalNorinori.prototype.purifyAnswerGrid = function(){
 	}
 }
 
+/**
+Sets up the neighbor grid
+Precondition : xLength and yLength are known
+*/
+GlobalNorinori.prototype.buildNeighborsGrid = function(){
+	this.neighborsGrid = [];
+	for(var iy=0;iy<this.yLength;iy++){
+		this.neighborsGrid.push([]);
+		for(var ix=0;ix<this.xLength;ix++){
+			this.neighborsGrid[iy].push({undecided : 4, Os : 0});
+		}
+	}
+	for(var iy=1;iy<this.yLength-1;iy++){
+		this.neighborsGrid[iy][0].undecided = 3;
+		this.neighborsGrid[iy][this.xLength-1].undecided = 3;
+	}
+	for(var ix=1;ix<this.yLength-1;ix++){
+		this.neighborsGrid[0][ix].undecided =  3;
+		this.neighborsGrid[this.yLength-1][ix].undecided = 3;
+	}
+	this.neighborsGrid[0][0].undecided = 2;
+	this.neighborsGrid[0][this.xLength-1].undecided = 2;
+	this.neighborsGrid[this.yLength-1][0].undecided = 2;
+	this.neighborsGrid[this.yLength-1][this.xLength-1].undecided = 2;
+}
+
+//TODO modify this description
 /**
 Sets the list of spaces for each row and column (might be exportated)
 Hyphothesis : all non-banned regions are numbered from 0 to n-1 ; banned spaces have lower-than-0 numbers
@@ -138,10 +168,31 @@ GlobalNorinori.prototype.putNew = function(p_x,p_y,p_symbol){
 		var indexRegion = this.getRegion(p_x,p_y);
 		if (p_symbol == FILLING.YES){
 			this.notPlacedYetByRegion[indexRegion].Os--;
-		}
-		if (p_symbol == FILLING.NO){
+			if (p_x > 0){
+				this.neighborsGrid[p_y][p_x-1].Os++;
+				this.neighborsGrid[p_y][p_x-1].undecided--;	
+			}if (p_y > 0){
+				this.neighborsGrid[p_y-1][p_x].Os++;
+				this.neighborsGrid[p_y-1][p_x].undecided--;	
+			}if (p_x < this.xLength-1){
+				this.neighborsGrid[p_y][p_x+1].Os++;
+				this.neighborsGrid[p_y][p_x+1].undecided--;	
+			}if (p_y < this.yLength-1){
+				this.neighborsGrid[p_y+1][p_x].Os++;
+				this.neighborsGrid[p_y+1][p_x].undecided--;	
+			}
+		} else if (p_symbol == FILLING.NO){
 			if (indexRegion >= 0){
 				this.notPlacedYetByRegion[indexRegion].Xs--;				
+			}
+			if (p_x > 0){
+				this.neighborsGrid[p_y][p_x-1].undecided--;	
+			}if (p_y > 0){
+				this.neighborsGrid[p_y-1][p_x].undecided--;	
+			}if (p_x < this.xLength-1){
+				this.neighborsGrid[p_y][p_x+1].undecided--;	
+			}if (p_y < this.yLength-1){
+				this.neighborsGrid[p_y+1][p_x].undecided--;	
 			}
 		}
 		return RESULT.SUCCESS;
@@ -162,9 +213,31 @@ GlobalNorinori.prototype.remove = function(p_x,p_y){
 	debugTryToPutNew("Removing the following : "+p_x+" "+p_y+" "+symbol);
 	if (symbol == FILLING.YES){
 		this.notPlacedYetByRegion[indexRegion].Os++;
+		if (p_x > 0){
+			this.neighborsGrid[p_y][p_x-1].Os--;
+			this.neighborsGrid[p_y][p_x-1].undecided++;	
+		}if (p_y > 0){
+			this.neighborsGrid[p_y-1][p_x].Os--;
+			this.neighborsGrid[p_y-1][p_x].undecided++;	
+		}if (p_x < this.xLength-1){
+			this.neighborsGrid[p_y][p_x+1].Os--;
+			this.neighborsGrid[p_y][p_x+1].undecided++;	
+		}if (p_y < this.yLength-1){
+			this.neighborsGrid[p_y+1][p_x].Os--;
+			this.neighborsGrid[p_y+1][p_x].undecided++;	
+		}
 	}
 	if (symbol == FILLING.NO){
 		this.notPlacedYetByRegion[indexRegion].Xs++;
+		if (p_x > 0){
+			this.neighborsGrid[p_y][p_x-1].undecided++;	
+		}if (p_y > 0){
+			this.neighborsGrid[p_y-1][p_x].undecided++;	
+		}if (p_x < this.xLength-1){
+			this.neighborsGrid[p_y][p_x+1].undecided++;	
+		}if (p_y < this.yLength-1){
+			this.neighborsGrid[p_y+1][p_x].undecided++;	
+		}
 	}
 }
 
@@ -208,7 +281,7 @@ GlobalNorinori.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 				for(var si=0;si< this.spacesByRegion[r].length;si++){
 					spaceInRegion = this.spacesByRegion[r][si];
 					if (this.answerGrid[spaceInRegion.y][spaceInRegion.x] == FILLING.UNDECIDED){
-						eventsToAdd.push(loggedSpaceEvent(FILLING.NO,spaceInRegion.x,spaceInRegion.y));
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,spaceInRegion.x,spaceInRegion.y)));
 					}
 				}
 			}
@@ -222,61 +295,41 @@ GlobalNorinori.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 				}
 			}
 			if (symbol == FILLING.YES){
-				//Alert on diagonally adjacent colored space && formed domino (down & up)
+				//Alert on formed domino (down & up)
+				//If not, neighbors are undecided and now have exactly 2 Os neighbors (reminder : they are added one by one) : 
+				
 				if (y > 0){
-					if ((x > 0 && this.answerGrid[y-1][x-1]) == FILLING.YES){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y-1)));
-					}
-					if ((x < this.xLength-1 && this.answerGrid[y-1][x+1]) == FILLING.YES){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y-1)));
-					}
 					if (this.answerGrid[y-1][x] == FILLING.YES){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y-2)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y+1)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y-1)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y-1)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y)));
+						eventsToAdd=pushEventsDominoMadeVertical(eventsToAdd,x,y-1);
+					} else if (this.neighborsGrid[y-1][x].Os == 2){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y-1)));
 					}
-					
 				}
 				if (y < this.yLength-1){
-					if ((x > 0 && this.answerGrid[y+1][x-1]) == FILLING.YES){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y+1)));
-					}
-					if ((x < this.xLength-1 && this.answerGrid[y+1][x+1]) == FILLING.YES){						
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y+1)));
-					}
 					if (this.answerGrid[y+1][x] == FILLING.YES){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y+2)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y-1)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y+1)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y+1)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y)));
+						eventsToAdd=pushEventsDominoMadeVertical(eventsToAdd,x,y);
+					} else if (this.neighborsGrid[y+1][x].Os == 2){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y+1)));
 					}
 				}
-				//Formed domino (left & right)
-				if (x < this.xLength-1 && (this.answerGrid[y][x+1] == FILLING.YES)){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+2,y)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y-1)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y+1)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y-1)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y+1)));
+				if (x < this.xLength-1){
+					if(this.answerGrid[y][x+1] == FILLING.YES){
+						eventsToAdd=pushEventsDominoMadeHorizontal(eventsToAdd,x,y);
+					} else if (this.neighborsGrid[y][x+1].Os == 2){
+							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y)));
+					}
 				}
-				if (x > 0 && (this.answerGrid[y][x-1] == FILLING.YES)){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-2,y)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y-1)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y+1)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y-1)));
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y+1)));
-				}
+				if (x > 0) {
+					if(this.answerGrid[y][x-1] == FILLING.YES){
+						eventsToAdd=pushEventsDominoMadeHorizontal(eventsToAdd,x-1,y);
+					} else if (this.neighborsGrid[y][x-1].Os == 2){
+							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y)));
+					}
+				}				
+				//Si la case nouvellement remplie a exactement un voisin incertain (aucun domino n'a été formé sinon elle en aurait 0) : annoncer le domino ! 
+			}
+			if (symbol == FILLING.NO){
+				//Si la case nouvellement rejetée a des voisins remplis : regarder leur nouveau nombre de "voisins incertains". S'il est de 0, c'est bon !
 			}
 			eventsApplied.push(spaceEventToApply);
 		} // if RESULT.SUCCESS
@@ -294,6 +347,39 @@ GlobalNorinori.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 		return {eventsApplied:eventsApplied,coherence:COHERENCE.SUCCESS};
 	}
 }
+
+function pushEventsDominoMadeHorizontal(p_eventsToAdd,p_xLeft,p_yLeft){
+	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xLeft+2,p_yLeft)));
+	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xLeft-1,p_yLeft)));
+	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xLeft,p_yLeft-1)));
+	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xLeft,p_yLeft+1)));
+	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xLeft+1,p_yLeft-1)));
+	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xLeft+1,p_yLeft+1)));
+	return p_eventsToAdd;
+}
+
+function pushEventsDominoMadeVertical(p_eventsToAdd,p_xUp,p_yUp){
+	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xUp,p_yUp+2)));
+	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xUp,p_yUp-1)));
+	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xUp-1,p_yUp+1)));
+	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xUp+1,p_yUp+1)));
+	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xUp-1,p_yUp)));
+	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xUp+1,p_yUp)));
+	return p_eventsToAdd;
+}
+
+/*
+Reprenons :
+On place un O (non foireux, ie il n'y a pas déjà un X) :
+Si la case au-dessus existe et contient un O, on complète le domino ! (répéter avec gauche, bas, droite)
+Si la case diagonal gauche existe et contient un O, on met des X dans les cases séparant. (répeter avec 3 autres diagonales)
+Si la case 2x au-dessus existe et contient un O, on met des X dans les cases séparant.
+Si la case nouvellement remplie a exactement un voisin incertain (aucun domino n'a été formé sinon on aurait déjà vu le domino) : compléter le domino !
+
+On place un X non foireux :
+Si la case au-dessus n'a désormais que des voisins à X (donc aucun incertain) : on met un X.
+*/
+
 
 /**
 Cancel the last list of events since the last "non-deducted" space. TODO : change this name.
