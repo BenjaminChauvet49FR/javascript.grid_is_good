@@ -71,7 +71,7 @@ GlobalNorinori.prototype.buildNeighborsGrid = function(){
 		this.neighborsGrid[iy][0].undecided = 3;
 		this.neighborsGrid[iy][this.xLength-1].undecided = 3;
 	}
-	for(var ix=1;ix<this.yLength-1;ix++){
+	for(var ix=1;ix<this.xLength-1;ix++){
 		this.neighborsGrid[0][ix].undecided =  3;
 		this.neighborsGrid[this.yLength-1][ix].undecided = 3;
 	}
@@ -163,6 +163,7 @@ GlobalNorinori.prototype.putNew = function(p_x,p_y,p_symbol){
 	(this.answerGrid[p_y][p_x] == p_symbol)){
 		return RESULT.HARMLESS;
 	}
+	debugTryToPutNew("Putting into grid : "+p_x+" "+p_y+" "+p_symbol);
 	if (this.answerGrid[p_y][p_x] == FILLING.UNDECIDED){
 		this.answerGrid[p_y][p_x] = p_symbol;
 		var indexRegion = this.getRegion(p_x,p_y);
@@ -270,7 +271,6 @@ GlobalNorinori.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 		x = spaceEventToApply.x;
 		y = spaceEventToApply.y;
 		symbol = spaceEventToApply.symbol;
-		debugTryToPutNew("Now let's try to add : "+spaceEventToApply.toString());
 		putNewResult = this.putNew(x, y,symbol);
 		ok = (putNewResult != RESULT.ERROR);
 		if (putNewResult == RESULT.SUCCESS){
@@ -296,40 +296,119 @@ GlobalNorinori.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 			}
 			if (symbol == FILLING.YES){
 				//Alert on formed domino (down & up)
-				//If not, neighbors are undecided and now have exactly 2 Os neighbors (reminder : they are added one by one) : 
-				
-				if (y > 0){
+				//If not, if neighbors are undecided and now have exactly 2 Os neighbors (reminder : they are added one by one)
+				//If this space has exactly one undecided neighbor and no O :
+				var notPartOfDomino = (this.neighborsGrid[y][x].Os == 0);
+				var exactlyOneUndecidedNeighbor = (this.neighborsGrid[y][x].undecided == 1);
+				var toBeMerged = (notPartOfDomino && exactlyOneUndecidedNeighbor);
+				if (y > 0){ // Up
 					if (this.answerGrid[y-1][x] == FILLING.YES){
 						eventsToAdd=pushEventsDominoMadeVertical(eventsToAdd,x,y-1);
 					} else if (this.neighborsGrid[y-1][x].Os == 2){
 						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y-1)));
 					}
+					if(toBeMerged && this.answerGrid[y-1][x] == FILLING.UNDECIDED){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x,y-1)));
+					}
 				}
-				if (y < this.yLength-1){
+				if (y < this.yLength-1){ //Down
 					if (this.answerGrid[y+1][x] == FILLING.YES){
 						eventsToAdd=pushEventsDominoMadeVertical(eventsToAdd,x,y);
 					} else if (this.neighborsGrid[y+1][x].Os == 2){
 						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y+1)));
 					}
-				}
-				if (x < this.xLength-1){
-					if(this.answerGrid[y][x+1] == FILLING.YES){
-						eventsToAdd=pushEventsDominoMadeHorizontal(eventsToAdd,x,y);
-					} else if (this.neighborsGrid[y][x+1].Os == 2){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y)));
+					if(toBeMerged && this.answerGrid[y+1][x] == FILLING.UNDECIDED){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x,y+1)));
 					}
 				}
-				if (x > 0) {
+				if (x > 0) { //Left
 					if(this.answerGrid[y][x-1] == FILLING.YES){
 						eventsToAdd=pushEventsDominoMadeHorizontal(eventsToAdd,x-1,y);
 					} else if (this.neighborsGrid[y][x-1].Os == 2){
 							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y)));
 					}
-				}				
-				//Si la case nouvellement remplie a exactement un voisin incertain (aucun domino n'a été formé sinon elle en aurait 0) : annoncer le domino ! 
+					if(toBeMerged && this.answerGrid[y][x-1] == FILLING.UNDECIDED){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x-1,y)));
+					}
+				}		
+				if (x < this.xLength-1){ //Right
+					if(this.answerGrid[y][x+1] == FILLING.YES){
+						eventsToAdd=pushEventsDominoMadeHorizontal(eventsToAdd,x,y);
+					} else if (this.neighborsGrid[y][x+1].Os == 2){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y)));
+					}
+					if(toBeMerged && this.answerGrid[y][x+1] == FILLING.UNDECIDED){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x+1,y)));
+					}
+				}
 			}
 			if (symbol == FILLING.NO){
-				//Si la case nouvellement rejetée a des voisins remplis : regarder leur nouveau nombre de "voisins incertains". S'il est de 0, c'est bon !
+				//Si la case nouvellement rejetée a des voisins vides : regarder leur nouveau nombre de "voisins incertains". S'il est de 0, c'est bon !
+				if (y > 0){ // Up
+					if ((this.neighborsGrid[y-1][x].undecided == 0) && (this.neighborsGrid[y-1][x].Os == 0)){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y-1)));
+					}
+					//if (this.answerGrid[y-1][x] == FILLING.YES && this.neighborsGrid[y-1][x].undecided == 1 && this.neighborsGrid[y-1][x].Os == 0){
+					if (this.readyToBeCompletedDomino(x,y-1)){
+						debugTryToPutNew("Domino "+x+" "+(y-1)+" ready for completion");
+						if (this.emptyLeftwards(x,y-1)){
+							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x-1,y-1)));
+						}else if (this.emptyUpwards(x,y-1)){
+							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x,y-2)));
+						}else{
+							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x+1,y-1)));
+						}
+					}
+				}
+				if (y < this.yLength-1){ //Down
+					if ((this.neighborsGrid[y+1][x].undecided == 0) && (this.neighborsGrid[y+1][x].Os == 0)){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y+1)));
+					}
+					//if (this.answerGrid[y+1][x] == FILLING.YES && this.neighborsGrid[y+1][x].undecided == 1){
+					if (this.readyToBeCompletedDomino(x,y+1)){
+						debugTryToPutNew("Domino "+x+" "+(y+1)+" ready for completion");
+						if (this.emptyRightwards(x,y+1)){
+							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x+1,y+1)));
+						}else if (this.emptyDownwards(x,y+1)){
+							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x,y+2)));
+						}else{
+							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x-1,y+1)));
+						}
+					}
+				}
+				if (x > 0) { //Left
+					if ((this.neighborsGrid[y][x-1].undecided == 0) && (this.neighborsGrid[y][x-1].Os == 0)){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y)));
+					}
+					//if (this.answerGrid[y][x-1] == FILLING.YES && this.neighborsGrid[y][x-1].undecided == 1){
+					if (this.readyToBeCompletedDomino(x-1,y)){
+						debugTryToPutNew("Domino "+(x-1)+" "+y+" ready for completion");
+						if (this.emptyDownwards(x-1,y)){
+							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x-1,y+1)));
+						}else if (this.emptyLeftwards(x-1,y)){
+							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x-2,y)));
+						}else{
+							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x-1,y-1)));
+						}
+					}
+				}		
+				if (x < this.xLength-1){ //Right
+					if ((this.neighborsGrid[y][x+1].undecided == 0) && (this.neighborsGrid[y][x+1].Os == 0)){
+						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y)));
+					}
+					//if (this.answerGrid[y][x+1] == FILLING.YES && this.neighborsGrid[y][x+1].undecided == 1){
+					if (this.readyToBeCompletedDomino(x+1,y)){	
+						debugTryToPutNew("Domino "+(x+1)+" "+y+" ready for completion");					
+						if (this.emptyUpwards(x+1,y)){
+							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x+1,y-1)));
+						}else if (this.emptyRightwards(x+1,y)){
+							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x+2,y)));
+						}else{
+							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x+1,y+1)));
+						}
+					}
+				}
+			
 			}
 			eventsApplied.push(spaceEventToApply);
 		} // if RESULT.SUCCESS
@@ -348,6 +427,9 @@ GlobalNorinori.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 	}
 }
 
+/**
+Pushes six events corresponding to the surroundings of an horizontal domino given the left space
+*/
 function pushEventsDominoMadeHorizontal(p_eventsToAdd,p_xLeft,p_yLeft){
 	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xLeft+2,p_yLeft)));
 	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xLeft-1,p_yLeft)));
@@ -358,6 +440,10 @@ function pushEventsDominoMadeHorizontal(p_eventsToAdd,p_xLeft,p_yLeft){
 	return p_eventsToAdd;
 }
 
+
+/**
+Pushes six events corresponding to the surroundings of a vertical domino given the up space
+*/
 function pushEventsDominoMadeVertical(p_eventsToAdd,p_xUp,p_yUp){
 	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xUp,p_yUp+2)));
 	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xUp,p_yUp-1)));
@@ -368,13 +454,29 @@ function pushEventsDominoMadeVertical(p_eventsToAdd,p_xUp,p_yUp){
 	return p_eventsToAdd;
 }
 
+GlobalNorinori.prototype.emptyUpwards = function(p_x,p_y){
+	return ((p_y > 0) &&  this.answerGrid[p_y-1][p_x] == FILLING.UNDECIDED);
+}
+GlobalNorinori.prototype.emptyDownwards = function(p_x,p_y){
+	return ((p_y < this.yLength-1) && this.answerGrid[p_y+1][p_x] == FILLING.UNDECIDED);
+}
+GlobalNorinori.prototype.emptyLeftwards = function(p_x,p_y){
+	return ((p_x > 0) && this.answerGrid[p_y][p_x-1] == FILLING.UNDECIDED);
+}
+GlobalNorinori.prototype.emptyRightwards = function(p_x,p_y){
+	return ((p_x < this.xLength-1) && this.answerGrid[p_y][p_x+1] == FILLING.UNDECIDED);
+}
+GlobalNorinori.prototype.readyToBeCompletedDomino = function(p_x,p_y){
+	return (this.answerGrid[p_y][p_x] == FILLING.YES) && (this.neighborsGrid[p_y][p_x].undecided == 1) && (this.neighborsGrid[p_y][p_x].Os == 0);
+}
+
 /*
 Reprenons :
 On place un O (non foireux, ie il n'y a pas déjà un X) :
 Si la case au-dessus existe et contient un O, on complète le domino ! (répéter avec gauche, bas, droite)
 Si la case diagonal gauche existe et contient un O, on met des X dans les cases séparant. (répeter avec 3 autres diagonales)
 Si la case 2x au-dessus existe et contient un O, on met des X dans les cases séparant.
-Si la case nouvellement remplie a exactement un voisin incertain (aucun domino n'a été formé sinon on aurait déjà vu le domino) : compléter le domino !
+Si la case nouvellement remplie a exactement un voisin incertain ET n'est pas relié à une case remplie : domino !
 
 On place un X non foireux :
 Si la case au-dessus n'a désormais que des voisins à X (donc aucun incertain) : on met un X.
