@@ -50,7 +50,7 @@ loadAction = function(p_canvas,p_drawer,p_global,p_detachedName,p_xLengthField,p
 		if (confirm("Charger la grille "+localStorageName+" ?")){
 			var answer = stringToNorinoriPuzzle(localStorage.getItem(localStorageName));
 			p_global.loadGrid(answer.grid);
-			adaptCanvas(p_canvas,p_drawer,p_global);	
+			adaptCanvasAndGrid(p_canvas,p_drawer,p_global);	
 			p_xLengthField.value = answer.grid[0].length;
 			p_yLengthField.value = answer.grid.length;
 		}
@@ -78,7 +78,7 @@ p_yLength : vertical dimension
 restartAction = function(p_canvas, p_drawer, p_global, p_xLength, p_yLength){
 	if (confirm("Redémarrer la grille ?")){
 		p_global.restartGrid(p_xLength,p_yLength);
-		adaptCanvas(p_canvas, p_drawer,p_global);	
+		adaptCanvasAndGrid(p_canvas, p_drawer,p_global);	
 	}
 }
 
@@ -88,7 +88,13 @@ p_canvas : the canvas to adapt
 p_pix : the Pix item to calculate coordinates
 p_global : the Global item the canvas should be adapted to
 */
-function adaptCanvas(p_canvas, p_drawer,p_global){
+function adaptCanvasAndGrid(p_canvas, p_drawer,p_global){
+	//Respects dimension of 800x512
+	//TODO Constants can be written somewhere else !
+	p_drawer.pix.sideSpace = Math.min(32,Math.min(Math.floor(800/p_global.xLength),Math.floor(512/p_global.yLength)));
+	p_drawer.pix.borderSpace = Math.max(1,Math.floor(p_drawer.pix.sideSpace/10));
+	p_drawer.setMarginGrid(0,0,0,0);
+	//TODO should be factorized with other editors !
 	p_canvas.width = p_global.xLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.left+p_drawer.pix.marginGrid.right;
 	p_canvas.height = p_global.yLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.up+p_drawer.pix.marginGrid.down;
 }

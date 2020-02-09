@@ -14,7 +14,7 @@ var fieldName = document.getElementById("input_grid_name");
 var fieldX = document.getElementById("input_number_xLength");
 var fieldY = document.getElementById("input_number_yLength");
 
-adaptCanvas(canevas,drawer,global);
+adaptCanvasAndGrid(canevas,drawer,global);
 document.getElementById("submit_save_grid").addEventListener('click',function(event){saveAction(global,fieldName.value)});
 document.getElementById("submit_load_grid").addEventListener('click',function(event){loadAction(canevas,drawer,global,fieldName.value,fieldX,fieldY)});
 document.getElementById("submit_show_region_grid").addEventListener('click',function(event){readRegionGrid(global)});

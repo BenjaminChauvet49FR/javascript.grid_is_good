@@ -163,7 +163,7 @@ GlobalNorinori.prototype.putNew = function(p_x,p_y,p_symbol){
 	(this.answerGrid[p_y][p_x] == p_symbol)){
 		return RESULT.HARMLESS;
 	}
-	debugTryToPutNew("Putting into grid : "+p_x+" "+p_y+" "+p_symbol);
+	debugTryToPutNewGold("Putting into grid : "+p_x+" "+p_y+" "+p_symbol);
 	if (this.answerGrid[p_y][p_x] == FILLING.UNDECIDED){
 		this.answerGrid[p_y][p_x] = p_symbol;
 		var indexRegion = this.getRegion(p_x,p_y);
@@ -199,7 +199,7 @@ GlobalNorinori.prototype.putNew = function(p_x,p_y,p_symbol){
 		return RESULT.SUCCESS;
 	}
 	if (this.answerGrid[p_y][p_x] != p_symbol){
-		debugTryToPutNew("NOOOO !");
+		debugTryToPutNewGold("NOOOO !");
 		return RESULT.ERROR;
 	}
 }
@@ -341,6 +341,27 @@ GlobalNorinori.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x+1,y)));
 					}
 				}
+				//First O of a region
+				if (this.notPlacedYetByRegion[r].Os == 1){ 
+					if (!(this.hasNeighborMergeable(r,x,y))){ //If we have put an O into a space without a foreign undecided neighbor OR a X :
+						debugTryToPutNew("Well, this has no neighbor mergeable");
+						for(var si=0;si< this.spacesByRegion[r].length;si++){ // Fill all unreachable spaces with X.
+							spaceInRegion = this.spacesByRegion[r][si];
+							if (this.answerGrid[spaceInRegion.y][spaceInRegion.x] == FILLING.UNDECIDED && (!adjacentOrIdentical(spaceInRegion.x,spaceInRegion.y,x,y))){
+								eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,spaceInRegion.x,spaceInRegion.y)));
+							}
+						}
+					}
+					else{
+						debugTryToPutNew("This has neighbor mergeable");
+						for(var si=0;si< this.spacesByRegion[r].length;si++){ //Fill all spaces that won't be part of a domino with X
+							spaceInRegion = this.spacesByRegion[r][si];
+							if ((this.answerGrid[spaceInRegion.y][spaceInRegion.x] == FILLING.UNDECIDED) && (!this.hasNeighborMergeable(r,spaceInRegion.x,spaceInRegion.y))){
+								eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,spaceInRegion.x,spaceInRegion.y)));
+							}
+						}
+					}
+				}
 			}
 			if (symbol == FILLING.NO){
 				//Si la case nouvellement rejetée a des voisins vides : regarder leur nouveau nombre de "voisins incertains". S'il est de 0, c'est bon !
@@ -422,7 +443,7 @@ GlobalNorinori.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 	
 	//Actually it's fine !
 	else{
-		debugTryToPutNew("Yes !-----------------"); 
+		debugTryToPutNewGold("Yes !-----------------"); 
 		return {eventsApplied:eventsApplied,coherence:COHERENCE.SUCCESS};
 	}
 }
@@ -470,18 +491,40 @@ GlobalNorinori.prototype.readyToBeCompletedDomino = function(p_x,p_y){
 	return (this.answerGrid[p_y][p_x] == FILLING.YES) && (this.neighborsGrid[p_y][p_x].undecided == 1) && (this.neighborsGrid[p_y][p_x].Os == 0);
 }
 
+GlobalNorinori.prototype.isNeighborMergeable = function(p_indexRegion,p_x,p_y){
+	return ((this.answerGrid[p_y][p_x] == FILLING.YES) || ((this.regionGrid[p_y][p_x] != p_indexRegion) && (this.answerGrid[p_y][p_x] == FILLING.UNDECIDED)));
+}
+
+GlobalNorinori.prototype.hasNeighborMergeable = function(p_indexRegion,p_x,p_y){
+	return ((p_x > 0 && this.isNeighborMergeable(p_indexRegion,p_x-1,p_y)) ||
+		   (p_y > 0 && this.isNeighborMergeable(p_indexRegion,p_x,p_y-1)) ||
+		   ((p_x < this.xLength - 1) && this.isNeighborMergeable(p_indexRegion,p_x+1,p_y)) ||
+		   ((p_y < this.yLength - 1) && this.isNeighborMergeable(p_indexRegion,p_x,p_y+1)));
+}
+
 /*
-Reprenons :
-On place un O (non foireux, ie il n'y a pas déjà un X) :
-Si la case au-dessus existe et contient un O, on complète le domino ! (répéter avec gauche, bas, droite)
-Si la case diagonal gauche existe et contient un O, on met des X dans les cases séparant. (répeter avec 3 autres diagonales)
-Si la case 2x au-dessus existe et contient un O, on met des X dans les cases séparant.
-Si la case nouvellement remplie a exactement un voisin incertain ET n'est pas relié à une case remplie : domino !
+Autres pistes à exploiter :
+->3 cases diagonalement consécutives ne peuvent être toutes coloriées (à cause de celle du milieu)
 
-On place un X non foireux :
-Si la case au-dessus n'a désormais que des voisins à X (donc aucun incertain) : on met un X.
+->
+O..
+X?X
+O.. 
+Le ? est un X ; fonctionne aussi en remplaçant X par un mur.
+
+->
+O..
+X?X
+.X.
+Le ? est un X.
+
+
+
+->Quand on met un X :
+->Regarder pour chaque case voisine incertaine :
+->si la case voisine appartient à une région qui a déjà un O ET si la case voisine est adjacente à aucun O ET à aucune case d'une autre région (incertain de région différente, donc)
+->Si c'est le cas, mettre un X en case voisine (impossible de faire un domino)
 */
-
 
 /**
 Cancel the last list of events since the last "non-deducted" space. TODO : change this name.
@@ -509,10 +552,18 @@ GlobalNorinori.prototype.undoList = function(p_list){
 Logs that a space event is pushed into a list (in the calling function !) and returns the space event !
 */
 function loggedSpaceEvent(spaceEvt){
-	debugTryToPutNew("Event pushed : "+spaceEvt.toString());
+	debugTryToPutNewGold("Event pushed : "+spaceEvt.toString());
 	return spaceEvt
 }
 
+//--------------
+/**Tests if two pairs of coordinates are orthogonally adjacent or identical
+*/
+function adjacentOrIdentical(p_x1,p_y1,p_x2,p_y2){
+	var dy = Math.abs(p_y1-p_y2);
+	var dx = Math.abs(p_x1-p_x2);
+	return (dx+dy <= 1);
+}
 //--------------
 // It's "to string" time !
 

@@ -57,7 +57,7 @@ loadAction = function(p_canvas,p_drawer,p_textArea,p_global,p_name){
 	var loadedItem = stringToNorinoriPuzzle(localStorage.getItem("grid_is_good_"+p_name));
 	p_global.loadGrid(loadedItem.grid);
 	p_global.loadIntelligence(loadedItem.starNumber);
-	adaptCanvas(p_canvas,p_drawer,p_global);
+	adaptCanvasAndGrid(p_canvas,p_drawer,p_global);
 	p_textArea.innerHTML = ""; //TODO manage true/false
 }
 
@@ -66,7 +66,13 @@ undoAction = function(p_global,p_textArea){
 	p_textArea.innerHTML = p_global.happenedEventsToString(false); //TODO manage true/false
 }
 
-function adaptCanvas(p_canvas, p_drawer,p_global){
+function adaptCanvasAndGrid(p_canvas, p_drawer,p_global){
+	//Respects dimension of 800x512
+	//TODO Constants can be written somewhere else !
+	p_drawer.pix.sideSpace = Math.min(32,Math.min(Math.floor(800/p_global.xLength),Math.floor(512/p_global.yLength)));
+	p_drawer.pix.borderSpace = Math.max(1,Math.floor(p_drawer.pix.sideSpace/10));
+	p_drawer.setMarginGrid(0,0,0,0);
+	//TODO should be factorized with other editors !
 	p_canvas.width = p_global.xLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.left+p_drawer.pix.marginGrid.right;
 	p_canvas.height = p_global.yLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.up+p_drawer.pix.marginGrid.down;
 }
