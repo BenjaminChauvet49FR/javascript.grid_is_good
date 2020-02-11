@@ -66,6 +66,11 @@ undoAction = function(p_global,p_textArea){
 	p_textArea.innerHTML = p_global.happenedEventsToString(false); //TODO manage true/false
 }
 
+quickStartAction = function(p_global,p_textArea){
+	p_global.quickStart();
+	p_textArea.innerHTML = p_global.happenedEventsToString(false); //TODO manage true/false
+}
+
 function adaptCanvasAndGrid(p_canvas, p_drawer,p_global){
 	//Respects dimension of 800x512
 	//TODO Constants can be written somewhere else !
