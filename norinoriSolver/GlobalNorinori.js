@@ -370,137 +370,42 @@ GlobalNorinori.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 						}
 					}
 				}
-				/*var leftBlocked = (x == 0 || this.answerGrid[y][x-1] == FILLING.NO);
-				var rightBlocked = (x == (this.xLength-1) || this.answerGrid[y][x+1] == FILLING.NO);
-				var upBlocked = (y == 0 || this.answerGrid[y-1][x] == FILLING.NO);
-				var downBlocked = (y == (this.yLength-1) || this.answerGrid[y+1][x] == FILLING.NO);*/
-				var leftBlocked = this.isBlockedLeft(x,y);
-				var rightBlocked = this.isBlockedRight(x,y);
-				var upBlocked = this.isBlockedUp(x,y);
-				var downBlocked = this.isBlockedDown(x,y);
-				if (leftBlocked && upBlocked && rightward && downward){ 
-					eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y+1)));
-				}				
-				if (leftward && upBlocked && rightBlocked && downward){ 
-					eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y+1)));
-				}				
-				if (leftward && upward && rightBlocked && downBlocked){ 
-					eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y-1)));
-				}				
-				if (leftBlocked && upward && rightward && downBlocked){ 
-					eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y-1)));
-				}
+				eventsToAdd = this.pushEventsIfAloneAndCornered(eventsToAdd,leftward,upward,rightward,downward,x,y);
 			}
 			if (symbol == FILLING.NO){
-				//TODO : english please !
-				//Si la case nouvellement rejetée a des voisins vides : regarder leur nouveau nombre de "voisins incertains". S'il est de 0, c'est bon !
-				if (upward){ // Up
-					if ((this.neighborsGrid[y-1][x].undecided == 0) && (this.neighborsGrid[y-1][x].Os == 0)){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y-1)));
-					}
-					if (this.readyToBeCompletedDomino(x,y-1)){
-						debugTryToPutNew("Domino "+x+" "+(y-1)+" ready for completion");
-						if (this.emptyLeftwards(x,y-1)){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x-1,y-1)));
-						}else if (this.emptyUpwards(x,y-1)){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x,y-2)));
-						}else{
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x+1,y-1)));
+				var alterX; 
+				var alterY;
+				//Four checks per direction :
+				//If the neighbor cell is fully isolated => X
+				//If the neighbor cell has only one undecided neighbor and is a single half of domino => O in the correct neighbor
+				//If the neighbor cell belongs to a region with only one O and cannot be linked to any O => X into it.
+				//If the neighbor cell is O => check if it is cornered and if yes add Xs in angles opposite to the corners
+				[DIRECTION.LEFT,DIRECTION.UP,DIRECTION.RIGHT,DIRECTION.DOWN].forEach(direction =>{
+					if (this.existentDirection(direction,x,y)){
+						alterX = alteredX(direction,x);
+						alterY = alteredY(direction,y);
+						if ((this.neighborsGrid[alterY][alterX].undecided == 0) &&
+							(this.neighborsGrid[alterY][alterX].Os == 0)){
+							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,alterX,alterY)));
+						}
+						if (this.isNotQualifiablePostPutX(alterX,alterY)){
+							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,alterX,alterY)));
+						}
+						if ((this.answerGrid[alterY][alterX] == FILLING.YES) && (this.furtherExistentDirection(direction,alterX,alterY))){
+							eventsToAdd = this.pushEventsIfAloneAndCornered(eventsToAdd,leftward,upward,rightward,downward,alterX,alterY);
+						}
+						if (this.readyToBeCompletedDomino(alterX,alterY)){
+							[DIRECTION.LEFT,DIRECTION.UP,DIRECTION.RIGHT,DIRECTION.DOWN].forEach(direction2 =>{
+								if(direction2 != ((direction+2) % 4) ){
+									if (this.existentDirection(direction2,alterX,alterY) &&
+										this.answerGrid[alteredY(direction2,alterY)][alteredX(direction2,alterX)] == FILLING.UNDECIDED){
+											eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,alteredX(direction2,alterX),alteredY(direction2,alterY))));	
+										}	
+								}
+							});
 						}
 					}
-					if (this.isNotQualifiablePostPutX(x,y-1)){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y-1)));
-					}
-					if (this.answerGrid[y-1][x] == FILLING.YES && y > 1){
-						if (leftward && this.isBlockedRight(x,y-1)){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y-2)));
-						}
-						if (this.isBlockedLeft(x,y-1) && rightward){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y-2)));
-						}
-					}
-				}
-				if (downward){ //Down
-					if ((this.neighborsGrid[y+1][x].undecided == 0) && (this.neighborsGrid[y+1][x].Os == 0)){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y+1)));
-					}
-					if (this.readyToBeCompletedDomino(x,y+1)){
-						debugTryToPutNew("Domino "+x+" "+(y+1)+" ready for completion");
-						if (this.emptyRightwards(x,y+1)){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x+1,y+1)));
-						}else if (this.emptyDownwards(x,y+1)){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x,y+2)));
-						}else{
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x-1,y+1)));
-						}
-					}
-					if (this.isNotQualifiablePostPutX(x,y+1)){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y+1)));
-					}
-					if (this.answerGrid[y+1][x] == FILLING.YES && y < this.yLength-2){
-						if (leftward && this.isBlockedRight(x,y+1)){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y+2)));
-						}
-						if (this.isBlockedLeft(x,y+1) && rightward){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y+2)));
-						}
-					}
-				}
-				if (leftward) { //Left
-					if ((this.neighborsGrid[y][x-1].undecided == 0) && (this.neighborsGrid[y][x-1].Os == 0)){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y)));
-					}
-					if (this.readyToBeCompletedDomino(x-1,y)){
-						debugTryToPutNew("Domino "+(x-1)+" "+y+" ready for completion");
-						if (this.emptyDownwards(x-1,y)){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x-1,y+1)));
-						}else if (this.emptyLeftwards(x-1,y)){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x-2,y)));
-						}else{
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x-1,y-1)));
-						}
-					}
-					if (this.isNotQualifiablePostPutX(x-1,y)){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y)));
-					}
-					if (this.answerGrid[y][x-1] == FILLING.YES && x > 1){
-						if (upward && this.isBlockedDown(x-1,y)){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-2,y-1)));
-						}
-						if (this.isBlockedUp(x-1,y) && downward){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-2,y+1)));
-						}
-					}
-				}		
-				if (rightward){ //Right
-					if ((this.neighborsGrid[y][x+1].undecided == 0) && (this.neighborsGrid[y][x+1].Os == 0)){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y)));
-					}
-					if (this.readyToBeCompletedDomino(x+1,y)){	
-						debugTryToPutNew("Domino "+(x+1)+" "+y+" ready for completion");					
-						if (this.emptyUpwards(x+1,y)){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x+1,y-1)));
-						}else if (this.emptyRightwards(x+1,y)){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x+2,y)));
-						}else{
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x+1,y+1)));
-						}
-					}
-					if (this.isNotQualifiablePostPutX(x+1,y)){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y)));
-					}
-					if (this.answerGrid[y][x+1] == FILLING.YES && x < this.xLength-2){
-						if (upward && this.isBlockedDown(x+1,y)){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+2,y-1)));
-						}
-						if (this.isBlockedUp(x+1,y) && downward){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+2,y+1)));
-						}
-					}
-				}
-				
-				
-				
+				});
 			}
 			eventsApplied.push(spaceEventToApply);
 		} // if RESULT.SUCCESS
@@ -612,6 +517,73 @@ GlobalNorinori.prototype.quickStart = function(){
 	}
 }
 
+
+
+
+/**
+Tests if an O in a space is alone and "cornered" (for all four corners)
+The (p_x,p_y) space must contain an O.
+*/
+GlobalNorinori.prototype.pushEventsIfAloneAndCornered = function(p_eventsToAdd,p_leftward, p_upward, p_rightward, p_downward, p_x,p_y){
+	if (this.neighborsGrid[p_y][p_x].Os == 1){
+		return p_eventsToAdd;
+	}
+	var leftBlocked = this.isBlockedLeft(p_x,p_y);
+	var rightBlocked = this.isBlockedRight(p_x,p_y);
+	var upBlocked = this.isBlockedUp(p_x,p_y);
+	var downBlocked = this.isBlockedDown(p_x,p_y);
+	var goDown = upBlocked && p_downward;
+	var goUp = p_upward && downBlocked;
+	if (leftBlocked && p_rightward){
+		if (goDown){
+			p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_x+1,p_y+1)));
+		}
+		if (goUp){
+			p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_x+1,p_y-1)));
+		}
+	}
+	if (p_leftward && rightBlocked){
+		if (goDown){
+			p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_x-1,p_y+1)));
+		}
+		if (goUp){
+			p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_x-1,p_y-1)));
+		}
+	}
+	return p_eventsToAdd;
+}
+
+
+
+
+/**
+Working on four directions to limit duplicated code
+*/
+GlobalNorinori.prototype.existentDirection = function(p_direction,p_x,p_y){
+	switch(p_direction){
+		case DIRECTION.LEFT : return (p_x > 0);
+		case DIRECTION.UP : return (p_y > 0);
+		case DIRECTION.RIGHT : return (p_x < (this.xLength-1));
+		case DIRECTION.DOWN : return (p_y < (this.yLength-1));
+	}
+}
+
+GlobalNorinori.prototype.furtherExistentDirection = function(p_direction,p_x,p_y){
+	switch(p_direction){
+		case DIRECTION.LEFT : return (p_x > 1);
+		case DIRECTION.UP : return (p_y > 1);
+		case DIRECTION.RIGHT : return (p_x < (this.xLength-2));
+		case DIRECTION.DOWN : return (p_y < (this.yLength-2));
+	}
+}
+
+alteredX = function(p_direction,p_x){
+	return p_x+DIRECTION_X_COORDINATES[p_direction];
+}
+
+alteredY = function(p_direction,p_y){
+	return p_y+DIRECTION_Y_COORDINATES[p_direction];
+}
 
 /*
 Autres pistes à exploiter :

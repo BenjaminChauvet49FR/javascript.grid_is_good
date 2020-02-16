@@ -17,10 +17,10 @@ HARMLESS : 2
 const COHERENCE ={SUCCESS:1,FAILURE:2};
 const DIAGONAL_X_COORDINATES = [-1,1,-1,1];
 const DIAGONAL_Y_COORDINATES = [-1,-1,1,1];
-/*const FAMILY ={REGION:1,ROW:2,COLUMN:3};
 
-ROUND_X_COORDINATES = [-1,-1,-1,0,1,1,1,0];
-ROUND_Y_COORDINATES = [-1,0,1,1,1,0,-1,-1];*/
+const DIRECTION = {LEFT:0,UP:1,RIGHT:2,DOWN:3};
+const DIRECTION_X_COORDINATES = [-1,0,1,0]; //MUST follow left/up/right/down because of code usage !
+const DIRECTION_Y_COORDINATES = [0,-1,0,1]; //Same.
 
 //---------------------
 //User interface part
