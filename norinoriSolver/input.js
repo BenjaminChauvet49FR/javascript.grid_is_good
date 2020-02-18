@@ -27,7 +27,9 @@ function clickSpaceAction(p_global,p_spaceIndexX,p_spaceIndexY,p_actionId){
 			p_global.emitHypothesis(p_spaceIndexX,p_spaceIndexY,FILLING.NO); 
 		break;		
 		case ACTION_PASS_REGION.id:
-			//p_global.passRegion(p_global.getRegion(p_spaceIndexX,p_spaceIndexY));
+			var indexRegion = p_global.getRegion(p_spaceIndexX,p_spaceIndexY);
+			console.log("PASSING REGION : "+indexRegion+" (Restent : "+p_global.getOsRemainRegion(indexRegion)+" "+p_global.getXsRemainRegion(indexRegion)+")");
+			p_global.emitPassRegion(indexRegion);
 		break;
 	}
 }
@@ -80,4 +82,15 @@ function adaptCanvasAndGrid(p_canvas, p_drawer,p_global){
 	//TODO should be factorized with other editors !
 	p_canvas.width = p_global.xLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.left+p_drawer.pix.marginGrid.right;
 	p_canvas.height = p_global.yLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.up+p_drawer.pix.marginGrid.down;
+}
+
+function viewNorinoriList(){
+	var string = "";
+	for (var i = 0, len = localStorage.length; i < len; i++) {
+        var key = localStorage.key(i);
+		if (key.startsWith("grid_is_good_Norinori")){
+			string+=(key+"\n");
+		}
+	}
+	alert(string);
 }

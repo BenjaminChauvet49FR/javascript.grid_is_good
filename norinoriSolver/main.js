@@ -40,6 +40,8 @@ document.getElementById("submit_load_grid").addEventListener('click',
 canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,textArea,global,actionToDo)},false);
 document.getElementById("submit_undo").addEventListener('click',function(event){undoAction(global,textArea)});
 document.getElementById("submit_quickStart").addEventListener('click',function(event){quickStartAction(global,textArea)});
+document.getElementById("submit_view_Norinori_list").addEventListener('click',function(event){viewNorinoriList(global,textArea)});
+document.getElementById("submit_multiPass").addEventListener('click',function(event){multiPass(global,textArea)});
 
 
 var submitFillSpace = document.getElementById("submit_fill_space");

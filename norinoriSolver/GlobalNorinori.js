@@ -147,9 +147,6 @@ GlobalNorinori.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
 }
 
 //------------------
-// TODO : pass and multipass.
-
-//------------------
 //Putting symbols into spaces. 
 
 /**Tries to put a symbol into the space of a grid. 3 possibilities :
@@ -242,13 +239,155 @@ GlobalNorinori.prototype.remove = function(p_x,p_y){
 	}
 }
 
+//--------------
+//It's pass time !
+
+GlobalNorinori.prototype.emitPassRegion = function(p_indexRegion){
+	var answer = this.passRegion(p_indexRegion,0);
+	console.log("Enfin sorti ! " + answer.eventsApplied.length);
+	if (answer.consistence == RESULT.SUCCESS){
+		this.happenedEvents.push(answer.eventsApplied);
+		answer.eventsApplied.forEach(spaceEvent => {this.putNew(spaceEvent.x,spaceEvent.y,spaceEvent.symbol)});
+	}
+	
+}
+
+GlobalNorinori.prototype.passRegion = function(p_indexRegion, p_indexFirstSpace){
+		var region = this.spacesByRegion[p_indexRegion];
+		var index = p_indexFirstSpace;
+		while (this.answerGrid[region[index].y][region[index].x] != FILLING.UNDECIDED)
+		{
+			index++;
+		}
+		//We MUST find an index where space is undecided.
+		var listO = null;
+		var listX = null;
+		var answerPut = this.tryToPutNew(region[index].x,region[index].y,FILLING.YES);
+		if (answerPut.coherence == COHERENCE.SUCCESS){
+			if (this.notPlacedYetByRegion[p_indexRegion].Os == 0){
+				listO = answerPut.eventsApplied;
+			}
+			else{
+				var answerPass = this.passRegion(p_indexRegion,index+1);
+				if (answerPass.consistence == RESULT.SUCCESS){
+					listO = answerPass.eventsApplied.concat(answerPut.eventsApplied);
+				}
+			}
+			this.undoList(answerPut.eventsApplied.slice());
+		}
+		if ((listO == null) || (listO.length > 0)){
+			answerPut = this.tryToPutNew(region[index].x,region[index].y,FILLING.NO);
+			if (answerPut.coherence == COHERENCE.SUCCESS){
+				if (this.notPlacedYetByRegion[p_indexRegion].Os == 0){
+					listX = answerPut.eventsApplied;
+				}
+				else{
+					var answerPass = this.passRegion(p_indexRegion,index+1);
+					if (answerPass.consistence == RESULT.SUCCESS){
+						listX = answerPass.eventsApplied.concat(answerPut.eventsApplied);
+					}
+				}
+				this.undoList(answerPut.eventsApplied.slice());
+			}
+		}
+		var list;
+		if (listO == null && listX == null){
+			return {consistence : RESULT.ERROR, eventsApplied: []};
+		}
+		if (listO == null){
+			return {consistence : RESULT.SUCCESS, eventsApplied: listX};
+		}
+		if (listX == null){
+			return {consistence : RESULT.SUCCESS, eventsApplied: listO};
+		}
+		return {consistence:RESULT.SUCCESS, eventsApplied:intersect(listO.sort(compareSpaceEvents),listX.sort(compareSpaceEvents))};
+}
+
+/*GlobalNorinori.prototype.passRegion = function(p_indexRegion){
+	var region = this.spacesByRegion[p_indexRegion];
+	var index = 0;
+	var answerPass;
+	var listAnswer = null;
+	var listX = [];
+	var ok = true;
+	var found = false;
+	while (index < region.length && !found){
+		if (this.answerGrid[region[index].y][region[index].x] == FILLING.UNDECIDED)
+			found = true;
+		else
+			index++;
+	}
+	if (index < region.length){
+		answerPass = this.tryToPassWith(region[index].x,region[index].y,p_indexRegion,FILLING.YES);
+		if (answerPass.consistence == RESULT.OK){
+			if (listAnswer == null){
+				listAnswer = answerPass.eventsApplied.sort(compareSpaceEvents);
+				console.log("Définissons listAnswer ! " + listAnswer);
+			} else {
+				console.log("Redéfinissons listAnswer avec " + listAnswer +" puis "+compareSpaceEvents);
+				listAnswer = concat(listX,intersect(listAnswer,answerPass.eventsApplied.sort(compareSpaceEvents)));
+				console.log("Et... " + listAnswer);
+			}
+		}
+		if (listAnswer != null && listAnswer.length == 0){
+			ok = false;
+		}
+		else{
+			answerPass = this.tryToPassWith(region[index].x,region[index].y,p_indexRegion,FILLING.NO);
+			if (answerPass.consistence == RESULT.OK){
+				if (listAnswer == null){
+					listAnswer = answerPass.eventsApplied.sort(compareSpaceEvents);
+				} else {
+					listAnswer = concat(listX,intersect(listAnswer,answerPass.eventsApplied.sort(compareSpaceEvents)));
+				}
+			}
+			if (listAnswer != null && listAnswer.length == 0){
+				ok = false;
+			}					
+		}
+	}
+
+	if (listAnswer == null){
+		return {eventsApplied:[],consistence:RESULT.ERROR};
+	}
+	if (!ok){
+		return {eventsApplied:[],consistence:RESULT.HARMLESS};
+	}
+	return {eventsApplied : answerPass.eventsApplied, consistence : RESULT.SUCCESS};
+}*/
 
 /**
-Tries to put a new symbol into a grid and then forces the filling of all stars and Xs that can be deduced logically without breaking the rules : 
--if a star is placed, all Xs around it
--if a star or an X is placed and it causes to have all the stars/Xs in that region/row/column deduced, fill this region/row/column with the missing symbols
--repeat until either new can be newly deduced (good, although this may be a wrong answer) or there is an absurd situation with two opposite symbols deduced in the same space (bad). 
+Regardless on consistent or not, we must have answergrid in the same state when we return something as when we entered
+*/
+/*GlobalNorinori.prototype.tryToPassWith = function(p_x,p_y,p_indexRegion, p_symbol){
+	var answerNew = this.tryToPutNew(p_x,p_y,p_symbol);
+	if (answerNew.coherence == COHERENCE.SUCCESS){
+		if (this.notPlacedYetByRegion[p_indexRegion].Os == 0){
+			this.undoList(answerNew.eventsApplied.slice());
+			return {eventsApplied:answerNew.eventsApplied,consistence:RESULT.SUCCESS};
+		}
+		else{
+			var answerPass = this.passRegion(p_indexRegion);
+			this.undoList(answerNew.eventsApplied.slice());
+			//this.undoList(answerPass.eventsApplied.slice());
+			if (answerPass.consistence == RESULT.SUCCESS){
+				return {eventsApplied:concat(answerNew.eventsApplied,answerPass.eventsApplied),
+					consistence:answerPass.consistence};
+			}
+			else{
+				return {eventsApplied:[],consistence:RESULT.ERROR};
+			}
+		}
+	}
+	else{
+		return {eventsApplied:[], consistence:COHERENCE.FAILURE};
+	}	
+}*/
 
+//AnswerPass 
+
+/**
+Tries to either fill a space or put an X into it. Will it be consistent ?
 BIG WARNING : if the end is successful, the list of spaces will be put into eventsApplied. But this doesn't mean they are all fine !
 */
 //TODO : do something about big warning !
@@ -308,47 +447,29 @@ GlobalNorinori.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 				var exactlyOneUndecidedNeighbor = (this.neighborsGrid[y][x].undecided == 1);
 				var toBeMerged = (notPartOfDomino && exactlyOneUndecidedNeighbor);
 
-				
-				if (upward){ // Up
-					if (this.answerGrid[y-1][x] == FILLING.YES){
-						eventsToAdd=pushEventsDominoMadeVertical(eventsToAdd,x,y-1);
-					} else if (this.neighborsGrid[y-1][x].Os == 2){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y-1)));
+				[DIRECTION.LEFT,DIRECTION.UP,DIRECTION.RIGHT,DIRECTION.DOWN].forEach(direction =>{
+					if (this.existentDirection(direction,x,y)){
+						var alterX = alteredX(direction,x); 
+						var alterY = alteredY(direction,y);
+						if(this.answerGrid[alterY][alterX] == FILLING.YES){
+							switch(direction){
+								case(DIRECTION.UP):
+									eventsToAdd=pushEventsDominoMadeVertical(eventsToAdd,x,y-1);break;
+								case(DIRECTION.RIGHT):
+									eventsToAdd=pushEventsDominoMadeHorizontal(eventsToAdd,x,y);break;
+								case(DIRECTION.DOWN):
+									eventsToAdd=pushEventsDominoMadeVertical(eventsToAdd,x,y);break;
+								case(DIRECTION.LEFT):
+									eventsToAdd=pushEventsDominoMadeHorizontal(eventsToAdd,x-1,y);break;
+							}
+						} else if (this.neighborsGrid[alterY][alterX].Os == 2){
+							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,alterX,alterY)));
+						}
+						if(toBeMerged && this.answerGrid[alterY][alterX] == FILLING.UNDECIDED){
+							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,alterX,alterY)));
+						}
 					}
-					if(toBeMerged && this.answerGrid[y-1][x] == FILLING.UNDECIDED){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x,y-1)));
-					}
-				}
-				if (downward){ //Down
-					if (this.answerGrid[y+1][x] == FILLING.YES){
-						eventsToAdd=pushEventsDominoMadeVertical(eventsToAdd,x,y);
-					} else if (this.neighborsGrid[y+1][x].Os == 2){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x,y+1)));
-					}
-					if(toBeMerged && this.answerGrid[y+1][x] == FILLING.UNDECIDED){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x,y+1)));
-					}
-				}
-				if (leftward) { //Left
-					if(this.answerGrid[y][x-1] == FILLING.YES){
-						eventsToAdd=pushEventsDominoMadeHorizontal(eventsToAdd,x-1,y);
-					} else if (this.neighborsGrid[y][x-1].Os == 2){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x-1,y)));
-					}
-					if(toBeMerged && this.answerGrid[y][x-1] == FILLING.UNDECIDED){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x-1,y)));
-					}
-				}		
-				if (rightward){ //Right
-					if(this.answerGrid[y][x+1] == FILLING.YES){
-						eventsToAdd=pushEventsDominoMadeHorizontal(eventsToAdd,x,y);
-					} else if (this.neighborsGrid[y][x+1].Os == 2){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,x+1,y)));
-					}
-					if(toBeMerged && this.answerGrid[y][x+1] == FILLING.UNDECIDED){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,x+1,y)));
-					}
-				}
+				});
 				//First O of a region
 				if (this.notPlacedYetByRegion[r].Os == 1){ 
 					if (!(this.hasNeighborQualifiable(r,x,y))){ //If we have put an O into a space without a foreign undecided neighbor OR a X (a non-"qualifiable" O, word subject to change) :
