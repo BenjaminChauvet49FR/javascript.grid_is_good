@@ -20,6 +20,7 @@ function Drawer(){
 		open_wall:'#dddddd',
 		edge_walls:'#000000',
 		bannedSpace:'#666666',
+		selectedSpace:'#bbffcc',
 		rainbowSpaces:["#6666ff","#ff6666","#66ff66",
 		"#66ffff","#ffff66","#ff66ff",
 		"#cc66ff","#ffcc66","#66ffcc",
@@ -93,6 +94,10 @@ Drawer.prototype.drawGrid = function(p_context,p_global){
 					p_context.fillRect(pixDrawXHoriz,pixDrawYVert,pixLength,pixLength);
 					innerSpaceNotColored = false;
 				}
+			}
+			if(p_global.getSelection(ix,iy) == SELECTED.YES){
+				p_context.fillStyle= this.colors.selectedSpace;
+				p_context.fillRect(pixDrawXHoriz,pixDrawYVert,pixLength,pixLength);
 			}
 			if (innerSpaceNotColored && p_global.getState(ix,iy) == CLOSED){
 				p_context.fillStyle= this.colors.bannedSpace;

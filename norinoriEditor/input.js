@@ -3,7 +3,7 @@
 /**
  When you click on the canvas
 */
-function clickCanvas(event,p_canvas,p_drawer,p_global){
+function clickCanvas(event,p_canvas,p_drawer,p_global,p_mode){
 	var wallOK = false;
 	var indexWallR = p_drawer.getClickWallR(event,p_canvas,p_global);
 	var indexWallD = p_drawer.getClickWallD(event,p_canvas,p_global);
@@ -20,9 +20,18 @@ function clickCanvas(event,p_canvas,p_drawer,p_global){
 	}
 	var indexSpaces = p_drawer.getClickSpace(event,p_canvas,p_global);
 	if (indexSpaces != null){
-		p_global.switchState(indexSpaces.x,indexSpaces.y);
+		if (p_mode == MODE_SELECTION.id){
+			p_global.selectSpace(indexSpaces.x,indexSpaces.y);
+		}
+		else if (p_mode == MODE_ERASE.id){
+			p_global.clearWallsAround(indexSpaces.x,indexSpaces.y);
+		} else {
+			p_global.switchState(indexSpaces.x,indexSpaces.y);
+		}
 	}
 }
+
+//------------------------------
 
 /** Saves a walled grid into local storage 
 p_global : the Global item
@@ -110,6 +119,20 @@ function adaptCanvasAndGrid(p_canvas, p_drawer,p_global){
 	else{
 		p_canvas.width = p_canvas.height;
 	}
+}
+
+//------------------------------
+
+/**
+Selection deal
+*/
+
+function actionBuildWallsAroundSelection(p_global) {
+	p_global.buildWallsAroundSelection();
+}
+
+function actionUnselectAll(p_global) {
+	p_global.unselectAll();
 }
 
 //------------------------------

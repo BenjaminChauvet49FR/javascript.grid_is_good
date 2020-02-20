@@ -15,8 +15,14 @@ Global.prototype.loadGrid = function(p_wallGrid){
 		this.xLength = 0;
 	}
 	this.wallGrid = p_wallGrid;
+	this.regionGrid = null;
 	this.updateRegionGrid();
 	this.isRegionGridValid = true;
+	this.isSelectionMode = false;
+	this.selectedSpacesList = null;
+	this.selectedGrid = null;
+	this.resetSelection(); 
+
 }
 
 Global.prototype.restartGrid = function(p_xLength,p_yLength){
@@ -34,8 +40,7 @@ Global.prototype.switchWallR = function(p_x,p_y){this.setWallR(p_x,p_y,switchedS
 Global.prototype.switchWallD = function(p_x,p_y){this.setWallD(p_x,p_y,switchedState(this.getWallD(p_x,p_y)));}
 Global.prototype.switchState = function(p_x,p_y){this.setState(p_x,p_y,switchedState(this.getState(p_x,p_y)));}
 Global.prototype.getRegion = function(p_x,p_y){return this.regionGrid[p_y][p_x]};
-
-
+Global.prototype.getSelection = function(p_x,p_y){return this.selectedGrid[p_y][p_x]};
 
 Global.prototype.updateRegionGrid = function(){
 	this.regionGrid = wallGridToRegionGrid(this.wallGrid);
@@ -128,7 +133,68 @@ function switchedState(p_wallState){
 	return 1-p_wallState;
 }
 
+//-------------------------------------------
 
+/**
+Selection phase
+*/
+Global.prototype.selectSpace = function(p_x,p_y){
+	this.selectedGrid[p_y][p_x] = SELECTED.YES;
+	this.selectedSpacesList.push({x:p_x,y:p_y});
+}
+
+Global.prototype.unselectAll = function(){
+	var space;
+	while(this.selectedSpacesList.length > 0){
+		space = this.selectedSpacesList.pop();
+		this.selectedGrid[space.y][space.x] = SELECTED.NO;
+	}
+}
+
+Global.prototype.resetSelection = function(){
+	this.isSelectionMode = false;
+	this.selectedSpacesList = [];
+	this.selectedGrid = [];
+	for(var iy = 0; iy<this.yLength;iy++){
+		this.selectedGrid.push([]);
+		for(var ix = 0; ix<this.xLength;ix++){
+			this.selectedGrid[iy].push(SELECTED.NO);
+		}
+	}		
+}
+
+Global.prototype.buildWallsAroundSelection = function(){
+	this.selectedSpacesList.forEach(space => {
+		if (space.x > 0 && this.selectedGrid[space.y][space.x-1] == SELECTED.NO){
+			this.setWallR(space.x-1,space.y,CLOSED);
+		}
+		if (space.x < this.xLength-1 && this.selectedGrid[space.y][space.x+1] == SELECTED.NO){
+			this.setWallR(space.x,space.y,CLOSED);
+		}
+		if (space.y > 0 && this.selectedGrid[space.y-1][space.x] == SELECTED.NO){
+			this.setWallD(space.x,space.y-1,CLOSED);
+		}
+		if (space.y < this.yLength-1 && this.selectedGrid[space.y+1][space.x] == SELECTED.NO){
+			this.setWallD(space.x,space.y,CLOSED);
+		}
+	});
+	this.unselectAll();
+}
+
+Global.prototype.clearWallsAround = function(p_x,p_y){
+	if (p_x > 0 && this.selectedGrid[p_y][p_x-1] == SELECTED.NO){
+		this.setWallR(p_x-1,p_y,OPEN);
+	}
+	if (p_x < this.xLength-1 && this.selectedGrid[p_y][p_x+1] == SELECTED.NO){
+		this.setWallR(p_x,p_y,OPEN);
+	}
+	if (p_y > 0 && this.selectedGrid[p_y-1][p_x] == SELECTED.NO){
+		this.setWallD(p_x,p_y-1,OPEN);
+	}
+	if (p_y < this.yLength-1 && this.selectedGrid[p_y+1][p_x] == SELECTED.NO){
+		this.setWallD(p_x,p_y,OPEN);
+	}
+}
 
 //-------------------------------------------
 
@@ -154,9 +220,6 @@ Global.prototype.rotateCWGrid = function(){
 			);
 		}
 	}
-	/*var saveXLength = this.xLength;
-	this.xLength = this.yLength;
-	this.yLength = saveXLength;*/
 	this.loadGrid(newWallGrid);
 }
 
@@ -208,9 +271,6 @@ Global.prototype.rotateCCWGrid = function(){
 			);
 		}
 	}
-	/*var saveXLength = this.xLength;
-	this.xLength = this.yLength;
-	this.yLength = saveXLength;*/
 	this.loadGrid(newWallGrid);
 }
 
