@@ -41,7 +41,7 @@ canevas.addEventListener('click', function(event){clickCanvas(event,canevas,draw
 document.getElementById("submit_undo").addEventListener('click',function(event){undoAction(global,textArea)});
 document.getElementById("submit_quickStart").addEventListener('click',function(event){quickStartAction(global,textArea)});
 document.getElementById("submit_view_Norinori_list").addEventListener('click',function(event){viewNorinoriList(global,textArea)});
-document.getElementById("submit_multiPass").addEventListener('click',function(event){multiPass(global,textArea)});
+document.getElementById("submit_multiPass").addEventListener('click',function(event){multiPassAction(global,textArea)});
 
 
 var submitFillSpace = document.getElementById("submit_fill_space");

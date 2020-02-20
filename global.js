@@ -127,3 +127,164 @@ p_wallState : a wall state (should match a wall state constant... right ?).
 function switchedState(p_wallState){
 	return 1-p_wallState;
 }
+
+
+
+//-------------------------------------------
+
+/**
+Transforms the grid
+*/
+Global.prototype.rotateCWGrid = function(){
+	var newWallGrid = [];
+	var newWallR;
+	var newWallD;
+	for(var iy = 0; iy < this.xLength; iy++){
+		newWallGrid.push([]);
+		for(var ix = 0;ix < this.yLength;ix++){	
+			newWallD = this.wallGrid[this.yLength-1-ix][iy].wallR;
+			if(ix < this.yLength-1)
+				newWallR = this.wallGrid[this.yLength-2-ix][iy].wallD;
+			else
+				newWallR = CLOSED;
+			newWallGrid[iy].push(
+				{state:this.wallGrid[this.yLength-1-ix][iy].state,
+				 wallD:newWallD,
+				 wallR:newWallR}
+			);
+		}
+	}
+	/*var saveXLength = this.xLength;
+	this.xLength = this.yLength;
+	this.yLength = saveXLength;*/
+	this.loadGrid(newWallGrid);
+}
+
+Global.prototype.rotateUTurnGrid = function(){
+	var newWallGrid = [];
+	var newWallR;
+	var newWallD;
+	for(var iy = 0; iy < this.yLength; iy++){
+		newWallGrid.push([]);
+		for(var ix = 0;ix < this.xLength;ix++){	
+			if(ix < this.xLength-1){
+				newWallR = this.wallGrid[this.yLength-1-iy][this.xLength-2-ix].wallR;
+			}
+			else{
+				newWallR = CLOSED;
+			}
+			if(iy < this.yLength-1){
+				newWallD = this.wallGrid[this.yLength-2-iy][this.xLength-1-ix].wallD;
+			}
+			else{
+				newWallD = CLOSED;
+			}
+			newWallGrid[iy].push(
+				{state:this.wallGrid[this.yLength-1-iy][this.xLength-1-ix].state,
+				 wallD:newWallD,
+				 wallR:newWallR}
+			);
+		}
+	}
+	this.loadGrid(newWallGrid);
+}
+
+Global.prototype.rotateCCWGrid = function(){
+	var newWallGrid = [];
+	var newWallR;
+	var newWallD;
+	for(var iy = 0; iy < this.xLength; iy++){
+		newWallGrid.push([]);
+		for(var ix = 0;ix < this.yLength;ix++){	
+			newWallR = this.wallGrid[ix][this.xLength-1-iy].wallD;
+			if(iy < this.xLength-1)
+				newWallD = this.wallGrid[ix][this.xLength-2-iy].wallR;
+			else
+				newWallD = CLOSED;
+			newWallGrid[iy].push(
+				{state:this.wallGrid[ix][this.xLength-1-iy].state,
+				 wallD:newWallD,
+				 wallR:newWallR}
+			);
+		}
+	}
+	/*var saveXLength = this.xLength;
+	this.xLength = this.yLength;
+	this.yLength = saveXLength;*/
+	this.loadGrid(newWallGrid);
+}
+
+Global.prototype.mirrorHorizontalGrid = function(){
+	var newWallGrid = [];
+	var newWallR;
+	var newWallD;
+	for(var iy = 0; iy < this.yLength; iy++){
+		newWallGrid.push([]);
+		for(var ix = 0;ix < this.xLength;ix++){	
+			if(ix < this.xLength-1){
+				newWallR = this.wallGrid[iy][this.xLength-2-ix].wallR;
+			}
+			else{
+				newWallR = CLOSED;
+			}
+			newWallD = this.wallGrid[iy][this.xLength-1-ix].wallD;
+			
+			newWallGrid[iy].push(
+				{state:this.wallGrid[iy][this.xLength-1-ix].state,
+				 wallD:newWallD,
+				 wallR:newWallR}
+			);
+		}
+	}
+	this.loadGrid(newWallGrid);
+}
+
+Global.prototype.mirrorVerticalGrid = function(){
+	var newWallGrid = [];
+	var newWallR;
+	var newWallD;
+	for(var iy = 0; iy < this.yLength; iy++){
+		newWallGrid.push([]);
+		for(var ix = 0;ix < this.xLength;ix++){	
+			if(iy < this.yLength-1){
+				newWallD = this.wallGrid[this.yLength-2-iy][ix].wallD;
+			}
+			else{
+				newWallD = CLOSED;
+			}
+			newWallR = this.wallGrid[this.yLength-1-iy][ix].wallR;
+			
+			newWallGrid[iy].push(
+				{state:this.wallGrid[this.yLength-1-iy][ix].state,
+				 wallD:newWallD,
+				 wallR:newWallR}
+			);
+		}
+	}
+	this.loadGrid(newWallGrid);
+}
+
+Global.prototype.resizeGrid = function(p_xLength,p_yLength){
+	var newWallGrid = [];
+	var newWallD,newWallR,newState;
+	for(var iy = 0; iy < p_yLength; iy++){
+		newWallGrid.push([]);
+		for(var ix = 0;ix < p_xLength;ix++){
+			if (ix < this.xLength && iy < this.yLength){
+				newState = this.wallGrid[iy][ix].state;
+				newWallD = this.wallGrid[iy][ix].wallD;
+				newWallR = this.wallGrid[iy][ix].wallR;
+			} else{
+				newState = OPEN;
+				newWallD = OPEN;
+				newWallR = OPEN;
+			}
+			newWallGrid[iy].push(
+				{state:newState,
+				 wallD:newWallD,
+				 wallR:newWallR}
+			);
+		}
+	}
+	this.loadGrid(newWallGrid);
+}

@@ -24,6 +24,7 @@ GlobalNorinori.prototype.loadIntelligence = function(){
 	this.buildNeighborsGrid(); //neighborsGrid
 	this.purifyAnswerGrid(); 
 	this.happenedEvents = [];
+	this.indexRegionsSortedBySize = null; //Will be initialized in the first use of multipass.
 }
 
 /**
@@ -242,14 +243,44 @@ GlobalNorinori.prototype.remove = function(p_x,p_y){
 //--------------
 //It's pass time !
 
+GlobalNorinori.prototype.multiPass = function(){
+	var oneMoreLoop;
+	var answer;
+	if (this.indexRegionsSortedBySize == null){
+		var sortedBySize = this.spacesByRegion.slice().sort(
+			function compareSpaceEvents(p_region1,p_region2){
+				if (p_region1.length < p_region2.length)
+					return -1;
+				if (p_region1.length > p_region2.length)
+					return 1;
+				return 0;
+			});
+		this.indexRegionsSortedBySize = [];
+		sortedBySize.forEach(region => this.indexRegionsSortedBySize.push(this.regionGrid[region[0].y][region[0].x]));
+	}
+
+	do{
+		oneMoreLoop = false;
+		for(var indexRegion=0;indexRegion<this.indexRegionsSortedBySize.length;indexRegion++){
+			if (this.notPlacedYetByRegion[indexRegion].Os != 0){
+				answer = this.emitPassRegion(indexRegion);
+				if ((answer.consistence == RESULT.SUCCESS) && (answer.eventsApplied.length > 0)){
+					oneMoreLoop = true;
+				}
+			}
+		}
+	}while(oneMoreLoop);
+	
+}
+
 GlobalNorinori.prototype.emitPassRegion = function(p_indexRegion){
 	var answer = this.passRegion(p_indexRegion,0);
 	console.log("Enfin sorti ! " + answer.eventsApplied.length);
-	if (answer.consistence == RESULT.SUCCESS){
+	if (answer.consistence == RESULT.SUCCESS && answer.eventsApplied.length > 0){
 		this.happenedEvents.push(answer.eventsApplied);
 		answer.eventsApplied.forEach(spaceEvent => {this.putNew(spaceEvent.x,spaceEvent.y,spaceEvent.symbol)});
 	}
-	
+	return answer;
 }
 
 GlobalNorinori.prototype.passRegion = function(p_indexRegion, p_indexFirstSpace){
@@ -303,88 +334,6 @@ GlobalNorinori.prototype.passRegion = function(p_indexRegion, p_indexFirstSpace)
 		return {consistence:RESULT.SUCCESS, eventsApplied:intersect(listO.sort(compareSpaceEvents),listX.sort(compareSpaceEvents))};
 }
 
-/*GlobalNorinori.prototype.passRegion = function(p_indexRegion){
-	var region = this.spacesByRegion[p_indexRegion];
-	var index = 0;
-	var answerPass;
-	var listAnswer = null;
-	var listX = [];
-	var ok = true;
-	var found = false;
-	while (index < region.length && !found){
-		if (this.answerGrid[region[index].y][region[index].x] == FILLING.UNDECIDED)
-			found = true;
-		else
-			index++;
-	}
-	if (index < region.length){
-		answerPass = this.tryToPassWith(region[index].x,region[index].y,p_indexRegion,FILLING.YES);
-		if (answerPass.consistence == RESULT.OK){
-			if (listAnswer == null){
-				listAnswer = answerPass.eventsApplied.sort(compareSpaceEvents);
-				console.log("Définissons listAnswer ! " + listAnswer);
-			} else {
-				console.log("Redéfinissons listAnswer avec " + listAnswer +" puis "+compareSpaceEvents);
-				listAnswer = concat(listX,intersect(listAnswer,answerPass.eventsApplied.sort(compareSpaceEvents)));
-				console.log("Et... " + listAnswer);
-			}
-		}
-		if (listAnswer != null && listAnswer.length == 0){
-			ok = false;
-		}
-		else{
-			answerPass = this.tryToPassWith(region[index].x,region[index].y,p_indexRegion,FILLING.NO);
-			if (answerPass.consistence == RESULT.OK){
-				if (listAnswer == null){
-					listAnswer = answerPass.eventsApplied.sort(compareSpaceEvents);
-				} else {
-					listAnswer = concat(listX,intersect(listAnswer,answerPass.eventsApplied.sort(compareSpaceEvents)));
-				}
-			}
-			if (listAnswer != null && listAnswer.length == 0){
-				ok = false;
-			}					
-		}
-	}
-
-	if (listAnswer == null){
-		return {eventsApplied:[],consistence:RESULT.ERROR};
-	}
-	if (!ok){
-		return {eventsApplied:[],consistence:RESULT.HARMLESS};
-	}
-	return {eventsApplied : answerPass.eventsApplied, consistence : RESULT.SUCCESS};
-}*/
-
-/**
-Regardless on consistent or not, we must have answergrid in the same state when we return something as when we entered
-*/
-/*GlobalNorinori.prototype.tryToPassWith = function(p_x,p_y,p_indexRegion, p_symbol){
-	var answerNew = this.tryToPutNew(p_x,p_y,p_symbol);
-	if (answerNew.coherence == COHERENCE.SUCCESS){
-		if (this.notPlacedYetByRegion[p_indexRegion].Os == 0){
-			this.undoList(answerNew.eventsApplied.slice());
-			return {eventsApplied:answerNew.eventsApplied,consistence:RESULT.SUCCESS};
-		}
-		else{
-			var answerPass = this.passRegion(p_indexRegion);
-			this.undoList(answerNew.eventsApplied.slice());
-			//this.undoList(answerPass.eventsApplied.slice());
-			if (answerPass.consistence == RESULT.SUCCESS){
-				return {eventsApplied:concat(answerNew.eventsApplied,answerPass.eventsApplied),
-					consistence:answerPass.consistence};
-			}
-			else{
-				return {eventsApplied:[],consistence:RESULT.ERROR};
-			}
-		}
-	}
-	else{
-		return {eventsApplied:[], consistence:COHERENCE.FAILURE};
-	}	
-}*/
-
-//AnswerPass 
 
 /**
 Tries to either fill a space or put an X into it. Will it be consistent ?

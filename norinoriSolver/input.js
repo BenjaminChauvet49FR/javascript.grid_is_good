@@ -36,7 +36,7 @@ function clickSpaceAction(p_global,p_spaceIndexX,p_spaceIndexY,p_actionId){
 
 //--------------------------
 /**
-Tries to pass everything : rows, regions, columns.
+Tries to pass every region.
 */
 multiPassAction = function (p_global,p_textArea){
 	p_global.multiPass();
@@ -86,11 +86,18 @@ function adaptCanvasAndGrid(p_canvas, p_drawer,p_global){
 
 function viewNorinoriList(){
 	var string = "";
+	var listToSort = [];
+	var baseString = "grid_is_good_Norinori";
 	for (var i = 0, len = localStorage.length; i < len; i++) {
         var key = localStorage.key(i);
-		if (key.startsWith("grid_is_good_Norinori")){
-			string+=(key+"\n");
+		if (key.startsWith(baseString)){
+			listToSort.push(parseInt(key.substring(baseString.length)));
 		}
+	}
+	console.log(listToSort);
+	listToSort=listToSort.sort(function(a,b){return a-b;});
+	for(var i=0;i<listToSort.length;i++){
+		string+=(baseString+listToSort[i]+"\n");
 	}
 	alert(string);
 }

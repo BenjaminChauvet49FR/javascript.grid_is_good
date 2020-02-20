@@ -82,6 +82,13 @@ restartAction = function(p_canvas, p_drawer, p_global, p_xLength, p_yLength){
 	}
 }
 
+resizeAction = function(p_canvas, p_drawer, p_global, p_xLength, p_yLength){
+	if (confirm("Redimensionner la grille ?")){
+		p_global.resizeGrid(p_xLength,p_yLength);
+		adaptCanvasAndGrid(p_canvas, p_drawer,p_global);	
+	}
+}
+
 /**
 Adapts canvas to global grid
 p_canvas : the canvas to adapt
@@ -97,4 +104,40 @@ function adaptCanvasAndGrid(p_canvas, p_drawer,p_global){
 	//TODO should be factorized with other editors !
 	p_canvas.width = p_global.xLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.left+p_drawer.pix.marginGrid.right;
 	p_canvas.height = p_global.yLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.up+p_drawer.pix.marginGrid.down;
+	if(p_canvas.width > p_canvas.height){
+		p_canvas.height = p_canvas.width;
+	}
+	else{
+		p_canvas.width = p_canvas.height;
+	}
+}
+
+//------------------------------
+
+/**
+Transform the grid
+*/
+function rotateCWAction(p_canvas,p_drawer,p_global){
+	p_global.rotateCWGrid();
+	adaptCanvasAndGrid(p_canvas,p_drawer,p_global);
+}
+
+function rotateUTurnAction(p_canvas,p_drawer,p_global){
+	p_global.rotateUTurnGrid();
+	adaptCanvasAndGrid(p_canvas,p_drawer,p_global);
+}
+
+function rotateCCWAction(p_canvas,p_drawer,p_global){
+	p_global.rotateCCWGrid();
+	adaptCanvasAndGrid(p_canvas,p_drawer,p_global);
+}
+
+function mirrorHorizontalAction(p_canvas,p_drawer,p_global){
+	p_global.mirrorHorizontalGrid();
+	adaptCanvasAndGrid(p_canvas,p_drawer,p_global);
+}
+
+function mirrorVerticalAction(p_canvas,p_drawer,p_global){
+	p_global.mirrorVerticalGrid();
+	adaptCanvasAndGrid(p_canvas,p_drawer,p_global);
 }

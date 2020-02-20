@@ -19,6 +19,15 @@ document.getElementById("submit_save_grid").addEventListener('click',function(ev
 document.getElementById("submit_load_grid").addEventListener('click',function(event){loadAction(canevas,drawer,global,fieldName.value,fieldX,fieldY)});
 document.getElementById("submit_show_region_grid").addEventListener('click',function(event){readRegionGrid(global)});
 document.getElementById("submit_new_grid").addEventListener('click',function(event){restartAction(canevas,drawer,global,fieldX.value,fieldY.value)});
+document.getElementById("submit_resize_grid").addEventListener('click',function(event){resizeAction(canevas,drawer,global,fieldX.value,fieldY.value)});
+
+document.getElementById("submit_rotate_clockwise").addEventListener('click',function(event){rotateCWAction(canevas,drawer,global)});
+document.getElementById("submit_rotate_uturn").addEventListener('click',function(event){rotateUTurnAction(canevas,drawer,global)});
+document.getElementById("submit_rotate_counter_clockwise").addEventListener('click',function(event){rotateCCWAction(canevas,drawer,global)});
+document.getElementById("submit_mirror_horizontal").addEventListener('click',function(event){mirrorHorizontalAction(canevas,drawer,global)});
+document.getElementById("submit_mirror_vertical").addEventListener('click',function(event){mirrorVerticalAction(canevas,drawer,global)});
+
+
 canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,global)},false);
 global.mode.colorRegionIfValid = true;
 
