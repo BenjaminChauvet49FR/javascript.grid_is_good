@@ -1,5 +1,3 @@
-//TODO do something with that
-
 /**
 Returns the string to be contained in local storage (must be rectangular and non-empty) from the SB puzzle
 X-empty ; 0 sides right and down open ; 1 side right closed ; 2 side down closed ; 3 side down closed.
@@ -47,9 +45,6 @@ function stringToNorinoriPuzzle(p_string){
 	return {grid:answer};
 }
 
-
-
-
 /**
 Returns the space that matches a char in unparsing function ('0123' => sides down-right = open/closed)
 p_char : the desired char
@@ -62,11 +57,4 @@ function charToSpace(p_char){
 		case('3'): return {state:OPEN,wallD:CLOSED,wallR:CLOSED};break;
 		default : return {state:CLOSED,wallD:OPEN,wallR:OPEN};break;
 	}
-}
-
-/**
-Returns a name to store into / load from local storage
-*/
-function getLocalStorageName(p_name){
-	return "grid_is_good_"+p_name;
 }

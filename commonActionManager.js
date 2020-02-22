@@ -24,10 +24,10 @@ function addEventListenerAndCaptionActionSubmit(p_editorCore,p_modesManager,p_te
 Changes the mode, both visually (innerHTML) and in model 
 */
 function setMode(p_textElement,p_modesManager,p_entry,p_mode){
-		p_textElement.innerHTML = p_mode.html;
-		switch(p_entry){
-			case (MODES.SPACE):p_modesManager.clickSpace = p_mode;break; 
-			case (MODES.WALL_R):p_modesManager.clickWallD = p_mode;break; 
-			case (MODES.WALL_D):p_modesManager.clickWallR = p_mode;break; 
-		}
+	p_textElement.innerHTML = p_mode.html;
+	switch(p_entry){
+		case (MODES.SPACE):p_modesManager.clickSpace = p_mode;break; 
+		case (MODES.WALL_R):p_modesManager.clickWallD = p_mode;break; 
+		case (MODES.WALL_D):p_modesManager.clickWallR = p_mode;break; 
+	}
 }

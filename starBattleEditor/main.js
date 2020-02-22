@@ -21,8 +21,9 @@ var fieldStars = document.getElementById("input_number_stars");
 var fieldDimension = document.getElementById("input_number_dimension");
 
 adaptCanvasAndGrid(canevas,drawer,editorCore);
-document.getElementById("submit_save_grid").addEventListener('click',function(event){saveAction(editorCore,fieldName.value,fieldStars.value)});
-document.getElementById("submit_load_grid").addEventListener('click',function(event){loadAction(canevas,drawer,editorCore,fieldName.value,fieldDimension,fieldStars)});
+document.getElementById("submit_save_grid").addEventListener('click',function(event){saveAction(editorCore,fieldName.value,{numberStars : fieldStars.value})});
+document.getElementById("submit_load_grid").addEventListener('click',function(event){loadAction(canevas,drawer,editorCore,fieldName.value,{numberStarsField : fieldStars, sizeField:fieldDimension})});
+document.getElementById("submit_auto_name").addEventListener('click',function(event){fieldName.value = "SternenSchlacht"});
 document.getElementById("submit_new_grid").addEventListener('click',function(event){restartAction(canevas,drawer,editorCore,fieldDimension.value,fieldDimension.value)});
 document.getElementById("submit_resize_grid").addEventListener('click',function(event){resizeAction(canevas,drawer,editorCore,fieldDimension.value,fieldDimension.value)});
 

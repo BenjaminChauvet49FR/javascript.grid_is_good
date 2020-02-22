@@ -19,8 +19,9 @@ var fieldX = document.getElementById("input_number_xLength");
 var fieldY = document.getElementById("input_number_yLength");
 
 adaptCanvasAndGrid(canevas,drawer,editorCore);
-document.getElementById("submit_save_grid").addEventListener('click',function(event){saveAction(editorCore,fieldName.value)});
-document.getElementById("submit_load_grid").addEventListener('click',function(event){loadAction(canevas,drawer,editorCore,fieldName.value,fieldX,fieldY)});
+document.getElementById("submit_save_grid").addEventListener('click',function(event){saveAction(editorCore,fieldName.value,null)});
+document.getElementById("submit_load_grid").addEventListener('click',function(event){loadAction(canevas,drawer,editorCore,fieldName.value,{xLengthField : fieldX, yLengthField:fieldY} )});
+document.getElementById("submit_auto_name").addEventListener('click',function(event){fieldName.value = "Norinori"});
 document.getElementById("submit_new_grid").addEventListener('click',function(event){restartAction(canevas,drawer,editorCore,fieldX.value,fieldY.value)});
 document.getElementById("submit_resize_grid").addEventListener('click',function(event){resizeAction(canevas,drawer,editorCore,fieldX.value,fieldY.value)});
 

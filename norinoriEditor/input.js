@@ -1,12 +1,12 @@
 // https://stackoverflow.com/questions/43172115/get-the-mouse-coordinates-when-clicking-on-canvas
 
-clickWallRAction = function(p_editorCore,p_x, p_y, p_modes){
+function clickWallRAction(p_editorCore,p_x, p_y, p_modes){
 	p_editorCore.switchWallR(p_x, p_y);
 }
-clickWallDAction = function(p_editorCore,p_x, p_y, p_modes){
+function clickWallDAction(p_editorCore,p_x, p_y, p_modes){
 	p_editorCore.switchWallD(p_x, p_y);
 }
-clickSpaceAction = function(p_editorCore,p_x, p_y, p_modes){
+function clickSpaceAction(p_editorCore,p_x, p_y, p_modes){
 	mode = p_modes.clickSpace;
 	if (mode.id == MODE_SELECTION.id){
 		p_editorCore.selectSpace(p_x,p_y);
@@ -17,41 +17,21 @@ clickSpaceAction = function(p_editorCore,p_x, p_y, p_modes){
 	}
 }
 
-//------------------------------
-
-/** Saves a walled grid into local storage 
-p_editorCore : the Global item
-p_detachedName : the detached name (without the prefix) to store into local storage
-*/
-saveAction = function(p_editorCore,p_detachedName) {
-	var localStorageName = getLocalStorageName(p_detachedName);
-	var letsSave = true;
-	if (localStorage.hasOwnProperty(localStorageName)){
-		if (!confirm("Le stockage local a déjà une propriété nommée '"+localStorageName+"'. L'écraser ?")){
-			letsSave = false;
-		}
-	}
-	if(letsSave){
-		localStorage.setItem(localStorageName, norinoriPuzzleToString(p_editorCore.wallGrid));
-	}
+function puzzleToString(p_editorCore,p_externalOptions){
+	return norinoriPuzzleToString(p_editorCore.wallGrid);
 }
 
-/** Loads a walled grid from local storage 
-p_detachedName : the detached name (without the prefix) to load from local storage
-*/
-loadAction = function(p_canvas,p_drawer,p_editorCore,p_detachedName,p_xLengthField,p_yLengthField){
-	var localStorageName = getLocalStorageName(p_detachedName);
-	if (localStorage.hasOwnProperty(localStorageName)){
-		if (confirm("Charger la grille "+localStorageName+" ?")){
-			var answer = stringToNorinoriPuzzle(localStorage.getItem(localStorageName));
-			p_editorCore.loadGrid(answer.grid);
-			adaptCanvasAndGrid(p_canvas,p_drawer,p_editorCore);	
-			p_xLengthField.value = answer.grid[0].length;
-			p_yLengthField.value = answer.grid.length;
-		}
-	} else{
-		alert("Le stockage local n'a pas de propriété nommée '"+localStorageName+"'.");
-	}
+function getLocalStorageName(p_detachedName){
+	return "grid_is_good_"+p_detachedName;
+}
+
+function stringToPuzzle(p_string){
+	return stringToNorinoriPuzzle(p_string);
+}
+
+function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem){
+	p_fieldsToUpdate.xLengthField.value = p_loadedItem.grid[0].length;
+	p_fieldsToUpdate.yLengthField.value = p_loadedItem.grid.length;
 }
 
 //------------------------------
@@ -60,7 +40,7 @@ loadAction = function(p_canvas,p_drawer,p_editorCore,p_detachedName,p_xLengthFie
 Read the region grid as it is
 p_editorCore : the global item
 */
-readRegionGrid = function(p_editorCore){
+function readRegionGrid(p_editorCore){
 	p_editorCore.updateRegionGrid();
 }
 
@@ -72,40 +52,17 @@ p_editorCore : the Global item
 p_xLength : horizontal dimension
 p_yLength : vertical dimension
 */
-restartAction = function(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength){
+function restartAction(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength){
 	if (confirm("Redémarrer la grille ?")){
 		p_editorCore.restartGrid(p_xLength,p_yLength);
 		adaptCanvasAndGrid(p_canvas, p_drawer,p_editorCore);	
 	}
 }
 
-resizeAction = function(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength){
+function resizeAction(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength){
 	if (confirm("Redimensionner la grille ?")){
 		p_editorCore.resizeGrid(p_xLength,p_yLength);
 		adaptCanvasAndGrid(p_canvas, p_drawer,p_editorCore);	
-	}
-}
-
-/**
-Adapts canvas to global grid
-p_canvas : the canvas to adapt
-p_pix : the Pix item to calculate coordinates
-p_editorCore : the Global item the canvas should be adapted to
-*/
-function adaptCanvasAndGrid(p_canvas, p_drawer,p_editorCore){
-	//Respects dimension of 800x512
-	//TODO Constants can be written somewhere else !
-	p_drawer.pix.sideSpace = Math.min(32,Math.min(Math.floor(800/p_editorCore.xLength),Math.floor(512/p_editorCore.yLength)));
-	p_drawer.pix.borderSpace = Math.max(1,Math.floor(p_drawer.pix.sideSpace/10));
-	p_drawer.setMarginGrid(0,0,0,0);
-	//TODO should be factorized with other editors !
-	p_canvas.width = p_editorCore.xLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.left+p_drawer.pix.marginGrid.right;
-	p_canvas.height = p_editorCore.yLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.up+p_drawer.pix.marginGrid.down;
-	if(p_canvas.width > p_canvas.height){
-		p_canvas.height = p_canvas.width;
-	}
-	else{
-		p_canvas.width = p_canvas.height;
 	}
 }
 

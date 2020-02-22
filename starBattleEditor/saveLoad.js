@@ -1,5 +1,3 @@
-//TODO do something with that
-
 /**
 Returns the string to be contained in local storage (must be rectangular and non-empty) from the SB puzzle
 X-empty ; 0 sides right and down open ; 1 side right closed ; 2 side down closed ; 3 side down closed.
