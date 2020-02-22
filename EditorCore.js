@@ -2,12 +2,12 @@
 This file contains the "global" object definition and all objects that could be put into it. 
 */
 
-function Global(p_xLength,p_yLength) {
+function EditorCore(p_xLength,p_yLength) {
 	this.loadGrid(generateWallGrid(p_xLength,p_yLength));
 	this.mode = {colorRegionIfValid : false};	
 }
 
-Global.prototype.loadGrid = function(p_wallGrid){
+EditorCore.prototype.loadGrid = function(p_wallGrid){
 	this.yLength = p_wallGrid.length;
 	if(this.yLength > 0){
 		this.xLength = p_wallGrid[0].length;		
@@ -25,24 +25,24 @@ Global.prototype.loadGrid = function(p_wallGrid){
 
 }
 
-Global.prototype.restartGrid = function(p_xLength,p_yLength){
+EditorCore.prototype.restartGrid = function(p_xLength,p_yLength){
 	this.loadGrid(generateWallGrid(p_xLength,p_yLength));
 }
 
 
-Global.prototype.getWallR = function(p_x,p_y){return this.wallGrid[p_y][p_x].wallR;}
-Global.prototype.getWallD = function(p_x,p_y){return this.wallGrid[p_y][p_x].wallD;}
-Global.prototype.getState = function(p_x,p_y){return this.wallGrid[p_y][p_x].state;}
-Global.prototype.setWallR = function(p_x,p_y,p_state){this.wallGrid[p_y][p_x].wallR = p_state;this.isRegionGridValid=false;}
-Global.prototype.setWallD = function(p_x,p_y,p_state){this.wallGrid[p_y][p_x].wallD = p_state;this.isRegionGridValid=false;}
-Global.prototype.setState = function(p_x,p_y,p_state){this.wallGrid[p_y][p_x].state = p_state;this.isRegionGridValid=false;}
-Global.prototype.switchWallR = function(p_x,p_y){this.setWallR(p_x,p_y,switchedState(this.getWallR(p_x,p_y)));}
-Global.prototype.switchWallD = function(p_x,p_y){this.setWallD(p_x,p_y,switchedState(this.getWallD(p_x,p_y)));}
-Global.prototype.switchState = function(p_x,p_y){this.setState(p_x,p_y,switchedState(this.getState(p_x,p_y)));}
-Global.prototype.getRegion = function(p_x,p_y){return this.regionGrid[p_y][p_x]};
-Global.prototype.getSelection = function(p_x,p_y){return this.selectedGrid[p_y][p_x]};
+EditorCore.prototype.getWallR = function(p_x,p_y){return this.wallGrid[p_y][p_x].wallR;}
+EditorCore.prototype.getWallD = function(p_x,p_y){return this.wallGrid[p_y][p_x].wallD;}
+EditorCore.prototype.getState = function(p_x,p_y){return this.wallGrid[p_y][p_x].state;}
+EditorCore.prototype.setWallR = function(p_x,p_y,p_state){this.wallGrid[p_y][p_x].wallR = p_state;this.isRegionGridValid=false;}
+EditorCore.prototype.setWallD = function(p_x,p_y,p_state){this.wallGrid[p_y][p_x].wallD = p_state;this.isRegionGridValid=false;}
+EditorCore.prototype.setState = function(p_x,p_y,p_state){this.wallGrid[p_y][p_x].state = p_state;this.isRegionGridValid=false;}
+EditorCore.prototype.switchWallR = function(p_x,p_y){this.setWallR(p_x,p_y,switchedState(this.getWallR(p_x,p_y)));}
+EditorCore.prototype.switchWallD = function(p_x,p_y){this.setWallD(p_x,p_y,switchedState(this.getWallD(p_x,p_y)));}
+EditorCore.prototype.switchState = function(p_x,p_y){this.setState(p_x,p_y,switchedState(this.getState(p_x,p_y)));}
+EditorCore.prototype.getRegion = function(p_x,p_y){return this.regionGrid[p_y][p_x]};
+EditorCore.prototype.getSelection = function(p_x,p_y){return this.selectedGrid[p_y][p_x]};
 
-Global.prototype.updateRegionGrid = function(){
+EditorCore.prototype.updateRegionGrid = function(){
 	this.regionGrid = wallGridToRegionGrid(this.wallGrid);
 	this.isRegionGridValid = true;
 }
@@ -138,12 +138,12 @@ function switchedState(p_wallState){
 /**
 Selection phase
 */
-Global.prototype.selectSpace = function(p_x,p_y){
+EditorCore.prototype.selectSpace = function(p_x,p_y){
 	this.selectedGrid[p_y][p_x] = SELECTED.YES;
 	this.selectedSpacesList.push({x:p_x,y:p_y});
 }
 
-Global.prototype.unselectAll = function(){
+EditorCore.prototype.unselectAll = function(){
 	var space;
 	while(this.selectedSpacesList.length > 0){
 		space = this.selectedSpacesList.pop();
@@ -151,7 +151,7 @@ Global.prototype.unselectAll = function(){
 	}
 }
 
-Global.prototype.resetSelection = function(){
+EditorCore.prototype.resetSelection = function(){
 	this.isSelectionMode = false;
 	this.selectedSpacesList = [];
 	this.selectedGrid = [];
@@ -163,7 +163,7 @@ Global.prototype.resetSelection = function(){
 	}		
 }
 
-Global.prototype.buildWallsAroundSelection = function(){
+EditorCore.prototype.buildWallsAroundSelection = function(){
 	this.selectedSpacesList.forEach(space => {
 		if (space.x > 0 && this.selectedGrid[space.y][space.x-1] == SELECTED.NO){
 			this.setWallR(space.x-1,space.y,CLOSED);
@@ -181,7 +181,7 @@ Global.prototype.buildWallsAroundSelection = function(){
 	this.unselectAll();
 }
 
-Global.prototype.clearWallsAround = function(p_x,p_y){
+EditorCore.prototype.clearWallsAround = function(p_x,p_y){
 	if (p_x > 0 && this.selectedGrid[p_y][p_x-1] == SELECTED.NO){
 		this.setWallR(p_x-1,p_y,OPEN);
 	}
@@ -201,7 +201,7 @@ Global.prototype.clearWallsAround = function(p_x,p_y){
 /**
 Transforms the grid
 */
-Global.prototype.rotateCWGrid = function(){
+EditorCore.prototype.rotateCWGrid = function(){
 	var newWallGrid = [];
 	var newWallR;
 	var newWallD;
@@ -223,7 +223,7 @@ Global.prototype.rotateCWGrid = function(){
 	this.loadGrid(newWallGrid);
 }
 
-Global.prototype.rotateUTurnGrid = function(){
+EditorCore.prototype.rotateUTurnGrid = function(){
 	var newWallGrid = [];
 	var newWallR;
 	var newWallD;
@@ -252,7 +252,7 @@ Global.prototype.rotateUTurnGrid = function(){
 	this.loadGrid(newWallGrid);
 }
 
-Global.prototype.rotateCCWGrid = function(){
+EditorCore.prototype.rotateCCWGrid = function(){
 	var newWallGrid = [];
 	var newWallR;
 	var newWallD;
@@ -274,7 +274,7 @@ Global.prototype.rotateCCWGrid = function(){
 	this.loadGrid(newWallGrid);
 }
 
-Global.prototype.mirrorHorizontalGrid = function(){
+EditorCore.prototype.mirrorHorizontalGrid = function(){
 	var newWallGrid = [];
 	var newWallR;
 	var newWallD;
@@ -299,7 +299,7 @@ Global.prototype.mirrorHorizontalGrid = function(){
 	this.loadGrid(newWallGrid);
 }
 
-Global.prototype.mirrorVerticalGrid = function(){
+EditorCore.prototype.mirrorVerticalGrid = function(){
 	var newWallGrid = [];
 	var newWallR;
 	var newWallD;
@@ -324,7 +324,7 @@ Global.prototype.mirrorVerticalGrid = function(){
 	this.loadGrid(newWallGrid);
 }
 
-Global.prototype.resizeGrid = function(p_xLength,p_yLength){
+EditorCore.prototype.resizeGrid = function(p_xLength,p_yLength){
 	var newWallGrid = [];
 	var newWallD,newWallR,newState;
 	for(var iy = 0; iy < p_yLength; iy++){

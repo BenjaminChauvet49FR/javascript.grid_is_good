@@ -18,12 +18,31 @@
 		Dimension : <input type="number" id="input_number_dimension" value="9"></input>
 		Nombre étoiles : <input type="number" id="input_number_stars" value="2"></input>
 
-		<input type="submit" id="submit_new_grid" value="Nouvelle grille"></input></br>
+		</br>
+		<input type="submit" id="submit_new_grid" value="Nouvelle grille"></input>
+		<input type="submit" id="submit_resize_grid" value="Redimensionner la grille"></input>
+		</br></br>
+
+		Mode : <span id="span_mode"></span></br>
+		<input type="submit" id="submit_normal_mode" value="XXX"></input>
+		<input type="submit" id="submit_erase_mode" value="XXX"></input>
+		<input type="submit" id="submit_select_mode" value="XXX"></input></br>
+		<input type="submit" id="submit_wall_selection" value="Murer sélection"></input>
+		<input type="submit" id="submit_clear_selection" value="Annuler sélection"></input>
+		</br>
+		</br>
+
+		<input type="submit" id="submit_rotate_clockwise" value="Rotation sens horaire"></input></br>
+		<input type="submit" id="submit_rotate_uturn" value="Rotation 180°"></input></br>
+		<input type="submit" id="submit_rotate_counter_clockwise" value="Rotation sens anti-horaire"></input></br>
+		<input type="submit" id="submit_mirror_horizontal" value="Réflexion horizontale"></input></br>
+		<input type="submit" id="submit_mirror_vertical" value="Réflexion verticale"></input></br>
 
 	
 		<script src="../constants.js"></script>
-		<script src="../Global.js"></script>
+		<script src="../EditorCore.js"></script>
 		<script src="../Drawer.js"></script>
+		<script src="../commonInput.js"></script>
 		<script src="input.js"></script>
 		<script src="saveLoad.js"></script>
 		<script src="main.js"></script>

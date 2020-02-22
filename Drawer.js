@@ -39,10 +39,10 @@ Drawer.prototype.setMarginGrid = function(p_left,p_up,p_right,p_down){
 // All drawing functions
 
 /**
-Draw the grid on-screen on p_context, with p_global informations, with this.pix and p_colors information for pixels and colors
+Draw the grid on-screen on p_context, with p_editorCore informations, with this.pix and p_colors information for pixels and colors
 */
 
-Drawer.prototype.drawGrid = function(p_context,p_global){
+Drawer.prototype.drawGrid = function(p_context,p_editorCore){
 	
 	var ix, iy, indexRegion;
 	
@@ -61,22 +61,22 @@ Drawer.prototype.drawGrid = function(p_context,p_global){
 	
 	//Go !
 	p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight);
-	for(iy = 0;iy < p_global.yLength; iy++){
-		for(ix = 0;ix < p_global.xLength;ix++){
+	for(iy = 0;iy < p_editorCore.yLength; iy++){
+		for(ix = 0;ix < p_editorCore.xLength;ix++){
 			//Draw down wall
-			if (iy <= p_global.yLength-2){ 
-				p_context.fillStyle= this.wallToColor(p_global.getWallD(ix,iy));
+			if (iy <= p_editorCore.yLength-2){ 
+				p_context.fillStyle= this.wallToColor(p_editorCore.getWallD(ix,iy));
 				p_context.fillRect(pixDrawXHoriz,pixDrawYHoriz,pixLength,pixThickness);
 			}	
 			//Draw right wall
-			if (ix <= p_global.xLength-2){
-				p_context.fillStyle= this.wallToColor(p_global.getWallR(ix,iy));
+			if (ix <= p_editorCore.xLength-2){
+				p_context.fillStyle= this.wallToColor(p_editorCore.getWallR(ix,iy));
 				p_context.fillRect(pixDrawXVert,pixDrawYVert,pixThickness,pixLength);
 			}
 			//Draw pillar
-			if((ix <= p_global.xLength-2) && (iy <= p_global.yLength-2)){
-				if (p_global.getWallR(ix,iy) == CLOSED || p_global.getWallD(ix,iy) == CLOSED ||
-					p_global.getWallR(ix,iy+1) == CLOSED || p_global.getWallD(ix+1,iy) == CLOSED)
+			if((ix <= p_editorCore.xLength-2) && (iy <= p_editorCore.yLength-2)){
+				if (p_editorCore.getWallR(ix,iy) == CLOSED || p_editorCore.getWallD(ix,iy) == CLOSED ||
+					p_editorCore.getWallR(ix,iy+1) == CLOSED || p_editorCore.getWallD(ix+1,iy) == CLOSED)
 				{
 					p_context.fillStyle= this.wallToColor(CLOSED);
 				} 
@@ -85,21 +85,22 @@ Drawer.prototype.drawGrid = function(p_context,p_global){
 				}
 				p_context.fillRect(pixDrawXVert,pixDrawYHoriz,pixThickness,pixThickness);
 			}
-			//Draw inner space
-			innerSpaceNotColored = true;
-			if(p_global.mode.colorRegionIfValid && p_global.isRegionGridValid){
-				indexRegion = p_global.getRegion(ix,iy);
+			//Draw inner space - Who knows, some coloration can be cute or... ?
+			/*innerSpaceNotColored = true; 
+			if(p_editorCore.mode.colorRegionIfValid && p_editorCore.isRegionGridValid){
+				indexRegion = p_editorCore.getRegion(ix,iy);
 				if (indexRegion >= 0){
 					p_context.fillStyle = this.colors.rainbowSpaces[indexRegion % 12];
 					p_context.fillRect(pixDrawXHoriz,pixDrawYVert,pixLength,pixLength);
 					innerSpaceNotColored = false;
 				}
-			}
-			if(p_global.getSelection(ix,iy) == SELECTED.YES){
+			}*/
+			innerSpaceNotColored = true; //C'était l'époque des cases colorées...
+			if(p_editorCore.getSelection(ix,iy) == SELECTED.YES){
 				p_context.fillStyle= this.colors.selectedSpace;
 				p_context.fillRect(pixDrawXHoriz,pixDrawYVert,pixLength,pixLength);
 			}
-			if (innerSpaceNotColored && p_global.getState(ix,iy) == CLOSED){
+			if (innerSpaceNotColored && p_editorCore.getState(ix,iy) == CLOSED){
 				p_context.fillStyle= this.colors.bannedSpace;
 				p_context.fillRect(pixDrawXHoriz,pixDrawYVert,pixLength,pixLength);
 			}
@@ -113,8 +114,8 @@ Drawer.prototype.drawGrid = function(p_context,p_global){
 	}
 	
 	//Draws the borders
-	const pixTotalWidth = p_global.xLength*this.pix.sideSpace;
-	const pixTotalHeight = p_global.yLength*this.pix.sideSpace;
+	const pixTotalWidth = p_editorCore.xLength*this.pix.sideSpace;
+	const pixTotalHeight = p_editorCore.yLength*this.pix.sideSpace;
 	p_context.fillStyle= this.colors.edge_walls;
 	p_context.fillRect(this.pix.marginGrid.left,this.pix.marginGrid.up,		this.pix.borderSpace,pixTotalHeight);
 	p_context.fillRect(this.pix.marginGrid.left,this.pix.marginGrid.up,		pixTotalWidth,this.pix.borderSpace);
@@ -172,10 +173,10 @@ Drawer.prototype.getPixInnerSide = function(){
 /**
 If a click is done on a space, otherwise return null
 */
-Drawer.prototype.getClickSpace = function(event,p_canvas,p_global){
+Drawer.prototype.getClickSpace = function(event,p_canvas,p_editorCore){
     var indexX = Math.floor(this.getPixXWithinGrid(event,p_canvas)/this.pix.sideSpace); 
     var indexY = Math.floor(this.getPixYWithinGrid(event,p_canvas)/this.pix.sideSpace);
-	if (indexX < 0 || indexX >= p_global.xLength || indexY < 0 || indexY >= p_global.yLength){
+	if (indexX < 0 || indexX >= p_editorCore.xLength || indexY < 0 || indexY >= p_editorCore.yLength){
 		return null;		
 	}
 	return {x:indexX,y:indexY}
@@ -184,7 +185,7 @@ Drawer.prototype.getClickSpace = function(event,p_canvas,p_global){
 /**
 If a click is done when mouse is a right wall, returns the index of the corresponding space, otherwise return null
 */
-Drawer.prototype.getClickWallR = function(event,p_canvas,p_global){
+Drawer.prototype.getClickWallR = function(event,p_canvas,p_editorCore){
 	var pixX = this.getPixXWithinGrid(event,p_canvas); 
     var pixY = this.getPixYWithinGrid(event,p_canvas); 
 	var pixXModulo = (pixX+this.pix.borderClickDetection)%this.pix.sideSpace;
@@ -193,7 +194,7 @@ Drawer.prototype.getClickWallR = function(event,p_canvas,p_global){
 			x:Math.floor((pixX+this.pix.borderClickDetection)/this.pix.sideSpace)-1,
 			y:Math.floor(pixY/this.pix.sideSpace)
 		};
-		if ((answer.x < (p_global.xLength-1)) && (answer.x >= 0) && (answer.y < p_global.yLength) && (answer.y >= 0)){
+		if ((answer.x < (p_editorCore.xLength-1)) && (answer.x >= 0) && (answer.y < p_editorCore.yLength) && (answer.y >= 0)){
 			return answer;
 		}
 	}  
@@ -203,7 +204,7 @@ Drawer.prototype.getClickWallR = function(event,p_canvas,p_global){
 /**
 Same as above with down walls
 */
-Drawer.prototype.getClickWallD = function(event,p_canvas,p_global){
+Drawer.prototype.getClickWallD = function(event,p_canvas,p_editorCore){
 	var pixX = this.getPixXWithinGrid(event,p_canvas); 
     var pixY = this.getPixYWithinGrid(event,p_canvas); 
 	var pixYModulo = (pixY+this.pix.borderClickDetection)%this.pix.sideSpace;
@@ -212,7 +213,7 @@ Drawer.prototype.getClickWallD = function(event,p_canvas,p_global){
 			x:Math.floor(pixX/this.pix.sideSpace),
 			y:Math.floor((pixY+this.pix.borderClickDetection)/this.pix.sideSpace)-1
 		};
-		if ((answer.y < (p_global.yLength-1)) && (answer.y >= 0) && (answer.x < p_global.xLength) && (answer.x >= 0)){
+		if ((answer.y < (p_editorCore.yLength-1)) && (answer.y >= 0) && (answer.x < p_editorCore.xLength) && (answer.x >= 0)){
 			return answer;
 		}
 	}  
