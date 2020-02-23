@@ -43,7 +43,21 @@ Draw the grid on-screen on p_context, with p_editorCore informations, with this.
 */
 
 Drawer.prototype.drawGrid = function(p_context,p_editorCore){
+	//TODO improve me this, lol !
+	for(var iy = 0;iy < p_editorCore.getYLength(); iy++){
+		for(var ix = 0;ix < p_editorCore.getXLength();ix++){
+			if(p_editorCore.getSelection(ix,iy) == SELECTED.YES){
+				p_context.fillStyle= this.colors.selectedSpace;
+				p_context.fillRect(this.getPixInnerXLeft(ix),this.getPixInnerYUp(iy),this.getPixInnerSide(),this.getPixInnerSide());
+			}
+		}
+	}
 	
+	
+	this.drawWallGrid(p_context,p_editorCore.wallGrid,p_editorCore.getXLength(),p_editorCore.getYLength());
+}
+
+Drawer.prototype.drawWallGrid = function(p_context,p_wallGrid, p_xLength, p_yLength){
 	var ix, iy, indexRegion;
 	
 	//Upper-left pixel of the horizontal walls (Horiz) and vertical walls (Vert) ; pillars aren't part of walls (meeting of 4 walls)
@@ -61,22 +75,22 @@ Drawer.prototype.drawGrid = function(p_context,p_editorCore){
 	
 	//Go !
 	p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight);
-	for(iy = 0;iy < p_editorCore.yLength; iy++){
-		for(ix = 0;ix < p_editorCore.xLength;ix++){
+	for(iy = 0;iy < p_yLength; iy++){
+		for(ix = 0;ix < p_xLength;ix++){
 			//Draw down wall
-			if (iy <= p_editorCore.yLength-2){ 
-				p_context.fillStyle= this.wallToColor(p_editorCore.getWallD(ix,iy));
+			if (iy <= p_yLength-2){ 
+				p_context.fillStyle= this.wallToColor(p_wallGrid.getWallD(ix,iy));
 				p_context.fillRect(pixDrawXHoriz,pixDrawYHoriz,pixLength,pixThickness);
 			}	
 			//Draw right wall
-			if (ix <= p_editorCore.xLength-2){
-				p_context.fillStyle= this.wallToColor(p_editorCore.getWallR(ix,iy));
+			if (ix <= p_xLength-2){
+				p_context.fillStyle= this.wallToColor(p_wallGrid.getWallR(ix,iy));
 				p_context.fillRect(pixDrawXVert,pixDrawYVert,pixThickness,pixLength);
 			}
 			//Draw pillar
-			if((ix <= p_editorCore.xLength-2) && (iy <= p_editorCore.yLength-2)){
-				if (p_editorCore.getWallR(ix,iy) == CLOSED || p_editorCore.getWallD(ix,iy) == CLOSED ||
-					p_editorCore.getWallR(ix,iy+1) == CLOSED || p_editorCore.getWallD(ix+1,iy) == CLOSED)
+			if((ix <= p_xLength-2) && (iy <= p_yLength-2)){
+				if (p_wallGrid.getWallR(ix,iy) == CLOSED || p_wallGrid.getWallD(ix,iy) == CLOSED ||
+					p_wallGrid.getWallR(ix,iy+1) == CLOSED || p_wallGrid.getWallD(ix+1,iy) == CLOSED)
 				{
 					p_context.fillStyle= this.wallToColor(CLOSED);
 				} 
@@ -85,25 +99,11 @@ Drawer.prototype.drawGrid = function(p_context,p_editorCore){
 				}
 				p_context.fillRect(pixDrawXVert,pixDrawYHoriz,pixThickness,pixThickness);
 			}
-			//Draw inner space - Who knows, some coloration can be cute or... ?
-			/*innerSpaceNotColored = true; 
-			if(p_editorCore.mode.colorRegionIfValid && p_editorCore.isRegionGridValid){
-				indexRegion = p_editorCore.getRegion(ix,iy);
-				if (indexRegion >= 0){
-					p_context.fillStyle = this.colors.rainbowSpaces[indexRegion % 12];
-					p_context.fillRect(pixDrawXHoriz,pixDrawYVert,pixLength,pixLength);
-					innerSpaceNotColored = false;
-				}
-			}*/
-			innerSpaceNotColored = true; //C'était l'époque des cases colorées...
-			if(p_editorCore.getSelection(ix,iy) == SELECTED.YES){
-				p_context.fillStyle= this.colors.selectedSpace;
-				p_context.fillRect(pixDrawXHoriz,pixDrawYVert,pixLength,pixLength);
-			}
-			if (innerSpaceNotColored && p_editorCore.getState(ix,iy) == CLOSED){
-				p_context.fillStyle= this.colors.bannedSpace;
-				p_context.fillRect(pixDrawXHoriz,pixDrawYVert,pixLength,pixLength);
-			}
+			//Draw inside space
+			if (p_wallGrid.getState(ix,iy) == CLOSED){
+                p_context.fillStyle= this.colors.bannedSpace;
+                p_context.fillRect(pixDrawXHoriz,pixDrawYVert,pixLength,pixLength);
+            }
 			pixDrawXHoriz += this.pix.sideSpace;
 			pixDrawXVert += this.pix.sideSpace;
 		}
@@ -114,8 +114,8 @@ Drawer.prototype.drawGrid = function(p_context,p_editorCore){
 	}
 	
 	//Draws the borders
-	const pixTotalWidth = p_editorCore.xLength*this.pix.sideSpace;
-	const pixTotalHeight = p_editorCore.yLength*this.pix.sideSpace;
+	const pixTotalWidth = p_xLength*this.pix.sideSpace;
+	const pixTotalHeight = p_yLength*this.pix.sideSpace;
 	p_context.fillStyle= this.colors.edge_walls;
 	p_context.fillRect(this.pix.marginGrid.left,this.pix.marginGrid.up,		this.pix.borderSpace,pixTotalHeight);
 	p_context.fillRect(this.pix.marginGrid.left,this.pix.marginGrid.up,		pixTotalWidth,this.pix.borderSpace);
@@ -176,7 +176,7 @@ If a click is done on a space, otherwise return null
 Drawer.prototype.getClickSpace = function(event,p_canvas,p_editorCore){
     var indexX = Math.floor(this.getPixXWithinGrid(event,p_canvas)/this.pix.sideSpace); 
     var indexY = Math.floor(this.getPixYWithinGrid(event,p_canvas)/this.pix.sideSpace);
-	if (indexX < 0 || indexX >= p_editorCore.xLength || indexY < 0 || indexY >= p_editorCore.yLength){
+	if (indexX < 0 || indexX >= p_editorCore.getXLength() || indexY < 0 || indexY >= p_editorCore.getYLength()){
 		return null;		
 	}
 	return {x:indexX,y:indexY}
@@ -194,7 +194,7 @@ Drawer.prototype.getClickWallR = function(event,p_canvas,p_editorCore){
 			x:Math.floor((pixX+this.pix.borderClickDetection)/this.pix.sideSpace)-1,
 			y:Math.floor(pixY/this.pix.sideSpace)
 		};
-		if ((answer.x < (p_editorCore.xLength-1)) && (answer.x >= 0) && (answer.y < p_editorCore.yLength) && (answer.y >= 0)){
+		if ((answer.x < (p_editorCore.getXLength()-1)) && (answer.x >= 0) && (answer.y < p_editorCore.getYLength()) && (answer.y >= 0)){
 			return answer;
 		}
 	}  
@@ -213,7 +213,7 @@ Drawer.prototype.getClickWallD = function(event,p_canvas,p_editorCore){
 			x:Math.floor(pixX/this.pix.sideSpace),
 			y:Math.floor((pixY+this.pix.borderClickDetection)/this.pix.sideSpace)-1
 		};
-		if ((answer.y < (p_editorCore.yLength-1)) && (answer.y >= 0) && (answer.x < p_editorCore.xLength) && (answer.x >= 0)){
+		if ((answer.y < (p_editorCore.getYLength()-1)) && (answer.y >= 0) && (answer.x < p_editorCore.getXLength()) && (answer.x >= 0)){
 			return answer;
 		}
 	}  

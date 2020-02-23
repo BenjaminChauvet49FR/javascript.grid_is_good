@@ -18,7 +18,7 @@ function clickSpaceAction(p_editorCore,p_x, p_y, p_modes){
 }
 
 function puzzleToString(p_editorCore,p_externalOptions){
-	return norinoriPuzzleToString(p_editorCore.wallGrid);
+	return norinoriPuzzleToString(p_editorCore.getArray());
 }
 
 function getLocalStorageName(p_detachedName){

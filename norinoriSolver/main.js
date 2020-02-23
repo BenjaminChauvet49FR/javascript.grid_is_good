@@ -21,7 +21,7 @@ var colors={
 //--------------------
 //The main draw function (at start)
 function drawCanvas(){
-	drawer.drawGrid(context,global);
+	drawer.drawGrid(context,global.getWallGrid());
 	drawInsideSpaces(context,drawer,colors,global);
 	if (document.getElementById("checkbox_drawIndications").checked){
 		drawInsideIndications(context,drawer,colors,global);	

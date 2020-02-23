@@ -16,7 +16,7 @@ clickSpaceAction = function(p_editorCore,p_x, p_y, p_modes){
 }
 
 function puzzleToString(p_editorCore,p_externalOptions){
-	return starBattlePuzzleToString(p_editorCore.wallGrid,p_externalOptions.numberStars);
+	return starBattlePuzzleToString(p_editorCore.getArray(),p_externalOptions.numberStars);
 }
 
 function getLocalStorageName(p_detachedName){
@@ -59,7 +59,12 @@ restartAction = function(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength)
 	}
 }
 
-//TODO : attention, pas de resizeAction !
+function resizeAction(p_canvas, p_drawer, p_editorCore, p_xyLength){
+	if (confirm("Redimensionner la grille ?")){
+		p_editorCore.resizeGrid(p_xyLength,p_xyLength);
+		adaptCanvasAndGrid(p_canvas, p_drawer,p_editorCore);	
+	}
+}
 
 //---------------
 

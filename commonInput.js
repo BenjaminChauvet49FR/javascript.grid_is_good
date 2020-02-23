@@ -57,7 +57,7 @@ loadAction = function(p_canvas,p_drawer,p_editorCore,p_detachedName,p_fieldsToUp
 	if (localStorage.hasOwnProperty(localStorageName)){
 		if (confirm("Charger le puzzle "+localStorageName+" ?")){
 			var loadedItem = stringToPuzzle(localStorage.getItem(localStorageName));
-			p_editorCore.loadGrid(loadedItem.grid); //TODO maybe this will have to be revisited because we are forcing "answer" to have a grid value. 
+			p_editorCore.setupFromWallArray(loadedItem.grid); //TODO maybe this will have to be revisited because we are forcing "answer" to have a grid value. 
 			adaptCanvasAndGrid(p_canvas,p_drawer,p_editorCore);	//Oh and this canvas, too...
 			updateFieldsAfterLoad(p_fieldsToUpdate,loadedItem);
 		}
@@ -77,10 +77,10 @@ p_editorCore : the Global item the canvas should be adapted to
 function adaptCanvasAndGrid(p_canvas, p_drawer,p_editorCore){
 	//Respects dimension of 800x512
 	//TODO Constants can be written somewhere else !
-	p_drawer.pix.sideSpace = Math.min(32,Math.min(Math.floor(800/p_editorCore.xLength),Math.floor(512/p_editorCore.yLength)));
+	p_drawer.pix.sideSpace = Math.min(32,Math.min(Math.floor(800/p_editorCore.getXLength()),Math.floor(512/p_editorCore.getYLength())));
 	p_drawer.pix.borderSpace = Math.max(1,Math.floor(p_drawer.pix.sideSpace/10));
-	p_canvas.width = p_editorCore.xLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.left+p_drawer.pix.marginGrid.right;
-	p_canvas.height = p_editorCore.yLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.up+p_drawer.pix.marginGrid.down;
+	p_canvas.width = p_editorCore.getXLength()*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.left+p_drawer.pix.marginGrid.right;
+	p_canvas.height = p_editorCore.getYLength()*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.up+p_drawer.pix.marginGrid.down;
 	if(p_canvas.width > p_canvas.height){
 		p_canvas.height = p_canvas.width;
 	}

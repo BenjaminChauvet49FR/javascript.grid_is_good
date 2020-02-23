@@ -1,6 +1,6 @@
 var drawer = new Drawer();
 drawer.setMarginGrid(32,32,32,32);
-var global = new GlobalStarBattle(generateWallGrid(1,1),1);
+var solver = new GlobalStarBattle(generateWallArray(1,1),1);
 //TODO (of course the grid (1,1) is a dummy grid, but at least it has as much rows as columns as regions
 var canevasInteraction = document.getElementById("canevas");
 var	context = canevasInteraction.getContext("2d");
@@ -24,11 +24,12 @@ var colors={
 //--------------------
 //The main draw function (at start)
 function drawCanvas(){
-	drawer.drawGrid(context,global);
-	drawInsideSpaces(context,drawer,colors,global);
+	//drawStarBattleGrid(context,drawer,solver); //Fonction à écrire !
+	drawer.drawWallGrid(context,solver.wallGrid,solver.xyLength,solver.xyLength); //TODO A SUIVRE APRES !
+	drawInsideSpaces(context,drawer,colors,solver);
 	if (document.getElementById("checkbox_drawIndications").checked){
-		drawAroundIndications(context,drawer,colors,global);
-		drawInsideIndications(context,drawer,colors,global);	
+		drawAroundIndications(context,drawer,colors,solver);
+		drawInsideIndications(context,drawer,colors,solver);	
 	}
 }
 
@@ -40,12 +41,12 @@ var starSpan = document.getElementById("span_stars");
 var textArea = document.getElementById("textarea_happened");
 
 document.getElementById("submit_load_grid").addEventListener('click',
-	function(event){loadAction(canevas,drawer,textArea,global,fieldName.value,starSpan)}
+	function(event){loadAction(canevas,drawer,textArea,solver,fieldName.value,starSpan)}
 );
-canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,textArea,global,actionToDo)},false);
-document.getElementById("submit_undo").addEventListener('click',function(event){undoAction(global,textArea)});
-document.getElementById("submit_multiPass").addEventListener('click',function(event){multiPassAction(global,textArea)});
-document.getElementById("submit_solve").addEventListener('click',function(event){solveAction(global,textArea)});
+canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,textArea,solver,actionToDo)},false);
+document.getElementById("submit_undo").addEventListener('click',function(event){undoAction(solver,textArea)});
+document.getElementById("submit_multiPass").addEventListener('click',function(event){multiPassAction(solver,textArea)});
+document.getElementById("submit_solve").addEventListener('click',function(event){solveAction(solver,textArea)});
 
 //Submits of click on a grid : what will happen ? (TODO : the word action is pretty generic)
 var submitPutStar = document.getElementById("submit_put_star");
