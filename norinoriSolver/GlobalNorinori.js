@@ -1,23 +1,18 @@
-function GlobalNorinori(p_wallGrid){
-	Global.call(this,1,1);
-	this.loadGrid(p_wallGrid);
+function GlobalNorinori(p_wallArray){
+	this.construct(p_wallArray);
+}
+
+GlobalNorinori.prototype.construct = function(p_wallArray){
+	this.xLength = p_wallArray[0].length;
+	this.yLength = p_wallArray.length;
+	this.wallGrid = new WallGrid(p_wallArray,this.xLength,this.yLength); 
+	this.regionGrid = this.wallGrid.toRegionGrid(); 
 	this.answerGrid = [];
 	this.spacesByRegion =  [];
 	this.notPlacedYetByRegion = [];
 	this.neighborsGrid = [];
 	this.happenedEvents = [];	
-	this.loadIntelligence(); 
-}
-
-GlobalNorinori.prototype = new Global(1,1);
-GlobalNorinori.prototype.constructor = GlobalNorinori;
-
-/**
-Calls the function that launches the intelligence of the grid. Very important !
-*/
-GlobalNorinori.prototype.loadIntelligence = function(){
-	this.xLength = this.wallGrid[0].length;
-	this.yLength = this.wallGrid.length;
+	//Build intelligence !
 	this.listSpacesByRegion(); //spacesByRegion
 	this.buildPossibilities(); //notPlacedYetByRegion
 	this.buildAnswerGrid(); //answerGrid
@@ -25,6 +20,7 @@ GlobalNorinori.prototype.loadIntelligence = function(){
 	this.purifyAnswerGrid(); 
 	this.happenedEvents = [];
 	this.indexRegionsSortedBySize = null; //Will be initialized in the first use of multipass.
+
 }
 
 /**
@@ -132,6 +128,10 @@ GlobalNorinori.prototype.getOsRemainRegion = function(p_i){return this.notPlaced
 GlobalNorinori.prototype.getXsRemainRegion = function(p_i){return this.notPlacedYetByRegion[p_i].Xs;}
 GlobalNorinori.prototype.getFirstSpaceRegion = function(p_i){return this.spacesByRegion[p_i][0];}
 GlobalNorinori.prototype.getRegionsNumber = function(){return this.spacesByRegion.length;}
+
+GlobalNorinori.prototype.getRegion = function(p_x,p_y){
+	return this.regionGrid[p_y][p_x];
+}
 
 //------------------
 //Strategy management

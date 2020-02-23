@@ -61,7 +61,7 @@ TODO doc
 */
 loadAction = function(p_canvas,p_drawer,p_textArea,p_solver,p_name,p_starField){
 	var loadedItem = stringToStarBattlePuzzle(localStorage.getItem("grid_is_good_"+p_name));
-	p_solver.construct(loadedItem.grid,loadedItem.starNumber); //TODO A SUIVRE APRES
+	p_solver.construct(loadedItem.grid,loadedItem.starNumber);
 	adaptCanvas(p_canvas,p_drawer,p_solver);
 	p_starField.innerHTML = loadedItem.starNumber;
 	p_textArea.innerHTML = ""; //TODO manage true/false

@@ -1,6 +1,6 @@
 var drawer = new Drawer();
 drawer.setMarginGrid(0,0,0,0);
-var global = new GlobalNorinori(generateWallGrid(1,1),1);
+var solver = new GlobalNorinori(generateWallArray(1,1),1);
 //TODO (of course the grid (1,1) is a dummy grid, see SB solver)
 var canevasInteraction = document.getElementById("canevas");
 var	context = canevasInteraction.getContext("2d");
@@ -21,10 +21,10 @@ var colors={
 //--------------------
 //The main draw function (at start)
 function drawCanvas(){
-	drawer.drawGrid(context,global.getWallGrid());
-	drawInsideSpaces(context,drawer,colors,global);
+	drawer.drawWallGrid(context,solver.wallGrid,solver.xLength,solver.yLength); //TODO A SUIVRE APRES !
+	drawInsideSpaces(context,drawer,colors,solver);
 	if (document.getElementById("checkbox_drawIndications").checked){
-		drawInsideIndications(context,drawer,colors,global);	
+		drawInsideIndications(context,drawer,colors,solver);	
 	}
 }
 
@@ -35,13 +35,13 @@ var fieldName = document.getElementById("input_grid_name");
 var textArea = document.getElementById("textarea_happened");
 
 document.getElementById("submit_load_grid").addEventListener('click',
-	function(event){loadAction(canevas,drawer,textArea,global,fieldName.value)}
+	function(event){loadAction(canevas,drawer,textArea,solver,fieldName.value)}
 );
-canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,textArea,global,actionToDo)},false);
-document.getElementById("submit_undo").addEventListener('click',function(event){undoAction(global,textArea)});
-document.getElementById("submit_quickStart").addEventListener('click',function(event){quickStartAction(global,textArea)});
-document.getElementById("submit_view_Norinori_list").addEventListener('click',function(event){viewNorinoriList(global,textArea)});
-document.getElementById("submit_multiPass").addEventListener('click',function(event){multiPassAction(global,textArea)});
+canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,textArea,solver,actionToDo)},false);
+document.getElementById("submit_undo").addEventListener('click',function(event){undoAction(solver,textArea)});
+document.getElementById("submit_quickStart").addEventListener('click',function(event){quickStartAction(solver,textArea)});
+document.getElementById("submit_view_Norinori_list").addEventListener('click',function(event){viewNorinoriList(solver,textArea)});
+document.getElementById("submit_multiPass").addEventListener('click',function(event){multiPassAction(solver,textArea)});
 
 
 var submitFillSpace = document.getElementById("submit_fill_space");

@@ -13,8 +13,8 @@ GlobalStarBattle.prototype.construct = function(p_wallArray,p_starNumber){
 	//notPlacedYet : object{regions{Os,Xs},rows{Os,Xs},columns{Os,Xs}} ; contains the Os and Xs that are yet to be placed in each region (ordered by index), row or column (left to right, top to bottom)
 	//spacesByRegion : array(length) of variable arrays of {x,y} ; returns the spaces contained in each region
 	//happenedEvents : array of array(Event) ; contains an array of an array of events : for each supposed, the list of itself and all events that were forced by it.
-	this.wallGrid = new WallGrid(p_wallArray,p_wallArray.length,p_wallArray.length); // TODO A SUIVRE APRES !
-	this.regionGrid = this.wallGrid.toRegionGrid(); //TODO idem
+	this.wallGrid = new WallGrid(p_wallArray,p_wallArray.length,p_wallArray.length);
+	this.regionGrid = this.wallGrid.toRegionGrid();
 	this.xyLength = this.getWallGrid().length;
 	this.listSpacesByRegion(); //spacesByRegion
 	this.buildPossibilities(p_starNumber); //notPlacedYet
