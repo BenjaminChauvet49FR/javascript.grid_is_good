@@ -33,7 +33,7 @@ function compareSpaceEvents(p_spaceEvent1,p_spaceEvent2){
 /**
 Returns the sorted list of the intersection of two sorted space event lists 
 */
-function interSortedSpaceEventList(p_spaceEventSortedList1,p_spaceEventSortedList2){
+function intersect(p_spaceEventSortedList1,p_spaceEventSortedList2){
 	var index1 = 0;
 	var index2 = 0;
 	var comparison;

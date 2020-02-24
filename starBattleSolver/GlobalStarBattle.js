@@ -132,12 +132,147 @@ GlobalStarBattle.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
 }
 
 //------------------
-//Pass strategy management (warning : heavy code)
+//Pass strategy management
+
+/*
+GlobalNorinori.prototype.emitPassRegion = function(p_indexRegion){
+	var answer = this.passRegion(p_indexRegion,0);
+	console.log("Enfin sorti ! " + answer.eventsApplied.length);
+	if (answer.consistence == RESULT.SUCCESS && answer.eventsApplied.length > 0){
+		this.happenedEvents.push(answer.eventsApplied);
+		answer.eventsApplied.forEach(spaceEvent => {this.putNew(spaceEvent.x,spaceEvent.y,spaceEvent.symbol)});
+	}
+	return answer;
+}
+
+*/
+
+GlobalStarBattle.prototype.passRegion = function(p_indexRegion){
+	if (p_indexRegion < 0){
+		debugHumanMisclick("Passing a negative region ");
+		return; //A click might be made onto a wrong space.
+	}
+	
+	
+	//Building a copy of an array of coordinates with only the unoccuped spaces that are unnocupied before the test of the function
+	var spacesToTestArray = [];
+	var space;
+	for(var i=0;i<this.spacesByRegion[p_indexRegion].length;i++){
+		space = this.spacesByRegion[p_indexRegion][i];
+		if (this.answerGrid[space.y][space.x] == UNDECIDED){
+			spacesToTestArray.push({x:space.x,y:space.y});
+		}
+	}
+	function closure(p_dataNotPlacedYet,p_index){
+		return function(){
+			return (p_dataNotPlacedYet.regions[p_index].Os == 0);
+		}
+	}
+	var answer = this.pass(spacesToTestArray,0,closure(this.notPlacedYet,p_indexRegion));
+	if (answer.consistence == RESULT.SUCCESS && answer.eventsApplied.length > 0){
+		this.happenedEvents.push(answer.eventsApplied);
+		answer.eventsApplied.forEach(spaceEvent => {this.putNew(spaceEvent.x,spaceEvent.y,spaceEvent.symbol)});
+	}
+	return answer;
+}
+
+GlobalStarBattle.prototype.passRow = function(p_indexRow){
+	var spacesToTestArray = [];
+	for(var i=0;i<this.xyLength;i++){
+		if (this.answerGrid[p_indexRow][i] == UNDECIDED){
+			spacesToTestArray.push({x:i,y:p_indexRow});
+		}
+	}
+	function closure(p_dataNotPlacedYet,p_index){ //TODO maybe closures weren't even mandatory ! Anyway, let's see if they can work.
+		return function(){
+			return (p_dataNotPlacedYet.rows[p_index].Os == 0);
+		}
+	}
+	var answer = this.pass(spacesToTestArray,0,closure(this.notPlacedYet,p_indexRow));
+	if (answer.consistence == RESULT.SUCCESS && answer.eventsApplied.length > 0){
+		this.happenedEvents.push(answer.eventsApplied);
+		answer.eventsApplied.forEach(spaceEvent => {this.putNew(spaceEvent.x,spaceEvent.y,spaceEvent.symbol)});
+	}
+	return answer;
+}
+
+GlobalStarBattle.prototype.passColumn = function(p_indexColumn){
+	var spacesToTestArray = [];
+	for(var i=0;i<this.xyLength;i++){
+		if (this.answerGrid[i][p_indexColumn] == UNDECIDED){
+			spacesToTestArray.push({x:p_indexColumn,y:i});
+		}
+	}
+	function closure(p_dataNotPlacedYet,p_index){
+		return function(){
+			return (p_dataNotPlacedYet.columns[p_index].Os == 0);
+		}
+	}
+	var answer = this.pass(spacesToTestArray,0,closure(this.notPlacedYet,p_indexColumn));
+	if (answer.consistence == RESULT.SUCCESS && answer.eventsApplied.length > 0){
+		this.happenedEvents.push(answer.eventsApplied);
+		answer.eventsApplied.forEach(spaceEvent => {this.putNew(spaceEvent.x,spaceEvent.y,spaceEvent.symbol)});
+	}
+	return answer;
+	
+}
+
+GlobalStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_functionFinishedPass){
+	var index = p_indexFirstSpace;
+	while (this.answerGrid[p_spacesToTest[index].y][p_spacesToTest[index].x] != UNDECIDED)
+	{
+		index++;
+	}
+	//We MUST find an index where space is undecided.
+	var listO = null;
+	var listX = null;
+	var answerPut = this.tryToPutNew(p_spacesToTest[index].x,p_spacesToTest[index].y,STAR);
+	if (answerPut.coherence == COHERENCE.SUCCESS){
+		//if (this.notPlacedYetByRegion[p_indexRegion].Os == 0){
+		if (p_functionFinishedPass()){
+			listO = answerPut.eventsApplied;
+		}
+		else{
+			var answerPass = this.pass(p_spacesToTest,index+1,p_functionFinishedPass);
+			if (answerPass.consistence == RESULT.SUCCESS){
+				listO = answerPass.eventsApplied.concat(answerPut.eventsApplied);
+			}
+		}
+		this.undoList(answerPut.eventsApplied.slice());
+	}
+	if ((listO == null) || (listO.length > 0)){
+		answerPut = this.tryToPutNew(p_spacesToTest[index].x,p_spacesToTest[index].y,NO_STAR);
+		if (answerPut.coherence == COHERENCE.SUCCESS){
+			//if (this.notPlacedYetByRegion[p_indexRegion].Os == 0){
+			if (p_functionFinishedPass()){
+				listX = answerPut.eventsApplied;
+			}
+			else{
+				var answerPass = this.pass(p_spacesToTest,index+1,p_functionFinishedPass);
+				if (answerPass.consistence == RESULT.SUCCESS){
+					listX = answerPass.eventsApplied.concat(answerPut.eventsApplied);
+				}
+			}
+			this.undoList(answerPut.eventsApplied.slice());
+		}
+	}
+	var list;
+	if (listO == null && listX == null){
+		return {consistence : RESULT.ERROR, eventsApplied: []};
+	}
+	if (listO == null){
+		return {consistence : RESULT.SUCCESS, eventsApplied: listX};
+	}
+	if (listX == null){
+		return {consistence : RESULT.SUCCESS, eventsApplied: listO};
+	}
+	return {consistence:RESULT.SUCCESS, eventsApplied:intersect(listO.sort(compareSpaceEvents),listX.sort(compareSpaceEvents))};
+}
 
 /**
 Prepares and applies the pass for a region
 */
-GlobalStarBattle.prototype.passRegion = function(p_indexRegion){
+/*GlobalStarBattle.prototype.passRegion = function(p_indexRegion){
 	if (p_indexRegion < 0){
 		debugHumanMisclick("Passing a negative region ");
 		return; //A click might be made onto a wrong space.
@@ -162,12 +297,12 @@ GlobalStarBattle.prototype.passRegion = function(p_indexRegion){
 		family : {kind:FAMILY.REGION,index:p_indexRegion}
 	};
 	return this.goForThePass();
-}
+}*/
 
 /**
 Prepares and applies the pass for a row (same as above)
 */
-GlobalStarBattle.prototype.passRow = function(p_indexRow){
+/*GlobalStarBattle.prototype.passRow = function(p_indexRow){
 
 	var spacesToTestArray = [];
 	for(var i=0;i<this.xyLength;i++){
@@ -182,12 +317,12 @@ GlobalStarBattle.prototype.passRow = function(p_indexRow){
 		family : {kind:FAMILY.ROW,index:p_indexRow}
 	};
 	return this.goForThePass();
-}
+}*/
 
 /**
 Prepares and applies the pass for a column (same as above)
 */
-GlobalStarBattle.prototype.passColumn = function(p_indexColumn){
+/*GlobalStarBattle.prototype.passColumn = function(p_indexColumn){
 
 	var spacesToTestArray = [];
 	for(var i=0;i<this.xyLength;i++){
@@ -202,13 +337,13 @@ GlobalStarBattle.prototype.passColumn = function(p_indexColumn){
 		family : {kind:FAMILY.COLUMN,index:p_indexColumn}
 	};
 	return this.goForThePass();
-}
+}*/
 
 /**
 Tries all coherent combinations of spaces in this region/row/column and saves the common denominator of all admitted combinations.
 Also warns if there is NO valid combination !
 */
-GlobalStarBattle.prototype.goForThePass = function(){
+/*GlobalStarBattle.prototype.goForThePass = function(){
 	
 	if (this.pass.spacesToTestArray.length == 0){
 		debugHumanMisclick("Doing a pass on a region/row/column that is already finished !");
@@ -240,7 +375,7 @@ GlobalStarBattle.prototype.goForThePass = function(){
 		alertPass("This pass allowed us to see that something went WRONG !");
 		return {result:RESULT.ERROR};
 	}
-}
+}*/
 
 /**
 	Recursively tries to put stars or crosses into specific spaces in a region (from first to last according to the order of p_spacesToTestArray) 
@@ -250,7 +385,7 @@ GlobalStarBattle.prototype.goForThePass = function(){
 		-Within this region, all spaces prior to the (p_indexToTry) in the order of (p_spacesToTestArray), must be defined AND the space from (p_indexToTry) mustn't be.
 		E.G. if (p_indexToTry = 3), we should have (spaces 0,1,2 of p_spacesToTestArray) already defined, either by test or by deduction.
 */
-GlobalStarBattle.prototype.tryToFillThatSpace = function(p_indexToTry,p_eventsPassedInPreviousCalls){
+//GlobalStarBattle.prototype.tryToFillThatSpace = function(p_indexToTry,p_eventsPassedInPreviousCalls){
 	/*
 	Puts a star, puts Space events in "resultPlacing" and sees what happens next :
 		-All stars are placed within this region : great, it's one possibility ! Let's update "certitudes" with the "p_eventsPassedInUpperCalls::resultPlacing".
@@ -268,7 +403,7 @@ GlobalStarBattle.prototype.tryToFillThatSpace = function(p_indexToTry,p_eventsPa
 	Looking for the next available space (if we had (p_indexToTry = 1) and (spaces 2,3) were occupied but not (space 4), then that index is (space 4)... 
 	If there are none (p_indexToTry = 1, spaces (2,3,4,5) are all occupied by this star we just set : NAS inexistant.
 	*/
-	const xToTest = this.pass.spacesToTestArray[p_indexToTry].x;
+	/*const xToTest = this.pass.spacesToTestArray[p_indexToTry].x;
 	const yToTest = this.pass.spacesToTestArray[p_indexToTry].y;
 
 	//TODO : si "certitude est vide" on arrête tout !
@@ -282,13 +417,13 @@ GlobalStarBattle.prototype.tryToFillThatSpace = function(p_indexToTry,p_eventsPa
 		this.goAfterCoherentDeduction(p_indexToTry,resultPlacing.eventsApplied,p_eventsPassedInPreviousCalls);
 	}
 	
-}
+}*/
 
 /**
 Performs what comes after a coherent deduction : either the row/column/region is full and it's time to update "certitudes" OR it itsn't and it should be continued.
 And don't forget to undo the events after !
 */
-GlobalStarBattle.prototype.goAfterCoherentDeduction = function(p_indexSuccessfullyTried,p_listAppliedEvents, p_eventsPassedInPreviousCalls){
+/*GlobalStarBattle.prototype.goAfterCoherentDeduction = function(p_indexSuccessfullyTried,p_listAppliedEvents, p_eventsPassedInPreviousCalls){
 	if (this.testFull()) //The desired region/row/column is full ? Okay !
 		this.updateCertitudes(p_listAppliedEvents.concat(p_eventsPassedInPreviousCalls)); //Update the list of "things that are certain"
 	else{
@@ -302,12 +437,12 @@ GlobalStarBattle.prototype.goAfterCoherentDeduction = function(p_indexSuccessful
 		this.tryToFillThatSpace(nextIndex, p_listAppliedEvents.concat(p_eventsPassedInPreviousCalls));
 	}
 	this.undoList(p_listAppliedEvents);
-}
+}*/
 
 /**
 Tests whether the concerned family (row/column/region) is full (e.g. remaining stars and Xs are at 0)
 */
-GlobalStarBattle.prototype.testFull = function(){
+/*GlobalStarBattle.prototype.testFull = function(){
 	//Assumption : if the number of remaining Os in a family is to 0, then so should be the remaining Xs.
 	switch(this.pass.family.kind){
 		case FAMILY.REGION:return (this.notPlacedYet.regions[this.pass.family.index].Os == 0);break;
@@ -325,7 +460,7 @@ GlobalStarBattle.prototype.updateCertitudes = function(p_eventsApplied){
 		var sortedEventsApplied = p_eventsApplied.sort(compareSpaceEvents);
 		this.pass.certitudes = interSortedSpaceEventList(sortedEventsApplied,this.pass.certitudes);
 	}
-}
+}*/
 
 //------------------
 //Multipass strategy
