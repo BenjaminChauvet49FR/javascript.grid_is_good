@@ -134,19 +134,6 @@ GlobalStarBattle.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
 //------------------
 //Pass strategy management
 
-/*
-GlobalNorinori.prototype.emitPassRegion = function(p_indexRegion){
-	var answer = this.passRegion(p_indexRegion,0);
-	console.log("Enfin sorti ! " + answer.eventsApplied.length);
-	if (answer.consistence == RESULT.SUCCESS && answer.eventsApplied.length > 0){
-		this.happenedEvents.push(answer.eventsApplied);
-		answer.eventsApplied.forEach(spaceEvent => {this.putNew(spaceEvent.x,spaceEvent.y,spaceEvent.symbol)});
-	}
-	return answer;
-}
-
-*/
-
 GlobalStarBattle.prototype.passRegion = function(p_indexRegion){
 	if (p_indexRegion < 0){
 		debugHumanMisclick("Passing a negative region ");

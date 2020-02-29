@@ -1,7 +1,7 @@
 var drawer = new Drawer();
 drawer.setMarginGrid(0,0,0,0);
 var solver = new GlobalNorinori(generateWallArray(1,1),1);
-//TODO (of course the grid (1,1) is a dummy grid, see SB solver)
+
 var canevasInteraction = document.getElementById("canevas");
 var	context = canevasInteraction.getContext("2d");
 var actionToDo;
@@ -34,20 +34,15 @@ setInterval(drawCanvas,30);
 var fieldName = document.getElementById("input_grid_name");
 var textArea = document.getElementById("textarea_happened");
 
-document.getElementById("submit_load_grid").addEventListener('click',
-	function(event){loadAction(canevas,drawer,textArea,solver,fieldName.value)}
-);
-canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,textArea,solver,actionToDo)},false);
-document.getElementById("submit_undo").addEventListener('click',function(event){undoAction(solver,textArea)});
-document.getElementById("submit_quickStart").addEventListener('click',function(event){quickStartAction(solver,textArea)});
-document.getElementById("submit_view_Norinori_list").addEventListener('click',function(event){viewNorinoriList(solver,textArea)});
-document.getElementById("submit_multiPass").addEventListener('click',function(event){multiPassAction(solver,textArea)});
-
+putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("Norinori")});
+putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,solver,fieldName.value,textArea)});
+putActionElementClick("submit_undo",function(event){undoAction(solver,textArea)});
+putActionElementClick("submit_quickStart",function(event){quickStartAction(solver,textArea)});
+putActionElementClick("submit_multiPass",function(event){multiPassAction(solver,textArea)});
 
 var submitFillSpace = document.getElementById("submit_fill_space");
 var submitPutX = document.getElementById("submit_put_X");
 var submitPassRegion = document.getElementById("submit_pass_region");
-
 var textAction = document.getElementById("text_canvas_action");
 textAction.innerHTML = ACTION_FILL_SPACE.caption;
 actionToDo = ACTION_FILL_SPACE.id;

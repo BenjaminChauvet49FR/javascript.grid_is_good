@@ -127,3 +127,26 @@ function mirrorVerticalAction(p_canvas,p_drawer,p_editorCore){
 /**
 Put action (todo todo...)
 */
+function putActionElementClick(p_idElement,p_eventFunction){
+	document.getElementById(p_idElement).addEventListener('click',p_eventFunction);
+}
+
+function viewPuzzleList(p_puzzleName){
+	var string = "";
+	var listToSort = [];
+	var baseString = "grid_is_good_"+p_puzzleName; //TODO ce changement...
+	for (var i = 0, len = localStorage.length; i < len; i++) {
+        var key = localStorage.key(i);
+		if (key.startsWith(baseString)){
+			listToSort.push(parseInt(key.substring(baseString.length)));
+		}
+	}
+	console.log(listToSort);
+	listToSort=listToSort.sort(function(a,b){return a-b;});
+	var conditionalComma = "";
+	for(var i=0;i<listToSort.length;i++){
+		string+=(conditionalComma+listToSort[i]);
+		conditionalComma=",";
+	}
+	alert(string);
+}

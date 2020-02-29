@@ -39,13 +39,13 @@ var fieldName = document.getElementById("input_grid_name");
 var starSpan = document.getElementById("span_stars");
 var textArea = document.getElementById("textarea_happened");
 
-document.getElementById("submit_load_grid").addEventListener('click',
-	function(event){loadAction(canevas,drawer,textArea,solver,fieldName.value,starSpan)}
-);
 canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,textArea,solver,actionToDo)},false);
-document.getElementById("submit_undo").addEventListener('click',function(event){undoAction(solver,textArea)});
-document.getElementById("submit_multiPass").addEventListener('click',function(event){multiPassAction(solver,textArea)});
-document.getElementById("submit_solve").addEventListener('click',function(event){solveAction(solver,textArea)});
+
+putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("SternenSchlacht")});
+putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,solver,fieldName.value,starSpan,textArea)});
+putActionElementClick("submit_undo",function(event){undoAction(solver,textArea)});
+//putActionElementClick("submit_quickStart",function(event){quickStartAction(solver,textArea)}); TODO
+putActionElementClick("submit_multiPass",function(event){multiPassAction(solver,textArea)});
 
 //Submits of click on a grid : what will happen ? (TODO : the word action is pretty generic)
 var submitPutStar = document.getElementById("submit_put_star");
