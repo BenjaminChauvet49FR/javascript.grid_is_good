@@ -205,6 +205,9 @@ GlobalStarBattle.prototype.passColumn = function(p_indexColumn){
 }
 
 GlobalStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_functionFinishedPass){
+	if (p_functionFinishedPass()){
+		return {consistence : RESULT.SUCCESS, eventsApplied: []}; //When performing a multipass, some passes can become useless since the corresponding row/column/region have been filled by previous passes.
+	}
 	var index = p_indexFirstSpace;
 	while (this.answerGrid[p_spacesToTest[index].y][p_spacesToTest[index].x] != UNDECIDED)
 	{
@@ -256,199 +259,6 @@ GlobalStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_fu
 	return {consistence:RESULT.SUCCESS, eventsApplied:intersect(listO.sort(compareSpaceEvents),listX.sort(compareSpaceEvents))};
 }
 
-/**
-Prepares and applies the pass for a region
-*/
-/*GlobalStarBattle.prototype.passRegion = function(p_indexRegion){
-	if (p_indexRegion < 0){
-		debugHumanMisclick("Passing a negative region ");
-		return; //A click might be made onto a wrong space.
-	}
-	
-	
-	//Building a copy of an array of coordinates with only the unoccuped spaces that are unnocupied before the test of the function
-	var spacesToTestArray = [];
-	var space;
-	for(var i=0;i<this.spacesByRegion[p_indexRegion].length;i++){
-		space = this.spacesByRegion[p_indexRegion][i];
-		if (this.answerGrid[space.y][space.x] == UNDECIDED){
-			spacesToTestArray.push({x:space.x,y:space.y});
-		}
-	}
-	
-	//These variables aren't supposed to be used outside of "passRegion" and "tryToFillThatSpace", hence they aren't mentioned elsewhere
-	//TODO : well, what if later I want to make "passes into passes" (e.g. passing a region while passing another one) ? 
-	this.pass = {
-		certitudes : null,
-		spacesToTestArray : spacesToTestArray,
-		family : {kind:FAMILY.REGION,index:p_indexRegion}
-	};
-	return this.goForThePass();
-}*/
-
-/**
-Prepares and applies the pass for a row (same as above)
-*/
-/*GlobalStarBattle.prototype.passRow = function(p_indexRow){
-
-	var spacesToTestArray = [];
-	for(var i=0;i<this.xyLength;i++){
-		if (this.answerGrid[p_indexRow][i] == UNDECIDED){
-			spacesToTestArray.push({x:i,y:p_indexRow});
-		}
-	}
-	
-	this.pass = {
-		certitudes : null,
-		spacesToTestArray : spacesToTestArray,
-		family : {kind:FAMILY.ROW,index:p_indexRow}
-	};
-	return this.goForThePass();
-}*/
-
-/**
-Prepares and applies the pass for a column (same as above)
-*/
-/*GlobalStarBattle.prototype.passColumn = function(p_indexColumn){
-
-	var spacesToTestArray = [];
-	for(var i=0;i<this.xyLength;i++){
-		if (this.answerGrid[i][p_indexColumn] == UNDECIDED){
-			spacesToTestArray.push({x:p_indexColumn,y:i});
-		}
-	}
-	
-	this.pass = {
-		certitudes : null,
-		spacesToTestArray : spacesToTestArray,
-		family : {kind:FAMILY.COLUMN,index:p_indexColumn}
-	};
-	return this.goForThePass();
-}*/
-
-/**
-Tries all coherent combinations of spaces in this region/row/column and saves the common denominator of all admitted combinations.
-Also warns if there is NO valid combination !
-*/
-/*GlobalStarBattle.prototype.goForThePass = function(){
-	
-	if (this.pass.spacesToTestArray.length == 0){
-		debugHumanMisclick("Doing a pass on a region/row/column that is already finished !");
-		return {result:RESULT.HARMLESS};
-	}
-	
-	this.tryToFillThatSpace(0,[]);
-	if (this.pass.certitudes != null){
-		if (this.pass.certitudes.length > 0){
-			debugPass("We have got certitudes !");
-			var spaceEvent;
-			for(var i=0;i<this.pass.certitudes.length;i++){
-				spaceEvent = this.pass.certitudes[i];
-				this.putNew(spaceEvent.x,spaceEvent.y,spaceEvent.symbol);
-			}
-			if(this.happenedEvents.length > 0){
-				this.happenedEvents[this.happenedEvents.length-1] = this.happenedEvents[this.happenedEvents.length-1].concat(this.pass.certitudes);//It is some sort of deduction, you know. Hence the concatenation to the last sequence of "happenedEvents"
-			}
-			else{
-				this.happenedEvents.push(this.pass.certitudes); //If the list was empty, maybe we can set this as a good start.
-			}
-		}
-		else{
-			debugPass("Unfortunately, this pass lead to nothing");
-		}
-		return {result:RESULT.SUCCESS, numberNewEvents:this.pass.certitudes.length};
-	}
-	else{
-		alertPass("This pass allowed us to see that something went WRONG !");
-		return {result:RESULT.ERROR};
-	}
-}*/
-
-/**
-	Recursively tries to put stars or crosses into specific spaces in a region (from first to last according to the order of p_spacesToTestArray) 
-	
-	AND updates certitudes accordingly. 
-	PREREQUISTED :
-		-Within this region, all spaces prior to the (p_indexToTry) in the order of (p_spacesToTestArray), must be defined AND the space from (p_indexToTry) mustn't be.
-		E.G. if (p_indexToTry = 3), we should have (spaces 0,1,2 of p_spacesToTestArray) already defined, either by test or by deduction.
-*/
-//GlobalStarBattle.prototype.tryToFillThatSpace = function(p_indexToTry,p_eventsPassedInPreviousCalls){
-	/*
-	Puts a star, puts Space events in "resultPlacing" and sees what happens next :
-		-All stars are placed within this region : great, it's one possibility ! Let's update "certitudes" with the "p_eventsPassedInUpperCalls::resultPlacing".
-		-An incoherent situation has happened : too bad. Anyway, everything will be cancelled. 
-		-A coherent situation has happened but there are still stars to place : 
-			-First, let's see the first available space index (FASI). It MUST exist, otherwise, it means all stars have already been placed.
-			-call(FASI,copy(p_eventsPassedInUpperCalls::resultPlacing),1ASIndex)
-	Cancels the Space events in "resultPlacing"
-	Puts a cross, puts Space events in "resultPlacing" and sees what happens next :
-		(same as above)
-	Cancels the Space events in "resultPlacing"
-	
-	
-	
-	Looking for the next available space (if we had (p_indexToTry = 1) and (spaces 2,3) were occupied but not (space 4), then that index is (space 4)... 
-	If there are none (p_indexToTry = 1, spaces (2,3,4,5) are all occupied by this star we just set : NAS inexistant.
-	*/
-	/*const xToTest = this.pass.spacesToTestArray[p_indexToTry].x;
-	const yToTest = this.pass.spacesToTestArray[p_indexToTry].y;
-
-	//TODO : si "certitude est vide" on arrête tout !
-	
-	var resultPlacing = this.tryToPutNew(xToTest,yToTest,STAR); 
-	if (resultPlacing.coherence == COHERENCE.SUCCESS){
-		this.goAfterCoherentDeduction(p_indexToTry,resultPlacing.eventsApplied,p_eventsPassedInPreviousCalls);
-	}
-	resultPlacing = this.tryToPutNew(xToTest,yToTest,NO_STAR); 
-	if (resultPlacing.coherence == COHERENCE.SUCCESS){
-		this.goAfterCoherentDeduction(p_indexToTry,resultPlacing.eventsApplied,p_eventsPassedInPreviousCalls);
-	}
-	
-}*/
-
-/**
-Performs what comes after a coherent deduction : either the row/column/region is full and it's time to update "certitudes" OR it itsn't and it should be continued.
-And don't forget to undo the events after !
-*/
-/*GlobalStarBattle.prototype.goAfterCoherentDeduction = function(p_indexSuccessfullyTried,p_listAppliedEvents, p_eventsPassedInPreviousCalls){
-	if (this.testFull()) //The desired region/row/column is full ? Okay !
-		this.updateCertitudes(p_listAppliedEvents.concat(p_eventsPassedInPreviousCalls)); //Update the list of "things that are certain"
-	else{
-		//Look for the first index of available space (there MUST be one) then call the function
-		var nextSpace;
-		var nextIndex = p_indexSuccessfullyTried;
-		do{
-			nextIndex++;
-			nextSpace = this.pass.spacesToTestArray[nextIndex];
-		}while(this.answerGrid[nextSpace.y][nextSpace.x] != UNDECIDED);
-		this.tryToFillThatSpace(nextIndex, p_listAppliedEvents.concat(p_eventsPassedInPreviousCalls));
-	}
-	this.undoList(p_listAppliedEvents);
-}*/
-
-/**
-Tests whether the concerned family (row/column/region) is full (e.g. remaining stars and Xs are at 0)
-*/
-/*GlobalStarBattle.prototype.testFull = function(){
-	//Assumption : if the number of remaining Os in a family is to 0, then so should be the remaining Xs.
-	switch(this.pass.family.kind){
-		case FAMILY.REGION:return (this.notPlacedYet.regions[this.pass.family.index].Os == 0);break;
-		case FAMILY.ROW:return (this.notPlacedYet.rows[this.pass.family.index].Os == 0);break;
-		case FAMILY.COLUMN:return (this.notPlacedYet.columns[this.pass.family.index].Os == 0);break;
-	}
-}
-
-
-GlobalStarBattle.prototype.updateCertitudes = function(p_eventsApplied){
-	if (this.pass.certitudes == null){
-		this.pass.certitudes = p_eventsApplied.sort(compareSpaceEvents);
-	}
-	else{
-		var sortedEventsApplied = p_eventsApplied.sort(compareSpaceEvents);
-		this.pass.certitudes = interSortedSpaceEventList(sortedEventsApplied,this.pass.certitudes);
-	}
-}*/
-
 //------------------
 //Multipass strategy
 
@@ -488,12 +298,12 @@ GlobalStarBattle.prototype.multiPass = function(){
 				case FAMILY.COLUMN: bilanPass = this.passColumn(family.id);break;
 				case FAMILY.REGION: bilanPass = this.passRegion(family.id);break;
 			}
-			if (bilanPass.result == RESULT.ERROR){
+			if (bilanPass.consistence == RESULT.ERROR){
 				ok = false;
 				this.massUndo();
 				return;
 			}
-			if (bilanPass.result == RESULT.SUCCESS && bilanPass.numberNewEvents > 0){
+			if (bilanPass.consistence == RESULT.SUCCESS && bilanPass.eventsApplied.length > 0){
 				anyModification = true;
 			}
 		}
