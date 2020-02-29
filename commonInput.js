@@ -57,7 +57,11 @@ loadAction = function(p_canvas,p_drawer,p_editorCore,p_detachedName,p_fieldsToUp
 	if (localStorage.hasOwnProperty(localStorageName)){
 		if (confirm("Charger le puzzle "+localStorageName+" ?")){
 			var loadedItem = stringToPuzzle(localStorage.getItem(localStorageName));
-			p_editorCore.setupFromWallArray(loadedItem.grid); //TODO maybe this will have to be revisited because we are forcing "answer" to have a grid value. 
+			p_editorCore.setupFromWallArray(loadedItem.grid); //TODO maybe this will have to be revisited because we are forcing "answer" to have a grid value.
+			if (p_editorCore.hasNumberGrid()){
+				p_editorCore.setupNumberGrid(loadedItem.gridNumber); //TODO same as this
+			}
+			p_editorCore.setupFromWallArray(loadedItem.grid); 
 			adaptCanvasAndGrid(p_canvas,p_drawer,p_editorCore);	//Oh and this canvas, too...
 			updateFieldsAfterLoad(p_fieldsToUpdate,loadedItem);
 		}
@@ -119,3 +123,7 @@ function mirrorVerticalAction(p_canvas,p_drawer,p_editorCore){
 	adaptCanvasAndGrid(p_canvas,p_drawer,p_editorCore);
 }
 
+//--------------------
+/**
+Put action (todo todo...)
+*/

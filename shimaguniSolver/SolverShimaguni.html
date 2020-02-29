@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    	<link rel="icon">
+		<link rel="icon" 
+		  type="image/png" 
+		  href="icon.png">
+        <title>Shimaguni solver !!!</title>
+		<link rel="stylesheet" type="text/css" href="../style.css">
+    </head>
+    <body>
+		<canvas id="canevas" width="800" height="500">
+            Message pour les navigateurs ne supportant pas encore canvas.
+        </canvas></br>
+		
+		Grille à charger : <input type="text" id="input_grid_name" value="Shimaguni1"></input> 
+		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
+		Action à réaliser : <span id="text_canvas_action"></span></br>
+		<input type="submit" id="submit_fill" value="Colorier case"></input></br>
+		<input type="submit" id="submit_put_X" value="Placer X"></input></br>
+		<input type="submit" id="submit_pass_region" value="Passe sur région"></input></br>
+		
+		Multipasse :
+		<input type="submit" id="submit_multiPass" value="Multi passe"></input></br>
+		
+		Résolution : 
+		<input type="submit" id="submit_solve" value="Résolution"></input></br>
+		
+		<input type="submit" id="submit_undo" value="Annuler"></input></br>	
+		
+
+        Afficher données : <input type="checkbox" id="checkbox_drawIndications" value="false"></span></br>
+		<textarea id="textarea_happened" style="width:100px; height:200px"></textarea> <!-- TODO ce sont des valeurs en dur-->
+		
+		<script src="../constants.js"></script>
+		<script src="../Drawer.js"></script>
+		<script src="../SolverShumaguni/saveLoad.js"></script>
+		<script src="../EditorCore.js"></script>
+		<script src="../WallGrid.js"></script>
+		<script src="../NumberGrid.js"></script>
+		<script src="constants.js"></script>
+		<script src="SpaceEvent.js"></script>
+		<script src="SolverShimaguni.js"></script>
+		<script src="drawing.js"></script>
+		<script src="input.js"></script>
+		<script src="main.js"></script>
+	</body>
+</html>

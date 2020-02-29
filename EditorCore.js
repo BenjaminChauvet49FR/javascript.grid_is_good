@@ -1,6 +1,16 @@
 function EditorCore(p_xLength,p_yLength) {
 	this.setupFromWallArray(generateWallArray(p_xLength,p_yLength));
+	if(this.hasNumberGrid()){
+		this.setupNumberGrid(generateNumberArray(p_xLength,p_yLength));
+	}
 	this.mode = {colorRegionIfValid : false};	
+}
+
+EditorCore.prototype.restartGrid = function(p_xLength,p_yLength){
+	this.setupFromWallArray(generateWallArray(p_xLength,p_yLength));
+	if(this.hasNumberGrid()){
+		this.setupNumberGrid(generateNumberArray(p_xLength,p_yLength));
+	}
 }
 
 //YUP ! The grid must NOT be null !
@@ -11,11 +21,16 @@ EditorCore.prototype.setupFromWallArray = function(p_wallArray){
 	this.isSelectionMode = false;
 	this.selectedSpacesList = null;
 	this.selectedGrid = null;
+	this.inputNumber = 1; //TODO faire getter et setter
 	this.resetSelection(); 
 }
 
-EditorCore.prototype.restartGrid = function(p_xLength,p_yLength){
-	this.setupFromWallArray(generateWallArray(p_xLength,p_yLength));
+EditorCore.prototype.hasNumberGrid = function(){
+	return (typeof(NumberGrid) == 'function');
+}
+
+EditorCore.prototype.setupNumberGrid = function(p_numberArray){
+	this.numberGrid = new NumberGrid(p_numberArray,p_numberArray[0].length,p_numberArray.length);
 }
 
 EditorCore.prototype.getXLength = function(){
@@ -24,11 +39,17 @@ EditorCore.prototype.getXLength = function(){
 EditorCore.prototype.getYLength = function(){
 	return this.wallGrid.yLength;
 }
-EditorCore.prototype.getArray = function(){
+EditorCore.prototype.getArray = function(){ //TODO cette fonction gagnera à être changée de nom !
 	return this.wallGrid.array;
+}
+EditorCore.prototype.getNumbers = function(){
+	return this.numberGrid.array;
 }
 
 EditorCore.prototype.getSelection = function(p_x,p_y){return this.selectedGrid[p_y][p_x];}
+EditorCore.prototype.getInputNumber = function(){return this.inputNumber;}
+EditorCore.prototype.setInputNumber = function(p_inputNumber){this.inputNumber = p_inputNumber}
+
 EditorCore.prototype.getWallR = function(p_x,p_y){return this.wallGrid.getWallR(p_x,p_y);}
 EditorCore.prototype.getWallD = function(p_x,p_y){return this.wallGrid.getWallD(p_x,p_y);}
 EditorCore.prototype.getState = function(p_x,p_y){return this.wallGrid.getState(p_x,p_y);}
@@ -38,37 +59,58 @@ EditorCore.prototype.setState = function(p_x,p_y,p_state){this.wallGrid.setState
 EditorCore.prototype.switchWallR = function(p_x,p_y){this.wallGrid.switchWallR(p_x,p_y);}
 EditorCore.prototype.switchWallD = function(p_x,p_y){this.wallGrid.switchWallD(p_x,p_y);}
 EditorCore.prototype.switchState = function(p_x,p_y){this.wallGrid.switchState(p_x,p_y);}
+EditorCore.prototype.getNumber = function(p_x,p_y,p_number){return this.numberGrid.getNumber(p_x,p_y,p_number);}
+EditorCore.prototype.setNumber = function(p_x,p_y,p_number){this.numberGrid.setNumber(p_x,p_y,p_number);}
+
 
 /**
 Transforms the grid
 */
 EditorCore.prototype.rotateCWGrid = function(){
 	this.wallGrid.rotateCWGrid();
-	this.setupFromWallArray(this.wallGrid.array); //TODO improve me this !
+	if(this.hasNumberGrid()){
+		this.numberGrid.rotateCWGrid();
+	}
+	this.setupFromWallArray(this.wallGrid.array); 
 }
 
 EditorCore.prototype.rotateUTurnGrid = function(){
 	this.wallGrid.rotateUTurnGrid();
+	if(this.hasNumberGrid()){
+		this.numberGrid.rotateUTurnGrid();
+	}
 	this.setupFromWallArray(this.wallGrid.array);
 }
 
 EditorCore.prototype.rotateCCWGrid = function(){
 	this.wallGrid.rotateCCWGrid();
+	if(this.hasNumberGrid()){
+		this.numberGrid.rotateCCWGrid();
+	}
 	this.setupFromWallArray(this.wallGrid.array);
 }
 
 EditorCore.prototype.mirrorHorizontalGrid = function(){
 	this.wallGrid.mirrorHorizontalGrid();
+	if(this.hasNumberGrid()){
+		this.numberGrid.mirrorHorizontalGrid();
+	}
 	this.setupFromWallArray(this.wallGrid.array);
 }
 
 EditorCore.prototype.mirrorVerticalGrid = function(){
 	this.wallGrid.mirrorVerticalGrid();
+	if(this.hasNumberGrid()){
+		this.numberGrid.mirrorVerticalGrid();
+	}
 	this.setupFromWallArray(this.wallGrid.array);
 }
 
 EditorCore.prototype.resizeGrid = function(p_xLength,p_yLength){
 	this.wallGrid.resizeGrid(p_xLength,p_yLength);
+	if(this.hasNumberGrid()){
+		this.numberGrid.resizeGrid(p_xLength,p_yLength);
+	}
 	this.setupFromWallArray(this.wallGrid.array);
 }
 
@@ -132,5 +174,44 @@ EditorCore.prototype.clearWallsAround = function(p_x,p_y){
 	}
 	if (p_y < this.getYLength()-1 && this.selectedGrid[p_y+1][p_x] == SELECTED.NO){
 		this.wallGrid.setWallD(p_x,p_y,OPEN);
+	}
+}
+
+EditorCore.prototype.resetNumbers = function(){
+	var regionGrid = this.wallGrid.toRegionGrid();
+	//Le code est copié-collé d'un solveur
+	var lastRegionNumber = 0;
+	for(iy = 0;iy < this.getYLength();iy++){
+		for(ix = 0;ix < this.getXLength();ix++){
+			lastRegionNumber = Math.max(regionGrid[iy][ix],lastRegionNumber);
+		}
+	}
+	
+	var numbersFoundInRegion = [];
+	var firstX = [];
+	var firstY = [];
+	for(var i=0;i<=lastRegionNumber;i++){
+		numbersFoundInRegion.push(0);
+		firstX.push(-1);
+		firstY.push(-1);
+	}
+	var ix,iy,ir;
+	for(var iy = 0;iy < this.getYLength(); iy++){
+		for(var ix = 0;ix < this.getXLength() ; ix++){
+			ir = regionGrid[iy][ix];
+			if (firstX[ir] == -1){
+				firstX[ir] = ix;
+				firstY[ir] = iy;
+			}
+			if (this.getNumber(ix,iy) > 0 && numbersFoundInRegion[ir] == 0){
+				numbersFoundInRegion[ir] = this.getNumber(ix,iy);
+			}
+			this.setNumber(ix,iy,0);
+		}
+	}
+	for(var i=0;i<=lastRegionNumber;i++){
+		if (numbersFoundInRegion[i] > 0){
+			this.setNumber(firstX[i],firstY[i],numbersFoundInRegion[i]);
+		}
 	}
 }

@@ -43,6 +43,7 @@ Draw the grid on-screen on p_context, with p_editorCore informations, with this.
 */
 
 Drawer.prototype.drawGrid = function(p_context,p_editorCore){
+	this.drawWallGrid(p_context,p_editorCore.wallGrid,p_editorCore.getXLength(),p_editorCore.getYLength());
 	//TODO improve me this, lol !
 	for(var iy = 0;iy < p_editorCore.getYLength(); iy++){
 		for(var ix = 0;ix < p_editorCore.getXLength();ix++){
@@ -52,9 +53,11 @@ Drawer.prototype.drawGrid = function(p_context,p_editorCore){
 			}
 		}
 	}
+	//Numbers
+	if (p_editorCore.hasNumberGrid()){
+		this.drawNumbersLittle(p_context,p_editorCore.numberGrid,p_editorCore.getXLength(),p_editorCore.getYLength());
+	}
 	
-	
-	this.drawWallGrid(p_context,p_editorCore.wallGrid,p_editorCore.getXLength(),p_editorCore.getYLength());
 }
 
 Drawer.prototype.drawWallGrid = function(p_context,p_wallGrid, p_xLength, p_yLength){
@@ -123,6 +126,22 @@ Drawer.prototype.drawWallGrid = function(p_context,p_wallGrid, p_xLength, p_yLen
 	this.pix.borderSpace,pixTotalHeight);
 	p_context.fillRect(this.pix.marginGrid.left,this.pix.marginGrid.up+pixTotalHeight-this.pix.borderSpace,
 	pixTotalWidth,this.pix.borderSpace);
+}
+
+Drawer.prototype.drawNumbersLittle = function(p_context,p_numberGrid, p_xLength, p_yLength){
+	p_context.textAlign = 'left'; //Et non center middle
+	p_context.textBaseline = 'top';
+	p_context.font = this.getPixInnerSide()/2+"px Arial";
+
+	for(var iy=0;iy<p_yLength;iy++){
+		for(var ix=0;ix<p_xLength;ix++){
+			if (p_numberGrid.getNumber(ix,iy)){
+				pixLeft = this.getPixInnerXLeft(ix)+2;
+				pixDown = this.getPixInnerYUp(iy)+2;
+				p_context.fillText(p_numberGrid.getNumber(ix,iy),pixLeft,pixDown);
+			}
+		}
+	}
 }
 
 /**

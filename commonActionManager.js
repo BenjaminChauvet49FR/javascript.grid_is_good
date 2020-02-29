@@ -7,6 +7,13 @@ const MODES = {
 const MODE_NORMAL = {id:1,html:"Etat case",value:"Changer case grille"};
 const MODE_SELECTION = {id:2,html:"Sélection",value:"Sélectionner cases"};
 const MODE_ERASE = {id:3,html:"Effaçage",value:"Effacer murs autour case"};
+const MODE_NUMBER = {id:4,html:"Ajout numéro",value:"Ajouter le n° ",numberToInput:0};
+
+/**
+Getter of setter for a specific mode
+*/
+function setNumberMode(p_numericMode,p_number){p_numericMode.numberToInput = p_number};
+function getNumberMode(p_numericMode){return p_numericMode.numberToInput};
 
 /**
 Adds the event listener of an action submit by linking it to an action for the canvas (warning : changes a text element)

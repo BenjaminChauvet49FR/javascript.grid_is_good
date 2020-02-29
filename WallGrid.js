@@ -93,6 +93,8 @@ WallGrid.prototype.switchWallU = function(p_x,p_y){this.setWallU(p_x,p_y,switche
 WallGrid.prototype.switchWallL = function(p_x,p_y){this.setWallU(p_x,p_y,switchedState(this.getWallL(p_x,p_y)));}
 WallGrid.prototype.switchState = function(p_x,p_y){this.setState(p_x,p_y,switchedState(this.getState(p_x,p_y)));}
 
+
+
 WallGrid.prototype.rotateCWGrid = function(){
 	var newWallGrid = [];
 	var newWallR;
