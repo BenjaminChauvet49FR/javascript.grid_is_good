@@ -29,7 +29,6 @@ function drawCanvas(){
 }
 
 setInterval(drawCanvas,30);
-//--------------------
 
 var fieldName = document.getElementById("input_grid_name");
 var textArea = document.getElementById("textarea_happened");
