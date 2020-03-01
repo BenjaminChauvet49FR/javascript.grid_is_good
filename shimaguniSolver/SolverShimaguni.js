@@ -6,17 +6,22 @@ SolverShimaguni.prototype.construct = function(p_wallArray,p_numberGrid){
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
 	this.wallGrid = new WallGrid(p_wallArray,this.xLength,this.yLength); 
-	this.regionGrid = wallGrid.toRegionGrid();
+	this.regionGrid = this.wallGrid.toRegionGrid();
+	this.answerGrid = [];
 	
 	var ix,iy;
 	var lastRegionNumber = 0;
-	for(iy = 0;iy < this.xyLength;iy++){
-		for(ix = 0;ix < this.xyLength;ix++){
+	
+	for(iy = 0;iy < this.yLength;iy++){
+		this.answerGrid.push([]);
+		for(ix = 0;ix < this.xLength;ix++){
 			lastRegionNumber = Math.max(this.regionGrid[iy][ix],lastRegionNumber);
+			this.answerGrid[iy].push(FILLING.UNDECIDED);
 		}
 	}
 	
 	this.regions = [];
+	this.contactTriangle = [];
 	for(var i=0;i<=lastRegionNumber;i++){
 		this.regions.push({
 			spaces : [],
@@ -29,10 +34,11 @@ SolverShimaguni.prototype.construct = function(p_wallArray,p_numberGrid){
 			maxVal : 0,
 			forcedVal : NOT_FORCED
 		});
+		this.contactTriangle.push([]); //(Le triangle doit être ainsi : [], [10], [20,21], [30,31,32] ...)
 		if(i > 1){
 			this.contactTriangle.push([]);	
 			for(var j=0;j<i;j++){
-				contactTriangle[j].push(false);
+				this.contactTriangle[i].push(false);
 			}
 		}		
 	}
@@ -41,9 +47,9 @@ SolverShimaguni.prototype.construct = function(p_wallArray,p_numberGrid){
 	var iOtherR;
 	var region;
 	for(iy = 0;iy < this.yLength;iy++){
-		for(ix = 0;ix < this.xyLength;ix++){
+		for(ix = 0;ix < this.xLength;ix++){
 			ir = this.regionGrid[iy][ix];
-			number = this.p_numberGrid[iy][ix];
+			number = p_numberGrid[iy][ix];
 			this.regions[ir].spaces.push({x:ix,y:iy});
 			region = this.regions[ir];
 			if (number > 0){
@@ -56,7 +62,7 @@ SolverShimaguni.prototype.construct = function(p_wallArray,p_numberGrid){
 				}
 			}			
 			if (ix < this.xLength-1){
-				iOtherR = this.regionGrid[iy][xLength+1];
+				iOtherR = this.regionGrid[iy][ix+1];
 				if (iOtherR != ir){
 					this.validateContact(ir,iOtherR);
 				}
@@ -86,13 +92,25 @@ SolverShimaguni.prototype.construct = function(p_wallArray,p_numberGrid){
 
 const NOT_FORCED = -1;
 
-SolverShimaguni.prototype.forcedValue(ir){
+SolverShimaguni.prototype.forcedValue = function(ir){
 	return this.regions[ir].forcedVal;
 }
 
+SolverShimaguni.prototype.getSpaceCoordinates = function(p_indexRegion,p_indexSpace){
+	return this.regions[p_indexRegion].spaces[p_indexSpace];
+}
 
-SolverShimaguni.prototype.getContact(i,j){return (j > i ? this.contactTriangle[j][i] : this.contactTriangle[i][j]);}
-SolverShimaguni.prototype.validateContact(i,j){
+SolverShimaguni.prototype.getContact = function(i,j){return (j > i ? this.contactTriangle[j][i] : this.contactTriangle[i][j]);}
+SolverShimaguni.prototype.validateContact = function(i,j){
 	if (j>i) this.contactTriangle[j][i] = true;
 		else this.contactTriangle[i][j] = true;
+}
+
+
+SolverShimaguni.prototype.getAnswer = function(p_x,p_y){
+	return this.answerGrid[p_y][p_x];
+}
+
+SolverShimaguni.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
+	this.answerGrid[p_y][p_x] = p_symbol; 
 }

@@ -15,7 +15,7 @@ GlobalStarBattle.prototype.construct = function(p_wallArray,p_starNumber){
 	//happenedEvents : array of array(Event) ; contains an array of an array of events : for each supposed, the list of itself and all events that were forced by it.
 	this.wallGrid = new WallGrid(p_wallArray,p_wallArray.length,p_wallArray.length);
 	this.regionGrid = this.wallGrid.toRegionGrid();
-	this.xyLength = this.getWallGrid().length;
+	this.xyLength = this.getWallGrid().length; //IMPORTANT : when copy-pasting this line to a non-square grid, make sure to replace ALL occurences by xLength and yLength
 	this.listSpacesByRegion(); //spacesByRegion
 	this.buildPossibilities(p_starNumber); //notPlacedYet
 	this.buildAnswerGrid(); //answerGrid

@@ -16,6 +16,9 @@ var colors={
 	rainbowSpaces:[],
 	insideIndicationsOnWhite:'#008800',
 	insideIndicationsOnFilled:'#00ff00',
+	standardWrite:'#000000',
+	reflectWrite:"#ffff88",
+	validSquare:"#000088"
 }
 
 //--------------------
@@ -34,14 +37,13 @@ setInterval(drawCanvas,30);
 var fieldName = document.getElementById("input_grid_name");
 var textArea = document.getElementById("textarea_happened");
 
-document.getElementById("submit_load_grid").addEventListener('click',
-	function(event){loadAction(canevas,drawer,textArea,solver,fieldName.value)}
-);
+
 canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,textArea,solver,actionToDo)},false);
-document.getElementById("submit_undo").addEventListener('click',function(event){undoAction(solver,textArea)});
-document.getElementById("submit_quickStart").addEventListener('click',function(event){quickStartAction(solver,textArea)});
-document.getElementById("submit_view_Shimaguni_list").addEventListener('click',function(event){viewNorinoriList(solver,textArea)});
-document.getElementById("submit_multiPass").addEventListener('click',function(event){multiPassAction(solver,textArea)});
+putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,solver,fieldName.value)});
+putActionElementClick("submit_undo",function(event){undoAction(solver,textArea)});
+//putActionElementClick("submit_quickStart",function(event){quickStartAction(solver,textArea)});
+putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("Shimaguni")});
+putActionElementClick("submit_multiPass",function(event){multiPassAction(solver,textArea)});
 
 
 var submitFillSpace = document.getElementById("submit_fill_space");

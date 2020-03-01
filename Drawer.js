@@ -24,7 +24,9 @@ function Drawer(){
 		rainbowSpaces:["#6666ff","#ff6666","#66ff66",
 		"#66ffff","#ffff66","#ff66ff",
 		"#cc66ff","#ffcc66","#66ffcc",
-		"#ff00cc","#00ccff","#ccff00"]
+		"#ff00cc","#00ccff","#ccff00"],
+		antiCloseWrite:'#00ffff',
+		standardWrite:'#000000'
 	}
 } 
 
@@ -129,15 +131,25 @@ Drawer.prototype.drawWallGrid = function(p_context,p_wallGrid, p_xLength, p_yLen
 }
 
 Drawer.prototype.drawNumbersLittle = function(p_context,p_numberGrid, p_xLength, p_yLength){
-	p_context.textAlign = 'left'; //Et non center middle
+	this.drawNumbersGrid(p_context,p_numberGrid, p_xLength, p_yLength,null,null)
+}
+
+//"Grid" qu'on combine avec la wallGrid... TODO nom à changer
+Drawer.prototype.drawNumbersGrid = function(p_context,p_wallGrid,p_numberGrid, p_xLength, p_yLength){
+	p_context.textAlign = 'left'; 
 	p_context.textBaseline = 'top';
 	p_context.font = this.getPixInnerSide()/2+"px Arial";
-
+	p_context.fillStyle = this.colors.standardWrite;
 	for(var iy=0;iy<p_yLength;iy++){
 		for(var ix=0;ix<p_xLength;ix++){
 			if (p_numberGrid.getNumber(ix,iy)){
 				pixLeft = this.getPixInnerXLeft(ix)+2;
 				pixDown = this.getPixInnerYUp(iy)+2;
+				if (p_wallGrid && p_wallGrid.getState(ix,iy) == CLOSED){
+					p_context.fillStyle = this.colors.antiCloseWrite;
+				} else{
+					p_context.fillStyle = this.colors.standardWrite;
+				}
 				p_context.fillText(p_numberGrid.getNumber(ix,iy),pixLeft,pixDown);
 			}
 		}

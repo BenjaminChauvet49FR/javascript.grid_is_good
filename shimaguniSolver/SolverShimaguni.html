@@ -14,9 +14,10 @@
         </canvas></br>
 		
 		Grille à charger : <input type="text" id="input_grid_name" value="Shimaguni1"></input> 
+		<input type="submit" id="submit_view_puzzle_list" value="Voir les puzzles Shimaguni"></input></br>
 		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
 		Action à réaliser : <span id="text_canvas_action"></span></br>
-		<input type="submit" id="submit_fill" value="Colorier case"></input></br>
+		<input type="submit" id="submit_fill_space" value="Colorier case"></input></br>
 		<input type="submit" id="submit_put_X" value="Placer X"></input></br>
 		<input type="submit" id="submit_pass_region" value="Passe sur région"></input></br>
 		
@@ -34,15 +35,16 @@
 		
 		<script src="../constants.js"></script>
 		<script src="../Drawer.js"></script>
-		<script src="../SolverShumaguni/saveLoad.js"></script>
+		<script src="../shimaguniEditor/saveLoad.js"></script>
 		<script src="../EditorCore.js"></script>
 		<script src="../WallGrid.js"></script>
 		<script src="../NumberGrid.js"></script>
+		<script src="../commonInput.js"></script>
 		<script src="constants.js"></script>
-		<script src="SpaceEvent.js"></script>
+		<!--script src="SpaceEvent.js"></script-->
 		<script src="SolverShimaguni.js"></script>
 		<script src="drawing.js"></script>
-		<script src="input.js"></script>
+		<script src="inputSolver.js"></script>
 		<script src="mainSolver.js"></script>
 	</body>
 </html>
