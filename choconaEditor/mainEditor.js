@@ -22,10 +22,10 @@ var fieldName = document.getElementById("input_grid_name");
 
 adaptCanvasAndGrid(canevas,drawer,editorCore);
 
-putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("Shimaguni")});
+putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("Chocona")});
 putActionElementClick("submit_save_grid",function(event){saveAction(editorCore,fieldName.value,{})});
 putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,editorCore,fieldName.value,{xLengthField : fieldX, yLengthField:fieldY})});
-putActionElementClick("submit_auto_name",function(event){fieldName.value = "Shimaguni"});
+putActionElementClick("submit_auto_name",function(event){fieldName.value = "Chocona"});
 putActionElementClick("submit_new_grid",function(event){restartAction(canevas,drawer,editorCore,fieldX.value,fieldY.value)});
 putActionElementClick("submit_resize_grid",function(event){resizeAction(canevas,drawer,editorCore,fieldX.value,fieldY.value)});
 

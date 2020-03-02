@@ -2,6 +2,7 @@ function Drawer(){
 	this.pix = {
 		sideSpace : 30,
 		borderSpace : 2, //Inner border
+		pathThickness : 4, //Divided by 2 at a point
 		borderClickDetection : 5, //How many pixels from the side of a space can you click to trigger the border ?
 		canvasWidth : 800,
 		canvasHeight: 800,
@@ -26,7 +27,8 @@ function Drawer(){
 		"#cc66ff","#ffcc66","#66ffcc",
 		"#ff00cc","#00ccff","#ccff00"],
 		antiCloseWrite:'#00ffff',
-		standardWrite:'#000000'
+		standardWrite:'#000000',
+		path:'#006600'
 	}
 } 
 
@@ -58,6 +60,10 @@ Drawer.prototype.drawGrid = function(p_context,p_editorCore){
 	//Numbers
 	if (p_editorCore.hasNumberGrid()){
 		this.drawNumbersLittle(p_context,p_editorCore.numberGrid,p_editorCore.getXLength(),p_editorCore.getYLength());
+	}
+	//Paths
+	if (p_editorCore.hasPathGrid()){
+		this.drawPathGrid(p_context,p_editorCore.pathGrid,p_editorCore.getXLength(),p_editorCore.getYLength());
 	}
 	
 }
@@ -131,7 +137,7 @@ Drawer.prototype.drawWallGrid = function(p_context,p_wallGrid, p_xLength, p_yLen
 }
 
 Drawer.prototype.drawNumbersLittle = function(p_context,p_numberGrid, p_xLength, p_yLength){
-	this.drawNumbersGrid(p_context,p_numberGrid, p_xLength, p_yLength,null,null)
+	this.drawNumbersGrid(p_context, null, p_numberGrid, p_xLength, p_yLength)
 }
 
 //"Grid" qu'on combine avec la wallGrid... TODO nom à changer
@@ -153,6 +159,30 @@ Drawer.prototype.drawNumbersGrid = function(p_context,p_wallGrid,p_numberGrid, p
 				p_context.fillText(p_numberGrid.getNumber(ix,iy),pixLeft,pixDown);
 			}
 		}
+	}
+}
+
+Drawer.prototype.drawPathGrid = function(p_context,p_pathGrid, p_xLength, p_yLength){
+	p_context.textAlign = 'left'; 
+	p_context.textBaseline = 'top';
+	p_context.fillStyle = this.colors.path;
+	const shorter = this.pix.pathThickness;
+	const longer = shorter+this.pix.sideSpace;
+	const pixLeftStart = this.getPixCenterX(0)-shorter/2;
+	var pixLeft = pixLeftStart;
+	var pixUp = this.getPixCenterY(0)-shorter/2;
+	for(var iy=0;iy<p_yLength;iy++){
+		for(var ix=0;ix<p_xLength;ix++){
+			if (p_pathGrid.getPathD(ix,iy) == PATH.YES){
+				p_context.fillRect(pixLeft,pixUp,shorter,longer);				
+			}
+			if (p_pathGrid.getPathR(ix,iy) == PATH.YES){
+				p_context.fillRect(pixLeft,pixUp,longer,shorter);	
+			}
+			pixLeft += this.pix.sideSpace;
+		}
+		pixLeft = pixLeftStart;
+		pixUp += this.pix.sideSpace;
 	}
 }
 
@@ -250,6 +280,41 @@ Drawer.prototype.getClickWallD = function(event,p_canvas,p_editorCore){
 	}  
 	return null;
 }
+
+Drawer.prototype.getClickAroundWallR = function(event,p_canvas,p_editorCore){
+	const pixX = this.getPixXWithinGrid(event,p_canvas); 
+    const pixY = this.getPixYWithinGrid(event,p_canvas); 
+	const sideSpace = this.pix.sideSpace;
+	var distanceX = pixX%sideSpace;
+	distanceX = Math.min(distanceX,sideSpace-distanceX);
+	var distanceY = pixY%sideSpace;
+	distanceY = Math.min(distanceY,sideSpace-distanceY);
+	if (distanceX < distanceY){
+		return {
+			x:Math.floor((pixX-sideSpace/2)/sideSpace),
+			y:Math.floor(pixY/sideSpace)
+		}
+	}
+	return null;
+}
+
+Drawer.prototype.getClickAroundWallD = function(event,p_canvas,p_editorCore){
+	const pixX = this.getPixXWithinGrid(event,p_canvas); 
+    const pixY = this.getPixYWithinGrid(event,p_canvas); 
+	const sideSpace = this.pix.sideSpace;
+	var distanceX = pixX%sideSpace;
+	distanceX = Math.min(distanceX,sideSpace-distanceX);
+	var distanceY = pixY%sideSpace;
+	distanceY = Math.min(distanceY,sideSpace-distanceY);
+	if (distanceX > distanceY){
+		return {
+			x:Math.floor(pixX/sideSpace),
+			y:Math.floor((pixY-sideSpace/2)/sideSpace)
+		}
+	}
+	return null;
+}
+
 
 //--------------------
 // Private functions

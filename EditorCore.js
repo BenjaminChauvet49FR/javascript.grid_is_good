@@ -1,16 +1,17 @@
 function EditorCore(p_xLength,p_yLength) {
-	this.setupFromWallArray(generateWallArray(p_xLength,p_yLength));
-	if(this.hasNumberGrid()){
-		this.setupNumberGrid(generateNumberArray(p_xLength,p_yLength));
-	}
-	this.mode = {colorRegionIfValid : false};	
+	this.restartGrid(p_xLength,p_yLength);
 }
 
+//TODO renommer cette méthode ! Yeah !
 EditorCore.prototype.restartGrid = function(p_xLength,p_yLength){
 	this.setupFromWallArray(generateWallArray(p_xLength,p_yLength));
 	if(this.hasNumberGrid()){
 		this.setupNumberGrid(generateNumberArray(p_xLength,p_yLength));
 	}
+	if(this.hasPathGrid()){
+		this.setupPathGrid(generatePathArray(p_xLength,p_yLength));
+	}
+	this.mode = {colorRegionIfValid : false};	
 }
 
 //YUP ! The grid must NOT be null !
@@ -29,21 +30,26 @@ EditorCore.prototype.hasNumberGrid = function(){
 	return (typeof(NumberGrid) == 'function');
 }
 
+EditorCore.prototype.hasPathGrid = function(){
+	return (typeof(PathGrid) == 'function');
+}
+
 EditorCore.prototype.setupNumberGrid = function(p_numberArray){
 	this.numberGrid = new NumberGrid(p_numberArray,p_numberArray[0].length,p_numberArray.length);
 }
 
-EditorCore.prototype.getXLength = function(){
-	return this.wallGrid.xLength;
+EditorCore.prototype.setupPathGrid = function(p_pathArray){
+	this.pathGrid = new PathGrid(p_pathArray,p_pathArray[0].length,p_pathArray.length);
 }
-EditorCore.prototype.getYLength = function(){
-	return this.wallGrid.yLength;
-}
+
 EditorCore.prototype.getArray = function(){ //TODO cette fonction gagnera à être changée de nom !
 	return this.wallGrid.array;
 }
 EditorCore.prototype.getNumbers = function(){
 	return this.numberGrid.array;
+}
+EditorCore.prototype.getPaths = function(){
+	return this.pathGrid.array;
 }
 
 EditorCore.prototype.getSelection = function(p_x,p_y){return this.selectedGrid[p_y][p_x];}
@@ -59,9 +65,24 @@ EditorCore.prototype.setState = function(p_x,p_y,p_state){this.wallGrid.setState
 EditorCore.prototype.switchWallR = function(p_x,p_y){this.wallGrid.switchWallR(p_x,p_y);}
 EditorCore.prototype.switchWallD = function(p_x,p_y){this.wallGrid.switchWallD(p_x,p_y);}
 EditorCore.prototype.switchState = function(p_x,p_y){this.wallGrid.switchState(p_x,p_y);}
+
 EditorCore.prototype.getNumber = function(p_x,p_y,p_number){return this.numberGrid.getNumber(p_x,p_y,p_number);}
 EditorCore.prototype.setNumber = function(p_x,p_y,p_number){this.numberGrid.setNumber(p_x,p_y,p_number);}
 
+EditorCore.prototype.getPathR = function(p_x,p_y){return this.pathGrid.getPathR(p_x,p_y);}
+EditorCore.prototype.getPathD = function(p_x,p_y){return this.pathGrid.getPathD(p_x,p_y);}
+EditorCore.prototype.setPathR = function(p_x,p_y,p_state){this.pathGrid.setPathR(p_x,p_y);}
+EditorCore.prototype.setPathD = function(p_x,p_y,p_state){this.pathGrid.setPathD(p_x,p_y);}
+EditorCore.prototype.switchPathR = function(p_x,p_y){this.pathGrid.switchPathR(p_x,p_y);}
+EditorCore.prototype.switchPathD = function(p_x,p_y){this.pathGrid.switchPathD(p_x,p_y);}
+
+//---
+EditorCore.prototype.getXLength = function(){
+	return this.wallGrid.xLength;
+}
+EditorCore.prototype.getYLength = function(){
+	return this.wallGrid.yLength;
+}
 
 /**
 Transforms the grid

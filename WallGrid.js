@@ -253,8 +253,8 @@ WallGrid.prototype.resizeGrid = function(p_xLength,p_yLength){
 
 //-----------
 
-// Walled grids
-const OPEN = 0;
+// Constants for walls and spaces
+const OPEN = 0; //TODO perform constants for everything
 const CLOSED = 1;
 
 function switchedState(p_state){

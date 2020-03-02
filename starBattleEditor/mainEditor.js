@@ -47,7 +47,11 @@ putActionElementClick("submit_clear_selection",function(event){actionUnselectAll
 //See "CommonXManager.js" above.
 var textMode = document.getElementById("span_mode"); 
 setMode(textMode,modesManager,MODES.SPACE,MODE_NORMAL);
-addEventListenerAndCaptionActionSubmit(editorCore,modesManager,textMode,"submit_normal_mode",MODES.SPACE,MODE_NORMAL);
-addEventListenerAndCaptionActionSubmit(editorCore,modesManager,textMode,"submit_erase_mode",MODES.SPACE,MODE_SELECTION);
-addEventListenerAndCaptionActionSubmit(editorCore,modesManager,textMode,"submit_select_mode",MODES.SPACE,MODE_ERASE);
+function addEventListenerAndCaptionActionSubmitStandardSpace(elementId, modeValue){
+	addEventListenerAndCaptionActionSubmit(editorCore,modesManager,textMode,elementId,MODES.SPACE,modeValue);
+}
+
+addEventListenerAndCaptionActionSubmitStandardSpace("submit_normal_mode",MODE_NORMAL);
+addEventListenerAndCaptionActionSubmitStandardSpace("submit_erase_mode",MODE_SELECTION);
+addEventListenerAndCaptionActionSubmitStandardSpace("submit_select_mode",MODE_ERASE);
 

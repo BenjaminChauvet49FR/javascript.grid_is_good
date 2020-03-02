@@ -25,7 +25,7 @@ clickSpaceAction = function(p_editorCore,p_x, p_y, p_modes){
 
 function puzzleToString(p_editorCore,p_externalOptions){
 	p_editorCore.resetNumbers();
-	return shimaguniPuzzleToString(p_editorCore.getArray(),p_editorCore.getNumbers());
+	return choconaPuzzleToString(p_editorCore.getArray(),p_editorCore.getNumbers());
 }
 
 function getLocalStorageName(p_detachedName){
@@ -33,7 +33,7 @@ function getLocalStorageName(p_detachedName){
 }
 
 function stringToPuzzle(p_string){
-	return stringToShimaguniPuzzle(p_string);
+	return stringToChoconaPuzzle(p_string);
 }
 
 function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem){

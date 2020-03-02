@@ -8,6 +8,8 @@ const MODE_NORMAL = {id:1,html:"Etat case",value:"Changer case grille"};
 const MODE_SELECTION = {id:2,html:"Sélection",value:"Sélectionner cases"};
 const MODE_ERASE = {id:3,html:"Effaçage",value:"Effacer murs autour case"};
 const MODE_NUMBER = {id:4,html:"Ajout numéro",value:"Ajouter le n° ",numberToInput:0};
+const MODE_NORMAL_PATH = {id:5,html:"Chemins",value:"Changer chemins"};
+const MODE_NORMAL_WALL = {id:6,html:"Murs",value:"Changer murs"};
 
 /**
 Getter of setter for a specific mode
@@ -36,5 +38,6 @@ function setMode(p_textElement,p_modesManager,p_entry,p_mode){
 		case (MODES.SPACE):p_modesManager.clickSpace = p_mode;break; 
 		case (MODES.WALL_R):p_modesManager.clickWallD = p_mode;break; 
 		case (MODES.WALL_D):p_modesManager.clickWallR = p_mode;break; 
+		case (MODES.WALLS):p_modesManager.clickWallD = p_mode;break; 
 	}
 }

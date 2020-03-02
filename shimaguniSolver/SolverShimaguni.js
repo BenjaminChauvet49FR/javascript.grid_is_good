@@ -92,6 +92,14 @@ SolverShimaguni.prototype.construct = function(p_wallArray,p_numberGrid){
 
 const NOT_FORCED = -1;
 
+SolverShimaguni.prototype.getRegion = function(ix,iy){
+	return this.regions[this.regionGrid[iy][ix]];
+}
+
+SolverShimaguni.prototype.getRegionIndex = function(ix,iy){
+	return this.regionGrid[iy][ix];
+}
+
 SolverShimaguni.prototype.forcedValue = function(ir){
 	return this.regions[ir].forcedVal;
 }
@@ -112,5 +120,72 @@ SolverShimaguni.prototype.getAnswer = function(p_x,p_y){
 }
 
 SolverShimaguni.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
-	this.answerGrid[p_y][p_x] = p_symbol; 
+	return this.tryToPutNew(p_x,p_y,p_symbol);
+}
+
+//--------------
+// Put new and try
+
+SolverShimaguni.prototype.putNew = function(p_x,p_y,p_symbol){
+	if (p_symbol == this.answerGrid[p_y][p_x]){
+		return RESULT.HARMLESS;
+	}
+	if (this.answerGrid[p_y][p_x] != FILLING.UNDECIDED){
+		return RESULT.FAILURE;
+	}
+	var region = this.getRegion(p_x,p_y);
+	this.answerGrid[p_y][p_x] = p_symbol;
+	if (p_symbol == FILLING.YES){
+		region.YES++;
+		region.UNDEFs--;
+	}
+	else{
+		region.NOs++;
+		region.UNDEFs--;
+	}
+	return RESULT.SUCCESS;
+}
+
+SolverShimaguni.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
+	var eventsToApply = [SolveEventPosition(p_x,p_y,p_symbol)];
+	var regionalEventsToAdd = [];
+	var currentEvent;
+	var testPutNew;
+	var kind,value,ir,x,y,symbol;
+	var ok = true;
+	do{
+		do{
+			
+			currentEvent = eventsToApply.pop();
+			x = currentEvent.x;
+			y = currentEvent.y;
+			symbol = currentEvent.symbol;
+			testPutNew = this.putNew(x,y,symbol);
+			if (testPutNew == RESULT.FAILURE){
+				ok = false;
+			}
+			if (testPutNew == RESULT.SUCCESS){
+				ir = this.getRegionIndex(x,y);
+				if (symbol == FILLING.YES){
+					if (x>0 && (this.getRegionIndex(x-1,y) != ir)){
+						eventsToApply.push(SolveEventPosition(x-1,y,FILLING.NO));
+					}if (x<this.xLength-1 && (this.getRegionIndex(x+1,y) != ir)){
+						eventsToApply.push(SolveEventPosition(x+1,y,FILLING.NO));
+					}if (y>0 && (this.getRegionIndex(x,y-1) != ir)){
+						eventsToApply.push(SolveEventPosition(x,y-1,FILLING.NO));
+					}if (y<this.yLength-1 && (this.getRegionIndex(x,y+1) != ir)){
+						eventsToApply.push(SolveEventPosition(x,y+1,FILLING.NO));
+					}
+				}	
+			}
+		}while (eventsToApply.length > 0 && ok);
+		while(regionalEventsToAdd.length > 0 && ok){
+
+		}					
+	} while (eventsToApply.length > 0 && ok);
+	if (!ok){
+		//Annuler 
+	}
+	
+	
 }

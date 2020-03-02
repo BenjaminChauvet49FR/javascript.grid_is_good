@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Grand Tour Editor</title>
+		<link rel="stylesheet" type="text/css" href="../style.css">
+    </head>
+    <body>
+		<!-- Le fameux canevas -->
+		<canvas id="canevas" width="800" height="500">
+            Message pour les navigateurs ne supportant pas encore canvas.
+        </canvas></br>
+		
+		<input type="submit" id="submit_show_region_grid" value="Donner les régions de la grille"></input></br>
+		<input type="submit" id="submit_view_puzzle_list" value="Voir numéros puzzles Grand Tour"></input></br>
+		Grille à sauver/charger : <input type="text" id="input_grid_name" value="default"></input>
+		<input type="submit" id="submit_save_grid" value="Sauver"></input>
+		<input type="submit" id="submit_load_grid" value="Charger"></input>
+		<input type="submit" id="submit_auto_name" value='Nommer Grand Tour'></input>
+		</br>
+		
+		Largeur : <input type="number" id="input_number_xLength" value="9"></input>
+		Hauteur : <input type="number" id="input_number_yLength" value="10"></input>
+
+		</br>
+		<input type="submit" id="submit_new_grid" value="Nouvelle grille"></input>
+		<input type="submit" id="submit_resize_grid" value="Redimensionner la grille"></input>
+		</br></br>
+
+		<input type="submit" id="submit_rotate_clockwise" value="Rotation sens horaire"></input></br>
+		<input type="submit" id="submit_rotate_uturn" value="Rotation 180°"></input></br>
+		<input type="submit" id="submit_rotate_counter_clockwise" value="Rotation sens anti-horaire"></input></br>
+		<input type="submit" id="submit_mirror_horizontal" value="Réflexion horizontale"></input></br>
+		<input type="submit" id="submit_mirror_vertical" value="Réflexion verticale"></input></br>
+
+	
+		<script src="../constants.js"></script>
+		<script src="../EditorCore.js"></script>
+		<script src="../WallGrid.js"></script>
+		<script src="../PathGrid.js"></script>
+		<script src="../Drawer.js"></script>
+		<script src="../commonInput.js"></script>
+		<script src="../commonActionManager.js"></script>
+		<script src="inputEditor.js"></script>
+		<script src="saveLoad.js"></script>
+		<script src="mainEditor.js"></script>
+	</body>
+</html>
