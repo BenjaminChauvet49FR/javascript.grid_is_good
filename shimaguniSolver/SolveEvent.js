@@ -29,13 +29,18 @@ SolveEvent.prototype.setupSymbol = function(p_x,p_y,p_symbol){
 SolveEvent.prototype.setupValue = function(p_index,p_val){
 	this.kind = KIND.VALUE;
 	this.valueToBan = p_val;
-	this.region = p_index;
+	this.indexRegion = p_index;
 }
 
 //
 
 SolveEvent.prototype.toString = function(){	
-	return "["+this.x+","+this.y+"] ("+this.symbol+")";
+	if (this.kind == KIND.SYMBOL){
+		return "["+this.x+","+this.y+"] ("+this.symbol+")";
+	}
+	else{
+		return "[Reg. "+this.indexRegion+" X"+this.valueToBan+"]";
+	}
 }
 
 SolveEvent.prototype.copy = function(){

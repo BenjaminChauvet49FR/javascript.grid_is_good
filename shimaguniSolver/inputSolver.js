@@ -51,6 +51,11 @@ solveAction = function (p_solver,p_textArea){
 	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO see above
 }
 
+quickStartAction = function(p_solver,p_textArea){
+	p_solver.quickStart();
+	//p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
+}
+
 //--------------------------
 
 /** 
