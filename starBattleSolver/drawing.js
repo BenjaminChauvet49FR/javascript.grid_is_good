@@ -15,7 +15,7 @@ function drawAroundIndications(p_context,p_drawer,p_colorDigits,p_solver){
 	var pixYDown = p_drawer.getPixCenterY(p_solver.xyLength);
 	p_context.font = pixFont+"px Arial";
 	for(var i=0;i<p_solver.xyLength;i++){
-		p_context.fillStyle = p_colorDigits.starIndication; //TODO perform color management
+		p_context.fillStyle = p_colorDigits.starIndication; 
 		p_context.fillText(p_solver.getOsRemainColumn(i),pixXUpAndDown,pixYUp);
 		p_context.fillText(p_solver.getOsRemainRow(i),pixXLeft,pixYLeftAndRight);
 		p_context.fillStyle = p_colorDigits.crossIndication;
@@ -63,10 +63,10 @@ function drawInsideSpaces(p_context,p_drawer,p_color,p_solver){
 	for(iy = 0;iy < p_solver.xyLength;iy++){
 		for(ix = 0;ix < p_solver.xyLength;ix++){
 			if  (p_solver.getRegion(ix,iy) != BANNED){ // Should this condition be missed the extra "no star" in banned spaces would be added.
-				if(p_solver.getAnswer(ix,iy) == STAR){
+				if(p_solver.getAnswer(ix,iy) == SYMBOL.STAR){
 					p_context.drawImage(document.getElementById("img_star"),0,0,64,64,pixDrawX,pixDrawY,drawer.getPixInnerSide(),drawer.getPixInnerSide());
 				}
-				if(p_solver.getAnswer(ix,iy) == NO_STAR){
+				if(p_solver.getAnswer(ix,iy) == SYMBOL.NO_STAR){
 					p_context.drawImage(document.getElementById("img_x"),0,0,64,64,pixDrawX,pixDrawY,drawer.getPixInnerSide(),drawer.getPixInnerSide());	
 				}
 			}

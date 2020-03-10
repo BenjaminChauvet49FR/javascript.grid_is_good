@@ -25,7 +25,7 @@ SolverStarBattle.prototype.buildAnswerGrid = function(){
 	for(iy = 0; iy < this.xyLength ; iy++){
 		this.answerGrid.push([]);
 		for(ix = 0; ix < this.xyLength ; ix++){
-			this.answerGrid[iy].push(UNDECIDED);
+			this.answerGrid[iy].push(SYMBOL.UNDECIDED);
 		}
 	}
 }
@@ -39,7 +39,7 @@ SolverStarBattle.prototype.purifyAnswerGrid = function(){
 	for(iy = 0; iy < this.xyLength ; iy++){
 		for(ix = 0; ix < this.xyLength ; ix++){
 			if (this.regionGrid[iy][ix] == BANNED){
-				this.putNew(ix,iy,NO_STAR);
+				this.putNew(ix,iy,SYMBOL.NO_STAR);
 			}
 		}
 	}
@@ -122,7 +122,7 @@ SolverStarBattle.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
 		this.happenedEvents.push(result.eventsApplied);
 		return {result:RESULT.SUCCESS,eventsApplied:result.eventsApplied};
 	}
-	return {result:RESULT.FAILURE,eventsApplied:[]};
+	return {result:RESULT.ERROR,eventsApplied:[]};
 }
 
 //------------------
@@ -140,7 +140,7 @@ SolverStarBattle.prototype.passRegion = function(p_indexRegion){
 	var space;
 	for(var i=0;i<this.spacesByRegion[p_indexRegion].length;i++){
 		space = this.spacesByRegion[p_indexRegion][i];
-		if (this.answerGrid[space.y][space.x] == UNDECIDED){
+		if (this.answerGrid[space.y][space.x] == SYMBOL.UNDECIDED){
 			spacesToTestArray.push({x:space.x,y:space.y});
 		}
 	}
@@ -160,7 +160,7 @@ SolverStarBattle.prototype.passRegion = function(p_indexRegion){
 SolverStarBattle.prototype.passRow = function(p_indexRow){
 	var spacesToTestArray = [];
 	for(var i=0;i<this.xyLength;i++){
-		if (this.answerGrid[p_indexRow][i] == UNDECIDED){
+		if (this.answerGrid[p_indexRow][i] == SYMBOL.UNDECIDED){
 			spacesToTestArray.push({x:i,y:p_indexRow});
 		}
 	}
@@ -180,7 +180,7 @@ SolverStarBattle.prototype.passRow = function(p_indexRow){
 SolverStarBattle.prototype.passColumn = function(p_indexColumn){
 	var spacesToTestArray = [];
 	for(var i=0;i<this.xyLength;i++){
-		if (this.answerGrid[i][p_indexColumn] == UNDECIDED){
+		if (this.answerGrid[i][p_indexColumn] == SYMBOL.UNDECIDED){
 			spacesToTestArray.push({x:p_indexColumn,y:i});
 		}
 	}
@@ -203,15 +203,15 @@ SolverStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_fu
 		return {consistence : RESULT.SUCCESS, eventsApplied: []}; //When performing a multipass, some passes can become useless since the corresponding row/column/region have been filled by previous passes.
 	}
 	var index = p_indexFirstSpace;
-	while (this.answerGrid[p_spacesToTest[index].y][p_spacesToTest[index].x] != UNDECIDED)
+	while (this.answerGrid[p_spacesToTest[index].y][p_spacesToTest[index].x] != SYMBOL.UNDECIDED)
 	{
 		index++;
 	}
 	//We MUST find an index where space is undecided.
 	var listO = null;
 	var listX = null;
-	var answerPut = this.tryToPutNew(p_spacesToTest[index].x,p_spacesToTest[index].y,STAR);
-	if (answerPut.coherence == COHERENCE.SUCCESS){
+	var answerPut = this.tryToPutNew(p_spacesToTest[index].x,p_spacesToTest[index].y,SYMBOL.STAR);
+	if (answerPut.RESULT == RESULT.SUCCESS){
 		if (p_functionFinishedPass()){
 			listO = answerPut.eventsApplied;
 		}
@@ -224,8 +224,8 @@ SolverStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_fu
 		this.undoList(answerPut.eventsApplied.slice());
 	}
 	if ((listO == null) || (listO.length > 0)){
-		answerPut = this.tryToPutNew(p_spacesToTest[index].x,p_spacesToTest[index].y,NO_STAR);
-		if (answerPut.coherence == COHERENCE.SUCCESS){
+		answerPut = this.tryToPutNew(p_spacesToTest[index].x,p_spacesToTest[index].y,SYMBOL.NO_STAR);
+		if (answerPut.RESULT == RESULT.SUCCESS){
 			if (p_functionFinishedPass()){
 				listX = answerPut.eventsApplied;
 			}
@@ -311,14 +311,14 @@ SolverStarBattle.prototype.multiPass = function(){
 SolverStarBattle.prototype.generalSolve = function(){
 	//Perform an autopass.
 		//It works and clears the puzzle : return "SUCCESS"
-		//It doesn't work : return "FAILURE"
+		//It doesn't work : return "ERROR"
 		//It works but doesn't clear the puzzle : 
 			// Randomly picks a O into a space of the non-full region with the largest O/X ratio 
 				// It works and clears the puzzle : return "SUCCESS"
 				// It works but doesn't clear the puzzle : repeat the process and call the result.
 				// It doesn't work : 
 					//Puts an X instead
-					// It works : either SUCCESS or repeat the process and call the result. It fails : FAILURE.
+					// It works : either SUCCESS or repeat the process and call the result. It fails : ERROR.
 	/*var answerPass, answerHypothesis, answer;
 	var answerPass = this.multiPass();
 	if (answerPass == RESULT.ERROR){
@@ -349,13 +349,13 @@ SolverStarBattle.prototype.generalSolve = function(){
 		var indexSpace = 0;
 		var spacesOfThisRegion = this.spacesByRegion[indexRegion];
 		var spaceCoordinates = spacesOfThisRegion[indexSpace];
-		while(this.answerGrid[spaceCoordinates.y][spaceCoordinates.x] != UNDECIDED){
+		while(this.answerGrid[spaceCoordinates.y][spaceCoordinates.x] != SYMBOL.UNDECIDED){
 			indexSpace++;
 			spaceCoordinates = spacesOfThisRegion[indexSpace];
 		}
 		
 		//Try with an O
-		answerHypothesis = this.emitHypothesis(spaceCoordinates.x,spaceCoordinates.y,STAR);
+		answerHypothesis = this.emitHypothesis(spaceCoordinates.x,spaceCoordinates.y,SYMBOL.STAR);
 		if (answerHypothesis.result == RESULT.SUCCESS){
 			answer=this.generalSolve();
 		}
@@ -366,7 +366,7 @@ SolverStarBattle.prototype.generalSolve = function(){
 		this.undoList(answerHypothesis.eventsApplied);
 
 		//Try with an X ?
-		answerHypothesis = this.emitHypothesis(spaceCoordinates.x,spaceCoordinates.y,NO_STAR);
+		answerHypothesis = this.emitHypothesis(spaceCoordinates.x,spaceCoordinates.y,SYMBOL.NO_STAR);
 		if (answerHypothesis.result == RESULT.SUCCESS){
 			return this.generalSolve();
 		}
@@ -384,22 +384,22 @@ SolverStarBattle.prototype.generalSolve = function(){
 RESULT.SUCCESS : it was indeed put into the grid ; the number of Os and Xs for this region, row and column are also updated.
 RESULT.HARMLESS : said symbol was either already put into that space OUT out of bounds beacuse of automatic operation. Don't change anything to the grid and remaining symbols
 ERROR : there is a different symbol in that space. We have done a wrong hypothesis somewhere ! (or the grid was wrong at the basis !)
-This is also used at grid start in order to put Xs in banned spaces, hence the check in the NO_STAR part.
+This is also used at grid start in order to put Xs in banned spaces, hence the check in the SYMBOL.NO_STAR part.
 */
 SolverStarBattle.prototype.putNew = function(p_x,p_y,p_symbol){
 	if ((p_x < 0) || (p_x >= this.xyLength) || (p_y < 0) || (p_y >= this.xyLength) || 
 	(this.answerGrid[p_y][p_x] == p_symbol)){
 		return RESULT.HARMLESS;
 	}
-	if (this.answerGrid[p_y][p_x] == UNDECIDED){
+	if (this.answerGrid[p_y][p_x] == SYMBOL.UNDECIDED){
 		this.answerGrid[p_y][p_x] = p_symbol;
 		var indexRegion = this.getRegion(p_x,p_y);
-		if (p_symbol == STAR){
+		if (p_symbol == SYMBOL.STAR){
 			this.notPlacedYet.regions[indexRegion].Os--;
 			this.notPlacedYet.rows[p_y].Os--;
 			this.notPlacedYet.columns[p_x].Os--;
 		}
-		if (p_symbol == NO_STAR){
+		if (p_symbol == SYMBOL.NO_STAR){
 			if (indexRegion >= 0){
 				this.notPlacedYet.regions[indexRegion].Xs--;				
 			}
@@ -422,14 +422,14 @@ When you want to remove a symbol from a space !
 SolverStarBattle.prototype.remove = function(p_x,p_y){
 	var indexRegion = this.regionGrid[p_y][p_x];
 	var symbol = this.answerGrid[p_y][p_x];
-	this.answerGrid[p_y][p_x] = UNDECIDED;
+	this.answerGrid[p_y][p_x] = SYMBOL.UNDECIDED;
 	debugTryToPutNew("Removing the following : "+p_x+" "+p_y+" "+symbol);
-	if (symbol == STAR){
+	if (symbol == SYMBOL.STAR){
 		this.notPlacedYet.regions[indexRegion].Os++;
 		this.notPlacedYet.rows[p_y].Os++;
 		this.notPlacedYet.columns[p_x].Os++;
 	}
-	if (symbol == NO_STAR){
+	if (symbol == SYMBOL.NO_STAR){
 		this.notPlacedYet.regions[indexRegion].Xs++;
 		this.notPlacedYet.rows[p_y].Xs++;
 		this.notPlacedYet.columns[p_x].Xs++;	
@@ -449,7 +449,7 @@ BIG WARNING : if the end is successful, the list of spaces will be put into even
 //TODO : do something about big warning !
 SolverStarBattle.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 	
-	if (this.answerGrid[p_y][p_x] != UNDECIDED){
+	if (this.answerGrid[p_y][p_x] != SYMBOL.UNDECIDED){
 		debugHumanMisclick("Trying to put "+p_symbol+" at "+p_x+","+p_y+" ; there is already "+this.answerGrid[p_y][p_x]+" in this place !");
 		return null;
 	}
@@ -471,19 +471,19 @@ SolverStarBattle.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 		ok = (putNewResult != RESULT.ERROR);
 		if (putNewResult == RESULT.SUCCESS){
 			r = this.getRegion(x,y); //(y,x) might be out of bounds, if so the putNewResult isn't supposed to be RESULT.SUCCESS. Hence the check only here.
-			if (symbol == STAR){
+			if (symbol == SYMBOL.STAR){
 				//Add to all 7 neighbors (no one should be star if solved correctly)
 				for(roundi=0;roundi<=7;roundi++){
-					spaceEventToAdd = new SpaceEvent(NO_STAR,x+ROUND_X_COORDINATES[roundi],y+ROUND_Y_COORDINATES[roundi]);
+					spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR,x+ROUND_X_COORDINATES[roundi],y+ROUND_Y_COORDINATES[roundi]);
 					eventsToAdd.push(spaceEventToAdd);
 					debugTryToPutNew("Event pushed : "+spaceEventToAdd.toString());
 				}
 				//Final alert on column : fill the missing spaces in the column 
 				if (this.notPlacedYet.columns[x].Os == 0){
 					for(yi=0;yi<this.xyLength;yi++){
-						//there may be stars already, hence the (if UNDECIDED) guard
-						if (this.answerGrid[yi][x] == UNDECIDED){
-							spaceEventToAdd = new SpaceEvent(NO_STAR,x,yi);
+						//there may be stars already, hence the (if SYMBOL.UNDECIDED) guard
+						if (this.answerGrid[yi][x] == SYMBOL.UNDECIDED){
+							spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR,x,yi);
 							eventsToAdd.push(spaceEventToAdd);
 							debugTryToPutNew("Event pushed : "+spaceEventToAdd.toString()); 
 						}
@@ -492,8 +492,8 @@ SolverStarBattle.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 				//Final alert on row
 				if (this.notPlacedYet.rows[y].Os == 0){
 					for(xi=0;xi<this.xyLength;xi++){
-						if (this.answerGrid[y][xi] == UNDECIDED){
-							spaceEventToAdd = new SpaceEvent(NO_STAR,xi,y);
+						if (this.answerGrid[y][xi] == SYMBOL.UNDECIDED){
+							spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR,xi,y);
 							eventsToAdd.push(spaceEventToAdd);
 							debugTryToPutNew("Event pushed : "+spaceEventToAdd.toString());
 						}
@@ -504,21 +504,21 @@ SolverStarBattle.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 					var spaceInRegion;
 					for(var si=0;si< this.spacesByRegion[r].length;si++){
 						spaceInRegion = this.spacesByRegion[r][si];
-						if (this.answerGrid[spaceInRegion.y][spaceInRegion.x] == UNDECIDED){
-							spaceEventToAdd = new SpaceEvent(NO_STAR,spaceInRegion.x,spaceInRegion.y);
+						if (this.answerGrid[spaceInRegion.y][spaceInRegion.x] == SYMBOL.UNDECIDED){
+							spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR,spaceInRegion.x,spaceInRegion.y);
 							eventsToAdd.push(spaceEventToAdd);
 							debugTryToPutNew("Event pushed : "+spaceEventToAdd.toString());
 						}
 					}
 				}
 			}
-			if (symbol == NO_STAR){
+			if (symbol == SYMBOL.NO_STAR){
 				//Final alert on column : fill the missing spaces in the column 
 				if (this.notPlacedYet.columns[x].Xs == 0){
 					for(yi=0;yi<this.xyLength;yi++){
-						//there may be stars already, hence the (if UNDECIDED) guard
-						if (this.answerGrid[yi][x] == UNDECIDED){
-							spaceEventToAdd = new SpaceEvent(STAR,x,yi);
+						//there may be stars already, hence the (if SYMBOL.UNDECIDED) guard
+						if (this.answerGrid[yi][x] == SYMBOL.UNDECIDED){
+							spaceEventToAdd = new SpaceEvent(SYMBOL.STAR,x,yi);
 							eventsToAdd.push(spaceEventToAdd);
 							debugTryToPutNew("Event pushed : "+spaceEventToAdd.toString());
 						}
@@ -527,8 +527,8 @@ SolverStarBattle.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 				//Final alert on row
 				if (this.notPlacedYet.rows[y].Xs == 0){
 					for(xi=0;xi<this.xyLength;xi++){
-						if (this.answerGrid[y][xi] == UNDECIDED){
-							spaceEventToAdd = new SpaceEvent(STAR,xi,y);
+						if (this.answerGrid[y][xi] == SYMBOL.UNDECIDED){
+							spaceEventToAdd = new SpaceEvent(SYMBOL.STAR,xi,y);
 							eventsToAdd.push(spaceEventToAdd);
 							debugTryToPutNew("Event pushed : "+spaceEventToAdd.toString());
 						}
@@ -539,8 +539,8 @@ SolverStarBattle.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 					var spaceInRegion;
 					for(var si=0;si< this.spacesByRegion[r].length;si++){
 						spaceInRegion = this.spacesByRegion[r][si];
-						if (this.answerGrid[spaceInRegion.y][spaceInRegion.x] == UNDECIDED){
-							spaceEventToAdd = new SpaceEvent(STAR,spaceInRegion.x,spaceInRegion.y);
+						if (this.answerGrid[spaceInRegion.y][spaceInRegion.x] == SYMBOL.UNDECIDED){
+							spaceEventToAdd = new SpaceEvent(SYMBOL.STAR,spaceInRegion.x,spaceInRegion.y);
 							eventsToAdd.push(spaceEventToAdd);
 							debugTryToPutNew("Event pushed : "+spaceEventToAdd.toString());
 						}
@@ -554,13 +554,13 @@ SolverStarBattle.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 	//Mistakes were made, we should undo everything 
 	if (!ok){
 		this.undoList(eventsApplied);
-		return {eventsApplied:[],coherence:COHERENCE.FAILURE};
+		return {eventsApplied:[],RESULT:RESULT.ERROR};
 	} 
 	
 	//Actually it's fine !
 	else{
 		debugTryToPutNew("Yes !-----------------"); 
-		return {eventsApplied:eventsApplied,coherence:COHERENCE.SUCCESS};
+		return {eventsApplied:eventsApplied,RESULT:RESULT.SUCCESS};
 	}
 }
 

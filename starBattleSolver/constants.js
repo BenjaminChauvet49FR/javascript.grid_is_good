@@ -2,9 +2,11 @@
 
 //Intelligence part
 
-STAR = 'O';
-NO_STAR = 'X';
-UNDECIDED = '-';
+const SYMBOL ={
+STAR : 'O',
+NO_STAR : 'X',
+UNDECIDED : '-'	
+}
 
 const RESULT = {
 SUCCESS : 3,
@@ -12,7 +14,6 @@ ERROR : 1,
 HARMLESS : 2
 }
 
-const COHERENCE ={SUCCESS:1,FAILURE:2};
 const FAMILY ={REGION:1,ROW:2,COLUMN:3};
 
 ROUND_X_COORDINATES = [-1,-1,-1,0,1,1,1,0];
