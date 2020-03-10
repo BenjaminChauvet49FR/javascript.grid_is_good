@@ -1,18 +1,12 @@
-function GlobalStarBattle(p_wallArray,p_starNumber){
+function SolverStarBattle(p_wallArray,p_starNumber){
 	this.construct(p_wallArray,p_starNumber);
 }
 
-	//TODO gérer l'initialisation quand on "donne pas vraiment de grille" !
-GlobalStarBattle.prototype.construct = function(p_wallArray,p_starNumber){ 
+SolverStarBattle.prototype.construct = function(p_wallArray,p_starNumber){ 
 	this.answerGrid = [];
 	this.spacesByRegion =  [];
 	this.notPlacedYet = {regions:[],rows:[],columns:[]};
 	this.happenedEvents = [];	
-	//xyLength : size of the grids.
-	//answerGrid : array(length, length) of int ; contains the desired answers (STAR,NO_STAR,UNDECIDED)
-	//notPlacedYet : object{regions{Os,Xs},rows{Os,Xs},columns{Os,Xs}} ; contains the Os and Xs that are yet to be placed in each region (ordered by index), row or column (left to right, top to bottom)
-	//spacesByRegion : array(length) of variable arrays of {x,y} ; returns the spaces contained in each region
-	//happenedEvents : array of array(Event) ; contains an array of an array of events : for each supposed, the list of itself and all events that were forced by it.
 	this.wallGrid = new WallGrid(p_wallArray,p_wallArray.length,p_wallArray.length);
 	this.regionGrid = this.wallGrid.toRegionGrid();
 	this.xyLength = this.getWallGrid().length; //IMPORTANT : when copy-pasting this line to a non-square grid, make sure to replace ALL occurences by xLength and yLength
@@ -26,7 +20,7 @@ GlobalStarBattle.prototype.construct = function(p_wallArray,p_starNumber){
 /**
 Starts the answerGrid
 */
-GlobalStarBattle.prototype.buildAnswerGrid = function(){
+SolverStarBattle.prototype.buildAnswerGrid = function(){
 	this.answerGrid = [];
 	for(iy = 0; iy < this.xyLength ; iy++){
 		this.answerGrid.push([]);
@@ -40,7 +34,7 @@ GlobalStarBattle.prototype.buildAnswerGrid = function(){
 Puts Xs into the answerGrid corresponding to banned spaces 
 Precondition : both spacesByRegion and notPlacedYet have been refreshed and answerGrid is ok.
 */
-GlobalStarBattle.prototype.purifyAnswerGrid = function(){
+SolverStarBattle.prototype.purifyAnswerGrid = function(){
 	//Removing banned spaces (hence the necessity to have things already updated)
 	for(iy = 0; iy < this.xyLength ; iy++){
 		for(ix = 0; ix < this.xyLength ; ix++){
@@ -56,7 +50,7 @@ Sets the list of spaces for each row and column (might be exportated)
 Hyphothesis : all non-banned regions are numbered from 0 to n-1 ; banned spaces have lower-than-0 numbers
 Exit : all spaces within a region are in reading order (top to bottom, then left to right)
 */
-GlobalStarBattle.prototype.listSpacesByRegion = function(){
+SolverStarBattle.prototype.listSpacesByRegion = function(){
 	var ix,iy;
 	var lastRegionNumber = 0;
 	for(iy = 0;iy < this.xyLength;iy++){
@@ -82,7 +76,7 @@ GlobalStarBattle.prototype.listSpacesByRegion = function(){
 Puts the number of remaining Stars (Os) and non-stars (Xs) in each region, row and column, assuming we start from scratch.
 Precondition : this.spacesByRegion must be refreshed, since it will be needed for region.
 */
-GlobalStarBattle.prototype.buildPossibilities = function(p_numberStarsPer){
+SolverStarBattle.prototype.buildPossibilities = function(p_numberStarsPer){
 	this.notPlacedYet = {regions:[],rows:[],columns:[]};
 	const complement = this.xyLength - p_numberStarsPer;
 	for(var i=0;i<this.xyLength;i++){
@@ -97,32 +91,32 @@ GlobalStarBattle.prototype.buildPossibilities = function(p_numberStarsPer){
 //----------------------
 //Getters (not setters, though)
 
-GlobalStarBattle.prototype.getAnswer = function(p_x,p_y){
+SolverStarBattle.prototype.getAnswer = function(p_x,p_y){
 	return this.answerGrid[p_y][p_x];
 }
 
-GlobalStarBattle.prototype.getWallGrid = function(){
+SolverStarBattle.prototype.getWallGrid = function(){
 	return this.wallGrid.array; //TODO à renommer ?
 }
 
-GlobalStarBattle.prototype.getRegion = function(p_x,p_y){
+SolverStarBattle.prototype.getRegion = function(p_x,p_y){
 	return this.regionGrid[p_y][p_x];
 }
 
-GlobalStarBattle.prototype.getOsRemainRow = function(p_i){return this.notPlacedYet.rows[p_i].Os;}
-GlobalStarBattle.prototype.getOsRemainColumn = function(p_i){return this.notPlacedYet.columns[p_i].Os;}
-GlobalStarBattle.prototype.getOsRemainRegion = function(p_i){return this.notPlacedYet.regions[p_i].Os;}
-GlobalStarBattle.prototype.getXsRemainRow = function(p_i){return this.notPlacedYet.rows[p_i].Xs;}
-GlobalStarBattle.prototype.getXsRemainColumn = function(p_i){return this.notPlacedYet.columns[p_i].Xs;}
-GlobalStarBattle.prototype.getXsRemainRegion = function(p_i){return this.notPlacedYet.regions[p_i].Xs;}
-GlobalStarBattle.prototype.getFirstSpaceRegion = function(p_i){return this.spacesByRegion[p_i][0];}
+SolverStarBattle.prototype.getOsRemainRow = function(p_i){return this.notPlacedYet.rows[p_i].Os;}
+SolverStarBattle.prototype.getOsRemainColumn = function(p_i){return this.notPlacedYet.columns[p_i].Os;}
+SolverStarBattle.prototype.getOsRemainRegion = function(p_i){return this.notPlacedYet.regions[p_i].Os;}
+SolverStarBattle.prototype.getXsRemainRow = function(p_i){return this.notPlacedYet.rows[p_i].Xs;}
+SolverStarBattle.prototype.getXsRemainColumn = function(p_i){return this.notPlacedYet.columns[p_i].Xs;}
+SolverStarBattle.prototype.getXsRemainRegion = function(p_i){return this.notPlacedYet.regions[p_i].Xs;}
+SolverStarBattle.prototype.getFirstSpaceRegion = function(p_i){return this.spacesByRegion[p_i][0];}
 
 //------------------
 //Strategy management
 /**
 Admits that a star OR a no-star could be in this space...
 */
-GlobalStarBattle.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
+SolverStarBattle.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
 	var result = this.tryToPutNew(p_x,p_y,p_symbol);
 	if (result != null && result.eventsApplied.length > 0){
 		this.happenedEvents.push(result.eventsApplied);
@@ -134,7 +128,7 @@ GlobalStarBattle.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
 //------------------
 //Pass strategy management
 
-GlobalStarBattle.prototype.passRegion = function(p_indexRegion){
+SolverStarBattle.prototype.passRegion = function(p_indexRegion){
 	if (p_indexRegion < 0){
 		debugHumanMisclick("Passing a negative region ");
 		return; //A click might be made onto a wrong space.
@@ -163,7 +157,7 @@ GlobalStarBattle.prototype.passRegion = function(p_indexRegion){
 	return answer;
 }
 
-GlobalStarBattle.prototype.passRow = function(p_indexRow){
+SolverStarBattle.prototype.passRow = function(p_indexRow){
 	var spacesToTestArray = [];
 	for(var i=0;i<this.xyLength;i++){
 		if (this.answerGrid[p_indexRow][i] == UNDECIDED){
@@ -183,7 +177,7 @@ GlobalStarBattle.prototype.passRow = function(p_indexRow){
 	return answer;
 }
 
-GlobalStarBattle.prototype.passColumn = function(p_indexColumn){
+SolverStarBattle.prototype.passColumn = function(p_indexColumn){
 	var spacesToTestArray = [];
 	for(var i=0;i<this.xyLength;i++){
 		if (this.answerGrid[i][p_indexColumn] == UNDECIDED){
@@ -204,7 +198,7 @@ GlobalStarBattle.prototype.passColumn = function(p_indexColumn){
 	
 }
 
-GlobalStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_functionFinishedPass){
+SolverStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_functionFinishedPass){
 	if (p_functionFinishedPass()){
 		return {consistence : RESULT.SUCCESS, eventsApplied: []}; //When performing a multipass, some passes can become useless since the corresponding row/column/region have been filled by previous passes.
 	}
@@ -218,7 +212,6 @@ GlobalStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_fu
 	var listX = null;
 	var answerPut = this.tryToPutNew(p_spacesToTest[index].x,p_spacesToTest[index].y,STAR);
 	if (answerPut.coherence == COHERENCE.SUCCESS){
-		//if (this.notPlacedYetByRegion[p_indexRegion].Os == 0){
 		if (p_functionFinishedPass()){
 			listO = answerPut.eventsApplied;
 		}
@@ -233,7 +226,6 @@ GlobalStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_fu
 	if ((listO == null) || (listO.length > 0)){
 		answerPut = this.tryToPutNew(p_spacesToTest[index].x,p_spacesToTest[index].y,NO_STAR);
 		if (answerPut.coherence == COHERENCE.SUCCESS){
-			//if (this.notPlacedYetByRegion[p_indexRegion].Os == 0){
 			if (p_functionFinishedPass()){
 				listX = answerPut.eventsApplied;
 			}
@@ -266,7 +258,7 @@ GlobalStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_fu
 Passes all regions/rows/columns in the order of size until no deduction can be done anymore.
 Warning : if something wrong is found, everything will be deleted until the new pass ! (TODO : this behavior seems like it can be changed)
 */
-GlobalStarBattle.prototype.multiPass = function(){
+SolverStarBattle.prototype.multiPass = function(){
 	var anyModification = false;
 	var ok = true;
 	var familiesToPass; //The list of all regions, lists and columns to pass.
@@ -316,7 +308,7 @@ GlobalStarBattle.prototype.multiPass = function(){
 
 //------------------
 //Autosolve strategy (at random...)
-GlobalStarBattle.prototype.generalSolve = function(){
+SolverStarBattle.prototype.generalSolve = function(){
 	//Perform an autopass.
 		//It works and clears the puzzle : return "SUCCESS"
 		//It doesn't work : return "FAILURE"
@@ -394,7 +386,7 @@ RESULT.HARMLESS : said symbol was either already put into that space OUT out of 
 ERROR : there is a different symbol in that space. We have done a wrong hypothesis somewhere ! (or the grid was wrong at the basis !)
 This is also used at grid start in order to put Xs in banned spaces, hence the check in the NO_STAR part.
 */
-GlobalStarBattle.prototype.putNew = function(p_x,p_y,p_symbol){
+SolverStarBattle.prototype.putNew = function(p_x,p_y,p_symbol){
 	if ((p_x < 0) || (p_x >= this.xyLength) || (p_y < 0) || (p_y >= this.xyLength) || 
 	(this.answerGrid[p_y][p_x] == p_symbol)){
 		return RESULT.HARMLESS;
@@ -427,7 +419,7 @@ GlobalStarBattle.prototype.putNew = function(p_x,p_y,p_symbol){
 /**
 When you want to remove a symbol from a space !
 */
-GlobalStarBattle.prototype.remove = function(p_x,p_y){
+SolverStarBattle.prototype.remove = function(p_x,p_y){
 	var indexRegion = this.regionGrid[p_y][p_x];
 	var symbol = this.answerGrid[p_y][p_x];
 	this.answerGrid[p_y][p_x] = UNDECIDED;
@@ -455,7 +447,7 @@ Tries to put a new symbol into a grid and then forces the filling of all stars a
 BIG WARNING : if the end is successful, the list of spaces will be put into eventsApplied. But this doesn't mean they are all fine !
 */
 //TODO : do something about big warning !
-GlobalStarBattle.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
+SolverStarBattle.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 	
 	if (this.answerGrid[p_y][p_x] != UNDECIDED){
 		debugHumanMisclick("Trying to put "+p_symbol+" at "+p_x+","+p_y+" ; there is already "+this.answerGrid[p_y][p_x]+" in this place !");
@@ -575,7 +567,7 @@ GlobalStarBattle.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 /**
 Cancel the last list of events since the last "non-deducted" space. TODO : change this name.
 */
-GlobalStarBattle.prototype.massUndo = function(){
+SolverStarBattle.prototype.massUndo = function(){
 	if (this.happenedEvents.length == 0)
 		return;	
 	var spaceEventsListToUndo = this.happenedEvents.pop();
@@ -585,7 +577,7 @@ GlobalStarBattle.prototype.massUndo = function(){
 /**
 Cancels a list of events passed in argument
 */
-GlobalStarBattle.prototype.undoList = function(p_list){
+SolverStarBattle.prototype.undoList = function(p_list){
 	console.log("We are going to undo a list of : "+p_list.length);
 	var spaceEventToUndo;
 	while (p_list.length !=0){
@@ -611,7 +603,7 @@ function answerGridToString(p_grid){
 Returns the events to the text
 p_onlyAssumed : true if only the assumed events should be written.
 */
-GlobalStarBattle.prototype.happenedEventsToString = function(p_onlyAssumed){
+SolverStarBattle.prototype.happenedEventsToString = function(p_onlyAssumed){
 	var ei,li;
 	var answer = "";
 	if (p_onlyAssumed){
