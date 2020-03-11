@@ -119,7 +119,7 @@ Admits that a star OR a no-star could be in this space...
 SolverStarBattle.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
 	var result = this.tryToPutNew(p_x,p_y,p_symbol);
 	if (result != null && result.eventsApplied.length > 0){
-		this.happenedEvents.push(result.eventsApplied);
+		this.happenedEvents.push({kind:"H",list:result.eventsApplied}); //TODO : une constante
 		return {result:RESULT.SUCCESS,eventsApplied:result.eventsApplied};
 	}
 	return {result:RESULT.ERROR,eventsApplied:[]};
@@ -150,11 +150,7 @@ SolverStarBattle.prototype.passRegion = function(p_indexRegion){
 		}
 	}
 	var answer = this.pass(spacesToTestArray,0,closure(this.notPlacedYet,p_indexRegion));
-	if (answer.consistence == RESULT.SUCCESS && answer.eventsApplied.length > 0){
-		this.happenedEvents.push(answer.eventsApplied);
-		answer.eventsApplied.forEach(spaceEvent => {this.putNew(spaceEvent.x,spaceEvent.y,spaceEvent.symbol)});
-	}
-	return answer;
+	return this.applyAnswerPass(answer);
 }
 
 SolverStarBattle.prototype.passRow = function(p_indexRow){
@@ -164,17 +160,13 @@ SolverStarBattle.prototype.passRow = function(p_indexRow){
 			spacesToTestArray.push({x:i,y:p_indexRow});
 		}
 	}
-	function closure(p_dataNotPlacedYet,p_index){ //TODO maybe closures weren't even mandatory ! Anyway, let's see if they can work.
+	function closure(p_dataNotPlacedYet,p_index){ //TODO maybe closures weren't even mandatory ! 
 		return function(){
 			return (p_dataNotPlacedYet.rows[p_index].Os == 0);
 		}
 	}
 	var answer = this.pass(spacesToTestArray,0,closure(this.notPlacedYet,p_indexRow));
-	if (answer.consistence == RESULT.SUCCESS && answer.eventsApplied.length > 0){
-		this.happenedEvents.push(answer.eventsApplied);
-		answer.eventsApplied.forEach(spaceEvent => {this.putNew(spaceEvent.x,spaceEvent.y,spaceEvent.symbol)});
-	}
-	return answer;
+	return this.applyAnswerPass(answer);
 }
 
 SolverStarBattle.prototype.passColumn = function(p_indexColumn){
@@ -190,17 +182,20 @@ SolverStarBattle.prototype.passColumn = function(p_indexColumn){
 		}
 	}
 	var answer = this.pass(spacesToTestArray,0,closure(this.notPlacedYet,p_indexColumn));
-	if (answer.consistence == RESULT.SUCCESS && answer.eventsApplied.length > 0){
-		this.happenedEvents.push(answer.eventsApplied);
-		answer.eventsApplied.forEach(spaceEvent => {this.putNew(spaceEvent.x,spaceEvent.y,spaceEvent.symbol)});
+	return this.applyAnswerPass(answer);
+}
+
+SolverStarBattle.prototype.applyAnswerPass = function(p_answer){
+	if (p_answer.consistencePass == RESULT.SUCCESS && p_answer.eventsApplied.length > 0){
+		this.happenedEvents.push({kind:"P",list:p_answer.eventsApplied});
+		p_answer.eventsApplied.forEach(spaceEvent => {this.putNew(spaceEvent.x,spaceEvent.y,spaceEvent.symbol)});
 	}
-	return answer;
-	
+	return p_answer;
 }
 
 SolverStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_functionFinishedPass){
 	if (p_functionFinishedPass()){
-		return {consistence : RESULT.SUCCESS, eventsApplied: []}; //When performing a multipass, some passes can become useless since the corresponding row/column/region have been filled by previous passes.
+		return {consistencePass : RESULT.SUCCESS, eventsApplied: []}; //When performing a multipass, some passes can become useless since the corresponding row/column/region have been filled by previous passes.
 	}
 	var index = p_indexFirstSpace;
 	while (this.answerGrid[p_spacesToTest[index].y][p_spacesToTest[index].x] != SYMBOL.UNDECIDED)
@@ -217,7 +212,7 @@ SolverStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_fu
 		}
 		else{
 			var answerPass = this.pass(p_spacesToTest,index+1,p_functionFinishedPass);
-			if (answerPass.consistence == RESULT.SUCCESS){
+			if (answerPass.consistencePass == RESULT.SUCCESS){
 				listO = answerPass.eventsApplied.concat(answerPut.eventsApplied);
 			}
 		}
@@ -231,7 +226,7 @@ SolverStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_fu
 			}
 			else{
 				var answerPass = this.pass(p_spacesToTest,index+1,p_functionFinishedPass);
-				if (answerPass.consistence == RESULT.SUCCESS){
+				if (answerPass.consistencePass == RESULT.SUCCESS){
 					listX = answerPass.eventsApplied.concat(answerPut.eventsApplied);
 				}
 			}
@@ -240,15 +235,15 @@ SolverStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_fu
 	}
 	var list;
 	if (listO == null && listX == null){
-		return {consistence : RESULT.ERROR, eventsApplied: []};
+		return {consistencePass : RESULT.ERROR, eventsApplied: []};
 	}
 	if (listO == null){
-		return {consistence : RESULT.SUCCESS, eventsApplied: listX};
+		return {consistencePass : RESULT.SUCCESS, eventsApplied: listX};
 	}
 	if (listX == null){
-		return {consistence : RESULT.SUCCESS, eventsApplied: listO};
+		return {consistencePass : RESULT.SUCCESS, eventsApplied: listO};
 	}
-	return {consistence:RESULT.SUCCESS, eventsApplied:intersect(listO.sort(compareSpaceEvents),listX.sort(compareSpaceEvents))};
+	return {consistencePass:RESULT.SUCCESS, eventsApplied:intersect(listO.sort(compareSpaceEvents),listX.sort(compareSpaceEvents))};
 }
 
 //------------------
@@ -290,12 +285,12 @@ SolverStarBattle.prototype.multiPass = function(){
 				case FAMILY.COLUMN: bilanPass = this.passColumn(family.id);break;
 				case FAMILY.REGION: bilanPass = this.passRegion(family.id);break;
 			}
-			if (bilanPass.consistence == RESULT.ERROR){
+			if (bilanPass.consistencePass == RESULT.ERROR){
 				ok = false;
 				this.massUndo();
 				return;
 			}
-			if (bilanPass.consistence == RESULT.SUCCESS && bilanPass.eventsApplied.length > 0){
+			if (bilanPass.consistencePass == RESULT.SUCCESS && bilanPass.eventsApplied.length > 0){
 				anyModification = true;
 			}
 		}
@@ -568,10 +563,10 @@ SolverStarBattle.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 Cancel the last list of events since the last "non-deducted" space. TODO : change this name.
 */
 SolverStarBattle.prototype.massUndo = function(){
-	if (this.happenedEvents.length == 0)
+	if (this.happenedEvents.list.length == 0)
 		return;	
 	var spaceEventsListToUndo = this.happenedEvents.pop();
-	this.undoList(spaceEventsListToUndo);
+	this.undoList(spaceEventsListToUndo.list);
 } 
 
 /**
@@ -608,12 +603,13 @@ SolverStarBattle.prototype.happenedEventsToString = function(p_onlyAssumed){
 	var answer = "";
 	if (p_onlyAssumed){
 		this.happenedEvents.forEach(function(eventList){
-			answer+=eventList[0].toString()+"\n";
+			answer+=eventList.list[0].toString()+"\n";
 		});
 	}
 	else{
 		this.happenedEvents.forEach(function(eventList){
-			eventList.forEach(function(spaceEvent){
+			answer+=eventList.kind+"\n";
+			eventList.list.forEach(function(spaceEvent){
 				answer+=spaceEvent.toString()+"\n" 
 			});
 			answer+="--------\n";
