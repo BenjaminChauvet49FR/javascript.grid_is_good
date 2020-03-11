@@ -186,7 +186,7 @@ SolverStarBattle.prototype.passColumn = function(p_indexColumn){
 }
 
 SolverStarBattle.prototype.applyAnswerPass = function(p_answer){
-	if (p_answer.consistencePass == RESULT.SUCCESS && p_answer.eventsApplied.length > 0){
+	if (p_answer.consistence == RESULT.SUCCESS && p_answer.eventsApplied.length > 0){
 		this.happenedEvents.push({kind:"P",list:p_answer.eventsApplied});
 		p_answer.eventsApplied.forEach(spaceEvent => {this.putNew(spaceEvent.x,spaceEvent.y,spaceEvent.symbol)});
 	}
@@ -195,7 +195,7 @@ SolverStarBattle.prototype.applyAnswerPass = function(p_answer){
 
 SolverStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_functionFinishedPass){
 	if (p_functionFinishedPass()){
-		return {consistencePass : RESULT.SUCCESS, eventsApplied: []}; //When performing a multipass, some passes can become useless since the corresponding row/column/region have been filled by previous passes.
+		return {consistence : RESULT.SUCCESS, eventsApplied: []}; //When performing a multipass, some passes can become useless since the corresponding row/column/region have been filled by previous passes.
 	}
 	var index = p_indexFirstSpace;
 	while (this.answerGrid[p_spacesToTest[index].y][p_spacesToTest[index].x] != SYMBOL.UNDECIDED)
@@ -212,7 +212,7 @@ SolverStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_fu
 		}
 		else{
 			var answerPass = this.pass(p_spacesToTest,index+1,p_functionFinishedPass);
-			if (answerPass.consistencePass == RESULT.SUCCESS){
+			if (answerPass.consistence == RESULT.SUCCESS){
 				listO = answerPass.eventsApplied.concat(answerPut.eventsApplied);
 			}
 		}
@@ -226,7 +226,7 @@ SolverStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_fu
 			}
 			else{
 				var answerPass = this.pass(p_spacesToTest,index+1,p_functionFinishedPass);
-				if (answerPass.consistencePass == RESULT.SUCCESS){
+				if (answerPass.consistence == RESULT.SUCCESS){
 					listX = answerPass.eventsApplied.concat(answerPut.eventsApplied);
 				}
 			}
@@ -235,15 +235,15 @@ SolverStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_fu
 	}
 	var list;
 	if (listO == null && listX == null){
-		return {consistencePass : RESULT.ERROR, eventsApplied: []};
+		return {consistence : RESULT.ERROR, eventsApplied: []};
 	}
 	if (listO == null){
-		return {consistencePass : RESULT.SUCCESS, eventsApplied: listX};
+		return {consistence : RESULT.SUCCESS, eventsApplied: listX};
 	}
 	if (listX == null){
-		return {consistencePass : RESULT.SUCCESS, eventsApplied: listO};
+		return {consistence : RESULT.SUCCESS, eventsApplied: listO};
 	}
-	return {consistencePass:RESULT.SUCCESS, eventsApplied:intersect(listO.sort(compareSpaceEvents),listX.sort(compareSpaceEvents))};
+	return {consistence:RESULT.SUCCESS, eventsApplied:intersect(listO.sort(compareSpaceEvents),listX.sort(compareSpaceEvents))};
 }
 
 //------------------
@@ -285,12 +285,12 @@ SolverStarBattle.prototype.multiPass = function(){
 				case FAMILY.COLUMN: bilanPass = this.passColumn(family.id);break;
 				case FAMILY.REGION: bilanPass = this.passRegion(family.id);break;
 			}
-			if (bilanPass.consistencePass == RESULT.ERROR){
+			if (bilanPass.consistence == RESULT.ERROR){
 				ok = false;
-				this.massUndo();
+				this.undoToLastHypothesis();
 				return;
 			}
-			if (bilanPass.consistencePass == RESULT.SUCCESS && bilanPass.eventsApplied.length > 0){
+			if (bilanPass.consistence == RESULT.SUCCESS && bilanPass.eventsApplied.length > 0){
 				anyModification = true;
 			}
 		}
@@ -304,71 +304,6 @@ SolverStarBattle.prototype.multiPass = function(){
 //------------------
 //Autosolve strategy (at random...)
 SolverStarBattle.prototype.generalSolve = function(){
-	//Perform an autopass.
-		//It works and clears the puzzle : return "SUCCESS"
-		//It doesn't work : return "ERROR"
-		//It works but doesn't clear the puzzle : 
-			// Randomly picks a O into a space of the non-full region with the largest O/X ratio 
-				// It works and clears the puzzle : return "SUCCESS"
-				// It works but doesn't clear the puzzle : repeat the process and call the result.
-				// It doesn't work : 
-					//Puts an X instead
-					// It works : either SUCCESS or repeat the process and call the result. It fails : ERROR.
-	/*var answerPass, answerHypothesis, answer;
-	var answerPass = this.multiPass();
-	if (answerPass == RESULT.ERROR){
-		return RESULT.ERROR;
-	}
-	var indexRegion = -1;
-	var highestRatio;
-	var remainingOs;
-	var ratio;
-	var DEBUGTOTAL = 0;
-	for(var ir=0;ir<this.xyLength;ir++){
-		remainingOs = this.notPlacedYet.regions[ir].Os;
-		if (remainingOs > 0){
-			ratio = remainingOs/this.notPlacedYet.regions[ir].Xs;			
-			if ((indexRegion == -1) || (ratio > highestRatio)){
-				highestRatio = ratio;
-				indexRegion = ir;
-			}
-		}
-		DEBUGTOTAL+= remainingOs+this.notPlacedYet.regions[ir].Xs;
-	}
-	console.log(" YAAAAY ! Merci de l'info ! DEBUGTOTAL = "+DEBUGTOTAL);
-	if (indexRegion == -1){
-		console.log("This is it ! Well played !");
-		return RESULT.SUCCESS;
-	}
-	else{
-		var indexSpace = 0;
-		var spacesOfThisRegion = this.spacesByRegion[indexRegion];
-		var spaceCoordinates = spacesOfThisRegion[indexSpace];
-		while(this.answerGrid[spaceCoordinates.y][spaceCoordinates.x] != SYMBOL.UNDECIDED){
-			indexSpace++;
-			spaceCoordinates = spacesOfThisRegion[indexSpace];
-		}
-		
-		//Try with an O
-		answerHypothesis = this.emitHypothesis(spaceCoordinates.x,spaceCoordinates.y,SYMBOL.STAR);
-		if (answerHypothesis.result == RESULT.SUCCESS){
-			answer=this.generalSolve();
-		}
-		if (answer == RESULT.SUCCESS){
-			console.log("This is it ! Well done !");
-			return RESULT.SUCCESS;
-		}
-		this.undoList(answerHypothesis.eventsApplied);
-
-		//Try with an X ?
-		answerHypothesis = this.emitHypothesis(spaceCoordinates.x,spaceCoordinates.y,SYMBOL.NO_STAR);
-		if (answerHypothesis.result == RESULT.SUCCESS){
-			return this.generalSolve();
-		}
-		this.undoList(answerHypothesis.eventsApplied);
-		return RESULT.ERROR;
-		
-	}*/
 	
 }
 
@@ -560,13 +495,17 @@ SolverStarBattle.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 }
 
 /**
-Cancel the last list of events since the last "non-deducted" space. TODO : change this name.
+Cancel the last list of events since the last "non-deducted" space.
 */
-SolverStarBattle.prototype.massUndo = function(){
-	if (this.happenedEvents.list.length == 0)
+SolverStarBattle.prototype.undoToLastHypothesis = function(){
+	if (this.happenedEvents.length == 0)
 		return;	
-	var spaceEventsListToUndo = this.happenedEvents.pop();
-	this.undoList(spaceEventsListToUndo.list);
+	var spaceEventsListToUndo;
+	//The last list of events to undo must come either from an hypothesis 
+	do{
+		spaceEventsListToUndo = this.happenedEvents.pop();
+		this.undoList(spaceEventsListToUndo.list);
+	}while(spaceEventsListToUndo.kind != 'H' && this.happenedEvents.length > 0);
 } 
 
 /**

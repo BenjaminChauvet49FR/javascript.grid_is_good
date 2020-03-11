@@ -68,7 +68,7 @@ loadAction = function(p_canvas,p_drawer,p_solver,p_name,p_starSpan,p_textArea){
 }
 
 undoAction = function(p_solver,p_textArea){
-	p_solver.massUndo();
+	p_solver.undoToLastHypothesis();
 	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
 }
 
