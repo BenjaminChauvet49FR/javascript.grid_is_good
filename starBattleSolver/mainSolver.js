@@ -83,13 +83,13 @@ function addEventListenerAndCaptionActionSubmit(p_submitElement,p_action){
 //TODO create a separate file ?
 
 function debugTryToPutNew(p_string){
-	console.log(p_string)
+	//console.log(p_string)
 }
 function debugPass(p_string){
-	console.log(p_string);
+	//console.log(p_string);
 }
 function debugHumanMisclick(p_string){
-	console.log("Human misclick ? "+p_string);
+	//console.log("Human misclick ? "+p_string);
 }
 function alertPass(p_string){
 	//alert(p_string);
