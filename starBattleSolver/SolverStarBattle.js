@@ -259,27 +259,28 @@ SolverStarBattle.prototype.multiPass = function(){
 	var familiesToPass; //The list of all regions, lists and columns to pass.
 	var family;
 	var bilanPass;
-	var i;
+	var indexFamily;
 	do{
 		//Initialize the families to pass and sort it
 		familiesToPass = [];
-		for(i=0;i<this.xyLength;i++){
-			if (this.notPlacedYet.regions[i].Os > 0){
-				familiesToPass.push({familyKind : FAMILY.REGION, id:i, remains : this.notPlacedYet.regions[i].Os + this.notPlacedYet.regions[i].Xs});
+		for(indexFamily=0;indexFamily<this.xyLength;indexFamily++){
+			if (this.notPlacedYet.regions[indexFamily].Os > 0){
+				familiesToPass.push({familyKind : FAMILY.REGION, id:indexFamily, remains : this.notPlacedYet.regions[indexFamily].Os + this.notPlacedYet.regions[indexFamily].Xs});
 			}				
-			if (this.notPlacedYet.rows[i].Os > 0){
-				familiesToPass.push({familyKind : FAMILY.ROW, id:i, remains : this.notPlacedYet.rows[i].Os + this.notPlacedYet.rows[i].Xs});
+			if (this.notPlacedYet.rows[indexFamily].Os > 0){
+				familiesToPass.push({familyKind : FAMILY.ROW, id:indexFamily, remains : this.notPlacedYet.rows[indexFamily].Os + this.notPlacedYet.rows[indexFamily].Xs});
 			}
-			if (this.notPlacedYet.columns[i].Os > 0){
-				familiesToPass.push({familyKind : FAMILY.COLUMN, id:i, remains : this.notPlacedYet.columns[i].Os + this.notPlacedYet.columns[i].Xs});
+			if (this.notPlacedYet.columns[indexFamily].Os > 0){
+				familiesToPass.push({familyKind : FAMILY.COLUMN, id:indexFamily, remains : this.notPlacedYet.columns[indexFamily].Os + this.notPlacedYet.columns[indexFamily].Xs});
 			}
 		}
 		familiesToPass.sort(function(a,b){return (a.remains-b.remains)});
 		
 		//Perform the passes
 		anyModification = false;
-		for(i=0;i<familiesToPass.length;i++){
-			family = familiesToPass[i];
+		indexFamily = 0;
+		while(indexFamily < familiesToPass.length && ok){
+			family = familiesToPass[indexFamily];
 			switch(family.familyKind){
 				case FAMILY.ROW: bilanPass = this.passRow(family.id);break;
 				case FAMILY.COLUMN: bilanPass = this.passColumn(family.id);break;
@@ -288,11 +289,11 @@ SolverStarBattle.prototype.multiPass = function(){
 			if (bilanPass.consistence == RESULT.ERROR){
 				ok = false;
 				this.undoToLastHypothesis();
-				return;
 			}
 			if (bilanPass.consistence == RESULT.SUCCESS && bilanPass.eventsApplied.length > 0){
 				anyModification = true;
 			}
+			indexFamily++;
 		}
 	} while(ok && anyModification);
 	if (ok)
@@ -302,10 +303,171 @@ SolverStarBattle.prototype.multiPass = function(){
 }
 
 //------------------
-//Autosolve strategy (at random...)
+//Autosolve strategy
 SolverStarBattle.prototype.generalSolve = function(){
+	//this.quickStart() //Pas de quickStart pour SternenSchlacht !
+	const numberEventsB4MultiPass = this.happenedEvents.length;
+	var multipass = this.multiPass();
+	var mistake = (multipass == RESULT.ERROR);
+	if (!mistake){
+		function puzzleSolved(p_dataNotPlacedYet){
+			return function(){
+				var compteur = 0;
+				while(compteur < p_dataNotPlacedYet.regions.length && p_dataNotPlacedYet.rows[compteur].index > 0){
+					compteur++;
+				}
+				return compteur < p_dataNotPlacedYet.regions.length;
+			}
+		}
+		var puzzleSolvedTest = puzzleSolved(this.notPlacedYet);
+		if (!puzzleSolvedTest()){
+			mistake = (this.solveByHypothesis(puzzleSolvedTest) == RESULT.ERROR);
+		}
+	}
+	if (mistake){
+		while (this.happenedEvents.length > numberEventsB4MultiPass){
+			this.undoToLastHypothesis();
+		}
+		this.undoToLastHypothesis();
+	}
+}
+
+SolverStarBattle.prototype.solveByHypothesis = function(p_puzzleSolvedTest){
+	//1) select the good space
+	//Initialize the families to pass and sort it // TODO sort the functions...
+	familiesToPass = [];
+	for(var i=0;i<this.xyLength;i++){
+		if (this.notPlacedYet.regions[i].Os > 0){
+			familiesToPass.push({familyKind : FAMILY.REGION, id:i, remains : this.notPlacedYet.regions[i].Os + this.notPlacedYet.regions[i].Xs});
+		}				
+		if (this.notPlacedYet.rows[i].Os > 0){
+			familiesToPass.push({familyKind : FAMILY.ROW, id:i, remains : this.notPlacedYet.rows[i].Os + this.notPlacedYet.rows[i].Xs});
+		}
+		if (this.notPlacedYet.columns[i].Os > 0){
+			familiesToPass.push({familyKind : FAMILY.COLUMN, id:i, remains : this.notPlacedYet.columns[i].Os + this.notPlacedYet.columns[i].Xs});
+		}
+	}
+	familiesToPass.sort(function(a,b){return (a.remains-b.remains)});
+	var foundSpace = false;
+	var indexFamily = 0;
+	var space;
+	var kind;
+	var indexRLC;
+	var regionSpaces;
+	while (space == null){
+		kind = familiesToPass[indexFamily].familyKind;
+		indexRLC = famiiesToPass[indexFamily].id;
+		switch(familiesToPass[indexFamily]){			
+			case(FAMILY.ROW) :
+				indexSpace = 0;
+				while(indexSpace < this.xyLength && this.answerGrid[indexRLC][indexSpace] == SYMBOL.UNDECIDED){
+					indexSpace++;
+				}
+				if (indexSpace < this.xyLength){
+					space = {x:indexSpace,y:indexRLC};
+				}
+			break;
+			case(FAMILY.COLUMN) :
+				indexSpace = 0;
+				while(indexSpace < this.xyLength && this.answerGrid[indexSpace][indexRLC] == SYMBOL.UNDECIDED){
+					indexSpace++;
+				}
+				if (indexSpace < this.xyLength){
+					space = {x:indexRLC,y:indexSpace};
+				}
+			break;
+			case(FAMILY.REGION) :
+				indexSpace = 0;
+				regionSpaces = this.spacesByRegion[indexRLC];
+				while(indexSpace < this.xyLength && this.answerGrid[regionSpaces[indexSpace].y][regionSpaces[indexSpace].x] == SYMBOL.UNDECIDED){
+					indexSpace++;
+				}
+				if (indexSpace < this.xyLength){
+					space = regionSpaces[indexSpace];
+				}
+			break;
+		}
+		indexFamily++;
+	}
+	
+	var hypothesis;
+	var listEvents = this.tryToPutNew(space.x,space.y,SYMBOL.STAR);
+	if (listEvents.consistence == RESULT.SUCCESS){
+		hypothesis = afterTheHypothesis(p_puzzleSolvedTest,listEvents.eventList.length,space);
+		if (hypothesis == RESULT.SUCCESS){
+			return RESULT.SUCCESS;
+		}
+		else{
+			this.undoList(listEvents.eventList);
+		}
+	}
+	listEvents = this.tryToPutNew(space.x,space.y,SYMBOL.NO_STAR);
+	if (listEvents.consistence == RESULT.SUCCESS){
+		hypothesis = afterTheHypothesis(p_puzzleSolvedTest,listEvents.eventList.length,space);
+		if (hypothesis == RESULT.SUCCESS){
+			return RESULT.SUCCESS;
+		}
+		else{
+			this.undoList(listEvents.eventList);
+		}
+	}
+	return RESULT.FAILURE;
+	
 	
 }
+
+SolverStarBattle.prototype.afterTheHypothesis = function(p_puzzleSolvedTest,p_numberNewEvents,p_space){
+	if (p_puzzleSolvedTest()){
+		return RESULT.SUCCESS;
+	}
+	const numberEventsB4MultiPass = this.eventsApplied.length;
+	var ok = true;
+	/*var resultMultiPass;
+	var resultPass;
+	var lengthEvents = 0;
+	if (p_numberNewEvents > 15){
+		resultMultiPass = this.multiPass();
+		ok = (resultMultiPass == RESULT.SUCCESS);
+	} else if (p_numberNewEvents > 8){
+		resultPass = this.passRegion(p_space.y);
+		if (resultPass.consistence == RESULT.SUCCESS){
+			lengthEvents += resultPass.eventList.length;
+			resultPass.consistence = this.passRow(p_space.y);			
+			if (resultPass == RESULT.SUCCESS){
+				lengthEvents += resultPass.eventList.length;
+				resultPass.consistence = this.passColumn(p_space.y);
+				if (resultPass == RESULT.SUCCESS){
+					lengthEvents += resultPass.events.length;
+					if (lengthEvents > this.xyLength){
+						resultMultiPass = this.multiPass();
+						ok = (resultMultiPass == RESULT.SUCCESS); 
+					}
+				}
+			}
+		}
+	} */
+	if (ok){
+		if (p_puzzleSolvedTest()){
+			return RESULT.SUCCESS;
+		}
+		else{
+			if (this.solveByHypothesis(p_puzzleSolvedTest)){
+				return RESULT.SUCCESS;
+			}
+			else 
+				ok = false;
+		}
+	}
+	if (!ok){
+		while (this.happenedEvents.length > numberEventsB4MultiPass){
+			this.undoToLastHypothesis();
+		}
+		this.undoToLastHypothesis();
+	}
+}
+
+
+
 
 //------------------
 //Putting symbols into spaces. 

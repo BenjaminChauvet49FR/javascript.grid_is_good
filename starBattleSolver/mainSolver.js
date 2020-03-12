@@ -46,6 +46,7 @@ putActionElementClick("submit_load_grid",function(event){loadAction(canevas,draw
 putActionElementClick("submit_undo",function(event){undoAction(solver,textArea)});
 //putActionElementClick("submit_quickStart",function(event){quickStartAction(solver,textArea)}); TODO
 putActionElementClick("submit_multiPass",function(event){multiPassAction(solver,textArea)});
+putActionElementClick("submit_solve",function(event){solveAction(solver,textArea)});
 
 //Submits of click on a grid : what will happen ? (TODO : the word action is pretty generic)
 var submitPutStar = document.getElementById("submit_put_star");
