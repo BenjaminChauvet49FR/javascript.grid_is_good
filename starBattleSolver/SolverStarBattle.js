@@ -326,6 +326,8 @@ SolverStarBattle.prototype.multiPass = function(){
 
 //------------------
 //General solve strategy
+
+//TODO Important : no happenedEvents after general solve !
 SolverStarBattle.prototype.generalSolve = function(){
 	//this.quickStart() //Pas de quickStart pour SternenSchlacht !
 	const numberEventsB4MultiPass = this.happenedEvents.length;
