@@ -1,7 +1,7 @@
 /**
  When you click on the canvas
 */
-function clickCanvas(event,p_canvas,p_drawer,p_textArea,p_solver,p_actionId) { //TODO rename this action ? Yeah, but what about loadAction ?
+function clickCanvas(event,p_canvas,p_drawer,p_components,p_solver,p_actionId) { //TODO rename this action ? Yeah, but what about loadAction ?
     var rect = p_canvas.getBoundingClientRect();
     var pixMouseXInGrid = event.clientX - p_drawer.pix.marginGrid.left - rect.left;
     var pixMouseYInGrid = event.clientY - p_drawer.pix.marginGrid.up - rect.top;
@@ -9,9 +9,10 @@ function clickCanvas(event,p_canvas,p_drawer,p_textArea,p_solver,p_actionId) { /
 	var spaceIndexY = Math.floor(pixMouseYInGrid/p_drawer.pix.sideSpace); //same - TODO maybe this should go to the Pix item ?
     if ((spaceIndexX >= 0) && (spaceIndexY >= 0) && (spaceIndexY < p_solver.xyLength) && (spaceIndexX < p_solver.xyLength)){
 		clickSpaceAction(p_solver,spaceIndexX,spaceIndexY,p_actionId);
-		p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
+		p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked);
 	}
 }
+//p_textArea
 
 /**
 You successfully clicked on a region space (coordinates in parameter). Then what ? 
@@ -42,15 +43,14 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_actionId){
 /**
 Tries to pass everything : rows, regions, columns.
 */
-multiPassAction = function (p_solver,p_textArea){
+multiPassAction = function (p_solver,p_components){
 	p_solver.multiPass();
-	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
-	//TODO also manage the rewriting of the events.
+	p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked)
 }
 
-solveAction = function (p_solver,p_textArea){
+solveAction = function (p_solver,p_components){
 	p_solver.generalSolve();
-	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO see above
+	p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked)
 }
 
 //--------------------------
@@ -67,9 +67,9 @@ loadAction = function(p_canvas,p_drawer,p_solver,p_name,p_starSpan,p_textArea){
 	p_textArea.innerHTML = ""; //TODO manage true/false
 }
 
-undoAction = function(p_solver,p_textArea){
+undoAction = function(p_solver,p_components){
 	p_solver.undoToLastHypothesis();
-	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
+	p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked)
 }
 
 function adaptCanvas(p_canvas, p_drawer,p_solver){

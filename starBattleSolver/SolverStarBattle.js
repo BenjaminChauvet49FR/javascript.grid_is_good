@@ -14,7 +14,6 @@ SolverStarBattle.prototype.construct = function(p_wallArray,p_starNumber){
 	this.buildPossibilities(p_starNumber); //notPlacedYet
 	this.buildAnswerGrid(); //answerGrid
 	this.purifyAnswerGrid(); 
-	this.happenedEvents = [];
 }
 
 /**
@@ -96,7 +95,7 @@ SolverStarBattle.prototype.getAnswer = function(p_x,p_y){
 }
 
 SolverStarBattle.prototype.getWallGrid = function(){
-	return this.wallGrid.array; //TODO à renommer ?
+	return this.wallGrid.array;
 }
 
 SolverStarBattle.prototype.getRegion = function(p_x,p_y){
@@ -125,9 +124,9 @@ SolverStarBattle.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
 	return {result:RESULT.ERROR,eventsApplied:[]};
 }
 
-//------------------
-//Pass strategy management
-
+/**
+Pass a region, row or column
+*/
 SolverStarBattle.prototype.passRegion = function(p_indexRegion){
 	if (p_indexRegion < 0){
 		debugHumanMisclick("Passing a negative region ");
@@ -185,17 +184,16 @@ SolverStarBattle.prototype.passColumn = function(p_indexColumn){
 	return this.applyAnswerPass(answer);
 }
 
+/**
+One pass
+*/
+
 SolverStarBattle.prototype.applyAnswerPass = function(p_answer){
 	if (p_answer.consistence == RESULT.SUCCESS && p_answer.eventsApplied.length > 0){
 		this.happenedEvents.push({kind:EVENTLIST_KIND.PASS,list:p_answer.eventsApplied});
 		p_answer.eventsApplied.forEach(spaceEvent => {this.putNew(spaceEvent.x,spaceEvent.y,spaceEvent.symbol)});
 	}
 	return p_answer;
-}
-
-const EVENTLIST_KIND ={
-	PASS : "P",
-	HYPOTHESIS : "H"
 }
 
 SolverStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_functionFinishedPass){
@@ -327,7 +325,7 @@ SolverStarBattle.prototype.multiPass = function(){
 }
 
 //------------------
-//Autosolve strategy
+//General solve strategy
 SolverStarBattle.prototype.generalSolve = function(){
 	//this.quickStart() //Pas de quickStart pour SternenSchlacht !
 	const numberEventsB4MultiPass = this.happenedEvents.length;
@@ -419,21 +417,25 @@ SolverStarBattle.prototype.solveByHypothesis = function(p_puzzleSolvedTest){
 	var hypothesis;
 	var listEvents = this.tryToPutNew(space.x,space.y,SYMBOL.STAR);
 	if (listEvents.consistence == RESULT.SUCCESS){
+		//this.happenedEvents.push({kind:EVENTLIST_KIND.HYPOTHESIS,list:listEvents.eventsApplied});
 		hypothesis = this.afterTheHypothesis(p_puzzleSolvedTest,listEvents.eventsApplied.length,space);
 		if (hypothesis == RESULT.SUCCESS){
 			return RESULT.SUCCESS;
 		}
 		else{
+			//this.happenedEvents.pop();
 			this.undoList(listEvents.eventsApplied);
 		}
 	}
 	listEvents = this.tryToPutNew(space.x,space.y,SYMBOL.NO_STAR);
 	if (listEvents.consistence == RESULT.SUCCESS){
+		//this.happenedEvents.push({kind:EVENTLIST_KIND.HYPOTHESIS,list:listEvents.eventsApplied});
 		hypothesis = this.afterTheHypothesis(p_puzzleSolvedTest,listEvents.eventsApplied.length,space);
 		if (hypothesis == RESULT.SUCCESS){
 			return RESULT.SUCCESS;
 		}
 		else{
+			//this.happenedEvents.pop();
 			this.undoList(listEvents.eventsApplied);
 		}
 	}
@@ -723,7 +725,9 @@ SolverStarBattle.prototype.happenedEventsToString = function(p_onlyAssumed){
 	var answer = "";
 	if (p_onlyAssumed){
 		this.happenedEvents.forEach(function(eventList){
-			answer+=eventList.list[0].toString()+"\n";
+			if (eventList.kind == EVENTLIST_KIND.HYPOTHESIS){
+				answer+=eventList.list[0].toString()+"\n";				
+			}
 		});
 	}
 	else{

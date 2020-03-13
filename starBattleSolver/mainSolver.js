@@ -37,16 +37,19 @@ setInterval(drawCanvas,30);
 
 var fieldName = document.getElementById("input_grid_name");
 var starSpan = document.getElementById("span_stars");
-var textArea = document.getElementById("textarea_happened");
+var components = {
+	textArea:document.getElementById("textarea_happened"),
+	checkBox : document.getElementById("checkbox_onlyAssumed")
+};
 
-canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,textArea,solver,actionToDo)},false);
+canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,components,solver,actionToDo)},false);
 
 putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("SternenSchlacht")});
-putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,solver,fieldName.value,starSpan,textArea)});
-putActionElementClick("submit_undo",function(event){undoAction(solver,textArea)});
-//putActionElementClick("submit_quickStart",function(event){quickStartAction(solver,textArea)}); TODO
-putActionElementClick("submit_multiPass",function(event){multiPassAction(solver,textArea)});
-putActionElementClick("submit_solve",function(event){solveAction(solver,textArea)});
+putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,solver,fieldName.value,starSpan,components)});
+putActionElementClick("submit_undo",function(event){undoAction(solver,components)});
+//putActionElementClick("submit_quickStart",function(event){quickStartAction(...)}); TODO
+putActionElementClick("submit_multiPass",function(event){multiPassAction(solver,components)});
+putActionElementClick("submit_solve",function(event){solveAction(solver,components)});
 
 //Submits of click on a grid : what will happen ? (TODO : the word action is pretty generic)
 var submitPutStar = document.getElementById("submit_put_star");
