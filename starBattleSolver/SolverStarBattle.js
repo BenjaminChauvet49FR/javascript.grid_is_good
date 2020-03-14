@@ -212,34 +212,25 @@ SolverStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_fu
 	if (answerPut.consistence == RESULT.SUCCESS){
 		if (p_functionFinishedPass()){
 			listO = answerPut.eventsApplied;
-			//listO = answerPut;
 		}
 		else{
 			var answerPass = this.pass(p_spacesToTest,index+1,p_functionFinishedPass);
-			//listO = this.pass(p_spacesToTest,index+1,p_functionFinishedPass);
 			if (answerPass.consistence == RESULT.SUCCESS){
-			//if (listO.consistence == RESULT.SUCCESS){
 				listO = answerPass.eventsApplied.concat(answerPut.eventsApplied);
-				//Array.prototype.push.apply(listO.eventsApplied,answerPut.eventsApplied);
 			}
 		}
 		this.undoList(answerPut.eventsApplied.slice());
 	}
 	if ((listO == null) || (listO.length > 0)){
-	//if ((listO == null) || (listO.eventsApplied.length > 0)){
 		answerPut = this.tryToPutNew(p_spacesToTest[index].x,p_spacesToTest[index].y,SYMBOL.NO_STAR);
 		if (answerPut.consistence == RESULT.SUCCESS){
 			if (p_functionFinishedPass()){
 				listX = answerPut.eventsApplied;
-				//listX = answerPut;
 			}
 			else{
 				var answerPass = this.pass(p_spacesToTest,index+1,p_functionFinishedPass);
-				//listX = this.pass(p_spacesToTest,index+1,p_functionFinishedPass);
 				if (answerPass.consistence == RESULT.SUCCESS){
-				//if (listX.pass == RESULT.SUCCESS){
 					listX = answerPass.eventsApplied.concat(answerPut.eventsApplied);
-					//Array.prototype.push.apply(listX.eventsApplied,answerPut.eventsApplied);
 				}
 			}
 			this.undoList(answerPut.eventsApplied.slice());
@@ -255,17 +246,7 @@ SolverStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_fu
 	if (listX == null){
 		return {consistence : RESULT.SUCCESS, eventsApplied: listO};
 	}
-	/*if (((listO == null) || (listO.consistence == RESULT.ERROR)) && ((listX == null) || (listX.consistence == RESULT.ERROR))){
-		return {consistence : RESULT.ERROR, eventsApplied: []};
-	}
-	if ((listO == null) || (listO.consistence == RESULT.ERROR)){
-		return {consistence : RESULT.SUCCESS, eventsApplied: listX.eventsApplied};
-	}
-	if ((listX == null) || (listX.consistence == RESULT.ERROR)){
-		return {consistence : RESULT.SUCCESS, eventsApplied: listO.eventsApplied};
-	}*/
 	return {consistence:RESULT.SUCCESS, eventsApplied:intersect(listO.sort(compareSpaceEvents),listX.sort(compareSpaceEvents))};
-	//return {consistence:RESULT.SUCCESS, eventsApplied:intersect(listO.eventsApplied.sort(compareSpaceEvents),listX.eventsApplied.sort(compareSpaceEvents))};
 }
 
 //------------------
@@ -419,25 +400,25 @@ SolverStarBattle.prototype.solveByHypothesis = function(p_puzzleSolvedTest){
 	var hypothesis;
 	var listEvents = this.tryToPutNew(space.x,space.y,SYMBOL.STAR);
 	if (listEvents.consistence == RESULT.SUCCESS){
-		//this.happenedEvents.push({kind:EVENTLIST_KIND.HYPOTHESIS,list:listEvents.eventsApplied});
+		this.happenedEvents.push({kind:EVENTLIST_KIND.HYPOTHESIS,list:listEvents.eventsApplied});
 		hypothesis = this.afterTheHypothesis(p_puzzleSolvedTest,listEvents.eventsApplied.length,space);
 		if (hypothesis == RESULT.SUCCESS){
 			return RESULT.SUCCESS;
 		}
 		else{
-			//this.happenedEvents.pop();
+			this.happenedEvents.pop();
 			this.undoList(listEvents.eventsApplied);
 		}
 	}
 	listEvents = this.tryToPutNew(space.x,space.y,SYMBOL.NO_STAR);
 	if (listEvents.consistence == RESULT.SUCCESS){
-		//this.happenedEvents.push({kind:EVENTLIST_KIND.HYPOTHESIS,list:listEvents.eventsApplied});
+		this.happenedEvents.push({kind:EVENTLIST_KIND.HYPOTHESIS,list:listEvents.eventsApplied});
 		hypothesis = this.afterTheHypothesis(p_puzzleSolvedTest,listEvents.eventsApplied.length,space);
 		if (hypothesis == RESULT.SUCCESS){
 			return RESULT.SUCCESS;
 		}
 		else{
-			//this.happenedEvents.pop();
+			this.happenedEvents.pop();
 			this.undoList(listEvents.eventsApplied);
 		}
 	}
@@ -483,9 +464,8 @@ SolverStarBattle.prototype.afterTheHypothesis = function(p_puzzleSolvedTest,p_nu
 		}
 	}
 	while (this.happenedEvents.length > numberEventsB4MultiPass){
-		this.undoToLastHypothesis();
+		this.undoList(this.happenedEvents.pop());
 	}
-	this.undoToLastHypothesis();	
 	return RESULT.FAILURE;
 }
 
