@@ -104,6 +104,27 @@ SolverStarBattle.prototype.getXsRemainColumn = function(p_i){return this.notPlac
 SolverStarBattle.prototype.getXsRemainRegion = function(p_i){return this.notPlacedYet.regions[p_i].Xs;}
 SolverStarBattle.prototype.getFirstSpaceRegion = function(p_i){return this.spacesByRegion[p_i][0];}
 
+//------------------
+
+/**
+For the following functions, the following returned values :
+emitHypothesis (*) (**)
+passRow/passColumn/passRegion
+pass 
+applyAnswerPass  (*)
+{result: (RESULT.SUCCESS | RESULT.ERROR), eventsApplied : list(SpaceEvent)}
+
+For the follwing, returns only (RESULT.SUCCESS | RESULT.ERROR) :
+multiPass
+generalSolve
+afterTheHypothesis
+solveByHypothesis 
+(*) : if success, adds its values to SolverObject.
+(**) : can also have a return of RESULT.HARMLESS
+
+For the Solver object : 
+{kind : KIND.HYPOTHESIS|KIND.PASS, list:list(SpaceEvent)}
+*/
 
 //------------------
 //Putting symbols into spaces. 
@@ -486,6 +507,7 @@ SolverStarBattle.prototype.multiPass = function(){
 	var family;
 	var bilanPass;
 	var indexFamily;
+	const numberEventsB4MultiPass = this.happenedEvents.length; //NB : no events that is already there should be removed in this function call !
 	do{
 		//Initialize the families to pass and sort it
 		familiesToPass = [];
@@ -514,7 +536,10 @@ SolverStarBattle.prototype.multiPass = function(){
 			}
 			if (bilanPass.consistence == RESULT.ERROR){
 				ok = false;
-				this.undoToLastHypothesis();
+				//this.undoToLastHypothesis();
+				while(this.happenedEvents.length > numberEventsB4MultiPass){
+					this.undoList(this.happenedEvents.pop().list);					
+				}
 			}
 			if (bilanPass.consistence == RESULT.SUCCESS && bilanPass.eventsApplied.length > 0){
 				anyModification = true;
@@ -622,6 +647,9 @@ SolverStarBattle.prototype.solveByHypothesis = function(p_puzzleSolvedTest){
 		indexFamily++;
 	}
 	
+	//2) Found a space ! Now try putting a star. 
+	//Success ? See "After the hypothesis". Failure ? Try X. 
+	//Success ? See "After the hypothesis". Failure ? Undo things as they were at start of function. 
 	var hypothesis;
 	var listEvents = this.tryToPutNew(space.x,space.y,SYMBOL.STAR);
 	if (listEvents.consistence == RESULT.SUCCESS){
@@ -651,6 +679,13 @@ SolverStarBattle.prototype.solveByHypothesis = function(p_puzzleSolvedTest){
 }
 
 SolverStarBattle.prototype.afterTheHypothesis = function(p_puzzleSolvedTest,p_numberNewEvents,p_space){
+	// We just came from an hypothesis. 
+	// Is the puzzle solved ? (grid full)
+	// Yes : Return success !
+	// No : try stuff such as passes, multipasses... but no hypotheses right now. Is it good ? 
+	// No : Undo things as they were at start of function. 
+	// Yes + puzzle solved : return success. 
+	// Yes + puzzle not solved : return "solveByHypothesis". If it is false, it means the previous hypothese was false.
 	if (p_puzzleSolvedTest()){
 		return RESULT.SUCCESS;
 	}
