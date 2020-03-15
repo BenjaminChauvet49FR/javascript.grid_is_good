@@ -16,33 +16,6 @@ SolverStarBattle.prototype.construct = function(p_wallArray,p_starNumber){
 	this.purifyAnswerGrid(); 
 }
 
-/**
-Starts the answerGrid
-*/
-SolverStarBattle.prototype.buildAnswerGrid = function(){
-	this.answerGrid = [];
-	for(iy = 0; iy < this.xyLength ; iy++){
-		this.answerGrid.push([]);
-		for(ix = 0; ix < this.xyLength ; ix++){
-			this.answerGrid[iy].push(SYMBOL.UNDECIDED);
-		}
-	}
-}
-
-/**
-Puts Xs into the answerGrid corresponding to banned spaces 
-Precondition : both spacesByRegion and notPlacedYet have been refreshed and answerGrid is ok.
-*/
-SolverStarBattle.prototype.purifyAnswerGrid = function(){
-	//Removing banned spaces (hence the necessity to have things already updated)
-	for(iy = 0; iy < this.xyLength ; iy++){
-		for(ix = 0; ix < this.xyLength ; ix++){
-			if (this.regionGrid[iy][ix] == BANNED){
-				this.putNew(ix,iy,SYMBOL.NO_STAR);
-			}
-		}
-	}
-}
 
 /**
 Sets the list of spaces for each row and column (might be exportated)
@@ -87,20 +60,41 @@ SolverStarBattle.prototype.buildPossibilities = function(p_numberStarsPer){
 	}
 }
 
+/**
+Starts the answerGrid
+*/
+SolverStarBattle.prototype.buildAnswerGrid = function(){
+	this.answerGrid = [];
+	for(iy = 0; iy < this.xyLength ; iy++){
+		this.answerGrid.push([]);
+		for(ix = 0; ix < this.xyLength ; ix++){
+			this.answerGrid[iy].push(SYMBOL.UNDECIDED);
+		}
+	}
+}
+
+/**
+Puts Xs into the answerGrid corresponding to banned spaces 
+Precondition : both spacesByRegion and notPlacedYet have been refreshed and answerGrid is ok.
+*/
+SolverStarBattle.prototype.purifyAnswerGrid = function(){
+	//Removing banned spaces (hence the necessity to have things already updated)
+	for(iy = 0; iy < this.xyLength ; iy++){
+		for(ix = 0; ix < this.xyLength ; ix++){
+			if (this.regionGrid[iy][ix] == BANNED){
+				this.putNew(ix,iy,SYMBOL.NO_STAR);
+			}
+		}
+	}
+}
+
 //----------------------
 //Getters (not setters, though)
 
-SolverStarBattle.prototype.getAnswer = function(p_x,p_y){
-	return this.answerGrid[p_y][p_x];
-}
+SolverStarBattle.prototype.getWallGrid = function(){return this.wallGrid.array;}
 
-SolverStarBattle.prototype.getWallGrid = function(){
-	return this.wallGrid.array;
-}
-
-SolverStarBattle.prototype.getRegion = function(p_x,p_y){
-	return this.regionGrid[p_y][p_x];
-}
+SolverStarBattle.prototype.getAnswer = function(p_x,p_y){return this.answerGrid[p_y][p_x];}
+SolverStarBattle.prototype.getRegion = function(p_x,p_y){return this.regionGrid[p_y][p_x];}
 
 SolverStarBattle.prototype.getOsRemainRow = function(p_i){return this.notPlacedYet.rows[p_i].Os;}
 SolverStarBattle.prototype.getOsRemainColumn = function(p_i){return this.notPlacedYet.columns[p_i].Os;}
@@ -110,10 +104,12 @@ SolverStarBattle.prototype.getXsRemainColumn = function(p_i){return this.notPlac
 SolverStarBattle.prototype.getXsRemainRegion = function(p_i){return this.notPlacedYet.regions[p_i].Xs;}
 SolverStarBattle.prototype.getFirstSpaceRegion = function(p_i){return this.spacesByRegion[p_i][0];}
 
+
 //------------------
-//Strategy management
+//Putting symbols into spaces. 
+
 /**
-Admits that a star OR a no-star could be in this space...
+USED OUTSIDE !
 */
 SolverStarBattle.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
 	var result = this.tryToPutNew(p_x,p_y,p_symbol);
@@ -123,357 +119,6 @@ SolverStarBattle.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
 	}
 	return {result:RESULT.ERROR,eventsApplied:[]};
 }
-
-/**
-Pass a region, row or column
-*/
-SolverStarBattle.prototype.passRegion = function(p_indexRegion){
-	if (p_indexRegion < 0){
-		debugHumanMisclick("Passing a negative region ");
-		return; //A click might be made onto a wrong space.
-	}
-	
-	
-	//Building a copy of an array of coordinates with only the unoccuped spaces that are unnocupied before the test of the function
-	var spacesToTestArray = [];
-	var space;
-	for(var i=0;i<this.spacesByRegion[p_indexRegion].length;i++){
-		space = this.spacesByRegion[p_indexRegion][i];
-		if (this.answerGrid[space.y][space.x] == SYMBOL.UNDECIDED){
-			spacesToTestArray.push({x:space.x,y:space.y});
-		}
-	}
-	function closure(p_dataNotPlacedYet,p_index){
-		return function(){
-			return (p_dataNotPlacedYet.regions[p_index].Os == 0);
-		}
-	}
-	var answer = this.pass(spacesToTestArray,0,closure(this.notPlacedYet,p_indexRegion));
-	return this.applyAnswerPass(answer);
-}
-
-SolverStarBattle.prototype.passRow = function(p_indexRow){
-	var spacesToTestArray = [];
-	for(var i=0;i<this.xyLength;i++){
-		if (this.answerGrid[p_indexRow][i] == SYMBOL.UNDECIDED){
-			spacesToTestArray.push({x:i,y:p_indexRow});
-		}
-	}
-	function closure(p_dataNotPlacedYet,p_index){ //TODO maybe closures weren't even mandatory ! 
-		return function(){
-			return (p_dataNotPlacedYet.rows[p_index].Os == 0);
-		}
-	}
-	var answer = this.pass(spacesToTestArray,0,closure(this.notPlacedYet,p_indexRow));
-	return this.applyAnswerPass(answer);
-}
-
-SolverStarBattle.prototype.passColumn = function(p_indexColumn){
-	var spacesToTestArray = [];
-	for(var i=0;i<this.xyLength;i++){
-		if (this.answerGrid[i][p_indexColumn] == SYMBOL.UNDECIDED){
-			spacesToTestArray.push({x:p_indexColumn,y:i});
-		}
-	}
-	function closure(p_dataNotPlacedYet,p_index){
-		return function(){
-			return (p_dataNotPlacedYet.columns[p_index].Os == 0);
-		}
-	}
-	var answer = this.pass(spacesToTestArray,0,closure(this.notPlacedYet,p_indexColumn));
-	return this.applyAnswerPass(answer);
-}
-
-/**
-One pass
-*/
-
-SolverStarBattle.prototype.applyAnswerPass = function(p_answer){
-	if (p_answer.consistence == RESULT.SUCCESS && p_answer.eventsApplied.length > 0){
-		this.happenedEvents.push({kind:EVENTLIST_KIND.PASS,list:p_answer.eventsApplied});
-		p_answer.eventsApplied.forEach(spaceEvent => {this.putNew(spaceEvent.x,spaceEvent.y,spaceEvent.symbol)});
-	}
-	return p_answer;
-}
-
-SolverStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_functionFinishedPass){
-	if (p_functionFinishedPass()){
-		return {consistence : RESULT.SUCCESS, eventsApplied: []}; //When performing a multipass, some passes can become useless since the corresponding row/column/region have been filled by previous passes.
-	}
-	var index = p_indexFirstSpace;
-	while (this.answerGrid[p_spacesToTest[index].y][p_spacesToTest[index].x] != SYMBOL.UNDECIDED)
-	{
-		index++;
-	}
-	//We MUST find an index where space is undecided.
-	var listO = null;
-	var listX = null;
-	var answerPut = this.tryToPutNew(p_spacesToTest[index].x,p_spacesToTest[index].y,SYMBOL.STAR);
-	if (answerPut.consistence == RESULT.SUCCESS){
-		if (p_functionFinishedPass()){
-			listO = answerPut.eventsApplied;
-		}
-		else{
-			var answerPass = this.pass(p_spacesToTest,index+1,p_functionFinishedPass);
-			if (answerPass.consistence == RESULT.SUCCESS){
-				listO = answerPass.eventsApplied.concat(answerPut.eventsApplied);
-			}
-		}
-		this.undoList(answerPut.eventsApplied.slice());
-	}
-	if ((listO == null) || (listO.length > 0)){
-		answerPut = this.tryToPutNew(p_spacesToTest[index].x,p_spacesToTest[index].y,SYMBOL.NO_STAR);
-		if (answerPut.consistence == RESULT.SUCCESS){
-			if (p_functionFinishedPass()){
-				listX = answerPut.eventsApplied;
-			}
-			else{
-				var answerPass = this.pass(p_spacesToTest,index+1,p_functionFinishedPass);
-				if (answerPass.consistence == RESULT.SUCCESS){
-					listX = answerPass.eventsApplied.concat(answerPut.eventsApplied);
-				}
-			}
-			this.undoList(answerPut.eventsApplied.slice());
-		}
-	}
-	var list;
-	if (listO == null && listX == null){
-		return {consistence : RESULT.ERROR, eventsApplied: []};
-	}
-	if (listO == null){
-		return {consistence : RESULT.SUCCESS, eventsApplied: listX};
-	}
-	if (listX == null){
-		return {consistence : RESULT.SUCCESS, eventsApplied: listO};
-	}
-	return {consistence:RESULT.SUCCESS, eventsApplied:intersect(listO.sort(compareSpaceEvents),listX.sort(compareSpaceEvents))};
-}
-
-//------------------
-//Multipass strategy
-
-/**
-Passes all regions/rows/columns in the order of size until no deduction can be done anymore.
-Warning : if something wrong is found, everything will be deleted until the new pass ! (TODO : this behavior seems like it can be changed)
-*/
-SolverStarBattle.prototype.multiPass = function(){
-	var anyModification = false;
-	var ok = true;
-	var familiesToPass; //The list of all regions, lists and columns to pass.
-	var family;
-	var bilanPass;
-	var indexFamily;
-	do{
-		//Initialize the families to pass and sort it
-		familiesToPass = [];
-		for(indexFamily=0;indexFamily<this.xyLength;indexFamily++){
-			if (this.notPlacedYet.regions[indexFamily].Os > 0){
-				familiesToPass.push({familyKind : FAMILY.REGION, id:indexFamily, remains : this.notPlacedYet.regions[indexFamily].Os + this.notPlacedYet.regions[indexFamily].Xs});
-			}				
-			if (this.notPlacedYet.rows[indexFamily].Os > 0){
-				familiesToPass.push({familyKind : FAMILY.ROW, id:indexFamily, remains : this.notPlacedYet.rows[indexFamily].Os + this.notPlacedYet.rows[indexFamily].Xs});
-			}
-			if (this.notPlacedYet.columns[indexFamily].Os > 0){
-				familiesToPass.push({familyKind : FAMILY.COLUMN, id:indexFamily, remains : this.notPlacedYet.columns[indexFamily].Os + this.notPlacedYet.columns[indexFamily].Xs});
-			}
-		}
-		familiesToPass.sort(function(a,b){return (a.remains-b.remains)});
-		
-		//Perform the passes
-		anyModification = false;
-		indexFamily = 0;
-		while(indexFamily < familiesToPass.length && ok){
-			family = familiesToPass[indexFamily];
-			switch(family.familyKind){
-				case FAMILY.ROW: bilanPass = this.passRow(family.id);break;
-				case FAMILY.COLUMN: bilanPass = this.passColumn(family.id);break;
-				case FAMILY.REGION: bilanPass = this.passRegion(family.id);break;
-			}
-			if (bilanPass.consistence == RESULT.ERROR){
-				ok = false;
-				this.undoToLastHypothesis();
-			}
-			if (bilanPass.consistence == RESULT.SUCCESS && bilanPass.eventsApplied.length > 0){
-				anyModification = true;
-			}
-			indexFamily++;
-		}
-	} while(ok && anyModification);
-	if (ok)
-		return RESULT.SUCCESS;
-	else
-		return RESULT.ERROR;
-}
-
-//------------------
-//General solve strategy
-
-//TODO Important : no happenedEvents after general solve !
-SolverStarBattle.prototype.generalSolve = function(){
-	//this.quickStart() //Pas de quickStart pour SternenSchlacht !
-	const numberEventsB4MultiPass = this.happenedEvents.length;
-	var multipass = this.multiPass();
-	var mistake = (multipass == RESULT.ERROR);
-	if (!mistake){
-		function puzzleSolved(p_dataNotPlacedYet){
-			return function(){
-				var compteur = 0;
-				while(compteur < p_dataNotPlacedYet.regions.length && p_dataNotPlacedYet.regions[compteur].Os == 0){
-					compteur++;
-				}
-				return (compteur == p_dataNotPlacedYet.regions.length);
-			}
-		}
-		var puzzleSolvedTest = puzzleSolved(this.notPlacedYet);
-		if (!puzzleSolvedTest()){
-			mistake = (this.solveByHypothesis(puzzleSolvedTest) == RESULT.ERROR);
-		}
-	}
-	if (mistake){
-		while (this.happenedEvents.length > numberEventsB4MultiPass){
-			this.undoToLastHypothesis();
-		}
-		this.undoToLastHypothesis();
-	}
-}
-
-SolverStarBattle.prototype.solveByHypothesis = function(p_puzzleSolvedTest){
-	//1) select the good space
-	//Initialize the families to pass and sort it // TODO sort the functions...
-	var familiesToPass = [];
-	for(var i=0;i<this.xyLength;i++){
-		if (this.notPlacedYet.regions[i].Os > 0){
-			familiesToPass.push({familyKind : FAMILY.REGION, id:i, remains : this.notPlacedYet.regions[i].Os + this.notPlacedYet.regions[i].Xs});
-		}				
-		if (this.notPlacedYet.rows[i].Os > 0){
-			familiesToPass.push({familyKind : FAMILY.ROW, id:i, remains : this.notPlacedYet.rows[i].Os + this.notPlacedYet.rows[i].Xs});
-		}
-		if (this.notPlacedYet.columns[i].Os > 0){
-			familiesToPass.push({familyKind : FAMILY.COLUMN, id:i, remains : this.notPlacedYet.columns[i].Os + this.notPlacedYet.columns[i].Xs});
-		}
-	}
-	familiesToPass.sort(function(a,b){return (a.remains-b.remains)});
-	var foundSpace = false;
-	var indexFamily = 0;
-	var space = null;
-	var kind;
-	var indexRLC;
-	var regionSpaces;
-	var family;
-	while (space == null){
-		family = familiesToPass[indexFamily];
-		kind = family.familyKind;
-		indexRLC = family.id;
-		switch(kind){			
-			case(FAMILY.ROW) :
-				indexSpace = 0;
-				while(indexSpace < this.xyLength && this.answerGrid[indexRLC][indexSpace] != SYMBOL.UNDECIDED){
-					indexSpace++;
-				}
-				if (indexSpace < this.xyLength){
-					space = {x:indexSpace,y:indexRLC};
-				}
-			break;
-			case(FAMILY.COLUMN) :
-				indexSpace = 0;
-				while(indexSpace < this.xyLength && this.answerGrid[indexSpace][indexRLC] != SYMBOL.UNDECIDED){
-					indexSpace++;
-				}
-				if (indexSpace < this.xyLength){
-					space = {x:indexRLC,y:indexSpace};
-				}
-			break;
-			case(FAMILY.REGION) :
-				indexSpace = 0;
-				regionSpaces = this.spacesByRegion[indexRLC];
-				while(indexSpace < this.xyLength && this.answerGrid[regionSpaces[indexSpace].y][regionSpaces[indexSpace].x] != SYMBOL.UNDECIDED){
-					indexSpace++;
-				}
-				if (indexSpace < this.xyLength){
-					space = regionSpaces[indexSpace];
-				}
-			break;
-		}
-		indexFamily++;
-	}
-	
-	var hypothesis;
-	var listEvents = this.tryToPutNew(space.x,space.y,SYMBOL.STAR);
-	if (listEvents.consistence == RESULT.SUCCESS){
-		this.happenedEvents.push({kind:EVENTLIST_KIND.HYPOTHESIS,list:listEvents.eventsApplied});
-		hypothesis = this.afterTheHypothesis(p_puzzleSolvedTest,listEvents.eventsApplied.length,space);
-		if (hypothesis == RESULT.SUCCESS){
-			return RESULT.SUCCESS;
-		}
-		else{
-			this.happenedEvents.pop();
-			this.undoList(listEvents.eventsApplied);
-		}
-	}
-	listEvents = this.tryToPutNew(space.x,space.y,SYMBOL.NO_STAR);
-	if (listEvents.consistence == RESULT.SUCCESS){
-		this.happenedEvents.push({kind:EVENTLIST_KIND.HYPOTHESIS,list:listEvents.eventsApplied});
-		hypothesis = this.afterTheHypothesis(p_puzzleSolvedTest,listEvents.eventsApplied.length,space);
-		if (hypothesis == RESULT.SUCCESS){
-			return RESULT.SUCCESS;
-		}
-		else{
-			this.happenedEvents.pop();
-			this.undoList(listEvents.eventsApplied);
-		}
-	}
-	return RESULT.FAILURE;
-}
-
-SolverStarBattle.prototype.afterTheHypothesis = function(p_puzzleSolvedTest,p_numberNewEvents,p_space){
-	if (p_puzzleSolvedTest()){
-		return RESULT.SUCCESS;
-	}
-	const numberEventsB4MultiPass = this.happenedEvents.length;
-	var ok = true;
-	/*var resultMultiPass;
-	var resultPass;
-	var lengthEvents = 0;
-	if (p_numberNewEvents > 15){
-		resultMultiPass = this.multiPass();
-		ok = (resultMultiPass == RESULT.SUCCESS);
-	} else if (p_numberNewEvents > 8){
-		resultPass = this.passRegion(p_space.y);
-		if (resultPass.consistence == RESULT.SUCCESS){
-			lengthEvents += resultPass.eventList.length;
-			resultPass.consistence = this.passRow(p_space.y);			
-			if (resultPass == RESULT.SUCCESS){
-				lengthEvents += resultPass.eventList.length;
-				resultPass.consistence = this.passColumn(p_space.y);
-				if (resultPass == RESULT.SUCCESS){
-					lengthEvents += resultPass.events.length;
-					if (lengthEvents > this.xyLength){
-						resultMultiPass = this.multiPass();
-						ok = (resultMultiPass == RESULT.SUCCESS); 
-					}
-				}
-			}
-		}
-	} */
-	if (ok){
-		if (p_puzzleSolvedTest()){
-			return RESULT.SUCCESS;
-		}
-		else if (this.solveByHypothesis(p_puzzleSolvedTest) == RESULT.SUCCESS){
-			return RESULT.SUCCESS;
-		}
-	}
-	while (this.happenedEvents.length > numberEventsB4MultiPass){
-		this.undoList(this.happenedEvents.pop());
-	}
-	return RESULT.FAILURE;
-}
-
-
-
-
-//------------------
-//Putting symbols into spaces. 
 
 /**Tries to put a symbol into the space of a grid. 3 possibilities :
 RESULT.SUCCESS : it was indeed put into the grid ; the number of Os and Xs for this region, row and column are also updated.
@@ -510,28 +155,6 @@ SolverStarBattle.prototype.putNew = function(p_x,p_y,p_symbol){
 
 
 }
-
-/**
-When you want to remove a symbol from a space !
-*/
-SolverStarBattle.prototype.remove = function(p_x,p_y){
-	var indexRegion = this.regionGrid[p_y][p_x];
-	var symbol = this.answerGrid[p_y][p_x];
-	this.answerGrid[p_y][p_x] = SYMBOL.UNDECIDED;
-	debugTryToPutNew("Removing the following : "+p_x+" "+p_y+" "+symbol);
-	if (symbol == SYMBOL.STAR){
-		this.notPlacedYet.regions[indexRegion].Os++;
-		this.notPlacedYet.rows[p_y].Os++;
-		this.notPlacedYet.columns[p_x].Os++;
-	}
-	if (symbol == SYMBOL.NO_STAR){
-		this.notPlacedYet.regions[indexRegion].Xs++;
-		this.notPlacedYet.rows[p_y].Xs++;
-		this.notPlacedYet.columns[p_x].Xs++;	
-	}
-
-}
-
 
 /**
 Tries to put a new symbol into a grid and then forces the filling of all stars and Xs that can be deduced logically without breaking the rules : 
@@ -659,7 +282,33 @@ SolverStarBattle.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 	}
 }
 
+
+//--------------
+//Undo things
+
 /**
+When you want to remove a symbol from a space !
+*/
+SolverStarBattle.prototype.remove = function(p_x,p_y){
+	var indexRegion = this.regionGrid[p_y][p_x];
+	var symbol = this.answerGrid[p_y][p_x];
+	this.answerGrid[p_y][p_x] = SYMBOL.UNDECIDED;
+	debugTryToPutNew("Removing the following : "+p_x+" "+p_y+" "+symbol);
+	if (symbol == SYMBOL.STAR){
+		this.notPlacedYet.regions[indexRegion].Os++;
+		this.notPlacedYet.rows[p_y].Os++;
+		this.notPlacedYet.columns[p_x].Os++;
+	}
+	if (symbol == SYMBOL.NO_STAR){
+		this.notPlacedYet.regions[indexRegion].Xs++;
+		this.notPlacedYet.rows[p_y].Xs++;
+		this.notPlacedYet.columns[p_x].Xs++;	
+	}
+
+}
+
+/**
+USED OUTSIDE !
 Cancel the last list of events since the last "non-deducted" space.
 */
 SolverStarBattle.prototype.undoToLastHypothesis = function(){
@@ -677,13 +326,381 @@ SolverStarBattle.prototype.undoToLastHypothesis = function(){
 Cancels a list of events passed in argument
 */
 SolverStarBattle.prototype.undoList = function(p_list){
-	console.log("We are going to undo a list of : "+p_list.length);
+	debugCancel("We are going to undo a list of : "+p_list.length);
 	var spaceEventToUndo;
 	while (p_list.length !=0){
 		spaceEventToUndo = p_list.pop();
 		this.remove(spaceEventToUndo.x,spaceEventToUndo.y);
 	}
 }
+
+
+//------------------
+//Pass a region, row or column
+
+/**
+USED OUTSIDE !
+*/
+SolverStarBattle.prototype.passRegion = function(p_indexRegion){
+	if (p_indexRegion < 0){
+		debugHumanMisclick("Passing a negative region ");
+		return; //A click might be made onto a wrong space.
+	}
+	
+	
+	//Building a copy of an array of coordinates with only the unoccuped spaces that are unnocupied before the test of the function
+	var spacesToTestArray = [];
+	var space;
+	for(var i=0;i<this.spacesByRegion[p_indexRegion].length;i++){
+		space = this.spacesByRegion[p_indexRegion][i];
+		if (this.answerGrid[space.y][space.x] == SYMBOL.UNDECIDED){
+			spacesToTestArray.push({x:space.x,y:space.y});
+		}
+	}
+	function closure(p_dataNotPlacedYet,p_index){
+		return function(){
+			return (p_dataNotPlacedYet.regions[p_index].Os == 0);
+		}
+	}
+	var answer = this.pass(spacesToTestArray,0,closure(this.notPlacedYet,p_indexRegion));
+	return this.applyAnswerPass(answer);
+}
+
+/**
+USED OUTSIDE !
+*/
+SolverStarBattle.prototype.passRow = function(p_indexRow){
+	var spacesToTestArray = [];
+	for(var i=0;i<this.xyLength;i++){
+		if (this.answerGrid[p_indexRow][i] == SYMBOL.UNDECIDED){
+			spacesToTestArray.push({x:i,y:p_indexRow});
+		}
+	}
+	function closure(p_dataNotPlacedYet,p_index){ //TODO maybe closures weren't even mandatory ! 
+		return function(){
+			return (p_dataNotPlacedYet.rows[p_index].Os == 0);
+		}
+	} 
+	var answer = this.pass(spacesToTestArray,0,closure(this.notPlacedYet,p_indexRow));
+	return this.applyAnswerPass(answer);
+}
+
+/**
+USED OUTSIDE !
+*/
+SolverStarBattle.prototype.passColumn = function(p_indexColumn){
+	var spacesToTestArray = [];
+	for(var i=0;i<this.xyLength;i++){
+		if (this.answerGrid[i][p_indexColumn] == SYMBOL.UNDECIDED){
+			spacesToTestArray.push({x:p_indexColumn,y:i});
+		}
+	}
+	function closure(p_dataNotPlacedYet,p_index){
+		return function(){
+			return (p_dataNotPlacedYet.columns[p_index].Os == 0);
+		}
+	}
+	var answer = this.pass(spacesToTestArray,0,closure(this.notPlacedYet,p_indexColumn));
+	return this.applyAnswerPass(answer);
+}
+
+/**
+One pass
+*/
+SolverStarBattle.prototype.applyAnswerPass = function(p_answer){
+	if (p_answer.consistence == RESULT.SUCCESS && p_answer.eventsApplied.length > 0){
+		this.happenedEvents.push({kind:EVENTLIST_KIND.PASS,list:p_answer.eventsApplied});
+		p_answer.eventsApplied.forEach(spaceEvent => {this.putNew(spaceEvent.x,spaceEvent.y,spaceEvent.symbol)});
+	}
+	return p_answer;
+}
+
+SolverStarBattle.prototype.pass = function(p_spacesToTest,p_indexFirstSpace,p_functionFinishedPass){
+	if (p_functionFinishedPass()){
+		return {consistence : RESULT.SUCCESS, eventsApplied: []}; //When performing a multipass, some passes can become useless since the corresponding row/column/region have been filled by previous passes.
+	}
+	var index = p_indexFirstSpace;
+	while (this.answerGrid[p_spacesToTest[index].y][p_spacesToTest[index].x] != SYMBOL.UNDECIDED)
+	{
+		index++;
+	}
+	//We MUST find an index where space is undecided.
+	var listO = null;
+	var listX = null;
+	var answerPut = this.tryToPutNew(p_spacesToTest[index].x,p_spacesToTest[index].y,SYMBOL.STAR);
+	if (answerPut.consistence == RESULT.SUCCESS){
+		if (p_functionFinishedPass()){
+			listO = answerPut.eventsApplied;
+		}
+		else{
+			var answerPass = this.pass(p_spacesToTest,index+1,p_functionFinishedPass);
+			if (answerPass.consistence == RESULT.SUCCESS){
+				listO = answerPass.eventsApplied.concat(answerPut.eventsApplied);
+			}
+		}
+		this.undoList(answerPut.eventsApplied.slice());
+	}
+	if ((listO == null) || (listO.length > 0)){
+		answerPut = this.tryToPutNew(p_spacesToTest[index].x,p_spacesToTest[index].y,SYMBOL.NO_STAR);
+		if (answerPut.consistence == RESULT.SUCCESS){
+			if (p_functionFinishedPass()){
+				listX = answerPut.eventsApplied;
+			}
+			else{
+				var answerPass = this.pass(p_spacesToTest,index+1,p_functionFinishedPass);
+				if (answerPass.consistence == RESULT.SUCCESS){
+					listX = answerPass.eventsApplied.concat(answerPut.eventsApplied);
+				}
+			}
+			this.undoList(answerPut.eventsApplied.slice());
+		}
+	}
+	var list;
+	if (listO == null && listX == null){
+		return {consistence : RESULT.ERROR, eventsApplied: []};
+	}
+	if (listO == null){
+		return {consistence : RESULT.SUCCESS, eventsApplied: listX};
+	}
+	if (listX == null){
+		return {consistence : RESULT.SUCCESS, eventsApplied: listO};
+	}
+	return {consistence:RESULT.SUCCESS, eventsApplied:intersect(listO.sort(compareSpaceEvents),listX.sort(compareSpaceEvents))};
+}
+
+//------------------
+//Multipass strategy
+
+/**
+Passes all regions/rows/columns in the order of size until no deduction can be done anymore.
+Warning : if something wrong is found, everything will be deleted until the new pass ! (TODO : this behavior seems like it can be changed)
+*/
+
+/**
+USED OUTSIDE !
+*/
+SolverStarBattle.prototype.multiPass = function(){
+	var anyModification = false;
+	var ok = true;
+	var familiesToPass; //The list of all regions, lists and columns to pass.
+	var family;
+	var bilanPass;
+	var indexFamily;
+	do{
+		//Initialize the families to pass and sort it
+		familiesToPass = [];
+		for(indexFamily=0;indexFamily<this.xyLength;indexFamily++){
+			if (this.notPlacedYet.regions[indexFamily].Os > 0){
+				familiesToPass.push({familyKind : FAMILY.REGION, id:indexFamily, remains : this.notPlacedYet.regions[indexFamily].Os + this.notPlacedYet.regions[indexFamily].Xs});
+			}				
+			if (this.notPlacedYet.rows[indexFamily].Os > 0){
+				familiesToPass.push({familyKind : FAMILY.ROW, id:indexFamily, remains : this.notPlacedYet.rows[indexFamily].Os + this.notPlacedYet.rows[indexFamily].Xs});
+			}
+			if (this.notPlacedYet.columns[indexFamily].Os > 0){
+				familiesToPass.push({familyKind : FAMILY.COLUMN, id:indexFamily, remains : this.notPlacedYet.columns[indexFamily].Os + this.notPlacedYet.columns[indexFamily].Xs});
+			}
+		}
+		familiesToPass.sort(function(a,b){return (a.remains-b.remains)});
+		
+		//Perform the passes
+		anyModification = false;
+		indexFamily = 0;
+		while(indexFamily < familiesToPass.length && ok){
+			family = familiesToPass[indexFamily];
+			switch(family.familyKind){
+				case FAMILY.ROW: bilanPass = this.passRow(family.id);break;
+				case FAMILY.COLUMN: bilanPass = this.passColumn(family.id);break;
+				case FAMILY.REGION: bilanPass = this.passRegion(family.id);break;
+			}
+			if (bilanPass.consistence == RESULT.ERROR){
+				ok = false;
+				this.undoToLastHypothesis();
+			}
+			if (bilanPass.consistence == RESULT.SUCCESS && bilanPass.eventsApplied.length > 0){
+				anyModification = true;
+			}
+			indexFamily++;
+		}
+	} while(ok && anyModification);
+	if (ok)
+		return RESULT.SUCCESS;
+	else
+		return RESULT.ERROR;
+}
+
+//------------------
+//General solve strategy
+
+/**
+USED OUTSIDE §
+*/
+SolverStarBattle.prototype.generalSolve = function(){
+	//this.quickStart() //Pas de quickStart pour SternenSchlacht !
+	const numberEventsB4MultiPass = this.happenedEvents.length;
+	var multipass = this.multiPass();
+	var mistake = (multipass == RESULT.ERROR);
+	if (!mistake){
+		function puzzleSolved(p_dataNotPlacedYet){
+			return function(){
+				var compteur = 0;
+				while(compteur < p_dataNotPlacedYet.regions.length && p_dataNotPlacedYet.regions[compteur].Os == 0){
+					compteur++;
+				}
+				return (compteur == p_dataNotPlacedYet.regions.length);
+			}
+		}
+		var puzzleSolvedTest = puzzleSolved(this.notPlacedYet);
+		if (!puzzleSolvedTest()){
+			mistake = (this.solveByHypothesis(puzzleSolvedTest) == RESULT.ERROR);
+		}
+	}
+	if (mistake){
+		while (this.happenedEvents.length > numberEventsB4MultiPass){
+			this.undoToLastHypothesis();
+		}
+		this.undoToLastHypothesis();
+	}
+}
+
+SolverStarBattle.prototype.solveByHypothesis = function(p_puzzleSolvedTest){
+	//1) select the good space
+	//Initialize the families to pass and sort it // TODO sort the functions...
+	var familiesToPass = [];
+	for(var i=0;i<this.xyLength;i++){
+		if (this.notPlacedYet.regions[i].Os > 0){
+			familiesToPass.push({familyKind : FAMILY.REGION, id:i, remains : this.notPlacedYet.regions[i].Os + this.notPlacedYet.regions[i].Xs});
+		}				
+		if (this.notPlacedYet.rows[i].Os > 0){
+			familiesToPass.push({familyKind : FAMILY.ROW, id:i, remains : this.notPlacedYet.rows[i].Os + this.notPlacedYet.rows[i].Xs});
+		}
+		if (this.notPlacedYet.columns[i].Os > 0){
+			familiesToPass.push({familyKind : FAMILY.COLUMN, id:i, remains : this.notPlacedYet.columns[i].Os + this.notPlacedYet.columns[i].Xs});
+		}
+	}
+	familiesToPass.sort(function(a,b){return (a.remains-b.remains)});
+	var foundSpace = false;
+	var indexFamily = 0;
+	var space = null;
+	var kind;
+	var indexRLC;
+	var regionSpaces;
+	var family;
+	while (space == null){
+		family = familiesToPass[indexFamily];
+		kind = family.familyKind;
+		indexRLC = family.id;
+		switch(kind){			
+			case(FAMILY.ROW) :
+				indexSpace = 0;
+				while(indexSpace < this.xyLength && this.answerGrid[indexRLC][indexSpace] != SYMBOL.UNDECIDED){
+					indexSpace++;
+				}
+				if (indexSpace < this.xyLength){
+					space = {x:indexSpace,y:indexRLC};
+				}
+			break;
+			case(FAMILY.COLUMN) :
+				indexSpace = 0;
+				while(indexSpace < this.xyLength && this.answerGrid[indexSpace][indexRLC] != SYMBOL.UNDECIDED){
+					indexSpace++;
+				}
+				if (indexSpace < this.xyLength){
+					space = {x:indexRLC,y:indexSpace};
+				}
+			break;
+			case(FAMILY.REGION) :
+				indexSpace = 0;
+				regionSpaces = this.spacesByRegion[indexRLC];
+				while(indexSpace < this.xyLength && this.answerGrid[regionSpaces[indexSpace].y][regionSpaces[indexSpace].x] != SYMBOL.UNDECIDED){
+					indexSpace++;
+				}
+				if (indexSpace < this.xyLength){
+					space = regionSpaces[indexSpace];
+				}
+			break;
+		}
+		indexFamily++;
+	}
+	
+	var hypothesis;
+	var listEvents = this.tryToPutNew(space.x,space.y,SYMBOL.STAR);
+	if (listEvents.consistence == RESULT.SUCCESS){
+		this.happenedEvents.push({kind:EVENTLIST_KIND.HYPOTHESIS,list:listEvents.eventsApplied});
+		hypothesis = this.afterTheHypothesis(p_puzzleSolvedTest,listEvents.eventsApplied.length,space);
+		if (hypothesis == RESULT.SUCCESS){
+			return RESULT.SUCCESS;
+		}
+		else{
+			this.happenedEvents.pop();
+			this.undoList(listEvents.eventsApplied);
+		}
+	}
+	listEvents = this.tryToPutNew(space.x,space.y,SYMBOL.NO_STAR);
+	if (listEvents.consistence == RESULT.SUCCESS){
+		this.happenedEvents.push({kind:EVENTLIST_KIND.HYPOTHESIS,list:listEvents.eventsApplied});
+		hypothesis = this.afterTheHypothesis(p_puzzleSolvedTest,listEvents.eventsApplied.length,space);
+		if (hypothesis == RESULT.SUCCESS){
+			return RESULT.SUCCESS;
+		}
+		else{
+			this.happenedEvents.pop();
+			this.undoList(listEvents.eventsApplied);
+		}
+	}
+	return RESULT.ERROR;
+}
+
+SolverStarBattle.prototype.afterTheHypothesis = function(p_puzzleSolvedTest,p_numberNewEvents,p_space){
+	if (p_puzzleSolvedTest()){
+		return RESULT.SUCCESS;
+	}
+	const numberEventsB4MultiPass = this.happenedEvents.length;
+	var ok = true;
+	var resultMultiPass;
+	var resultPass;
+	var lengthEvents = 0;
+	if (p_numberNewEvents > 10){
+		resultMultiPass = this.multiPass();
+		ok = (resultMultiPass == RESULT.SUCCESS);
+	} /*else if (p_numberNewEvents >= 4){
+		resultPass = this.passRegion(this.regionGrid[p_space.y][p_space.x]);
+		ok = (resultPass.consistence == RESULT.SUCCESS);
+		if (ok){
+			lengthEvents += resultPass.eventsApplied.length;
+			resultPass = this.passRow(p_space.y);
+			ok = (resultPass.consistence == RESULT.SUCCESS);			
+			if (ok){
+				lengthEvents += resultPass.eventsApplied.length;
+				resultPass = this.passColumn(p_space.x);
+				ok = (resultPass.consistence == RESULT.SUCCESS);
+				if (ok){
+					lengthEvents += resultPass.eventsApplied.length;
+					if (lengthEvents > this.xyLength){
+						resultMultiPass = this.multiPass();
+						ok = (resultMultiPass == RESULT.SUCCESS); 
+					}
+				}
+			}
+		}
+	}*/
+	if (ok){
+		if (p_puzzleSolvedTest()){
+			return RESULT.SUCCESS;
+		}
+		else if (this.solveByHypothesis(p_puzzleSolvedTest) == RESULT.SUCCESS){
+			return RESULT.SUCCESS;
+		}
+	}
+	while (this.happenedEvents.length > numberEventsB4MultiPass){
+		this.undoList(this.happenedEvents.pop().list);
+	}
+	return RESULT.ERROR;
+}
+
+
+
+
+
 
 //--------------
 // It's "to string" time !

@@ -94,6 +94,9 @@ function debugPass(p_string){
 function debugHumanMisclick(p_string){
 	//console.log("Human misclick ? "+p_string);
 }
+function debugCancel(p_string){
+	//console.log(p_string);
+}
 function alertPass(p_string){
 	//alert(p_string);
 }
