@@ -3,8 +3,8 @@
 function SolveEvent(){}
 
 const KIND = {
-	SYMBOL:'S',
-	VALUE:'V'
+	SYMBOL:1,
+	VALUE:2
 }
 
 function SolveEventPosition(p_x,p_y,p_symbol){
@@ -44,28 +44,48 @@ SolveEvent.prototype.toString = function(){
 }
 
 SolveEvent.prototype.copy = function(){
-	//TODO retourner un SolveEvent. 
-	//ATTENTION : il faudra obligatoirement appeler le constructeur de SolveEvent, quelqu'il soit.
+	var se = new SolveEvent();
+	if (this.kind == KIND.SYMBOL){
+		se.setupSymbol(this.x,this.y,this.symbol);
+		return se;
+	}
+	else{
+		se.setupValue(this.valueToBan,this.indexRegion);
+		return se;
+	}
 }
 
 /**
 Compares two space events for sorting (left is "superior" : 1 ; right is "superior" : -1)
 */
 function compareSolveEvents(p_spaceEvent1,p_spaceEvent2){
-/*	if (p_spaceEvent1.y < p_spaceEvent2.y)
-		return -1;
-	if ((p_spaceEvent1.y > p_spaceEvent2.y) || (p_spaceEvent1.x > p_spaceEvent2.x))
-		return 1;
-	if (p_spaceEvent1.x < p_spaceEvent2.x)
-		return -1;*/
-	return 0;
+	if (p_spaceEvent1.kind != p_spaceEvent2.kind){
+		return p_spaceEvent1.kind-p_spaceEvent2.kind;
+	}
+	if (p_spaceEvent1 == KIND.SYMBOL){
+		if (p_spaceEvent1.y < p_spaceEvent2.y)
+			return -1;
+		if ((p_spaceEvent1.y > p_spaceEvent2.y) || (p_spaceEvent1.x > p_spaceEvent2.x))
+			return 1;
+		if (p_spaceEvent1.x < p_spaceEvent2.x)
+			return -1;
+		return 0;	
+	} else {
+		if (p_spaceEvent1.indexRegion < p_spaceEvent2.indexRegion)
+			return -1;
+		if ((p_spaceEvent1.indexRegion > p_spaceEvent2.indexRegion) || (p_spaceEvent1.valueToBan > p_spaceEvent2.valueToBan))
+			return 1;
+		if (p_spaceEvent1.valueToBan < p_spaceEvent2.valueToBan)
+			return -1;
+		return 0;
+	}
 }
 
 /**
 Returns the sorted list of the intersection of two sorted space event lists 
 */
 function intersect(p_spaceEventSortedList1,p_spaceEventSortedList2){
-	/*var index1 = 0;
+	var index1 = 0;
 	var index2 = 0;
 	var comparison;
 	var answer = [];
@@ -83,6 +103,6 @@ function intersect(p_spaceEventSortedList1,p_spaceEventSortedList2){
 				index2++;
 			break;
 		}
-	}*/
+	}
 	return answer;
 }

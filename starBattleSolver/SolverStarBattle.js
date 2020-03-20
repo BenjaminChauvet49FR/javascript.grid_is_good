@@ -357,7 +357,7 @@ SolverStarBattle.prototype.undoList = function(p_list){
 
 
 //------------------
-//Pass a region, row or column
+//Pass a single region, row or column
 
 /**
 USED OUTSIDE !
@@ -425,9 +425,6 @@ SolverStarBattle.prototype.passColumn = function(p_indexColumn){
 	return this.applyAnswerPass(answer);
 }
 
-/**
-One pass
-*/
 SolverStarBattle.prototype.applyAnswerPass = function(p_answer){
 	if (p_answer.consistence == RESULT.SUCCESS && p_answer.eventsApplied.length > 0){
 		this.happenedEvents.push({kind:EVENTLIST_KIND.PASS,list:p_answer.eventsApplied});

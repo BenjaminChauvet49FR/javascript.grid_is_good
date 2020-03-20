@@ -23,15 +23,9 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_actionId){
 		break;
 		case ACTION_PUT_NO_FILL.id:
 			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,FILLING.NO); 
-		break;		
-		case ACTION_PASS_ROW.id:
-			//p_solver.passRow(p_spaceIndexY);
-		break;
-		case ACTION_PASS_COLUMN.id:
-			//p_solver.passColumn(p_spaceIndexX);
 		break;
 		case ACTION_PASS_REGION.id:
-			//p_solver.passRegion(p_solver.getRegion(p_spaceIndexX,p_spaceIndexY));
+			p_solver.passRegion(p_solver.getRegionIndex(p_spaceIndexX,p_spaceIndexY));
 		break;
 	}
 }
@@ -69,7 +63,7 @@ loadAction = function(p_canvas,p_drawer,p_solver,p_name){
 }
 
 undoAction = function(p_solver,p_textArea){
-	p_solver.massUndo();
+	p_solver.undoToLastHypothesis();
 	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
 }
 

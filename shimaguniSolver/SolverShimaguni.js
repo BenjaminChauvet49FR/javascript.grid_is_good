@@ -9,7 +9,7 @@ SolverShimaguni.prototype.construct = function(p_wallArray,p_numberGrid){
 	this.regionGrid = this.wallGrid.toRegionGrid();
 	this.answerGrid = [];
 	this.clusterGrid = [];
-	
+	this.happenedEvents = [];
 	var ix,iy;
 	var lastRegionNumber = 0;
 	
@@ -160,6 +160,14 @@ SolverShimaguni.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
 //--------------
 // Put new and try
 
+SolverShimaguni.prototype.apply = function(p_solveEvent){
+	if (p_solveEvent.kind == KIND.SYMBOL){
+		this.putNew(p_solveEvent.x,p_solveEvent.y);
+	}else{
+		this.banValue(p_solveEvent.indexRegion,p_solveEvent.valueToBan);
+	}
+}
+
 SolverShimaguni.prototype.putNew = function(p_x,p_y,p_symbol){
 	if (p_symbol == this.answerGrid[p_y][p_x]){
 		return RESULT.HARMLESS;
@@ -223,7 +231,8 @@ SolverShimaguni.prototype.tryToBan = function(p_region,p_value){
 }
 
 SolverShimaguni.prototype.tryToApplyEvent = function(p_singletonEvent){
-	var eventsToApply = p_singletonEvent;
+	var eventsToApply = p_singletonEvent; //list to do
+	var eventsApplied = [];//list done
 	var regionalEventsToAdd = [];
 	var currentEvent;
 	var testPutNew,testBanNew;
@@ -252,6 +261,7 @@ SolverShimaguni.prototype.tryToApplyEvent = function(p_singletonEvent){
 					debugTryToPutNewGold("NOOOOO !");
 				}
 				if (testPutNew == RESULT.SUCCESS){
+					eventsApplied.push(currentEvent);
 					ir = this.getRegionIndex(x,y);
 					region = this.regions[ir];
 					if (symbol == FILLING.YES){
@@ -285,6 +295,7 @@ SolverShimaguni.prototype.tryToApplyEvent = function(p_singletonEvent){
 					}
 				}
 			} else { // Ban a value
+				eventsApplied.push(currentEvent);
 				ir = currentEvent.indexRegion;
 				tryToAddArrayList(raisedMinsByRegion,ir); //TODO nom à changer ? Même si logiquement on ne s'intéresse qu'aux minima qui diminuent car les clusters deviennent trop petits
 				value = currentEvent.valueToBan;
@@ -383,7 +394,11 @@ SolverShimaguni.prototype.tryToApplyEvent = function(p_singletonEvent){
 		
 	} while (eventsToApply.length > 0 && ok);
 	if (!ok){
-		//Annuler 
+		this.undoList(eventsApplied);
+		return {consistence:RESULT.ERROR,eventsApplied:[]};
+	} else{
+		this.happenedEvents.push({kind:EVENTLIST_KIND.HYPOTHESIS,list:eventsApplied});
+		return {consistence:RESULT.SUCCESS,eventsApplied:eventsApplied};
 	}
 }
 
@@ -473,6 +488,65 @@ SolverShimaguni.prototype.fillCluster = function(p_x,p_y,p_indexRegion,p_value){
 	return listUpdatedSpaces;
 }
 
+//----------------
+// Undo things
+
+SolverShimaguni.prototype.undoList = function(p_list){
+	var solveEventToUndo;
+	while (p_list.length !=0){
+		solveEventToUndo = p_list.pop();
+		if (solveEventToUndo.kind == KIND.SYMBOL){
+			this.undoSymbolEvent(solveEventToUndo);
+		}
+		else{
+			this.undoValueEvent(solveEventToUndo);
+		}
+	}
+}
+
+/**
+CALLED OUTSIDE !
+*/
+//TODO annuler plus qu'un évènement...
+SolverShimaguni.prototype.undoToLastHypothesis = function(){
+	if (this.happenedEvents.length == 0)
+		return;	
+	var spaceEventsListToUndo;
+	//The last list of events to undo must come either from an hypothesis 
+	do{
+		spaceEventsListToUndo = this.happenedEvents.pop();
+		this.undoList(spaceEventsListToUndo.list);
+	}while(spaceEventsListToUndo.kind != EVENTLIST_KIND.HYPOTHESIS && this.happenedEvents.length > 0);
+}
+
+SolverShimaguni.prototype.undoSymbolEvent = function(p_event){
+	const region = this.regions[this.regionGrid[p_event.y][p_event.x]];
+	region.freshClusters = false;
+	this.answerGrid[p_event.y][p_event.x] = FILLING.UNDECIDED;
+	if (p_event.symbol == FILLING.YES){
+		region.YES--;
+		region.UNDEFs++;
+	}
+	else{
+		region.NOs--;
+		region.UNDEFs++;
+	}
+}
+
+SolverShimaguni.prototype.undoValueEvent = function(p_event){
+	const region = this.regions[p_event.indexRegion];
+	this.setPossibleValueTrue(p_event.indexRegion,p_event.valueToBan);
+	if (p_event.valueToBan < region.minVal){
+		region.minVal = p_event.valueToBan;
+	}
+	if (p_event.valueToBan > region.maxVal){
+		region.maxVal = p_event.valueToBan;
+	}
+}
+
+//----------------
+// Quick start
+
 /**
 Rushes the spaces as big as their size and bans values adjacent to the forced regions
 */
@@ -496,11 +570,121 @@ SolverShimaguni.prototype.quickStart = function(){
 	});
 }
 
+//----------------
+// Pass
+SolverShimaguni.prototype.passRegion = function(p_indexRegion){
+	if (p_indexRegion < 0){
+		debugHumanMisclick("Passing a negative region ");
+		return; //A click might be made onto a wrong space.
+	}
 
+	//Building a copy of an array of coordinates with only the unoccuped spaces that are unnocupied before the test of the function
+	var spacesToTestArray = [];
+	var space;
+	const region = this.regions[p_indexRegion];
+	region.spaces.forEach(space => {
+		if (this.answerGrid[space.y][space.x] == FILLING.UNDECIDED){
+			spacesToTestArray.push({x:space.x,y:space.y});
+		}
+	});
+	function closure(p_region){
+		return function(){
+			console.log("Undecided : "+p_region.UNDEFs);
+			return (p_region.UNDEFs == 0);
+		}
+	}
+	var answer = this.passSpaces(spacesToTestArray,0,closure(region));
+	if (answer.consistence == RESULT.SUCCESS && answer.eventsApplied.length > 0){
+		this.happenedEvents.push({kind:EVENTLIST_KIND.PASS,list:answer.eventsApplied});
+		answer.eventsApplied.forEach(solveEvent => {
+			this.apply(solveEvent);
+		});
+	}
+}
 
+SolverShimaguni.prototype.passSpaces = function(p_spacesToTest,p_indexFirstSpace,p_functionFinishedPass){
+	if (p_functionFinishedPass()){
+		return {consistence : RESULT.SUCCESS, eventsApplied: []}; 
+	}
+	var index = p_indexFirstSpace;
+	while (this.answerGrid[p_spacesToTest[index].y][p_spacesToTest[index].x] != FILLING.UNDECIDED)
+	{
+		console.log("To test : "+p_spacesToTest[index].x+" "+p_spacesToTest[index].y+" "+index+" "+p_spacesToTest.length);
+		index++;
+	}
+	//We MUST find an index where space is undecided.
+	var listO = null;
+	var listX = null;
+	var answerPut = this.tryToPutNew(p_spacesToTest[index].x,p_spacesToTest[index].y,FILLING.YES);
+	if (answerPut.consistence == RESULT.SUCCESS){
+		if (p_functionFinishedPass()){
+			listO = answerPut.eventsApplied;
+		}
+		else{
+			var answerPass = this.passSpaces(p_spacesToTest,index+1,p_functionFinishedPass);
+			if (answerPass.consistence == RESULT.SUCCESS){
+				listO = answerPass.eventsApplied.concat(answerPut.eventsApplied);
+			}
+		}
+		this.undoList(answerPut.eventsApplied.slice());
+	}
+	if ((listO == null) || (listO.length > 0)){
+		answerPut = this.tryToPutNew(p_spacesToTest[index].x,p_spacesToTest[index].y,FILLING.NO);
+		if (answerPut.consistence == RESULT.SUCCESS){
+			if (p_functionFinishedPass()){
+				listX = answerPut.eventsApplied;
+			}
+			else{
+				var answerPass = this.passSpaces(p_spacesToTest,index+1,p_functionFinishedPass);
+				if (answerPass.consistence == RESULT.SUCCESS){
+					listX = answerPass.eventsApplied.concat(answerPut.eventsApplied);
+				}
+			}
+			this.undoList(answerPut.eventsApplied.slice());
+		}
+	}
+	var list;
+	if (listO == null && listX == null){
+		return {consistence : RESULT.ERROR, eventsApplied: []};
+	}
+	if (listO == null){
+		return {consistence : RESULT.SUCCESS, eventsApplied: listX};
+	}
+	if (listX == null){
+		return {consistence : RESULT.SUCCESS, eventsApplied: listO};
+	}
+	return {consistence:RESULT.SUCCESS, eventsApplied:intersect(listO.sort(compareSpaceEvents),listX.sort(compareSpaceEvents))};
+}
 
+//----------------
+// To string
+/**
+CALLED OUTSIDE !
+*/
+SolverShimaguni.prototype.happenedEventsToString = function(p_onlyAssumed){
+	var ei,li;
+	var answer = "";
+	if (p_onlyAssumed){
+		this.happenedEvents.forEach(function(eventList){
+			if (eventList.kind == EVENTLIST_KIND.HYPOTHESIS){
+				answer+=eventList.list[0].toString()+"\n";				
+			}
+		});
+	}
+	else{
+		this.happenedEvents.forEach(function(eventList){
+			answer+=eventList.kind+"\n";
+			eventList.list.forEach(function(spaceEvent){
+				answer+=spaceEvent.toString()+"\n" 
+			});
+			answer+="--------\n";
+		});
+	}
+	return answer;
+}
 
-
+//----------------
+// It's arrayList time !
 
 //TODO en faire une classe, peut-être... (array : vaut true si un élément est présent. list : liste des index des éléments à true)
 function initializeArrayList(p_length){
@@ -518,7 +702,7 @@ function tryToAddArrayList(p_arrayList,p_index){
 	}
 }
 
-//TODO : mélanger index et données en forçant le champ "ir", on a vu mieux. Mais j'ai trouvé cette solution à l'arrache...
+//TODO : "index" is an injected field for data.
 function tryToAddArrayListData(p_arrayList,p_index,p_data){
 	if (!p_arrayList.array[p_index]){
 		var data = p_data;
