@@ -234,10 +234,10 @@ Drawer.prototype.getPixInnerSide = function(){
 /**
 If a click is done on a space, otherwise return null
 */
-Drawer.prototype.getClickSpace = function(event,p_canvas,p_editorCore){
+Drawer.prototype.getClickSpace = function(event,p_canvas,p_xLength,p_yLength){
     var indexX = Math.floor(this.getPixXWithinGrid(event,p_canvas)/this.pix.sideSpace); 
     var indexY = Math.floor(this.getPixYWithinGrid(event,p_canvas)/this.pix.sideSpace);
-	if (indexX < 0 || indexX >= p_editorCore.getXLength() || indexY < 0 || indexY >= p_editorCore.getYLength()){
+	if (indexX < 0 || indexX >= p_xLength || indexY < 0 || indexY >= p_yLength){
 		return null;		
 	}
 	return {x:indexX,y:indexY}

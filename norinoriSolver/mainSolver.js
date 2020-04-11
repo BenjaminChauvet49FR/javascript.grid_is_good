@@ -28,6 +28,13 @@ function drawCanvas(){
 	}
 }
 
+var components = {
+	textArea:document.getElementById("textarea_happened"),
+	checkBox : document.getElementById("checkbox_onlyAssumed"),
+};
+
+canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,components,solver,actionToDo)},false);
+
 setInterval(drawCanvas,30);
 
 var fieldName = document.getElementById("input_grid_name");

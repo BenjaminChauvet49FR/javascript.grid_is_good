@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    	<link rel="icon">
+		<link rel="icon" 
+		  type="image/png" 
+		  href="choco.png">
+        <title>Chocona solver !!!</title>
+		<link rel="stylesheet" type="text/css" href="../style.css">
+    </head>
+    <body>
+		<img id="img_chocona" src="choco.png" style="display:none">
+		<img id="img_x" src="x.png" style="display:none">
+		<canvas id="canevas" width="800" height="500">
+            Message pour les navigateurs ne supportant pas encore canvas.
+        </canvas></br>
+		
+		<input type="submit" id="submit_view_puzzle_list" value="Voir numéros puzzles Chocona"></input></br>
+		Grille à charger : <input type="text" id="input_grid_name" value="Chocona5"></input> 
+		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
+		Action à réaliser : <span id="text_canvas_action"></span></br>
+		<input type="submit" id="submit_fill_space" value="Remplir case"></input></br>
+		<input type="submit" id="submit_put_X" value="Placer X"></input></br>
+		
+        Dessiner données grille : <input type="checkbox" id="checkbox_drawIndications" value="false"></input></br>
+        Afficher seulement les éléments supposés : <input type="checkbox" id="checkbox_onlyAssumed" value="false"></input></br>
+		<textarea id="textarea_happened" style="width:100px; height:200px"></textarea> <!-- TODO ce sont des valeurs en dur-->
+		
+		<script src="../constants.js"></script>
+		<script src="../Drawer.js"></script>
+		<script src="../ChoconaEditor/saveLoad.js"></script>
+		<script src="../EditorCore.js"></script>
+		<script src="../WallGrid.js"></script>
+		<script src="../commonInput.js"></script>
+		<script src="constants.js"></script>
+		<script src="SpaceEvent.js"></script>
+		<script src="SolverChocona.js"></script>
+		<script src="drawing.js"></script>
+		<script src="inputSolver.js"></script>
+		<script src="mainSolver.js"></script>
+	</body>
+</html>

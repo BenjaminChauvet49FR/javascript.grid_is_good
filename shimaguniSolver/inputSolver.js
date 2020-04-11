@@ -1,15 +1,11 @@
 /**
  When you click on the canvas
 */
-function clickCanvas(event,p_canvas,p_drawer,p_textArea,p_solver,p_actionId) { //TODO rename this action ? Yeah, but what about loadAction ?
-    var rect = p_canvas.getBoundingClientRect();
-    var pixMouseXInGrid = event.clientX - p_drawer.pix.marginGrid.left - rect.left;
-    var pixMouseYInGrid = event.clientY - p_drawer.pix.marginGrid.up - rect.top;
-	var spaceIndexX = Math.floor(pixMouseXInGrid/p_drawer.pix.sideSpace); //index of the space, calculated from the (x,y) position
-	var spaceIndexY = Math.floor(pixMouseYInGrid/p_drawer.pix.sideSpace); //same - TODO maybe this should go to the Pix item ?
-    if ((spaceIndexX >= 0) && (spaceIndexY >= 0) && (spaceIndexY < p_solver.yLength) && (spaceIndexX < p_solver.xLength)){
-		clickSpaceAction(p_solver,spaceIndexX,spaceIndexY,p_actionId);
-		//p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
+function clickCanvas(event,p_canvas,p_drawer,p_components,p_solver,p_actionId) { //TODO rename this as an action ? But what about loadAction ? //TODO modifier la fonction qui a ce nom dans les autres solveurs.
+	var spaceClicked = drawer.getClickSpace(event,p_canvas,p_solver.xyLength,p_solver.xyLength);
+    if (spaceClicked != null){
+		clickSpaceAction(p_solver,spaceClicked.x,spaceClicked.y,p_actionId);
+		p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked);
 	}
 }
 

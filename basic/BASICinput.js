@@ -18,7 +18,7 @@ function clickCanvas(event,p_canvas,p_drawer,p_global){
 	if (wallOK){
 		return;
 	}
-	var indexSpaces = p_drawer.getClickSpace(event,p_canvas,p_global);
+	var indexSpaces = p_drawer.getClickSpace(event,p_canvas,p_global.getXLength(),p_global.getYLength());
 	if (indexSpaces != null){
 		p_global.switchState(indexSpaces.x,indexSpaces.y);
 	}

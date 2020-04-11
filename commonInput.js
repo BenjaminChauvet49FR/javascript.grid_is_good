@@ -46,7 +46,7 @@ function clickCanvas(event,p_canvas,p_drawer,p_core,p_modes){
 	if (wallOK){
 		return;
 	}
-	var indexSpaces = p_drawer.getClickSpace(event,p_canvas,p_core);
+	var indexSpaces = p_drawer.getClickSpace(event,p_canvas,p_core.getXLength(),p_core.getYLength());
 	if (indexSpaces != null && (typeof(clickSpaceAction) == 'function')){
 		clickSpaceAction(p_core,indexSpaces.x, indexSpaces.y, p_modes);
 	}

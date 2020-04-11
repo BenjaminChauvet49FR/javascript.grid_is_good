@@ -1,14 +1,10 @@
 /**
  When you click on the canvas
 */
-function clickCanvas(event,p_canvas,p_drawer,p_components,p_solver,p_actionId) { //TODO rename this action ? Yeah, but what about loadAction ?
-    var rect = p_canvas.getBoundingClientRect();
-    var pixMouseXInGrid = event.clientX - p_drawer.pix.marginGrid.left - rect.left;
-    var pixMouseYInGrid = event.clientY - p_drawer.pix.marginGrid.up - rect.top;
-	var spaceIndexX = Math.floor(pixMouseXInGrid/p_drawer.pix.sideSpace); //index of the space, calculated from the (x,y) position
-	var spaceIndexY = Math.floor(pixMouseYInGrid/p_drawer.pix.sideSpace); //same - TODO maybe this should go to the Pix item ?
-    if ((spaceIndexX >= 0) && (spaceIndexY >= 0) && (spaceIndexY < p_solver.xyLength) && (spaceIndexX < p_solver.xyLength)){
-		clickSpaceAction(p_solver,spaceIndexX,spaceIndexY,p_actionId);
+function clickCanvas(event,p_canvas,p_drawer,p_components,p_solver,p_actionId) { //TODO rename this as an action ? But what about loadAction ? //TODO modifier la fonction qui a ce nom dans les autres solveurs.
+	var spaceClicked = drawer.getClickSpace(event,p_canvas,p_solver.xyLength,p_solver.xyLength);
+    if (spaceClicked != null){
+		clickSpaceAction(p_solver,spaceClicked.x,spaceClicked.y,p_actionId);
 		p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked);
 	}
 }
@@ -59,12 +55,12 @@ solveAction = function (p_solver,p_components){
 Loads a walled grid from local storage and its region grid (cf. super-function), updates intelligence, updates canvas
 TODO doc
 */
-loadAction = function(p_canvas,p_drawer,p_solver,p_name,p_starSpan,p_textArea){
+loadAction = function(p_canvas,p_drawer,p_solver,p_name,p_components){  //TODO adapt loadAction to starSpan in other solvers
 	var loadedItem = stringToStarBattlePuzzle(localStorage.getItem("grid_is_good_"+p_name));
 	p_solver.construct(loadedItem.grid,loadedItem.starNumber);
 	adaptCanvas(p_canvas,p_drawer,p_solver);
-	p_starSpan.innerHTML = loadedItem.starNumber;
-	p_textArea.innerHTML = ""; //TODO manage true/false
+	p_components.starSpan.innerHTML = loadedItem.starNumber;
+	p_components.textArea.innerHTML = ""; //TODO manage true/false
 }
 
 undoAction = function(p_solver,p_components){

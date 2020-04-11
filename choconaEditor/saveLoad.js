@@ -22,7 +22,7 @@ function choconaPuzzleToString(p_wallArray,p_numbersArray){
 				}
 				gridChain+=valueSpace;
 			}
-			if (p_numbersArray[iy][ix] > 0){
+			if (p_numbersArray[iy][ix] >= 0){
 				numbersChain+=(ix+" "+iy+" "+p_numbersArray[iy][ix]+" ");
 			}
 		}
@@ -45,7 +45,7 @@ function stringToChoconaPuzzle(p_string){
 		numberGrid.push([]);
 		for(ix=0;ix<xLength;ix++){
 			wallGridAnswer[iy].push(charToSpace(fieldString.charAt(ix+iy*xLength)));
-			numberGrid[iy].push(0);
+			numberGrid[iy].push(-1);
 		}
 	}
 	var indexToken = 4;
