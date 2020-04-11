@@ -25,7 +25,7 @@ clickSpaceAction = function(p_editorCore,p_x, p_y, p_modes){
 
 function puzzleToString(p_editorCore,p_externalOptions){
 	p_editorCore.resetNumbers();
-	return shimaguniPuzzleToString(p_editorCore.getArray(),p_editorCore.getNumbers());
+	return shimaguniPuzzleToString(p_editorCore.getWallGrid(),p_editorCore.getNumberGrid());
 }
 
 function getLocalStorageName(p_detachedName){

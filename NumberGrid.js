@@ -1,7 +1,12 @@
-function NumberGrid(p_numberArray,p_xLength,p_yLength) {
+/*
+"Number grid : Grid that holds numbers ; it is dependent on a wallGrid and its corresponding regionGrid, because there should not be more than one number per region."
+*/
+
+function NumberGrid(p_numberArray,p_xLength,p_yLength,p_defaultNumber) { 
 	this.array = p_numberArray;
 	this.xLength = p_xLength;
 	this.yLength = p_yLength;
+	this.defaultNumber = p_defaultNumber;
 }
 
 function generateNumberArray(p_widthGrid, p_heightGrid){
@@ -9,10 +14,36 @@ function generateNumberArray(p_widthGrid, p_heightGrid){
 	for(var iy=0;iy<p_heightGrid;iy++){
 		answer.push([]);
 		for(var ix=0;ix<p_widthGrid;ix++){
-			answer[iy].push(DEFAULT_NUMBER);
+			answer[iy].push(this.defaultNumber);
 		}
 	}
 	return answer;
+}
+
+/*
+Aligns number according to a region grid in a way that exactly one number is contained in each region that has one.
+Preconditions : 
+-The region grid MUST be standardized (in reading order of first space in reading order of regions.)
+-There shouldn't be more than one number other than p_defaultNumber (0 or -1 for instance) in each region. Some regions may contain 0 such number.
+Post condition : 
+*/
+NumberGrid.prototype.arrangeNumbers = function(p_regionGrid){
+	var firstSpacesX = [];
+	var firstSpacesY = [];
+	var ir;
+	for(var iy=0;iy<p_heightGrid;iy++){
+		for(var ix=0;ix<p_widthGrid;ix++){
+			ir = p_regionGrid[iy][ix];
+			if (ir == firstSpacesX.length){
+				this.firstSpacesX.push(ix);
+				this.firstSpacesY.push(iy);
+			}
+			if (this.array[iy][ix] != this.defaultNumber){
+				this.array[firstSpaceY[ir]][firstSpaceX[ir]] = this.array[iy][ix];
+				this.array[iy][ix]= this.defaultNumber;
+			}
+		}
+	}
 }
 
 NumberGrid.prototype.getNumber = function(p_x,p_y){return this.array[p_y][p_x]}
@@ -99,4 +130,17 @@ NumberGrid.prototype.resizeGrid = function(p_xLength,p_yLength){
 	this.array = newNumberArray;
 	this.xLength = p_xLength;
 	this.yLength = p_yLength;
+}
+
+//---------------------
+
+NumberGrid.prototype.toString = function(){
+	for(var iy = 0;iy < this.yLength;iy++){
+		for(var ix = 0;ix < this.xLength;ix++){
+			if (this.array[iy][ix] > 0){
+				numbersChain+=(ix+" "+iy+" "+this.array[iy][ix]+" ");
+			}
+		}
+	}
+	return numbersChain;
 }

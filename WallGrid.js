@@ -260,3 +260,35 @@ const CLOSED = 1;
 function switchedState(p_state){
 	return 1-p_state;
 }
+
+//-----------
+
+function toParsableString(p_parameters){
+	var gridChain;
+	if (p_parameters.isSquare && this.xLength == this.yLength) {
+		gridChain = this.xLength+" ";
+	}
+	else {
+		gridChain = this.xLength+" "+this.yLength+" ";
+	}
+	var numbersChain = "Numbers ";
+	var valueSpace;
+	for(var iy = 0;iy < this.yLength;iy++){
+		for(var ix = 0;ix < this.xLength;ix++){
+			if (this.array[iy][ix].state == CLOSED){
+				gridChain+='X';
+			}
+			else{
+				valueSpace=0;
+				if (this.array[iy][ix].wallR == CLOSED){
+					valueSpace+=1;
+				}
+				if (this.array[iy][ix].wallD == CLOSED){
+					valueSpace+=2;
+				}
+				gridChain+=valueSpace;
+			}
+		}
+	}
+	return gridChain;
+}

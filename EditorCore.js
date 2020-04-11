@@ -52,6 +52,16 @@ EditorCore.prototype.getPaths = function(){
 	return this.pathGrid.array;
 }
 
+EditorCore.prototype.getWallGrid = function(){ //TODO cette fonction gagnera à être changée de nom !
+	return this.wallGrid;
+}
+EditorCore.prototype.getNumberGrid = function(){
+	return this.numberGrid;
+}
+EditorCore.prototype.getPathGrid = function(){
+	return this.pathGrid;
+}
+
 EditorCore.prototype.getSelection = function(p_x,p_y){return this.selectedGrid[p_y][p_x];}
 EditorCore.prototype.getInputNumber = function(){return this.inputNumber;}
 EditorCore.prototype.setInputNumber = function(p_inputNumber){this.inputNumber = p_inputNumber}
@@ -199,7 +209,7 @@ EditorCore.prototype.clearWallsAround = function(p_x,p_y){
 }
 
 EditorCore.prototype.resetNumbers = function(){
-	var regionGrid = this.wallGrid.toRegionGrid();
+	/*var regionGrid = this.wallGrid.toRegionGrid();
 	//Le code est copié-collé d'un solveur
 	var lastRegionNumber = 0;
 	for(iy = 0;iy < this.getYLength();iy++){
@@ -234,5 +244,6 @@ EditorCore.prototype.resetNumbers = function(){
 		if (numbersFoundInRegion[i] > 0){
 			this.setNumber(firstX[i],firstY[i],numbersFoundInRegion[i]);
 		}
-	}
+	}*/
+	this.numberGrid.arrangeNumbers();
 }

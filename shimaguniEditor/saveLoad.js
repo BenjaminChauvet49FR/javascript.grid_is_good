@@ -1,8 +1,9 @@
 /**
 Cf. StarBattle puzzles I guess
 */
-function shimaguniPuzzleToString(p_wallArray,p_numbersArray){
-	var yLength = p_wallArray.length; 
+function shimaguniPuzzleToString(p_wallGrid,p_numberGrid){
+	return p_wallGrid.toString()+" "+p_numberGrid.toString();
+	/*var yLength = p_wallArray.length; 
 	var xLength = p_wallArray[0].length; 
 	var gridChain = xLength+" "+yLength+" ";
 	var numbersChain = "Numbers ";
@@ -26,7 +27,7 @@ function shimaguniPuzzleToString(p_wallArray,p_numbersArray){
 				numbersChain+=(ix+" "+iy+" "+p_numbersArray[iy][ix]+" ");
 			}
 		}
-	return gridChain+" "+numbersChain;
+	return gridChain+" "+numbersChain;*/
 	//NOTE : there is a final "" after the last space of numbersChain when split by " ".
 }
 

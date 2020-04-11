@@ -87,7 +87,7 @@ SolverChocona.prototype.listInfosByRegion = function(p_numberGrid){
 	for(iy = 0;iy < this.yLength;iy++){
 		for(ix = 0;ix < this.xLength;ix++){
 			ir = this.regionGrid[iy][ix];
-			this.spacesByRegion[ir].push({x:ix,y:iy});
+			this.spacesByRegion[ir].push({x:ix,y:iy});		
 			if (p_numberGrid != null){
 				number = p_numberGrid[iy][ix];
 				if (number > 0){ 

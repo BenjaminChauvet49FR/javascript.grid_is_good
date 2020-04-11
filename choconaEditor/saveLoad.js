@@ -1,37 +1,12 @@
 /**
 Cf. StarBattle puzzles I guess
 */
-function choconaPuzzleToString(p_wallArray,p_numbersArray){
-	var yLength = p_wallArray.length; 
-	var xLength = p_wallArray[0].length; 
-	var gridChain = xLength+" "+yLength+" ";
-	var numbersChain = "Numbers ";
-	var valueSpace;
-	for(var iy = 0;iy < yLength;iy++)
-		for(var ix = 0;ix < xLength;ix++){
-			if (p_wallArray[iy][ix].state == CLOSED){
-				gridChain+='X';
-			}
-			else{
-				valueSpace=0;
-				if (p_wallArray[iy][ix].wallR == CLOSED){
-					valueSpace+=1;
-				}
-				if (p_wallArray[iy][ix].wallD == CLOSED){
-					valueSpace+=2;
-				}
-				gridChain+=valueSpace;
-			}
-			if (p_numbersArray[iy][ix] >= 0){
-				numbersChain+=(ix+" "+iy+" "+p_numbersArray[iy][ix]+" ");
-			}
-		}
-	return gridChain+" "+numbersChain;
-	//NOTE : there is a final "" after the last space of numbersChain when split by " ".
+function choconaPuzzleToString(p_wallGrid,p_numberGrid){
+	return p_wallGrid.toString()+" "+p_numberGrid.toString();
 }
 
 /**
-Returns elements for the SB puzzle (grid + number of stars)
+Returns elements for the puzzle (wallGrid + gridNumber)
 */
 function stringToChoconaPuzzle(p_string){
 	var stringArray = p_string.split(' ');
