@@ -295,10 +295,20 @@ function wallArrayToString(p_wallGrid,p_parameters){
 /**
 Transforms a list of strings (tokens) into a wall array
 */
-function tokensToWallArray(p_tokens){
-	var xLength = p_tokens[0];
-	var yLength = p_tokens[1];
-	var fieldString = p_tokens[2];
+function tokensToWallArray(p_tokens, p_parameters){
+	var isSquare = (p_parameters && p_parameters.isSquare) ? true : false;
+	var xLength;
+	var yLength;
+	var fieldString;
+	xLength = p_tokens[0];
+	if (isSquare){
+		yLength = xLength;
+		fieldString = p_tokens[1];
+	}
+	else{
+		yLength = p_tokens[1];
+		fieldString = p_tokens[2];
+	}
 	var answer = [];
 	for(iy=0;iy<yLength;iy++){
 		answer.push([]);
