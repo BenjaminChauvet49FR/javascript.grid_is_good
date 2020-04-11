@@ -6,7 +6,7 @@ function EditorCore(p_xLength,p_yLength) {
 EditorCore.prototype.restartGrid = function(p_xLength,p_yLength){
 	this.setupFromWallArray(generateWallArray(p_xLength,p_yLength));
 	if(this.hasNumberGrid()){
-		this.setupNumberGrid(generateNumberArray(p_xLength,p_yLength));
+		this.setupNumberGrid(generateNumberArray(p_xLength,p_yLength, this.defaultNumber));
 	}
 	if(this.hasPathGrid()){
 		this.setupPathGrid(generatePathArray(p_xLength,p_yLength));

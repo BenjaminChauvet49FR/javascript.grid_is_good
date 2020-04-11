@@ -263,32 +263,62 @@ function switchedState(p_state){
 
 //-----------
 
-function toParsableString(p_parameters){
-	var gridChain;
-	if (p_parameters.isSquare && this.xLength == this.yLength) {
-		gridChain = this.xLength+" ";
+function wallArrayToString(p_wallGrid,p_parameters){
+	var xLength = p_wallGrid[0].length;
+	var yLength = p_wallGrid.length;
+	var answer;
+	if (p_parameters && p_parameters.isSquare){
+		answer = xLength+" ";
+	} else {
+		answer = xLength+" "+yLength+" ";
 	}
-	else {
-		gridChain = this.xLength+" "+this.yLength+" ";
-	}
-	var numbersChain = "Numbers ";
 	var valueSpace;
-	for(var iy = 0;iy < this.yLength;iy++){
-		for(var ix = 0;ix < this.xLength;ix++){
-			if (this.array[iy][ix].state == CLOSED){
-				gridChain+='X';
+	for(var iy = 0;iy < yLength;iy++)
+		for(var ix = 0;ix < xLength;ix++){
+			if (p_wallGrid[iy][ix].state == CLOSED){
+				answer+='X';
 			}
 			else{
 				valueSpace=0;
-				if (this.array[iy][ix].wallR == CLOSED){
+				if (p_wallGrid[iy][ix].wallR == CLOSED){
 					valueSpace+=1;
 				}
-				if (this.array[iy][ix].wallD == CLOSED){
+				if (p_wallGrid[iy][ix].wallD == CLOSED){
 					valueSpace+=2;
 				}
-				gridChain+=valueSpace;
+				answer+=valueSpace;
 			}
 		}
+	return answer;
+}
+
+/**
+Transforms a list of strings (tokens) into a wall array
+*/
+function tokensToWallArray(p_tokens){
+	var xLength = p_tokens[0];
+	var yLength = p_tokens[1];
+	var fieldString = p_tokens[2];
+	var answer = [];
+	for(iy=0;iy<yLength;iy++){
+		answer.push([]);
+		for(ix=0;ix<xLength;ix++){
+			answer[iy].push(charToSpace(fieldString.charAt(ix+iy*xLength)));
+		}
 	}
-	return gridChain;
+	return answer;
+}
+
+/**
+Returns the space that matches a char in unparsing function ('0123' => sides down-right = open/closed)
+p_char : the desired char
+*/
+function charToSpace(p_char){
+	switch(p_char){
+		case('0'): return {state:OPEN,wallD:OPEN,wallR:OPEN};break;
+		case('1'): return {state:OPEN,wallD:OPEN,wallR:CLOSED};break;
+		case('2'): return {state:OPEN,wallD:CLOSED,wallR:OPEN};break;
+		case('3'): return {state:OPEN,wallD:CLOSED,wallR:CLOSED};break;
+		default : return {state:CLOSED,wallD:OPEN,wallR:OPEN};break;
+	}
 }

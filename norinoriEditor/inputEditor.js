@@ -18,15 +18,15 @@ function clickSpaceAction(p_editorCore,p_x, p_y, p_modes){
 }
 
 function puzzleToString(p_editorCore,p_externalOptions){
-	return norinoriPuzzleToString(p_editorCore.getArray());
+	return wallArrayToString(p_editorCore.getArray());
+}
+
+function stringToPuzzle(p_string){
+	return {grid:tokensToWallArray(p_string.split(' '))};
 }
 
 function getLocalStorageName(p_detachedName){
 	return "grid_is_good_"+p_detachedName;
-}
-
-function stringToPuzzle(p_string){
-	return stringToNorinoriPuzzle(p_string);
 }
 
 function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem){

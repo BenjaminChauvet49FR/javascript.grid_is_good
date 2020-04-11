@@ -2,14 +2,14 @@
 Cf. StarBattle puzzles I guess
 */
 function choconaPuzzleToString(p_wallGrid,p_numberGrid){
-	return p_wallGrid.toString()+" "+p_numberGrid.toString();
+	return p_wallGrid.toParsableString()+" "+p_numberGrid.toParsableString();
 }
 
 /**
 Returns elements for the puzzle (wallGrid + gridNumber)
 */
 function stringToChoconaPuzzle(p_string){
-	var stringArray = p_string.split(' ');
+	/*var stringArray = p_string.split(' ');
 	var xLength = stringArray[0];
 	var yLength = stringArray[1];
 	var fieldString = stringArray[2];
@@ -28,7 +28,8 @@ function stringToChoconaPuzzle(p_string){
 		numberGrid[parseInt(stringArray[indexToken+1],10)]
 					[parseInt(stringArray[indexToken],10)] = parseInt(stringArray[indexToken+2],10);
 		indexToken+=3;
-	}
+	}*/
+	
 	return {grid:wallGridAnswer,gridNumber:numberGrid};
 }
 

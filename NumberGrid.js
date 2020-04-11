@@ -9,12 +9,12 @@ function NumberGrid(p_numberArray,p_xLength,p_yLength,p_defaultNumber) {
 	this.defaultNumber = p_defaultNumber;
 }
 
-function generateNumberArray(p_widthGrid, p_heightGrid){
+function generateNumberArray(p_widthGrid, p_heightGrid, p_defaultNumber){
 	var answer = [];
 	for(var iy=0;iy<p_heightGrid;iy++){
 		answer.push([]);
 		for(var ix=0;ix<p_widthGrid;ix++){
-			answer[iy].push(this.defaultNumber);
+			answer[iy].push(p_defaultNumber);
 		}
 	}
 	return answer;
@@ -134,13 +134,26 @@ NumberGrid.prototype.resizeGrid = function(p_xLength,p_yLength){
 
 //---------------------
 
-NumberGrid.prototype.toString = function(){
-	for(var iy = 0;iy < this.yLength;iy++){
-		for(var ix = 0;ix < this.xLength;ix++){
-			if (this.array[iy][ix] > 0){
-				numbersChain+=(ix+" "+iy+" "+this.array[iy][ix]+" ");
+function numberArrayToString(p_numberArray, p_defaultValue){
+	xLength = p_numberArray[0].length;
+	yLength = p_numberArray.length;
+	var numbersChain = "";
+	for(var iy = 0;iy < yLength;iy++){
+		for(var ix = 0;ix < xLength;ix++){
+			if (p_numberArray[iy][ix] != p_defaultValue){
+				numbersChain+=(ix+" "+iy+" "+p_numberArray[iy][ix]+" ");
 			}
 		}
 	}
 	return numbersChain;
+}
+
+function tokensToNumberArray(p_tokens,p_xLength,p_yLength,p_defaultValue){
+	var p_stringArray = generateNumberArray(p_xLength,p_yLength,p_defaultValue);
+	var indexToken = 0;
+	while (indexToken < p_tokens.length-2) {
+		p_tokens[parseInt(p_tokens[indexToken+1],10)]
+					[parseInt(p_tokens[indexToken],10)] = parseInt(p_tokens[indexToken+2],10);
+		indexToken+=3;
+	}
 }

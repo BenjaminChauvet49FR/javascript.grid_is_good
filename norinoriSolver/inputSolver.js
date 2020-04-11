@@ -52,8 +52,8 @@ Loads a walled grid from local storage and its region grid (cf. super-function),
 TODO doc
 */
 loadAction = function(p_canvas,p_drawer,p_solver,p_name,p_textArea){ //TODO dans le cadre d'une mutualisation des actions (loadAction, saveAction ...), transformer textArea en components... ?
-	var loadedItem = stringToNorinoriPuzzle(localStorage.getItem("grid_is_good_"+p_name));
-	p_solver.construct(loadedItem.grid);
+	var loadedItem = tokensToWallArray(localStorage.getItem("grid_is_good_"+p_name).split(' ')); 	
+	p_solver.construct(loadedItem);
 	adaptCanvasAndGrid(p_canvas,p_drawer,p_solver);
 	p_textArea.innerHTML = ""; //TODO manage true/false
 }
