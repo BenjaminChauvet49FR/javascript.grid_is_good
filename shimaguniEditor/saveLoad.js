@@ -1,42 +1,14 @@
 /**
-Cf. StarBattle puzzles I guess
+This kinda matches SB puzzles
 */
-function shimaguniPuzzleToString(p_wallGrid,p_numberGrid){
-	return p_wallGrid.toString()+" "+p_numberGrid.toString();
-	/*var yLength = p_wallArray.length; 
-	var xLength = p_wallArray[0].length; 
-	var gridChain = xLength+" "+yLength+" ";
-	var numbersChain = "Numbers ";
-	var valueSpace;
-	for(var iy = 0;iy < yLength;iy++)
-		for(var ix = 0;ix < xLength;ix++){
-			if (p_wallArray[iy][ix].state == CLOSED){
-				gridChain+='X';
-			}
-			else{
-				valueSpace=0;
-				if (p_wallArray[iy][ix].wallR == CLOSED){
-					valueSpace+=1;
-				}
-				if (p_wallArray[iy][ix].wallD == CLOSED){
-					valueSpace+=2;
-				}
-				gridChain+=valueSpace;
-			}
-			if (p_numbersArray[iy][ix] > 0){
-				numbersChain+=(ix+" "+iy+" "+p_numbersArray[iy][ix]+" ");
-			}
-		}
-	return gridChain+" "+numbersChain;*/
-	//NOTE : there is a final "" after the last space of numbersChain when split by " ".
+
+function shimaguniPuzzleToString(p_wallArray,p_numbersArray){
+	return wallArrayToString(p_wallArray)+" "+numberArrayToString(p_numbersArray,0);
 }
 
-/**
-Returns elements for the SB puzzle (grid + number of stars)
-*/
 function stringToShimaguniPuzzle(p_string){
 	var stringArray = p_string.split(' ');
-	var xLength = stringArray[0];
+	/*var xLength = stringArray[0];
 	var yLength = stringArray[1];
 	var fieldString = stringArray[2];
 	var wallGridAnswer = [];
@@ -48,13 +20,18 @@ function stringToShimaguniPuzzle(p_string){
 			wallGridAnswer[iy].push(charToSpace(fieldString.charAt(ix+iy*xLength)));
 			numberGrid[iy].push(0);
 		}
-	}
-	var indexToken = 4;
+	}*/
+	var wallGridAnswer = tokensToWallArray(stringArray.slice(0,3));
+	var xLength = stringArray[0];
+	var yLength = stringArray[1];
+	var numberGrid = tokensToNumberArray(stringArray.slice(3),xLength,yLength,0);
+	
+	/*var indexToken = 4;
 	while (indexToken < stringArray.length-2){
 		numberGrid[parseInt(stringArray[indexToken+1],10)]
 					[parseInt(stringArray[indexToken],10)] = parseInt(stringArray[indexToken+2],10);
 		indexToken+=3;
-	}
+	}*/
 	return {grid:wallGridAnswer,gridNumber:numberGrid};
 }
 

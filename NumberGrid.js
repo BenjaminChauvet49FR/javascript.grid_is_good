@@ -6,7 +6,6 @@ function NumberGrid(p_numberArray,p_xLength,p_yLength,p_defaultNumber) {
 	this.array = p_numberArray;
 	this.xLength = p_xLength;
 	this.yLength = p_yLength;
-	this.defaultNumber = p_defaultNumber;
 }
 
 function generateNumberArray(p_widthGrid, p_heightGrid, p_defaultNumber){
@@ -14,7 +13,7 @@ function generateNumberArray(p_widthGrid, p_heightGrid, p_defaultNumber){
 	for(var iy=0;iy<p_heightGrid;iy++){
 		answer.push([]);
 		for(var ix=0;ix<p_widthGrid;ix++){
-			answer[iy].push(p_defaultNumber);
+			answer[iy].push(null);
 		}
 	}
 	return answer;
@@ -24,23 +23,28 @@ function generateNumberArray(p_widthGrid, p_heightGrid, p_defaultNumber){
 Aligns number according to a region grid in a way that exactly one number is contained in each region that has one.
 Preconditions : 
 -The region grid MUST be standardized (in reading order of first space in reading order of regions.)
--There shouldn't be more than one number other than p_defaultNumber (0 or -1 for instance) in each region. Some regions may contain 0 such number.
+-There shouldn't be more than one number in each region. Some regions may contain 0 such number.
 Post condition : 
+-Each region contains either zero number or one, and that number is in the upper and then lefter space of the region.
 */
 NumberGrid.prototype.arrangeNumbers = function(p_regionGrid){
 	var firstSpacesX = [];
 	var firstSpacesY = [];
-	var ir;
-	for(var iy=0;iy<p_heightGrid;iy++){
-		for(var ix=0;ix<p_widthGrid;ix++){
+	var ir,firstX,firstY;
+	for(var iy=0;iy<this.yLength;iy++){
+		for(var ix=0;ix<this.xLength;ix++){
 			ir = p_regionGrid[iy][ix];
 			if (ir == firstSpacesX.length){
-				this.firstSpacesX.push(ix);
-				this.firstSpacesY.push(iy);
+				firstSpacesX.push(ix);
+				firstSpacesY.push(iy);
 			}
 			if (this.array[iy][ix] != this.defaultNumber){
-				this.array[firstSpaceY[ir]][firstSpaceX[ir]] = this.array[iy][ix];
-				this.array[iy][ix]= this.defaultNumber;
+				firstX = firstSpacesX[ir];
+				firstY = firstSpacesY[ir];
+				if (firstX != ix || firstY != iy){				
+					this.array[firstY][firstX] = this.array[iy][ix];
+					this.array[iy][ix]= this.defaultNumber;	
+				}
 			}
 		}
 	}
@@ -48,6 +52,7 @@ NumberGrid.prototype.arrangeNumbers = function(p_regionGrid){
 
 NumberGrid.prototype.getNumber = function(p_x,p_y){return this.array[p_y][p_x]}
 NumberGrid.prototype.setNumber = function(p_x,p_y,p_number){this.array[p_y][p_x] = p_number}
+NumberGrid.prototype.clearNumber = function(p_x,p_y){this.array[p_y][p_x] = null}
 const DEFAULT_NUMBER = 0; //TODO c'est le nombre par défaut. Est-ce ce que nous voulons ?
 
 NumberGrid.prototype.rotateCWGrid = function(){
@@ -140,7 +145,7 @@ function numberArrayToString(p_numberArray, p_defaultValue){
 	var numbersChain = "";
 	for(var iy = 0;iy < yLength;iy++){
 		for(var ix = 0;ix < xLength;ix++){
-			if (p_numberArray[iy][ix] != p_defaultValue){
+			if (p_numberArray[iy][ix] != null){
 				numbersChain+=(ix+" "+iy+" "+p_numberArray[iy][ix]+" ");
 			}
 		}
@@ -149,11 +154,16 @@ function numberArrayToString(p_numberArray, p_defaultValue){
 }
 
 function tokensToNumberArray(p_tokens,p_xLength,p_yLength,p_defaultValue){
-	var p_stringArray = generateNumberArray(p_xLength,p_yLength,p_defaultValue);
+	var p_array = generateNumberArray(p_xLength,p_yLength,null);
 	var indexToken = 0;
+	//TODO : HOTFIX de compatibilité avec l'ancien format
+	if (p_tokens[0].startsWith("Numbers")){
+		indexToken++;
+	}
 	while (indexToken < p_tokens.length-2) {
-		p_tokens[parseInt(p_tokens[indexToken+1],10)]
+		p_array[parseInt(p_tokens[indexToken+1],10)]
 					[parseInt(p_tokens[indexToken],10)] = parseInt(p_tokens[indexToken+2],10);
 		indexToken+=3;
 	}
+	return p_array;
 }

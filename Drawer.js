@@ -146,9 +146,11 @@ Drawer.prototype.drawNumbersGrid = function(p_context,p_wallGrid,p_numberGrid, p
 	p_context.textBaseline = 'top';
 	p_context.font = this.getPixInnerSide()/2+"px Arial";
 	p_context.fillStyle = this.colors.standardWrite;
-	for(var iy=0;iy<p_yLength;iy++){
-		for(var ix=0;ix<p_xLength;ix++){
-			if (p_numberGrid.getNumber(ix,iy)){
+	var ix,iy,number;
+	for(iy=0;iy<p_yLength;iy++){
+		for(ix=0;ix<p_xLength;ix++){
+			number = p_numberGrid.getNumber(ix,iy);
+			if (number != null){
 				pixLeft = this.getPixInnerXLeft(ix)+2;
 				pixDown = this.getPixInnerYUp(iy)+2;
 				if (p_wallGrid && p_wallGrid.getState(ix,iy) == CLOSED){
@@ -156,7 +158,7 @@ Drawer.prototype.drawNumbersGrid = function(p_context,p_wallGrid,p_numberGrid, p
 				} else{
 					p_context.fillStyle = this.colors.standardWrite;
 				}
-				p_context.fillText(p_numberGrid.getNumber(ix,iy),pixLeft,pixDown);
+				p_context.fillText(number,pixLeft,pixDown);
 			}
 		}
 	}

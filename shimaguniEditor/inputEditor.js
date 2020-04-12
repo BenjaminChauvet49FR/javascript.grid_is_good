@@ -10,22 +10,22 @@ clickSpaceAction = function(p_editorCore,p_x, p_y, p_modes){
 		p_editorCore.selectSpace(p_x,p_y);
 	} else if (mode.id == MODE_ERASE.id){
 		p_editorCore.clearWallsAround(p_x,p_y);
-		p_editorCore.setNumber(p_x,p_y,0);
+		p_editorCore.clearNumber(p_x,p_y);
 	} else if (mode.id == MODE_NUMBER.id) {
 		if (p_editorCore.getNumber(p_x,p_y) != p_editorCore.getInputNumber()){
 			p_editorCore.setNumber(p_x,p_y,p_editorCore.getInputNumber());
 		}else{
-			p_editorCore.setNumber(p_x,p_y,0);
+			p_editorCore.clearNumber(p_x,p_y);
 		}
 	}else {
 		p_editorCore.switchState(p_x,p_y);
-		p_editorCore.setNumber(p_x,p_y,0);
+		p_editorCore.clearNumber(p_x,p_y);
 	}
 }
 
 function puzzleToString(p_editorCore,p_externalOptions){
 	p_editorCore.resetNumbers();
-	return shimaguniPuzzleToString(p_editorCore.getWallGrid(),p_editorCore.getNumberGrid());
+	return shimaguniPuzzleToString(p_editorCore.getArray(),p_editorCore.getNumbers());
 }
 
 function getLocalStorageName(p_detachedName){

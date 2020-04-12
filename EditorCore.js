@@ -6,7 +6,7 @@ function EditorCore(p_xLength,p_yLength) {
 EditorCore.prototype.restartGrid = function(p_xLength,p_yLength){
 	this.setupFromWallArray(generateWallArray(p_xLength,p_yLength));
 	if(this.hasNumberGrid()){
-		this.setupNumberGrid(generateNumberArray(p_xLength,p_yLength, this.defaultNumber));
+		this.setupNumberGrid(generateNumberArray(p_xLength,p_yLength, -1)); //TODO ticking bomb ! Un "numéro par défaut" à -1, j'aime pas trop ça.
 	}
 	if(this.hasPathGrid()){
 		this.setupPathGrid(generatePathArray(p_xLength,p_yLength));
@@ -34,8 +34,8 @@ EditorCore.prototype.hasPathGrid = function(){
 	return (typeof(PathGrid) == 'function');
 }
 
-EditorCore.prototype.setupNumberGrid = function(p_numberArray){
-	this.numberGrid = new NumberGrid(p_numberArray,p_numberArray[0].length,p_numberArray.length);
+EditorCore.prototype.setupNumberGrid = function(p_numberArray,p_defaultNumber){
+	this.numberGrid = new NumberGrid(p_numberArray,p_numberArray[0].length,p_numberArray.length,p_defaultNumber);
 }
 
 EditorCore.prototype.setupPathGrid = function(p_pathArray){
@@ -78,6 +78,7 @@ EditorCore.prototype.switchState = function(p_x,p_y){this.wallGrid.switchState(p
 
 EditorCore.prototype.getNumber = function(p_x,p_y,p_number){return this.numberGrid.getNumber(p_x,p_y,p_number);}
 EditorCore.prototype.setNumber = function(p_x,p_y,p_number){this.numberGrid.setNumber(p_x,p_y,p_number);}
+EditorCore.prototype.clearNumber = function(p_x,p_y){this.numberGrid.clearNumber(p_x,p_y);}
 
 EditorCore.prototype.getPathR = function(p_x,p_y){return this.pathGrid.getPathR(p_x,p_y);}
 EditorCore.prototype.getPathD = function(p_x,p_y){return this.pathGrid.getPathD(p_x,p_y);}
@@ -245,5 +246,5 @@ EditorCore.prototype.resetNumbers = function(){
 			this.setNumber(firstX[i],firstY[i],numbersFoundInRegion[i]);
 		}
 	}*/
-	this.numberGrid.arrangeNumbers();
+	this.numberGrid.arrangeNumbers(this.wallGrid.toRegionGrid());
 }
