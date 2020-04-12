@@ -1,5 +1,4 @@
 var drawer = new Drawer();
-drawer.setMarginGrid(32,32,32,32);
 var solver = new SolverChocona(generateWallArray(1,1),1);
 var canevas = document.getElementById("canevas");
 var	context = canevas.getContext("2d");

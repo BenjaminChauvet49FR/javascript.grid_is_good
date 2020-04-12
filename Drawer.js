@@ -1,4 +1,5 @@
 function Drawer(){
+	
 	this.pix = {
 		sideSpace : 30,
 		borderSpace : 2, //Inner border
@@ -34,7 +35,7 @@ function Drawer(){
 /**
 Sets up the margin grid. Should only be set up at the beginning of the string. 
 */
-Drawer.prototype.setMarginGrid = function(p_left,p_up,p_right,p_down){ //TODO et si c'était amené à changer... ?
+Drawer.prototype.setMarginGrid = function(p_left,p_up,p_right,p_down){ //TODO inutile pour l'instant ; deviendra utile lorsqu'on réglera les ticks on/off... ? 
 	this.pix.marginGrid.left = p_left;
 	this.pix.marginGrid.up = p_up;
 	this.pix.marginGrid.right = p_right;

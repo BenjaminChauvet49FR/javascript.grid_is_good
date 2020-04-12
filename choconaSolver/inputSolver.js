@@ -69,13 +69,6 @@ quickStartAction = function(p_solver,p_textArea){
 }
 
 function adaptCanvasAndGrid(p_canvas, p_drawer,p_solver){
-	//Respects dimension of 800x512
-	//TODO Constants can be written somewhere else !
-	p_drawer.pix.sideSpace = Math.min(32,Math.min(Math.floor(800/p_solver.xLength),Math.floor(512/p_solver.yLength)));
-	p_drawer.pix.borderSpace = Math.max(1,Math.floor(p_drawer.pix.sideSpace/10));
-	p_drawer.setMarginGrid(0,0,0,0);
-	//TODO should be factorized with other editors !
-	p_canvas.width = p_solver.xLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.left+p_drawer.pix.marginGrid.right;
-	p_canvas.height = p_solver.yLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.up+p_drawer.pix.marginGrid.down;
+	//TODO copier sur ce qui existe déjà !
 }
 

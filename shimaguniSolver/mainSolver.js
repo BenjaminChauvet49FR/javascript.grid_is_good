@@ -1,5 +1,4 @@
 var drawer = new Drawer();
-drawer.setMarginGrid(0,0,0,0);
 var solver = new SolverShimaguni(generateWallArray(1,1),generateNumberArray(1,1,0));
 //TODO (dummy grid problem)
 var canevasInteraction = document.getElementById("canevas");

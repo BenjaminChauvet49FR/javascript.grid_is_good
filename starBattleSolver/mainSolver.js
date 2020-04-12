@@ -1,5 +1,4 @@
 var drawer = new Drawer();
-drawer.setMarginGrid(32,32,32,32);
 var solver = new SolverStarBattle(generateWallArray(1,1),1);
 //TODO (of course the grid (1,1) is a dummy grid, but at least it has as much rows as columns as regions
 var canevasInteraction = document.getElementById("canevas");
