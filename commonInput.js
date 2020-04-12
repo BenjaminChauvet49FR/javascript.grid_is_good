@@ -98,17 +98,7 @@ p_pix : the Pix item to calculate coordinates
 p_core : the Global item the canvas should be adapted to
 */
 function adaptCanvasAndGrid(p_canvas, p_drawer,p_core){
-	//Respects dimension of 800x512
-	//TODO Constants can be written somewhere else !
-	/*p_drawer.pix.sideSpace = Math.min(32,Math.min(Math.floor(800/p_core.getXLength()),Math.floor(512/p_core.getYLength())));
-	p_drawer.pix.borderSpace = Math.max(1,Math.floor(p_drawer.pix.sideSpace/10));*/ //TODO ça ça doit être supprimé
 	p_drawer.adaptCanvasDimensions(p_canvas,{xLength:p_core.getXLength(),yLength:p_core.getYLength()});
-	/*if(p_canvas.width > p_canvas.height){ //TODO ça c'est pour la science
-		p_canvas.height = p_canvas.width;
-	}
-	else{
-		p_canvas.width = p_canvas.height;
-	}*/
 }
 
 //--------------------

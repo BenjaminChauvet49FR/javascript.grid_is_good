@@ -40,7 +40,7 @@ putActionElementClick("submit_clear_selection",function(event){actionUnselectAll
 // Mode of selection 
 
 var textMode = document.getElementById("span_mode"); 
-setMode(textMode,modesManager,MODES.SPACE,MODE_NORMAL);
-addEventListenerAndCaptionActionSubmit(editorCore,modesManager,textMode,"submit_normal_mode",MODES.SPACE,MODE_NORMAL);
-addEventListenerAndCaptionActionSubmit(editorCore,modesManager,textMode,"submit_erase_mode",MODES.SPACE,MODE_SELECTION);
-addEventListenerAndCaptionActionSubmit(editorCore,modesManager,textMode,"submit_select_mode",MODES.SPACE,MODE_ERASE);
+setMode(textMode,modesManager,ENTRY.SPACE,MODE_NORMAL);
+addEventListenerAndCaptionActionSubmit(editorCore,modesManager,textMode,"submit_normal_mode",ENTRY.SPACE,MODE_NORMAL);
+addEventListenerAndCaptionActionSubmit(editorCore,modesManager,textMode,"submit_erase_mode",ENTRY.SPACE,MODE_SELECTION);
+addEventListenerAndCaptionActionSubmit(editorCore,modesManager,textMode,"submit_select_mode",ENTRY.SPACE,MODE_ERASE);

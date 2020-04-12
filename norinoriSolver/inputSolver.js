@@ -1,10 +1,10 @@
 /**
  When you click on the canvas
 */
-function clickCanvas(event,p_canvas,p_drawer,p_components,p_solver,p_actionId) {
+function clickCanvas(event,p_canvas,p_drawer,p_components,p_solver,p_actionManager) {
 	var spaceClicked = drawer.getClickSpace(event,p_canvas,p_solver.xLength,p_solver.yLength);
     if (spaceClicked != null){
-		clickSpaceAction(p_solver,spaceClicked.x,spaceClicked.y,p_actionId);
+		clickSpaceAction(p_solver,spaceClicked.x,spaceClicked.y,p_actionManager.clickSpace);
 		p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked);
 	}
 }
@@ -12,8 +12,8 @@ function clickCanvas(event,p_canvas,p_drawer,p_components,p_solver,p_actionId) {
 /**
 You successfully clicked on a region space (coordinates in parameter). Then what ? 
 */
-function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_actionId){
-	switch(p_actionId){
+function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
+	switch(p_action.id){
 		case ACTION_FILL_SPACE.id:
 			console.log("HYPOTHESIS : "+p_spaceIndexX+" "+p_spaceIndexY+" "+FILLING.YES);
 			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,FILLING.YES); 
@@ -31,9 +31,18 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_actionId){
 }
 
 //--------------------------
-/**
-Tries to pass every region.
-*/
+// Game action buttons
+
+quickStartAction = function(p_solver,p_textArea){
+	p_solver.quickStart();
+	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
+}
+
+undoAction = function(p_solver,p_textArea){
+	p_solver.massUndo();
+	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
+}
+
 multiPassAction = function (p_solver,p_textArea){
 	p_solver.multiPass();
 	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
@@ -56,14 +65,4 @@ loadAction = function(p_canvas,p_drawer,p_solver,p_name,p_textArea){ //TODO dans
 	p_solver.construct(loadedItem);
 	p_drawer.adaptCanvasDimensions(p_canvas,{xLength:p_solver.xLength,yLength:p_solver.yLength});
 	p_textArea.innerHTML = ""; //TODO manage true/false
-}
-
-undoAction = function(p_solver,p_textArea){
-	p_solver.massUndo();
-	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
-}
-
-quickStartAction = function(p_solver,p_textArea){
-	p_solver.quickStart();
-	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
 }

@@ -1,20 +1,19 @@
 /**
  When you click on the canvas
 */
-function clickCanvas(event,p_canvas,p_drawer,p_components,p_solver,p_actionId) { //TODO rename this as an action ? But what about loadAction ? //TODO modifier la fonction qui a ce nom dans les autres solveurs.
+function clickCanvas(event,p_canvas,p_drawer,p_components,p_solver,p_actionsManager) { //TODO rename this as an action ? But what about loadAction ? //TODO modifier la fonction qui a ce nom dans les autres solveurs.
 	var spaceClicked = drawer.getClickSpace(event,p_canvas,p_solver.xyLength,p_solver.xyLength);
     if (spaceClicked != null){
-		clickSpaceAction(p_solver,spaceClicked.x,spaceClicked.y,p_actionId);
+		clickSpaceAction(p_solver,spaceClicked.x,spaceClicked.y,p_actionsManager.clickSpace);
 		p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked);
 	}
 }
-//p_textArea
 
 /**
 You successfully clicked on a region space (coordinates in parameter). Then what ? 
 */
-function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_actionId){
-	switch(p_actionId){
+function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
+	switch(p_action.id){
 		case ACTION_PUT_STAR.id:
 			console.log("HYPOTHESIS : "+p_spaceIndexX+" "+p_spaceIndexY+" "+SYMBOL.STAR);
 			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,SYMBOL.STAR); 
@@ -36,9 +35,13 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_actionId){
 }
 
 //--------------------------
-/**
-Tries to pass everything : rows, regions, columns.
-*/
+// Game action buttons
+
+undoAction = function(p_solver,p_components){
+	p_solver.undoToLastHypothesis();
+	p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked)
+}
+
 multiPassAction = function (p_solver,p_components){
 	p_solver.multiPass();
 	p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked)
@@ -63,7 +66,3 @@ loadAction = function(p_canvas,p_drawer,p_solver,p_name,p_components){  //TODO a
 	p_components.textArea.innerHTML = ""; //TODO manage true/false
 }
 
-undoAction = function(p_solver,p_components){
-	p_solver.undoToLastHypothesis();
-	p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked)
-}
