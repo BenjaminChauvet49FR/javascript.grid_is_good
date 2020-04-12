@@ -58,7 +58,7 @@ TODO doc
 loadAction = function(p_canvas,p_drawer,p_solver,p_name,p_components){  //TODO adapt loadAction to starSpan in other solvers
 	var loadedItem = stringToStarBattlePuzzle(localStorage.getItem("grid_is_good_"+p_name));
 	p_solver.construct(loadedItem.grid,loadedItem.starNumber);
-	adaptCanvas(p_canvas,p_drawer,p_solver);
+	p_drawer.adaptCanvasDimensions(p_canvas,p_solver.xyLength,p_solver.xyLength);
 	p_components.starSpan.innerHTML = loadedItem.starNumber;
 	p_components.textArea.innerHTML = ""; //TODO manage true/false
 }
@@ -66,9 +66,4 @@ loadAction = function(p_canvas,p_drawer,p_solver,p_name,p_components){  //TODO a
 undoAction = function(p_solver,p_components){
 	p_solver.undoToLastHypothesis();
 	p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked)
-}
-
-function adaptCanvas(p_canvas, p_drawer,p_solver){
-	p_canvas.width = p_solver.xyLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.left+p_drawer.pix.marginGrid.right;
-	p_canvas.height = p_solver.xyLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.up+p_drawer.pix.marginGrid.down;
 }

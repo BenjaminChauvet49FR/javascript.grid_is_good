@@ -14,7 +14,6 @@ function Drawer(){
 		}		
 	}
 
-	
 	//All the colors used in the scenery
 	this.colors={
 		closed_wall:'#222222',
@@ -32,7 +31,10 @@ function Drawer(){
 	}
 } 
 
-Drawer.prototype.setMarginGrid = function(p_left,p_up,p_right,p_down){
+/**
+Sets up the margin grid. Should only be set up at the beginning of the string. 
+*/
+Drawer.prototype.setMarginGrid = function(p_left,p_up,p_right,p_down){ //TODO et si c'était amené à changer... ?
 	this.pix.marginGrid.left = p_left;
 	this.pix.marginGrid.up = p_up;
 	this.pix.marginGrid.right = p_right;
@@ -317,6 +319,48 @@ Drawer.prototype.getClickAroundWallD = function(event,p_canvas,p_editorCore){
 	return null;
 }
 
+//--------------------
+// Setting up functions
+
+
+
+/**
+Changes the width and height of a canvas according to some parameters ; mandatory ones are the X and Y length of spaces. 
+*/
+Drawer.prototype.adaptCanvasDimensions = function(p_canvas,p_parameters){
+	if (p_parameters.margin){
+		if (p_parameters.margin.common){
+			this.pix.marginGrid.left = p_parameters.margin.common;
+			this.pix.marginGrid.up = p_parameters.margin.common;
+			this.pix.marginGrid.right = p_parameters.margin.common;
+			this.pix.marginGrid.down = p_parameters.margin.common;
+		}
+		if (p_parameters.margin.left){
+			this.pix.marginGrid.left = p_parameters.margin.left;
+		}		
+		if (p_parameters.margin.up){
+			this.pix.marginGrid.left = p_parameters.margin.up;
+		}		
+		if (p_parameters.margin.right){
+			this.pix.marginGrid.left = p_parameters.margin.right;
+		}		
+		if (p_parameters.margin.down){
+			this.pix.marginGrid.left = p_parameters.margin.down;
+		}
+	}
+	
+	const pixMaxSpace = 32; //TODO peut changer
+	const pixXCanvasSize = 800; //TODO peut changer
+	const pixYCanvasSize = 512; //TODO peut changer
+	const pixHorizontalMargins = this.pix.marginGrid.left+this.pix.marginGrid.right
+	const pixVerticalMargins = this.pix.marginGrid.up+this.pix.marginGrid.down
+	const pixXArraySize = pixXCanvasSize-pixHorizontalMargins;
+	const pixYArraySize = pixYCanvasSize-pixVerticalMargins;
+	this.pix.sideSpace = Math.min(pixMaxSpace,Math.min(Math.floor(pixXArraySize/p_parameters.xLength),Math.floor(pixYArraySize/p_parameters.yLength)));
+	this.pix.borderSpace = Math.max(1,Math.floor(this.pix.sideSpace/10));
+	this.width = p_parameters.xLength*this.pix.sideSpace+pixHorizontalMargins;
+	this.height = p_parameters.yLength*this.pix.sideSpace+pixVerticalMargins;
+}
 
 //--------------------
 // Private functions

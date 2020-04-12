@@ -55,15 +55,10 @@ TODO doc
 loadAction = function(p_canvas,p_drawer,p_solver,p_name){
 	var loadedItem = stringToShimaguniPuzzle(localStorage.getItem("grid_is_good_"+p_name));
 	p_solver.construct(loadedItem.grid,loadedItem.gridNumber);
-	adaptCanvas(p_canvas,p_drawer,p_solver);
+	p_drawer.adaptCanvasDimensions(p_canvas,{xLength:p_solver.xLength,yLength:p_solver.yLength});
 }
 
 undoAction = function(p_solver,p_textArea){
 	p_solver.undoToLastHypothesis();
 	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
-}
-
-function adaptCanvas(p_canvas, p_drawer,p_solver){
-	p_canvas.width = p_solver.xLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.left+p_drawer.pix.marginGrid.right;
-	p_canvas.height = p_solver.yLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.up+p_drawer.pix.marginGrid.down;
 }

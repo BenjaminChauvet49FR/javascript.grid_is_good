@@ -54,7 +54,7 @@ TODO doc
 loadAction = function(p_canvas,p_drawer,p_solver,p_name,p_textArea){ //TODO dans le cadre d'une mutualisation des actions (loadAction, saveAction ...), transformer textArea en components... ?
 	var loadedItem = tokensToWallArray(localStorage.getItem("grid_is_good_"+p_name).split(' ')); 	
 	p_solver.construct(loadedItem);
-	adaptCanvasAndGrid(p_canvas,p_drawer,p_solver);
+	p_drawer.adaptCanvasDimensions(p_canvas,{xLength:p_solver.xLength,yLength:p_solver.yLength});
 	p_textArea.innerHTML = ""; //TODO manage true/false
 }
 
@@ -67,15 +67,3 @@ quickStartAction = function(p_solver,p_textArea){
 	p_solver.quickStart();
 	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
 }
-
-function adaptCanvasAndGrid(p_canvas, p_drawer,p_solver){
-	//Respects dimension of 800x512
-	//TODO Constants can be written somewhere else !
-	p_drawer.pix.sideSpace = Math.min(32,Math.min(Math.floor(800/p_solver.xLength),Math.floor(512/p_solver.yLength)));
-	p_drawer.pix.borderSpace = Math.max(1,Math.floor(p_drawer.pix.sideSpace/10));
-	p_drawer.setMarginGrid(0,0,0,0);
-	//TODO should be factorized with other editors !
-	p_canvas.width = p_solver.xLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.left+p_drawer.pix.marginGrid.right;
-	p_canvas.height = p_solver.yLength*p_drawer.pix.sideSpace+p_drawer.pix.marginGrid.up+p_drawer.pix.marginGrid.down;
-}
-
