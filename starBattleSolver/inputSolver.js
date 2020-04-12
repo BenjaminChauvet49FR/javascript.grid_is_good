@@ -58,7 +58,7 @@ TODO doc
 loadAction = function(p_canvas,p_drawer,p_solver,p_name,p_components){  //TODO adapt loadAction to starSpan in other solvers
 	var loadedItem = stringToStarBattlePuzzle(localStorage.getItem("grid_is_good_"+p_name));
 	p_solver.construct(loadedItem.grid,loadedItem.starNumber);
-	p_drawer.adaptCanvasDimensions(p_canvas,p_solver.xyLength,p_solver.xyLength);
+	p_drawer.adaptCanvasDimensions(p_canvas,{xyLength:p_solver.xyLength});
 	p_components.starSpan.innerHTML = loadedItem.starNumber;
 	p_components.textArea.innerHTML = ""; //TODO manage true/false
 }

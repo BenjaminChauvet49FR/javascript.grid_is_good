@@ -5,7 +5,7 @@ function Drawer(){
 		pathThickness : 4, //Divided by 2 at a point
 		borderClickDetection : 5, //How many pixels from the side of a space can you click to trigger the border ?
 		canvasWidth : 800,
-		canvasHeight: 800,
+		canvasHeight: 512,
 		marginGrid : {
 			left:0,
 			up:0,
@@ -322,10 +322,8 @@ Drawer.prototype.getClickAroundWallD = function(event,p_canvas,p_editorCore){
 //--------------------
 // Setting up functions
 
-
-
 /**
-Changes the width and height of a canvas according to some parameters ; mandatory ones are the X and Y length of spaces. 
+Changes the width and height of a canvas according to some parameters ; mandatory ones are the X and Y length of spaces (or xyLength if square puzzle). 
 */
 Drawer.prototype.adaptCanvasDimensions = function(p_canvas,p_parameters){
 	if (p_parameters.margin){
@@ -352,14 +350,18 @@ Drawer.prototype.adaptCanvasDimensions = function(p_canvas,p_parameters){
 	const pixMaxSpace = 32; //TODO peut changer
 	const pixXCanvasSize = 800; //TODO peut changer
 	const pixYCanvasSize = 512; //TODO peut changer
+	const xLength = p_parameters.xLength ? p_parameters.xLength : p_parameters.xyLength;
+	const yLength = p_parameters.yLength ? p_parameters.yLength : p_parameters.xyLength;
 	const pixHorizontalMargins = this.pix.marginGrid.left+this.pix.marginGrid.right
 	const pixVerticalMargins = this.pix.marginGrid.up+this.pix.marginGrid.down
 	const pixXArraySize = pixXCanvasSize-pixHorizontalMargins;
 	const pixYArraySize = pixYCanvasSize-pixVerticalMargins;
-	this.pix.sideSpace = Math.min(pixMaxSpace,Math.min(Math.floor(pixXArraySize/p_parameters.xLength),Math.floor(pixYArraySize/p_parameters.yLength)));
+	this.pix.sideSpace = Math.min(pixMaxSpace,Math.min(Math.floor(pixXArraySize/xLength),Math.floor(pixYArraySize/yLength)));
 	this.pix.borderSpace = Math.max(1,Math.floor(this.pix.sideSpace/10));
-	this.width = p_parameters.xLength*this.pix.sideSpace+pixHorizontalMargins;
-	this.height = p_parameters.yLength*this.pix.sideSpace+pixVerticalMargins;
+	this.canvasWidth = xLength*this.pix.sideSpace+pixHorizontalMargins;
+	this.canvasHeight = yLength*this.pix.sideSpace+pixVerticalMargins;
+	p_canvas.width = this.canvasWidth;
+	p_canvas.height = this.canvasHeight;
 }
 
 //--------------------

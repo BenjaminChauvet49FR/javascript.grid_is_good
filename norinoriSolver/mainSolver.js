@@ -2,8 +2,8 @@ var drawer = new Drawer();
 drawer.setMarginGrid(0,0,0,0);
 var solver = new GlobalNorinori(generateWallArray(1,1),1);
 
-var canevasInteraction = document.getElementById("canevas");
-var	context = canevasInteraction.getContext("2d");
+var canevas = document.getElementById("canevas");
+var	context = canevas.getContext("2d");
 var actionToDo;
 var drawIndications;
 
