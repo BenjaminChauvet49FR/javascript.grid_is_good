@@ -50,25 +50,29 @@ Draw the grid on-screen on p_context, with p_editorCore informations, with this.
 */
 
 Drawer.prototype.drawGrid = function(p_context,p_editorCore){
-	this.drawWallGrid(p_context,p_editorCore.wallGrid,p_editorCore.getXLength(),p_editorCore.getYLength());
-	//TODO improve me this, lol !
-	for(var iy = 0;iy < p_editorCore.getYLength(); iy++){
-		for(var ix = 0;ix < p_editorCore.getXLength();ix++){
-			if(p_editorCore.getSelection(ix,iy) == SELECTED.YES){
-				p_context.fillStyle= this.colors.selectedSpace;
-				p_context.fillRect(this.getPixInnerXLeft(ix),this.getPixInnerYUp(iy),this.getPixInnerSide(),this.getPixInnerSide());
+	const xLength = p_editorCore.getXLength();
+	const yLength = p_editorCore.getYLength();
+	if (p_editorCore.hasWallGrid()){
+		this.drawWallGrid(p_context,p_editorCore.wallGrid,xLength,yLength);
+		//TODO improve me this, lol !
+		for(var iy = 0;iy < yLength; iy++){
+			for(var ix = 0;ix < xLength;ix++){
+				if(p_editorCore.getSelection(ix,iy) == SELECTED.YES){
+					p_context.fillStyle= this.colors.selectedSpace;
+					p_context.fillRect(this.getPixInnerXLeft(ix),this.getPixInnerYUp(iy),this.getPixInnerSide(),this.getPixInnerSide());
+				}
 			}
 		}
 	}
 	//Numbers
 	if (p_editorCore.hasNumberGrid()){
-		this.drawNumbersLittle(p_context,p_editorCore.numberGrid,p_editorCore.getXLength(),p_editorCore.getYLength());
+		this.drawNumbersLittle(p_context,p_editorCore.numberGrid,xLength,yLength);
 	}
 	//Paths
 	if (p_editorCore.hasPathGrid()){
-		this.drawPathGrid(p_context,p_editorCore.pathGrid,p_editorCore.getXLength(),p_editorCore.getYLength());
+		this.drawWallGridBlank(p_context,xLength,yLength);
+		this.drawWallGridAsPath(p_context,p_editorCore.pathGrid,xLength,yLength);
 	}
-	
 }
 
 Drawer.prototype.drawWallGrid = function(p_context,p_wallGrid, p_xLength, p_yLength){
@@ -167,7 +171,16 @@ Drawer.prototype.drawNumbersGrid = function(p_context,p_wallGrid,p_numberGrid, p
 	}
 }
 
-Drawer.prototype.drawPathGrid = function(p_context,p_pathGrid, p_xLength, p_yLength){
+//TODO : L'état actuel est très mal défini ! On redéfinit un objet entier de la classe WallGrid à chaque fois.
+Drawer.prototype.drawWallGridBlank = function(p_context,p_xLength,p_yLength){
+	const blankWallGrid = new WallGrid(generateWallArray(p_xLength,p_yLength),p_xLength,p_yLength);
+	this.drawWallGrid(p_context,blankWallGrid,p_xLength,p_yLength);
+}
+
+/**
+Draws a path out of a grid.
+*/
+Drawer.prototype.drawWallGridAsPath = function(p_context,p_wallGrid, p_xLength, p_yLength){
 	p_context.textAlign = 'left'; 
 	p_context.textBaseline = 'top';
 	p_context.fillStyle = this.colors.path;
@@ -178,16 +191,23 @@ Drawer.prototype.drawPathGrid = function(p_context,p_pathGrid, p_xLength, p_yLen
 	var pixUp = this.getPixCenterY(0)-shorter/2;
 	for(var iy=0;iy<p_yLength;iy++){
 		for(var ix=0;ix<p_xLength;ix++){
-			if (p_pathGrid.getPathD(ix,iy) == PATH.YES){
+			if (p_wallGrid.getWallD(ix,iy) == OPEN){
 				p_context.fillRect(pixLeft,pixUp,shorter,longer);				
 			}
-			if (p_pathGrid.getPathR(ix,iy) == PATH.YES){
+			if (p_wallGrid.getWallR(ix,iy) == OPEN){
 				p_context.fillRect(pixLeft,pixUp,longer,shorter);	
 			}
 			pixLeft += this.pix.sideSpace;
+			//Draws banned spaces : there should be few of them / none in a path grid.
+			if (p_wallGrid.getState(ix,iy) == CLOSED){
+				p_context.fillStyle = this.colors.bannedSpace;
+				p_context.fillRect(getPixInnerXLeft(),getPixInnerYUp(),getPixInnerSide(),getPixInnerSide());	
+				p_context.fillStyle = this.colors.path;
+			} 			
 		}
 		pixLeft = pixLeftStart;
 		pixUp += this.pix.sideSpace;
+		
 	}
 }
 

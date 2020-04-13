@@ -1,20 +1,40 @@
-function EditorCore(p_xLength,p_yLength) {
+function EditorCore(p_xLength,p_yLength,p_parameters) {
+	this.possessPathGrid = (p_parameters && (p_parameters.hasPathGrid == true)); //TODO il y a mieux qu'une gestion de booléens j'imagine
+	this.possessWallGrid = !this.possessPathGrid;
+	this.startGrid(p_xLength,p_yLength);
+}
+
+//TODO : en l'état actuel on a une grille "wallGrid" et une grille "pathGrid"... qui ont exactement la même nature ! (WallGrid). Attention danger.
+
+/**
+Starts a grid from scratch. 
+Basically the same as restarting it.
+*/
+EditorCore.prototype.startGrid = function(p_xLength,p_yLength){
 	this.restartGrid(p_xLength,p_yLength);
 }
 
-//TODO renommer cette méthode ! Yeah !
+/**
+Restarts a grid from scratch.
+*/
 EditorCore.prototype.restartGrid = function(p_xLength,p_yLength){
-	this.setupFromWallArray(generateWallArray(p_xLength,p_yLength));
 	if(this.hasNumberGrid()){
 		this.setupNumberGrid(generateNumberArray(p_xLength,p_yLength, -1)); //TODO ticking bomb ! Un "numéro par défaut" à -1, j'aime pas trop ça.
 	}
 	if(this.hasPathGrid()){
-		this.setupPathGrid(generatePathArray(p_xLength,p_yLength));
+		this.setupFromPathArray(generatePathArray(p_xLength,p_yLength));
+	}
+	if (this.hasWallGrid()){
+		this.setupFromWallArray(generateWallArray(p_xLength,p_yLength));
 	}
 	this.mode = {colorRegionIfValid : false};	
 }
 
-//YUP ! The grid must NOT be null !
+//Set up from non null grids
+/**
+Performs the required set up from a wall array (a blank one, one that was just modified or a loaded one)
+This required setup may include region grid, selection mode...
+*/
 EditorCore.prototype.setupFromWallArray = function(p_wallArray){
 	this.wallGrid = new WallGrid(p_wallArray,p_wallArray[0].length,p_wallArray.length);
 	this.regionGrid = null;
@@ -26,20 +46,30 @@ EditorCore.prototype.setupFromWallArray = function(p_wallArray){
 	this.resetSelection(); 
 }
 
-EditorCore.prototype.hasNumberGrid = function(){
-	return (typeof(NumberGrid) == 'function');
-}
-
-EditorCore.prototype.hasPathGrid = function(){
-	return (typeof(PathGrid) == 'function');
+/**
+Same as setupFromWallArray but with a path grid
+*/
+EditorCore.prototype.setupFromPathArray = function(p_pathArray){
+	this.pathGrid = new WallGrid(p_pathArray,p_pathArray[0].length,p_pathArray.length);
 }
 
 EditorCore.prototype.setupNumberGrid = function(p_numberArray,p_defaultNumber){
 	this.numberGrid = new NumberGrid(p_numberArray,p_numberArray[0].length,p_numberArray.length,p_defaultNumber);
 }
 
-EditorCore.prototype.setupPathGrid = function(p_pathArray){
-	this.pathGrid = new PathGrid(p_pathArray,p_pathArray[0].length,p_pathArray.length);
+// ----------
+// Testers
+
+EditorCore.prototype.hasNumberGrid = function(){
+	return (typeof(NumberGrid) == 'function');
+}
+
+EditorCore.prototype.hasPathGrid = function(){
+	return this.possessPathGrid;
+}
+
+EditorCore.prototype.hasWallGrid = function(){
+	return this.possessWallGrid;
 }
 
 EditorCore.prototype.getArray = function(){ //TODO cette fonction gagnera à être changée de nom !
@@ -58,9 +88,6 @@ EditorCore.prototype.getWallGrid = function(){ //TODO cette fonction gagnera à 
 EditorCore.prototype.getNumberGrid = function(){
 	return this.numberGrid;
 }
-EditorCore.prototype.getPathGrid = function(){
-	return this.pathGrid;
-}
 
 EditorCore.prototype.getSelection = function(p_x,p_y){return this.selectedGrid[p_y][p_x];}
 EditorCore.prototype.getInputNumber = function(){return this.inputNumber;}
@@ -75,75 +102,121 @@ EditorCore.prototype.setState = function(p_x,p_y,p_state){this.wallGrid.setState
 EditorCore.prototype.switchWallR = function(p_x,p_y){this.wallGrid.switchWallR(p_x,p_y);}
 EditorCore.prototype.switchWallD = function(p_x,p_y){this.wallGrid.switchWallD(p_x,p_y);}
 EditorCore.prototype.switchState = function(p_x,p_y){this.wallGrid.switchState(p_x,p_y);}
+EditorCore.prototype.getPathR = function(p_x,p_y){return this.pathGrid.getWallR(p_x,p_y);}
+EditorCore.prototype.getPathD = function(p_x,p_y){return this.pathGrid.getWallD(p_x,p_y);}
+EditorCore.prototype.setPathR = function(p_x,p_y,p_state){this.pathGrid.setWallR(p_x,p_y);}
+EditorCore.prototype.setPathD = function(p_x,p_y,p_state){this.pathGrid.setWallD(p_x,p_y);}
+EditorCore.prototype.switchPathR = function(p_x,p_y){this.pathGrid.switchWallR(p_x,p_y);}
+EditorCore.prototype.switchPathD = function(p_x,p_y){this.pathGrid.switchWallD(p_x,p_y);}
 
 EditorCore.prototype.getNumber = function(p_x,p_y,p_number){return this.numberGrid.getNumber(p_x,p_y,p_number);}
 EditorCore.prototype.setNumber = function(p_x,p_y,p_number){this.numberGrid.setNumber(p_x,p_y,p_number);}
 EditorCore.prototype.clearNumber = function(p_x,p_y){this.numberGrid.clearNumber(p_x,p_y);}
 
-EditorCore.prototype.getPathR = function(p_x,p_y){return this.pathGrid.getPathR(p_x,p_y);}
-EditorCore.prototype.getPathD = function(p_x,p_y){return this.pathGrid.getPathD(p_x,p_y);}
-EditorCore.prototype.setPathR = function(p_x,p_y,p_state){this.pathGrid.setPathR(p_x,p_y);}
-EditorCore.prototype.setPathD = function(p_x,p_y,p_state){this.pathGrid.setPathD(p_x,p_y);}
-EditorCore.prototype.switchPathR = function(p_x,p_y){this.pathGrid.switchPathR(p_x,p_y);}
-EditorCore.prototype.switchPathD = function(p_x,p_y){this.pathGrid.switchPathD(p_x,p_y);}
-
-//---
 EditorCore.prototype.getXLength = function(){
-	return this.wallGrid.xLength;
+	if (this.hasWallGrid()){
+		return this.wallGrid.xLength;
+	}
+	if (this.hasPathGrid()){
+		return this.pathGrid.xLength;
+	}
 }
 EditorCore.prototype.getYLength = function(){
-	return this.wallGrid.yLength;
+	if (this.hasWallGrid()){
+		return this.wallGrid.yLength;
+	}
+	if (this.hasPathGrid()){
+		return this.pathGrid.yLength;
+	}
 }
 
-/**
-Transforms the grid
-*/
+// --------------------
+// Grid transformations
+
+//TODO un jour je factoriserai ça !
+
 EditorCore.prototype.rotateCWGrid = function(){
-	this.wallGrid.rotateCWGrid();
+	if (this.hasWallGrid()){
+		this.wallGrid.rotateCWGrid();
+		this.setupFromWallArray(this.wallGrid.array); 
+	}
+	if (this.hasPathGrid()){
+		this.pathGrid.rotateCWGrid();
+		this.setupFromPathArray(this.pathGrid.array);
+	}
 	if(this.hasNumberGrid()){
 		this.numberGrid.rotateCWGrid();
 	}
-	this.setupFromWallArray(this.wallGrid.array); 
 }
 
 EditorCore.prototype.rotateUTurnGrid = function(){
-	this.wallGrid.rotateUTurnGrid();
+	if (this.hasWallGrid()){
+		this.wallGrid.rotateUTurnGrid();
+		this.setupFromWallArray(this.wallGrid.array);
+	}
+	if (this.hasPathGrid()){
+		this.pathGrid.rotateUTurnGrid();
+		this.setupFromPathArray(this.pathGrid.array);
+	}
 	if(this.hasNumberGrid()){
 		this.numberGrid.rotateUTurnGrid();
 	}
-	this.setupFromWallArray(this.wallGrid.array);
 }
 
 EditorCore.prototype.rotateCCWGrid = function(){
-	this.wallGrid.rotateCCWGrid();
+	if (this.hasWallGrid()){
+		this.wallGrid.rotateCCWGrid();
+		this.setupFromWallArray(this.wallGrid.array);
+	}
+	if (this.hasPathGrid()){
+		this.pathGrid.rotateCCWGrid();
+		this.setupFromPathArray(this.pathGrid.array);
+	}
 	if(this.hasNumberGrid()){
 		this.numberGrid.rotateCCWGrid();
 	}
-	this.setupFromWallArray(this.wallGrid.array);
 }
 
 EditorCore.prototype.mirrorHorizontalGrid = function(){
-	this.wallGrid.mirrorHorizontalGrid();
+	if (this.hasWallGrid()){
+		this.wallGrid.mirrorHorizontalGrid();
+		this.setupFromWallArray(this.wallGrid.array);
+	}
+	if (this.hasPathGrid()){
+		this.pathGrid.mirrorHorizontalGrid();
+		this.setupFromPathArray(this.pathGrid.array);
+	}
 	if(this.hasNumberGrid()){
 		this.numberGrid.mirrorHorizontalGrid();
 	}
-	this.setupFromWallArray(this.wallGrid.array);
 }
 
 EditorCore.prototype.mirrorVerticalGrid = function(){
-	this.wallGrid.mirrorVerticalGrid();
+	if (this.hasWallGrid()){
+		this.wallGrid.mirrorVerticalGrid();
+		this.setupFromWallArray(this.wallGrid.array);
+	}
+	if (this.hasPathGrid()){
+		this.pathGrid.mirrorVerticalGrid();
+		this.setupFromPathArray(this.pathGrid.array);
+	}
 	if(this.hasNumberGrid()){
 		this.numberGrid.mirrorVerticalGrid();
 	}
-	this.setupFromWallArray(this.wallGrid.array);
 }
 
 EditorCore.prototype.resizeGrid = function(p_xLength,p_yLength){
-	this.wallGrid.resizeGrid(p_xLength,p_yLength);
+	if (this.hasWallGrid()){
+		this.wallGrid.resizeGrid(p_xLength,p_yLength);
+		this.setupFromWallArray(this.wallGrid.array);
+	}
+	if (this.hasPathGrid()){
+		this.pathGrid.resizeGrid(p_xLength,p_yLength);
+		this.setupFromPathArray(this.pathGrid.array);
+	}
 	if(this.hasNumberGrid()){
 		this.numberGrid.resizeGrid(p_xLength,p_yLength);
 	}
-	this.setupFromWallArray(this.wallGrid.array);
 }
 
 //-------------------------------------------
@@ -210,41 +283,5 @@ EditorCore.prototype.clearWallsAround = function(p_x,p_y){
 }
 
 EditorCore.prototype.resetNumbers = function(){
-	/*var regionGrid = this.wallGrid.toRegionGrid();
-	//Le code est copié-collé d'un solveur
-	var lastRegionNumber = 0;
-	for(iy = 0;iy < this.getYLength();iy++){
-		for(ix = 0;ix < this.getXLength();ix++){
-			lastRegionNumber = Math.max(regionGrid[iy][ix],lastRegionNumber);
-		}
-	}
-	
-	var numbersFoundInRegion = [];
-	var firstX = [];
-	var firstY = [];
-	for(var i=0;i<=lastRegionNumber;i++){
-		numbersFoundInRegion.push(0);
-		firstX.push(-1);
-		firstY.push(-1);
-	}
-	var ix,iy,ir;
-	for(var iy = 0;iy < this.getYLength(); iy++){
-		for(var ix = 0;ix < this.getXLength() ; ix++){
-			ir = regionGrid[iy][ix];
-			if (firstX[ir] == -1){
-				firstX[ir] = ix;
-				firstY[ir] = iy;
-			}
-			if (this.getNumber(ix,iy) > 0 && numbersFoundInRegion[ir] == 0){
-				numbersFoundInRegion[ir] = this.getNumber(ix,iy);
-			}
-			this.setNumber(ix,iy,0);
-		}
-	}
-	for(var i=0;i<=lastRegionNumber;i++){
-		if (numbersFoundInRegion[i] > 0){
-			this.setNumber(firstX[i],firstY[i],numbersFoundInRegion[i]);
-		}
-	}*/
 	this.numberGrid.arrangeNumbers(this.wallGrid.toRegionGrid());
 }

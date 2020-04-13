@@ -76,7 +76,11 @@ loadAction = function(p_canvas,p_drawer,p_core,p_detachedName,p_fieldsToUpdate){
 	if (localStorage.hasOwnProperty(localStorageName)){
 		if (confirm("Charger le puzzle "+localStorageName+" ?")){
 			var loadedItem = stringToPuzzle(localStorage.getItem(localStorageName));
-			p_core.setupFromWallArray(loadedItem.grid); //TODO maybe this will have to be revisited because we are forcing "answer" to have a grid value.
+			if (p_core.hasPathGrid()){
+				p_core.setupFromPathArray(loadedItem.grid);
+			} else if (p_core.hasWallGrid()){
+				p_core.setupFromWallArray(loadedItem.grid); //TODO maybe this will have to be revisited because we are forcing "answer" to have a grid value.				
+			}
 			if (p_core.hasNumberGrid()){
 				p_core.setupNumberGrid(loadedItem.gridNumber); //TODO same as this
 			}

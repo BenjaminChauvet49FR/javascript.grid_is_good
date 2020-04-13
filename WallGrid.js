@@ -5,14 +5,22 @@ function WallGrid(p_wallArray,p_xLength,p_yLength) {
 }
 
 function generateWallArray(p_widthGrid, p_heightGrid){
+	return generateSuggestedArray(p_widthGrid, p_heightGrid, OPEN);
+}
+
+function generatePathArray(p_widthGrid, p_heightGrid){
+	return generateSuggestedArray(p_widthGrid, p_heightGrid, CLOSED);
+}
+
+function generateSuggestedArray(p_widthGrid,p_heightGrid,p_startingStateWalls){
 	var answer = [];
 	for(var iy=0;iy<p_heightGrid;iy++){
 		answer.push([]);
 		for(var ix=0;ix<p_widthGrid;ix++){
-			answer[iy].push({state:OPEN,wallD:OPEN,wallR:OPEN});
+			answer[iy].push({state:OPEN,wallD:p_startingStateWalls,wallR:p_startingStateWalls});
 		}
 	}
-	return answer;
+	return answer;	
 }
 
 

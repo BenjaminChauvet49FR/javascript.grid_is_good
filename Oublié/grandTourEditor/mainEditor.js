@@ -1,9 +1,11 @@
+
 // All the main variables
 var drawer=new Drawer();
-var editorCore = new EditorCore(9,9,{hasPathGrid:true});
+var editorCore = new EditorCore(9,9);
 var canevas = document.getElementById("canevas");
 var	context = canevas.getContext("2d");
 var modesManager = {clickSpace:null, clickWallD:null, clickWallR:null};
+
 
 //The main draw function (at start)
 function drawCanvas(){
@@ -20,10 +22,10 @@ var fieldName = document.getElementById("input_grid_name");
 
 adaptCanvasAndGrid(canevas,drawer,editorCore);
 
-putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("GrandTour")});
+putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("Grand Tour")});
 putActionElementClick("submit_save_grid",function(event){saveAction(editorCore,fieldName.value,{})});
 putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,editorCore,fieldName.value,{xLengthField : fieldX, yLengthField:fieldY})});
-putActionElementClick("submit_auto_name",function(event){fieldName.value = "GrandTour"});
+putActionElementClick("submit_auto_name",function(event){fieldName.value = "Grand Tour"});
 putActionElementClick("submit_new_grid",function(event){restartAction(canevas,drawer,editorCore,fieldX.value,fieldY.value)});
 putActionElementClick("submit_resize_grid",function(event){resizeAction(canevas,drawer,editorCore,fieldX.value,fieldY.value)});
 
