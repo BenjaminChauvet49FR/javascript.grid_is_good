@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    	<link rel="icon">
+		<link rel="icon" 
+		  type="image/png" 
+		  href="icon.png">
+        <title>Heyawake solver !!!</title>
+		<link rel="stylesheet" type="text/css" href="../style.css">
+    </head>
+    <body>
+		<img id="img_x" src="x.png" style="display:none">
+		<canvas id="canevas" width="800" height="500">
+            Message pour les navigateurs ne supportant pas encore canvas.
+        </canvas></br>
+		
+		Grille à charger : <input type="text" id="input_grid_name" value="Heyawake1"></input> 
+		<input type="submit" id="submit_view_puzzle_list" value="Voir les puzzles Heyawake"></input></br>
+		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
+		
+		<script src="../constants.js"></script>
+		<script src="../commonActionManager.js"></script>
+		<script src="../Drawer.js"></script>
+		<script src="../sharedEditor/saveLoad.js"></script>
+		<script src="../EditorCore.js"></script>
+		<script src="../WallGrid.js"></script>
+		<script src="../NumberGrid.js"></script>
+		<script src="../commonInput.js"></script>
+		<script src="../DrawableItem.js"></script>
+		<script src="constants.js"></script>
+		<script src="SolverHeyawake.js"></script>
+		<script src="drawing.js"></script>
+		<script src="inputSolver.js"></script>
+		<script src="mainSolver.js"></script>
+	</body>
+</html>
