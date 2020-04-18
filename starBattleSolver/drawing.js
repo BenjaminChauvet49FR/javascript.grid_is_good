@@ -52,28 +52,18 @@ function drawInsideIndications(p_context,p_drawer,p_colorDigits,p_solver){
 /**
 Draws what's inside spaces
 */
-function drawInsideSpaces(p_context,p_drawer,p_color,p_solver){
-	const fontSize = p_drawer.pix.sideSpace;
-	p_context.font = fontSize+"px Arial";
-	p_context.fillStyle = p_color.cross;
-	const pixStartX = p_drawer.getPixInnerXLeft(0);  
-	var pixDrawX = pixStartX;	
-	var pixDrawY = p_drawer.getPixInnerYUp(0);
-	var ix,iy;
-	for(iy = 0;iy < p_solver.xyLength;iy++){
-		for(ix = 0;ix < p_solver.xyLength;ix++){
-			if  (p_solver.getRegion(ix,iy) != BANNED){ // Should this condition be missed the extra "no star" in banned spaces would be added.
-				if(p_solver.getAnswer(ix,iy) == SYMBOL.STAR){
-					p_context.drawImage(document.getElementById("img_star"),0,0,64,64,pixDrawX,pixDrawY,drawer.getPixInnerSide(),drawer.getPixInnerSide());
-				}
-				if(p_solver.getAnswer(ix,iy) == SYMBOL.NO_STAR){
-					p_context.drawImage(document.getElementById("img_x"),0,0,64,64,pixDrawX,pixDrawY,drawer.getPixInnerSide(),drawer.getPixInnerSide());	
-				}
+function drawInsideSpaces(p_context,p_drawer,p_solver){
+	var items = [DrawableImage("img_star",0,0,64,64),DrawableImage("img_x",0,0,64,64)];
+	indexSelectionFunction = function(x,y){
+		if  (p_solver.getRegion(x,y) != BANNED){ // Should this condition be missed the extra "no star" in banned spaces would be added.
+			if(p_solver.getAnswer(x,y) == SYMBOL.STAR){
+				return 0;
 			}
-			pixDrawX+=p_drawer.pix.sideSpace;
+			if(p_solver.getAnswer(x,y) == SYMBOL.NO_STAR){
+				return 1;	
+			}
 		}
-		pixDrawY+=p_drawer.pix.sideSpace;
-		pixDrawX = pixStartX;
+		return -1;
 	}
+	p_drawer.drawSpaceContents(p_context,items,indexSelectionFunction,p_solver.xyLength,p_solver.xyLength);
 }
-

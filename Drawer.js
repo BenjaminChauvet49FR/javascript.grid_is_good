@@ -340,6 +340,40 @@ Drawer.prototype.getClickAroundWallD = function(event,p_canvas,p_editorCore){
 	return null;
 }
 
+/**
+Draws the main content of a space into a grid. 
+(It is used mainly for solver as the space is supposed to be colorized, to have an image into it...)
+
+p_drawableItems : array of items to draw.
+p_function : function to return the index.
+*/
+Drawer.prototype.drawSpaceContents = function(p_context, p_drawableItems, p_function,p_xLength, p_yLength){
+	const pixStartX = this.getPixInnerXLeft(0);  
+	const pixInnerSide = this.getPixInnerSide();
+	var pixDrawX = pixStartX;	
+	var pixDrawY = this.getPixInnerYUp(0);
+	var item;
+	var ix,iy,indexItem;
+	for(iy = 0;iy < p_yLength;iy++){
+		for(ix = 0;ix < p_xLength;ix++){
+			indexItem = p_function(ix,iy);
+			if (indexItem >= 0 && indexItem < p_drawableItems.length){
+				item = p_drawableItems[indexItem];
+				if (item.kind == KIND_DRAWABLE_ITEM.IMAGE){
+					p_context.drawImage(item.getImage(),item.x1,item.y1,item.x2,item.y2,pixDrawX,pixDrawY,pixInnerSide,pixInnerSide);						
+				} else if (item.kind = KIND_DRAWABLE_ITEM.COLOR){
+					p_context.fillStyle = item.getColorString();
+					p_context.fillRect(pixDrawX,pixDrawY,pixInnerSide,pixInnerSide);
+				}
+			}
+			pixDrawX+=this.pix.sideSpace;
+		}
+		pixDrawY+=this.pix.sideSpace;
+		pixDrawX = pixStartX;
+	}
+}
+
+
 //--------------------
 // Setting up functions
 

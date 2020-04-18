@@ -32,40 +32,32 @@ function drawAroundIndications(p_context,p_drawer,p_colorDigits,p_solver){
 Draws what's inside spaces
 */
 function drawInsideSpaces(p_context,p_drawer,p_color,p_solver){
+	var items = [DrawableColor(p_color.validSquare),DrawableImage("img_x",0,0,64,64)];
+	function selection(x,y){
+		if(p_solver.getAnswer(x,y) == FILLING.YES){
+			return 0;
+		}
+		if(p_solver.getAnswer(x,y) == FILLING.NO){
+			return 1;
+		}
+		return -1;
+	}
+	p_drawer.drawSpaceContents(p_context,items,selection,p_solver.xLength,p_solver.yLength);
+	
+	//TODO : Comment colorier les "régions forcées" ?
+	var pixLeft,pixDown,space;
 	const fontSize = p_drawer.getPixInnerSide()/2;
 	p_context.font = fontSize+"px Arial";
 	p_context.textAlign = 'left'; 
 	p_context.textBaseline = 'top';
-	const pixStartX = p_drawer.getPixInnerXLeft(0);  
-	var pixDrawX = pixStartX;	
-	var pixDrawY = p_drawer.getPixInnerYUp(0);
-	var ix,iy;
-	for(iy = 0;iy < p_solver.yLength;iy++){
-		for(ix = 0;ix < p_solver.xLength;ix++){
-			//if (p_solver.getRegion(ix,iy) != BANNED){  TODO Manage that case where the space belongs to no region...
-				if(p_solver.getAnswer(ix,iy) == FILLING.YES){
-					p_context.fillStyle = p_color.validSquare;
-					p_context.fillRect(pixDrawX,pixDrawY,p_drawer.getPixInnerSide(),p_drawer.getPixInnerSide());
-				}
-				if(p_solver.getAnswer(ix,iy) == FILLING.NO){
-					p_context.drawImage(document.getElementById("img_x"),0,0,64,64,pixDrawX,pixDrawY,drawer.getPixInnerSide(),drawer.getPixInnerSide());	
-				}
-			//}
-			pixDrawX+=p_drawer.pix.sideSpace;
-		}
-		pixDrawY+=p_drawer.pix.sideSpace;
-		pixDrawX = pixStartX;
-	}
-	
-	var pixLeft,pixDown,space;
-	for(var i=0;i<p_solver.regions.length;i++){
-		if (p_solver.forcedValue(i) != NOT_FORCED){
+	for(var i=0;i<p_solver.regions.length;i++) {
+		if (p_solver.forcedValue(i) != NOT_FORCED) {
 			space = p_solver.getSpaceCoordinates(i,0);
 			pixLeft = p_drawer.getPixInnerXLeft(space.x)+2;
 			pixUp = p_drawer.getPixInnerYUp(space.y)+2;
-			if (p_solver.getAnswer(space.x,space.y) == FILLING.YES){
+			if (p_solver.getAnswer(space.x,space.y) == FILLING.YES) {
 				p_context.fillStyle = p_color.reflectWrite;
-			} else{
+			} else {
 				p_context.fillStyle = p_color.standardWrite;
 			}
 			p_context.fillText(p_solver.forcedValue(i),pixLeft,pixUp);
