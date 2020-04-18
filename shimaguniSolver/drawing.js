@@ -1,5 +1,5 @@
 /**
-Draws the around indications
+Draws the around indications (TODO : factorisable ?)
 */
 function drawAroundIndications(p_context,p_drawer,p_colorDigits,p_solver){
 	var pixFont = p_drawer.pix.sideSpace-p_drawer.pix.borderSpace;
@@ -29,7 +29,7 @@ function drawAroundIndications(p_context,p_drawer,p_colorDigits,p_solver){
 }
 
 /**
-Draws what's inside spaces
+Draws what's inside spaces 
 */
 function drawInsideSpaces(p_context,p_drawer,p_color,p_solver){
 	var items = [DrawableColor(p_color.validSquare),DrawableImage("img_x",0,0,64,64)];
@@ -44,7 +44,7 @@ function drawInsideSpaces(p_context,p_drawer,p_color,p_solver){
 	}
 	p_drawer.drawSpaceContents(p_context,items,selection,p_solver.xLength,p_solver.yLength);
 	
-	//TODO : Comment colorier les "régions forcées" ?
+	//TODO : Comment colorier les "régions forcées" ? Factorisable ?
 	var pixLeft,pixDown,space;
 	const fontSize = p_drawer.getPixInnerSide()/2;
 	p_context.font = fontSize+"px Arial";

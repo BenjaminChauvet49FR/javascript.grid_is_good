@@ -1,5 +1,5 @@
 /**
-Draws the around indications
+Draws the around indications (TODO : factorisable ?)
 */
 function drawAroundIndications(p_context,p_drawer,p_colorDigits,p_solver){
 	var pixFont = p_drawer.pix.sideSpace-p_drawer.pix.borderSpace;
@@ -29,7 +29,7 @@ function drawAroundIndications(p_context,p_drawer,p_colorDigits,p_solver){
 }
 
 /**
-Draws the region indications within a space in each.
+Draws the region indications within a space in each. (TODO : factorisable ?)
 */
 function drawInsideIndications(p_context,p_drawer,p_colorDigits,p_solver){
 	const fontSize = p_drawer.pix.sideSpace/3;
@@ -46,7 +46,6 @@ function drawInsideIndications(p_context,p_drawer,p_colorDigits,p_solver){
 		textToWrite = p_solver.getOsRemainRegion(i)+" "+p_solver.getXsRemainRegion(i);
 		p_context.fillText(textToWrite,pixLeft,pixDown);
 	}
-	
 }
 
 /**

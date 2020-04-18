@@ -1,5 +1,5 @@
 /**
-Draws the region indications within a space in each.
+Draws the region indications within a space in each. (TODO : factorisable ?)
 */
 function drawInsideIndications(p_context,p_drawer,p_colorDigits,p_solver){
 	const fontSize = p_drawer.pix.sideSpace/3;
@@ -25,7 +25,7 @@ function drawInsideIndications(p_context,p_drawer,p_colorDigits,p_solver){
 }
 
 /**
-Draws what's inside spaces
+Draws what's inside spaces 
 */
 function drawInsideSpaces(p_context,p_drawer,p_color,p_solver){
 	var items = [DrawableColor(p_color.validSquare),DrawableImage("img_x",0,0,64,64)];
