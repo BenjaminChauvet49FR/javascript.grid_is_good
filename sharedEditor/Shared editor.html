@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Shimaguni Editor</title>
+        <title>Editeur de casse-têtes partagé</title>
 		<link rel="stylesheet" type="text/css" href="../style.css">
     </head>
     <body>
@@ -11,11 +11,18 @@
         </canvas></br>
 		
 		<input type="submit" id="submit_show_region_grid" value="Donner les régions de la grille"></input></br>
-		<input type="submit" id="submit_view_puzzle_list" value="Voir numéros puzzles Shimaguni"></input></br>
+		
+		Type de puzzle : 
+		<select id="select_puzzle_type" onChange="combo(this, 'theinput')">
+			<option>Norinori</option>
+			<option>Shimaguni</option>
+		</select></br>
+		<input type="submit" id="submit_view_puzzle_list" value="Voir numéros puzzle"></input></br>
+
 		Grille à sauver/charger : <input type="text" id="input_grid_name" value="default"></input>
 		<input type="submit" id="submit_save_grid" value="Sauver"></input>
 		<input type="submit" id="submit_load_grid" value="Charger"></input>
-		<input type="submit" id="submit_auto_name" value='Nommer Shimaguni'></input>
+		<input type="submit" id="submit_auto_name" value='Nommer automatiquement'></input>
 		</br>
 		
 		Largeur : <input type="number" id="input_number_xLength" value="9"></input>

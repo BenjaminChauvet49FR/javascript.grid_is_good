@@ -57,7 +57,7 @@ Loads a walled grid from local storage and its region grid (cf. super-function),
 TODO doc
 */
 loadAction = function(p_canvas,p_drawer,p_solver,p_name){
-	var loadedItem = stringToShimaguniPuzzle(localStorage.getItem("grid_is_good_"+p_name));
+	var loadedItem = stringToCommonPuzzle(localStorage.getItem("grid_is_good_"+p_name));
 	p_solver.construct(loadedItem.grid,loadedItem.gridNumber);
 	p_drawer.adaptCanvasDimensions(p_canvas,{xLength:p_solver.xLength,yLength:p_solver.yLength});
 }

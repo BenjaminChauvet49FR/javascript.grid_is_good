@@ -1,32 +1,39 @@
-// https://stackoverflow.com/questions/43172115/get-the-mouse-coordinates-when-clicking-on-canvas
-
-function clickWallRAction(p_editorCore,p_x, p_y, p_modes){
+clickWallRAction = function(p_editorCore,p_x, p_y, p_modes){
 	p_editorCore.switchWallR(p_x, p_y);
 }
-function clickWallDAction(p_editorCore,p_x, p_y, p_modes){
+clickWallDAction = function(p_editorCore,p_x, p_y, p_modes){
 	p_editorCore.switchWallD(p_x, p_y);
 }
-function clickSpaceAction(p_editorCore,p_x, p_y, p_modes){
+clickSpaceAction = function(p_editorCore,p_x, p_y, p_modes){
 	mode = p_modes.clickSpace;
 	if (mode.id == MODE_SELECTION.id){
 		p_editorCore.selectSpace(p_x,p_y);
 	} else if (mode.id == MODE_ERASE.id){
 		p_editorCore.clearWallsAround(p_x,p_y);
-	} else {
+		p_editorCore.clearNumber(p_x,p_y);
+	} else if (mode.id == MODE_NUMBER.id) {
+		if (p_editorCore.getNumber(p_x,p_y) != p_editorCore.getInputNumber()){
+			p_editorCore.setNumber(p_x,p_y,p_editorCore.getInputNumber());
+		}else{
+			p_editorCore.clearNumber(p_x,p_y);
+		}
+	}else {
 		p_editorCore.switchState(p_x,p_y);
+		p_editorCore.clearNumber(p_x,p_y);
 	}
 }
 
 function puzzleToString(p_editorCore,p_externalOptions){
-	return wallArrayToString(p_editorCore.getArray());
-}
-
-function stringToPuzzle(p_string){
-	return {grid:tokensToWallArray(p_string.split(' '))};
+	p_editorCore.resetNumbers();
+	return commonPuzzleToString(p_editorCore.getArray(),p_editorCore.getNumbers());
 }
 
 function getLocalStorageName(p_detachedName){
 	return "grid_is_good_"+p_detachedName;
+}
+
+function stringToPuzzle(p_string){
+	return stringToCommonPuzzle(p_string);
 }
 
 function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem){
@@ -34,13 +41,15 @@ function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem){
 	p_fieldsToUpdate.yLengthField.value = p_loadedItem.grid.length;
 }
 
-//------------------------------
+//---------------
+
+//TODO : the below method can (and should ?) be refactored...
 
 /** 
 Read the region grid as it is
-p_editorCore : the global item
+p_editorCore : the editorCore item
 */
-function readRegionGrid(p_editorCore){
+readRegionGrid = function(p_editorCore){
 	p_editorCore.updateRegionGrid();
 }
 
@@ -52,21 +61,21 @@ p_editorCore : the Global item
 p_xLength : horizontal dimension
 p_yLength : vertical dimension
 */
-function restartAction(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength){
+restartAction = function(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength){
 	if (confirm("Redémarrer la grille ?")){
 		p_editorCore.restartGrid(p_xLength,p_yLength);
 		adaptCanvasAndGrid(p_canvas, p_drawer,p_editorCore);	
 	}
 }
 
-function resizeAction(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength){
+function resizeAction(p_canvas, p_drawer, p_editorCore, p_xyLength){
 	if (confirm("Redimensionner la grille ?")){
-		p_editorCore.resizeGrid(p_xLength,p_yLength);
+		p_editorCore.resizeGrid(p_xyLength,p_xyLength);
 		adaptCanvasAndGrid(p_canvas, p_drawer,p_editorCore);	
 	}
 }
 
-//------------------------------
+//---------------
 
 /**
 Selection deal
