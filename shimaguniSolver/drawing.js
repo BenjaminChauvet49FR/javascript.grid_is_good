@@ -32,17 +32,20 @@ function drawAroundIndications(p_context,p_drawer,p_colorDigits,p_solver){
 Draws what's inside spaces 
 */
 function drawInsideSpaces(p_context,p_drawer,p_color,p_solver){
-	var items = [DrawableColor(p_color.validSquare),DrawableImage("img_x",0,0,64,64)];
+	//var items = [DrawableColor(p_color.validSquare),DrawableImage("img_x",0,0,64,64)];
+	var items = [DrawableImage("img_x",0,0,64,64)];
 	function selection(x,y){
 		if(p_solver.getAnswer(x,y) == FILLING.YES){
-			return 0;
+			return 1;//0;
 		}
 		if(p_solver.getAnswer(x,y) == FILLING.NO){
-			return 1;
+			return 0;//1;
 		}
 		return -1;
 	}
 	p_drawer.drawSpaceContents(p_context,items,selection,p_solver.xLength,p_solver.yLength);
+	p_drawer.drawPolyomino4x5TiledMap(p_context,document.getElementById("img_map_polyomino"),16,selection,1,p_solver.xLength,p_solver.yLength);
+	//TODO fournir la longueur, une bonne idée ? Si on peut s'affranchir d'un paramètre je suis pour.
 	
 	//TODO : Comment colorier les "régions forcées" ? Factorisable ?
 	var pixLeft,pixDown,space;

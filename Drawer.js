@@ -373,6 +373,101 @@ Drawer.prototype.drawSpaceContents = function(p_context, p_drawableItems, p_func
 	}
 }
 
+Drawer.prototype.drawPolyomino4x5TiledMap = function (p_context, p_map, p_pixMapSide, p_function, p_number,p_xLength, p_yLength){
+	const pixStartX = this.pix.marginGrid.left;
+	const pixSide = this.pix.sideSpace;
+	const pixHalfSide = pixSide/2;
+	var upOn;
+	var leftOn;
+	var rightOn;
+	var downOn;
+	var pixOriginX = pixStartX;
+	var pixOriginY = this.pix.marginGrid.up;
+	var pixDrawX,pixDrawY;
+	var coordinateXInMap, coordinateYInmap;
+	const xBlockLeft = 0;
+	const yBlockUp = 0;
+	const xBlockRight = 3;
+	const yBlockDown = 3;
+	
+	function xLeftContinue(p_continue){
+		return p_continue ? 2 : 0;
+	}
+	
+	function yUpContinue(p_continue){
+		return p_continue ? 2 : 0;
+	}
+	
+	function xRightContinue(p_continue){
+		return p_continue ? 1 : 3;
+	}
+	
+	function yDownContinue(p_continue){
+		return p_continue ? 1 : 3;
+	}
+	
+	function drawQuarter(x,y){
+		p_context.drawImage(p_map,coordinateXInMap*p_pixMapSide,coordinateYInMap*p_pixMapSide,p_pixMapSide,p_pixMapSide,
+		pixOriginX+x*pixHalfSide,pixOriginY+y*pixHalfSide,pixHalfSide,pixHalfSide);	
+	}
+	
+	for(iy = 0;iy < p_yLength;iy++){
+		for(ix = 0;ix < p_xLength;ix++){
+			indexItem = p_function(ix,iy);
+			if (indexItem == p_number){
+				upOn = (iy > 0 && (p_function(ix,iy-1) == p_number));
+				leftOn = (ix > 0 && (p_function(ix-1,iy) == p_number));
+				rightOn = (ix < p_xLength-1 && (p_function(ix+1,iy) == p_number));
+				downOn = (iy < p_yLength-1 && (p_function(ix,iy+1) == p_number));
+				xLeftContinue = leftOn ? 2:0;
+				yUpContinue = upOn ? 2:0;
+				xRightContinue = rightOn ? 1:3;
+				yDownContinue = downOn ? 1:3
+				//LU corner
+				if (leftOn && upOn && !p_function(ix-1,iy-1) == p_number){
+					coordinateXInMap = 4
+					coordinateYInMap = 0;
+				} else {
+					coordinateXInMap = xLeftContinue;
+					coordinateYInMap = yUpContinue;
+				}
+				drawQuarter(0,0);
+				//RU corner
+				if (rightOn && upOn && !p_function(ix+1,iy-1) == p_number){
+					coordinateXInMap = 4
+					coordinateYInMap = 1;
+				} else {
+					coordinateXInMap = xRightContinue;
+					coordinateYInMap = yUpContinue;
+				}
+				drawQuarter(1,0);
+				//RD corner
+				if (rightOn && downOn && !p_function(ix+1,iy+1) == p_number){
+					coordinateXInMap = 4
+					coordinateYInMap = 2;
+				} else {
+					coordinateXInMap = xRightContinue;
+					coordinateYInMap = yDownContinue;
+				}
+				drawQuarter(1,1);
+				//LD corner
+				if (leftOn && downOn && !p_function(ix-1,iy+1) == p_number){
+					coordinateXInMap = 4
+					coordinateYInMap = 3;
+				} else {
+					coordinateXInMap = xLeftContinue;
+					coordinateYInMap = yDownContinue;
+				}
+				drawQuarter(0,1);				
+			}
+			pixOriginX+=this.pix.sideSpace;
+		}
+		pixOriginY+=this.pix.sideSpace;
+		pixOriginX = pixStartX;
+	}
+	
+	
+}
 
 //--------------------
 // Setting up functions
