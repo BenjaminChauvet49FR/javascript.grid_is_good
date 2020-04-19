@@ -5,7 +5,7 @@ function clickCanvas(event,p_canvas,p_drawer,p_components,p_solver,p_actionsMana
 	var spaceClicked = drawer.getClickSpace(event,p_canvas,p_solver.xLength,p_solver.yLength);
     if (spaceClicked != null){
 		clickSpaceAction(p_solver,spaceClicked.x,spaceClicked.y,p_actionsManager.clickSpace);
-		p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked);
+		//p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked); TODO : à gérer !
 	}
 }
 
@@ -13,17 +13,17 @@ function clickCanvas(event,p_canvas,p_drawer,p_components,p_solver,p_actionsMana
 You successfully clicked on a region space (coordinates in parameter). Then what ? 
 */
 function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
-	/*switch(p_action.id){
-		case ACTION_FILL_SPACE.id:
-			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,FILLING.YES); 
+	switch(p_action.id){
+		case ACTION_OPEN_SPACE.id:
+			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,SPACE.OPEN); 
 		break;
-		case ACTION_PUT_NO_FILL.id:
-			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,FILLING.NO); 
+		case ACTION_CLOSE_SPACE.id:
+			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,SPACE.CLOSED); 
 		break;
-		case ACTION_PASS_REGION.id:
+		/*case ACTION_PASS_REGION.id:
 			p_solver.passRegion(p_solver.getRegionIndex(p_spaceIndexX,p_spaceIndexY));
-		break;
-	}*/
+		break;*/
+	}
 }
 
 //--------------------------

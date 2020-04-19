@@ -11,7 +11,8 @@ var colors={
 	open_wall:'#dddddd',
 	edge_walls:'#000000',
 	bannedSpace:'#666666',
-	validSquare:'#000088',
+	openSquare:'#00ffcc',
+	closedSquare:'#cc0022',
 	rainbowSpaces:[],
 	insideIndicationsOnWhite:'#008800',
 	insideIndicationsOnFilled:'#00ff00',
@@ -40,3 +41,11 @@ putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("
 putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,solver,fieldName.value)});
 
 //------
+
+var textAction = document.getElementById("text_canvas_action");
+setMode(textAction,actionsManager,ENTRY.SPACE,ACTION_CLOSE_SPACE);
+addEventListenerAndCaption("submit_open_space",ACTION_OPEN_SPACE);
+addEventListenerAndCaption("submit_close_space",ACTION_CLOSE_SPACE);
+function addEventListenerAndCaption(p_identifier,p_action){ //Shortcut action
+	addEventListenerAndCaptionForSolver(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
+}

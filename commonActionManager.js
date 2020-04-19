@@ -18,6 +18,9 @@ const ACTION_FILL_SPACE = {id:2,htmlCaption:"Colorier case"};
 const ACTION_PUT_NO_FILL = {id:3,htmlCaption:"Placer un X"};
 const ACTION_PUT_STAR = {id:4,htmlCaption:"Placer une étoile"};
 const ACTION_PUT_NO_STAR = {id:5,htmlCaption:"Placer un X"};
+const ACTION_OPEN_SPACE = {id:6,htmlCaption:"Déclarer case ouverte"};
+const ACTION_CLOSE_SPACE = {id:7,htmlCaption:"Déclarer case fermée"};
+
 
 /**
 Getter of setter for a specific mode
