@@ -60,6 +60,7 @@ function addEventListenerAndCaptionActionSubmitStandardSpace(elementId, modeValu
 }
 addEventListenerAndCaptionActionSubmitStandardSpace("submit_normal_mode",MODE_NORMAL);
 addEventListenerAndCaptionActionSubmitStandardSpace("submit_select_mode",MODE_SELECTION);
+addEventListenerAndCaptionActionSubmitStandardSpace("submit_select_rectangles_mode",MODE_SELECTION_RECTANGLE);
 addEventListenerAndCaptionActionSubmitStandardSpace("submit_erase_mode",MODE_ERASE);
 addEventListenerAndCaptionActionSubmitStandardSpace("submit_digit_mode",MODE_NUMBER);
 

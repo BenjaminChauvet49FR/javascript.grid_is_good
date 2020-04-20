@@ -6,6 +6,7 @@ const ENTRY = {
 
 const MODE_NORMAL = {id:1,html:"Etat case",submitCaption:"Changer case grille"};
 const MODE_SELECTION = {id:2,html:"Sélection",submitCaption:"Sélectionner cases"};
+const MODE_SELECTION_RECTANGLE = {id:7,html:"Sélection rectangulaire",submitCaption:"Sélectionner cases en rectangle"};
 const MODE_ERASE = {id:3,html:"Effaçage",submitCaption:"Effacer murs autour case"};
 const MODE_NUMBER = {id:4,html:"Ajout numéro",submitCaption:"Ajouter le n° ",numberToInput:0};
 const MODE_NORMAL_PATH = {id:5,html:"Chemins",submitCaption:"Changer chemins"};

@@ -8,6 +8,8 @@ clickSpaceAction = function(p_editorCore,p_x, p_y, p_modes){
 	mode = p_modes.clickSpace;
 	if (mode.id == MODE_SELECTION.id){
 		p_editorCore.selectSpace(p_x,p_y);
+	} else if (mode.id == MODE_SELECTION_RECTANGLE.id) {
+		p_editorCore.selectRectangleMechanism(p_x,p_y);
 	} else if (mode.id == MODE_ERASE.id){
 		p_editorCore.clearWallsAround(p_x,p_y);
 		p_editorCore.clearNumber(p_x,p_y);
@@ -17,7 +19,7 @@ clickSpaceAction = function(p_editorCore,p_x, p_y, p_modes){
 		}else{
 			p_editorCore.clearNumber(p_x,p_y);
 		}
-	}else {
+	} else {
 		p_editorCore.switchState(p_x,p_y);
 		p_editorCore.clearNumber(p_x,p_y);
 	}

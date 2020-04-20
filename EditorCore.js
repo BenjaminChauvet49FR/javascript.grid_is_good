@@ -40,7 +40,7 @@ EditorCore.prototype.setupFromWallArray = function(p_wallArray){
 	this.regionGrid = null;
 	this.isRegionGridValid = true;
 	this.isSelectionMode = false;
-	this.selectedSpacesList = null;
+	this.selectedCornerSpace = null; //TODO gagnerait à être renommé
 	this.selectedGrid = null;
 	this.inputNumber = 1; //TODO faire getter et setter
 	this.resetSelection(); 
@@ -226,20 +226,36 @@ Selection phase
 */
 EditorCore.prototype.selectSpace = function(p_x,p_y){
 	this.selectedGrid[p_y][p_x] = SELECTED.YES;
-	this.selectedSpacesList.push({x:p_x,y:p_y});
+}
+
+EditorCore.prototype.selectRectangleMechanism = function (p_x,p_y){
+	if (this.selectedCornerSpace == null){
+		this.selectedCornerSpace = {x:p_x,y:p_y};
+	} else {
+		const xMin = Math.min(this.selectedCornerSpace.x,p_x);
+		const yMin = Math.min(this.selectedCornerSpace.y,p_y);		
+		const xMax = Math.max(this.selectedCornerSpace.x,p_x);
+		const yMax = Math.max(this.selectedCornerSpace.y,p_y);
+		for(x = xMin ; x <= xMax ; x++){
+			for(var y=yMin; y<= yMax ; y++){
+				this.selectSpace(x,y);
+			}
+		}
+		this.selectedCornerSpace = null;
+	}
 }
 
 EditorCore.prototype.unselectAll = function(){
-	var space;
-	while(this.selectedSpacesList.length > 0){
-		space = this.selectedSpacesList.pop();
-		this.selectedGrid[space.y][space.x] = SELECTED.NO;
+	for(var iy = 0;iy < this.getYLength() ; iy++){
+		for(var ix = 0;ix < this.getXLength() ; ix++){
+			this.selectedGrid[iy][ix] = SELECTED.NO;
+		}
 	}
+	this.selectedCornerSpace = null;
 }
 
 EditorCore.prototype.resetSelection = function(){
 	this.isSelectionMode = false;
-	this.selectedSpacesList = [];
 	this.selectedGrid = [];
 	for(var iy = 0; iy<this.getYLength();iy++){
 		this.selectedGrid.push([]);
@@ -247,23 +263,28 @@ EditorCore.prototype.resetSelection = function(){
 			this.selectedGrid[iy].push(SELECTED.NO);
 		}
 	}		
+	this.selectedCornerSpace = null;
 }
 
 EditorCore.prototype.buildWallsAroundSelection = function(){
-	this.selectedSpacesList.forEach(space => {
-		if (space.x > 0 && this.selectedGrid[space.y][space.x-1] == SELECTED.NO){
-			this.wallGrid.setWallR(space.x-1,space.y,CLOSED);
+	for(var y = 0;y < this.getYLength();y++){
+		for(var x = 0;x < this.getXLength();x++){
+			if (this.selectedGrid[y][x] == SELECTED.YES){
+				if (x > 0 && this.selectedGrid[y][x-1] == SELECTED.NO){
+					this.wallGrid.setWallR(x-1,y,CLOSED);
+				}
+				if (x < this.getXLength()-1 && this.selectedGrid[y][x+1] == SELECTED.NO){
+					this.wallGrid.setWallR(x,y,CLOSED);
+				}
+				if (y > 0 && this.selectedGrid[y-1][x] == SELECTED.NO){
+					this.wallGrid.setWallD(x,y-1,CLOSED);
+				}
+				if (y < this.getYLength()-1 && this.selectedGrid[y+1][x] == SELECTED.NO){
+					this.wallGrid.setWallD(x,y,CLOSED);
+				}
+			}
 		}
-		if (space.x < this.getXLength()-1 && this.selectedGrid[space.y][space.x+1] == SELECTED.NO){
-			this.wallGrid.setWallR(space.x,space.y,CLOSED);
-		}
-		if (space.y > 0 && this.selectedGrid[space.y-1][space.x] == SELECTED.NO){
-			this.wallGrid.setWallD(space.x,space.y-1,CLOSED);
-		}
-		if (space.y < this.getYLength()-1 && this.selectedGrid[space.y+1][space.x] == SELECTED.NO){
-			this.wallGrid.setWallD(space.x,space.y,CLOSED);
-		}
-	});
+	}
 	this.unselectAll();
 }
 
