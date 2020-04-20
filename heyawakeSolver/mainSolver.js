@@ -39,6 +39,8 @@ var fieldName = document.getElementById("input_grid_name");
 
 putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("Heyawake")});
 putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,solver,fieldName.value)});
+putActionElementClick("submit_quickStart",function(event){quickStartAction(solver,null)});
+putActionElementClick("submit_undo",function(event){undoAction(solver,null)});
 
 //------
 

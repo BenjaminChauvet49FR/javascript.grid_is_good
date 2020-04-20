@@ -178,19 +178,35 @@ SolverHeyawake.prototype.putNew = function(p_x,p_y,p_symbol){
 }
 
 SolverHeyawake.prototype.lowerHorizontalStrip = function(p_index,p_symbol){
+	this.modifyHorizontalStrip(p_index,p_symbol,-1);
+}
+
+SolverHeyawake.prototype.lowerVerticalStrip = function(p_index,p_symbol){
+	this.modifyVerticalStrip(p_index,p_symbol,-1);
+}
+
+SolverHeyawake.prototype.raiseHorizontalStrip = function(p_index,p_symbol){
+	this.modifyHorizontalStrip(p_index,p_symbol,1);
+}
+
+SolverHeyawake.prototype.raiseVerticalStrip = function(p_index,p_symbol){
+	this.modifyVerticalStrip(p_index,p_symbol,1);
+}
+
+SolverHeyawake.prototype.modifyHorizontalStrip = function(p_index,p_symbol,p_modify){
 	if (p_index != NOT_RELEVANT){
-		this.horizontalStripes[p_index].UNDEFs--;
+		this.horizontalStripes[p_index].UNDEFs += p_modify;
 		if (p_symbol == SPACE.CLOSED){
-			this.horizontalStripes[p_index].CLOSEDs++;
+			this.horizontalStripes[p_index].CLOSEDs += p_modify;
 		}
 	}
 }
 
-SolverHeyawake.prototype.lowerVerticalStrip = function(p_index,p_symbol){
+SolverHeyawake.prototype.modifyVerticalStrip = function(p_index,p_symbol,p_modify){
 	if (p_index != NOT_RELEVANT){
-		this.verticalStripes[p_index].UNDEFs--;
+		this.verticalStripes[p_index].UNDEFs  += p_modify;
 		if (p_symbol == SPACE.CLOSED){
-			this.verticalStripes[p_index].CLOSEDs++;
+			this.verticalStripes[p_index].CLOSEDs += p_modify;
 		}
 	}
 }
@@ -242,7 +258,9 @@ SolverHeyawake.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 		}			
 	}
 	if (!ok){
-		
+		this.undo(eventsApplied);
+	} else if (eventsApplied.length > 0) {
+		this.happenedEvents.push(eventsApplied); //TODO dire que ça vient d'une hypothèse !
 	}
 }
 
@@ -288,4 +306,63 @@ SolverHeyawake.prototype.alertRegion = function(p_listEvents,p_regionIndex,p_mis
 		}
 	}
 	return p_listEvents;
+}
+
+//--------------------
+// Quick start 
+
+/**
+Used by outside !
+*/
+SolverHeyawake.prototype.quickStart = function(){
+	this.regions.forEach(region => {
+		if (region.size == 1 && region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 1){
+			this.tryToPutNew(region.spaces[0].x,region.spaces[0].y,SPACE.CLOSED);
+		};
+		if (region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 0){
+			region.spaces.forEach(space => {
+				this.tryToPutNew(space.x,space.y,SPACE.OPEN);
+			});
+		}
+	});
+}
+
+//--------------------
+// Undoing
+
+SolverHeyawake.prototype.undoEvent = function(p_event){
+	const x = p_event.x;
+	const y = p_event.y;
+	const symbol = p_event.symbol;
+	this.answerGrid[y][x] = SPACE.UNDECIDED;
+		var ir = this.regionGrid[y][x];
+	var region = this.regions[ir];
+	if (region.notPlacedYet != null){
+		if (symbol == SPACE.OPEN){
+			region.notPlacedYet.OPENs++;
+		} else if (symbol == SPACE.CLOSED){
+			region.notPlacedYet.CLOSEDs++;
+		}
+	}
+	const stripSpace = this.stripGrid[y][x];
+	this.raiseHorizontalStrip(stripSpace.leftMost,symbol);
+	this.raiseHorizontalStrip(stripSpace.horizIn,symbol);
+	this.raiseHorizontalStrip(stripSpace.rightMost,symbol);	
+	this.raiseVerticalStrip(stripSpace.topMost,symbol);
+	this.raiseVerticalStrip(stripSpace.vertIn,symbol);
+	this.raiseVerticalStrip(stripSpace.bottomMost,symbol);
+}
+
+SolverHeyawake.prototype.undoEventList = function(p_eventsList){
+	p_eventsList.forEach(solveEvent => this.undoEvent(solveEvent));
+}
+
+/**
+Used by outside !
+*/
+SolverHeyawake.prototype.undoToLastHypothesis = function(){
+	if (this.happenedEvents.length > 0){
+		var lastEventsList = this.happenedEvents.pop();
+		this.undoEventList(lastEventsList);
+	}
 }
