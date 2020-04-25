@@ -31,3 +31,5 @@ addToElement(divElement,namingHTMLDoc(false,"starBattle"),"Star battle");
 addToElement(divElement,namingHTMLDoc(false,"norinori"),"Norinori");
 addToElement(divElement,namingHTMLDoc(false,"shimaguni"),"Shimagni");
 addToElement(divElement,namingHTMLDoc(false,"heyawake"),"Heyawake");
+addText(divElement,"Solveurs théoriques : ");
+addToElement(divElement,namingHTMLDoc(false,"theoryCluster"),"Theorical cluster");
