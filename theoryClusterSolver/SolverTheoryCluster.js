@@ -77,10 +77,11 @@ SolverTheoryCluster.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
     var newClosedSpaces;
     var firstOpenThisTime;
     while (ok && listEventsToApply.length > 0) {
+		// Overall (classical + geographical) verification
         newClosedSpaces = [];
         firstOpenThisTime = false;
         while (ok && listEventsToApply.length > 0) {
-            //Classical verification
+            // Classical verification
             eventBeingApplied = listEventsToApply.pop();
             x = eventBeingApplied.x;
             y = eventBeingApplied.y;
@@ -97,6 +98,7 @@ SolverTheoryCluster.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
                         y: y
                     });
                 } else {
+					//If we are putting the first open space, add a corresponding event into the list of applied events (it isn't "to apply" anymore)
                     if (!this.atLeastOneOpen) {
                         listEventsApplied.push({
                             firstOpen: true
@@ -233,3 +235,15 @@ SolverTheoryCluster.prototype.undoToLastHypothesis = function () {
         this.undoEventList(lastEventsList);
     }
 }
+
+
+
+
+/**
+What not to forget when copying the adjacency constraint into a solver that doesn't have it yet : 
+-geographicalVerification
+-firstOpenThisTime && listNewClosedEvents initialized in the right part of the loop
+-events concatenation
+-this.gridArray, this.gridList (limits), this.atLeastOneOpen
+-undoing events
+*/
