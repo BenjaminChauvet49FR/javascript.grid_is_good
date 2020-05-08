@@ -1,5 +1,5 @@
 function commonPuzzleToString(p_wallArray,p_numbersArray){
-	return wallArrayToString(p_wallArray)+" "+numberArrayToString(p_numbersArray,0);
+	return wallArrayToString(p_wallArray)+" "+arrayToString(p_numbersArray,0);
 }
 
 function stringToCommonPuzzle(p_string){
@@ -7,7 +7,10 @@ function stringToCommonPuzzle(p_string){
 	var wallGridAnswer = tokensToWallArray(stringArray.slice(0,3));
 	var xLength = stringArray[0];
 	var yLength = stringArray[1];
-	var numberGrid = tokensToNumberArray(stringArray.slice(3),xLength,yLength,0);
+	var numberGrid = null;
+	if (stringArray.length > 3) {
+	    numberGrid = tokensToArray(stringArray.slice(3), xLength, yLength, 0);
+	}
 	return {grid:wallGridAnswer,gridNumber:numberGrid};
 }
 

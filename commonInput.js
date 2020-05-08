@@ -81,11 +81,9 @@ loadAction = function (p_canvas, p_drawer, p_core, p_detachedName, p_fieldsToUpd
             } else if (p_core.hasWallGrid()) {
                 p_core.setupFromWallArray(loadedItem.grid); //TODO maybe this will have to be revisited because we are forcing "answer" to have a grid value.
             }
-            if (p_core.hasNumberGrid()) {
-                p_core.setupNumberGrid(loadedItem.gridNumber); //TODO same as this
-            }
+			p_core.addGrid(GRID_ID.NUMBER_REGION,loadedItem.gridNumber); //TODO gridNumber will somehow have to be renamed
             p_core.setupFromWallArray(loadedItem.grid);
-            adaptCanvasAndGrid(p_canvas, p_drawer, p_core); //Oh and this canvas, too...
+            adaptCanvasAndGrid(p_canvas, p_drawer, p_core); 
             updateFieldsAfterLoad(p_fieldsToUpdate, loadedItem);
         }
     } else {

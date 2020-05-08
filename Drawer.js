@@ -47,8 +47,7 @@ Drawer.prototype.setMarginGrid = function (p_left, p_up, p_right, p_down) { //TO
 
 /**
 Draw the grid on-screen on p_context, with p_editorCore informations, with this.pix and p_colors information for pixels and colors
- */
-
+*/
 Drawer.prototype.drawGrid = function (p_context, p_editorCore) {
     const xLength = p_editorCore.getXLength();
     const yLength = p_editorCore.getYLength();
@@ -68,10 +67,11 @@ Drawer.prototype.drawGrid = function (p_context, p_editorCore) {
             }
         }
     }
-    //Numbers
-    if (p_editorCore.hasNumberGrid()) {
-        this.drawNumbersLittle(p_context, p_editorCore.numberGrid, xLength, yLength);
-    }
+	
+	if (p_editorCore.getGrid(GRID_ID.NUMBER_REGION)) {
+	    this.drawNumbersLittle(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_REGION), xLength, yLength);
+	}
+		
     //Paths
     if (p_editorCore.hasPathGrid()) {
         this.drawWalllessGrid(p_context, null, xLength, yLength);
@@ -190,11 +190,10 @@ Drawer.prototype.drawWalllessGrid = function (p_context, p_wallGrid, p_xLength, 
 }
 
 Drawer.prototype.drawNumbersLittle = function (p_context, p_numberGrid, p_xLength, p_yLength) {
-    this.drawNumbersGrid(p_context, null, p_numberGrid, p_xLength, p_yLength)
+    this.drawNumbersLittleInCorner(p_context, null, p_numberGrid, p_xLength, p_yLength)
 }
 
-//"Grid" qu'on combine avec la wallGrid... TODO nom à changer
-Drawer.prototype.drawNumbersGrid = function (p_context, p_wallGrid, p_numberGrid, p_xLength, p_yLength) {
+Drawer.prototype.drawNumbersLittleInCorner = function (p_context, p_wallGrid, p_numberGrid, p_xLength, p_yLength) {
     p_context.textAlign = 'left';
     p_context.textBaseline = 'top';
     p_context.font = this.getPixInnerSide() / 2 + "px Arial";
@@ -204,7 +203,7 @@ Drawer.prototype.drawNumbersGrid = function (p_context, p_wallGrid, p_numberGrid
     number;
     for (iy = 0; iy < p_yLength; iy++) {
         for (ix = 0; ix < p_xLength; ix++) {
-            number = p_numberGrid.getNumber(ix, iy);
+            number = p_numberGrid.get(ix, iy);
             if (number != null) {
                 pixLeft = this.getPixInnerXLeft(ix) + 2;
                 pixDown = this.getPixInnerYUp(iy) + 2;

@@ -1,3 +1,5 @@
+const GRID_ID = {NUMBER_REGION:'NR'}
+
 function EditorCore(p_xLength, p_yLength, p_parameters) {
     this.possessPathGrid = (p_parameters && (p_parameters.hasPathGrid == true)); //TODO il y a mieux qu'une gestion de booléens j'imagine
     this.possessWallGrid = !this.possessPathGrid;
@@ -6,7 +8,7 @@ function EditorCore(p_xLength, p_yLength, p_parameters) {
 }
 
 //TODO : en l'état actuel on a une grille "wallGrid" et une grille "pathGrid"... qui ont exactement la même nature ! (WallGrid). Attention danger.
-
+//TODO renommer "startGrid" ou "restartGrid"
 /**
 Starts a grid from scratch.
 Basically the same as restarting it.
@@ -19,15 +21,13 @@ EditorCore.prototype.startGrid = function (p_xLength, p_yLength) {
 Restarts a grid from scratch.
  */
 EditorCore.prototype.restartGrid = function (p_xLength, p_yLength) {
-    if (this.hasNumberGrid()) {
-        this.setupNumberGrid(generateNumberArray(p_xLength, p_yLength, -1)); //TODO ticking bomb ! Un "numéro par défaut" à -1, j'aime pas trop ça.
-    }
     if (this.hasPathGrid()) {
         this.setupFromPathArray(generatePathArray(p_xLength, p_yLength));
     }
     if (this.hasWallGrid()) {
         this.setupFromWallArray(generateWallArray(p_xLength, p_yLength));
     }
+	this.grids = {};
     this.mode = {
         colorRegionIfValid: false
     };
@@ -56,16 +56,18 @@ EditorCore.prototype.setupFromPathArray = function (p_pathArray) {
     this.pathGrid = new WallGrid(p_pathArray, p_pathArray[0].length, p_pathArray.length);
 }
 
-EditorCore.prototype.setupNumberGrid = function (p_numberArray, p_defaultNumber) {
-    this.numberGrid = new NumberGrid(p_numberArray, p_numberArray[0].length, p_numberArray.length, p_defaultNumber);
+EditorCore.prototype.addCleanGrid = function (p_id,p_xLength,p_yLength) {
+    this.grids[p_id] = new Grid(generateSymbolArray(p_xLength,p_yLength),p_xLength,p_yLength);
+}
+
+EditorCore.prototype.addGrid = function (p_id,p_array) {
+	if (p_array != null && p_array.length > 0) {
+	    this.grids[p_id] = new Grid(p_array, p_array[0].length, p_array.length);
+	}
 }
 
 // ----------
 // Testers
-
-EditorCore.prototype.hasNumberGrid = function () {
-    return (typeof(NumberGrid) == 'function');
-}
 
 EditorCore.prototype.hasPathGrid = function () {
     return this.possessPathGrid;
@@ -75,12 +77,10 @@ EditorCore.prototype.hasWallGrid = function () {
     return this.possessWallGrid;
 }
 
-EditorCore.prototype.getArray = function () { //TODO cette fonction gagnera à être changée de nom !
+EditorCore.prototype.getWallArray = function () {
     return this.wallGrid.array;
 }
-EditorCore.prototype.getNumbers = function () {
-    return this.numberGrid.array;
-}
+
 EditorCore.prototype.getPaths = function () {
     return this.pathGrid.array;
 }
@@ -88,16 +88,19 @@ EditorCore.prototype.getPaths = function () {
 EditorCore.prototype.getWallGrid = function () { //TODO cette fonction gagnera à être changée de nom !
     return this.wallGrid;
 }
-EditorCore.prototype.getNumberGrid = function () {
-    return this.numberGrid;
+
+EditorCore.prototype.getGrid = function(p_index){
+	return this.grids[p_index];
 }
 
 EditorCore.prototype.getSelection = function (p_x, p_y) {
     return this.selectedGrid[p_y][p_x];
 }
+
 EditorCore.prototype.getInputNumber = function () {
     return this.inputNumber;
 }
+
 EditorCore.prototype.setInputNumber = function (p_inputNumber) {
     this.inputNumber = p_inputNumber
 }
@@ -148,14 +151,16 @@ EditorCore.prototype.switchPathD = function (p_x, p_y) {
     this.pathGrid.switchWallD(p_x, p_y);
 }
 
-EditorCore.prototype.getNumber = function (p_x, p_y, p_number) {
-    return this.numberGrid.getNumber(p_x, p_y, p_number);
+EditorCore.prototype.get = function (p_idGrid, p_x, p_y) {
+    return this.grids[p_idGrid].get(p_x, p_y);
 }
-EditorCore.prototype.setNumber = function (p_x, p_y, p_number) {
-    this.numberGrid.setNumber(p_x, p_y, p_number);
+
+EditorCore.prototype.set = function (p_idGrid, p_x, p_y, p_value) {
+    this.grids[p_idGrid].set(p_x, p_y, p_value);
 }
-EditorCore.prototype.clearNumber = function (p_x, p_y) {
-    this.numberGrid.clearNumber(p_x, p_y);
+
+EditorCore.prototype.clear = function (p_idGrid, p_x, p_y) {
+    this.grids[p_idGrid].clear(p_x, p_y);
 }
 
 EditorCore.prototype.getXLength = function () {
@@ -203,9 +208,9 @@ EditorCore.prototype.rotateCWGrid = function () {
         this.pathGrid.rotateCWGrid();
         this.setupFromPathArray(this.pathGrid.array);
     }
-    if (this.hasNumberGrid()) {
-        this.numberGrid.rotateCWGrid();
-    }
+	for (const id in this.grids) {
+	    this.grids[id].rotateCWGrid();
+	}
 }
 
 EditorCore.prototype.rotateUTurnGrid = function () {
@@ -217,9 +222,9 @@ EditorCore.prototype.rotateUTurnGrid = function () {
         this.pathGrid.rotateUTurnGrid();
         this.setupFromPathArray(this.pathGrid.array);
     }
-    if (this.hasNumberGrid()) {
-        this.numberGrid.rotateUTurnGrid();
-    }
+	for (const id in this.grids) {
+	    this.grids[id].rotateUTurnGrid();
+	}
 }
 
 EditorCore.prototype.rotateCCWGrid = function () {
@@ -231,9 +236,9 @@ EditorCore.prototype.rotateCCWGrid = function () {
         this.pathGrid.rotateCCWGrid();
         this.setupFromPathArray(this.pathGrid.array);
     }
-    if (this.hasNumberGrid()) {
-        this.numberGrid.rotateCCWGrid();
-    }
+	for (const id in this.grids) {
+	    this.grids[id].rotateCCWGrid();
+	}
 }
 
 EditorCore.prototype.mirrorHorizontalGrid = function () {
@@ -245,9 +250,9 @@ EditorCore.prototype.mirrorHorizontalGrid = function () {
         this.pathGrid.mirrorHorizontalGrid();
         this.setupFromPathArray(this.pathGrid.array);
     }
-    if (this.hasNumberGrid()) {
-        this.numberGrid.mirrorHorizontalGrid();
-    }
+	for (const id in this.grids) {
+	    this.grids[id].mirrorHorizontalGrid();
+	}
 }
 
 EditorCore.prototype.mirrorVerticalGrid = function () {
@@ -259,9 +264,9 @@ EditorCore.prototype.mirrorVerticalGrid = function () {
         this.pathGrid.mirrorVerticalGrid();
         this.setupFromPathArray(this.pathGrid.array);
     }
-    if (this.hasNumberGrid()) {
-        this.numberGrid.mirrorVerticalGrid();
-    }
+	for (const id in this.grids) {
+	    this.grids[id].mirrorVerticalGrid();
+	}
 }
 
 EditorCore.prototype.resizeGrid = function (p_xLength, p_yLength) {
@@ -273,9 +278,9 @@ EditorCore.prototype.resizeGrid = function (p_xLength, p_yLength) {
         this.pathGrid.resizeGrid(p_xLength, p_yLength);
         this.setupFromPathArray(this.pathGrid.array);
     }
-    if (this.hasNumberGrid()) {
-        this.numberGrid.resizeGrid(p_xLength, p_yLength);
-    }
+	for (const id in this.grids) {
+	    this.grids[id].resizeGrid(p_xLength, p_yLength);
+	}
 }
 
 //-------------------------------------------
@@ -365,6 +370,7 @@ EditorCore.prototype.clearWallsAround = function (p_x, p_y) {
     }
 }
 
-EditorCore.prototype.resetNumbers = function () {
-    this.numberGrid.arrangeNumbers(this.wallGrid.toRegionGrid());
+EditorCore.prototype.alignToRegions = function (p_idGrid) {
+    this.grids[p_idGrid].arrangeSymbols(this.wallGrid.toRegionGrid());
 }
+

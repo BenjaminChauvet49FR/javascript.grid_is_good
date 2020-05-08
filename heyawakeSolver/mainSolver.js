@@ -1,5 +1,5 @@
 var drawer = new Drawer();
-var solver = new SolverHeyawake(generateWallArray(1,1),generateNumberArray(1,1,0));
+var solver = new SolverHeyawake(generateWallArray(1,1),generateSymbolArray(1,1));
 //TODO (dummy grid problem)
 var canevas = document.getElementById("canevas");
 var	context = canevas.getContext("2d");

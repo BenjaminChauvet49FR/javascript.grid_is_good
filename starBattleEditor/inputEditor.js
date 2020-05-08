@@ -16,7 +16,7 @@ clickSpaceAction = function(p_editorCore,p_x, p_y, p_modes){
 }
 
 function puzzleToString(p_editorCore,p_externalOptions){
-	return starBattlePuzzleToString(p_editorCore.getArray(),p_externalOptions.numberStars);
+	return starBattlePuzzleToString(p_editorCore.getWallArray(),p_externalOptions.numberStars);
 }
 
 function getLocalStorageName(p_detachedName){
