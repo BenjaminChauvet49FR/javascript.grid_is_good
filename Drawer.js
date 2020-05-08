@@ -53,15 +53,19 @@ Drawer.prototype.drawGrid = function(p_context,p_editorCore){
 	const xLength = p_editorCore.getXLength();
 	const yLength = p_editorCore.getYLength();
 	if (p_editorCore.hasWallGrid()){
-		this.drawWallGrid(p_context,p_editorCore.wallGrid,xLength,yLength);
-		//TODO improve me this, lol !
-		for(var iy = 0;iy < yLength; iy++){
-			for(var ix = 0;ix < xLength;ix++){
-				if(p_editorCore.getSelection(ix,iy) == SELECTED.YES){
-					p_context.fillStyle= this.colors.selectedSpace;
-					p_context.fillRect(this.getPixInnerXLeft(ix),this.getPixInnerYUp(iy),this.getPixInnerSide(),this.getPixInnerSide());
-				}
-			}
+		if (p_editorCore.hasWalls()) {
+		    this.drawWallGrid(p_context, p_editorCore.wallGrid, xLength, yLength);
+		} else {
+			this.drawWalllessGrid(p_context, p_editorCore.wallGrid, xLength, yLength);
+		}
+		// Selection
+		for (var iy = 0; iy < yLength; iy++) {
+		    for (var ix = 0; ix < xLength; ix++) {
+		        if (p_editorCore.getSelection(ix, iy) == SELECTED.YES) {
+		            p_context.fillStyle = this.colors.selectedSpace;
+		            p_context.fillRect(this.getPixInnerXLeft(ix), this.getPixInnerYUp(iy), this.getPixInnerSide(), this.getPixInnerSide());
+		        }
+		    }
 		}
 	}
 	//Numbers
@@ -70,7 +74,7 @@ Drawer.prototype.drawGrid = function(p_context,p_editorCore){
 	}
 	//Paths
 	if (p_editorCore.hasPathGrid()){
-		this.drawWallGridBlank(p_context,xLength,yLength);
+		this.drawWalllessGrid(p_context,null,xLength,yLength);
 		this.drawWallGridAsPath(p_context,p_editorCore.pathGrid,xLength,yLength);
 	}
 }
@@ -92,7 +96,7 @@ Drawer.prototype.drawWallGrid = function(p_context,p_wallGrid, p_xLength, p_yLen
 	const pixThickness = 2*this.pix.borderSpace;
 	
 	//Go !
-	p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight);
+	p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight); //TODO best place to put this function ?
 	for(iy = 0;iy < p_yLength; iy++){
 		for(ix = 0;ix < p_xLength;ix++){
 			//Draw down wall
@@ -143,6 +147,48 @@ Drawer.prototype.drawWallGrid = function(p_context,p_wallGrid, p_xLength, p_yLen
 	pixTotalWidth,this.pix.borderSpace);
 }
 
+Drawer.prototype.drawWalllessGrid = function (p_context, p_wallGrid, p_xLength, p_yLength) {
+    p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight); //TODO best place to put this function ?
+    var i;
+    const pixTotalWidth = p_xLength * this.pix.sideSpace;
+    const pixTotalHeight = p_yLength * this.pix.sideSpace;
+    var pixXStart = this.pix.marginGrid.left;
+    var pixYStart = this.pix.marginGrid.up;
+    var pixY = pixYStart - this.pix.borderSpace;
+    const pixInsideThickness = 2 * this.pix.borderSpace;
+    const pixInnerLength = this.getPixInnerSide();
+    p_context.fillStyle = this.colors.open_wall;
+    for (i = 0; i < p_yLength; i++) {
+        pixY += this.pix.sideSpace;
+        p_context.fillRect(pixXStart, pixY, pixTotalWidth, pixInsideThickness);
+    }
+    var pixX = pixXStart - this.pix.borderSpace;
+    for (i = 0; i < p_xLength; i++) {
+        pixX += this.pix.sideSpace;
+        p_context.fillRect(pixX, pixYStart, pixInsideThickness, pixTotalHeight);
+    }
+    p_context.fillStyle = this.colors.edge_walls;
+    p_context.fillRect(pixXStart, pixYStart, pixTotalWidth, this.pix.borderSpace);
+    p_context.fillRect(pixXStart, pixYStart, this.pix.borderSpace, pixTotalHeight);
+    p_context.fillRect(pixXStart, pixY, pixTotalWidth, this.pix.borderSpace);
+    p_context.fillRect(pixX, pixYStart, this.pix.borderSpace, pixTotalHeight);
+    p_context.fillStyle = this.colors.closed_wall;
+	if (p_wallGrid != null) {
+		var ix;
+		pixY = this.getPixInnerYUp(0);
+		for (var iy = 0; iy < p_yLength; iy++) {
+			pixX = this.getPixInnerXLeft(0);
+			for (ix = 0; ix < p_xLength; ix++) {
+				if (p_wallGrid.getState(ix, iy) == CLOSED) {
+					p_context.fillRect(pixX, pixY, pixInnerLength, pixInnerLength);
+				}
+				pixX += this.pix.sideSpace;
+			}
+			pixY += this.pix.sideSpace;
+		}
+	}
+}
+
 Drawer.prototype.drawNumbersLittle = function(p_context,p_numberGrid, p_xLength, p_yLength){
 	this.drawNumbersGrid(p_context, null, p_numberGrid, p_xLength, p_yLength)
 }
@@ -169,12 +215,6 @@ Drawer.prototype.drawNumbersGrid = function(p_context,p_wallGrid,p_numberGrid, p
 			}
 		}
 	}
-}
-
-//TODO : L'état actuel est très mal défini ! On redéfinit un objet entier de la classe WallGrid à chaque fois.
-Drawer.prototype.drawWallGridBlank = function(p_context,p_xLength,p_yLength){
-	const blankWallGrid = new WallGrid(generateWallArray(p_xLength,p_yLength),p_xLength,p_yLength);
-	this.drawWallGrid(p_context,blankWallGrid,p_xLength,p_yLength);
 }
 
 /**
@@ -272,18 +312,20 @@ Drawer.prototype.getClickSpace = function(event,p_canvas,p_xLength,p_yLength){
 If a click is done when mouse is a right wall, returns the index of the corresponding space, otherwise return null
 */
 Drawer.prototype.getClickWallR = function(event,p_canvas,p_editorCore){
-	var pixX = this.getPixXWithinGrid(event,p_canvas); 
-    var pixY = this.getPixYWithinGrid(event,p_canvas); 
-	var pixXModulo = (pixX+this.pix.borderClickDetection)%this.pix.sideSpace;
-	if (pixXModulo < 2*this.pix.borderClickDetection){
-		var answer = {
-			x:Math.floor((pixX+this.pix.borderClickDetection)/this.pix.sideSpace)-1,
-			y:Math.floor(pixY/this.pix.sideSpace)
-		};
-		if ((answer.x < (p_editorCore.getXLength()-1)) && (answer.x >= 0) && (answer.y < p_editorCore.getYLength()) && (answer.y >= 0)){
-			return answer;
-		}
-	}  
+	if (p_editorCore.hasWalls()){
+		var pixX = this.getPixXWithinGrid(event,p_canvas); 
+		var pixY = this.getPixYWithinGrid(event,p_canvas); 
+		var pixXModulo = (pixX+this.pix.borderClickDetection)%this.pix.sideSpace;
+		if (pixXModulo < 2*this.pix.borderClickDetection){
+			var answer = {
+				x:Math.floor((pixX+this.pix.borderClickDetection)/this.pix.sideSpace)-1,
+				y:Math.floor(pixY/this.pix.sideSpace)
+			};
+			if ((answer.x < (p_editorCore.getXLength()-1)) && (answer.x >= 0) && (answer.y < p_editorCore.getYLength()) && (answer.y >= 0)){
+				return answer;
+			}
+		}  
+	}
 	return null;
 }
 
@@ -291,50 +333,56 @@ Drawer.prototype.getClickWallR = function(event,p_canvas,p_editorCore){
 Same as above with down walls
 */
 Drawer.prototype.getClickWallD = function(event,p_canvas,p_editorCore){
-	var pixX = this.getPixXWithinGrid(event,p_canvas); 
-    var pixY = this.getPixYWithinGrid(event,p_canvas); 
-	var pixYModulo = (pixY+this.pix.borderClickDetection)%this.pix.sideSpace;
-	if (pixYModulo < 2*this.pix.borderClickDetection){
-		var answer = {
-			x:Math.floor(pixX/this.pix.sideSpace),
-			y:Math.floor((pixY+this.pix.borderClickDetection)/this.pix.sideSpace)-1
-		};
-		if ((answer.y < (p_editorCore.getYLength()-1)) && (answer.y >= 0) && (answer.x < p_editorCore.getXLength()) && (answer.x >= 0)){
-			return answer;
-		}
-	}  
+	if (p_editorCore.hasWalls()) {
+		var pixX = this.getPixXWithinGrid(event,p_canvas); 
+		var pixY = this.getPixYWithinGrid(event,p_canvas); 
+		var pixYModulo = (pixY+this.pix.borderClickDetection)%this.pix.sideSpace;
+		if (pixYModulo < 2*this.pix.borderClickDetection){
+			var answer = {
+				x:Math.floor(pixX/this.pix.sideSpace),
+				y:Math.floor((pixY+this.pix.borderClickDetection)/this.pix.sideSpace)-1
+			};
+			if ((answer.y < (p_editorCore.getYLength()-1)) && (answer.y >= 0) && (answer.x < p_editorCore.getXLength()) && (answer.x >= 0)){
+				return answer;
+			}
+		}  
+	}
 	return null;
 }
 
 Drawer.prototype.getClickAroundWallR = function(event,p_canvas,p_editorCore){
-	const pixX = this.getPixXWithinGrid(event,p_canvas); 
-    const pixY = this.getPixYWithinGrid(event,p_canvas); 
-	const sideSpace = this.pix.sideSpace;
-	var distanceX = pixX%sideSpace;
-	distanceX = Math.min(distanceX,sideSpace-distanceX);
-	var distanceY = pixY%sideSpace;
-	distanceY = Math.min(distanceY,sideSpace-distanceY);
-	if (distanceX < distanceY){
-		return {
-			x:Math.floor((pixX-sideSpace/2)/sideSpace),
-			y:Math.floor(pixY/sideSpace)
+	if (p_editorCore.hasWalls()) {
+		const pixX = this.getPixXWithinGrid(event,p_canvas); 
+		const pixY = this.getPixYWithinGrid(event,p_canvas); 
+		const sideSpace = this.pix.sideSpace;
+		var distanceX = pixX%sideSpace;
+		distanceX = Math.min(distanceX,sideSpace-distanceX);
+		var distanceY = pixY%sideSpace;
+		distanceY = Math.min(distanceY,sideSpace-distanceY);
+		if (distanceX < distanceY){
+			return {
+				x:Math.floor((pixX-sideSpace/2)/sideSpace),
+				y:Math.floor(pixY/sideSpace)
+			}
 		}
 	}
 	return null;
 }
 
 Drawer.prototype.getClickAroundWallD = function(event,p_canvas,p_editorCore){
-	const pixX = this.getPixXWithinGrid(event,p_canvas); 
-    const pixY = this.getPixYWithinGrid(event,p_canvas); 
-	const sideSpace = this.pix.sideSpace;
-	var distanceX = pixX%sideSpace;
-	distanceX = Math.min(distanceX,sideSpace-distanceX);
-	var distanceY = pixY%sideSpace;
-	distanceY = Math.min(distanceY,sideSpace-distanceY);
-	if (distanceX > distanceY){
-		return {
-			x:Math.floor(pixX/sideSpace),
-			y:Math.floor((pixY-sideSpace/2)/sideSpace)
+	if (p_editorCore.hasWalls()) {
+		const pixX = this.getPixXWithinGrid(event,p_canvas); 
+		const pixY = this.getPixYWithinGrid(event,p_canvas); 
+		const sideSpace = this.pix.sideSpace;
+		var distanceX = pixX%sideSpace;
+		distanceX = Math.min(distanceX,sideSpace-distanceX);
+		var distanceY = pixY%sideSpace;
+		distanceY = Math.min(distanceY,sideSpace-distanceY);
+		if (distanceX > distanceY){
+			return {
+				x:Math.floor(pixX/sideSpace),
+				y:Math.floor((pixY-sideSpace/2)/sideSpace)
+			}
 		}
 	}
 	return null;

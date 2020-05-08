@@ -2,6 +2,7 @@ function EditorCore(p_xLength,p_yLength,p_parameters) {
 	this.possessPathGrid = (p_parameters && (p_parameters.hasPathGrid == true)); //TODO il y a mieux qu'une gestion de booléens j'imagine
 	this.possessWallGrid = !this.possessPathGrid;
 	this.startGrid(p_xLength,p_yLength);
+	this.isWithWalls = (!p_parameters || !p_parameters.hasWalls || (p_parameters.hasWalls != false));
 }
 
 //TODO : en l'état actuel on a une grille "wallGrid" et une grille "pathGrid"... qui ont exactement la même nature ! (WallGrid). Attention danger.
@@ -128,6 +129,20 @@ EditorCore.prototype.getYLength = function(){
 	if (this.hasPathGrid()){
 		return this.pathGrid.yLength;
 	}
+}
+
+// --------------------
+// Non-wall stuff
+EditorCore.prototype.setWallsOn = function () {
+    this.isWithWalls = true;
+}
+
+EditorCore.prototype.setWallsOff = function () {
+    this.isWithWalls = false;
+}
+
+EditorCore.prototype.hasWalls = function () {
+    return this.isWithWalls == true;
 }
 
 // --------------------
