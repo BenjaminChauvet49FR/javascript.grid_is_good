@@ -24,8 +24,8 @@ adaptCanvasAndGrid(canevas,drawer,editorCore);
 
 const puzzleName = "SternenSchlacht";
 putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList(puzzleName)});
-putActionElementClick("submit_save_grid",function(event){saveAction(editorCore,fieldName.value,{numberStars : fieldStars.value})});
-putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,editorCore,fieldName.value,{numberStarsField : fieldStars, sizeField:fieldDimension})});
+putActionElementClick("submit_save_grid",function(event){saveAction(editorCore,fieldName.value,PUZZLES_KIND.STAR_BATTLE.id, {numberStars : fieldStars.value})});
+putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,editorCore,fieldName.value,PUZZLES_KIND.STAR_BATTLE.id,{numberStarsField : fieldStars, sizeField:fieldDimension})});
 putActionElementClick("submit_auto_name",function(event){fieldName.value = puzzleName});
 putActionElementClick("submit_new_grid",function(event){restartAction(canevas,drawer,editorCore,fieldDimension.value,fieldDimension.value)});
 putActionElementClick("submit_resize_grid",function(event){resizeAction(canevas,drawer,editorCore,fieldDimension.value,fieldDimension.value)});

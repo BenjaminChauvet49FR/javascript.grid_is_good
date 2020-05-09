@@ -60,6 +60,18 @@ Grid.prototype.clear = function (p_x, p_y) {
     this.array[p_y][p_x] = null
 }
 
+Grid.prototype.transform = function(p_transformation, p_xDatum, p_yDatum) {
+	switch (p_transformation) {
+		case GRID_TRANSFORMATION.ROTATE_CW : this.rotateCWGrid(); break;
+		case GRID_TRANSFORMATION.ROTATE_CCW : this.rotateCCWGrid(); break;
+		case GRID_TRANSFORMATION.ROTATE_UTURN : this.rotateUTurnGrid(); break;
+		case GRID_TRANSFORMATION.MIRROR_HORIZONTAL : this.mirrorHorizontalGrid(); break;
+		case GRID_TRANSFORMATION.MIRROR_VERTICAL : this.mirrorVerticalGrid(); break;
+		case GRID_TRANSFORMATION.RESIZE : this.resizeGrid(p_xDatum, p_yDatum); break;
+	}
+}
+
+
 Grid.prototype.rotateCWGrid = function () {
     var newArray = [];
     var newWallR;
@@ -143,8 +155,44 @@ Grid.prototype.resizeGrid = function (p_xLength, p_yLength) {
 }
 
 //---------------------
+// Saving from and loading to array
 
-function arrayToString(p_array, p_defaultValue) {
+/**
+New version : 
+.O.O......
+.....O..O.
+..........
+..O.......
+<=>
+O 1 3 | 5 8 | | 2 
+*/
+function arrayToStringRows(p_array,p_value) {
+    xLength = p_array[0].length;
+    yLength = p_array.length;
+    var chain = "";
+	var pipe = "";
+    for (var iy = 0; iy < yLength; iy++) {
+		chain += pipe;
+        for (var ix = 0; ix < xLength; ix++) {
+            if (p_array[iy][ix] = p_value) {
+                chain += (ix + " ");
+            }
+        }
+		pipe = "| ";
+    }
+    return chain;
+}
+
+/**
+Old version : 
+.O.O......
+.....O..O.
+..........
+..O.......
+<=> 
+1 0 O 3 0 O 5 1 O 8 1 O 3 2 O
+*/
+function arrayToStringSpaces(p_array) {
     xLength = p_array[0].length;
     yLength = p_array.length;
     var chain = "";
@@ -158,17 +206,29 @@ function arrayToString(p_array, p_defaultValue) {
     return chain;
 }
 
-function tokensToArray(p_tokens, p_xLength, p_yLength, p_defaultValue) {
-    var p_array = generateSymbolArray(p_xLength, p_yLength, null);
+function fillArrayWithTokensRows(p_tokens, p_array, p_symbol) {
+    var indexToken;
+	var y = 0;
+	value = p_tokens[1];
+	indexToken = 2;
+	while (y < p_array.length) {
+		if (p_tokens[indexToken] == '|') {
+			y++;
+		} else {
+			p_array[parseInt(p_tokens[y], 10)]
+			[parseInt(p_tokens[indexToken], 10)] = value;
+		}
+		indexToken++;
+	}
+	return p_array;
+}
+
+function fillArrayWithTokensSpaces(p_tokens,p_array){
     var indexToken = 0;
-    //Wrapping for compatibility with previous formats
-    if (p_tokens[0].startsWith("Numbers")) {
-        indexToken++;
-    }
     while (indexToken < p_tokens.length - 2) {
         p_array[parseInt(p_tokens[indexToken + 1], 10)]
         [parseInt(p_tokens[indexToken], 10)] = parseInt(p_tokens[indexToken + 2], 10);
         indexToken += 3;
     }
     return p_array;
-}
+}  

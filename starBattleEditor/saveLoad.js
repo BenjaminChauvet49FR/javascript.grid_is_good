@@ -10,9 +10,9 @@ function starBattlePuzzleToString(p_grid,p_starBattleNumber){
 /**
 Returns elements for the SB puzzle (grid + number of stars)
 */
-function stringToStarBattlePuzzle(p_string){
+function stringToStarBattlePuzzle(p_string) {
 	var stringArray = p_string.split(' ');
-	//TODO hotfix avec les anciens puzzles qui mettaient le xy en premier. Désormais le nombre d'étoiles doit venir avant pour coller avec les méthodes de WallGrid.
+	// Wrapper avec les anciens puzzles qui mettaient le xy en premier. Désormais le nombre d'étoiles doit venir avant pour coller avec les méthodes de WallGrid.
 	if (parseInt(stringArray[0]) > parseInt(stringArray[1])){
 		var inter = stringArray[0];
 		stringArray[0] = stringArray[1];

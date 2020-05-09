@@ -28,7 +28,8 @@ function Drawer() {
             "#ff00cc", "#00ccff", "#ccff00"],
         antiCloseWrite: '#00ffff',
         standardWrite: '#000000',
-        path: '#006600'
+        path: '#006600',
+		pearl: '#222222'
     }
 }
 
@@ -70,6 +71,9 @@ Drawer.prototype.drawGrid = function (p_context, p_editorCore) {
 	
 	if (p_editorCore.getGrid(GRID_ID.NUMBER_REGION)) {
 	    this.drawNumbersLittle(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_REGION), xLength, yLength);
+	}
+	if (p_editorCore.getGrid(GRID_ID.PEARL)) {
+		this.drawPearlGrid(p_context, p_editorCore.getGrid(GRID_ID.PEARL), xLength, yLength);
 	}
 		
     //Paths
@@ -200,7 +204,7 @@ Drawer.prototype.drawNumbersLittleInCorner = function (p_context, p_wallGrid, p_
     p_context.fillStyle = this.colors.standardWrite;
     var ix,
     iy,
-    number;
+    number, pixLeft, pixDown; 
     for (iy = 0; iy < p_yLength; iy++) {
         for (ix = 0; ix < p_xLength; ix++) {
             number = p_numberGrid.get(ix, iy);
@@ -213,6 +217,31 @@ Drawer.prototype.drawNumbersLittleInCorner = function (p_context, p_wallGrid, p_
                     p_context.fillStyle = this.colors.standardWrite;
                 }
                 p_context.fillText(number, pixLeft, pixDown);
+            }
+        }
+    }
+}
+
+Drawer.prototype.drawPearlGrid = function (p_context, p_pearlGrid, p_xLength, p_yLength) {
+    p_context.fillStyle = this.colors.pearl;
+    var ix,
+    iy,
+    pearl;
+	const radius = this.getPixInnerSide()*1/3;
+	p_context.fillStyle = this.colors.standardWrite; 
+    for (iy = 0; iy < p_yLength; iy++) {
+        for (ix = 0; ix < p_xLength; ix++) {
+            pearl = p_pearlGrid.get(ix, iy);
+            if (pearl == SYMBOL_ID.WHITE) {
+				//Crédits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/ellipse 
+				p_context.beginPath();
+				p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
+				p_context.stroke();
+            }
+			if (pearl == SYMBOL_ID.BLACK) {
+				p_context.beginPath();
+				p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
+				p_context.fill();
             }
         }
     }

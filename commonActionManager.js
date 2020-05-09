@@ -6,11 +6,14 @@ const ENTRY = {
 
 const MODE_NORMAL = {id:1,html:"Etat case",submitCaption:"Changer case grille"};
 const MODE_SELECTION = {id:2,html:"Sélection",submitCaption:"Sélectionner cases"};
-const MODE_SELECTION_RECTANGLE = {id:7,html:"Sélection rectangulaire",submitCaption:"Sélectionner cases en rectangle"};
-const MODE_ERASE = {id:3,html:"Effaçage",submitCaption:"Effacer murs autour case"};
-const MODE_NUMBER = {id:4,html:"Ajout numéro",submitCaption:"Ajouter le n° ",numberToInput:0};
-const MODE_NORMAL_PATH = {id:5,html:"Chemins",submitCaption:"Changer chemins"};
-const MODE_NORMAL_WALL = {id:6,html:"Murs",submitCaption:"Changer murs"};
+const MODE_SELECTION_RECTANGLE = {id:3,html:"Sélection rectangulaire",submitCaption:"Sélectionner cases en rectangle"};
+const MODE_ERASE = {id:4,html:"Effaçage",submitCaption:"Effacer murs autour case"};
+const MODE_NUMBER = {id:51,html:"Ajout numéro",submitCaption:"Ajouter le n° ",numberToInput:0};
+const MODE_PEARL_ABSTRACT = {id:52};
+const MODE_PEARL_WHITE = {id:MODE_PEARL_ABSTRACT.id,html:"Ajout blanc",submitCaption:"Ajouter perle blanche"};
+const MODE_PEARL_BLACK = {id:MODE_PEARL_ABSTRACT.id,html:"Ajout noir",submitCaption:"Ajouter perle noire"};
+const MODE_NORMAL_PATH = {id:101,html:"Chemins",submitCaption:"Changer chemins"};
+const MODE_NORMAL_WALL = {id:102,html:"Murs",submitCaption:"Changer murs"};
 
 const ACTION_PASS_REGION = {id:101,htmlCaption:"Passer région"};
 const ACTION_PASS_ROW = {id:102,htmlCaption:"Passer ligne"};

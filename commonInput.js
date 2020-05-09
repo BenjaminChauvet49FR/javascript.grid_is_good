@@ -16,49 +16,59 @@ stringToPuzzle : Loads a puzzle from a string
  */
 
 /**
-p_core refers as well to an editorCore or a solver
+p_editorCore refers as well to an editorCore or a solver
  */
 
 //--------------------
 
-function clickCanvas(event, p_canvas, p_drawer, p_core, p_modes) {
+//TODO à déplacer à l'endroit pus approprié peut-être ?
+const PUZZLES_KIND = {
+	HEYAWAKE_LIKE : {id:2},
+	MASYU_LIKE : {id:3},
+	STAR_BATTLE : {id:101,squareGrid : true},
+	GRAND_TOUR : {id:102}
+}
+
+//--------------------
+
+function clickCanvas(event, p_canvas, p_drawer, p_editorCore, p_modes) {
     var wallOK = false;
-    var indexWallR = p_drawer.getClickWallR(event, p_canvas, p_core);
-    var indexWallD = p_drawer.getClickWallD(event, p_canvas, p_core);
-    var indexAroundWallR = p_drawer.getClickAroundWallR(event, p_canvas, p_core);
-    var indexAroundWallD = p_drawer.getClickAroundWallD(event, p_canvas, p_core);
+    var indexWallR = p_drawer.getClickWallR(event, p_canvas, p_editorCore);
+    var indexWallD = p_drawer.getClickWallD(event, p_canvas, p_editorCore);
+    var indexAroundWallR = p_drawer.getClickAroundWallR(event, p_canvas, p_editorCore);
+    var indexAroundWallD = p_drawer.getClickAroundWallD(event, p_canvas, p_editorCore);
     if (indexWallR != null && (typeof(clickWallRAction) == 'function')) {
-        clickWallRAction(p_core, indexWallR.x, indexWallR.y, p_modes);
+        clickWallRAction(p_editorCore, indexWallR.x, indexWallR.y, p_modes);
         wallOK = true;
     }
     if (indexAroundWallR != null && (typeof(clickAroundWallRAction) == 'function')) {
-        clickAroundWallRAction(p_core, indexAroundWallR.x, indexAroundWallR.y, p_modes);
+        clickAroundWallRAction(p_editorCore, indexAroundWallR.x, indexAroundWallR.y, p_modes);
         wallOK = true;
     }
     if (indexWallD != null && (typeof(clickWallDAction) == 'function')) {
-        clickWallDAction(p_core, indexWallD.x, indexWallD.y, p_modes);
+        clickWallDAction(p_editorCore, indexWallD.x, indexWallD.y, p_modes);
         wallOK = true;
     }
     if (indexAroundWallD != null && (typeof(clickAroundWallDAction) == 'function')) {
-        clickAroundWallDAction(p_core, indexAroundWallD.x, indexAroundWallD.y, p_modes);
+        clickAroundWallDAction(p_editorCore, indexAroundWallD.x, indexAroundWallD.y, p_modes);
         wallOK = true;
     }
     if (wallOK) {
         return;
     }
-    var indexSpaces = p_drawer.getClickSpace(event, p_canvas, p_core.getXLength(), p_core.getYLength());
+    var indexSpaces = p_drawer.getClickSpace(event, p_canvas, p_editorCore.getXLength(), p_editorCore.getYLength());
     if (indexSpaces != null && (typeof(clickSpaceAction) == 'function')) {
-        clickSpaceAction(p_core, indexSpaces.x, indexSpaces.y, p_modes);
+        clickSpaceAction(p_editorCore, indexSpaces.x, indexSpaces.y, p_modes);
     }
 }
 
 //--------------------
 
 /** Saves a walled grid into local storage
-p_core : the Global item
+p_editorCore : the Global item
 p_detachedName : the detached name (without the prefix) to store into local storage
  */
-saveAction = function (p_core, p_detachedName, p_externalOptions) {
+saveAction = function (p_editorCore, p_detachedName,p_kindId, p_externalOptions) { //TODO la plupart n'ont pas de "p_kind"
     var localStorageName = getLocalStorageName(p_detachedName);
     var letsSave = true;
     if (localStorage.hasOwnProperty(localStorageName)) {
@@ -67,23 +77,38 @@ saveAction = function (p_core, p_detachedName, p_externalOptions) {
         }
     }
     if (letsSave) {
-        localStorage.setItem(localStorageName, puzzleToString(p_core, p_externalOptions));
+		var puzzleToSave = "";
+		if (p_kindId == PUZZLES_KIND.STAR_BATTLE.id){
+			puzzleToSave = starBattlePuzzleToString(p_editorCore.getWallArray(),p_externalOptions.numberStars);
+		} else if (p_kindId == PUZZLES_KIND.MASYU_LIKE.id) {
+			puzzleToSave = commonPuzzleToString(null,null,p_editorCore.get(GRID_ID.PEARL));
+		} else {
+			p_editorCore.alignToRegions(GRID_ID.NUMBER_REGION);
+			puzzleToSave = commonPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION),null);
+		}
+        localStorage.setItem(localStorageName, puzzleToSave);
     }
 }
 
-loadAction = function (p_canvas, p_drawer, p_core, p_detachedName, p_fieldsToUpdate) {
+loadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p_kindId, p_fieldsToUpdate) {
     var localStorageName = getLocalStorageName(p_detachedName);
     if (localStorage.hasOwnProperty(localStorageName)) {
         if (confirm("Charger le puzzle " + localStorageName + " ?")) {
-            var loadedItem = stringToPuzzle(localStorage.getItem(localStorageName));
-            if (p_core.hasPathGrid()) {
-                p_core.setupFromPathArray(loadedItem.grid);
-            } else if (p_core.hasWallGrid()) {
-                p_core.setupFromWallArray(loadedItem.grid); //TODO maybe this will have to be revisited because we are forcing "answer" to have a grid value.
-            }
-			p_core.addGrid(GRID_ID.NUMBER_REGION,loadedItem.gridNumber); //TODO gridNumber will somehow have to be renamed
-            p_core.setupFromWallArray(loadedItem.grid);
-            adaptCanvasAndGrid(p_canvas, p_drawer, p_core); 
+			var loadedItem = null;
+			//NB : reinitialization is supposed to be contained in setupFromWallArray
+            if (p_kindId == PUZZLES_KIND.STAR_BATTLE.id){
+				loadedItem = stringToStarBattlePuzzle(localStorage.getItem(localStorageName));
+				p_editorCore.setupFromWallArray(loadedItem.grid);			
+			} else if (p_kindId == PUZZLES_KIND.MASYU_LIKE.id){
+				loadedItem = stringToPuzzle(localStorage.getItem(localStorageName));
+				p_editorCore.setupFromWallArray(loadedItem.grid);			
+				p_editorCore.addGrid(GRID_ID.PEARL,loadedItem.gridSymbol); 
+			} else {
+				loadedItem = stringToWallAndNumbersPuzzle(localStorage.getItem(localStorageName));
+				p_editorCore.setupFromWallArray(loadedItem.grid);			
+				p_editorCore.addGrid(GRID_ID.NUMBER_REGION,loadedItem.gridNumber); 
+			}
+            adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore); 
             updateFieldsAfterLoad(p_fieldsToUpdate, loadedItem);
         }
     } else {
@@ -97,12 +122,12 @@ loadAction = function (p_canvas, p_drawer, p_core, p_detachedName, p_fieldsToUpd
 Adapts canvas to global grid
 p_canvas : the canvas to adapt
 p_pix : the Pix item to calculate coordinates
-p_core : the Global item the canvas should be adapted to
+p_editorCore : the Global item the canvas should be adapted to
  */
-function adaptCanvasAndGrid(p_canvas, p_drawer, p_core) {
+function adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore) {
     p_drawer.adaptCanvasDimensions(p_canvas, {
-        xLength: p_core.getXLength(),
-        yLength: p_core.getYLength()
+        xLength: p_editorCore.getXLength(),
+        yLength: p_editorCore.getYLength()
     });
 }
 
@@ -111,29 +136,29 @@ function adaptCanvasAndGrid(p_canvas, p_drawer, p_core) {
 Transform the grid
  */
 
-function rotateCWAction(p_canvas, p_drawer, p_core) {
-    p_core.rotateCWGrid();
-    adaptCanvasAndGrid(p_canvas, p_drawer, p_core);
+function rotateCWAction(p_canvas, p_drawer, p_editorCore) {
+    p_editorCore.transformGrid(GRID_TRANSFORMATION.ROTATE_CW);
+    adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
 }
 
-function rotateUTurnAction(p_canvas, p_drawer, p_core) {
-    p_core.rotateUTurnGrid();
-    adaptCanvasAndGrid(p_canvas, p_drawer, p_core);
+function rotateUTurnAction(p_canvas, p_drawer, p_editorCore) {
+    p_editorCore.transformGrid(GRID_TRANSFORMATION.ROTATE_UTURN);
+    adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
 }
 
-function rotateCCWAction(p_canvas, p_drawer, p_core) {
-    p_core.rotateCCWGrid();
-    adaptCanvasAndGrid(p_canvas, p_drawer, p_core);
+function rotateCCWAction(p_canvas, p_drawer, p_editorCore) {
+    p_editorCore.transformGrid(GRID_TRANSFORMATION.ROTATE_CCW);
+    adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
 }
 
-function mirrorHorizontalAction(p_canvas, p_drawer, p_core) {
-    p_core.mirrorHorizontalGrid();
-    adaptCanvasAndGrid(p_canvas, p_drawer, p_core);
+function mirrorHorizontalAction(p_canvas, p_drawer, p_editorCore) {
+    p_editorCore.transformGrid(GRID_TRANSFORMATION.MIRROR_HORIZONTAL);
+    adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
 }
 
-function mirrorVerticalAction(p_canvas, p_drawer, p_core) {
-    p_core.mirrorVerticalGrid();
-    adaptCanvasAndGrid(p_canvas, p_drawer, p_core);
+function mirrorVerticalAction(p_canvas, p_drawer, p_editorCore) {
+    p_editorCore.transformGrid(GRID_TRANSFORMATION.MIRROR_VERTICAL);
+    adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
 }
 
 //--------------------

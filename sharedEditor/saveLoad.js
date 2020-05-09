@@ -1,17 +1,43 @@
-function commonPuzzleToString(p_wallArray,p_numbersArray){
-	return wallArrayToString(p_wallArray)+" "+arrayToString(p_numbersArray,0);
+function commonPuzzleToString(p_wallArray,p_numbersArray,p_symbolsArray,p_symbolsToSave) {
+	var wallsString = "";
+	var rowsString = "";
+	var spacesString = "";
+	if (p_wallArray && (p_wallArray != null)) {
+		wallsString = wallArrayToString(p_wallArray);
+	}
+	if (p_numbersArray && (p_numbersArray != null)) {
+		spacesString = arrayToStringSpaces(p_numbersArray);
+	}
+	if (p_symbolsToSave) {
+		p_symbolsToSave.forEach(symbol => {
+			rowsString += symbol+" "+arrayToStringRows(p_symbolsArray,symbol);
+		});
+	}
+	return wallsString+" "+spacesString+" "+rowsString;
 }
 
-function stringToCommonPuzzle(p_string){
+function stringToWallAndNumbersPuzzle(p_string) {
 	var stringArray = p_string.split(' ');
-	var wallGridAnswer = tokensToWallArray(stringArray.slice(0,3));
+	// Wrapper for compatibility with previous formats
+	const wallGridAnswer = tokensToWallArray(stringArray.slice(0,3));
 	var xLength = stringArray[0];
 	var yLength = stringArray[1];
-	var numberGrid = null;
-	if (stringArray.length > 3) {
-	    numberGrid = tokensToArray(stringArray.slice(3), xLength, yLength, 0);
+	var numberGrid = generateSymbolArray(xLength,yLength);
+	var indexToken = 3;	
+	while(indexToken < stringArray.length && stringArray[indexToken].length == 0) {
+		indexToken++;
 	}
-	return {grid:wallGridAnswer,gridNumber:numberGrid};
+	if (stringArray.length > indexToken) {
+		//Wrapping for compatibility with previous formats
+		if (stringArray[indexToken].startsWith("Numbers")) {
+			indexToken++;
+		}
+		numberGrid = fillArrayWithTokensSpaces(stringArray.slice(indexToken),numberGrid);
+	}
+	return {
+	    grid: wallGridAnswer,
+	    gridNumber: numberGrid
+	};
 }
 
 /**
@@ -31,6 +57,6 @@ function charToSpace(p_char){
 /**
 Returns a name to store into / load from local storage
 */
-function getLocalStorageName(p_name){
+function getLocalStorageName(p_name) {
 	return "grid_is_good_"+p_name;
 }

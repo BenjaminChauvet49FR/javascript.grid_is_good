@@ -15,16 +15,8 @@ clickSpaceAction = function(p_editorCore,p_x, p_y, p_modes){
 	}
 }
 
-function puzzleToString(p_editorCore,p_externalOptions){
-	return starBattlePuzzleToString(p_editorCore.getWallArray(),p_externalOptions.numberStars);
-}
-
 function getLocalStorageName(p_detachedName){
 	return "grid_is_good_"+p_detachedName;
-}
-
-function stringToPuzzle(p_string){
-	return stringToStarBattlePuzzle(p_string);
 }
 
 function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem){
@@ -61,7 +53,7 @@ restartAction = function(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength)
 
 function resizeAction(p_canvas, p_drawer, p_editorCore, p_xyLength){
 	if (confirm("Redimensionner la grille ?")){
-		p_editorCore.resizeGrid(p_xyLength,p_xyLength);
+		p_editorCore.transformGrid(GRID_TRANSFORMATION.RESIZE, p_xyLength, p_xyLength);
 		adaptCanvasAndGrid(p_canvas, p_drawer,p_editorCore);	
 	}
 }

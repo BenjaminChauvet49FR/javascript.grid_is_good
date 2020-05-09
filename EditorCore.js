@@ -1,4 +1,20 @@
-const GRID_ID = {NUMBER_REGION:'NR'}
+const GRID_ID = {
+    NUMBER_REGION: 'NR',
+    PEARL: 'P'
+}
+const SYMBOL_ID = {
+    WHITE: "W",
+    BLACK: 'B'
+}
+
+const GRID_TRANSFORMATION = {
+	ROTATE_CW : "RCW",
+	ROTATE_CCW : "RCCW",
+	ROTATE_UTURN : "RUT",
+	MIRROR_HORIZONTAL : "MH",
+	MIRROR_VERTICAL : "MV",
+	RESIZE : "Rs"
+}
 
 function EditorCore(p_xLength, p_yLength, p_parameters) {
     this.possessPathGrid = (p_parameters && (p_parameters.hasPathGrid == true)); //TODO il y a mieux qu'une gestion de booléens j'imagine
@@ -8,7 +24,6 @@ function EditorCore(p_xLength, p_yLength, p_parameters) {
 }
 
 //TODO : en l'état actuel on a une grille "wallGrid" et une grille "pathGrid"... qui ont exactement la même nature ! (WallGrid). Attention danger.
-//TODO renommer "startGrid" ou "restartGrid"
 /**
 Starts a grid from scratch.
 Basically the same as restarting it.
@@ -21,14 +36,27 @@ EditorCore.prototype.startGrid = function (p_xLength, p_yLength) {
 Restarts a grid from scratch.
  */
 EditorCore.prototype.restartGrid = function (p_xLength, p_yLength) {
-    if (this.hasPathGrid()) {
-        this.setupFromPathArray(generatePathArray(p_xLength, p_yLength));
+	if (this.hasPathGrid()) {
+        this.pathGrid = new WallGrid(generatePathArray(p_xLength,p_yLength), p_xLength, p_yLength); //TODO très laid
     }
     if (this.hasWallGrid()) {
-        this.setupFromWallArray(generateWallArray(p_xLength, p_yLength));
+        this.wallGrid = new WallGrid(generateWallArray(p_xLength,p_yLength), p_xLength, p_yLength);
     }
 	this.grids = {};
-    this.mode = {
+	this.reinitializeGridData();
+}
+
+// NB : fonction de convénience.
+EditorCore.prototype.reinitializeGridData = function() {
+	this.regionGrid = null;
+    this.isRegionGridValid = true;
+    this.isSelectionMode = false;
+    this.selectedCornerSpace = null;
+    this.selectedGrid = null;
+    this.inputNumber = 1;
+	this.inputSymbol = null;
+	this.resetSelection();
+	this.mode = {
         colorRegionIfValid: false
     };
 }
@@ -39,14 +67,8 @@ Performs the required set up from a wall array (a blank one, one that was just m
 This required setup may include region grid, selection mode...
  */
 EditorCore.prototype.setupFromWallArray = function (p_wallArray) {
+	this.restartGrid(p_wallArray[0].length, p_wallArray.length);
     this.wallGrid = new WallGrid(p_wallArray, p_wallArray[0].length, p_wallArray.length);
-    this.regionGrid = null;
-    this.isRegionGridValid = true;
-    this.isSelectionMode = false;
-    this.selectedCornerSpace = null; //TODO gagnerait à être renommé
-    this.selectedGrid = null;
-    this.inputNumber = 1; //TODO faire getter et setter
-    this.resetSelection();
 }
 
 /**
@@ -85,8 +107,12 @@ EditorCore.prototype.getPaths = function () {
     return this.pathGrid.array;
 }
 
-EditorCore.prototype.getWallGrid = function () { //TODO cette fonction gagnera à être changée de nom !
+EditorCore.prototype.getWallGrid = function () {
     return this.wallGrid;
+}
+
+EditorCore.prototype.getArray = function(p_index){
+	return this.grids[p_index].array;
 }
 
 EditorCore.prototype.getGrid = function(p_index){
@@ -104,6 +130,15 @@ EditorCore.prototype.getInputNumber = function () {
 EditorCore.prototype.setInputNumber = function (p_inputNumber) {
     this.inputNumber = p_inputNumber
 }
+
+EditorCore.prototype.getInputSymbol = function () {
+    return this.inputSybol;
+}
+
+EditorCore.prototype.setInputSymbol = function (p_inputSymbol) {
+    this.inputSybol = p_inputSymbol
+}
+
 
 EditorCore.prototype.getWallR = function (p_x, p_y) {
     return this.wallGrid.getWallR(p_x, p_y);
@@ -197,90 +232,19 @@ EditorCore.prototype.hasWalls = function () {
 // --------------------
 // Grid transformations
 
-//TODO un jour je factoriserai ça !
 
-EditorCore.prototype.rotateCWGrid = function () {
+EditorCore.prototype.transformGrid = function (p_transformation, p_xDatum, p_yDatum) {
+	this.reinitializeGridData();
     if (this.hasWallGrid()) {
-        this.wallGrid.rotateCWGrid();
-        this.setupFromWallArray(this.wallGrid.array);
+        this.wallGrid.transform(p_transformation, p_xDatum, p_yDatum);
     }
     if (this.hasPathGrid()) {
-        this.pathGrid.rotateCWGrid();
-        this.setupFromPathArray(this.pathGrid.array);
+        this.pathGrid.transform(p_transformation, p_xDatum, p_yDatum);
     }
 	for (const id in this.grids) {
-	    this.grids[id].rotateCWGrid();
+	    this.grids[id].transform(p_transformation, p_xDatum, p_yDatum);
 	}
-}
-
-EditorCore.prototype.rotateUTurnGrid = function () {
-    if (this.hasWallGrid()) {
-        this.wallGrid.rotateUTurnGrid();
-        this.setupFromWallArray(this.wallGrid.array);
-    }
-    if (this.hasPathGrid()) {
-        this.pathGrid.rotateUTurnGrid();
-        this.setupFromPathArray(this.pathGrid.array);
-    }
-	for (const id in this.grids) {
-	    this.grids[id].rotateUTurnGrid();
-	}
-}
-
-EditorCore.prototype.rotateCCWGrid = function () {
-    if (this.hasWallGrid()) {
-        this.wallGrid.rotateCCWGrid();
-        this.setupFromWallArray(this.wallGrid.array);
-    }
-    if (this.hasPathGrid()) {
-        this.pathGrid.rotateCCWGrid();
-        this.setupFromPathArray(this.pathGrid.array);
-    }
-	for (const id in this.grids) {
-	    this.grids[id].rotateCCWGrid();
-	}
-}
-
-EditorCore.prototype.mirrorHorizontalGrid = function () {
-    if (this.hasWallGrid()) {
-        this.wallGrid.mirrorHorizontalGrid();
-        this.setupFromWallArray(this.wallGrid.array);
-    }
-    if (this.hasPathGrid()) {
-        this.pathGrid.mirrorHorizontalGrid();
-        this.setupFromPathArray(this.pathGrid.array);
-    }
-	for (const id in this.grids) {
-	    this.grids[id].mirrorHorizontalGrid();
-	}
-}
-
-EditorCore.prototype.mirrorVerticalGrid = function () {
-    if (this.hasWallGrid()) {
-        this.wallGrid.mirrorVerticalGrid();
-        this.setupFromWallArray(this.wallGrid.array);
-    }
-    if (this.hasPathGrid()) {
-        this.pathGrid.mirrorVerticalGrid();
-        this.setupFromPathArray(this.pathGrid.array);
-    }
-	for (const id in this.grids) {
-	    this.grids[id].mirrorVerticalGrid();
-	}
-}
-
-EditorCore.prototype.resizeGrid = function (p_xLength, p_yLength) {
-    if (this.hasWallGrid()) {
-        this.wallGrid.resizeGrid(p_xLength, p_yLength);
-        this.setupFromWallArray(this.wallGrid.array);
-    }
-    if (this.hasPathGrid()) {
-        this.pathGrid.resizeGrid(p_xLength, p_yLength);
-        this.setupFromPathArray(this.pathGrid.array);
-    }
-	for (const id in this.grids) {
-	    this.grids[id].resizeGrid(p_xLength, p_yLength);
-	}
+	this.resetSelection();
 }
 
 //-------------------------------------------

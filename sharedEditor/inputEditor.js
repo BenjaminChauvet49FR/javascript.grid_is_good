@@ -8,36 +8,50 @@ clickWallDAction = function (p_editorCore, p_x, p_y, p_modes) {
 
 clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
     mode = p_modes.clickSpace;
-    if (mode.id == MODE_SELECTION.id) {
-        p_editorCore.switchSelectedSpace(p_x, p_y);
-    } else if (mode.id == MODE_SELECTION_RECTANGLE.id) {
-        p_editorCore.selectRectangleMechanism(p_x, p_y);
-    } else if (mode.id == MODE_ERASE.id) {
-        p_editorCore.clearWallsAround(p_x, p_y);
-        p_editorCore.clear(GRID_ID.NUMBER_REGION, p_x, p_y);
-    } else if (mode.id == MODE_NUMBER.id) {
-        if (p_editorCore.get(GRID_ID.NUMBER_REGION, p_x, p_y) != p_editorCore.getInputNumber()) {
-            p_editorCore.set(GRID_ID.NUMBER_REGION, p_x, p_y, p_editorCore.getInputNumber());
-        } else {
-            p_editorCore.clear(GRID_ID.NUMBER_REGION, p_x, p_y);
-        }
-    } else {
-        p_editorCore.switchState(p_x, p_y);
-        p_editorCore.clear(GRID_ID.NUMBER_REGION, p_x, p_y);
-    }
+	switch (mode.id) {
+		case (MODE_SELECTION.id) :
+		    p_editorCore.switchSelectedSpace(p_x, p_y);
+		break;
+		case (MODE_ERASE.id) :
+		    p_editorCore.clearWallsAround(p_x, p_y);
+			p_editorCore.clear(GRID_ID.NUMBER_REGION, p_x, p_y);
+		break;
+		case (MODE_SELECTION_RECTANGLE.id) :
+		    p_editorCore.selectRectangleMechanism(p_x, p_y);
+		break;
+		case (MODE_NUMBER.id) :
+			if (p_editorCore.get(GRID_ID.NUMBER_REGION, p_x, p_y) != p_editorCore.getInputNumber()) {
+				p_editorCore.set(GRID_ID.NUMBER_REGION, p_x, p_y, p_editorCore.getInputNumber());
+			} else {
+				p_editorCore.clear(GRID_ID.NUMBER_REGION, p_x, p_y);
+			}
+		break;	
+		case (MODE_PEARL_ABSTRACT.id) :
+			if (p_editorCore.get(GRID_ID.PEARL, p_x, p_y) != p_editorCore.getInputSymbol()) {
+				p_editorCore.set(GRID_ID.PEARL, p_x, p_y, p_editorCore.getInputSymbol());
+			} else {
+				p_editorCore.clear(GRID_ID.PEARL, p_x, p_y);
+			}
+		break;
+		default :
+			p_editorCore.switchState(p_x,p_y);
+	}
 }
 
-function puzzleToString(p_editorCore, p_externalOptions) {
+//------------------------
+
+//TODO Default function, rename it to "default / stadard / ..."
+/*function puzzleToString(p_editorCore, p_externalOptions) {
     p_editorCore.alignToRegions(GRID_ID.NUMBER_REGION);
-    return commonPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getGrid(GRID_ID.NUMBER_REGION).array); //TODO faire mieux que "p_editorCore.getGrid.array"
-}
+    return commonPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION)); 
+}*/
 
 function getLocalStorageName(p_detachedName) {
     return "grid_is_good_" + p_detachedName;
 }
 
 function stringToPuzzle(p_string) {
-    return stringToCommonPuzzle(p_string);
+    return stringToWallAndNumbersPuzzle(p_string);
 }
 
 function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem) {
@@ -66,14 +80,15 @@ p_yLength : vertical dimension
 restartAction = function (p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength) {
     if (confirm("Redémarrer la grille ?")) {
         p_editorCore.restartGrid(p_xLength, p_yLength);
-        p_editorCore.addCleanGrid(GRID_ID.NUMBER_REGION,p_xLength, p_yLength);
+		p_editorCore.addCleanGrid(GRID_ID.NUMBER_REGION,p_xLength, p_yLength);
+		p_editorCore.addCleanGrid(GRID_ID.PEARL,p_xLength, p_yLength);
         adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
     }
 }
 
-function resizeAction(p_canvas, p_drawer, p_editorCore, p_xyLength) {
+function resizeAction(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength) {
     if (confirm("Redimensionner la grille ?")) {
-        p_editorCore.resizeGrid(p_xyLength, p_xyLength);
+        p_editorCore.transformGrid(GRID_TRANSFORMATION.RESIZE, p_xLength, p_yLength);
         adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
     }
 }

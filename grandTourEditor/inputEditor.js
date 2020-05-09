@@ -49,7 +49,7 @@ function restartAction(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength){
 
 function resizeAction(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength){
 	if (confirm("Redimensionner la grille ?")){
-		p_editorCore.resizeGrid(p_xLength,p_yLength);
+		//p_editorCore.resizeGrid(p_xLength,p_yLength); TODO Obsolète ! (cf. "mainstream" puzzles)
 		adaptCanvasAndGrid(p_canvas, p_drawer,p_editorCore);	
 	}
 }

@@ -21,7 +21,7 @@ var fieldName = document.getElementById("input_grid_name");
 adaptCanvasAndGrid(canevas,drawer,editorCore);
 
 putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("GrandTour")});
-putActionElementClick("submit_save_grid",function(event){saveAction(editorCore,fieldName.value,{})});
+putActionElementClick("submit_save_grid",function(event){saveAction(editorCore,fieldName.value,PUZZLES_KIND.GRAND_TOUR.id)});
 putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,editorCore,fieldName.value,{xLengthField : fieldX, yLengthField:fieldY})});
 putActionElementClick("submit_auto_name",function(event){fieldName.value = "GrandTour"});
 putActionElementClick("submit_new_grid",function(event){restartAction(canevas,drawer,editorCore,fieldX.value,fieldY.value)});

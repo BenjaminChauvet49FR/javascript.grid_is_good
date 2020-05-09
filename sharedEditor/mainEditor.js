@@ -2,6 +2,8 @@
 // All the main variables
 var drawer = new Drawer();
 var editorCore = new EditorCore(9, 9);
+editorCore.addCleanGrid(GRID_ID.NUMBER_REGION,9, 9);
+editorCore.addCleanGrid(GRID_ID.PEARL,9, 9);
 var canevas = document.getElementById("canevas");
 var context = canevas.getContext("2d");
 var modesManager = {
@@ -32,10 +34,10 @@ putActionElementClick("submit_view_puzzle_list", function (event) {
     viewPuzzleList(puzzleTypeComboBox.options[puzzleTypeComboBox.selectedIndex].innerHTML)
 });
 putActionElementClick("submit_save_grid", function (event) {
-    saveAction(editorCore, fieldName.value, {})
+    saveAction(editorCore, fieldName.value, PUZZLES_KIND.HEYAWAKE_LIKE.id)
 });
 putActionElementClick("submit_load_grid", function (event) {
-    loadAction(canevas, drawer, editorCore, fieldName.value, {
+    loadAction(canevas, drawer, editorCore, fieldName.value, PUZZLES_KIND.HEYAWAKE_LIKE.id, {
         xLengthField: fieldX,
         yLengthField: fieldY
     })
@@ -81,12 +83,12 @@ function combo(thelist) {
     console.log(content);
     //theinput.value = content;
     switch (content) {
-    case 'CurvingRoad':
-        editorCore.setWallsOff();
-        break;
-    default:
-        editorCore.setWallsOn();
-        break;
+		case 'CurvingRoad':
+			editorCore.setWallsOff();
+			break;
+		default:
+			editorCore.setWallsOn();
+			break;
     }
 }
 
@@ -103,6 +105,17 @@ addEventListenerAndCaptionActionSubmitStandardSpace("submit_select_mode", MODE_S
 addEventListenerAndCaptionActionSubmitStandardSpace("submit_select_rectangles_mode", MODE_SELECTION_RECTANGLE);
 addEventListenerAndCaptionActionSubmitStandardSpace("submit_erase_mode", MODE_ERASE);
 addEventListenerAndCaptionActionSubmitStandardSpace("submit_digit_mode", MODE_NUMBER);
+addEventListenerAndCaptionActionSubmitStandardSpace("add_white", MODE_PEARL_WHITE);
+addEventListenerAndCaptionActionSubmitStandardSpace("add_black", MODE_PEARL_BLACK);
+
+document.getElementById("add_white").addEventListener('click', function () {
+    editorCore.setInputSymbol(SYMBOL_ID.WHITE)
+});
+
+document.getElementById("add_black").addEventListener('click', function () {
+    editorCore.setInputSymbol(SYMBOL_ID.BLACK)
+});
+
 
 document.getElementById("input_number_value_region").addEventListener('change', function () {
     editorCore.setInputNumber(this.value)

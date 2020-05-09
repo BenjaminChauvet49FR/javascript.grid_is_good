@@ -179,6 +179,18 @@ WallGrid.prototype.rotateCWGrid = function () {
     this.yLength = saveXLength;
 }
 
+
+WallGrid.prototype.transform = function(p_transformation, p_xDatum, p_yDatum) {
+	switch (p_transformation) {
+		case GRID_TRANSFORMATION.ROTATE_CW : this.rotateCWGrid(); break;
+		case GRID_TRANSFORMATION.ROTATE_CCW : this.rotateCCWGrid(); break;
+		case GRID_TRANSFORMATION.ROTATE_UTURN : this.rotateUTurnGrid(); break;
+		case GRID_TRANSFORMATION.MIRROR_HORIZONTAL : this.mirrorHorizontalGrid(); break;
+		case GRID_TRANSFORMATION.MIRROR_VERTICAL : this.mirrorVerticalGrid(); break;
+		case GRID_TRANSFORMATION.RESIZE : this.resizeGrid(p_xDatum, p_yDatum); break;
+	}
+}
+
 WallGrid.prototype.rotateUTurnGrid = function () {
     var newWallGrid = [];
     var newWallR;
