@@ -5,11 +5,11 @@ function WallGrid(p_wallArray, p_xLength, p_yLength) {
 }
 
 function generateWallArray(p_widthGrid, p_heightGrid) {
-    return generateSuggestedArray(p_widthGrid, p_heightGrid, OPEN);
+    return generateSuggestedArray(p_widthGrid, p_heightGrid, WALLGRID.OPEN);
 }
 
 function generatePathArray(p_widthGrid, p_heightGrid) {
-    return generateSuggestedArray(p_widthGrid, p_heightGrid, CLOSED);
+    return generateSuggestedArray(p_widthGrid, p_heightGrid, WALLGRID.CLOSED);
 }
 
 function generateSuggestedArray(p_widthGrid, p_heightGrid, p_startingStateWalls) {
@@ -18,7 +18,7 @@ function generateSuggestedArray(p_widthGrid, p_heightGrid, p_startingStateWalls)
         answer.push([]);
         for (var ix = 0; ix < p_widthGrid; ix++) {
             answer[iy].push({
-                state: OPEN,
+                state: WALLGRID.OPEN,
                 wallD: p_startingStateWalls,
                 wallR: p_startingStateWalls
             });
@@ -36,7 +36,7 @@ WallGrid.prototype.toRegionGrid = function () {
     for (var iy = 0; iy < this.yLength; iy++) {
         regionGridAnswer.push([]);
         for (var ix = 0; ix < this.xLength; ix++) {
-            if (this.array[iy][ix].state == CLOSED) {
+            if (this.array[iy][ix].state == WALLGRID.CLOSED) {
                 regionGridAnswer[iy].push(BANNED);
             } else {
                 regionGridAnswer[iy].push(UNCHARTED);
@@ -67,25 +67,25 @@ WallGrid.prototype.toRegionGrid = function () {
                 x = spaceToPut.sx;
                 y = spaceToPut.sy;
                 regionGridAnswer[y][x] = regionIndex;
-                if ((y > 0) && (regionGridAnswer[y - 1][x] == UNCHARTED) && (this.array[y - 1][x].wallD == OPEN)) {
+                if ((y > 0) && (regionGridAnswer[y - 1][x] == UNCHARTED) && (this.array[y - 1][x].wallD == WALLGRID.OPEN)) {
                     spacesThatBelong.push({
                         sx: x,
                         sy: y - 1
                     });
                 }
-                if ((x > 0) && (regionGridAnswer[y][x - 1] == UNCHARTED) && (this.array[y][x - 1].wallR == OPEN)) {
+                if ((x > 0) && (regionGridAnswer[y][x - 1] == UNCHARTED) && (this.array[y][x - 1].wallR == WALLGRID.OPEN)) {
                     spacesThatBelong.push({
                         sx: x - 1,
                         sy: y
                     });
                 }
-                if ((y <= this.yLength - 2) && (regionGridAnswer[y + 1][x] == UNCHARTED) && (this.array[y][x].wallD == OPEN)) {
+                if ((y <= this.yLength - 2) && (regionGridAnswer[y + 1][x] == UNCHARTED) && (this.array[y][x].wallD == WALLGRID.OPEN)) {
                     spacesThatBelong.push({
                         sx: x,
                         sy: y + 1
                     });
                 }
-                if ((x <= this.xLength - 2) && (regionGridAnswer[y][x + 1] == UNCHARTED) && (this.array[y][x].wallR == OPEN)) {
+                if ((x <= this.xLength - 2) && (regionGridAnswer[y][x + 1] == UNCHARTED) && (this.array[y][x].wallR == WALLGRID.OPEN)) {
                     spacesThatBelong.push({
                         sx: x + 1,
                         sy: y
@@ -165,7 +165,7 @@ WallGrid.prototype.rotateCWGrid = function () {
             if (ix < this.yLength - 1)
                 newWallR = this.getWallD(iy, this.yLength - 2 - ix);
             else
-                newWallR = CLOSED;
+                newWallR = WALLGRID.CLOSED;
             newWallGrid[iy].push({
                 state: this.getState(iy, this.yLength - 1 - ix),
                 wallD: newWallD,
@@ -189,12 +189,12 @@ WallGrid.prototype.rotateUTurnGrid = function () {
             if (ix < this.xLength - 1) {
                 newWallR = this.getWallR(this.xLength - 2 - ix, this.yLength - 1 - iy);
             } else {
-                newWallR = CLOSED;
+                newWallR = WALLGRID.CLOSED;
             }
             if (iy < this.yLength - 1) {
                 newWallD = this.getWallD(this.xLength - 1 - ix, this.yLength - 2 - iy);
             } else {
-                newWallD = CLOSED;
+                newWallD = WALLGRID.CLOSED;
             }
             newWallGrid[iy].push({
                 state: this.getState(this.xLength - 1 - ix, this.yLength - 1 - iy),
@@ -217,7 +217,7 @@ WallGrid.prototype.rotateCCWGrid = function () {
             if (iy < this.xLength - 1)
                 newWallD = this.getWallR(this.xLength - 2 - iy, ix);
             else
-                newWallD = CLOSED;
+                newWallD = WALLGRID.CLOSED;
             newWallGrid[iy].push({
                 state: this.getState(this.xLength - 1 - iy, ix),
                 wallD: newWallD,
@@ -241,7 +241,7 @@ WallGrid.prototype.mirrorHorizontalGrid = function () {
             if (ix < this.xLength - 1) {
                 newWallR = this.getWallR(this.xLength - 2 - ix, iy);
             } else {
-                newWallR = CLOSED;
+                newWallR = WALLGRID.CLOSED;
             }
             newWallD = this.getWallD(this.xLength - 1 - ix, iy);
 
@@ -265,7 +265,7 @@ WallGrid.prototype.mirrorVerticalGrid = function () {
             if (iy < this.yLength - 1) {
                 newWallD = this.getWallD(ix, this.yLength - 2 - iy);
             } else {
-                newWallD = CLOSED;
+                newWallD = WALLGRID.CLOSED;
             }
             newWallR = this.getWallR(ix, this.yLength - 1 - iy);
 
@@ -292,9 +292,9 @@ WallGrid.prototype.resizeGrid = function (p_xLength, p_yLength) {
                 newWallD = this.getWallD(ix, iy);
                 newWallR = this.getWallR(ix, iy);
             } else {
-                newState = OPEN;
-                newWallD = OPEN;
-                newWallR = OPEN;
+                newState = WALLGRID.OPEN;
+                newWallD = WALLGRID.OPEN;
+                newWallR = WALLGRID.OPEN;
             }
             newWallGrid[iy].push({
                 state: newState,
@@ -311,8 +311,7 @@ WallGrid.prototype.resizeGrid = function (p_xLength, p_yLength) {
 //-----------
 
 // Constants for walls and spaces
-const OPEN = 0; //TODO perform constants for everything
-const CLOSED = 1;
+const WALLGRID = {OPEN : 0, CLOSED : 1} 
 
 function switchedState(p_state) {
     return 1 - p_state;
@@ -332,14 +331,14 @@ function wallArrayToString(p_wallGrid, p_parameters) {
     var valueSpace;
     for (var iy = 0; iy < yLength; iy++)
         for (var ix = 0; ix < xLength; ix++) {
-            if (p_wallGrid[iy][ix].state == CLOSED) {
+            if (p_wallGrid[iy][ix].state == WALLGRID.CLOSED) {
                 answer += 'X';
             } else {
                 valueSpace = 0;
-                if (p_wallGrid[iy][ix].wallR == CLOSED) {
+                if (p_wallGrid[iy][ix].wallR == WALLGRID.CLOSED) {
                     valueSpace += 1;
                 }
-                if (p_wallGrid[iy][ix].wallD == CLOSED) {
+                if (p_wallGrid[iy][ix].wallD == WALLGRID.CLOSED) {
                     valueSpace += 2;
                 }
                 answer += valueSpace;
@@ -382,37 +381,37 @@ function charToSpace(p_char) {
     switch (p_char) {
     case ('0'):
         return {
-            state: OPEN,
-            wallD: OPEN,
-            wallR: OPEN
+            state: WALLGRID.OPEN,
+            wallD: WALLGRID.OPEN,
+            wallR: WALLGRID.OPEN
         };
         break;
     case ('1'):
         return {
-            state: OPEN,
-            wallD: OPEN,
-            wallR: CLOSED
+            state: WALLGRID.OPEN,
+            wallD: WALLGRID.OPEN,
+            wallR: WALLGRID.CLOSED
         };
         break;
     case ('2'):
         return {
-            state: OPEN,
-            wallD: CLOSED,
-            wallR: OPEN
+            state: WALLGRID.OPEN,
+            wallD: WALLGRID.CLOSED,
+            wallR: WALLGRID.OPEN
         };
         break;
     case ('3'):
         return {
-            state: OPEN,
-            wallD: CLOSED,
-            wallR: CLOSED
+            state: WALLGRID.OPEN,
+            wallD: WALLGRID.CLOSED,
+            wallR: WALLGRID.CLOSED
         };
         break;
     default:
         return {
-            state: CLOSED,
-            wallD: OPEN,
-            wallR: OPEN
+            state: WALLGRID.CLOSED,
+            wallD: WALLGRID.OPEN,
+            wallR: WALLGRID.OPEN
         };
         break;
     }

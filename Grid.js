@@ -144,7 +144,6 @@ Grid.prototype.resizeGrid = function (p_xLength, p_yLength) {
 
 //---------------------
 
-//function numberArrayToString(p_array, p_defaultValue) {
 function arrayToString(p_array, p_defaultValue) {
     xLength = p_array[0].length;
     yLength = p_array.length;
@@ -159,11 +158,10 @@ function arrayToString(p_array, p_defaultValue) {
     return chain;
 }
 
-//function tokensToNumberArray(p_tokens, p_xLength, p_yLength, p_defaultValue) {
 function tokensToArray(p_tokens, p_xLength, p_yLength, p_defaultValue) {
     var p_array = generateSymbolArray(p_xLength, p_yLength, null);
     var indexToken = 0;
-    //TODO : HOTFIX de compatibilité avec l'ancien format
+    //Wrapping for compatibility with previous formats
     if (p_tokens[0].startsWith("Numbers")) {
         indexToken++;
     }

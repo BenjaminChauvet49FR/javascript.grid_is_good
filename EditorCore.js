@@ -338,16 +338,16 @@ EditorCore.prototype.buildWallsAroundSelection = function () {
         for (var x = 0; x < this.getXLength(); x++) {
             if (this.selectedGrid[y][x] == SELECTED.YES) {
                 if (x > 0 && this.selectedGrid[y][x - 1] == SELECTED.NO) {
-                    this.wallGrid.setWallR(x - 1, y, CLOSED);
+                    this.wallGrid.setWallR(x - 1, y, WALLGRID.CLOSED);
                 }
                 if (x < this.getXLength() - 1 && this.selectedGrid[y][x + 1] == SELECTED.NO) {
-                    this.wallGrid.setWallR(x, y, CLOSED);
+                    this.wallGrid.setWallR(x, y, WALLGRID.CLOSED);
                 }
                 if (y > 0 && this.selectedGrid[y - 1][x] == SELECTED.NO) {
-                    this.wallGrid.setWallD(x, y - 1, CLOSED);
+                    this.wallGrid.setWallD(x, y - 1, WALLGRID.CLOSED);
                 }
                 if (y < this.getYLength() - 1 && this.selectedGrid[y + 1][x] == SELECTED.NO) {
-                    this.wallGrid.setWallD(x, y, CLOSED);
+                    this.wallGrid.setWallD(x, y, WALLGRID.CLOSED);
                 }
             }
         }

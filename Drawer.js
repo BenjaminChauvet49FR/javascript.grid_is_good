@@ -113,16 +113,16 @@ Drawer.prototype.drawWallGrid = function (p_context, p_wallGrid, p_xLength, p_yL
             }
             //Draw pillar
             if ((ix <= p_xLength - 2) && (iy <= p_yLength - 2)) {
-                if (p_wallGrid.getWallR(ix, iy) == CLOSED || p_wallGrid.getWallD(ix, iy) == CLOSED ||
-                    p_wallGrid.getWallR(ix, iy + 1) == CLOSED || p_wallGrid.getWallD(ix + 1, iy) == CLOSED) {
-                    p_context.fillStyle = this.wallToColor(CLOSED);
+                if (p_wallGrid.getWallR(ix, iy) == WALLGRID.CLOSED || p_wallGrid.getWallD(ix, iy) == WALLGRID.CLOSED ||
+                    p_wallGrid.getWallR(ix, iy + 1) == WALLGRID.CLOSED || p_wallGrid.getWallD(ix + 1, iy) == WALLGRID.CLOSED) {
+                    p_context.fillStyle = this.wallToColor(WALLGRID.CLOSED);
                 } else {
-                    p_context.fillStyle = this.wallToColor(OPEN);
+                    p_context.fillStyle = this.wallToColor(WALLGRID.OPEN);
                 }
                 p_context.fillRect(pixDrawXVert, pixDrawYHoriz, pixThickness, pixThickness);
             }
             //Draw inside space
-            if (p_wallGrid.getState(ix, iy) == CLOSED) {
+            if (p_wallGrid.getState(ix, iy) == WALLGRID.CLOSED) {
                 p_context.fillStyle = this.colors.bannedSpace;
                 p_context.fillRect(pixDrawXHoriz, pixDrawYVert, pixLength, pixLength);
             }
@@ -179,7 +179,7 @@ Drawer.prototype.drawWalllessGrid = function (p_context, p_wallGrid, p_xLength, 
         for (var iy = 0; iy < p_yLength; iy++) {
             pixX = this.getPixInnerXLeft(0);
             for (ix = 0; ix < p_xLength; ix++) {
-                if (p_wallGrid.getState(ix, iy) == CLOSED) {
+                if (p_wallGrid.getState(ix, iy) == WALLGRID.CLOSED) {
                     p_context.fillRect(pixX, pixY, pixInnerLength, pixInnerLength);
                 }
                 pixX += this.pix.sideSpace;
@@ -232,15 +232,15 @@ Drawer.prototype.drawWallGridAsPath = function (p_context, p_wallGrid, p_xLength
     var pixUp = this.getPixCenterY(0) - shorter / 2;
     for (var iy = 0; iy < p_yLength; iy++) {
         for (var ix = 0; ix < p_xLength; ix++) {
-            if (p_wallGrid.getWallD(ix, iy) == OPEN) {
+            if (p_wallGrid.getWallD(ix, iy) == WALLGRID.OPEN) {
                 p_context.fillRect(pixLeft, pixUp, shorter, longer);
             }
-            if (p_wallGrid.getWallR(ix, iy) == OPEN) {
+            if (p_wallGrid.getWallR(ix, iy) == WALLGRID.OPEN) {
                 p_context.fillRect(pixLeft, pixUp, longer, shorter);
             }
             pixLeft += this.pix.sideSpace;
             //Draws banned spaces : there should be few of them / none in a path grid.
-            if (p_wallGrid.getState(ix, iy) == CLOSED) {
+            if (p_wallGrid.getState(ix, iy) == WALLGRID.CLOSED) {
                 p_context.fillStyle = this.colors.bannedSpace;
                 p_context.fillRect(getPixInnerXLeft(), getPixInnerYUp(), getPixInnerSide(), getPixInnerSide());
                 p_context.fillStyle = this.colors.path;
@@ -259,10 +259,10 @@ Gives the correct wall color from a wall type (a #RRGGBB string)
  */
 Drawer.prototype.wallToColor = function (p_wallType) {
     switch (p_wallType) {
-    case (OPEN):
+    case (WALLGRID.OPEN):
         return (this.colors.open_wall);
         break;
-    case (CLOSED):
+    case (WALLGRID.CLOSED):
         return (this.colors.closed_wall);
         break;
     }

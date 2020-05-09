@@ -20,11 +20,11 @@ p_char : the desired char
 */
 function charToSpace(p_char){
 	switch(p_char){
-		case('0'): return {state:OPEN,wallD:OPEN,wallR:OPEN};break;
-		case('1'): return {state:OPEN,wallD:OPEN,wallR:CLOSED};break;
-		case('2'): return {state:OPEN,wallD:CLOSED,wallR:OPEN};break;
-		case('3'): return {state:OPEN,wallD:CLOSED,wallR:CLOSED};break;
-		default : return {state:CLOSED,wallD:OPEN,wallR:OPEN};break;
+		case('0'): return {state:WALLGRID.OPEN,wallD:WALLGRID.OPEN,wallR:WALLGRID.OPEN};break;
+		case('1'): return {state:WALLGRID.OPEN,wallD:WALLGRID.OPEN,wallR:WALLGRID.CLOSED};break;
+		case('2'): return {state:WALLGRID.OPEN,wallD:WALLGRID.CLOSED,wallR:WALLGRID.OPEN};break;
+		case('3'): return {state:WALLGRID.OPEN,wallD:WALLGRID.CLOSED,wallR:WALLGRID.CLOSED};break;
+		default : return {state:WALLGRID.CLOSED,wallD:WALLGRID.OPEN,wallR:WALLGRID.OPEN};break;
 	}
 }
 

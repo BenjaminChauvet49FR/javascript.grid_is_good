@@ -47,8 +47,6 @@ function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem) {
 
 //---------------
 
-//TODO : the below method can (and should ?) be refactored...
-
 /**
 Read the region grid as it is
 p_editorCore : the editorCore item
