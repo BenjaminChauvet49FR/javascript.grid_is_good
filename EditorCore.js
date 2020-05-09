@@ -288,8 +288,12 @@ EditorCore.prototype.resizeGrid = function (p_xLength, p_yLength) {
 /**
 Selection phase
  */
-EditorCore.prototype.selectSpace = function (p_x, p_y) {
-    this.selectedGrid[p_y][p_x] = SELECTED.YES;
+EditorCore.prototype.switchSelectedSpace = function (p_x, p_y) {
+    if (this.selectedGrid[p_y][p_x] == SELECTED.YES){
+		this.selectedGrid[p_y][p_x] = SELECTED.NO;
+		return;
+	}
+	this.selectedGrid[p_y][p_x] = SELECTED.YES;
 }
 
 EditorCore.prototype.selectRectangleMechanism = function (p_x, p_y) {
@@ -305,7 +309,7 @@ EditorCore.prototype.selectRectangleMechanism = function (p_x, p_y) {
         const yMax = Math.max(this.selectedCornerSpace.y, p_y);
         for (x = xMin; x <= xMax; x++) {
             for (var y = yMin; y <= yMax; y++) {
-                this.selectSpace(x, y);
+                this.selectedGrid[p_y][p_x] = SELECTED.YES;
             }
         }
         this.selectedCornerSpace = null;

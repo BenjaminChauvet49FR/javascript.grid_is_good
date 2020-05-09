@@ -9,7 +9,7 @@ clickWallDAction = function (p_editorCore, p_x, p_y, p_modes) {
 clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
     mode = p_modes.clickSpace;
     if (mode.id == MODE_SELECTION.id) {
-        p_editorCore.selectSpace(p_x, p_y);
+        p_editorCore.switchSelectedSpace(p_x, p_y);
     } else if (mode.id == MODE_SELECTION_RECTANGLE.id) {
         p_editorCore.selectRectangleMechanism(p_x, p_y);
     } else if (mode.id == MODE_ERASE.id) {
