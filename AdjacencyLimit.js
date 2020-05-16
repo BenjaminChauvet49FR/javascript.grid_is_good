@@ -9,8 +9,7 @@ function AdjacencyLimit(p_strings) {
 }
 
 function AdjacencyLimitNew() {
-    //return new AdjacencyLimit([[DIRECTION.LEFT,DIRECTION.UP,DIRECTION.RIGHT,DIRECTION.DOWN]]);
-    return new AdjacencyLimit(["LURD"]); //TODO faire un nouveau constructeur
+    return new AdjacencyLimit([FOUR_DIRECTIONS_STRING]);
 }
 
 AdjacencyLimit.prototype.isAccessible = function (p_dir1, p_dir2) {

@@ -11,6 +11,8 @@ const DIRECTION = {
     HERE: 'H',
     UNDEFINED: '-'
 };
+const FOUR_DIRECTIONS_STRING = "LURD";
+
 const TASK = {
     TBD: 0,
     DONE: 1
@@ -481,7 +483,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
 		limitsLog("Starting 'risky' space "+xRisk+","+yRisk+" (adjacency : "+p_function(xRisk, yRisk)+")");
         if (p_function(xRisk, yRisk) != ADJACENCY.NO) { 
             const exploList = {
-				//TODO I hope the labels "L U R D" won't change.
+				//WARNING : the code below is dependent from the labels ! Unfortunately, this seems to be the cost of defining an object with properties...
                 L: {
                     spacesExploToDo: [],
                     containADJACENCY: false,

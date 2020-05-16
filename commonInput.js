@@ -68,7 +68,7 @@ function clickCanvas(event, p_canvas, p_drawer, p_editorCore, p_modes) {
 p_editorCore : the Global item
 p_detachedName : the detached name (without the prefix) to store into local storage
  */
-saveAction = function (p_editorCore, p_detachedName,p_kindId, p_externalOptions) { //TODO la plupart n'ont pas de "p_kind"
+saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions) {
     var localStorageName = getLocalStorageName(p_detachedName);
     var letsSave = true;
     if (localStorage.hasOwnProperty(localStorageName)) {
