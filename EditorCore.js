@@ -263,17 +263,17 @@ EditorCore.prototype.switchSelectedSpace = function (p_x, p_y) {
 EditorCore.prototype.selectRectangleMechanism = function (p_x, p_y) {
     if (this.selectedCornerSpace == null) {
         this.selectedCornerSpace = {
-            x: p_x,
-            y: p_y
+            x : p_x,
+			y : p_y
         };
     } else {
         const xMin = Math.min(this.selectedCornerSpace.x, p_x);
         const yMin = Math.min(this.selectedCornerSpace.y, p_y);
         const xMax = Math.max(this.selectedCornerSpace.x, p_x);
         const yMax = Math.max(this.selectedCornerSpace.y, p_y);
-        for (x = xMin; x <= xMax; x++) {
-            for (var y = yMin; y <= yMax; y++) {
-                this.selectedGrid[p_y][p_x] = SELECTED.YES;
+        for (var ix = xMin; ix <= xMax; ix++) {
+            for (var iy = yMin; iy <= yMax; iy++) {
+                this.selectedGrid[iy][ix] = SELECTED.YES;
             }
         }
         this.selectedCornerSpace = null;

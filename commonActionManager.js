@@ -35,26 +35,34 @@ function getNumberMode(p_numericMode){return p_numericMode.numberToInput};
 /**
 Adds the event listener of an action submit by linking it to an action for the canvas
 */
-function addEventListenerAndCaptionActionSubmit(p_editorCore,p_entriesManager,p_textElement,p_idSubmitElement,p_entry,p_value){
-	const submitElement = document.getElementById(p_idSubmitElement);
+
+function addEventListenerAndCaptionForSolver(p_entriesManager, p_textElement, p_idSubmitElement, p_entry, p_value) {
+    addEventListenerAndCaptionActionSubmit(null, p_entriesManager, p_textElement, p_idSubmitElement, p_entry, p_value);
+}
+
+function addEventListenerAndCaptionActionSubmit(p_editorCore, p_entriesManager, p_textElement, p_idSubmitElement, p_entry, p_value) {
+    const submitElement = document.getElementById(p_idSubmitElement);
 	submitElement.value = (p_value.submitCaption) ? p_value.submitCaption : p_value.htmlCaption; 
-	submitElement.addEventListener('click',function(event){
-		if (p_entry == ENTRY.SPACE && p_editorCore != null){
-			actionUnselectAll(p_editorCore);	
+	submitElement.addEventListener('click', function(event) {
+		if (p_entry == ENTRY.SPACE && p_editorCore != null) {
+			changeSpaceMode(p_editorCore);	
 		}
-		setMode(p_textElement,p_entriesManager,p_entry,p_value);
+		setMode(p_textElement, p_entriesManager, p_entry, p_value);
 	});
 }
 
-function addEventListenerAndCaptionForSolver(p_entriesManager,p_textElement,p_idSubmitElement,p_entry,p_value){ //TODO changer nom car le "forSolver"... voilà quoi.
-	addEventListenerAndCaptionActionSubmit(null,p_entriesManager,p_textElement,p_idSubmitElement,p_entry,p_value)
+/**
+Perform stuff when we change the mode for the "space" entry
+*/
+function changeSpaceMode(p_editorCore) {
+	actionUnselectAll(p_editorCore);
 }
 
 /**
 Changes the mode, both visually (innerHTML) and in model
 */
-function setMode(p_textElement,p_entriesManager,p_entry,p_value){
-	p_textElement.innerHTML = p_value.html ? p_value.html : p_value.htmlCaption;
+function setMode(p_textElement, p_entriesManager, p_entry, p_value) {
+    p_textElement.innerHTML = p_value.html ? p_value.html : p_value.htmlCaption;
 	switch(p_entry){
 		case (ENTRY.SPACE):p_entriesManager.clickSpace = p_value;break; 
 		case (ENTRY.WALL_R):p_entriesManager.clickWallD = p_value;break; 

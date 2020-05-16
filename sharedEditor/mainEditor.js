@@ -116,7 +116,9 @@ document.getElementById("add_black").addEventListener('click', function () {
     editorCore.setInputSymbol(SYMBOL_ID.BLACK)
 });
 
-
 document.getElementById("input_number_value_region").addEventListener('change', function () {
-    editorCore.setInputNumber(this.value)
+    editorCore.setInputNumber(this.value);
+	setMode(textMode, modesManager, ENTRY.SPACE, MODE_NUMBER);
+	changeSpaceMode(p_editorCore);
 });
+
