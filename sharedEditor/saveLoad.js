@@ -1,3 +1,5 @@
+// Note : for commodity, a saver has been associated with its loader rather than having all savers together and all loaders together
+
 function commonPuzzleToString(p_wallArray,p_numbersArray,p_symbolsArray,p_symbolsToSave) {
 	var wallsString = "";
 	var rowsString = "";
@@ -39,6 +41,42 @@ function stringToWallAndNumbersPuzzle(p_string) {
 	    gridNumber: numberGrid
 	};
 }
+
+function commonPuzzleEmptyWallsToString(p_xLength, p_yLength, p_symbolsArray, p_symbolsToSave) {
+    var dimensionsString = p_xLength + " " + p_yLength + " "; //Spaces right
+	var symbolsString = ""; //No spaces left/right
+    var rowsString = ""; //Spaces left
+    if (p_symbolsToSave) {
+        p_symbolsToSave.forEach(symbol => {
+			symbolsString += symbol;
+            rowsString += " " + arrayToStringRows(p_symbolsArray, symbol);
+        });
+    }
+    return dimensionsString + symbolsString + rowsString;
+}
+
+function stringToEmptyWallsPuzzle(p_string) {
+	var stringArray = p_string.split(' ');
+	var xLength = parseInt(stringArray[0],10);
+	var yLength = parseInt(stringArray[1],10);
+	var symbolsString = stringArray[2];
+	var array = generateSymbolArray(xLength,yLength);
+	var indexToken = 3;	
+	while(indexToken < stringArray.length && stringArray[indexToken].length == 0) {
+		indexToken++;
+	}
+	if (stringArray.length > indexToken) {
+		for (var i = 0; i < symbolsString.length ; i++) {	
+			filledArray = fillArrayWithTokensRows(stringArray.slice(), array, indexToken, symbolsString.charAt(i));
+			array = filledArray.newArray;
+			indexToken = filledArray.newIndexToken;
+		}
+	}
+	return {
+	    gridSymbol: array
+	};
+}
+
 
 /**
 Returns the space that matches a char in unparsing function ('0123' => sides down-right = open/closed)

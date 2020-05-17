@@ -11,7 +11,7 @@ var modesManager = {
     clickWallD: null,
     clickWallR: null
 };
-var puzzleTypeComboBox = document.getElementById("select_puzzle_type");
+var saveLoadModeId = PUZZLES_KIND.HEYAWAKE_LIKE.id;
 
 //The main draw function (at start)
 function drawCanvas() {
@@ -27,17 +27,21 @@ setInterval(drawCanvas, 30);
 var fieldX = document.getElementById("input_number_xLength");
 var fieldY = document.getElementById("input_number_yLength");
 var fieldName = document.getElementById("input_grid_name");
+var puzzleTypeComboBox = document.getElementById("select_puzzle_type");
+
 
 adaptCanvasAndGrid(canevas, drawer, editorCore);
 
 putActionElementClick("submit_view_puzzle_list", function (event) {
     viewPuzzleList(puzzleTypeComboBox.options[puzzleTypeComboBox.selectedIndex].innerHTML)
 });
+
 putActionElementClick("submit_save_grid", function (event) {
-    saveAction(editorCore, fieldName.value, PUZZLES_KIND.HEYAWAKE_LIKE.id)
+    saveAction(editorCore, fieldName.value, saveLoadModeId)
 });
+
 putActionElementClick("submit_load_grid", function (event) {
-    loadAction(canevas, drawer, editorCore, fieldName.value, PUZZLES_KIND.HEYAWAKE_LIKE.id, {
+    loadAction(canevas, drawer, editorCore, fieldName.value, saveLoadModeId, {
         xLengthField: fieldX,
         yLengthField: fieldY
     })
@@ -84,9 +88,11 @@ function combo(thelist) {
     switch (content) {
 		case 'CurvingRoad':
 			editorCore.setWallsOff();
+			saveLoadModeId = PUZZLES_KIND.MASYU_LIKE.id;
 			break;
 		default:
 			editorCore.setWallsOn();
+			saveLoadModeId = PUZZLES_KIND.HEYAWAKE_LIKE.id;
 			break;
     }
 }

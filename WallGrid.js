@@ -1,3 +1,12 @@
+// Constants for walls and spaces
+const WALLGRID = {OPEN : 0, CLOSED : 1} 
+
+function switchedState(p_state) {
+    return 1 - p_state;
+}
+
+// ---------------------------------------------
+
 function WallGrid(p_wallArray, p_xLength, p_yLength) {
     this.array = p_wallArray;
     this.xLength = p_xLength;
@@ -318,15 +327,6 @@ WallGrid.prototype.resizeGrid = function (p_xLength, p_yLength) {
     this.array = newWallGrid;
     this.xLength = p_xLength;
     this.yLength = p_yLength;
-}
-
-//-----------
-
-// Constants for walls and spaces
-const WALLGRID = {OPEN : 0, CLOSED : 1} 
-
-function switchedState(p_state) {
-    return 1 - p_state;
 }
 
 //-----------

@@ -159,26 +159,25 @@ Grid.prototype.resizeGrid = function (p_xLength, p_yLength) {
 
 /**
 New version : 
-.O.O......
-.....O..O.
-..........
+.O.O..X...
+.X...O..O.
+.....X....
 ..O.......
 <=>
-O 1 3 | 5 8 | | 2 
+OX 1 3 | 5 8 | | 2 | 6 | 1 | 5 | |
+(nb : "|" between 2 and 6 marks the separation between two arrays since it is the 4th, and the row count is 4.
 */
 function arrayToStringRows(p_array,p_value) {
     xLength = p_array[0].length;
     yLength = p_array.length;
     var chain = "";
-	var pipe = "";
     for (var iy = 0; iy < yLength; iy++) {
-		chain += pipe;
         for (var ix = 0; ix < xLength; ix++) {
-            if (p_array[iy][ix] = p_value) {
+            if (p_array[iy][ix] == p_value) {
                 chain += (ix + " ");
             }
         }
-		pipe = "| ";
+		chain += "| ";
     }
     return chain;
 }
@@ -206,21 +205,20 @@ function arrayToStringSpaces(p_array) {
     return chain;
 }
 
-function fillArrayWithTokensRows(p_tokens, p_array, p_symbol) {
-    var indexToken;
+function fillArrayWithTokensRows(p_tokens, p_array, p_indexToken, p_symbol) {
 	var y = 0;
-	value = p_tokens[1];
-	indexToken = 2;
 	while (y < p_array.length) {
-		if (p_tokens[indexToken] == '|') {
+		if (p_tokens[p_indexToken] == '') {
+			p_indexToken++;
+		}
+		if (p_tokens[p_indexToken] == '|') {
 			y++;
 		} else {
-			p_array[parseInt(p_tokens[y], 10)]
-			[parseInt(p_tokens[indexToken], 10)] = value;
+			p_array[y][parseInt(p_tokens[p_indexToken], 10)] = p_symbol;
 		}
-		indexToken++;
+		p_indexToken++;
 	}
-	return p_array;
+	return {newArray : p_array, newIndexToken : p_indexToken};
 }
 
 function fillArrayWithTokensSpaces(p_tokens,p_array){

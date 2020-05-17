@@ -77,15 +77,16 @@ saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions
         }
     }
     if (letsSave) {
-		var puzzleToSave = "";
-		if (p_kindId == PUZZLES_KIND.STAR_BATTLE.id){
-			puzzleToSave = starBattlePuzzleToString(p_editorCore.getWallArray(),p_externalOptions.numberStars);
-		} else if (p_kindId == PUZZLES_KIND.MASYU_LIKE.id) {
-			puzzleToSave = commonPuzzleToString(null,null,p_editorCore.get(GRID_ID.PEARL));
-		} else {
-			p_editorCore.alignToRegions(GRID_ID.NUMBER_REGION);
-			puzzleToSave = commonPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION),null);
-		}
+        var puzzleToSave = "";
+        if (p_kindId == PUZZLES_KIND.STAR_BATTLE.id) {
+            puzzleToSave = starBattlePuzzleToString(p_editorCore.getWallArray(), p_externalOptions.numberStars);
+        } else if (p_kindId == PUZZLES_KIND.MASYU_LIKE.id) {
+            const grid = p_editorCore.getArray(GRID_ID.PEARL);
+            puzzleToSave = commonPuzzleEmptyWallsToString(grid[0].length, grid.length, p_editorCore.getArray(GRID_ID.PEARL), [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK]);
+        } else {
+            p_editorCore.alignToRegions(GRID_ID.NUMBER_REGION);
+            puzzleToSave = commonPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION), null);
+        }
         localStorage.setItem(localStorageName, puzzleToSave);
     }
 }
@@ -100,9 +101,11 @@ loadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p_kindI
 				loadedItem = stringToStarBattlePuzzle(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.grid);			
 			} else if (p_kindId == PUZZLES_KIND.MASYU_LIKE.id){
-				loadedItem = stringToPuzzle(localStorage.getItem(localStorageName));
+				loadedItem = stringToEmptyWallsPuzzle(localStorage.getItem(localStorageName));
+				const gridPearl = loadedItem.gridSymbol;
+				loadedItem.grid = generateWallArray(gridPearl[0].length, gridPearl.length); //TODO ".grid" ajouté par commodité puisque "updateFieldsAfterLoad" utilise cette propriété grid.
 				p_editorCore.setupFromWallArray(loadedItem.grid);			
-				p_editorCore.addGrid(GRID_ID.PEARL,loadedItem.gridSymbol); 
+				p_editorCore.addGrid(GRID_ID.PEARL, gridPearl); 
 			} else {
 				loadedItem = stringToWallAndNumbersPuzzle(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.grid);			
