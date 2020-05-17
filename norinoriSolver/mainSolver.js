@@ -53,23 +53,3 @@ addEventListenerAndCaption("submit_pass_region",ACTION_PASS_REGION);
 function addEventListenerAndCaption(p_identifier,p_action){ //Shortcut action
 	addEventListenerAndCaptionForSolver(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
 }
-
-//----------------
-//Debug room. 
-//TODO create a separate file ?
-
-function debugTryToPutNewGold(p_string){
-	console.log(p_string)
-}
-function debugTryToPutNew(p_string){
-	console.log(p_string)
-}
-function debugPass(p_string){
-	console.log(p_string);
-}
-function debugHumanMisclick(p_string){
-	console.log("Human misclick ? "+p_string);
-}
-function alertPass(p_string){
-	//alert(p_string);
-}

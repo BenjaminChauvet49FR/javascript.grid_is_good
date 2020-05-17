@@ -1,6 +1,5 @@
 var drawer = new Drawer();
-var solver = new SolverShimaguni(generateWallArray(1,1),generateSymbolArray(1,1));
-//TODO (dummy grid problem)
+var solver = new SolverShimaguni();
 var canevas = document.getElementById("canevas");
 var	context = canevas.getContext("2d");
 var actionsManager = {clickSpace : null}; 
@@ -52,24 +51,4 @@ addEventListenerAndCaption("submit_put_X",ACTION_PUT_NO_FILL);
 addEventListenerAndCaption("submit_pass_region",ACTION_PASS_REGION);
 function addEventListenerAndCaption(p_identifier,p_action){ //Shortcut action
 	addEventListenerAndCaptionForSolver(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
-}
-
-//----------------
-//Debug room. 
-//TODO create a separate file ?
-
-function debugTryToPutNewGold(p_string){
-	console.log(p_string)
-}
-function debugTryToPutNew(p_string){
-	console.log(p_string)
-}
-function debugPass(p_string){
-	console.log(p_string);
-}
-function debugHumanMisclick(p_string){
-	console.log("Human misclick ? "+p_string);
-}
-function alertPass(p_string){
-	//alert(p_string);
 }

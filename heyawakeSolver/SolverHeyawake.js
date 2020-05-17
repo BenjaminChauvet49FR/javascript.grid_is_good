@@ -130,8 +130,7 @@ SolverHeyawake.prototype.construct = function(p_wallArray,p_numberGrid){
 		}
 	}
 	
-	
-	//TODO manque la purification de la grille !
+	//Note : grid not purified.
 }
 
 SolverHeyawake.prototype.expectedNumberInRegion = function(ir){

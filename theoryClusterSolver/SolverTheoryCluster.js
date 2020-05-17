@@ -11,8 +11,8 @@ const RESULT = {
     HARMLESS: 2
 }
 
-function SolverTheoryCluster(p_wallArray, p_numberGrid) {
-    this.construct(p_wallArray, p_numberGrid);
+function SolverTheoryCluster() {
+    this.construct(generateWallArray(1,1),generateSymbolArray(1,1));
 }
 
 SolverTheoryCluster.prototype.construct = function (p_wallArray, p_numberGrid) {
@@ -35,7 +35,7 @@ SolverTheoryCluster.prototype.construct = function (p_wallArray, p_numberGrid) {
         }
     }
 
-    //TODO manque la purification de la grille !
+    //IMPORTANT : Purification not performed yet !
 }
 
 SolverTheoryCluster.prototype.getSpaceCoordinates = function (p_indexRegion, p_indexSpace) {
@@ -212,7 +212,7 @@ SolverTheoryCluster.prototype.geographicalVerification = function (p_listNewXs) 
 // Undoing
 
 SolverTheoryCluster.prototype.undoEvent = function (p_event) {
-    if (p_event.kind == EVENT_KIND.SPACE) { // TODO attention, j'avais tenté d'écrire "p_event.y" et ça n'a plus annulé les events pour lesquels y était égal à 0.
+    if (p_event.kind == EVENT_KIND.SPACE) { // Note : I tried to put "if (p_event.y)" but it resulted into top line (y = 0) to be not taken into account.
         this.answerGrid[p_event.y][p_event.x] = SPACE.UNDECIDED;
     } else if (p_event.adjacency) {
         const aals = this.adjacencyLimitSpacesList.pop(); //aals = added adjacency limit space

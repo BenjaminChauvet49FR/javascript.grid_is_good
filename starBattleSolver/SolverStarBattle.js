@@ -135,7 +135,7 @@ USED OUTSIDE !
 SolverStarBattle.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
 	var result = this.tryToPutNew(p_x,p_y,p_symbol);
 	if (result != null && result.eventsApplied.length > 0){
-		this.happenedEvents.push({kind:EVENTLIST_KIND.HYPOTHESIS,list:result.eventsApplied}); //TODO : une constante
+		this.happenedEvents.push({kind:EVENTLIST_KIND.HYPOTHESIS,list:result.eventsApplied}); 
 		return {result:RESULT.SUCCESS,eventsApplied:result.eventsApplied};
 	}
 	return {result:RESULT.ERROR,eventsApplied:[]};

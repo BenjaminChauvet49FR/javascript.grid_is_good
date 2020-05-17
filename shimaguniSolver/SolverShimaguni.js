@@ -1,5 +1,5 @@
-function SolverShimaguni(p_wallArray,p_numberGrid){
-	this.construct(p_wallArray,p_numberGrid);
+function SolverShimaguni() {
+    this.construct(generateWallArray(1, 1), generateSymbolArray(1, 1));
 }
 
 SolverShimaguni.prototype.construct = function(p_wallArray,p_numberGrid){

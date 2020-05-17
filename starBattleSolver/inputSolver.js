@@ -55,8 +55,7 @@ solveAction = function (p_solver,p_components){
 //--------------------------
 
 /** 
-Loads a walled grid from local storage and its region grid (cf. super-function), updates intelligence, updates canvas
-TODO doc
+Loads a puzzle from local storage and its region grid (cf. super-function), updates intelligence, updates canvas
 */
 loadAction = function(p_canvas,p_drawer,p_solver,p_name,p_components){  //TODO adapt loadAction to starSpan in other solvers
 	var loadedItem = stringToStarBattlePuzzle(localStorage.getItem("grid_is_good_"+p_name));

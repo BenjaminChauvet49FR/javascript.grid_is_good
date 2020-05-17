@@ -39,7 +39,7 @@ quickStartAction = function(p_solver,p_textArea){
 }
 
 undoAction = function(p_solver,p_textArea){
-	p_solver.massUndo();
+	p_solver.undoDeducted();
 	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
 }
 

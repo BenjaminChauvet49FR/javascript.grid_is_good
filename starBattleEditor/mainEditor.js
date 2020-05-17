@@ -42,7 +42,7 @@ putActionElementClick("submit_clear_selection",function(event){actionUnselectAll
 
 
 //-------------------------
-// Mode of selection (TODO : besides the modesManager item, nothing appears above this line) 
+// Mode of selection (note : besides the modesManager item, nothing appears above this line) 
 
 //See "CommonXManager.js" above.
 var textMode = document.getElementById("span_mode"); 

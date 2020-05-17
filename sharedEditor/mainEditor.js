@@ -75,8 +75,7 @@ putActionElementClick("submit_clear_selection", function (event) {
     actionUnselectAll(editorCore)
 });
 
-//TODO Ceci est un exemple d'utilisation possible du "onChange" d'une combobox. A modifier le jour où on verra une utilité.
-//Crédits : https://www.scriptol.fr/html5/combobox.php
+//How to use the change of a combobox. Credits : https://www.scriptol.fr/html5/combobox.php
 function combo(thelist) {
     var idx = thelist.selectedIndex;
     var content = thelist.options[idx].innerHTML;

@@ -676,9 +676,9 @@ TODO :
 */
 
 /**
-Cancel the last list of events since the last "non-deducted" space. TODO : change this name.
+Cancels the last list of events since the last "non-deducted" space.
 */
-GlobalNorinori.prototype.massUndo = function(){
+GlobalNorinori.prototype.undoDeducted = function(){
 	if (this.happenedEvents.length == 0)
 		return;	
 	var spaceEventsListToUndo = this.happenedEvents.pop();
