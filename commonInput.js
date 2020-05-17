@@ -137,28 +137,38 @@ Transform the grid
  */
 
 function rotateCWAction(p_canvas, p_drawer, p_editorCore) {
-    p_editorCore.transformGrid(GRID_TRANSFORMATION.ROTATE_CW);
-    adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
+    transformGrid(p_canvas, p_drawer, p_editorCore, GRID_TRANSFORMATION.ROTATE_CW);
 }
 
 function rotateUTurnAction(p_canvas, p_drawer, p_editorCore) {
-    p_editorCore.transformGrid(GRID_TRANSFORMATION.ROTATE_UTURN);
-    adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
+    transformGrid(p_canvas, p_drawer, p_editorCore, GRID_TRANSFORMATION.ROTATE_UTURN);
 }
 
 function rotateCCWAction(p_canvas, p_drawer, p_editorCore) {
-    p_editorCore.transformGrid(GRID_TRANSFORMATION.ROTATE_CCW);
-    adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
+    transformGrid(p_canvas, p_drawer, p_editorCore, GRID_TRANSFORMATION.ROTATE_CCW);
 }
 
 function mirrorHorizontalAction(p_canvas, p_drawer, p_editorCore) {
-    p_editorCore.transformGrid(GRID_TRANSFORMATION.MIRROR_HORIZONTAL);
-    adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
+    transformGrid(p_canvas, p_drawer, p_editorCore, GRID_TRANSFORMATION.MIRROR_HORIZONTAL);
 }
 
 function mirrorVerticalAction(p_canvas, p_drawer, p_editorCore) {
-    p_editorCore.transformGrid(GRID_TRANSFORMATION.MIRROR_VERTICAL);
+	transformGrid(p_canvas, p_drawer, p_editorCore, GRID_TRANSFORMATION.MIRROR_VERTICAL);
+}
+
+function transformGrid(p_canvas,p_drawer,p_editorCore, p_transformation) {
+	p_editorCore.transformGrid(p_transformation);
     adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
+}
+
+function resizeAction(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength) {
+	if (!p_yLength) {
+		p_yLength = p_xLength;
+	}
+	if (confirm("Redimensionner la grille ?")) {
+		p_editorCore.transformGrid(GRID_TRANSFORMATION.RESIZE, p_xLength, p_yLength);
+		adaptCanvasAndGrid(p_canvas, p_drawer,p_editorCore);	
+	}
 }
 
 //--------------------
@@ -189,4 +199,13 @@ function viewPuzzleList(p_puzzleName) {
         conditionalComma = ",";
     }
     alert(string);
+}
+
+
+function actionBuildWallsAroundSelection(p_editorCore) {
+	p_editorCore.buildWallsAroundSelection();
+}
+
+function actionUnselectAll(p_editorCore) {
+	p_editorCore.unselectAll();
 }

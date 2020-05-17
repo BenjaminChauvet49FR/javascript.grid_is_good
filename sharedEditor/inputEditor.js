@@ -40,12 +40,6 @@ clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
 
 //------------------------
 
-//TODO Default function, rename it to "default / stadard / ..."
-/*function puzzleToString(p_editorCore, p_externalOptions) {
-    p_editorCore.alignToRegions(GRID_ID.NUMBER_REGION);
-    return commonPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION)); 
-}*/
-
 function getLocalStorageName(p_detachedName) {
     return "grid_is_good_" + p_detachedName;
 }
@@ -57,16 +51,6 @@ function stringToPuzzle(p_string) {
 function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem) {
     p_fieldsToUpdate.xLengthField.value = p_loadedItem.grid[0].length;
     p_fieldsToUpdate.yLengthField.value = p_loadedItem.grid.length;
-}
-
-//---------------
-
-/**
-Read the region grid as it is
-p_editorCore : the editorCore item
- */
-readRegionGrid = function (p_editorCore) {
-    p_editorCore.updateRegionGrid();
 }
 
 /**
@@ -84,25 +68,4 @@ restartAction = function (p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength
 		p_editorCore.addCleanGrid(GRID_ID.PEARL,p_xLength, p_yLength);
         adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
     }
-}
-
-function resizeAction(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength) {
-    if (confirm("Redimensionner la grille ?")) {
-        p_editorCore.transformGrid(GRID_TRANSFORMATION.RESIZE, p_xLength, p_yLength);
-        adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
-    }
-}
-
-//---------------
-
-/**
-Selection deal
- */
-
-function actionBuildWallsAroundSelection(p_editorCore) {
-    p_editorCore.buildWallsAroundSelection();
-}
-
-function actionUnselectAll(p_editorCore) {
-    p_editorCore.unselectAll();
 }

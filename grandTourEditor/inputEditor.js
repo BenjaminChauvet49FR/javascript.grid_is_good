@@ -24,14 +24,6 @@ function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem){
 
 //------------------------------
 
-/** 
-Read the region grid as it is
-p_editorCore : the global item
-*/
-function readRegionGrid(p_editorCore){
-	p_editorCore.updateRegionGrid();
-}
-
 /**
 Restarts the grid and the canvas to new dimensions
 p_canvas : the canvas to adapt
@@ -52,18 +44,4 @@ function resizeAction(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength){
 		//p_editorCore.resizeGrid(p_xLength,p_yLength); TODO Obsolète ! (cf. "mainstream" puzzles)
 		adaptCanvasAndGrid(p_canvas, p_drawer,p_editorCore);	
 	}
-}
-
-//------------------------------
-
-/**
-Selection deal
-*/
-
-function actionBuildWallsAroundSelection(p_editorCore) {
-	p_editorCore.buildWallsAroundSelection();
-}
-
-function actionUnselectAll(p_editorCore) {
-	p_editorCore.unselectAll();
 }

@@ -24,18 +24,6 @@ function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem){
 	p_fieldsToUpdate.sizeField.value = p_loadedItem.grid.length;
 }
 
-//---------------
-
-//TODO : the below method can (and should ?) be refactored...
-
-/** 
-Read the region grid as it is
-p_editorCore : the editorCore item
-*/
-readRegionGrid = function(p_editorCore){
-	p_editorCore.updateRegionGrid();
-}
-
 /**
 Restarts the grid and the canvas to new dimensions
 p_canvas : the canvas to adapt
@@ -49,25 +37,4 @@ restartAction = function(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength)
 		p_editorCore.restartGrid(p_xLength,p_yLength);
 		adaptCanvasAndGrid(p_canvas, p_drawer,p_editorCore);	
 	}
-}
-
-function resizeAction(p_canvas, p_drawer, p_editorCore, p_xyLength){
-	if (confirm("Redimensionner la grille ?")){
-		p_editorCore.transformGrid(GRID_TRANSFORMATION.RESIZE, p_xyLength, p_xyLength);
-		adaptCanvasAndGrid(p_canvas, p_drawer,p_editorCore);	
-	}
-}
-
-//---------------
-
-/**
-Selection deal
-*/
-
-function actionBuildWallsAroundSelection(p_editorCore) {
-	p_editorCore.buildWallsAroundSelection();
-}
-
-function actionUnselectAll(p_editorCore) {
-	p_editorCore.unselectAll();
 }
