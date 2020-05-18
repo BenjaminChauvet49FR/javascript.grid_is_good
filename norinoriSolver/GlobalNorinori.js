@@ -5,7 +5,7 @@ function GlobalNorinori(p_wallArray){
 GlobalNorinori.prototype.construct = function(p_wallArray){
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
-	this.wallGrid = new WallGrid(p_wallArray,this.xLength,this.yLength); 
+	this.wallGrid = WallGrid_data(p_wallArray); 
 	this.regionGrid = this.wallGrid.toRegionGrid(); 
 	this.answerGrid = [];
 	this.spacesByRegion =  [];

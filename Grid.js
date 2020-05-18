@@ -4,6 +4,17 @@ function Grid(p_array, p_xLength, p_yLength) {
     this.yLength = p_yLength;
 }
 
+function Grid_dim(p_xLength, p_yLength) {
+	return new Grid(generateSymbolArray(p_xLength, p_yLength), p_xLength, p_yLength);
+}
+
+function Grid_data(p_array) {
+	if ((!p_array) || (!p_array.length)) {
+		return null;
+	}
+	return new Grid(p_array, p_array[0].length, p_array.length);
+}
+
 function generateSymbolArray(p_widthGrid, p_heightGrid) {
     var answer = [];
     for (var iy = 0; iy < p_heightGrid; iy++) {

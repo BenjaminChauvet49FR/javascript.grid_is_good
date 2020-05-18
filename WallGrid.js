@@ -13,13 +13,30 @@ function WallGrid(p_wallArray, p_xLength, p_yLength) {
     this.yLength = p_yLength;
 }
 
+function WallGrid_dim(p_xLength, p_yLength) {
+    return new WallGrid(generateSuggestedArray(p_xLength, p_yLength, WALLGRID.OPEN), p_xLength, p_yLength);
+}
+
+function WallGrid_dim_closed(p_xLength, p_yLength) {
+    return new WallGrid(generateSuggestedArray(p_xLength, p_yLength, WALLGRID.CLOSED), p_xLength, p_yLength);
+}
+
+function WallGrid_data(p_array) {
+	if (!p_array || !p_array.length) {
+		return null;
+	}
+	else {
+		return new WallGrid(p_array, p_array[0].length, p_array.length);		
+	}
+}
+
 function generateWallArray(p_widthGrid, p_heightGrid) {
     return generateSuggestedArray(p_widthGrid, p_heightGrid, WALLGRID.OPEN);
 }
 
-function generatePathArray(p_widthGrid, p_heightGrid) {
+/*function generatePathArray(p_widthGrid, p_heightGrid) {
     return generateSuggestedArray(p_widthGrid, p_heightGrid, WALLGRID.CLOSED);
-}
+}*/
 
 function generateSuggestedArray(p_widthGrid, p_heightGrid, p_startingStateWalls) {
     var answer = [];

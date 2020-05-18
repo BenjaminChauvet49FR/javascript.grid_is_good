@@ -7,7 +7,7 @@ SolverStarBattle.prototype.construct = function(p_wallArray,p_starNumber){
 	this.spacesByRegion =  [];
 	this.notPlacedYet = {regions:[],rows:[],columns:[]};
 	this.happenedEvents = [];	
-	this.wallGrid = new WallGrid(p_wallArray,p_wallArray.length,p_wallArray.length);
+	this.wallGrid = WallGrid_data(p_wallArray);
 	this.regionGrid = this.wallGrid.toRegionGrid();
 	this.xyLength = this.getWallGrid().length; //IMPORTANT : when copy-pasting this line to a non-square grid, make sure to replace ALL occurences by xLength and yLength
 	this.listSpacesByRegion(); //spacesByRegion

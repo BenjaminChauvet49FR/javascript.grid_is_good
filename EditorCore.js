@@ -36,14 +36,14 @@ EditorCore.prototype.startGrid = function (p_xLength, p_yLength) {
 Restarts a grid from scratch.
  */
 EditorCore.prototype.restartGrid = function (p_xLength, p_yLength) {
-	if (this.hasPathGrid()) {
-        this.pathGrid = new WallGrid(generatePathArray(p_xLength,p_yLength), p_xLength, p_yLength); //TODO très laid
+    if (this.hasPathGrid()) {
+        this.pathGrid = WallGrid_dim_closed(p_xLength, p_yLength);
     }
     if (this.hasWallGrid()) {
-        this.wallGrid = new WallGrid(generateWallArray(p_xLength,p_yLength), p_xLength, p_yLength);
+        this.wallGrid = WallGrid_dim(p_xLength, p_yLength);
     }
-	this.grids = {};
-	this.reinitializeGridData();
+    this.grids = {};
+    this.reinitializeGridData();
 }
 
 // NB : fonction de convénience.
@@ -68,23 +68,23 @@ This required setup may include region grid, selection mode...
  */
 EditorCore.prototype.setupFromWallArray = function (p_wallArray) {
 	this.restartGrid(p_wallArray[0].length, p_wallArray.length);
-    this.wallGrid = new WallGrid(p_wallArray, p_wallArray[0].length, p_wallArray.length);
+    this.wallGrid = WallGrid_data(p_wallArray);
 }
 
 /**
 Same as setupFromWallArray but with a path grid
  */
 EditorCore.prototype.setupFromPathArray = function (p_pathArray) {
-    this.pathGrid = new WallGrid(p_pathArray, p_pathArray[0].length, p_pathArray.length);
+    this.pathGrid = WallGrid_data(p_pathArray);
 }
 
 EditorCore.prototype.addCleanGrid = function (p_id,p_xLength,p_yLength) {
-    this.grids[p_id] = new Grid(generateSymbolArray(p_xLength,p_yLength),p_xLength,p_yLength);
+    this.grids[p_id] = Grid_dim(generateSymbolArray(p_xLength,p_yLength),p_xLength,p_yLength);
 }
 
 EditorCore.prototype.addGrid = function (p_id,p_array) {
 	if (p_array != null && p_array.length > 0) {
-	    this.grids[p_id] = new Grid(p_array, p_array[0].length, p_array.length);
+	    this.grids[p_id] = Grid_data(p_array, p_array[0].length, p_array.length);
 	}
 }
 
