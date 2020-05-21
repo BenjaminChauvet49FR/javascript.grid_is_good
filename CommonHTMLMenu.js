@@ -22,14 +22,12 @@ function addText(p_divElement,p_text){
 
 
 const divElement = document.getElementById("div_common_menu");
-addText(divElement,"Editeurs : ");
-addToElement(divElement,namingHTMLDoc(true,"starBattle"),"Star battle");
-addToElement(divElement,namingHTMLDoc(true,"shared"),"Partagé");
+addToElement(divElement, namingHTMLDoc(true, "shared"), "Editeur partagé");
 divElement.appendChild(document.createElement("br"));
-addText(divElement,"Solveurs : ");
-addToElement(divElement,namingHTMLDoc(false,"starBattle"),"Star battle");
-addToElement(divElement,namingHTMLDoc(false,"norinori"),"Norinori");
-addToElement(divElement,namingHTMLDoc(false,"shimaguni"),"Shimagni");
-addToElement(divElement,namingHTMLDoc(false,"heyawake"),"Heyawake");
-addText(divElement,"Solveurs théoriques : ");
-addToElement(divElement,namingHTMLDoc(false,"theoryCluster"),"Theorical cluster");
+addText(divElement, "Solveurs : ");
+addToElement(divElement, namingHTMLDoc(false, "starBattle"), "Star battle");
+addToElement(divElement, namingHTMLDoc(false, "norinori"), "Norinori");
+addToElement(divElement, namingHTMLDoc(false, "shimaguni"), "Shimagni");
+addToElement(divElement, namingHTMLDoc(false, "heyawake"), "Heyawake");
+addText(divElement, "Solveurs théoriques : ");
+addToElement(divElement, namingHTMLDoc(false, "theoryCluster"), "Theorical cluster");

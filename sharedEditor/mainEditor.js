@@ -1,9 +1,9 @@
 
 // All the main variables
 var drawer = new Drawer();
-var editorCore = new EditorCore(9, 9);
-editorCore.addCleanGrid(GRID_ID.NUMBER_REGION,9, 9);
-editorCore.addCleanGrid(GRID_ID.PEARL,9, 9);
+var editorCore = new EditorCore(10, 10);
+editorCore.addCleanGrid(GRID_ID.NUMBER_REGION, 10, 10);
+editorCore.addCleanGrid(GRID_ID.PEARL, 10, 10);
 var canevas = document.getElementById("canevas");
 var context = canevas.getContext("2d");
 var modesManager = {
@@ -11,7 +11,8 @@ var modesManager = {
     clickWallD: null,
     clickWallR: null
 };
-var saveLoadModeId = PUZZLES_KIND.HEYAWAKE_LIKE.id;
+var actualFieldX;
+var actualFieldY;
 
 //The main draw function (at start)
 function drawCanvas() {
@@ -24,11 +25,17 @@ canevas.addEventListener('click', function (event) {
 }, false);
 setInterval(drawCanvas, 30);
 
-var fieldX = document.getElementById("input_number_xLength");
-var fieldY = document.getElementById("input_number_yLength");
-var fieldName = document.getElementById("input_grid_name");
-var puzzleTypeComboBox = document.getElementById("select_puzzle_type");
+const fieldX = document.getElementById("input_number_xLength");
+const fieldY = document.getElementById("input_number_yLength");
+const fieldXY = document.getElementById("input_number_xyLength");
+const fieldName = document.getElementById("input_grid_name");
+const puzzleTypeComboBox = document.getElementById("select_puzzle_type");
 
+const fieldStars = document.getElementById("input_number_stars");
+
+
+var actualFieldX = fieldX;
+var actualFieldY = fieldY;
 
 adaptCanvasAndGrid(canevas, drawer, editorCore);
 
@@ -37,23 +44,24 @@ putActionElementClick("submit_view_puzzle_list", function (event) {
 });
 
 putActionElementClick("submit_save_grid", function (event) {
-    saveAction(editorCore, fieldName.value, saveLoadModeId)
+    saveAction(editorCore, fieldName.value, saveLoadModeId, {numberStars : fieldStars.value}) //TODO provisoire : il y aura sans doute un "saveAction" par puzzle à l'avenir.
 });
 
 putActionElementClick("submit_load_grid", function (event) {
     loadAction(canevas, drawer, editorCore, fieldName.value, saveLoadModeId, {
-        xLengthField: fieldX,
-        yLengthField: fieldY
+        xLengthField: actualFieldX,
+        yLengthField: actualFieldY,
+		numberStarsField : fieldStars
     })
 });
 putActionElementClick("submit_auto_name", function (event) {
     fieldName.value = puzzleTypeComboBox.options[puzzleTypeComboBox.selectedIndex].innerHTML
 });
 putActionElementClick("submit_new_grid", function (event) {
-    restartAction(canevas, drawer, editorCore, fieldX.value, fieldY.value)
+    restartAction(canevas, drawer, editorCore, actualFieldX.value, actualFieldY.value)
 });
 putActionElementClick("submit_resize_grid", function (event) {
-    resizeAction(canevas, drawer, editorCore, fieldX.value, fieldY.value)
+    resizeAction(canevas, drawer, editorCore, actualFieldX.value, actualFieldY.value)
 });
 
 putActionElementClick("submit_rotate_clockwise", function (event) {
@@ -79,6 +87,8 @@ putActionElementClick("submit_clear_selection", function (event) {
     actionUnselectAll(editorCore)
 });
 
+combo(document.getElementById('select_puzzle_type')); //TODO c'est comme ça que ça se passe au démarrage, j'espère que c'est chargé. On peut le mettre directement sur la combobox ? Mais ce serait peut-être un peu lourd pour le mélange fond/forme, non ?
+
 //How to use the change of a combobox. Credits : https://www.scriptol.fr/html5/combobox.php
 function combo(thelist) {
     var idx = thelist.selectedIndex;
@@ -86,6 +96,7 @@ function combo(thelist) {
     console.log(content);
 	// Default options
 	editorCore.setModePathOff();
+	editorCore.setWallsOn();
 	// Specific options
     switch (content) {
 		case 'CurvingRoad':
@@ -93,15 +104,35 @@ function combo(thelist) {
 			saveLoadModeId = PUZZLES_KIND.MASYU_LIKE.id;
 			break;
 		case 'GrandTour':
-			editorCore.setWallsOn();
 			editorCore.setModePathOn();
 			saveLoadModeId = PUZZLES_KIND.HEYAWAKE_LIKE.id;
+			break;	
+		case 'SternenSchlacht':
+			saveLoadModeId = PUZZLES_KIND.STAR_BATTLE.id;
 			break;
 		default:
-			editorCore.setWallsOn();
 			saveLoadModeId = PUZZLES_KIND.HEYAWAKE_LIKE.id;
 			break;
     }
+	const squarePuzzle = correspondsToSquarePuzzle(saveLoadModeId); 
+	if (squarePuzzle) {
+		actualFieldX = fieldXY;
+		actualFieldY = fieldXY; 
+	} else {
+		actualFieldX = fieldX;
+		actualFieldY = fieldY;
+	}
+	fieldX.disabled = squarePuzzle;
+	fieldY.disabled = squarePuzzle;
+	fieldXY.disabled = !squarePuzzle;
+}
+
+/**
+Matches true if puzzle is square-shaped. 
+TODO obviously not the best way, obviously it only takes account of Star battle, but hey it's temporary !
+*/
+function correspondsToSquarePuzzle(p_id) {
+	return (p_id == PUZZLES_KIND.STAR_BATTLE.id);
 }
 
 //-------------------------

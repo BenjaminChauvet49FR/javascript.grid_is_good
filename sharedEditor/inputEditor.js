@@ -51,6 +51,9 @@ function stringToPuzzle(p_string) {
 function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem) {
     p_fieldsToUpdate.xLengthField.value = p_loadedItem.grid[0].length;
     p_fieldsToUpdate.yLengthField.value = p_loadedItem.grid.length;
+	if (p_loadedItem.starNumber) {
+		p_fieldsToUpdate.numberStarsField.value = p_loadedItem.starNumber;
+	}
 }
 
 /**

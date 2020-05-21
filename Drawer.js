@@ -88,6 +88,7 @@ Drawer.prototype.drawWallGrid = function (p_context, p_wallGrid, p_xLength, p_yL
     var ix,
     iy,
     indexRegion;
+	p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight); //TODO not the best place to put this function but necessary for solvers
 
     //Upper-left pixel of the horizontal walls (Horiz) and vertical walls (Vert) ; pillars aren't part of walls (meeting of 4 walls)
     const pixStartXVert = this.pix.marginGrid.left + this.pix.sideSpace - this.pix.borderSpace;
