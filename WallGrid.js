@@ -34,10 +34,6 @@ function generateWallArray(p_widthGrid, p_heightGrid) {
     return generateSuggestedArray(p_widthGrid, p_heightGrid, WALLGRID.OPEN);
 }
 
-/*function generatePathArray(p_widthGrid, p_heightGrid) {
-    return generateSuggestedArray(p_widthGrid, p_heightGrid, WALLGRID.CLOSED);
-}*/
-
 function generateSuggestedArray(p_widthGrid, p_heightGrid, p_startingStateWalls) {
     var answer = [];
     for (var iy = 0; iy < p_heightGrid; iy++) {
@@ -178,6 +174,12 @@ WallGrid.prototype.switchWallL = function (p_x, p_y) {
 }
 WallGrid.prototype.switchState = function (p_x, p_y) {
     this.setState(p_x, p_y, switchedState(this.getState(p_x, p_y)));
+}
+WallGrid.prototype.getXLength = function() {
+	return this.xLength;
+}
+WallGrid.prototype.getYLength = function() {
+	return this.yLength;
 }
 
 WallGrid.prototype.rotateCWGrid = function () {

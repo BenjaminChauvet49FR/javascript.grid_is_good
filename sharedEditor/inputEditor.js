@@ -64,8 +64,8 @@ p_yLength : vertical dimension
 restartAction = function (p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength) {
     if (confirm("Redémarrer la grille ?")) {
         p_editorCore.restartGrid(p_xLength, p_yLength);
-		p_editorCore.addCleanGrid(GRID_ID.NUMBER_REGION,p_xLength, p_yLength);
-		p_editorCore.addCleanGrid(GRID_ID.PEARL,p_xLength, p_yLength);
+		p_editorCore.addCleanGrid(GRID_ID.NUMBER_REGION, p_xLength, p_yLength);
+		p_editorCore.addCleanGrid(GRID_ID.PEARL, p_xLength, p_yLength);
         adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
     }
 }

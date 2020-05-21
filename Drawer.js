@@ -52,6 +52,7 @@ Draw the grid on-screen on p_context, with p_editorCore informations, with this.
 Drawer.prototype.drawGrid = function (p_context, p_editorCore) {
     const xLength = p_editorCore.getXLength();
     const yLength = p_editorCore.getYLength();
+	p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight);
     if (p_editorCore.hasWallGrid()) {
         if (p_editorCore.hasWalls()) {
             this.drawWallGrid(p_context, p_editorCore.wallGrid, xLength, yLength);
@@ -70,16 +71,16 @@ Drawer.prototype.drawGrid = function (p_context, p_editorCore) {
     }
 	
 	if (p_editorCore.getGrid(GRID_ID.NUMBER_REGION)) {
-	    this.drawNumbersLittle(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_REGION), xLength, yLength);
+	    this.drawNumbersLittleInCorner(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_REGION));
 	}
 	if (p_editorCore.getGrid(GRID_ID.PEARL)) {
-		this.drawPearlGrid(p_context, p_editorCore.getGrid(GRID_ID.PEARL), xLength, yLength);
+		this.drawPearlGrid(p_context, p_editorCore.getGrid(GRID_ID.PEARL));
 	}
 		
     //Paths
     if (p_editorCore.hasPathGrid()) {
         this.drawWalllessGrid(p_context, null, xLength, yLength);
-        this.drawWallGridAsPath(p_context, p_editorCore.pathGrid, xLength, yLength);
+		this.drawWallGridAsPath(p_context, p_editorCore.wallGrid, xLength, yLength);
     }
 }
 
@@ -102,7 +103,6 @@ Drawer.prototype.drawWallGrid = function (p_context, p_wallGrid, p_xLength, p_yL
     const pixThickness = 2 * this.pix.borderSpace;
 
     //Go !
-    p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight); //TODO best place to put this function ?
     for (iy = 0; iy < p_yLength; iy++) {
         for (ix = 0; ix < p_xLength; ix++) {
             //Draw down wall
@@ -152,7 +152,6 @@ Drawer.prototype.drawWallGrid = function (p_context, p_wallGrid, p_xLength, p_yL
 }
 
 Drawer.prototype.drawWalllessGrid = function (p_context, p_wallGrid, p_xLength, p_yLength) {
-    p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight); //TODO best place to put this function ?
     var i;
     const pixTotalWidth = p_xLength * this.pix.sideSpace;
     const pixTotalHeight = p_yLength * this.pix.sideSpace;
@@ -193,58 +192,57 @@ Drawer.prototype.drawWalllessGrid = function (p_context, p_wallGrid, p_xLength, 
     }
 }
 
-Drawer.prototype.drawNumbersLittle = function (p_context, p_numberGrid, p_xLength, p_yLength) {
-    this.drawNumbersLittleInCorner(p_context, null, p_numberGrid, p_xLength, p_yLength)
+Drawer.prototype.drawNumbersLittleInCorner = function (p_context, p_numberGrid) {
+	const yLength = p_numberGrid.getYLength();
+	if (yLength > 0) {
+		const xLength = p_numberGrid.getXLength();
+		p_context.textAlign = 'left';
+		p_context.textBaseline = 'top';
+		p_context.font = this.getPixInnerSide() / 2 + "px Arial";
+		p_context.fillStyle = this.colors.standardWrite;
+		var ix,
+		iy,
+		number, pixLeft, pixDown; 
+		for (iy = 0; iy < yLength; iy++) {
+			for (ix = 0; ix < xLength; ix++) {
+				number = p_numberGrid.get(ix, iy);
+				if (number != null) {
+					pixLeft = this.getPixInnerXLeft(ix) + 2;
+					pixDown = this.getPixInnerYUp(iy) + 2;
+					p_context.fillText(number, pixLeft, pixDown);
+				}
+			}
+		}
+	}
 }
 
-Drawer.prototype.drawNumbersLittleInCorner = function (p_context, p_wallGrid, p_numberGrid, p_xLength, p_yLength) {
-    p_context.textAlign = 'left';
-    p_context.textBaseline = 'top';
-    p_context.font = this.getPixInnerSide() / 2 + "px Arial";
-    p_context.fillStyle = this.colors.standardWrite;
-    var ix,
-    iy,
-    number, pixLeft, pixDown; 
-    for (iy = 0; iy < p_yLength; iy++) {
-        for (ix = 0; ix < p_xLength; ix++) {
-            number = p_numberGrid.get(ix, iy);
-            if (number != null) {
-                pixLeft = this.getPixInnerXLeft(ix) + 2;
-                pixDown = this.getPixInnerYUp(iy) + 2;
-                if (p_wallGrid && p_wallGrid.getState(ix, iy) == CLOSED) {
-                    p_context.fillStyle = this.colors.antiCloseWrite;
-                } else {
-                    p_context.fillStyle = this.colors.standardWrite;
-                }
-                p_context.fillText(number, pixLeft, pixDown);
-            }
-        }
-    }
-}
-
-Drawer.prototype.drawPearlGrid = function (p_context, p_pearlGrid, p_xLength, p_yLength) {
-    p_context.fillStyle = this.colors.pearl;
-    var ix,
-    iy,
-    pearl;
-	const radius = this.getPixInnerSide()*1/3;
-	p_context.fillStyle = this.colors.standardWrite; 
-    for (iy = 0; iy < p_yLength; iy++) {
-        for (ix = 0; ix < p_xLength; ix++) {
-            pearl = p_pearlGrid.get(ix, iy);
-            if (pearl == SYMBOL_ID.WHITE) {
-				//Crédits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/ellipse 
-				p_context.beginPath();
-				p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
-				p_context.stroke();
-            }
-			if (pearl == SYMBOL_ID.BLACK) {
-				p_context.beginPath();
-				p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
-				p_context.fill();
-            }
-        }
-    }
+Drawer.prototype.drawPearlGrid = function (p_context, p_pearlGrid) {
+	const yLength = p_pearlGrid.getYLength();
+	if (yLength > 0) {
+		const xLength = p_pearlGrid.getXLength();
+		p_context.fillStyle = this.colors.pearl;
+		var ix,
+		iy,
+		pearl;
+		const radius = this.getPixInnerSide()*1/3;
+		p_context.fillStyle = this.colors.standardWrite; 
+		for (iy = 0; iy < yLength; iy++) {
+			for (ix = 0; ix < xLength; ix++) {
+				pearl = p_pearlGrid.get(ix, iy);
+				if (pearl == SYMBOL_ID.WHITE) {
+					//Crédits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/ellipse 
+					p_context.beginPath();
+					p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
+					p_context.stroke();
+				}
+				if (pearl == SYMBOL_ID.BLACK) {
+					p_context.beginPath();
+					p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
+					p_context.fill();
+				}
+			}
+		}
+	}
 }
 
 /**
@@ -261,17 +259,17 @@ Drawer.prototype.drawWallGridAsPath = function (p_context, p_wallGrid, p_xLength
     var pixUp = this.getPixCenterY(0) - shorter / 2;
     for (var iy = 0; iy < p_yLength; iy++) {
         for (var ix = 0; ix < p_xLength; ix++) {
-            if (p_wallGrid.getWallD(ix, iy) == WALLGRID.OPEN) {
+            if (iy < (p_yLength-1) && p_wallGrid.getWallD(ix, iy) == WALLGRID.OPEN) {
                 p_context.fillRect(pixLeft, pixUp, shorter, longer);
             }
-            if (p_wallGrid.getWallR(ix, iy) == WALLGRID.OPEN) {
+            if (ix < (p_xLength-1) && p_wallGrid.getWallR(ix, iy) == WALLGRID.OPEN) {
                 p_context.fillRect(pixLeft, pixUp, longer, shorter);
             }
             pixLeft += this.pix.sideSpace;
             //Draws banned spaces : there should be few of them / none in a path grid.
             if (p_wallGrid.getState(ix, iy) == WALLGRID.CLOSED) {
                 p_context.fillStyle = this.colors.bannedSpace;
-                p_context.fillRect(getPixInnerXLeft(), getPixInnerYUp(), getPixInnerSide(), getPixInnerSide());
+                p_context.fillRect(this.getPixInnerXLeft(ix), this.getPixInnerYUp(iy), this.getPixInnerSide(), this.getPixInnerSide());
                 p_context.fillStyle = this.colors.path;
             }
         }

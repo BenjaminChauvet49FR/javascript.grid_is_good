@@ -84,11 +84,18 @@ function combo(thelist) {
     var idx = thelist.selectedIndex;
     var content = thelist.options[idx].innerHTML;
     console.log(content);
-    //theinput.value = content;
+	// Default options
+	editorCore.setModePathOff();
+	// Specific options
     switch (content) {
 		case 'CurvingRoad':
 			editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.MASYU_LIKE.id;
+			break;
+		case 'GrandTour':
+			editorCore.setWallsOn();
+			editorCore.setModePathOn();
+			saveLoadModeId = PUZZLES_KIND.HEYAWAKE_LIKE.id;
 			break;
 		default:
 			editorCore.setWallsOn();

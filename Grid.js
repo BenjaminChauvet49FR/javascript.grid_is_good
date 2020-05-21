@@ -71,6 +71,13 @@ Grid.prototype.clear = function (p_x, p_y) {
     this.array[p_y][p_x] = null
 }
 
+Grid.prototype.getXLength = function() {
+	return this.xLength;
+}
+Grid.prototype.getYLength = function() {
+	return this.yLength;
+}
+
 Grid.prototype.transform = function(p_transformation, p_xDatum, p_yDatum) {
 	switch (p_transformation) {
 		case GRID_TRANSFORMATION.ROTATE_CW : this.rotateCWGrid(); break;

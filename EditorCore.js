@@ -17,48 +17,45 @@ const GRID_TRANSFORMATION = {
 }
 
 function EditorCore(p_xLength, p_yLength, p_parameters) {
-    this.possessPathGrid = (p_parameters && (p_parameters.hasPathGrid == true)); //TODO il y a mieux qu'une gestion de booléens j'imagine
-    this.possessWallGrid = !this.possessPathGrid;
-    this.startGrid(p_xLength, p_yLength);
+    this.xLength = p_xLength;
+	this.yLength = p_yLength; //TODO potentielle redondance dans la gestion des xLength et des yLength... mais au moins ça permet de savoir ce qu'on fait.
+	this.initializeGridData();
+	this.buildGrids(p_xLength, p_yLength);
     this.isWithWalls = (!p_parameters || !p_parameters.hasWalls || (p_parameters.hasWalls != false));
-}
-
-//TODO : en l'état actuel on a une grille "wallGrid" et une grille "pathGrid"... qui ont exactement la même nature ! (WallGrid). Attention danger.
-/**
-Starts a grid from scratch.
-Basically the same as restarting it.
- */
-EditorCore.prototype.startGrid = function (p_xLength, p_yLength) {
-    this.restartGrid(p_xLength, p_yLength);
 }
 
 /**
 Restarts a grid from scratch.
  */
 EditorCore.prototype.restartGrid = function (p_xLength, p_yLength) {
-    if (this.hasPathGrid()) {
-        this.pathGrid = WallGrid_dim_closed(p_xLength, p_yLength);
-    }
-    if (this.hasWallGrid()) {
-        this.wallGrid = WallGrid_dim(p_xLength, p_yLength);
-    }
-    this.grids = {};
+	this.xLength = p_xLength;
+	this.yLength = p_yLength;
+	this.buildGrids(p_xLength, p_yLength);
     this.reinitializeGridData();
 }
 
-// NB : fonction de convénience.
+EditorCore.prototype.buildGrids = function (p_xLength, p_yLength) {
+	this.wallGrid = WallGrid_dim(p_xLength, p_yLength);
+    this.grids = {};
+}
+
+// Only launched on building. ALL data are loaded here.
+EditorCore.prototype.initializeGridData = function() {
+	this.reinitializeGridData();
+	this.inputNumber = 1; // input numbers and symbols are supposed to be defined at start but not modified when data are relaunched afterards
+	this.inputSymbol = null; // Note : No input symbol at start
+	this.possessWallGrid = true;
+	this.wallsArePaths = false;
+}
+
+// NB : fonction de convénience. //TODO devrait être renommé "extra grid data" puisque ce sont des données indépendantes des grilles
 EditorCore.prototype.reinitializeGridData = function() {
 	this.regionGrid = null;
     this.isRegionGridValid = true;
     this.isSelectionMode = false;
     this.selectedCornerSpace = null;
     this.selectedGrid = null;
-    this.inputNumber = 1;
-	this.inputSymbol = null;
 	this.resetSelection();
-	this.mode = {
-        colorRegionIfValid: false
-    };
 }
 
 //Set up from non null grids
@@ -79,7 +76,7 @@ EditorCore.prototype.setupFromPathArray = function (p_pathArray) {
 }
 
 EditorCore.prototype.addCleanGrid = function (p_id,p_xLength,p_yLength) {
-    this.grids[p_id] = Grid_dim(generateSymbolArray(p_xLength,p_yLength),p_xLength,p_yLength);
+    this.grids[p_id] = Grid_dim(p_xLength,p_yLength);
 }
 
 EditorCore.prototype.addGrid = function (p_id,p_array) {
@@ -92,7 +89,7 @@ EditorCore.prototype.addGrid = function (p_id,p_array) {
 // Testers
 
 EditorCore.prototype.hasPathGrid = function () {
-    return this.possessPathGrid;
+    return this.wallsArePaths;
 }
 
 EditorCore.prototype.hasWallGrid = function () {
@@ -199,24 +196,12 @@ EditorCore.prototype.clear = function (p_idGrid, p_x, p_y) {
 }
 
 EditorCore.prototype.getXLength = function () {
-    if (this.hasWallGrid()) {
-        return this.wallGrid.xLength;
-    }
-    if (this.hasPathGrid()) {
-        return this.pathGrid.xLength;
-    }
+    return this.xLength;
 }
 EditorCore.prototype.getYLength = function () {
-    if (this.hasWallGrid()) {
-        return this.wallGrid.yLength;
-    }
-    if (this.hasPathGrid()) {
-        return this.pathGrid.yLength;
-    }
+    return this.yLength;
 }
 
-// --------------------
-// Non-wall stuff
 EditorCore.prototype.setWallsOn = function () {
     this.isWithWalls = true;
 }
@@ -225,8 +210,17 @@ EditorCore.prototype.setWallsOff = function () {
     this.isWithWalls = false;
 }
 
+//TODO revoir le nom de la fonction, wallGrid et walls c'est pas pareil (et déplacer les autres fonctions)
 EditorCore.prototype.hasWalls = function () {
     return this.isWithWalls == true;
+}
+
+EditorCore.prototype.setModePathOff = function() {
+	this.wallsArePaths = false;
+}
+
+EditorCore.prototype.setModePathOn = function() {
+	this.wallsArePaths = true;
 }
 
 // --------------------
@@ -238,12 +232,20 @@ EditorCore.prototype.transformGrid = function (p_transformation, p_xDatum, p_yDa
     if (this.hasWallGrid()) {
         this.wallGrid.transform(p_transformation, p_xDatum, p_yDatum);
     }
-    if (this.hasPathGrid()) {
-        this.pathGrid.transform(p_transformation, p_xDatum, p_yDatum);
-    }
 	for (const id in this.grids) {
 	    this.grids[id].transform(p_transformation, p_xDatum, p_yDatum);
 	}
+	//TODO resee definitions of xLength and yLength
+	if (this.hasWallGrid()) {
+		this.xLength = this.wallGrid.getXLength();
+		this.yLength = this.wallGrid.getYLength();
+	} else {
+		for (const id in this.grids) {
+			this.xLength = this.grids[id].getXLength();
+			this.yLength = this.grids[id].getYLength();
+		}
+	}
+	
 	this.resetSelection();
 }
 
