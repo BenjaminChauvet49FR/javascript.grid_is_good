@@ -1,5 +1,5 @@
 var drawer = new Drawer();
-var solver = new GlobalNorinori(generateWallArray(1,1),1);
+var solver = new SolverNorinori(generateWallArray(1,1),1);
 
 var canevas = document.getElementById("canevas");
 var	context = canevas.getContext("2d");

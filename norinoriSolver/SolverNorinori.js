@@ -1,10 +1,12 @@
 const BANNED = -2;
+const DIRECTION_X_COORDINATES = [-1,0,1,0]; //MUST follow left/up/right/down because of code usage !
+const DIRECTION_Y_COORDINATES = [0,-1,0,1]; //Same.
 
-function GlobalNorinori(p_wallArray){
+function SolverNorinori(p_wallArray){
 	this.construct(p_wallArray);
 }
 
-GlobalNorinori.prototype.construct = function(p_wallArray){
+SolverNorinori.prototype.construct = function(p_wallArray){
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
 	this.wallGrid = WallGrid_data(p_wallArray); 
@@ -28,7 +30,7 @@ GlobalNorinori.prototype.construct = function(p_wallArray){
 /**
 Starts the answerGrid
 */
-GlobalNorinori.prototype.buildAnswerGrid = function(){
+SolverNorinori.prototype.buildAnswerGrid = function(){
 	this.answerGrid = [];
 	for(iy = 0; iy < this.yLength ; iy++){
 		this.answerGrid.push([]);
@@ -43,7 +45,7 @@ GlobalNorinori.prototype.buildAnswerGrid = function(){
 Puts NOs into the answerGrid corresponding to banned spaces 
 Precondition : both spacesByRegion and notPlacedYetByRegion have been refreshed and answerGrid is ok.
 */
-GlobalNorinori.prototype.purifyAnswerGrid = function(){
+SolverNorinori.prototype.purifyAnswerGrid = function(){
 	//Removing banned spaces (hence the necessity to have things already updated)
 	for(iy = 0; iy < this.yLength ; iy++){
 		for(ix = 0; ix < this.xLength ; ix++){
@@ -58,7 +60,7 @@ GlobalNorinori.prototype.purifyAnswerGrid = function(){
 Sets up the neighbor grid
 Precondition : xLength and yLength are known
 */
-GlobalNorinori.prototype.buildNeighborsGrid = function(){
+SolverNorinori.prototype.buildNeighborsGrid = function(){
 	this.neighborsGrid = [];
 	for(var iy=0;iy<this.yLength;iy++){
 		this.neighborsGrid.push([]);
@@ -86,7 +88,7 @@ Sets the list of spaces for each row and column (might be exportated)
 Hyphothesis : all non-banned regions are numbered from 0 to n-1 ; banned spaces have lower-than-0 numbers
 Exit : all spaces within a region are in reading order (top to bottom, then left to right)
 */
-GlobalNorinori.prototype.listSpacesByRegion = function(){
+SolverNorinori.prototype.listSpacesByRegion = function(){
 	var ix,iy;
 	var lastRegionNumber = 0;
 	for(iy = 0;iy < this.yLength;iy++){
@@ -112,7 +114,7 @@ GlobalNorinori.prototype.listSpacesByRegion = function(){
 Puts the number of remaining spaces to fill (Os) and to remain white (Xs) in each region, row and column, assuming we start from scratch.
 Precondition : this.spacesByRegion must be refreshed, since it will be needed for region.
 */
-GlobalNorinori.prototype.buildPossibilities = function(p_numberStarsPer){
+SolverNorinori.prototype.buildPossibilities = function(p_numberStarsPer){
 	this.notPlacedYetByRegion = [];
 	for(var i=0;i<this.spacesByRegion.length;i++){
 		this.notPlacedYetByRegion.push({Os:2,Xs:this.spacesByRegion[i].length-2});
@@ -122,16 +124,16 @@ GlobalNorinori.prototype.buildPossibilities = function(p_numberStarsPer){
 //----------------------
 //Getters (not setters, of course)
 
-GlobalNorinori.prototype.getAnswer = function(p_x,p_y){
+SolverNorinori.prototype.getAnswer = function(p_x,p_y){
 	return this.answerGrid[p_y][p_x];
 }
 
-GlobalNorinori.prototype.getOsRemainRegion = function(p_i){return this.notPlacedYetByRegion[p_i].Os;}
-GlobalNorinori.prototype.getXsRemainRegion = function(p_i){return this.notPlacedYetByRegion[p_i].Xs;}
-GlobalNorinori.prototype.getFirstSpaceRegion = function(p_i){return this.spacesByRegion[p_i][0];}
-GlobalNorinori.prototype.getRegionsNumber = function(){return this.spacesByRegion.length;}
+SolverNorinori.prototype.getOsRemainRegion = function(p_i){return this.notPlacedYetByRegion[p_i].Os;}
+SolverNorinori.prototype.getXsRemainRegion = function(p_i){return this.notPlacedYetByRegion[p_i].Xs;}
+SolverNorinori.prototype.getFirstSpaceRegion = function(p_i){return this.spacesByRegion[p_i][0];}
+SolverNorinori.prototype.getRegionsNumber = function(){return this.spacesByRegion.length;}
 
-GlobalNorinori.prototype.getRegion = function(p_x,p_y){
+SolverNorinori.prototype.getRegion = function(p_x,p_y){
 	return this.regionGrid[p_y][p_x];
 }
 
@@ -140,7 +142,7 @@ GlobalNorinori.prototype.getRegion = function(p_x,p_y){
 /**
 Admits that this space could be filled or not...
 */
-GlobalNorinori.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
+SolverNorinori.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
 	var result = this.tryToPutNew(p_x,p_y,p_symbol);
 	if (result != null && result.eventsApplied.length > 0){
 		this.happenedEvents.push(result.eventsApplied);
@@ -158,7 +160,7 @@ RESULT.HARMLESS : said symbol was either already put into that space OUT out of 
 ERROR : there is a different symbol in that space. We have done a wrong hypothesis somewhere ! (or the grid was wrong at the basis !)
 This is also used at grid start in order to put Xs in banned spaces, hence the check in the NO_STAR part.
 */
-GlobalNorinori.prototype.putNew = function(p_x,p_y,p_symbol){
+SolverNorinori.prototype.putNew = function(p_x,p_y,p_symbol){
 	if ((p_x < 0) || (p_x >= this.xLength) || (p_y < 0) || (p_y >= this.yLength) || 
 	(this.answerGrid[p_y][p_x] == p_symbol)){
 		return RESULT.HARMLESS;
@@ -207,7 +209,7 @@ GlobalNorinori.prototype.putNew = function(p_x,p_y,p_symbol){
 /**
 When you want to remove a symbol from a space !
 */
-GlobalNorinori.prototype.remove = function(p_x,p_y){
+SolverNorinori.prototype.remove = function(p_x,p_y){
 	var indexRegion = this.regionGrid[p_y][p_x];
 	var symbol = this.answerGrid[p_y][p_x];
 	this.answerGrid[p_y][p_x] = FILLING.UNDECIDED;
@@ -245,7 +247,7 @@ GlobalNorinori.prototype.remove = function(p_x,p_y){
 //--------------
 //It's pass time !
 
-GlobalNorinori.prototype.multiPass = function(){
+SolverNorinori.prototype.multiPass = function(){
 	var oneMoreLoop;
 	var answer;
 	if (this.indexRegionsSortedBySize == null){
@@ -275,7 +277,7 @@ GlobalNorinori.prototype.multiPass = function(){
 	
 }
 
-GlobalNorinori.prototype.emitPassRegion = function(p_indexRegion){
+SolverNorinori.prototype.emitPassRegion = function(p_indexRegion){
 	var answer = this.passRegion(p_indexRegion,0);
 	console.log("Enfin sorti ! " + answer.eventsApplied.length);
 	if (answer.consistence == RESULT.SUCCESS && answer.eventsApplied.length > 0){
@@ -285,7 +287,7 @@ GlobalNorinori.prototype.emitPassRegion = function(p_indexRegion){
 	return answer;
 }
 
-GlobalNorinori.prototype.passRegion = function(p_indexRegion, p_indexFirstSpace){
+SolverNorinori.prototype.passRegion = function(p_indexRegion, p_indexFirstSpace){
 		var region = this.spacesByRegion[p_indexRegion];
 		var index = p_indexFirstSpace;
 		while (this.answerGrid[region[index].y][region[index].x] != FILLING.UNDECIDED)
@@ -342,7 +344,7 @@ Tries to either fill a space or put an X into it. Will it be consistent ?
 BIG WARNING : if the end is successful, the list of spaces will be put into eventsApplied. But this doesn't mean they are all fine !
 */
 //TODO : do something about big warning !
-GlobalNorinori.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
+SolverNorinori.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
 	
 	if (this.answerGrid[p_y][p_x] != FILLING.UNDECIDED){
 		debugHumanMisclick("Trying to put "+p_symbol+" at "+p_x+","+p_y+" ; there is already "+this.answerGrid[p_y][p_x]+" in this place !");
@@ -523,27 +525,27 @@ function pushEventsDominoMadeVertical(p_eventsToAdd,p_xUp,p_yUp){
 	return p_eventsToAdd;
 }
 
-GlobalNorinori.prototype.emptyUpwards = function(p_x,p_y){
+SolverNorinori.prototype.emptyUpwards = function(p_x,p_y){
 	return ((p_y > 0) &&  this.answerGrid[p_y-1][p_x] == FILLING.UNDECIDED);
 }
-GlobalNorinori.prototype.emptyDownwards = function(p_x,p_y){
+SolverNorinori.prototype.emptyDownwards = function(p_x,p_y){
 	return ((p_y < this.yLength-1) && this.answerGrid[p_y+1][p_x] == FILLING.UNDECIDED);
 }
-GlobalNorinori.prototype.emptyLeftwards = function(p_x,p_y){
+SolverNorinori.prototype.emptyLeftwards = function(p_x,p_y){
 	return ((p_x > 0) && this.answerGrid[p_y][p_x-1] == FILLING.UNDECIDED);
 }
-GlobalNorinori.prototype.emptyRightwards = function(p_x,p_y){
+SolverNorinori.prototype.emptyRightwards = function(p_x,p_y){
 	return ((p_x < this.xLength-1) && this.answerGrid[p_y][p_x+1] == FILLING.UNDECIDED);
 }
-GlobalNorinori.prototype.readyToBeCompletedDomino = function(p_x,p_y){
+SolverNorinori.prototype.readyToBeCompletedDomino = function(p_x,p_y){
 	return (this.answerGrid[p_y][p_x] == FILLING.YES) && (this.neighborsGrid[p_y][p_x].undecided == 1) && (this.neighborsGrid[p_y][p_x].Os == 0);
 }
 
-GlobalNorinori.prototype.isNeighborQualifiable = function(p_indexRegion,p_x,p_y){
+SolverNorinori.prototype.isNeighborQualifiable = function(p_indexRegion,p_x,p_y){
 	return ((this.answerGrid[p_y][p_x] == FILLING.YES) || ((this.regionGrid[p_y][p_x] != p_indexRegion) && (this.answerGrid[p_y][p_x] == FILLING.UNDECIDED)));
 }
 
-GlobalNorinori.prototype.hasNeighborQualifiable = function(p_indexRegion,p_x,p_y){
+SolverNorinori.prototype.hasNeighborQualifiable = function(p_indexRegion,p_x,p_y){
 	return ((p_x > 0 && this.isNeighborQualifiable(p_indexRegion,p_x-1,p_y)) ||
 		   (p_y > 0 && this.isNeighborQualifiable(p_indexRegion,p_x,p_y-1)) ||
 		   ((p_x < this.xLength - 1) && this.isNeighborQualifiable(p_indexRegion,p_x+1,p_y)) ||
@@ -553,25 +555,25 @@ GlobalNorinori.prototype.hasNeighborQualifiable = function(p_indexRegion,p_x,p_y
 /**
 Tests if an X should be put into a neighbor space of a newly put X because it is unqualifiable and in a region with already one O.
 */
-GlobalNorinori.prototype.isNotQualifiablePostPutX = function(p_x,p_y){
+SolverNorinori.prototype.isNotQualifiablePostPutX = function(p_x,p_y){
 	var indexRegion = this.regionGrid[p_y][p_x];
 	return ((this.answerGrid[p_y][p_x] == FILLING.UNDECIDED) && (this.notPlacedYetByRegion[indexRegion].Os == 1) && !this.hasNeighborQualifiable(indexRegion,p_x,p_y));
 }
 
 
-GlobalNorinori.prototype.isBlockedLeft = function(p_x,p_y){
+SolverNorinori.prototype.isBlockedLeft = function(p_x,p_y){
 	return (p_x == 0 || this.answerGrid[p_y][p_x-1] == FILLING.NO);
 }
 
-GlobalNorinori.prototype.isBlockedUp = function(p_x,p_y){
+SolverNorinori.prototype.isBlockedUp = function(p_x,p_y){
 	return (p_y == 0 || this.answerGrid[p_y-1][p_x] == FILLING.NO);
 }
 
-GlobalNorinori.prototype.isBlockedRight = function(p_x,p_y){
+SolverNorinori.prototype.isBlockedRight = function(p_x,p_y){
 	return (p_x == (this.xLength-1) || this.answerGrid[p_y][p_x+1] == FILLING.NO);
 }
 
-GlobalNorinori.prototype.isBlockedDown = function(p_x,p_y){
+SolverNorinori.prototype.isBlockedDown = function(p_x,p_y){
 	return (p_y == (this.yLength-1) || this.answerGrid[p_y+1][p_x] == FILLING.NO);
 }
 
@@ -579,7 +581,7 @@ GlobalNorinori.prototype.isBlockedDown = function(p_x,p_y){
 /**
 Rushes the spaces with 2 regions by filling them with O (actually, fills one space and the next one follows)
 */
-GlobalNorinori.prototype.quickStart = function(){
+SolverNorinori.prototype.quickStart = function(){
 	var space;
 	for(var i=0;i<this.spacesByRegion.length;i++){
 		if(this.spacesByRegion[i].length == 2){
@@ -596,7 +598,7 @@ GlobalNorinori.prototype.quickStart = function(){
 Tests if an O in a space is alone and "cornered" (for all four corners)
 The (p_x,p_y) space must contain an O.
 */
-GlobalNorinori.prototype.pushEventsIfAloneAndCornered = function(p_eventsToAdd,p_leftward, p_upward, p_rightward, p_downward, p_x,p_y){
+SolverNorinori.prototype.pushEventsIfAloneAndCornered = function(p_eventsToAdd,p_leftward, p_upward, p_rightward, p_downward, p_x,p_y){
 	if (this.neighborsGrid[p_y][p_x].Os == 1){
 		return p_eventsToAdd;
 	}
@@ -631,7 +633,7 @@ GlobalNorinori.prototype.pushEventsIfAloneAndCornered = function(p_eventsToAdd,p
 /**
 Working on four directions to limit duplicated code
 */
-GlobalNorinori.prototype.existentDirection = function(p_direction,p_x,p_y){
+SolverNorinori.prototype.existentDirection = function(p_direction,p_x,p_y){
 	switch(p_direction){
 		case DIRECTION.LEFT : return (p_x > 0);
 		case DIRECTION.UP : return (p_y > 0);
@@ -640,7 +642,7 @@ GlobalNorinori.prototype.existentDirection = function(p_direction,p_x,p_y){
 	}
 }
 
-GlobalNorinori.prototype.furtherExistentDirection = function(p_direction,p_x,p_y){
+SolverNorinori.prototype.furtherExistentDirection = function(p_direction,p_x,p_y){
 	switch(p_direction){
 		case DIRECTION.LEFT : return (p_x > 1);
 		case DIRECTION.UP : return (p_y > 1);
@@ -680,7 +682,7 @@ TODO :
 /**
 Cancels the last list of events since the last "non-deducted" space.
 */
-GlobalNorinori.prototype.undoDeducted = function(){
+SolverNorinori.prototype.undoDeducted = function(){
 	if (this.happenedEvents.length == 0)
 		return;	
 	var spaceEventsListToUndo = this.happenedEvents.pop();
@@ -690,7 +692,7 @@ GlobalNorinori.prototype.undoDeducted = function(){
 /**
 Cancels a list of events passed in argument
 */
-GlobalNorinori.prototype.undoList = function(p_list){
+SolverNorinori.prototype.undoList = function(p_list){
 	console.log("We are going to undo a list of : "+p_list.length);
 	var spaceEventToUndo;
 	while (p_list.length !=0){
@@ -732,7 +734,7 @@ function answerGridToString(p_grid){
 Returns the events to the text
 p_onlyAssumed : true if only the assumed events should be written.
 */
-GlobalNorinori.prototype.happenedEventsToString = function(p_onlyAssumed){
+SolverNorinori.prototype.happenedEventsToString = function(p_onlyAssumed){
 	var ei,li;
 	var answer = "";
 	if (p_onlyAssumed){
