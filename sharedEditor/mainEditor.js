@@ -16,7 +16,7 @@ var actualFieldY;
 
 //The main draw function (at start)
 function drawCanvas() {
-    drawer.drawGrid(context, editorCore);
+    drawer.drawEditableGrid(context, editorCore);
 }
 
 // Canvas
@@ -140,16 +140,16 @@ function correspondsToSquarePuzzle(p_id) {
 
 var textMode = document.getElementById("span_mode");
 setMode(textMode, modesManager, ENTRY.SPACE, MODE_NORMAL);
-function addEventListenerAndCaptionActionSubmitStandardSpace(elementId, modeValue) {
+function setupEventListenerCaption(elementId, modeValue) {
     addEventListenerAndCaptionActionSubmit(editorCore, modesManager, textMode, elementId, ENTRY.SPACE, modeValue);
 }
-addEventListenerAndCaptionActionSubmitStandardSpace("submit_normal_mode", MODE_NORMAL);
-addEventListenerAndCaptionActionSubmitStandardSpace("submit_select_mode", MODE_SELECTION);
-addEventListenerAndCaptionActionSubmitStandardSpace("submit_select_rectangles_mode", MODE_SELECTION_RECTANGLE);
-addEventListenerAndCaptionActionSubmitStandardSpace("submit_erase_mode", MODE_ERASE);
-addEventListenerAndCaptionActionSubmitStandardSpace("submit_digit_mode", MODE_NUMBER);
-addEventListenerAndCaptionActionSubmitStandardSpace("add_white", MODE_PEARL_WHITE);
-addEventListenerAndCaptionActionSubmitStandardSpace("add_black", MODE_PEARL_BLACK);
+setupEventListenerCaption("submit_normal_mode", MODE_NORMAL);
+setupEventListenerCaption("submit_select_mode", MODE_SELECTION);
+setupEventListenerCaption("submit_select_rectangles_mode", MODE_SELECTION_RECTANGLE);
+setupEventListenerCaption("submit_erase_mode", MODE_ERASE);
+setupEventListenerCaption("submit_digit_mode", MODE_NUMBER);
+setupEventListenerCaption("add_white", MODE_PEARL_WHITE);
+setupEventListenerCaption("add_black", MODE_PEARL_BLACK);
 
 document.getElementById("add_white").addEventListener('click', function () {
     editorCore.setInputSymbol(SYMBOL_ID.WHITE)

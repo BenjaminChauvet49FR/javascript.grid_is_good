@@ -1,9 +1,39 @@
-clickWallRAction = function (p_editorCore, p_x, p_y, p_modes) {
-    p_editorCore.switchWallR(p_x, p_y);
-}
-
-clickWallDAction = function (p_editorCore, p_x, p_y, p_modes) {
-    p_editorCore.switchWallD(p_x, p_y);
+function clickCanvas(event, p_canvas, p_drawer, p_editorCore, p_modes) {
+    var doneClicking = false;
+	const p_xLength = p_editorCore.getXLength();
+	const p_yLength = p_editorCore.getYLength();
+	if (p_editorCore.hasWalls()) {
+		var indexWallR = p_drawer.getClickWallR(event, p_canvas, p_xLength, p_yLength);
+		var indexWallD = p_drawer.getClickWallD(event, p_canvas, p_xLength, p_yLength);
+		if (indexWallR != null) {
+			p_editorCore.switchWallR(indexWallR.x, indexWallR.y);
+			doneClicking = true;
+		}
+		if (indexWallD != null) {
+			p_editorCore.switchWallD(indexWallD.x, indexWallD.y);
+			doneClicking = true;
+		}
+	}
+	if (p_editorCore.hasPathGrid()) {
+		var indexAroundWallR = p_drawer.getClickAroundWallR(event, p_canvas, p_xLength, p_yLength);
+		var indexAroundWallD = p_drawer.getClickAroundWallD(event, p_canvas, p_xLength, p_yLength);
+		if (indexAroundWallR != null) {
+			p_editorCore.switchWallR(indexAroundWallR.x, indexAroundWallR.y);
+			doneClicking = true;
+		}
+	  
+		if (indexAroundWallD != null && (typeof(clickAroundWallDAction) == 'function')) {
+			p_editorCore.switchWallD(indexAroundWallD.x, indexAroundWallD.y);
+			doneClicking = true;
+		}
+	}
+    if (doneClicking) {
+        return;
+    }
+    var indexSpaces = p_drawer.getClickSpace(event, p_canvas, p_xLength, p_yLength);
+    if (indexSpaces != null) {
+        clickSpaceAction(p_editorCore, indexSpaces.x, indexSpaces.y, p_modes);
+    }
 }
 
 clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
@@ -40,10 +70,6 @@ clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
 
 //------------------------
 
-function getLocalStorageName(p_detachedName) {
-    return "grid_is_good_" + p_detachedName;
-}
-
 function stringToPuzzle(p_string) {
     return stringToWallAndNumbersPuzzle(p_string);
 }
@@ -71,4 +97,51 @@ restartAction = function (p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength
 		p_editorCore.addCleanGrid(GRID_ID.PEARL, p_xLength, p_yLength);
         adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
     }
+}
+
+//------------------------
+
+function rotateCWAction(p_canvas, p_drawer, p_editorCore) {
+    transformGrid(p_canvas, p_drawer, p_editorCore, GRID_TRANSFORMATION.ROTATE_CW);
+}
+
+function rotateUTurnAction(p_canvas, p_drawer, p_editorCore) {
+    transformGrid(p_canvas, p_drawer, p_editorCore, GRID_TRANSFORMATION.ROTATE_UTURN);
+}
+
+function rotateCCWAction(p_canvas, p_drawer, p_editorCore) {
+    transformGrid(p_canvas, p_drawer, p_editorCore, GRID_TRANSFORMATION.ROTATE_CCW);
+}
+
+function mirrorHorizontalAction(p_canvas, p_drawer, p_editorCore) {
+    transformGrid(p_canvas, p_drawer, p_editorCore, GRID_TRANSFORMATION.MIRROR_HORIZONTAL);
+}
+
+function mirrorVerticalAction(p_canvas, p_drawer, p_editorCore) {
+	transformGrid(p_canvas, p_drawer, p_editorCore, GRID_TRANSFORMATION.MIRROR_VERTICAL);
+}
+
+function transformGrid(p_canvas,p_drawer,p_editorCore, p_transformation) {
+	p_editorCore.transformGrid(p_transformation);
+    adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
+}
+
+function resizeAction(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength) {
+	if (!p_yLength) {
+		p_yLength = p_xLength;
+	}
+	if (confirm("Redimensionner la grille ?")) {
+		p_editorCore.transformGrid(GRID_TRANSFORMATION.RESIZE, p_xLength, p_yLength);
+		adaptCanvasAndGrid(p_canvas, p_drawer,p_editorCore);	
+	}
+}
+
+//------------------------
+
+function actionUnselectAll(p_editorCore) {
+	p_editorCore.unselectAll();
+}
+
+function actionBuildWallsAroundSelection(p_editorCore) {
+	p_editorCore.buildWallsAroundSelection();
 }

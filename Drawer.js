@@ -49,7 +49,7 @@ Drawer.prototype.setMarginGrid = function (p_left, p_up, p_right, p_down) { //TO
 /**
 Draw the grid on-screen on p_context, with p_editorCore informations, with this.pix and p_colors information for pixels and colors
 */
-Drawer.prototype.drawGrid = function (p_context, p_editorCore) {
+Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
     const xLength = p_editorCore.getXLength();
     const yLength = p_editorCore.getYLength();
 	p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight);
@@ -331,8 +331,8 @@ Drawer.prototype.getPixInnerSide = function () {
 If a click is done on a space, otherwise return null
  */
 Drawer.prototype.getClickSpace = function (event, p_canvas, p_xLength, p_yLength) {
-    var indexX = Math.floor(this.getPixXWithinGrid(event, p_canvas) / this.pix.sideSpace);
-    var indexY = Math.floor(this.getPixYWithinGrid(event, p_canvas) / this.pix.sideSpace);
+    const indexX = Math.floor(this.getPixXWithinGrid(event, p_canvas) / this.pix.sideSpace);
+    const indexY = Math.floor(this.getPixYWithinGrid(event, p_canvas) / this.pix.sideSpace);
     if (indexX < 0 || indexX >= p_xLength || indexY < 0 || indexY >= p_yLength) {
         return null;
     }
@@ -345,80 +345,78 @@ Drawer.prototype.getClickSpace = function (event, p_canvas, p_xLength, p_yLength
 /**
 If a click is done when mouse is a right wall, returns the index of the corresponding space, otherwise return null
  */
-Drawer.prototype.getClickWallR = function (event, p_canvas, p_editorCore) {
-    if (p_editorCore.hasWalls()) {
-        var pixX = this.getPixXWithinGrid(event, p_canvas);
-        var pixY = this.getPixYWithinGrid(event, p_canvas);
-        var pixXModulo = (pixX + this.pix.borderClickDetection) % this.pix.sideSpace;
-        if (pixXModulo < 2 * this.pix.borderClickDetection) {
-            var answer = {
-                x: Math.floor((pixX + this.pix.borderClickDetection) / this.pix.sideSpace) - 1,
-                y: Math.floor(pixY / this.pix.sideSpace)
-            };
-            if ((answer.x < (p_editorCore.getXLength() - 1)) && (answer.x >= 0) && (answer.y < p_editorCore.getYLength()) && (answer.y >= 0)) {
-                return answer;
-            }
-        }
-    }
+Drawer.prototype.getClickWallR = function (event, p_canvas, p_xLength, p_yLength) {
+	const pixX = this.getPixXWithinGrid(event, p_canvas);
+	const pixY = this.getPixYWithinGrid(event, p_canvas);
+	const pixXModulo = (pixX + this.pix.borderClickDetection) % this.pix.sideSpace;
+	if (pixXModulo < 2 * this.pix.borderClickDetection) {
+		const answer = {
+			x: Math.floor((pixX + this.pix.borderClickDetection) / this.pix.sideSpace) - 1,
+			y: Math.floor(pixY / this.pix.sideSpace)
+		};
+		if ((answer.x < (p_xLength - 1)) && (answer.x >= 0) && (answer.y < p_yLength) && (answer.y >= 0)) {
+			return answer;
+		}
+	}
     return null;
 }
 
 /**
 Same as above with down walls
  */
-Drawer.prototype.getClickWallD = function (event, p_canvas, p_editorCore) {
-    if (p_editorCore.hasWalls()) {
-        var pixX = this.getPixXWithinGrid(event, p_canvas);
-        var pixY = this.getPixYWithinGrid(event, p_canvas);
-        var pixYModulo = (pixY + this.pix.borderClickDetection) % this.pix.sideSpace;
-        if (pixYModulo < 2 * this.pix.borderClickDetection) {
-            var answer = {
-                x: Math.floor(pixX / this.pix.sideSpace),
-                y: Math.floor((pixY + this.pix.borderClickDetection) / this.pix.sideSpace) - 1
-            };
-            if ((answer.y < (p_editorCore.getYLength() - 1)) && (answer.y >= 0) && (answer.x < p_editorCore.getXLength()) && (answer.x >= 0)) {
-                return answer;
-            }
-        }
-    }
+Drawer.prototype.getClickWallD = function (event, p_canvas, p_xLength, p_yLength) {
+	const pixX = this.getPixXWithinGrid(event, p_canvas);
+	const pixY = this.getPixYWithinGrid(event, p_canvas);
+	const pixYModulo = (pixY + this.pix.borderClickDetection) % this.pix.sideSpace;
+	if (pixYModulo < 2 * this.pix.borderClickDetection) {
+		const answer = {
+			x: Math.floor(pixX / this.pix.sideSpace),
+			y: Math.floor((pixY + this.pix.borderClickDetection) / this.pix.sideSpace) - 1
+		};
+		if ((answer.y < (p_yLength - 1)) && (answer.y >= 0) && (answer.x < p_xLength) && (answer.x >= 0)) {
+			return answer;
+		}
+	}
     return null;
 }
 
-Drawer.prototype.getClickAroundWallR = function (event, p_canvas, p_editorCore) {
-    if (p_editorCore.hasWalls()) {
-        const pixX = this.getPixXWithinGrid(event, p_canvas);
-        const pixY = this.getPixYWithinGrid(event, p_canvas);
-        const sideSpace = this.pix.sideSpace;
-        var distanceX = pixX % sideSpace;
-        distanceX = Math.min(distanceX, sideSpace - distanceX);
-        var distanceY = pixY % sideSpace;
-        distanceY = Math.min(distanceY, sideSpace - distanceY);
-        if (distanceX < distanceY) {
-            return {
-                x: Math.floor((pixX - sideSpace / 2) / sideSpace),
-                y: Math.floor(pixY / sideSpace)
-            }
-        }
-    }
+Drawer.prototype.getClickAroundWallR = function (event, p_canvas, p_xLength, p_yLength) {
+	const pixX = this.getPixXWithinGrid(event, p_canvas);
+	const pixY = this.getPixYWithinGrid(event, p_canvas);
+	const sideSpace = this.pix.sideSpace;
+	var distanceX = pixX % sideSpace;
+	distanceX = Math.min(distanceX, sideSpace - distanceX);
+	var distanceY = pixY % sideSpace;
+	distanceY = Math.min(distanceY, sideSpace - distanceY);
+	if (distanceX < distanceY) {
+		const answer = {
+			x: Math.floor((pixX - sideSpace / 2) / sideSpace),
+			y: Math.floor(pixY / sideSpace)
+		}
+		if ((answer.x < (p_xLength - 1)) && (answer.x >= 0) && (answer.y < p_yLength) && (answer.y >= 0)) {
+			return answer;
+		}
+	}
     return null;
 }
 
-Drawer.prototype.getClickAroundWallD = function (event, p_canvas, p_editorCore) {
-    if (p_editorCore.hasWalls()) {
-        const pixX = this.getPixXWithinGrid(event, p_canvas);
-        const pixY = this.getPixYWithinGrid(event, p_canvas);
-        const sideSpace = this.pix.sideSpace;
-        var distanceX = pixX % sideSpace;
-        distanceX = Math.min(distanceX, sideSpace - distanceX);
-        var distanceY = pixY % sideSpace;
-        distanceY = Math.min(distanceY, sideSpace - distanceY);
-        if (distanceX > distanceY) {
-            return {
-                x: Math.floor(pixX / sideSpace),
-                y: Math.floor((pixY - sideSpace / 2) / sideSpace)
-            }
-        }
-    }
+Drawer.prototype.getClickAroundWallD = function (event, p_canvas, p_xLength, p_yLength) {
+	const pixX = this.getPixXWithinGrid(event, p_canvas);
+	const pixY = this.getPixYWithinGrid(event, p_canvas);
+	const sideSpace = this.pix.sideSpace;
+	var distanceX = pixX % sideSpace;
+	distanceX = Math.min(distanceX, sideSpace - distanceX);
+	var distanceY = pixY % sideSpace;
+	distanceY = Math.min(distanceY, sideSpace - distanceY);
+	if (distanceX > distanceY) {
+		const answer = {
+			x: Math.floor(pixX / sideSpace),
+			y: Math.floor((pixY - sideSpace / 2) / sideSpace)
+		}
+		if ((answer.y < (p_yLength - 1)) && (answer.y >= 0) && (answer.x < p_xLength) && (answer.x >= 0)) {
+			return answer;	
+		}
+	}
     return null;
 }
 

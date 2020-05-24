@@ -74,6 +74,7 @@ Grid.prototype.clear = function (p_x, p_y) {
 Grid.prototype.getXLength = function() {
 	return this.xLength;
 }
+
 Grid.prototype.getYLength = function() {
 	return this.yLength;
 }

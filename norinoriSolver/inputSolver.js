@@ -58,10 +58,9 @@ solveAction = function (p_solver,p_textArea){
 
 /** 
 Loads a walled grid from local storage and its region grid (cf. super-function), updates intelligence, updates canvas
-TODO doc
 */
-loadAction = function(p_canvas,p_drawer,p_solver,p_name,p_textArea){ //TODO dans le cadre d'une mutualisation des actions (loadAction, saveAction ...), transformer textArea en components... ?
-	var loadedItem = tokensToWallArray(localStorage.getItem("grid_is_good_"+p_name).split(' ')); 	
+loadAction = function (p_canvas, p_drawer, p_solver, p_name, p_textArea) {
+    var loadedItem = tokensToWallArray(localStorage.getItem("grid_is_good_" + p_name).split(' '));
 	p_solver.construct(loadedItem);
 	p_drawer.adaptCanvasDimensions(p_canvas,{xLength:p_solver.xLength,yLength:p_solver.yLength});
 	p_textArea.innerHTML = ""; //TODO manage true/false

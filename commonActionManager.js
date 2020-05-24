@@ -52,7 +52,9 @@ function addEventListenerAndCaptionActionSubmit(p_editorCore, p_entriesManager, 
 }
 
 /**
+Editor only !
 Perform stuff when we change the mode for the "space" entry
+(pretty much everything)
 */
 function changeSpaceMode(p_editorCore) {
 	actionUnselectAll(p_editorCore);

@@ -1,3 +1,58 @@
+/** Saves a walled grid into local storage
+p_editorCore : the Global item
+p_detachedName : the detached name (without the prefix) to store into local storage
+ */
+saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions) {
+    var localStorageName = getLocalStorageName(p_detachedName);
+    var letsSave = true;
+    if (localStorage.hasOwnProperty(localStorageName)) {
+        if (!confirm("Le stockage local a déjà une propriété nommée '" + localStorageName + "'. L'écraser ?")) {
+            letsSave = false;
+        }
+    }
+    if (letsSave) {
+        var puzzleToSave = "";
+        if (p_kindId == PUZZLES_KIND.STAR_BATTLE.id) {
+            puzzleToSave = starBattlePuzzleToString(p_editorCore.getWallArray(), p_externalOptions.numberStars);
+        } else if (p_kindId == PUZZLES_KIND.MASYU_LIKE.id) {
+            const grid = p_editorCore.getArray(GRID_ID.PEARL);
+            puzzleToSave = commonPuzzleEmptyWallsToString(p_editorCore.getXLength(), p_editorCore.getYLength(), p_editorCore.getArray(GRID_ID.PEARL), [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK]);
+        } else {
+            p_editorCore.alignToRegions(GRID_ID.NUMBER_REGION);
+            puzzleToSave = commonPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION), null);
+        }
+        localStorage.setItem(localStorageName, puzzleToSave);
+    }
+}
+
+loadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p_kindId, p_fieldsToUpdate) {
+    var localStorageName = getLocalStorageName(p_detachedName);
+    if (localStorage.hasOwnProperty(localStorageName)) {
+        if (confirm("Charger le puzzle " + localStorageName + " ?")) {
+			var loadedItem = null;
+			//NB : reinitialization is supposed to be contained in setupFromWallArray
+            if (p_kindId == PUZZLES_KIND.STAR_BATTLE.id){
+				loadedItem = stringToStarBattlePuzzle(localStorage.getItem(localStorageName));
+				p_editorCore.setupFromWallArray(loadedItem.grid);			
+			} else if (p_kindId == PUZZLES_KIND.MASYU_LIKE.id){
+				loadedItem = stringToEmptyWallsPuzzle(localStorage.getItem(localStorageName));
+				const gridPearl = loadedItem.gridSymbol;
+				loadedItem.grid = generateWallArray(gridPearl[0].length, gridPearl.length); //TODO ".grid" ajouté par commodité puisque "updateFieldsAfterLoad" utilise cette propriété grid.
+				p_editorCore.setupFromWallArray(loadedItem.grid);			
+				p_editorCore.addGrid(GRID_ID.PEARL, gridPearl); 
+			} else {
+				loadedItem = stringToWallAndNumbersPuzzle(localStorage.getItem(localStorageName));
+				p_editorCore.setupFromWallArray(loadedItem.grid);			
+				p_editorCore.addGrid(GRID_ID.NUMBER_REGION,loadedItem.gridNumber); 
+			}
+            adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore); 
+            updateFieldsAfterLoad(p_fieldsToUpdate, loadedItem);
+        }
+    } else {
+        alert("Le stockage local n'a pas de propriété nommée '" + localStorageName + "'.");
+    }
+}
+
 // Note : for commodity, a saver has been associated with its loader rather than having all savers together and all loaders together
 
 function commonPuzzleToString(p_wallArray,p_numbersArray,p_symbolsArray,p_symbolsToSave) {
@@ -101,21 +156,6 @@ function stringToStarBattlePuzzle(p_string) {
 	
 	var answerGrid = tokensToWallArray(stringArray.slice(1,3),{isSquare : true});
 	return {grid:answerGrid,starNumber:stars};
-}
-
-
-/**
-Returns the space that matches a char in unparsing function ('0123' => sides down-right = open/closed)
-p_char : the desired char
-*/
-function charToSpace(p_char){
-	switch(p_char){
-		case('0'): return {state:WALLGRID.OPEN,wallD:WALLGRID.OPEN,wallR:WALLGRID.OPEN};break;
-		case('1'): return {state:WALLGRID.OPEN,wallD:WALLGRID.OPEN,wallR:WALLGRID.CLOSED};break;
-		case('2'): return {state:WALLGRID.OPEN,wallD:WALLGRID.CLOSED,wallR:WALLGRID.OPEN};break;
-		case('3'): return {state:WALLGRID.OPEN,wallD:WALLGRID.CLOSED,wallR:WALLGRID.CLOSED};break;
-		default : return {state:WALLGRID.CLOSED,wallD:WALLGRID.OPEN,wallR:WALLGRID.OPEN};break;
-	}
 }
 
 /**
