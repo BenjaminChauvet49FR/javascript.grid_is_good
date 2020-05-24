@@ -73,6 +73,8 @@ SolverStarBattle.prototype.buildAnswerGrid = function(){
 	}
 }
 
+const BANNED = -2;
+
 /**
 Puts Xs into the answerGrid corresponding to banned spaces 
 Precondition : both spacesByRegion and notPlacedYet have been refreshed and answerGrid is ok.

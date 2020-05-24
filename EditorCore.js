@@ -1,3 +1,8 @@
+const SELECTED = {
+    YES: true,
+    NO: false
+}
+
 const GRID_ID = {
     NUMBER_REGION: 'NR',
     PEARL: 'P'

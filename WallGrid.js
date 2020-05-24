@@ -1,4 +1,5 @@
 // Constants for walls and spaces
+const UNCHARTED = -1;
 const WALLGRID = {OPEN : 0, CLOSED : 1} 
 
 function switchedState(p_state) {

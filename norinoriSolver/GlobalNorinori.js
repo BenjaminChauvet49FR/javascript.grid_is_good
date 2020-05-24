@@ -1,3 +1,5 @@
+const BANNED = -2;
+
 function GlobalNorinori(p_wallArray){
 	this.construct(p_wallArray);
 }
