@@ -7,10 +7,6 @@ const GRID_ID = {
     NUMBER_REGION: 'NR',
     PEARL: 'P'
 }
-const SYMBOL_ID = {
-    WHITE: "W",
-    BLACK: 'B'
-}
 
 const GRID_TRANSFORMATION = {
 	ROTATE_CW : "RCW",

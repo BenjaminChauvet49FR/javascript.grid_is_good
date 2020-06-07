@@ -1,3 +1,8 @@
+const SYMBOL_ID = {
+    WHITE: 'W',
+    BLACK: 'B'
+}
+
 /** Saves a walled grid into local storage
 p_editorCore : the Global item
 p_detachedName : the detached name (without the prefix) to store into local storage
