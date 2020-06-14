@@ -447,11 +447,17 @@ Drawer.prototype.drawSpaceContents = function (p_context, p_drawableItems, p_fun
                     p_context.fillStyle = item.getColorString();
                     p_context.fillRect(pixDrawX, pixDrawY, pixInnerSide, pixInnerSide);
                 } else if (item.kind = KIND_DRAWABLE_ITEM.CIRCLE) {
-					p_context.fillStyle == item.colorBorder; //TODO j'ai repris la propriété plutôt que créer une nouvelle fonction. A voir lequel des 2 est meilleur.
 					p_context.beginPath();
 					const radius = this.getPixInnerSide()*1/3;
 					p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
-					p_context.stroke();
+					p_context.fillStyle = item.colorInner; //TODO j'ai repris la propriété plutôt que créer une nouvelle fonction. A voir lequel des 2 est meilleur.
+					if (p_context.fillStyle) {
+						p_context.fill();
+					}
+					p_context.fillStyle = item.colorBorder;
+					if (p_context.fillStyle) {
+						p_context.stroke();
+					}
 				}
             }
             pixDrawX += this.pix.sideSpace;
