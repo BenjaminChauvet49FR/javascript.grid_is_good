@@ -52,7 +52,6 @@ Draw the grid on-screen on p_context, with p_editorCore informations, with this.
 Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
     const xLength = p_editorCore.getXLength();
     const yLength = p_editorCore.getYLength();
-	p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight);
     if (p_editorCore.hasWallGrid()) {
         if (p_editorCore.hasWalls()) {
             this.drawWallGrid(p_context, p_editorCore.wallGrid, xLength, yLength);
@@ -88,8 +87,8 @@ Drawer.prototype.drawWallGrid = function (p_context, p_wallGrid, p_xLength, p_yL
     var ix,
     iy,
     indexRegion;
-	p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight); //TODO not the best place to put this function but necessary for solvers
-
+	p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight); 
+	
     //Upper-left pixel of the horizontal walls (Horiz) and vertical walls (Vert) ; pillars aren't part of walls (meeting of 4 walls)
     const pixStartXVert = this.pix.marginGrid.left + this.pix.sideSpace - this.pix.borderSpace;
     const pixStartXHoriz = this.pix.marginGrid.left + this.pix.borderSpace;
@@ -154,6 +153,7 @@ Drawer.prototype.drawWallGrid = function (p_context, p_wallGrid, p_xLength, p_yL
 
 Drawer.prototype.drawWalllessGrid = function (p_context, p_wallGrid, p_xLength, p_yLength) {
     var i;
+	p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight);
     const pixTotalWidth = p_xLength * this.pix.sideSpace;
     const pixTotalHeight = p_yLength * this.pix.sideSpace;
     var pixXStart = this.pix.marginGrid.left;

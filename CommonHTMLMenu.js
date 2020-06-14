@@ -1,33 +1,83 @@
 //ATTENTION DANGER !
-//Ce fichier contient des valeurs en dur sur : 
+//Ce fichier contient des valeurs en dur sur :
 // -les noms de dossier
 // -les noms de fichier
 // -un identifiant d'élément HTML
 
-function addToElement(p_divElement,p_htmlDoc,p_displayedText){
-	var aNode = document.createElement("a");
-	aNode.setAttribute("href",p_htmlDoc);
-	aNode.innerText = p_displayedText;
-	p_divElement.appendChild(aNode);
-	addText(p_divElement," ");
+function createReferenceElement(p_path, p_displayedText) {
+	const aNode = document.createElement("a");
+    aNode.setAttribute("href", p_path);
+    aNode.innerText = p_displayedText;
+	return aNode;
 }
 
-function namingHTMLDoc(p_isEditor,p_folder){
-	return "../"+p_folder+(p_isEditor ? "Editor" : "Solver")+"/"+(p_isEditor ? "Editor" : "Solver")+".html";
+function addElement(p_divElement, p_path, p_displayedText) {
+    p_divElement.appendChild(addReferenceElement(p_path, p_displayedText));
+    addText(p_divElement, " ");
 }
 
-function addText(p_divElement,p_text){
-	p_divElement.appendChild(document.createTextNode(p_text));
+function addMenu(p_divElement, p_menu) {
+	addText(p_divElement, p_menu.displayName+" : ");
+	p_menu.typeList.forEach( type => {
+		p_divElement.appendChild(createReferenceElement(getHTMLpath(p_menu.documentPage, type.name), type.displayName));	
+		addText(p_divElement, " ");		
+	});
 }
 
+
+//function namingHTMLDoc(p_type, p_family) {
+function getHTMLpath(p_type, p_family) {
+    return "../" + p_family + p_type + "/" + p_type + ".html";
+}
+
+function addText(p_divElement, p_text) {
+    p_divElement.appendChild(document.createTextNode(p_text));
+}
+
+const menu1 = {
+	displayName : "Editeur",
+	documentPage : "Editor",
+	typeList : [
+		{name : "shared", displayName : "Editeur partagé"}
+	]
+}
+
+const menu2 = {
+	displayName : "Solveurs",
+	documentPage : "Solver",
+	typeList : [
+		{name : "starBattle", displayName : "Star battle"},
+		{name : "norinori", displayName : "Norinori"},
+		{name : "shimaguni", displayName : "Shimaguni"},
+		{name : "heyawake", displayName : "Heyawake"},
+		{name : "curvingRoad", displayName : "Curving road"}
+	]
+}
+
+const menu3 = {
+	displayName : "Solveur théorique",
+	documentPage : "Solver",
+	typeList : [
+		{name : "theoryCluster", displayName : "Clusters d'adjacence"}
+	]
+}
 
 const divElement = document.getElementById("div_common_menu");
-addToElement(divElement, namingHTMLDoc(true, "shared"), "Editeur partagé");
+addMenu(divElement, menu1);
+divElement.appendChild(document.createElement("br"));
+addMenu(divElement, menu2);
+divElement.appendChild(document.createElement("br"));
+addMenu(divElement, menu3);
+divElement.appendChild(document.createElement("br"));
+
+/*addElement(divElement, namingHTMLDoc("Editor", "shared"), "Editeur partagé");
 divElement.appendChild(document.createElement("br"));
 addText(divElement, "Solveurs : ");
-addToElement(divElement, namingHTMLDoc(false, "starBattle"), "Star battle");
-addToElement(divElement, namingHTMLDoc(false, "norinori"), "Norinori");
-addToElement(divElement, namingHTMLDoc(false, "shimaguni"), "Shimagni");
-addToElement(divElement, namingHTMLDoc(false, "heyawake"), "Heyawake");
-addText(divElement, "Solveurs théoriques : ");
-addToElement(divElement, namingHTMLDoc(false, "theoryCluster"), "Theorical cluster");
+addElement(divElement, namingHTMLDoc("Solver", "starBattle"), "Star battle");
+addElement(divElement, namingHTMLDoc("Solver", "norinori"), "Norinori");
+addElement(divElement, namingHTMLDoc("Solver", "shimaguni"), "Shimagni");
+addElement(divElement, namingHTMLDoc("Solver", "heyawake"), "Heyawake");
+addElement(divElement, namingHTMLDoc("Solver", "curvingRoad"), "Curving Road");
+addText(divElement, "Solveur théorique : ");
+addElement(divElement, namingHTMLDoc("Solver", "theoryCluster"), "Theorical cluster");*/
+

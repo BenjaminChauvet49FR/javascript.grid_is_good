@@ -414,7 +414,7 @@ SolverCurvingRoad.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
                     }
 
                     this.curvingLinkArray[y][x].forEach(index => {
-                        listEventsToApply = this.testAlertCurvingList(listEventsToApply, index); // TODO à faire
+                        listEventsToApply = this.testAlertCurvingList(listEventsToApply, index); 
                     });
                 }
                 eventsApplied.push(eventBeingApplied);
@@ -554,13 +554,21 @@ SolverCurvingRoad.prototype.quickStart = function () {
 
 //--------------------
 // Undoing
-// TODO incorrect pour l'instant !
 SolverCurvingRoad.prototype.undoEvent = function (p_event) {
     if (p_event.kind == EVENT_KIND.SPACE) {
         const x = p_event.x;
         const y = p_event.y;
         const symbol = p_event.symbol;
         this.answerGrid[y][x] = SPACE.UNDECIDED;
+		this.curvingLinkArray[y][x].forEach(
+			index => {
+			this.curvingLinkList[index].undecided++;
+			if (symbol == SPACE.CLOSED) {
+				this.curvingLinkList[index].closeds--;
+			}
+		});
+		
+		
     } else if (p_event.adjacency) {
         const aals = this.adjacencyLimitSpacesList.pop(); //aals = added adjacency limit space
         this.adjacencyLimitGrid[aals.y][aals.x] = aals.formerValue;
