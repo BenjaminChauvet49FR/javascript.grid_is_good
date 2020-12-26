@@ -15,6 +15,10 @@ function Grid_data(p_array) {
 	return new Grid(p_array, p_array[0].length, p_array.length);
 }
 
+/**
+Generates a clean grid that is supposed to contain things into spaces. 
+Even though the method is named "SymbolArray" it is generic and can contain anything that is contained directly into spaces. For instance, numbers.
+*/
 function generateSymbolArray(p_widthGrid, p_heightGrid) {
     var answer = [];
     for (var iy = 0; iy < p_heightGrid; iy++) {
@@ -176,6 +180,47 @@ Grid.prototype.resizeGrid = function (p_xLength, p_yLength) {
 //---------------------
 // Saving from and loading to array
 
+//Saver and loader by written spaces
+/**
+Old version : 
+.O.O......
+.....O..O.
+..........
+..O.......
+<=> 
+1 0 O 3 0 O 5 1 O 8 1 O 3 2 O
+Can give coordinates if "p_dealCoordinates" is set to true
+*/
+function arrayToStringSpaces(p_array, p_dealCoordinates) {
+    xLength = p_array[0].length;
+    yLength = p_array.length;
+    var answer = (p_dealCoordinates ? xLength + " " + yLength + " " : "");
+    for (var iy = 0; iy < yLength; iy++) {
+        for (var ix = 0; ix < xLength; ix++) {
+            if (p_array[iy][ix] != null) {
+                answer += (ix + " " + iy + " " + p_array[iy][ix] + " ");
+            }
+        }
+    }
+    return answer;
+}
+
+/*
+Directly fills an array with tokens.
+(p_array must be provided. And dimensions must be known.)
+*/
+function fillArrayWithTokensSpaces(p_tokens, p_array){
+    var indexToken = 0;
+    while (indexToken < p_tokens.length - 2) {
+        p_array[parseInt(p_tokens[indexToken + 1], 10)]
+        [parseInt(p_tokens[indexToken], 10)] = parseInt(p_tokens[indexToken + 2], 10);
+        indexToken += 3;
+    }
+    return p_array;
+}  
+
+// Saver and loader by written rows
+
 /**
 New version : 
 .O.O..X...
@@ -202,28 +247,15 @@ function arrayToStringRows(p_array,p_value) {
 }
 
 /**
-Old version : 
-.O.O......
-.....O..O.
-..........
-..O.......
-<=> 
-1 0 O 3 0 O 5 1 O 8 1 O 3 2 O
+Fills arrays with tokens by rows. Only stops when <number of rows> separator symbols ('|') have been read.
+p_tokens : list of tokens (resulting from a string split by ' ' for instance)
+p_array : array to fill (must be provided. And dimensions must be known.)
+p_indexToken : next index to be read
+p_symbol : symbol to put into spaces
+newArray and newIndexToken are the states of p_array and p_indexToken after applying this method.
+Example : a set of parameters ("5 5 WB | | 3 | | | 1 3 | | | 1 3 | |" , [array 5x5], 3, W) will put W symbols until having met the 5th | (here, in space [2][3] (y first) )
+and upgrade the grid as such and the index (initially 3) into newArray and newIndexToken)
 */
-function arrayToStringSpaces(p_array) {
-    xLength = p_array[0].length;
-    yLength = p_array.length;
-    var chain = "";
-    for (var iy = 0; iy < yLength; iy++) {
-        for (var ix = 0; ix < xLength; ix++) {
-            if (p_array[iy][ix] != null) {
-                chain += (ix + " " + iy + " " + p_array[iy][ix] + " ");
-            }
-        }
-    }
-    return chain;
-}
-
 function fillArrayWithTokensRows(p_tokens, p_array, p_indexToken, p_symbol) {
 	var y = 0;
 	while (y < p_array.length) {
@@ -240,12 +272,3 @@ function fillArrayWithTokensRows(p_tokens, p_array, p_indexToken, p_symbol) {
 	return {newArray : p_array, newIndexToken : p_indexToken};
 }
 
-function fillArrayWithTokensSpaces(p_tokens,p_array){
-    var indexToken = 0;
-    while (indexToken < p_tokens.length - 2) {
-        p_array[parseInt(p_tokens[indexToken + 1], 10)]
-        [parseInt(p_tokens[indexToken], 10)] = parseInt(p_tokens[indexToken + 2], 10);
-        indexToken += 3;
-    }
-    return p_array;
-}  

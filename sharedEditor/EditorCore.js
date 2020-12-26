@@ -5,7 +5,9 @@ const SELECTED = {
 
 const GRID_ID = {
     NUMBER_REGION: 'NR',
-    PEARL: 'P'
+    NUMBER_SPACE: 'NS',
+    PEARL: 'P',
+	YAJILIN: 'YAJILIN' //TODO inutile pour l'instant
 }
 
 const GRID_TRANSFORMATION = {

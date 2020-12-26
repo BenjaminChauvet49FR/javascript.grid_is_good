@@ -58,7 +58,8 @@ const menu3 = {
 	displayName : "Solveur théorique",
 	documentPage : "Solver",
 	typeList : [
-		{name : "theoryCluster", displayName : "Clusters d'adjacence"}
+		{name : "theoryCluster", displayName : "Clusters d'adjacence"},
+		{name : "theoryLoop", displayName : "Boucles"}
 	]
 }
 
@@ -69,15 +70,3 @@ addMenu(divElement, menu2);
 divElement.appendChild(document.createElement("br"));
 addMenu(divElement, menu3);
 divElement.appendChild(document.createElement("br"));
-
-/*addElement(divElement, namingHTMLDoc("Editor", "shared"), "Editeur partagé");
-divElement.appendChild(document.createElement("br"));
-addText(divElement, "Solveurs : ");
-addElement(divElement, namingHTMLDoc("Solver", "starBattle"), "Star battle");
-addElement(divElement, namingHTMLDoc("Solver", "norinori"), "Norinori");
-addElement(divElement, namingHTMLDoc("Solver", "shimaguni"), "Shimagni");
-addElement(divElement, namingHTMLDoc("Solver", "heyawake"), "Heyawake");
-addElement(divElement, namingHTMLDoc("Solver", "curvingRoad"), "Curving Road");
-addText(divElement, "Solveur théorique : ");
-addElement(divElement, namingHTMLDoc("Solver", "theoryCluster"), "Theorical cluster");*/
-

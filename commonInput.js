@@ -1,10 +1,4 @@
-//TODO à déplacer à l'endroit plus approprié peut-être ?
-const PUZZLES_KIND = {
-	HEYAWAKE_LIKE : {id:2},
-	MASYU_LIKE : {id:3},
-	STAR_BATTLE : {id:101,squareGrid : true},
-	GRAND_TOUR : {id:102}
-}
+
 
 //--------------------
 

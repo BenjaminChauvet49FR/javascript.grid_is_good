@@ -1,9 +1,24 @@
 const SYMBOL_ID = {
     WHITE: 'W',
-    BLACK: 'B'
+    BLACK: 'B',
+	LEFT_COMBINED: 'l',
+	UP_COMBINED: 'u',
+	RIGHT_COMBINED: 'r',
+	DOWN_COMBINED: 'd',
+	
 }
 
-/** Saves a walled grid into local storage
+const PUZZLES_KIND = {
+	HEYAWAKE_LIKE : {id:2},
+	MASYU_LIKE : {id:3},
+	STAR_BATTLE : {id:101,squareGrid : true},
+	GRAND_TOUR : {id:102},
+	NURIKABE_LIKE : {id:4},
+	YAJILIN_LIKE : {id:5}
+}
+
+/** 
+Saves a walled grid into local storage
 p_editorCore : the Global item
 p_detachedName : the detached name (without the prefix) to store into local storage
  */
@@ -22,6 +37,13 @@ saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions
         } else if (p_kindId == PUZZLES_KIND.MASYU_LIKE.id) {
             const grid = p_editorCore.getArray(GRID_ID.PEARL);
             puzzleToSave = commonPuzzleEmptyWallsToString(p_editorCore.getXLength(), p_editorCore.getYLength(), p_editorCore.getArray(GRID_ID.PEARL), [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK]);
+        } else if (p_kindId == PUZZLES_KIND.NURIKABE_LIKE.id) {
+            const grid = p_editorCore.getArray(GRID_ID.NUMBER_SPACE);
+            puzzleToSave = arrayToStringSpaces(p_editorCore.getArray(GRID_ID.NUMBER_SPACE), true);
+        } else if (p_kindId == PUZZLES_KIND.YAJILIN_LIKE.id) {
+            alert("551551 Saving To be done ...");
+			//const grid = p_editorCore.getArray(GRID_ID.NUMBER_SPACE);
+            //puzzleToSave = arrayToStringRows(p_editorCore.getArray(GRID_ID.YAJILIN), true);
         } else {
             p_editorCore.alignToRegions(GRID_ID.NUMBER_REGION);
             puzzleToSave = commonPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION), null);
@@ -30,6 +52,10 @@ saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions
     }
 }
 
+/**
+Loads the desired grid from the local storage
+p_detachedName is the detached name
+*/
 loadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p_kindId, p_fieldsToUpdate) {
     var localStorageName = getLocalStorageName(p_detachedName);
     if (localStorage.hasOwnProperty(localStorageName)) {
@@ -45,6 +71,19 @@ loadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p_kindI
 				loadedItem.grid = generateWallArray(gridPearl[0].length, gridPearl.length); //TODO ".grid" ajouté par commodité puisque "updateFieldsAfterLoad" utilise cette propriété grid.
 				p_editorCore.setupFromWallArray(loadedItem.grid);			
 				p_editorCore.addGrid(GRID_ID.PEARL, gridPearl); 
+			} else if (p_kindId == PUZZLES_KIND.NURIKABE_LIKE.id){
+				loadedItem = stringToNurikabePuzzle(localStorage.getItem(localStorageName));
+				const gridNumber = loadedItem.gridNumber;
+				loadedItem.grid = generateWallArray(gridNumber[0].length, gridNumber.length); //TODO ".grid" ajouté par commodité puisque "updateFieldsAfterLoad" utilise cette propriété grid.
+				p_editorCore.setupFromWallArray(loadedItem.grid);			
+				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE, gridNumber); 
+			} else if (p_kindId == PUZZLES_KIND.YAJILIN_LIKE.id){
+				/*loadedItem = stringToYajilinPuzzle(localStorage.getItem(localStorageName));
+				const gridNumber = loadedItem.gridNumber;
+				loadedItem.grid = generateWallArray(gridNumber[0].length, gridNumber.length); //TODO ".grid" ajouté par commodité puisque "updateFieldsAfterLoad" utilise cette propriété grid.
+				p_editorCore.setupFromWallArray(loadedItem.grid);			
+				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE, gridNumber); */
+				alert("551551 Loading To be done ...");
 			} else {
 				loadedItem = stringToWallAndNumbersPuzzle(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.grid);			
@@ -58,6 +97,16 @@ loadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p_kindI
     }
 }
 
+/**
+Returns a name to store into / load from local storage
+*/
+function getLocalStorageName(p_name) {
+	return "grid_is_good_"+p_name;
+}
+
+// ------------------------------------------
+
+// Savers and loaders
 // Note : for commodity, a saver has been associated with its loader rather than having all savers together and all loaders together
 
 function commonPuzzleToString(p_wallArray,p_numbersArray,p_symbolsArray,p_symbolsToSave) {
@@ -68,7 +117,7 @@ function commonPuzzleToString(p_wallArray,p_numbersArray,p_symbolsArray,p_symbol
 		wallsString = wallArrayToString(p_wallArray);
 	}
 	if (p_numbersArray && (p_numbersArray != null)) {
-		spacesString = arrayToStringSpaces(p_numbersArray);
+		spacesString = arrayToStringSpaces(p_numbersArray, false);
 	}
 	if (p_symbolsToSave) {
 		p_symbolsToSave.forEach(symbol => {
@@ -102,6 +151,10 @@ function stringToWallAndNumbersPuzzle(p_string) {
 	};
 }
 
+/*
+p_symbolsArray : grid to save
+p_symbolsToSave : list of symbols that should be saved (if any, otherwise the grid is saved directly)
+*/
 function commonPuzzleEmptyWallsToString(p_xLength, p_yLength, p_symbolsArray, p_symbolsToSave) {
     var dimensionsString = p_xLength + " " + p_yLength + " "; //Spaces right
 	var symbolsString = ""; //No spaces left/right
@@ -138,6 +191,24 @@ function stringToEmptyWallsPuzzle(p_string) {
 }
 
 /**
+Transforms a space-representation string with only its width and height before into a gridnumber 
+4 4 1 2 15 =>
+....
+....
+.{15}..
+....
+*/
+function stringToNurikabePuzzle(p_string) {
+	var stringArray = p_string.split(' ');
+	var xLength = stringArray[0];
+	var yLength = stringArray[1];
+	var numberGrid = generateSymbolArray(xLength,yLength);
+	return {
+	    gridNumber : numberGrid = fillArrayWithTokensSpaces(stringArray.slice(2),numberGrid)
+	}
+}
+
+/**
 Returns the string to be contained in local storage (must be rectangular and non-empty) from the SB puzzle
 X-empty ; 0 sides right and down open ; 1 side right closed ; 2 side down closed ; 3 side down closed.
 p_grid : the grid to be stringed
@@ -163,9 +234,3 @@ function stringToStarBattlePuzzle(p_string) {
 	return {grid:answerGrid,starNumber:stars};
 }
 
-/**
-Returns a name to store into / load from local storage
-*/
-function getLocalStorageName(p_name) {
-	return "grid_is_good_"+p_name;
-}

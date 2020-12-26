@@ -3,6 +3,7 @@
 var drawer = new Drawer();
 var editorCore = new EditorCore(10, 10);
 editorCore.addCleanGrid(GRID_ID.NUMBER_REGION, 10, 10);
+editorCore.addCleanGrid(GRID_ID.NUMBER_SPACE, 10, 10);
 editorCore.addCleanGrid(GRID_ID.PEARL, 10, 10);
 var canevas = document.getElementById("canevas");
 var context = canevas.getContext("2d");
@@ -44,7 +45,7 @@ putActionElementClick("submit_view_puzzle_list", function (event) {
 });
 
 putActionElementClick("submit_save_grid", function (event) {
-    saveAction(editorCore, fieldName.value, saveLoadModeId, {numberStars : fieldStars.value}) //TODO provisoire : il y aura sans doute un "saveAction" par puzzle à l'avenir.
+    saveAction(editorCore, fieldName.value, saveLoadModeId, {numberStars : fieldStars.value}) 
 });
 
 putActionElementClick("submit_load_grid", function (event) {
@@ -103,6 +104,10 @@ function combo(thelist) {
 			editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.MASYU_LIKE.id;
 			break;
+		case 'Nurikabe':
+			editorCore.setWallsOff();
+			saveLoadModeId = PUZZLES_KIND.NURIKABE_LIKE.id;
+			break;
 		case 'GrandTour':
 			editorCore.setModePathOn();
 			saveLoadModeId = PUZZLES_KIND.HEYAWAKE_LIKE.id;
@@ -147,21 +152,53 @@ setupEventListenerCaption("submit_normal_mode", MODE_NORMAL);
 setupEventListenerCaption("submit_select_mode", MODE_SELECTION);
 setupEventListenerCaption("submit_select_rectangles_mode", MODE_SELECTION_RECTANGLE);
 setupEventListenerCaption("submit_erase_mode", MODE_ERASE);
-setupEventListenerCaption("submit_digit_mode", MODE_NUMBER);
-setupEventListenerCaption("add_white", MODE_PEARL_WHITE);
-setupEventListenerCaption("add_black", MODE_PEARL_BLACK);
+setupEventListenerCaption("submit_digit_region_mode", MODE_NUMBER_REGION);
+setupEventListenerCaption("submit_digit_space_mode", MODE_NUMBER_SPACE);
+setupEventListenerCaption("submit_add_white", MODE_PEARL_WHITE);
+setupEventListenerCaption("submit_add_black", MODE_PEARL_BLACK);
+setupEventListenerCaption("submit_add_combined_left", MODE_ARROW_COMBINED_LEFT);
+setupEventListenerCaption("submit_add_combined_up", MODE_ARROW_COMBINED_UP);
+setupEventListenerCaption("submit_add_combined_right", MODE_ARROW_COMBINED_RIGHT);
+setupEventListenerCaption("submit_add_combined_down", MODE_ARROW_COMBINED_DOWN);
 
-document.getElementById("add_white").addEventListener('click', function () {
+// Editor input symbol
+document.getElementById("submit_add_white").addEventListener('click', function () {
     editorCore.setInputSymbol(SYMBOL_ID.WHITE)
 });
 
-document.getElementById("add_black").addEventListener('click', function () {
+document.getElementById("submit_add_black").addEventListener('click', function () {
     editorCore.setInputSymbol(SYMBOL_ID.BLACK)
 });
 
+document.getElementById("submit_add_combined_left").addEventListener('click', function () {
+    editorCore.setInputSymbol(SYMBOL_ID.COMBINED_LEFT)
+});
+document.getElementById("submit_add_combined_up").addEventListener('click', function () {
+    editorCore.setInputSymbol(SYMBOL_ID.COMBINED_UP)
+});
+document.getElementById("submit_add_combined_right").addEventListener('click', function () {
+    editorCore.setInputSymbol(SYMBOL_ID.COMBINED_RIGHT)
+});
+document.getElementById("submit_add_combined_down").addEventListener('click', function () {
+    editorCore.setInputSymbol(SYMBOL_ID.COMBINED_DOWN)
+});
+
+
+// Changes on spinboxes
 document.getElementById("input_number_value_region").addEventListener('change', function () {
     editorCore.setInputNumber(this.value);
-	setMode(textMode, modesManager, ENTRY.SPACE, MODE_NUMBER);
-	changeSpaceMode(p_editorCore);
+	setMode(textMode, modesManager, ENTRY.SPACE, MODE_NUMBER_REGION);
+	applyChangesForSpaceMode(editorCore);
 });
+
+document.getElementById("input_number_value_space").addEventListener('change', function () {
+    editorCore.setInputNumber(this.value);
+	setMode(textMode, modesManager, ENTRY.SPACE, MODE_NUMBER_SPACE);
+	applyChangesForSpaceMode(editorCore);
+});
+
+document.getElementById("input_add_combined_value").addEventListener('change', function () {
+    editorCore.setCombinedInputNumber(this.value);
+});
+
 

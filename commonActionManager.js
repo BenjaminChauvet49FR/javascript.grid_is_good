@@ -8,10 +8,16 @@ const MODE_NORMAL = {id:1,html:"Etat case",submitCaption:"Changer case grille"};
 const MODE_SELECTION = {id:2,html:"Sélection",submitCaption:"Sélectionner cases"};
 const MODE_SELECTION_RECTANGLE = {id:3,html:"Sélection rectangulaire",submitCaption:"Sélectionner cases en rectangle"};
 const MODE_ERASE = {id:4,html:"Effaçage",submitCaption:"Effacer murs autour case"};
-const MODE_NUMBER = {id:51,html:"Ajout numéro",submitCaption:"Ajouter le n° ",numberToInput:0};
+const MODE_NUMBER_SPACE = {id:51,html:"Ajout numéro case",submitCaption:"Case : ajouter le n° ",numberToInput:0};
+const MODE_NUMBER_REGION = {id:53,html:"Ajout numéro région",submitCaption:"Région : ajouter le n° ",numberToInput:0};
 const MODE_PEARL_ABSTRACT = {id:52};
-const MODE_PEARL_WHITE = {id:MODE_PEARL_ABSTRACT.id,html:"Ajout blanc",submitCaption:"Ajouter perle blanche"};
-const MODE_PEARL_BLACK = {id:MODE_PEARL_ABSTRACT.id,html:"Ajout noir",submitCaption:"Ajouter perle noire"};
+const MODE_PEARL_WHITE = {id:MODE_PEARL_ABSTRACT.id, html:"Ajout blanc",submitCaption:"Ajouter perle blanche"};
+const MODE_PEARL_BLACK = {id:MODE_PEARL_ABSTRACT.id, html:"Ajout noir",submitCaption:"Ajouter perle noire"};
+const MODE_ARROW_COMBINED_ABSTRACT = {id:61}; // "ARROW COMBINED" parce que la flèche est combinée à un nombre.
+const MODE_ARROW_COMBINED_UP = {id:MODE_ARROW_COMBINED_ABSTRACT.id, html:"Ajout haut", submitCaption:"Ajouter flèche haut combinée"};
+const MODE_ARROW_COMBINED_LEFT = {id:MODE_ARROW_COMBINED_ABSTRACT.id, html:"Ajout gauche", submitCaption:"Ajouter flèche gauche combinée"};
+const MODE_ARROW_COMBINED_RIGHT = {id:MODE_ARROW_COMBINED_ABSTRACT.id, html:"Ajout droite", submitCaption:"Ajouter flèche droite combinée"};
+const MODE_ARROW_COMBINED_DOWN = {id:MODE_ARROW_COMBINED_ABSTRACT.id, html:"Ajout bas", submitCaption:"Ajouter flèche bas combinée"};
 const MODE_NORMAL_PATH = {id:101,html:"Chemins",submitCaption:"Changer chemins"};
 const MODE_NORMAL_WALL = {id:102,html:"Murs",submitCaption:"Changer murs"};
 
@@ -43,21 +49,14 @@ function addEventListenerAndCaptionForSolver(p_entriesManager, p_textElement, p_
 function addEventListenerAndCaptionActionSubmit(p_editorCore, p_entriesManager, p_textElement, p_idSubmitElement, p_entry, p_value) {
     const submitElement = document.getElementById(p_idSubmitElement);
 	submitElement.value = (p_value.submitCaption) ? p_value.submitCaption : p_value.htmlCaption; 
+	
+	// For editor only
 	submitElement.addEventListener('click', function(event) {
 		if (p_entry == ENTRY.SPACE && p_editorCore != null) {
-			changeSpaceMode(p_editorCore);	
+			applyChangesForSpaceMode(p_editorCore);	
 		}
 		setMode(p_textElement, p_entriesManager, p_entry, p_value);
 	});
-}
-
-/**
-Editor only !
-Perform stuff when we change the mode for the "space" entry
-(pretty much everything)
-*/
-function changeSpaceMode(p_editorCore) {
-	actionUnselectAll(p_editorCore);
 }
 
 /**

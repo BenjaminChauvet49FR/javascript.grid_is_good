@@ -45,23 +45,39 @@ clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
 		case (MODE_ERASE.id) :
 		    p_editorCore.clearWallsAround(p_x, p_y);
 			p_editorCore.clear(GRID_ID.NUMBER_REGION, p_x, p_y);
+			p_editorCore.clear(GRID_ID.NUMBER_SPACE, p_x, p_y);
+			p_editorCore.clear(GRID_ID.NUMBER_PEARL, p_x, p_y);
 		break;
 		case (MODE_SELECTION_RECTANGLE.id) :
 		    p_editorCore.selectRectangleMechanism(p_x, p_y);
 		break;
-		case (MODE_NUMBER.id) :
+		case (MODE_NUMBER_REGION.id) :
 			if (p_editorCore.get(GRID_ID.NUMBER_REGION, p_x, p_y) != p_editorCore.getInputNumber()) {
 				p_editorCore.set(GRID_ID.NUMBER_REGION, p_x, p_y, p_editorCore.getInputNumber());
 			} else {
 				p_editorCore.clear(GRID_ID.NUMBER_REGION, p_x, p_y);
 			}
-		break;	
+		break;
+		case (MODE_NUMBER_SPACE.id) :
+			if (p_editorCore.get(GRID_ID.NUMBER_SPACE, p_x, p_y) != p_editorCore.getInputNumber()) {
+				p_editorCore.set(GRID_ID.NUMBER_SPACE, p_x, p_y, p_editorCore.getInputNumber());
+			} else {
+				p_editorCore.clear(GRID_ID.NUMBER_SPACE, p_x, p_y);
+			}
+		break;			
 		case (MODE_PEARL_ABSTRACT.id) :
 			if (p_editorCore.get(GRID_ID.PEARL, p_x, p_y) != p_editorCore.getInputSymbol()) {
 				p_editorCore.set(GRID_ID.PEARL, p_x, p_y, p_editorCore.getInputSymbol());
 			} else {
 				p_editorCore.clear(GRID_ID.PEARL, p_x, p_y);
 			}
+		break;
+		case (MODE_ARROW_COMBINED_ABSTRACT.id) :	
+			/*if (!equalityYajilinSpaces(p_editorCore.get(GRID_ID.YAJILIN, p_x, p_y), )) {
+				p_editorCore.set(GRID_ID.YAJILIN, p_x, p_y, p_editorCore.getInputSymbol());
+			} else {
+				p_editorCore.clear(GRID_ID.YAJILIN, p_x, p_y);
+			}*/ // TO BE DONE quand j'apprendrai le "typescript". Là, la "grid id Yajilin" n'existe pas encore mais ça ne saurait tarder.
 		break;
 		default :
 			p_editorCore.switchState(p_x,p_y);
@@ -94,6 +110,7 @@ restartAction = function (p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength
     if (confirm("Redémarrer la grille ?")) {
         p_editorCore.restartGrid(p_xLength, p_yLength);
 		p_editorCore.addCleanGrid(GRID_ID.NUMBER_REGION, p_xLength, p_yLength);
+		p_editorCore.addCleanGrid(GRID_ID.NUMBER_SPACE, p_xLength, p_yLength);
 		p_editorCore.addCleanGrid(GRID_ID.PEARL, p_xLength, p_yLength);
         adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
     }
@@ -134,6 +151,12 @@ function resizeAction(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength) {
 		p_editorCore.transformGrid(GRID_TRANSFORMATION.RESIZE, p_xLength, p_yLength);
 		adaptCanvasAndGrid(p_canvas, p_drawer,p_editorCore);	
 	}
+}
+
+//------------------------
+
+function applyChangesForSpaceMode(p_editorCore) {
+	actionUnselectAll(p_editorCore);
 }
 
 //------------------------

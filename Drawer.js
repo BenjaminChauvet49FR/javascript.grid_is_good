@@ -75,6 +75,9 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	if (p_editorCore.getGrid(GRID_ID.PEARL)) {
 		this.drawPearlGrid(p_context, p_editorCore.getGrid(GRID_ID.PEARL));
 	}
+	if (p_editorCore.getGrid(GRID_ID.NUMBER_SPACE)) {
+	    this.drawNumbersGrid(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_SPACE));
+	}
 		
     //Paths
     if (p_editorCore.hasPathGrid()) {
@@ -194,12 +197,21 @@ Drawer.prototype.drawWalllessGrid = function (p_context, p_wallGrid, p_xLength, 
 }
 
 Drawer.prototype.drawNumbersLittleInCorner = function (p_context, p_numberGrid) {
+	this.drawOneNumberPerSpace(p_context, p_numberGrid, this.getPixInnerSide() / 2, {offX : 2, offY : 2});
+}
+
+
+Drawer.prototype.drawNumbersGrid = function (p_context, p_numberGrid) {
+	this.drawOneNumberPerSpace(p_context, p_numberGrid, this.getPixInnerSide() * 4 / 5, {offX : 1, offY : 1});
+}
+
+Drawer.prototype.drawOneNumberPerSpace = function (p_context, p_numberGrid, p_pixSize, p_pixInnerOffset) {
 	const yLength = p_numberGrid.getYLength();
 	if (yLength > 0) {
 		const xLength = p_numberGrid.getXLength();
 		p_context.textAlign = 'left';
 		p_context.textBaseline = 'top';
-		p_context.font = this.getPixInnerSide() / 2 + "px Arial";
+		p_context.font = p_pixSize + "px Arial";
 		p_context.fillStyle = this.colors.standardWrite;
 		var ix,
 		iy,
@@ -208,14 +220,15 @@ Drawer.prototype.drawNumbersLittleInCorner = function (p_context, p_numberGrid) 
 			for (ix = 0; ix < xLength; ix++) {
 				number = p_numberGrid.get(ix, iy);
 				if (number != null) {
-					pixLeft = this.getPixInnerXLeft(ix) + 2;
-					pixDown = this.getPixInnerYUp(iy) + 2;
+					pixLeft = this.getPixInnerXLeft(ix) + p_pixInnerOffset.offX;
+					pixDown = this.getPixInnerYUp(iy) + p_pixInnerOffset.offY;
 					p_context.fillText(number, pixLeft, pixDown);
 				}
 			}
 		}
 	}
 }
+
 
 Drawer.prototype.drawPearlGrid = function (p_context, p_pearlGrid) {
 	const yLength = p_pearlGrid.getYLength();
