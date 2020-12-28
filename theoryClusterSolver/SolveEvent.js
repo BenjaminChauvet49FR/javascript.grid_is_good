@@ -1,25 +1,26 @@
-const EVENT_KIND = {
-	SPACE : 1,
-	OTHER : 100
+function SpaceEvent(p_x,p_y,p_symbol) {
+	this.symbol = p_symbol;
+	this.myX = p_x;
+	this.myY = p_y;
 }
 
-function SolveEvent(){
-
+SpaceEvent.prototype.toString = function() {	
+	return "["+this.myX+","+this.myY+"] ("+this.symbol+")";
 }
 
-function SpaceEvent(p_x,p_y,p_symbol){
-	solveEvent = new SolveEvent();
-	solveEvent.kind = EVENT_KIND.SPACE;
-	solveEvent.symbol = p_symbol;
-	solveEvent.x = p_x;
-	solveEvent.y = p_y;
-	return solveEvent;
+SpaceEvent.prototype.copy = function() {
+	return new SpaceEvent(this.symbol,this.myX,this.myY);
 }
 
-SpaceEvent.prototype.toString = function(){	
-	return "["+this.x+","+this.y+"] ("+this.symbol+")";
+SpaceEvent.prototype.opening = function() {
+	return this.symbol;
 }
 
-SpaceEvent.prototype.copy = function(){
-	return new SpaceEvent(this.symbol,this.x,this.y);
+SpaceEvent.prototype.x = function() {
+	return this.myX;
 }
+
+SpaceEvent.prototype.y = function() {
+	return this.myY;
+}
+// Maintenant que je veux que des méthodes s'appellent x et y, les propriétés ne doivent plus avoir ces noms, j'ai donc renommé les coordonnées "x" et "y" en "myX" et "myY"

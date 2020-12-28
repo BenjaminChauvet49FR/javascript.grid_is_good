@@ -39,7 +39,8 @@ TODO doc
 */
 loadAction = function(p_canvas,p_drawer,p_solver,p_name){
 	var loadedItem = stringToWallAndNumbersPuzzle(localStorage.getItem("grid_is_good_"+p_name));
-	p_solver.construct(loadedItem.grid,loadedItem.gridNumber);
+	//p_solver.construct(loadedItem.grid,loadedItem.gridNumber); 551551 à retirer si c'est bon
+	p_solver.constructForReal(loadedItem.grid,loadedItem.gridNumber);
 	p_drawer.adaptCanvasDimensions(p_canvas,{xLength:p_solver.xLength,yLength:p_solver.yLength});
 }
 
