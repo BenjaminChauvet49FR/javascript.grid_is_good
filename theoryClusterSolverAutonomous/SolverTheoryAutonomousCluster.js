@@ -1,3 +1,5 @@
+/* This acts as a backup, if the "new" Solver theory cluster isn't fine*/
+
 const NOT_FORCED = -1;
 const NOT_RELEVANT = -1;
 const SPACE = {
@@ -11,11 +13,11 @@ const RESULT = {
     HARMLESS: 2
 }
 
-function SolverTheoryCluster() {
+function SolverTheoryAutonomousCluster() {
     this.construct(generateWallArray(1,1),generateSymbolArray(1,1));
 }
 
-SolverTheoryCluster.prototype.construct = function (p_wallArray, p_numberGrid) {
+SolverTheoryAutonomousCluster.prototype.construct = function (p_wallArray, p_numberGrid) {
     this.xLength = p_wallArray[0].length;
     this.yLength = p_wallArray.length;
     this.wallGrid = WallGrid_data(p_wallArray);
@@ -38,22 +40,22 @@ SolverTheoryCluster.prototype.construct = function (p_wallArray, p_numberGrid) {
     //IMPORTANT : Purification not performed yet !
 }
 
-SolverTheoryCluster.prototype.getSpaceCoordinates = function (p_indexRegion, p_indexSpace) {
+SolverTheoryAutonomousCluster.prototype.getSpaceCoordinates = function (p_indexRegion, p_indexSpace) {
     return this.regions[p_indexRegion].spaces[p_indexSpace];
 }
 
-SolverTheoryCluster.prototype.getAnswer = function (p_x, p_y) {
+SolverTheoryAutonomousCluster.prototype.getAnswer = function (p_x, p_y) {
     return this.answerGrid[p_y][p_x];
 }
 
 //--------------------------------
-SolverTheoryCluster.prototype.emitHypothesis = function (p_x, p_y, p_symbol) {
+SolverTheoryAutonomousCluster.prototype.emitHypothesis = function (p_x, p_y, p_symbol) {
     this.tryToPutNew(p_x, p_y, p_symbol);
 }
 
 //--------------------------------
 
-SolverTheoryCluster.prototype.putNew = function (p_x, p_y, p_symbol) {
+SolverTheoryAutonomousCluster.prototype.putNew = function (p_x, p_y, p_symbol) {
     if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerGrid[p_y][p_x] == p_symbol)) {
         return RESULT.HARMLESS;
     }
@@ -64,7 +66,7 @@ SolverTheoryCluster.prototype.putNew = function (p_x, p_y, p_symbol) {
     return RESULT.SUCCESS;
 }
 
-SolverTheoryCluster.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
+SolverTheoryAutonomousCluster.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
     var listEventsToApply = [SpaceEvent(p_x, p_y, p_symbol)];
     var eventBeingApplied;
     var listEventsApplied = [];
@@ -144,7 +146,7 @@ SolverTheoryCluster.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
     }
 }
 
-SolverTheoryCluster.prototype.deductions = function (p_listEventsToApply, p_x, p_y, p_symbol) {
+SolverTheoryAutonomousCluster.prototype.deductions = function (p_listEventsToApply, p_x, p_y, p_symbol) {
     if (p_symbol == SPACE.OPEN) {
         console.log("Perform deductions for 'open' space at " + p_x + " " + p_y);
     } else if (p_symbol == SPACE.CLOSED) {
@@ -153,7 +155,7 @@ SolverTheoryCluster.prototype.deductions = function (p_listEventsToApply, p_x, p
     return p_listEventsToApply;
 }
 
-SolverTheoryCluster.prototype.adjacencyClosure = function (p_grid) {
+SolverTheoryAutonomousCluster.prototype.adjacencyClosure = function (p_grid) {
     return function (p_x, p_y) {
         switch (p_grid[p_y][p_x]) {
         case SPACE.OPEN:
@@ -170,7 +172,7 @@ SolverTheoryCluster.prototype.adjacencyClosure = function (p_grid) {
     //If not for a closure, adjacencyCheck wouldn't be able to access the grid because "this.answerGrid" is undefined for the Window object.
 };
 
-SolverTheoryCluster.prototype.geographicalVerification = function (p_listNewXs) {
+SolverTheoryAutonomousCluster.prototype.geographicalVerification = function (p_listNewXs) {
     console.log("Perform geographicalVerification");
     const checking = adjacencyCheck(p_listNewXs, this.adjacencyLimitGrid, this.adjacencyLimitSpacesList, this.adjacencyClosure(this.answerGrid), this.xLength, this.yLength);
     if (checking.success) {
@@ -211,7 +213,7 @@ SolverTheoryCluster.prototype.geographicalVerification = function (p_listNewXs) 
 //--------------------
 // Undoing
 
-SolverTheoryCluster.prototype.undoEvent = function (p_event) {
+SolverTheoryAutonomousCluster.prototype.undoEvent = function (p_event) {
     if (p_event.kind == EVENT_KIND.SPACE) { // Note : I tried to put "if (p_event.y)" but it resulted into top line (y = 0) to be not taken into account.
         this.answerGrid[p_event.y][p_event.x] = SPACE.UNDECIDED;
     } else if (p_event.adjacency) {
@@ -222,14 +224,14 @@ SolverTheoryCluster.prototype.undoEvent = function (p_event) {
     }
 }
 
-SolverTheoryCluster.prototype.undoEventList = function (p_eventsList) {
+SolverTheoryAutonomousCluster.prototype.undoEventList = function (p_eventsList) {
     p_eventsList.forEach(solveEvent => this.undoEvent(solveEvent));
 }
 
 /**
 Used by outside !
  */
-SolverTheoryCluster.prototype.undoToLastHypothesis = function () {
+SolverTheoryAutonomousCluster.prototype.undoToLastHypothesis = function () {
     if (this.happenedEvents.length > 0) {
         var lastEventsList = this.happenedEvents.pop();
         this.undoEventList(lastEventsList);

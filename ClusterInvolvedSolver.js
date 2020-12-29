@@ -1,14 +1,14 @@
-const NOT_FORCED = -1;
-const NOT_RELEVANT = -1;
+/** Limitation : only one "global cluster" at a time may be managed. */
+
 const SPACE = {
     OPEN: 'O',
     CLOSED: 'C',
     UNDECIDED: '-'
 };
-const RESULT = {
-    SUCCESS: 3,
-    ERROR: 1,
-    HARMLESS: 2
+const EVENT_RESULT = { // WARNING : don't confuse EVENT_RESULT and RESULT, ; harmonization needed
+    SUCCESS : 3,
+    FAILURE : 1,
+    HARMLESS : 2
 }
 
 function ClusterInvolvedSolver(p_xLength, p_yLength) {
@@ -22,8 +22,21 @@ function ClusterInvolvedSolver(p_xLength, p_yLength) {
 
 /**
 	Generic method for any solver that includes a global adjacency check
+	p_startingEvent : PRE (puzzle-related event, described below ; it must have a set of methods) that can lead to consequences
+	p_applyEvent : method that states how to apply the PRE (e.g. fill a space in a grid and modify numbers in the cluster). 
+	If the PRE has several potential forms, this method must give the behaviour for each forms. Must return EVENT_RESULT.FAILURE, EVENT_RESULT.SUCCESS or EVENT_RESULT.HARMLESS
+	p_deductions : method that updates the list of events to apply as deductions to the one being applied. Must return the list of PREs potentially updated with new PRE's.
+	p_adjacencyClosure : method that takes (x,y) and must return whether the space (x,y) must be considered open. The limitation of one global cluster makes sense here.
+	p_transform : transforms the GeographicalDeduction (see corresponding class) into a PRE.
+	p_undoEvent : method to undo a PRE.
+	p_extras : may contain stuff that wasn't planned in the first place when this generic solver was written :
+		abort : method so the puzzle solver is authorized to do vital stuff such as cleaning environment when a mistake is made. (If no aborting, this method isn't automatically called)
+		filters : list of methods that must each take no argument and return either a PRE list (that may be empty) or EVENT_RESULT.FAILURE if something went wrong. 
+		These methods should allow to add new events that cannot/ should not be deducted by the application of a single PRE.
+		Order of filters matter for optimisation since as soon as the application of a filter returns a non-empty list, the chain breaks and returns to individual event applications (or aborts)
+		Warning : methods should be provided, not expressions of methods ! Also, don't forget the keyword "return" in both the closure and the method.
 */
-ClusterInvolvedSolver.prototype.tryToApply = function (p_startingEvent, p_applyEvent, p_deductions, p_adjacencyClosure, p_transform, p_undoEvent) {
+ClusterInvolvedSolver.prototype.tryToApply = function (p_startingEvent, p_applyEvent, p_deductions, p_adjacencyClosure, p_transform, p_undoEvent, p_extras) {
     this.undoEventMethod = p_undoEvent; // TODO experimental !
 	var listEventsToApply = [p_startingEvent]; //List of the "events" type used by the solver. 
 	// Events can be of any kind but must have the following method :
@@ -46,15 +59,10 @@ ClusterInvolvedSolver.prototype.tryToApply = function (p_startingEvent, p_applyE
             // Classical verification
             eventBeingApplied = listEventsToApply.pop();
 			result = p_applyEvent(eventBeingApplied);
-            /*x = eventBeingApplied.x;
-            y = eventBeingApplied.y;
-            symbol = eventBeingApplied.symbol;
-            result = this.putNew(x, y, symbol);*/
-            if (result == RESULT.ERROR) {
+            if (result == EVENT_RESULT.FAILURE) {
                 ok = false;
             }
-            if (result == RESULT.SUCCESS) {
-                //listEventsToApply = this.deductions(listEventsToApply, x, y, symbol);
+            if (result == EVENT_RESULT.SUCCESS) {
 				listEventsToApply = p_deductions(listEventsToApply, eventBeingApplied);
                 if (eventBeingApplied.opening() == SPACE.CLOSED) {
                     newClosedSpaces.push({
@@ -74,6 +82,24 @@ ClusterInvolvedSolver.prototype.tryToApply = function (p_startingEvent, p_applyE
                 listEventsApplied.push(eventBeingApplied);
             }
         }
+		
+		// listEventsToApply is empty at this point.
+		// When logical deductions are performed individually (e.g. each space is watched as itself), apply other methods that may lead to deductions
+		if (p_extras && p_extras.filters) {
+			var i = 0; // i = filter index
+			while (ok && listEventsToApply.length == 0 && i < p_extras.filters.length) {
+				filter = p_extras.filters[i];
+				var result = filter();
+				ok = (result != EVENT_RESULT.FAILURE);
+				if (ok) {
+					if (result.length > 0) {
+						listEventsToApply = result;
+					} else {
+						i++;
+					}
+				}
+			}
+		}
 
 		// listEventsToApply is empty at this point. Perform geographical deductions.
         if (ok) {
@@ -93,25 +119,25 @@ ClusterInvolvedSolver.prototype.tryToApply = function (p_startingEvent, p_applyE
             if (this.atLeastOneOpen) {
                 //Geographical verification.
                 geoV = this.geographicalVerification(newClosedSpaces, p_adjacencyClosure);
-				ok = (geoV.result == RESULT.SUCCESS);
+				ok = (geoV.result == EVENT_RESULT.SUCCESS);
 				if (ok) {
 					geoV.listGeographicalDeductionsToApply.forEach(geographicalDeduction =>
 						listEventsToApply.push(p_transform(geographicalDeduction))
 					);
-					//if (geoV.listGeographicalDeductionsApplied && geoV.listGeographicalDeductionsApplied.length > 0) {
-						geoV.listGeographicalDeductionsApplied.forEach(geographicalDeduction =>
-							listEventsApplied.push(geographicalDeduction)
-						);
-					//}
+					geoV.listGeographicalDeductionsApplied.forEach(geographicalDeduction =>
+						listEventsApplied.push(geographicalDeduction)
+					);
 				}
             }
         }
     }
     if (!ok) {
+		if (p_extras && p_extras.abort) {
+			p_extras.abort();
+		}
         this.undoEventList(listEventsApplied, p_undoEvent);
     } else if (listEventsApplied.length > 0) {
         this.happenedEvents.push(listEventsApplied);
-        //TODO : remember : this is an hypothesis !
     }
 }
 
@@ -125,7 +151,6 @@ listGeographicalDeductionsApplied : a list of {adjacency : true} items. Whenever
 */
 ClusterInvolvedSolver.prototype.geographicalVerification = function (p_listNewXs, p_adjacencyClosure) {
     console.log("Perform geographicalVerification");
-    //const checking = adjacencyCheck(p_listNewXs, this.adjacencyLimitGrid, this.adjacencyLimitSpacesList, this.adjacencyClosure(this.answerGrid), this.xLength, this.yLength);
     const checking = adjacencyCheck(p_listNewXs, this.adjacencyLimitGrid, this.adjacencyLimitSpacesList, p_adjacencyClosure, this.xLength, this.yLength);
 	if (checking.success) {
         var newListEvents = [];
@@ -149,13 +174,13 @@ ClusterInvolvedSolver.prototype.geographicalVerification = function (p_listNewXs
             this.adjacencyLimitGrid[spaceLimit.y][spaceLimit.x] = spaceLimit.limit;
         });
         return {
-            result: RESULT.SUCCESS,
+            result: EVENT_RESULT.SUCCESS,
             listGeographicalDeductionsToApply: newListEvents,
             listGeographicalDeductionsApplied: newListEventsApplied
         };
     } else {
         return {
-            result: RESULT.FAILURE
+            result: EVENT_RESULT.FAILURE
         };
     }
 
@@ -163,21 +188,6 @@ ClusterInvolvedSolver.prototype.geographicalVerification = function (p_listNewXs
 
 //--------------------
 // Undoing
-
-/*SolverTheoryCluster.prototype.undoEvent = function (p_event) {
-    if (p_event.kind == EVENT_KIND.SPACE) { // Note : I tried to put "if (p_event.y)" but it resulted into top line (y = 0) to be not taken into account.
-        this.answerGrid[p_event.y][p_event.x] = SPACE.UNDECIDED;
-    } else if (p_event.adjacency) {
-        const aals = this.adjacencyLimitSpacesList.pop(); //aals = added adjacency limit space
-        this.adjacencyLimitGrid[aals.y][aals.x] = aals.formerValue;
-    } else if (p_event.firstOpen) {
-        this.atLeastOneOpen = false;
-    }
-}
-
-SolverTheoryCluster.prototype.undoEventList = function (p_eventsList) {
-    p_eventsList.forEach(solveEvent => this.undoEvent(solveEvent));
-}*/
 
 ClusterInvolvedSolver.prototype.undoEventList = function (p_eventsList, p_undoEventMethod) {
 	p_eventsList.forEach(eventToUndo => {
@@ -190,11 +200,6 @@ ClusterInvolvedSolver.prototype.undoEventList = function (p_eventsList, p_undoEv
 			p_undoEventMethod(eventToUndo);
 		}
 	});
-	/*for(var i = 0 ; i < p_eventsList.length; i++) {
-		eventToUndo = p_eventsList[i];
-		
-	}*/
-	
 }
 
 /**
@@ -206,15 +211,3 @@ ClusterInvolvedSolver.prototype.undoToLastHypothesis = function (p_undoEventMeth
         this.undoEventList(lastEventsList, p_undoEventMethod); // TODO Impossible d'échapper à l'utilisation de p_undoEventMethod
     }
 }
-
-
-
-
-/**
-What not to forget when copying the adjacency constraint into a solver that doesn't have it yet : 
--geographicalVerification
--firstOpenThisTime && listNewClosedEvents initialized in the right part of the loop
--events concatenation
--this.gridArray, this.gridList (limits), this.atLeastOneOpen
--undoing events
-*/

@@ -1,7 +1,11 @@
-const NOT_FORCED = -1; 
+const NOT_FORCED = -1;
 const NOT_RELEVANT = -1;
-// const SPACE is used in the main solver
-
+const SPACE = {OPEN :'O',CLOSED:'C', UNDECIDED :'-'};
+const RESULT = {
+SUCCESS : 3,
+FAILURE : 1,
+HARMLESS : 2
+}
 const EVENTLIST_KIND = {HYPOTHESIS:"H",PASS:"P"};
 
 function SolverHeyawake(p_wallArray,p_numberGrid){
@@ -11,8 +15,6 @@ function SolverHeyawake(p_wallArray,p_numberGrid){
 SolverHeyawake.prototype.construct = function(p_wallArray,p_numberGrid){
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
-	this.clusterInvolvedSolver = new ClusterInvolvedSolver(this.xLength, this.yLength);
-
 	this.wallGrid = WallGrid_data(p_wallArray); 
 	this.regionGrid = this.wallGrid.toRegionGrid();
 	this.answerGrid = [];
@@ -22,7 +24,11 @@ SolverHeyawake.prototype.construct = function(p_wallArray,p_numberGrid){
 	this.happenedEvents = [];
 	var ix,iy;
 	var lastRegionNumber = 0;
-
+	// Below fields are for adjacency "all spaces with ... must form a orthogonally contiguous area"
+	this.atLeastOneOpen = false;
+	this.adjacencyLimitGrid = createAdjacencyLimitGrid(this.xLength, this.yLength);
+    this.adjacencyLimitSpacesList = [];
+	
 	// Initialize the required grids (notably answerGrid) and the number of regions
 	for(iy = 0;iy < this.yLength;iy++){
 		this.answerGrid.push([]);
@@ -148,10 +154,10 @@ SolverHeyawake.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
 
 SolverHeyawake.prototype.putNew = function(p_x,p_y,p_symbol){
 	if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerGrid[p_y][p_x] == p_symbol)){
-		return EVENT_RESULT.HARMLESS;
+		return RESULT.HARMLESS;
 	}
 	if (this.answerGrid[p_y][p_x] != SPACE.UNDECIDED){
-		return EVENT_RESULT.FAILURE;
+		return RESULT.FAILURE;
 	}
 	this.answerGrid[p_y][p_x] = p_symbol;
 	var ir = this.regionGrid[p_y][p_x];
@@ -170,7 +176,7 @@ SolverHeyawake.prototype.putNew = function(p_x,p_y,p_symbol){
 	this.lowerVerticalStrip(stripSpace.topMost,p_symbol);
 	this.lowerVerticalStrip(stripSpace.vertIn,p_symbol);
 	this.lowerVerticalStrip(stripSpace.bottomMost,p_symbol);
-	return EVENT_RESULT.SUCCESS;
+	return RESULT.SUCCESS;
 }
 
 SolverHeyawake.prototype.lowerHorizontalStrip = function(p_index,p_symbol){
@@ -207,71 +213,113 @@ SolverHeyawake.prototype.modifyVerticalStrip = function(p_index,p_symbol,p_modif
 	}
 }
 
-SolverHeyawake.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
-	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.clusterInvolvedSolver.tryToApply(
-		new SpaceEvent(p_x, p_y, p_symbol),
-		applyEventClosure(this),
-		deductionsClosure(this),
-		adjacencyClosure(this),
-		transformClosure(this),
-		undoEventClosure(this) 
-	);
-}
-
-applyEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		return p_solver.putNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
-	}
-}
-
-/**
-Transforms a geographical deduction (see dedicated class GeographicalDeduction) into an appropriate event (SolveEvent in our case)
-*/
-transformClosure = function (p_solver) {
-    return function (p_geographicalDeduction) {
-		return new SpaceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, p_geographicalDeduction.opening);
-    }
-};
-
-// C'est ici que ça devient intéressant !
-deductionsClosure = function (p_solver) {
-	return function(p_listEventsToApply, p_eventBeingApplied) {
-		var x = p_eventBeingApplied.x();
-		var y = p_eventBeingApplied.y();
-		var ir = p_solver.regionGrid[y][x];
-		var region = p_solver.regions[ir];
-		symbol = p_eventBeingApplied.symbol;
-		if (symbol == SPACE.CLOSED) {
-			p_listEventsToApply.push(SpaceEvent(x,y-1,SPACE.OPEN));
-			p_listEventsToApply.push(SpaceEvent(x,y+1,SPACE.OPEN));
-			p_listEventsToApply.push(SpaceEvent(x-1,y,SPACE.OPEN));
-			p_listEventsToApply.push(SpaceEvent(x+1,y,SPACE.OPEN));	
-			//Alert on region
-			if (region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 0){
-				p_listEventsToApply = p_solver.alertRegion(p_listEventsToApply,ir,SPACE.OPEN,region.notPlacedYet.OPENs);			
-			}			
-		} else {
-			stripSpace = p_solver.stripGrid[y][x];
-			p_listEventsToApply = p_solver.testAlertHorizontalStrip(p_listEventsToApply,stripSpace.leftMost);
-			p_listEventsToApply = p_solver.testAlertHorizontalStrip(p_listEventsToApply,stripSpace.horizIn);
-			p_listEventsToApply = p_solver.testAlertHorizontalStrip(p_listEventsToApply,stripSpace.rightMost);
-			p_listEventsToApply = p_solver.testAlertVerticalStrip(p_listEventsToApply,stripSpace.topMost);
-			p_listEventsToApply = p_solver.testAlertVerticalStrip(p_listEventsToApply,stripSpace.vertIn);
-			p_listEventsToApply = p_solver.testAlertVerticalStrip(p_listEventsToApply,stripSpace.bottomMost);
-			//Alert on region
-			if (region.notPlacedYet != null && region.notPlacedYet.OPENs == 0){
-				p_listEventsToApply = p_solver.alertRegion(p_listEventsToApply,ir,SPACE.CLOSED,region.notPlacedYet.CLOSEDs);			
+SolverHeyawake.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
+	var listEventsToApply = [SpaceEvent(p_x,p_y,p_symbol)];
+	var eventBeingApplied;
+	var eventsApplied = [];
+	var ok = true;
+	var result;
+	var x,y,symbol;
+	var ir,region;
+	var i,alertSpace,xa,ya;
+	while (ok && listEventsToApply.length > 0){
+		// Overall (classical + geographical) verification
+		newClosedSpaces = [];
+        firstOpenThisTime = false;
+		while (ok && listEventsToApply.length > 0){
+			// Classical verification
+			eventBeingApplied = listEventsToApply.pop();
+			x = eventBeingApplied.x;
+			y = eventBeingApplied.y;
+			symbol = eventBeingApplied.symbol;
+			result = this.putNew(x, y, symbol);
+			
+			if (result == RESULT.FAILURE){
+				ok = false;
+			}
+			if (result == RESULT.SUCCESS){
+				// Deduction time !
+				
+				ir = this.regionGrid[y][x];
+				region = this.regions[ir];
+				if (symbol == SPACE.CLOSED){				
+					listEventsToApply.push(SpaceEvent(x,y-1,SPACE.OPEN));
+					listEventsToApply.push(SpaceEvent(x,y+1,SPACE.OPEN));
+					listEventsToApply.push(SpaceEvent(x-1,y,SPACE.OPEN));
+					listEventsToApply.push(SpaceEvent(x+1,y,SPACE.OPEN));	
+					//Alert on region
+					if (region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 0){
+						listEventsToApply = this.alertRegion(listEventsToApply,ir,SPACE.OPEN,region.notPlacedYet.OPENs);			
+					}
+					//Add a closed space. Refer to theorical cluster solver for more details about this part.
+					newClosedSpaces.push({
+                        x: x,
+                        y: y
+                    });
+					
+				} else {
+					
+					//The first open space.  Refer to theorical cluster solver for more details about this part.
+					if (!this.atLeastOneOpen) {
+                        eventsApplied.push({
+                            firstOpen: true
+                        });
+                        this.atLeastOneOpen = true;
+                        firstOpenThisTime = true;
+                    }
+					
+					stripSpace = this.stripGrid[y][x];
+					listEventsToApply = this.testAlertHorizontalStrip(listEventsToApply,stripSpace.leftMost);
+					listEventsToApply = this.testAlertHorizontalStrip(listEventsToApply,stripSpace.horizIn);
+					listEventsToApply = this.testAlertHorizontalStrip(listEventsToApply,stripSpace.rightMost);
+					listEventsToApply = this.testAlertVerticalStrip(listEventsToApply,stripSpace.topMost);
+					listEventsToApply = this.testAlertVerticalStrip(listEventsToApply,stripSpace.vertIn);
+					listEventsToApply = this.testAlertVerticalStrip(listEventsToApply,stripSpace.bottomMost);
+					//Alert on region
+					if (region.notPlacedYet != null && region.notPlacedYet.OPENs == 0){
+						listEventsToApply = this.alertRegion(listEventsToApply,ir,SPACE.CLOSED,region.notPlacedYet.CLOSEDs);			
+					}
+				}
+				eventsApplied.push(eventBeingApplied);
 			}
 		}
-		return p_listEventsToApply;
+
+        if (ok) {
+			// Geographical verification. Refer to theorical cluster solver for more details about this part.
+			
+            if (firstOpenThisTime) {
+                this.happenedEvents.forEach(eventList => {
+                    eventList.forEach(solveEvent => {
+                        if (solveEvent.symbol && (solveEvent.symbol == SPACE.CLOSED)) {
+                            newClosedSpaces.push({
+                                x: solveEvent.x,
+                                y: solveEvent.y
+                            });
+                        }
+                    });
+                });
+            }
+            if (this.atLeastOneOpen) {
+                geoV = this.geographicalVerification(newClosedSpaces);
+                listEventsToApply = geoV.listEventsToApply;
+                if (geoV.listEventsApplied) {
+                    Array.prototype.push.apply(eventsApplied, geoV.listEventsApplied);
+                }
+                ok = (geoV.result == RESULT.SUCCESS);
+            }
+        }
+	}
+	if (!ok){
+		this.undoEventList(eventsApplied);
+	} else if (eventsApplied.length > 0) {
+		this.happenedEvents.push(eventsApplied); //TODO dire que ça vient d'une hypothèse !
 	}
 }
 
-adjacencyClosure = function (p_solver) {
+//The geograhical modification and its closure. More details at theory cluster solver.
+SolverHeyawake.prototype.adjacencyClosure = function (p_grid) {
     return function (p_x, p_y) {
-        switch (p_solver.answerGrid[p_y][p_x]) {
+        switch (p_grid[p_y][p_x]) {
         case SPACE.OPEN:
             return ADJACENCY.YES;
             break;
@@ -282,6 +330,42 @@ adjacencyClosure = function (p_solver) {
             return ADJACENCY.UNDEFINED;
             break;
         }
+    }
+};
+
+SolverHeyawake.prototype.geographicalVerification = function (p_listNewXs) {
+    console.log("Perform geographicalVerification");
+    const checking = adjacencyCheck(p_listNewXs, this.adjacencyLimitGrid, this.adjacencyLimitSpacesList, this.adjacencyClosure(this.answerGrid), this.xLength, this.yLength);
+    if (checking.success) {
+        var newListEvents = [];
+        var newListEventsApplied = [];
+        checking.newADJACENCY.forEach(space => {
+            newListEvents.push(SpaceEvent(space.x, space.y, SPACE.OPEN));
+        });
+        checking.newBARRIER.forEach(space => {
+            newListEvents.push(SpaceEvent(space.x, space.y, SPACE.CLOSED));
+        });
+        checking.newLimits.forEach(spaceLimit => {
+            newListEventsApplied.push({
+                adjacency: true
+            });
+            this.adjacencyLimitSpacesList.push({
+                x: spaceLimit.x,
+                y: spaceLimit.y,
+                formerValue: this.adjacencyLimitGrid[spaceLimit.y][spaceLimit.x].copy()
+            });
+            this.adjacencyLimitGrid[spaceLimit.y][spaceLimit.x] = spaceLimit.limit;
+        });
+        return {
+            result: RESULT.SUCCESS,
+            listEventsToApply: newListEvents,
+            listEventsApplied: newListEventsApplied
+        };
+    } else {
+        return {
+            result: RESULT.FAILURE,
+            listEventsToApply: []
+        };
     }
 }
 
@@ -351,16 +435,14 @@ SolverHeyawake.prototype.quickStart = function(){
 //--------------------
 // Undoing
 
-
-
-undoEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		const x = eventToApply.x(); //Décidément il y en a eu à faire, des changements de x en x() depuis qu'on a mis en commun les solvers de puzzles d'adjacences
-		const y = eventToApply.y();
-		const symbol = eventToApply.symbol;
-		p_solver.answerGrid[y][x] = SPACE.UNDECIDED;
-		var ir = p_solver.regionGrid[y][x];
-		var region = p_solver.regions[ir];
+SolverHeyawake.prototype.undoEvent = function(p_event){
+	if (p_event.kind == EVENT_KIND.SPACE) {
+		const x = p_event.x;
+		const y = p_event.y;
+		const symbol = p_event.symbol;
+		this.answerGrid[y][x] = SPACE.UNDECIDED;
+			var ir = this.regionGrid[y][x];
+		var region = this.regions[ir];
 		if (region.notPlacedYet != null){
 			if (symbol == SPACE.OPEN){
 				region.notPlacedYet.OPENs++;
@@ -368,19 +450,32 @@ undoEventClosure = function(p_solver) {
 				region.notPlacedYet.CLOSEDs++;
 			}
 		}
-		const stripSpace = p_solver.stripGrid[y][x];
-		p_solver.raiseHorizontalStrip(stripSpace.leftMost,symbol);
-		p_solver.raiseHorizontalStrip(stripSpace.horizIn,symbol);
-		p_solver.raiseHorizontalStrip(stripSpace.rightMost,symbol);	
-		p_solver.raiseVerticalStrip(stripSpace.topMost,symbol);
-		p_solver.raiseVerticalStrip(stripSpace.vertIn,symbol);
-		p_solver.raiseVerticalStrip(stripSpace.bottomMost,symbol);
-	}
+		const stripSpace = this.stripGrid[y][x];
+		this.raiseHorizontalStrip(stripSpace.leftMost,symbol);
+		this.raiseHorizontalStrip(stripSpace.horizIn,symbol);
+		this.raiseHorizontalStrip(stripSpace.rightMost,symbol);	
+		this.raiseVerticalStrip(stripSpace.topMost,symbol);
+		this.raiseVerticalStrip(stripSpace.vertIn,symbol);
+		this.raiseVerticalStrip(stripSpace.bottomMost,symbol);
+	} else if (p_event.adjacency) {
+        const aals = this.adjacencyLimitSpacesList.pop(); //aals = added adjacency limit space
+        this.adjacencyLimitGrid[aals.y][aals.x] = aals.formerValue;
+    } else if (p_event.firstOpen) {
+        this.atLeastOneOpen = false;
+    }
+	
+}
+
+SolverHeyawake.prototype.undoEventList = function(p_eventsList){
+	p_eventsList.forEach(solveEvent => this.undoEvent(solveEvent));
 }
 
 /**
 Used by outside !
 */
 SolverHeyawake.prototype.undoToLastHypothesis = function(){
-	this.clusterInvolvedSolver.undoToLastHypothesis(undoEventClosure(this));
+	if (this.happenedEvents.length > 0){
+		var lastEventsList = this.happenedEvents.pop();
+		this.undoEventList(lastEventsList);
+	}
 }

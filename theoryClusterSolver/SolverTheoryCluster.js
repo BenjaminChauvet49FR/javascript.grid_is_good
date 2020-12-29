@@ -1,23 +1,5 @@
-/*const NOT_FORCED = -1;
-const NOT_RELEVANT = -1;
-const SPACE = {
-    OPEN: 'O',
-    CLOSED: 'C',
-    UNDECIDED: '-'
-};
-const RESULT = {
-    SUCCESS: 3,
-    ERROR: 1,
-    HARMLESS: 2
-}*/
-
 function SolverTheoryCluster() {
-    this.constructForReal(generateWallArray(1,1),generateSymbolArray(1,1));
-}
-
-
-SolverTheoryCluster.prototype.constructForReal = function (p_wallArray, p_numberGrid) {	
-	this.construct(p_wallArray, p_numberGrid); //551551 Méthode à rebaptiser "initializeConstruct"
+    this.construct(generateWallArray(1,1),generateSymbolArray(1,1));
 }
 
 SolverTheoryCluster.prototype.construct = function (p_wallArray, p_numberGrid) {
@@ -65,30 +47,31 @@ SolverTheoryCluster.prototype.putNew = function (p_x, p_y, p_symbol) {
 }
 
 SolverTheoryCluster.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
+	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
+	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
 	this.clusterInvolvedSolver.tryToApply(
 		new SpaceEvent(p_x, p_y, p_symbol),
-		applyEventMethod(this),
-		deductionsMethod(this),
-		adjacencyClosure(this.answerGrid),
-		transformMethod(this),
-		undoEventMethod(this) 
+		applyEventClosure(this),
+		deductionsClosure(this),
+		adjacencyClosure(this),
+		transformClosure(this),
+		undoEventClosure(this) 
 	);
 }
 
 /**
 Closure for when we have to apply an event
 */
-//SolverTheoryCluster.prototype.applyEventMethod = function(p_solver) {
-applyEventMethod = function(p_solver) {
+applyEventClosure = function(p_solver) {
 	return function(eventToApply) {
 		return p_solver.putNew(eventToApply.myX, eventToApply.myY, eventToApply.symbol);
 	}
 }
 
 /**
-Closure for when we have to undo an event (symetrical to apply)
+Closure for when we have to undo an event (symetrical to applyEvent)
 */
-undoEventMethod = function(p_solver) {
+undoEventClosure = function(p_solver) {
 	return function(eventToApply) {
 		p_solver.answerGrid[eventToApply.myY][eventToApply.myX] = SPACE.UNDECIDED;
 	}
@@ -97,7 +80,7 @@ undoEventMethod = function(p_solver) {
 /**
 Adds events that should be added to the p_listEventsToApply (they will be applied soon) in deduction from the p_eventBeingApplied
 */
-deductionsMethod = function (p_solver) {
+deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
 		if (p_eventBeingApplied.p_symbol == SPACE.OPEN) {
 			console.log("Perform deductions for 'open' space at " + p_eventBeingApplied.myX + " " + p_eventBeingApplied.myY);
@@ -109,11 +92,11 @@ deductionsMethod = function (p_solver) {
 }
 
 /**
-Closure that checks about adjacencies
+Closure that checks about whether a space should belong to the global adjacency or not. 
 */
-adjacencyClosure = function (p_grid) {
+adjacencyClosure = function (p_solver) {
     return function (p_x, p_y) {
-        switch (p_grid[p_y][p_x]) {
+        switch (p_solver.answerGrid[p_y][p_x]) {
         case SPACE.OPEN:
             return ADJACENCY.YES;
             break;
@@ -125,22 +108,20 @@ adjacencyClosure = function (p_grid) {
             break;
         }
     }
-    //If not for a closure, adjacencyCheck wouldn't be able to access the grid because "this.answerGrid" is undefined for the Window object.
 };
 
 /**
-Transforms a geographical deduction into an appropriate event
+Transforms a geographical deduction (see dedicated class GeographicalDeduction) into an appropriate event (SolveEvent in our case)
 */
-transformMethod = function (p_solver) {
+transformClosure = function (p_solver) {
     return function (p_geographicalDeduction) {
 		return new SpaceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, p_geographicalDeduction.opening);
     }
-    //If not for a closure, adjacencyCheck wouldn't be able to access the grid because "this.answerGrid" is undefined for the Window object.
 };
 
 /**
-Used by outside !
+Used by outside ! //TODO quand on harmonisera les noms des méthodes...
  */
 SolverTheoryCluster.prototype.undoToLastHypothesis = function () {
-    this.clusterInvolvedSolver.undoToLastHypothesis(undoEventMethod(this));
+    this.clusterInvolvedSolver.undoToLastHypothesis(undoEventClosure(this));
 }
