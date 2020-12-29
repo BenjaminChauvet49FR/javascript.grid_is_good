@@ -3,8 +3,10 @@
 const SPACE = {
     OPEN: 'O',
     CLOSED: 'C',
-    UNDECIDED: '-'
+    UNDECIDED: '-',
+    NOT_APPLICABLE: 'n',
 };
+
 const EVENT_RESULT = { // WARNING : don't confuse EVENT_RESULT and RESULT, ; harmonization needed
     SUCCESS : 3,
     FAILURE : 1,

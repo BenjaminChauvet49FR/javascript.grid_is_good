@@ -50,6 +50,7 @@ const menu2 = {
 		{name : "norinori", displayName : "Norinori"},
 		{name : "shimaguni", displayName : "Shimaguni"},
 		{name : "heyawake", displayName : "Heyawake"},
+		{name : "LITS", displayName : "LITS"},
 		{name : "curvingRoad", displayName : "Curving road"}
 	]
 }
