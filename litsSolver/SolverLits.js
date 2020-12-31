@@ -808,9 +808,27 @@ undoEventClosure = function(p_solver) {
 	}
 }
 
+// Generate covering events for "region pass".
+SolverLITS.prototype.generateEventsForRegionPass = function(p_indexRegion) {
+	var eventList = [];
+	this.regions[p_indexRegion].spaces.forEach(space => {
+		if (this.answerGrid[space.y][space.x] == SPACE.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
+			eventList.push([SpaceEvent(space.x, space.y, SPACE.OPEN), SpaceEvent(space.x, space.y, SPACE.CLOSED)]);
+		}			 
+	});
+	return eventList;
+}
+
 /**
 Used by outside !
 */
 SolverLITS.prototype.undoToLastHypothesis = function(){
 	this.clusterInvolvedSolver.undoToLastHypothesis(undoEventClosure(this));
+}
+
+SolverLITS.prototype.passEvents = function(p_indexRegion) {
+	const generatedEvents = generateEventsForRegionPass(p_indexRegion);
+	methodSet = {};
+	methodTools = {};
+	this.passEvents(generatedEvents, methodSet, methodTools); // Ajouter 
 }

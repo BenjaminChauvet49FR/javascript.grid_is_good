@@ -13,6 +13,11 @@ const EVENT_RESULT = { // WARNING : don't confuse EVENT_RESULT and RESULT, ; har
     HARMLESS : 2
 }
 
+const DEDUCTIONS_RESULT = {
+	SUCCESS : 11,
+	FAILURE : 12
+}
+
 function ClusterInvolvedSolver(p_xLength, p_yLength) {
 	this.xLength = p_xLength;
 	this.yLength = p_yLength;
@@ -138,8 +143,10 @@ ClusterInvolvedSolver.prototype.tryToApply = function (p_startingEvent, p_applyE
 			p_extras.abort();
 		}
         this.undoEventList(listEventsApplied, p_undoEvent);
+		return DEDUCTIONS_RESULT.FAILURE;
     } else if (listEventsApplied.length > 0) {
         this.happenedEvents.push(listEventsApplied);
+		return DEDUCTIONS_RESULT.SUCCESS;
     }
 }
 
@@ -188,9 +195,7 @@ ClusterInvolvedSolver.prototype.geographicalVerification = function (p_listNewXs
 
 }
 
-//--------------------
 // Undoing
-
 ClusterInvolvedSolver.prototype.undoEventList = function (p_eventsList, p_undoEventMethod) {
 	p_eventsList.forEach(eventToUndo => {
 		if (eventToUndo.firstOpen) {
@@ -202,6 +207,82 @@ ClusterInvolvedSolver.prototype.undoEventList = function (p_eventsList, p_undoEv
 			p_undoEventMethod(eventToUndo);
 		}
 	});
+}
+
+/**
+Passes a list of covering events (for instance, if a region contains spaces "1 2 3 4" and we want to apply a pass on it, it should have the following events :
+ [[(open space 1),(close space 1)], [(open space 2),(close space 2)], [(open space 3),(close space 3)], [(open space 4),(close space 4)]]) 
+ // p_methodSet : must contain applyEventMethod, deductionMethod, adjacencyClosureMethod, transformMethod, extras (or not)
+ // p_eventsTools : must contain comparisonMethod, copyMethod
+
+*/
+ClusterInvolvedSolver.prototype.passEvents = function (p_listListCoveringEvent, p_methodSet ,p_eventsTools) {
+	var listExtractedEvents = this.passEventsAnnex(p_listListCoveringEvent, p_methodSet ,p_eventsTools, 0);
+	if (listExtractedEvents != DEDUCTIONS_RESULT.FAILURE) {
+		listExtractedEvents.forEach( deductedEvent => {
+			this.tryToApply(deductedEvent, 
+			p_methodSet.applyEventMethod, p_methodSet.deductionMethod, p_methodSet.adjacencyClosureMethod, 
+			p_methodSet.transformMethod, null, p_methodSet.extras);	// TODO changer cette méthode "try to apply" dans son nom mais aussi dans ses arguments...
+		});
+	}
+}
+
+ClusterInvolvedSolver.prototype.passEventsAnnex = function (p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_indexInList) {
+	if (p_indexInList == p_listListCoveringEvent.length) {
+		return [];
+	} else {
+		var listCoveringEvent = p_listListCoveringEvent[p_indexInList];
+		var deductedEvents = DEDUCTIONS_RESULT.FAILURE;
+		var eventsToIntersect;
+		var answer;
+		var i = 0;
+		while (i < listCoveringEvent.length && !emptyResult) {
+			possibleEvent = listCoveringEvent[i];
+			const happenedEventsBeforeDeduction = this.happenedEvents.size;
+			answer = this.tryToApply(possibleEvent, 
+			p_methodSet.applyEventMethod, p_methodSet.deductionMethod, p_methodSet.adjacencyClosureMethod, 
+			p_methodSet.transformMethod, null, p_methodSet.extras);
+			if (answer == DEDUCTIONS_RESULT.SUCCESS) {
+				const afterEvents = this.passEventsAnnex(p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_indexInList + 1);
+				eventsToIntersect = afterEvents;
+				if (this.happenedEvents.length > happenedEventsBeforeDeduction) {
+					this.happenedEvents[this.happenedEvents.length-1].forEach( recentEvent => {
+						eventsToIntersect.push(recentEvent);
+					});
+				}					// Get events that have been deducted by tryToApply)
+				deductedEvents = intersect(deductedEvents, eventsToIntersect, p_eventsTools);
+				emptyResult = ((deductedEvents != DEDUCTIONS_RESULT.FAILURE) && (deductedEvents.length == 0));
+			} 
+			i++;
+		}
+		return deductedEvents;
+	}
+}
+
+function intersect(p_eventsListOld, p_eventsListNew, p_eventsTools) {
+	if (p_eventsListOld == DEDUCTIONS_RESULT.FAILURE) {
+		return p_eventsListNew.sort(p_eventsTools.comparisonMethod);
+	} else {
+		eventsList1 = p_eventsListOld; //Already sorted ;)
+		eventsList2 = p_eventsListNew.sort(p_eventsTools.comparisonMethod);
+		var i1 = 0;
+		var i2 = 0;
+		var answer = [];
+		var comparison;
+		while (i1 < eventsList1.length && i2 < eventsList2.length) {
+			comparison = p_eventsTools.comparisonMethod(eventsList1[i1], eventsList2[i2], p_eventsTools.comparisonMethod);
+			if (comparison < 0) {
+				i1++;
+			} else if (comparison > 0) {
+				i2++;
+			} else {
+				answer.push(p_eventsTools.copyMethod(eventsList1[i1]));
+				i1++;
+				i2++;
+			}
+		}
+		return answer;
+	}
 }
 
 /**
