@@ -242,7 +242,6 @@ ClusterInvolvedSolver.prototype.passEventsAnnex = function (p_listListCoveringEv
 			const happenedEventsBeforeDeduction = this.happenedEvents.length;
 			answer = this.tryToApply(possibleEvent, p_methodSet);
 			if (answer == DEDUCTIONS_RESULT.SUCCESS) {
-				//console.log("It works ! Next level. ("+ (p_indexInList+1) +")");
 				const afterEvents = this.passEventsAnnex(p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_indexInList + 1);
 				if (afterEvents != DEDUCTIONS_RESULT.FAILURE) {
 					eventsToIntersect = afterEvents;
@@ -251,100 +250,29 @@ ClusterInvolvedSolver.prototype.passEventsAnnex = function (p_listListCoveringEv
 							eventsToIntersect.push(recentEvent);
 						});
 					}					// Get events that have been deducted by tryToApply)
-					//console.log("Conclusion : "+possibleEvent.toString()+" ; Level : ("+p_indexInList+")");
-					//console.log("Deducted events before "+p_indexInList+" index "+i+" : "+deductedEvents);
-					//console.log("Events to intersect : "+eventsToIntersect);
 					deductedEvents = intersect(deductedEvents, eventsToIntersect, p_eventsTools);
-					//console.log("Deducted events after trying and intersecting "+p_indexInList+" index "+i+" : "+deductedEvents);
 					emptyResult = ((deductedEvents != DEDUCTIONS_RESULT.FAILURE) && (deductedEvents.length == 0));
 				}
 				if (this.happenedEvents.length > happenedEventsBeforeDeduction) {
-					//console.log("Event is gonna have its consequences undone : "+possibleEvent.toString()+ " (cancel "+this.happenedEvents[this.happenedEvents.length-1]+" event(s))");
 					this.undoToLastHypothesis(p_methodSet.undoEventMethod);
 				}
 			} 
 			i++;
 		}
-		//console.log("Return from level " + p_indexInList + " : " + deductedEvents);
 		return deductedEvents;
 	}
 }
 
-/*ClusterInvolvedSolver.prototype.passEventsAnnex = function (p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_indexInList) {
-	if (p_indexInList == p_listListCoveringEvent.length) {
-		return [];
-	} else {
-		var listCoveringEvent = p_listListCoveringEvent[p_indexInList];
-		var deductedEvents = DEDUCTIONS_RESULT.FAILURE;
-		var eventsToIntersect;
-		var answer;
-		var emptyResult = false;
-		//var i = 0;
-
-			possibleEvent = listCoveringEvent[0];
-			console.log("Event is gonna be tried (lv. "+p_indexInList+") : "+possibleEvent.toString());
-			const happenedEventsBeforeDeductionOPEN = this.happenedEvents.length;
-			answer = this.tryToApply(possibleEvent, p_methodSet);
-			if (answer == DEDUCTIONS_RESULT.SUCCESS) {
-				const afterEventsOPEN = this.passEventsAnnex(p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_indexInList + 1);
-				if (afterEventsOPEN != DEDUCTIONS_RESULT.FAILURE) {
-					eventsToIntersect = afterEventsOPEN;
-					if (this.happenedEvents.length > happenedEventsBeforeDeductionOPEN) {
-						this.happenedEvents[this.happenedEvents.length-1].forEach( recentEvent => {
-							eventsToIntersect.push(recentEvent);
-						});
-					}					
-					deductedEvents = filterExternalMethods(eventsToIntersect.sort(p_eventsTools.comparisonMethod));
-					// emptyResult = ((deductedEvents != DEDUCTIONS_RESULT.FAILURE) && (deductedEvents.length == 0));
-				}
-				if (this.happenedEvents.length > happenedEventsBeforeDeductionOPEN) {
-					this.undoToLastHypothesis(p_methodSet.undoEventMethod);
-				}
-			} 
-			
-			possibleEvent = listCoveringEvent[1];
-			console.log("Event is gonna be tried (lv. "+p_indexInList+") : "+possibleEvent.toString());
-			const happenedEventsBeforeDeductionCLOSE = this.happenedEvents.length;
-			answer = this.tryToApply(possibleEvent, p_methodSet);
-			if (answer == DEDUCTIONS_RESULT.SUCCESS) {
-				const afterEventsCLOSE = this.passEventsAnnex(p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_indexInList + 1);
-				if (afterEventsCLOSE != DEDUCTIONS_RESULT.FAILURE) {
-					eventsToIntersect = afterEventsCLOSE;
-					if (this.happenedEvents.length > happenedEventsBeforeDeductionCLOSE) {
-						this.happenedEvents[this.happenedEvents.length-1].forEach( recentEvent => {
-							eventsToIntersect.push(recentEvent);
-						});
-					}					
-					deductedEvents = intersect(deductedEvents, eventsToIntersect, p_eventsTools);
-					// emptyResult = ((deductedEvents != DEDUCTIONS_RESULT.FAILURE) && (deductedEvents.length == 0));
-				}
-				if (this.happenedEvents.length > happenedEventsBeforeDeductionCLOSE) {
-					this.undoToLastHypothesis(p_methodSet.undoEventMethod);
-				}
-			} 
-			
-		
-		console.log("Return from level " + p_indexInList + " : " + deductedEvents);
-		return deductedEvents;
-	}
-}*/
-
 function intersect(p_eventsListOld, p_eventsListNew, p_eventsTools) {
-	console.log("Intersecting (already sorted+filtered) "+p_eventsListOld);
-	console.log("and "+p_eventsListNew);
 	if (p_eventsListOld == DEDUCTIONS_RESULT.FAILURE) {
 		if (p_eventsListNew == DEDUCTIONS_RESULT.FAILURE) {
-			console.log("Producing failure");
 			return DEDUCTIONS_RESULT.FAILURE;
 		} else {
-			console.log("Producing (2nd zone) " +filterExternalMethods(p_eventsListNew).sort(p_eventsTools.comparisonMethod)); //551551 Je comprends pourquoi un "answer", en somme...
 			return filterExternalMethods(p_eventsListNew).sort(p_eventsTools.comparisonMethod); // VERY IMPORTANT : apply "filter" first and "sort" then, otherwise elements supposed to be discarded by filter could be "sorted" and make the intersection bogus
 		}
 	} else {
 		eventsList1 = p_eventsListOld; //Already sorted ;)
 		eventsList2 = filterExternalMethods(p_eventsListNew).sort(p_eventsTools.comparisonMethod);
-		console.log("Lane 1 : "+eventsList1);
-		console.log("Lane 2 : "+eventsList2);
 		var i1 = 0;
 		var i2 = 0;
 		var answer = [];
@@ -361,7 +289,6 @@ function intersect(p_eventsListOld, p_eventsListNew, p_eventsTools) {
 				i2++;
 			}
 		}
-		console.log("Producing "+answer);
 		return answer;
 	}
 }

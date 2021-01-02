@@ -858,7 +858,65 @@ SolverLITS.prototype.undoToLastHypothesis = function(){
 	this.clusterInvolvedSolver.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverLITS.prototype.passEvents = function(p_indexRegion) {
+SolverLITS.prototype.passRegionAndAdjacents = function(p_indexRegion) {
+	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
+	var alreadyAddedRegions = [];
+	var addedRegions = [];
+	var x,y,otherIR;
+	for (var i = 0; i < this.regions.size; i++) {
+		alreadyAddedRegions.push(false);
+	}
+	this.regions[p_indexRegion].spaces.forEach(space => {
+		x = space.x;
+		y = space.y;
+		if (x > 0) {
+			otherIR = this.regionGrid[y][x-1];
+			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
+				alreadyAddedRegions[otherIR] = true;
+				addedRegions.push(otherIR);
+			}
+		}
+		if (x <= this.xLength-2) {
+			otherIR = this.regionGrid[y][x+1];
+			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
+				alreadyAddedRegions[otherIR] = true;
+				addedRegions.push(otherIR);
+			}
+		}
+		if (y > 0) {
+			otherIR = this.regionGrid[y-1][x];
+			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
+				alreadyAddedRegions[otherIR] = true;
+				addedRegions.push(otherIR);
+			}
+		}
+		if (y <= this.yLength-2) {
+			otherIR = this.regionGrid[y+1][x];
+			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
+				alreadyAddedRegions[otherIR] = true;
+				addedRegions.push(otherIR);
+			}
+		}
+	});
+	 
+	addedRegions.forEach(ir => {
+		var newList = this.generateEventsForRegionPass(ir);
+		Array.prototype.push.apply(generatedEvents, newList);
+	});
+	
+	methodSet = new ApplyEventMethodPack(
+		applyEventClosure(this),
+		deductionsClosure(this),
+		adjacencyClosure(this),
+		transformClosure(this),
+		undoEventClosure(this)
+	);
+	methodSet.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
+	methodTools = {comparisonMethod : comparison, copyMethod : copying};
+	this.clusterInvolvedSolver.passEvents(generatedEvents, methodSet, methodTools); 
+}
+
+SolverLITS.prototype.passRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
 	methodSet = new ApplyEventMethodPack(
 		applyEventClosure(this),
@@ -872,60 +930,4 @@ SolverLITS.prototype.passEvents = function(p_indexRegion) {
 	this.clusterInvolvedSolver.passEvents(generatedEvents, methodSet, methodTools); 
 }
 
-// DEBUG ! 551551 !
-SolverLITS.prototype.debugPassSpace = function(p_x, p_y) {
-	const generatedEvents = [[SpaceEvent(p_x, p_y, SPACE.OPEN), SpaceEvent(p_x, p_y, SPACE.CLOSED)]];
-	methodSet = new ApplyEventMethodPack(
-		applyEventClosure(this),
-		deductionsClosure(this),
-		adjacencyClosure(this),
-		transformClosure(this),
-		undoEventClosure(this)
-	);
-	methodSet.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
-	methodTools = {comparisonMethod : comparison, copyMethod : copying};
-	this.clusterInvolvedSolver.passEvents(generatedEvents, methodSet, methodTools); 
-}
-
-//p_spaces.forEach(space => {
-//		if (this.answerGrid[space.y][space.x] == SPACE.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
-//			eventList.push([SpaceEvent(space.x, space.y, SPACE.OPEN), SpaceEvent(space.x, space.y, SPACE.CLOSED)]);
-//		}			 
-//	});
-SolverLITS.prototype.debugPassSpaces = function(p_coordinates) {
-	var generatedEvents = [];
-	
-	for (i = 0; i < p_coordinates.length; i+=2) {
-		var space = {x : p_coordinates[i], y : p_coordinates[i+1]};
-		if (this.answerGrid[space.y][space.x] == SPACE.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
-			generatedEvents.push([SpaceEvent(space.x, space.y, SPACE.OPEN), SpaceEvent(space.x, space.y, SPACE.CLOSED)]);
-		}			 
-	};// Cases générées à l'arrache
-	methodSet = new ApplyEventMethodPack(
-		applyEventClosure(this),
-		deductionsClosure(this),
-		adjacencyClosure(this),
-		transformClosure(this),
-		undoEventClosure(this)
-	);
-	methodSet.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
-	methodTools = {comparisonMethod : comparison, copyMethod : copying};
-	this.clusterInvolvedSolver.passEvents(generatedEvents, methodSet, methodTools); 
-}
-
-// Stuff de console :
-/*
-intersect([new ShapeEvent(7,1,2), new ShapeEvent(7,2,2), new ShapeEvent(7,3,2), new ShapeEvent(7,4,2)],
-[new ShapeEvent(7,0,2), new ShapeEvent(7,2,2), new ShapeEvent(7,3,2), new ShapeEvent(7,1,2)],  {comparisonMethod : comparison, copyMethod : copying})
-Rappel : la liste de gauche doit être triée !
-intersect([SpaceEvent(7,0,2), SpaceEvent(7,2,2), SpaceEvent(7,3,2)],[SpaceEvent(7,4,2), SpaceEvent(7,3,2), SpaceEvent(7,2,2), SpaceEvent(7,1,2)],
- {comparisonMethod : comparison, copyMethod : copying})
-solver.debugPassSpaces([0,7,1,7,1,6,2,6,2,5,3,5,3,4]) // Puzzle 998, S in bottom left
-solver.debugPassSpaces([7,0,7,1,7,2,7,3,7,4])
-solver.passEvents(8) // puzzle 55 : still incorrect, as space 4,4 shouldn't be automatically be "opened".
-Puzzle 129 : solver.passEvents(0), solver.passEvents(7), solver.passEvents(13) (ce dernier me surprend)
-
-
-[3,1] (s-L),[2,2] (s-S),[3,2] (O)
-ClusterInvolvedSolver.js:350 Lane 2 : [3,1] (s-T),[2,1] (s-T),[1,1] (s-T),[2,2] (s-T),[3,1] (O),[3,2] (C),[1,2] (C),[2,2] (O)
-*/
+// Les problèmes que j'ai pu rencontrer ne venaient pas de l'algorithme "passEvents" mais bel et bien des méthodes de comparaison et de copie (enfin surtout de comparaison). D'abord ne pas penser à comparer les "O" et "X" alors que c'était vital (on teste un évènement O et un évènement X qui ne peuvent être intersectés), et finalement ne plus penser à comparer les x. Oups...

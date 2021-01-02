@@ -1,0 +1,3 @@
+LITS130 : faire un démarrage rapide puis tester "passer région + adjacentes" à droite.
+LITS79 : faire un test en bas à droite (ligne 436 d'AdjacencyCheck : cannot read property "x" of null) 
+(ou bien un test multiple de la région de taille 2x7 qui démarre à 2,6)
