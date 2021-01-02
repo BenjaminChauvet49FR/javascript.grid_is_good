@@ -7,3 +7,5 @@ const LITS = {
 	S:4,
 	UNDECIDED:0
 }
+
+const LITSLettersArray = ['-','L','I','T','S'];

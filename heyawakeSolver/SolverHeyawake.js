@@ -212,11 +212,7 @@ SolverHeyawake.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
 	this.clusterInvolvedSolver.tryToApply(
 		new SpaceEvent(p_x, p_y, p_symbol),
-		applyEventClosure(this),
-		deductionsClosure(this),
-		adjacencyClosure(this),
-		transformClosure(this),
-		undoEventClosure(this) 
+		new ApplyEventMethodPack(applyEventClosure(this), deductionsClosure(this), adjacencyClosure(this), transformClosure(this), undoEventClosure(this))
 	);
 }
 

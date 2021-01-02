@@ -27,7 +27,7 @@ SolveEvent.prototype.toString = function(){
 }
 
 SolveEvent.prototype.copy = function(){
-	return new SpaceEvent(this.symbol,this.coorX,this.coorY);
+	return new SpaceEvent(this.coorX, this.coorY, this.symbol);
 }
 
 SolveEvent.prototype.opening = function() {
@@ -42,6 +42,10 @@ SolveEvent.prototype.y = function() {
 	return this.coorY;
 }
 
+ShapeEvent.prototype.toString = function(){	
+	return "["+this.coorX+","+this.coorY+"] (s-"+LITSLettersArray[this.shape]+")";
+}
+
 ShapeEvent.prototype.opening = function() {
 	return SPACE.NOT_APPLICABLE; // TODO Un petit Typescript ?
 }
@@ -52,5 +56,9 @@ ShapeEvent.prototype.x = function() {
 
 ShapeEvent.prototype.y = function() {
 	return this.coorY;
+}
+
+ShapeEvent.prototype.copy = function() {
+	return new ShapeEvent(this.coorX, this.coorY, this.shape);
 }
 

@@ -163,23 +163,21 @@ SolverLITS.prototype.abortingEvent = function() {
 SolverLITS.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.clusterInvolvedSolver.tryToApply(
-		SpaceEvent(p_x, p_y, p_symbol),
+	methodPack = new ApplyEventMethodPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		adjacencyClosure(this),
 		transformClosure(this),
-		undoEventClosure(this),
-		{
-			abort : abortClosure(this),
-			filters : [filterClosure(this)]
-		}
+		undoEventClosure(this)
 	);
+	methodPack.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
+	this.clusterInvolvedSolver.tryToApply( SpaceEvent(p_x, p_y, p_symbol), methodPack);
 }
 
 applyEventClosure = function(p_solver) {
 	return function(eventToApply) {
 		if (isSpaceEvent(eventToApply)) {
+			//console.log("Like a mistake ? "+eventToApply.x()+" "+eventToApply.y()); 551551
 			return p_solver.putNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
 		} else {
 			return p_solver.putShape(eventToApply.x(), eventToApply.y(), eventToApply.shape);
@@ -589,6 +587,9 @@ SolverLITS.prototype.eventsTripletPlacement = function(p_eventsList, p_indexRegi
 			} else if (this.isOpenInRegion(x1, y1+1, p_indexRegion)) {
 				p_eventsList = this.shapeFrom3Open(p_eventsList, x1, y1, p_indexRegion, 3);
 				ok = true;
+			} else if (this.isOpenInRegionAtLeft(x1-1, y1+1, p_indexRegion)) {
+				p_eventsList = this.shapeFrom3Open(p_eventsList, x1, y1, p_indexRegion, 14);
+				ok = true;
 			}
 		} 
 	} else if (y1 <= this.yLength-2) {
@@ -655,7 +656,7 @@ const spaceDelta_MM1 = {x:-2, y:1};
 
 // For each of the configurations, give : list of L-placements, list of I-placements, list of T-placements, list of S-placements
 const arrayOfEventsByConfig = [
-[], // config 0, nonexistent (numerotation starts at 1)
+[[],[],[],[]], // config 0, nonexistent (numerotation starts at 1)
 [[spaceDelta_0M, spaceDelta_01, spaceDelta_2M, spaceDelta_21],  [spaceDelta_M0, spaceDelta_30], [spaceDelta_1M, spaceDelta_11],[]], // config 1 Ooo
 [[spaceDelta_M0, spaceDelta_10, spaceDelta_M2, spaceDelta_12],  [spaceDelta_0M, spaceDelta_03], [spaceDelta_M1, spaceDelta_11],[]], //config 2 going down
 [[spaceDelta_02, spaceDelta_20], [], [spaceDelta_M0, spaceDelta_0M], [spaceDelta_1M, spaceDelta_M1]], // Config 3 angle with legs DR
@@ -713,11 +714,13 @@ SolverLITS.prototype.isOpenInRegionAtDown = function(p_x, p_y, p_ir) {
 }
 
 SolverLITS.prototype.isOpenInRegionAtDownRight = function(p_x, p_y, p_ir) {
-	return (p_y <= this.yLength-2) && (this.isOpenInRegionAtRight(p_x+1, p_y+1, p_ir));
+	//return (p_y <= this.yLength-2) && (this.isOpenInRegionAtRight(p_x+1, p_y+1, p_ir));
+	return (p_y <= this.yLength-1) && (this.isOpenInRegionAtRight(p_x, p_y, p_ir));
 }
 
 SolverLITS.prototype.isOpenInRegionAtDownLeft = function(p_x, p_y, p_ir) {
-	return (p_y <= this.yLength-2) && (this.isOpenInRegionAtLeft(p_x-1, p_y+1, p_ir));
+	//return (p_y <= this.yLength-2) && (this.isOpenInRegionAtLeft(p_x-1, p_y+1, p_ir));
+	return (p_y <= this.yLength-1) && (this.isOpenInRegionAtRight(p_x, p_y, p_ir));
 }
 
 
@@ -819,6 +822,35 @@ SolverLITS.prototype.generateEventsForRegionPass = function(p_indexRegion) {
 	return eventList;
 }
 
+
+copying = function(p_event) {
+	return p_event.copy();
+}
+
+comparison = function(p_event1, p_event2) {
+	if (p_event1.shape && p_event2.symbol) {
+		return -1;
+	} else if (p_event2.shape && p_event1.symbol) {
+		return 1;
+	} else if (p_event2.coorY > p_event1.coorY) {
+		return -1;
+	} else if (p_event2.coorY < p_event1.coorY) {
+		return 1;
+	} else if (p_event2.coorX > p_event1.coorX) {
+		return -1;
+	} else if (p_event2.coorX < p_event1.coorX) {
+		return 1;
+	} else {
+		if (p_event1.shape) {
+			return p_event1.shape - p_event2.shape; // Unstable : works because "shape" values are numbers
+		} else {
+			var c1 = (p_event1.symbol == SPACE.OPEN ? 1 : 0);
+			var c2 = (p_event2.symbol == SPACE.OPEN ? 1 : 0); // Unstable : works because only "O" and "C" values are admitted
+			return c1-c2;
+		}
+	}
+}
+
 /**
 Used by outside !
 */
@@ -827,8 +859,73 @@ SolverLITS.prototype.undoToLastHypothesis = function(){
 }
 
 SolverLITS.prototype.passEvents = function(p_indexRegion) {
-	const generatedEvents = generateEventsForRegionPass(p_indexRegion);
-	methodSet = {};
-	methodTools = {};
-	this.passEvents(generatedEvents, methodSet, methodTools); // Ajouter 
+	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
+	methodSet = new ApplyEventMethodPack(
+		applyEventClosure(this),
+		deductionsClosure(this),
+		adjacencyClosure(this),
+		transformClosure(this),
+		undoEventClosure(this)
+	);
+	methodSet.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
+	methodTools = {comparisonMethod : comparison, copyMethod : copying};
+	this.clusterInvolvedSolver.passEvents(generatedEvents, methodSet, methodTools); 
 }
+
+// DEBUG ! 551551 !
+SolverLITS.prototype.debugPassSpace = function(p_x, p_y) {
+	const generatedEvents = [[SpaceEvent(p_x, p_y, SPACE.OPEN), SpaceEvent(p_x, p_y, SPACE.CLOSED)]];
+	methodSet = new ApplyEventMethodPack(
+		applyEventClosure(this),
+		deductionsClosure(this),
+		adjacencyClosure(this),
+		transformClosure(this),
+		undoEventClosure(this)
+	);
+	methodSet.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
+	methodTools = {comparisonMethod : comparison, copyMethod : copying};
+	this.clusterInvolvedSolver.passEvents(generatedEvents, methodSet, methodTools); 
+}
+
+//p_spaces.forEach(space => {
+//		if (this.answerGrid[space.y][space.x] == SPACE.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
+//			eventList.push([SpaceEvent(space.x, space.y, SPACE.OPEN), SpaceEvent(space.x, space.y, SPACE.CLOSED)]);
+//		}			 
+//	});
+SolverLITS.prototype.debugPassSpaces = function(p_coordinates) {
+	var generatedEvents = [];
+	
+	for (i = 0; i < p_coordinates.length; i+=2) {
+		var space = {x : p_coordinates[i], y : p_coordinates[i+1]};
+		if (this.answerGrid[space.y][space.x] == SPACE.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
+			generatedEvents.push([SpaceEvent(space.x, space.y, SPACE.OPEN), SpaceEvent(space.x, space.y, SPACE.CLOSED)]);
+		}			 
+	};// Cases générées à l'arrache
+	methodSet = new ApplyEventMethodPack(
+		applyEventClosure(this),
+		deductionsClosure(this),
+		adjacencyClosure(this),
+		transformClosure(this),
+		undoEventClosure(this)
+	);
+	methodSet.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
+	methodTools = {comparisonMethod : comparison, copyMethod : copying};
+	this.clusterInvolvedSolver.passEvents(generatedEvents, methodSet, methodTools); 
+}
+
+// Stuff de console :
+/*
+intersect([new ShapeEvent(7,1,2), new ShapeEvent(7,2,2), new ShapeEvent(7,3,2), new ShapeEvent(7,4,2)],
+[new ShapeEvent(7,0,2), new ShapeEvent(7,2,2), new ShapeEvent(7,3,2), new ShapeEvent(7,1,2)],  {comparisonMethod : comparison, copyMethod : copying})
+Rappel : la liste de gauche doit être triée !
+intersect([SpaceEvent(7,0,2), SpaceEvent(7,2,2), SpaceEvent(7,3,2)],[SpaceEvent(7,4,2), SpaceEvent(7,3,2), SpaceEvent(7,2,2), SpaceEvent(7,1,2)],
+ {comparisonMethod : comparison, copyMethod : copying})
+solver.debugPassSpaces([0,7,1,7,1,6,2,6,2,5,3,5,3,4]) // Puzzle 998, S in bottom left
+solver.debugPassSpaces([7,0,7,1,7,2,7,3,7,4])
+solver.passEvents(8) // puzzle 55 : still incorrect, as space 4,4 shouldn't be automatically be "opened".
+Puzzle 129 : solver.passEvents(0), solver.passEvents(7), solver.passEvents(13) (ce dernier me surprend)
+
+
+[3,1] (s-L),[2,2] (s-S),[3,2] (O)
+ClusterInvolvedSolver.js:350 Lane 2 : [3,1] (s-T),[2,1] (s-T),[1,1] (s-T),[2,2] (s-T),[3,1] (O),[3,2] (C),[1,2] (C),[2,2] (O)
+*/

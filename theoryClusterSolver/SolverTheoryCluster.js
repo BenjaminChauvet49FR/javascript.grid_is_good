@@ -37,26 +37,26 @@ SolverTheoryCluster.prototype.emitHypothesis = function (p_x, p_y, p_symbol) {
 
 SolverTheoryCluster.prototype.putNew = function (p_x, p_y, p_symbol) {
     if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerGrid[p_y][p_x] == p_symbol)) {
-        return RESULT.HARMLESS;
+        return EVENT_RESULT.HARMLESS;
     }
     if (this.answerGrid[p_y][p_x] != SPACE.UNDECIDED) {
-        return RESULT.ERROR;
+        return EVENT_RESULT.ERROR;
     }
     this.answerGrid[p_y][p_x] = p_symbol;
-    return RESULT.SUCCESS;
+    return EVENT_RESULT.SUCCESS;
 }
 
 SolverTheoryCluster.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
-	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.clusterInvolvedSolver.tryToApply(
-		new SpaceEvent(p_x, p_y, p_symbol),
+	methodPack = new ApplyEventMethodPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		adjacencyClosure(this),
 		transformClosure(this),
-		undoEventClosure(this) 
+		undoEventClosure(this)
 	);
+	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
+	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
+	this.clusterInvolvedSolver.tryToApply(new SpaceEvent(p_x, p_y, p_symbol), methodPack);
 }
 
 /**

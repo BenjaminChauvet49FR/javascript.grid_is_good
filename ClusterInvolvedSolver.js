@@ -28,6 +28,7 @@ function ClusterInvolvedSolver(p_xLength, p_yLength) {
 }
 
 /**
+// TODO while the things defined below are accurate, the names aren't !
 	Generic method for any solver that includes a global adjacency check
 	p_startingEvent : PRE (puzzle-related event, described below ; it must have a set of methods) that can lead to consequences
 	p_applyEvent : method that states how to apply the PRE (e.g. fill a space in a grid and modify numbers in the cluster). 
@@ -43,8 +44,7 @@ function ClusterInvolvedSolver(p_xLength, p_yLength) {
 		Order of filters matter for optimisation since as soon as the application of a filter returns a non-empty list, the chain breaks and returns to individual event applications (or aborts)
 		Warning : methods should be provided, not expressions of methods ! Also, don't forget the keyword "return" in both the closure and the method.
 */
-ClusterInvolvedSolver.prototype.tryToApply = function (p_startingEvent, p_applyEvent, p_deductions, p_adjacencyClosure, p_transform, p_undoEvent, p_extras) {
-    this.undoEventMethod = p_undoEvent; // TODO experimental !
+ClusterInvolvedSolver.prototype.tryToApply = function (p_startingEvent, p_methodPack) {
 	var listEventsToApply = [p_startingEvent]; //List of the "events" type used by the solver. 
 	// Events can be of any kind but must have the following method :
 	// A "x" method (int), a "y" method (int), a "opening" method (OPEN | CLOSED | UNDEFINED), in which case no geographical check is performed)
@@ -65,12 +65,12 @@ ClusterInvolvedSolver.prototype.tryToApply = function (p_startingEvent, p_applyE
         while (ok && listEventsToApply.length > 0) {
             // Classical verification
             eventBeingApplied = listEventsToApply.pop();
-			result = p_applyEvent(eventBeingApplied);
+			result = p_methodPack.applyEventMethod(eventBeingApplied);
             if (result == EVENT_RESULT.FAILURE) {
                 ok = false;
             }
             if (result == EVENT_RESULT.SUCCESS) {
-				listEventsToApply = p_deductions(listEventsToApply, eventBeingApplied);
+				listEventsToApply = p_methodPack.deductionsMethod(listEventsToApply, eventBeingApplied);
                 if (eventBeingApplied.opening() == SPACE.CLOSED) {
                     newClosedSpaces.push({
                         x: eventBeingApplied.x(),
@@ -92,10 +92,10 @@ ClusterInvolvedSolver.prototype.tryToApply = function (p_startingEvent, p_applyE
 		
 		// listEventsToApply is empty at this point.
 		// When logical deductions are performed individually (e.g. each space is watched as itself), apply other methods that may lead to deductions
-		if (p_extras && p_extras.filters) {
+		if (p_methodPack.filters) {
 			var i = 0; // i = filter index
-			while (ok && listEventsToApply.length == 0 && i < p_extras.filters.length) {
-				filter = p_extras.filters[i];
+			while (ok && listEventsToApply.length == 0 && i < p_methodPack.filters.length) {
+				filter = p_methodPack.filters[i];
 				var result = filter();
 				ok = (result != EVENT_RESULT.FAILURE);
 				if (ok) {
@@ -125,11 +125,11 @@ ClusterInvolvedSolver.prototype.tryToApply = function (p_startingEvent, p_applyE
             }
             if (this.atLeastOneOpen) {
                 //Geographical verification.
-                geoV = this.geographicalVerification(newClosedSpaces, p_adjacencyClosure);
+                geoV = this.geographicalVerification(newClosedSpaces, p_methodPack.adjacencyMethod);
 				ok = (geoV.result == EVENT_RESULT.SUCCESS);
 				if (ok) {
 					geoV.listGeographicalDeductionsToApply.forEach(geographicalDeduction =>
-						listEventsToApply.push(p_transform(geographicalDeduction))
+						listEventsToApply.push(p_methodPack.retrieveGeographicalDeductionMethod(geographicalDeduction))
 					);
 					geoV.listGeographicalDeductionsApplied.forEach(geographicalDeduction =>
 						listEventsApplied.push(geographicalDeduction)
@@ -139,13 +139,15 @@ ClusterInvolvedSolver.prototype.tryToApply = function (p_startingEvent, p_applyE
         }
     }
     if (!ok) {
-		if (p_extras && p_extras.abort) {
-			p_extras.abort();
+		if (p_methodPack.abort) {
+			p_methodPack.abort();
 		}
-        this.undoEventList(listEventsApplied, p_undoEvent);
+        this.undoEventList(listEventsApplied, p_methodPack.undoEventMethod);
 		return DEDUCTIONS_RESULT.FAILURE;
-    } else if (listEventsApplied.length > 0) {
-        this.happenedEvents.push(listEventsApplied);
+    } else {
+		if (listEventsApplied.length > 0) {
+			this.happenedEvents.push(listEventsApplied);
+		}
 		return DEDUCTIONS_RESULT.SUCCESS;
     }
 }
@@ -192,7 +194,6 @@ ClusterInvolvedSolver.prototype.geographicalVerification = function (p_listNewXs
             result: EVENT_RESULT.FAILURE
         };
     }
-
 }
 
 // Undoing
@@ -220,9 +221,7 @@ ClusterInvolvedSolver.prototype.passEvents = function (p_listListCoveringEvent, 
 	var listExtractedEvents = this.passEventsAnnex(p_listListCoveringEvent, p_methodSet ,p_eventsTools, 0);
 	if (listExtractedEvents != DEDUCTIONS_RESULT.FAILURE) {
 		listExtractedEvents.forEach( deductedEvent => {
-			this.tryToApply(deductedEvent, 
-			p_methodSet.applyEventMethod, p_methodSet.deductionMethod, p_methodSet.adjacencyClosureMethod, 
-			p_methodSet.transformMethod, null, p_methodSet.extras);	// TODO changer cette méthode "try to apply" dans son nom mais aussi dans ses arguments...
+			this.tryToApply(deductedEvent, p_methodSet);	// TODO changer cette méthode "try to apply" dans son nom mais aussi dans ses arguments...
 		});
 	}
 }
@@ -235,36 +234,117 @@ ClusterInvolvedSolver.prototype.passEventsAnnex = function (p_listListCoveringEv
 		var deductedEvents = DEDUCTIONS_RESULT.FAILURE;
 		var eventsToIntersect;
 		var answer;
+		var emptyResult = false;
 		var i = 0;
 		while (i < listCoveringEvent.length && !emptyResult) {
 			possibleEvent = listCoveringEvent[i];
-			const happenedEventsBeforeDeduction = this.happenedEvents.size;
-			answer = this.tryToApply(possibleEvent, 
-			p_methodSet.applyEventMethod, p_methodSet.deductionMethod, p_methodSet.adjacencyClosureMethod, 
-			p_methodSet.transformMethod, null, p_methodSet.extras);
+			//console.log("Event is gonna be tried (lv. "+p_indexInList+") : "+possibleEvent.toString());
+			const happenedEventsBeforeDeduction = this.happenedEvents.length;
+			answer = this.tryToApply(possibleEvent, p_methodSet);
 			if (answer == DEDUCTIONS_RESULT.SUCCESS) {
+				//console.log("It works ! Next level. ("+ (p_indexInList+1) +")");
 				const afterEvents = this.passEventsAnnex(p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_indexInList + 1);
-				eventsToIntersect = afterEvents;
+				if (afterEvents != DEDUCTIONS_RESULT.FAILURE) {
+					eventsToIntersect = afterEvents;
+					if (this.happenedEvents.length > happenedEventsBeforeDeduction) {
+						this.happenedEvents[this.happenedEvents.length-1].forEach( recentEvent => {
+							eventsToIntersect.push(recentEvent);
+						});
+					}					// Get events that have been deducted by tryToApply)
+					//console.log("Conclusion : "+possibleEvent.toString()+" ; Level : ("+p_indexInList+")");
+					//console.log("Deducted events before "+p_indexInList+" index "+i+" : "+deductedEvents);
+					//console.log("Events to intersect : "+eventsToIntersect);
+					deductedEvents = intersect(deductedEvents, eventsToIntersect, p_eventsTools);
+					//console.log("Deducted events after trying and intersecting "+p_indexInList+" index "+i+" : "+deductedEvents);
+					emptyResult = ((deductedEvents != DEDUCTIONS_RESULT.FAILURE) && (deductedEvents.length == 0));
+				}
 				if (this.happenedEvents.length > happenedEventsBeforeDeduction) {
-					this.happenedEvents[this.happenedEvents.length-1].forEach( recentEvent => {
-						eventsToIntersect.push(recentEvent);
-					});
-				}					// Get events that have been deducted by tryToApply)
-				deductedEvents = intersect(deductedEvents, eventsToIntersect, p_eventsTools);
-				emptyResult = ((deductedEvents != DEDUCTIONS_RESULT.FAILURE) && (deductedEvents.length == 0));
+					//console.log("Event is gonna have its consequences undone : "+possibleEvent.toString()+ " (cancel "+this.happenedEvents[this.happenedEvents.length-1]+" event(s))");
+					this.undoToLastHypothesis(p_methodSet.undoEventMethod);
+				}
 			} 
 			i++;
 		}
+		//console.log("Return from level " + p_indexInList + " : " + deductedEvents);
 		return deductedEvents;
 	}
 }
 
+/*ClusterInvolvedSolver.prototype.passEventsAnnex = function (p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_indexInList) {
+	if (p_indexInList == p_listListCoveringEvent.length) {
+		return [];
+	} else {
+		var listCoveringEvent = p_listListCoveringEvent[p_indexInList];
+		var deductedEvents = DEDUCTIONS_RESULT.FAILURE;
+		var eventsToIntersect;
+		var answer;
+		var emptyResult = false;
+		//var i = 0;
+
+			possibleEvent = listCoveringEvent[0];
+			console.log("Event is gonna be tried (lv. "+p_indexInList+") : "+possibleEvent.toString());
+			const happenedEventsBeforeDeductionOPEN = this.happenedEvents.length;
+			answer = this.tryToApply(possibleEvent, p_methodSet);
+			if (answer == DEDUCTIONS_RESULT.SUCCESS) {
+				const afterEventsOPEN = this.passEventsAnnex(p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_indexInList + 1);
+				if (afterEventsOPEN != DEDUCTIONS_RESULT.FAILURE) {
+					eventsToIntersect = afterEventsOPEN;
+					if (this.happenedEvents.length > happenedEventsBeforeDeductionOPEN) {
+						this.happenedEvents[this.happenedEvents.length-1].forEach( recentEvent => {
+							eventsToIntersect.push(recentEvent);
+						});
+					}					
+					deductedEvents = filterExternalMethods(eventsToIntersect.sort(p_eventsTools.comparisonMethod));
+					// emptyResult = ((deductedEvents != DEDUCTIONS_RESULT.FAILURE) && (deductedEvents.length == 0));
+				}
+				if (this.happenedEvents.length > happenedEventsBeforeDeductionOPEN) {
+					this.undoToLastHypothesis(p_methodSet.undoEventMethod);
+				}
+			} 
+			
+			possibleEvent = listCoveringEvent[1];
+			console.log("Event is gonna be tried (lv. "+p_indexInList+") : "+possibleEvent.toString());
+			const happenedEventsBeforeDeductionCLOSE = this.happenedEvents.length;
+			answer = this.tryToApply(possibleEvent, p_methodSet);
+			if (answer == DEDUCTIONS_RESULT.SUCCESS) {
+				const afterEventsCLOSE = this.passEventsAnnex(p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_indexInList + 1);
+				if (afterEventsCLOSE != DEDUCTIONS_RESULT.FAILURE) {
+					eventsToIntersect = afterEventsCLOSE;
+					if (this.happenedEvents.length > happenedEventsBeforeDeductionCLOSE) {
+						this.happenedEvents[this.happenedEvents.length-1].forEach( recentEvent => {
+							eventsToIntersect.push(recentEvent);
+						});
+					}					
+					deductedEvents = intersect(deductedEvents, eventsToIntersect, p_eventsTools);
+					// emptyResult = ((deductedEvents != DEDUCTIONS_RESULT.FAILURE) && (deductedEvents.length == 0));
+				}
+				if (this.happenedEvents.length > happenedEventsBeforeDeductionCLOSE) {
+					this.undoToLastHypothesis(p_methodSet.undoEventMethod);
+				}
+			} 
+			
+		
+		console.log("Return from level " + p_indexInList + " : " + deductedEvents);
+		return deductedEvents;
+	}
+}*/
+
 function intersect(p_eventsListOld, p_eventsListNew, p_eventsTools) {
+	console.log("Intersecting (already sorted+filtered) "+p_eventsListOld);
+	console.log("and "+p_eventsListNew);
 	if (p_eventsListOld == DEDUCTIONS_RESULT.FAILURE) {
-		return p_eventsListNew.sort(p_eventsTools.comparisonMethod);
+		if (p_eventsListNew == DEDUCTIONS_RESULT.FAILURE) {
+			console.log("Producing failure");
+			return DEDUCTIONS_RESULT.FAILURE;
+		} else {
+			console.log("Producing (2nd zone) " +filterExternalMethods(p_eventsListNew).sort(p_eventsTools.comparisonMethod)); //551551 Je comprends pourquoi un "answer", en somme...
+			return filterExternalMethods(p_eventsListNew).sort(p_eventsTools.comparisonMethod); // VERY IMPORTANT : apply "filter" first and "sort" then, otherwise elements supposed to be discarded by filter could be "sorted" and make the intersection bogus
+		}
 	} else {
 		eventsList1 = p_eventsListOld; //Already sorted ;)
-		eventsList2 = p_eventsListNew.sort(p_eventsTools.comparisonMethod);
+		eventsList2 = filterExternalMethods(p_eventsListNew).sort(p_eventsTools.comparisonMethod);
+		console.log("Lane 1 : "+eventsList1);
+		console.log("Lane 2 : "+eventsList2);
 		var i1 = 0;
 		var i2 = 0;
 		var answer = [];
@@ -281,8 +361,20 @@ function intersect(p_eventsListOld, p_eventsListNew, p_eventsTools) {
 				i2++;
 			}
 		}
+		console.log("Producing "+answer);
 		return answer;
 	}
+}
+
+// Filter methods that are not reserved to the solver
+function filterExternalMethods(p_list) {
+	var answer = [];
+	p_list.forEach(event_ => {
+		if (!event_.adjacency && !event_.firstOpen) {
+			answer.push(event_);
+		}
+	});
+	return answer;
 }
 
 /**
