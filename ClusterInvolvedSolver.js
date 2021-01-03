@@ -71,23 +71,25 @@ ClusterInvolvedSolver.prototype.tryToApply = function (p_startingEvent, p_method
             }
             if (result == EVENT_RESULT.SUCCESS) {
 				listEventsToApply = p_methodPack.deductionsMethod(listEventsToApply, eventBeingApplied);
-                if (eventBeingApplied.opening() == SPACE.CLOSED) {
+                if (p_methodPack.adjacencyMethod) {
+					if (eventBeingApplied.opening() == SPACE.CLOSED) {
                     newClosedSpaces.push({
                         x: eventBeingApplied.x(),
                         y: eventBeingApplied.y()
                     });
-                } else if (eventBeingApplied.opening() == SPACE.OPEN) {
-					//If we are putting the first open space, add a corresponding event into the list of applied events (it isn't "to apply" anymore)
-                    if (!this.atLeastOneOpen) {
-                        listEventsApplied.push({
-                            firstOpen: true
-                        });
-                        this.atLeastOneOpen = true;
-                        firstOpenThisTime = true;
-                    }
-                }
-                listEventsApplied.push(eventBeingApplied);
+					} else if (eventBeingApplied.opening() == SPACE.OPEN) {
+						//If we are putting the first open space, add a corresponding event into the list of applied events (it isn't "to apply" anymore)
+						if (!this.atLeastOneOpen) {
+							listEventsApplied.push({
+								firstOpen: true
+							});
+							this.atLeastOneOpen = true;
+							firstOpenThisTime = true;
+						}
+					}	
+				}
             }
+			listEventsApplied.push(eventBeingApplied);
         }
 		
 		// listEventsToApply is empty at this point.
@@ -109,7 +111,7 @@ ClusterInvolvedSolver.prototype.tryToApply = function (p_startingEvent, p_method
 		}
 
 		// listEventsToApply is empty at this point. Perform geographical deductions.
-        if (ok) {
+        if (ok && p_methodPack.adjacencyMethod) {
             if (firstOpenThisTime) {
                 // The first open space has been added this time (ie this succession of events before a check verification) : add all previously closed to the list.
                 this.happenedEvents.forEach(eventList => {

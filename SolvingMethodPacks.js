@@ -1,3 +1,9 @@
+function ApplyEventMethodNonAdjacentPack(p_applyEventMethod, p_deductionsMethod, p_undoEventMethod) {
+	this.applyEventMethod = p_applyEventMethod;
+	this.deductionsMethod = p_deductionsMethod;
+	this.undoEventMethod = p_undoEventMethod;
+}
+
 function ApplyEventMethodPack(p_applyEventMethod, p_deductionsMethod, p_adjacencyMethod, p_transformMethod, p_undoEventMethod) {
 	this.applyEventMethod = p_applyEventMethod;
 	this.deductionsMethod = p_deductionsMethod;
