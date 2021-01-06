@@ -215,7 +215,7 @@ SolverHeyawake.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
 	this.clusterInvolvedSolver.tryToApply(
-		new SpaceEvent(p_x, p_y, p_symbol),
+		SpaceEvent(p_x, p_y, p_symbol),
 		new ApplyEventMethodPack(
 			applyEventClosure(this), 
 			deductionsClosure(this), 
@@ -255,14 +255,6 @@ SolverHeyawake.prototype.putNew = function(p_x,p_y,p_symbol){
 	return EVENT_RESULT.SUCCESS;
 }
 
-/**
-Transforms a geographical deduction (see dedicated class GeographicalDeduction) into an appropriate event (SolveEvent in our case)
-*/
-transformClosure = function (p_solver) {
-    return function (p_geographicalDeduction) {
-		return new SpaceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, p_geographicalDeduction.opening);
-    }
-};
 
 applyEventClosure = function(p_solver) {
 	return function(eventToApply) {
@@ -297,6 +289,34 @@ undoEventClosure = function(p_solver) {
 
 //--------------------------------
 
+// Exchanges solver and geographical
+
+/**
+Transforms a geographical deduction (see dedicated class GeographicalDeduction) into an appropriate event (SolveEvent in our case)
+*/
+transformClosure = function (p_solver) {
+    return function (p_geographicalDeduction) {
+		return SpaceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, p_geographicalDeduction.opening);
+    }
+};
+
+adjacencyClosure = function (p_solver) {
+    return function (p_x, p_y) {
+        switch (p_solver.answerGrid[p_y][p_x]) {
+        case SPACE.OPEN:
+            return ADJACENCY.YES;
+            break;
+        case SPACE.CLOSED:
+            return ADJACENCY.NO;
+            break;
+        default:
+            return ADJACENCY.UNDEFINED;
+            break;
+        }
+    }
+}
+
+//--------------------------------
 // Intelligence
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
@@ -331,21 +351,7 @@ deductionsClosure = function (p_solver) {
 	}
 }
 
-adjacencyClosure = function (p_solver) {
-    return function (p_x, p_y) {
-        switch (p_solver.answerGrid[p_y][p_x]) {
-        case SPACE.OPEN:
-            return ADJACENCY.YES;
-            break;
-        case SPACE.CLOSED:
-            return ADJACENCY.NO;
-            break;
-        default:
-            return ADJACENCY.UNDEFINED;
-            break;
-        }
-    }
-}
+
 
 // Classic logical verifications 
 SolverHeyawake.prototype.testAlertHorizontalStrip = function(p_eventsList,p_index){

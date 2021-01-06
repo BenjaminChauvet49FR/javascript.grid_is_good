@@ -1,15 +1,9 @@
-const EVENT_KIND = {
-	SPACE : 1,
-	OTHER : 2
-}
-
 function SolveEvent(){
 
 }
 
 function SpaceEvent(p_x,p_y,p_symbol){
 	solveEvent = new SolveEvent();
-	solveEvent.kind = EVENT_KIND.SPACE;
 	solveEvent.symbol = p_symbol;
 	solveEvent.coorX = p_x;
 	solveEvent.coorY = p_y;

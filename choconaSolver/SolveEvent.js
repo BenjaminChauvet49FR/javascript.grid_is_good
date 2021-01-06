@@ -18,10 +18,6 @@ SolveEvent.prototype.copy = function(){
 	return new SpaceEvent(this.coorX, this.coorY, this.symbol);
 }
 
-SolveEvent.prototype.opening = function() {
-	return this.symbol;
-}
-
 SolveEvent.prototype.x = function() {
 	return this.coorX;
 }

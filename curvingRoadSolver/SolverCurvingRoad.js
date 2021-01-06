@@ -1,19 +1,6 @@
 const NOT_FORCED = -1;
 const NOT_RELEVANT = -1;
-const SPACE = {
-    OPEN: 'O',
-    CLOSED: 'C',
-    UNDECIDED: '-'
-};
-const RESULT = {
-    SUCCESS: 3,
-    FAILURE: 1,
-    HARMLESS: 2
-}
-const EVENTLIST_KIND = {
-    HYPOTHESIS: "H",
-    PASS: "P"
-};
+
 const CURVING_WAY = {
     LEFT_VERTICAL: 'L',
     RIGHT_VERTICAL: 'R',
@@ -28,6 +15,8 @@ function SolverCurvingRoad(p_wallArray, p_symbolArray) {
 SolverCurvingRoad.prototype.construct = function (p_wallArray, p_symbolArray) {
     this.xLength = p_symbolArray[0].length;
     this.yLength = p_symbolArray.length;
+	this.clusterInvolvedSolver = new ClusterInvolvedSolver(this.xLength, this.yLength);
+	
     this.wallGrid = WallGrid_data(p_wallArray);
     this.happenedEvents = [];
     this.answerGrid = [];
@@ -74,9 +63,9 @@ SolverCurvingRoad.prototype.construct = function (p_wallArray, p_symbolArray) {
     }
 
     // Below fields are for adjacency "all spaces with ... must form a orthogonally contiguous area"
-    this.atLeastOneOpen = false;
+    /*this.atLeastOneOpen = false;
     this.adjacencyLimitGrid = createAdjacencyLimitGrid(this.xLength, this.yLength);
-    this.adjacencyLimitSpacesList = [];
+    this.adjacencyLimitSpacesList = [];*/
 }
 
 SolverCurvingRoad.prototype.traceRoadsFrom = function (p_x, p_y) {
@@ -344,14 +333,51 @@ SolverCurvingRoad.prototype.emitHypothesis = function (p_x, p_y, p_symbol) {
     this.tryToPutNew(p_x, p_y, p_symbol);
 }
 
+SolverCurvingRoad.prototype.undoToLastHypothesis = function () {
+    if (this.happenedEvents.length > 0) {
+        var lastEventsList = this.happenedEvents.pop();
+        this.undoEventList(lastEventsList);
+    }
+}
+
+SolverCurvingRoad.prototype.quickStart = function () {
+    this.curvingLinkList.forEach(curvingLink => {
+        if (curvingLink.valid && (curvingLink.point != null)) {
+            this.emitHypothesis(curvingLink.point.x, curvingLink.point.y, SPACE.CLOSED);
+        }
+    });
+}
+
+SolverCurvingRoad.prototype.undoToLastHypothesis = function() {
+	this.clusterInvolvedSolver.undoToLastHypothesis(undoEventClosure(this));
+}
+
 //--------------------------------
 
+// Central method
+SolverCurvingRoad.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
+	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
+	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
+	this.clusterInvolvedSolver.tryToApply(
+		SpaceEvent(p_x, p_y, p_symbol),
+		new ApplyEventMethodPack(
+			applyEventClosure(this), 
+			deductionsClosure(this), 
+			adjacencyClosure(this), 
+			transformClosure(this), 
+			undoEventClosure(this))
+	);
+}
+
+//--------------------------------
+
+// Doing, undoing and transforming
 SolverCurvingRoad.prototype.putNew = function (p_x, p_y, p_symbol) {
     if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerGrid[p_y][p_x] == p_symbol)) {
-        return RESULT.HARMLESS;
+        return EVENT_RESULT.HARMLESS;
     }
     if (this.answerGrid[p_y][p_x] != SPACE.UNDECIDED) {
-        return RESULT.FAILURE;
+        return EVENT_RESULT.FAILURE;
     }
     this.answerGrid[p_y][p_x] = p_symbol;
     this.curvingLinkArray[p_y][p_x].forEach(
@@ -361,102 +387,37 @@ SolverCurvingRoad.prototype.putNew = function (p_x, p_y, p_symbol) {
             this.curvingLinkList[index].closeds++;
         }
     });
-    return RESULT.SUCCESS;
+    return EVENT_RESULT.SUCCESS;
 }
 
-SolverCurvingRoad.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-    var listEventsToApply = [SpaceEvent(p_x, p_y, p_symbol)];
-    var eventBeingApplied;
-    var eventsApplied = [];
-    var ok = true;
-    var result;
-    var x,
-    y,
-    symbol;
-    while (ok && listEventsToApply.length > 0) {
-        // Overall (classical + geographical) verification
-        newClosedSpaces = [];
-        firstOpenThisTime = false;
-        while (ok && listEventsToApply.length > 0) {
-            // Classical verification
-            eventBeingApplied = listEventsToApply.pop();
-            x = eventBeingApplied.x;
-            y = eventBeingApplied.y;
-            symbol = eventBeingApplied.symbol;
-            result = this.putNew(x, y, symbol);
-
-            if (result == RESULT.FAILURE) {
-                ok = false;
-            }
-            if (result == RESULT.SUCCESS) {
-                // Deduction time !
-                if (symbol == SPACE.CLOSED) {
-                    listEventsToApply.push(SpaceEvent(x, y - 1, SPACE.OPEN));
-                    listEventsToApply.push(SpaceEvent(x, y + 1, SPACE.OPEN));
-                    listEventsToApply.push(SpaceEvent(x - 1, y, SPACE.OPEN));
-                    listEventsToApply.push(SpaceEvent(x + 1, y, SPACE.OPEN));
-
-                    //Add a closed space. Refer to theorical cluster solver for more details about this part.
-                    newClosedSpaces.push({
-                        x: x,
-                        y: y
-                    });
-
-                } else {
-
-                    //The first open space.  Refer to theorical cluster solver for more details about this part.
-                    if (!this.atLeastOneOpen) {
-                        eventsApplied.push({
-                            firstOpen: true
-                        });
-                        this.atLeastOneOpen = true;
-                        firstOpenThisTime = true;
-                    }
-
-                    this.curvingLinkArray[y][x].forEach(index => {
-                        listEventsToApply = this.testAlertCurvingList(listEventsToApply, index); 
-                    });
-                }
-                eventsApplied.push(eventBeingApplied);
-            }
-        }
-
-        if (ok) {
-            // Geographical verification. Refer to theorical cluster solver for more details about this part.
-
-            if (firstOpenThisTime) {
-                this.happenedEvents.forEach(eventList => {
-                    eventList.forEach(solveEvent => {
-                        if (solveEvent.symbol && (solveEvent.symbol == SPACE.CLOSED)) {
-                            newClosedSpaces.push({
-                                x: solveEvent.x,
-                                y: solveEvent.y
-                            });
-                        }
-                    });
-                });
-            }
-            if (this.atLeastOneOpen) {
-                geoV = this.geographicalVerification(newClosedSpaces);
-                listEventsToApply = geoV.listEventsToApply;
-                if (geoV.listEventsApplied) {
-                    Array.prototype.push.apply(eventsApplied, geoV.listEventsApplied);
-                }
-                ok = (geoV.result == RESULT.SUCCESS);
-            }
-        }
-    }
-    if (!ok) {
-        this.undoEventList(eventsApplied);
-    } else if (eventsApplied.length > 0) {
-        this.happenedEvents.push(eventsApplied); //TODO dire que ça vient d'une hypothèse !
-    }
+applyEventClosure = function(p_solver) {
+	return function(eventToApply) {
+		return p_solver.putNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
+	}
 }
 
-//The geograhical modification and its closure. More details at theory cluster solver.
-SolverCurvingRoad.prototype.adjacencyClosure = function (p_grid) {
+undoEventClosure = function(p_solver) {
+	return function (p_eventToApply) {
+		const x = p_eventToApply.x(); // Si on oublie de changer le  en x() par erreurs on peut avoir un message très funky dans la console. Et avec un "cannot read ... of undefined."
+		const y = p_eventToApply.y();
+		const symbol = p_eventToApply.symbol;
+		p_solver.answerGrid[y][x] = SPACE.UNDECIDED;
+		p_solver.curvingLinkArray[y][x].forEach(
+			index => {
+			p_solver.curvingLinkList[index].undecided++;
+			if (symbol == SPACE.CLOSED) {
+				p_solver.curvingLinkList[index].closeds--;
+			}
+		});
+	}
+}
+
+//--------------------------------
+// Exchanges solver and geographical
+
+adjacencyClosure = function(p_solver) {
     return function (p_x, p_y) {
-        switch (p_grid[p_y][p_x]) {
+        switch (p_solver.answerGrid[p_y][p_x]) {
         case SPACE.OPEN:
             return ADJACENCY.YES;
             break;
@@ -470,40 +431,33 @@ SolverCurvingRoad.prototype.adjacencyClosure = function (p_grid) {
     }
 };
 
-SolverCurvingRoad.prototype.geographicalVerification = function (p_listNewXs) {
-    console.log("Perform geographicalVerification");
-    const checking = adjacencyCheck(p_listNewXs, this.adjacencyLimitGrid, this.adjacencyLimitSpacesList, this.adjacencyClosure(this.answerGrid), this.xLength, this.yLength);
-    if (checking.success) {
-        var newListEvents = [];
-        var newListEventsApplied = [];
-        checking.newADJACENCY.forEach(space => {
-            newListEvents.push(SpaceEvent(space.x, space.y, SPACE.OPEN));
-        });
-        checking.newBARRIER.forEach(space => {
-            newListEvents.push(SpaceEvent(space.x, space.y, SPACE.CLOSED));
-        });
-        checking.newLimits.forEach(spaceLimit => {
-            newListEventsApplied.push({
-                adjacency: true
-            });
-            this.adjacencyLimitSpacesList.push({
-                x: spaceLimit.x,
-                y: spaceLimit.y,
-                formerValue: this.adjacencyLimitGrid[spaceLimit.y][spaceLimit.x].copy()
-            });
-            this.adjacencyLimitGrid[spaceLimit.y][spaceLimit.x] = spaceLimit.limit;
-        });
-        return {
-            result: RESULT.SUCCESS,
-            listEventsToApply: newListEvents,
-            listEventsApplied: newListEventsApplied
-        };
-    } else {
-        return {
-            result: RESULT.FAILURE,
-            listEventsToApply: []
-        };
+transformClosure = function (p_solver) {
+    return function (p_geographicalDeduction) {
+		return SpaceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, p_geographicalDeduction.opening);
     }
+};
+
+//--------------------------------
+// Intelligence
+deductionsClosure = function (p_solver) {
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		x = p_eventBeingApplied.x();
+		y = p_eventBeingApplied.y();
+		symbol = p_eventBeingApplied.symbol;
+		//result = this.putNew(x, y, symbol);
+		// Deduction time !
+		if (symbol == SPACE.CLOSED) {
+			p_listEventsToApply.push(SpaceEvent(x, y - 1, SPACE.OPEN));
+			p_listEventsToApply.push(SpaceEvent(x, y + 1, SPACE.OPEN));
+			p_listEventsToApply.push(SpaceEvent(x - 1, y, SPACE.OPEN));
+			p_listEventsToApply.push(SpaceEvent(x + 1, y, SPACE.OPEN));
+		} else {
+			p_solver.curvingLinkArray[y][x].forEach(index => {
+				p_listEventsToApply = p_solver.testAlertCurvingList(p_listEventsToApply, index); 
+			});
+		}
+		return p_listEventsToApply
+	}	
 }
 
 SolverCurvingRoad.prototype.testAlertCurvingList = function (p_listEvents, p_index) {
@@ -534,60 +488,7 @@ SolverCurvingRoad.prototype.testAlertCurvingList = function (p_listEvents, p_ind
                 }
             }
         }
-        p_listEvents.push(new SpaceEvent(xSpot, ySpot, SPACE.CLOSED));
+        p_listEvents.push(SpaceEvent(xSpot, ySpot, SPACE.CLOSED));
     }
     return p_listEvents;
-}
-
-// Quick start
-
-/**
-Used by outside !
- */
-SolverCurvingRoad.prototype.quickStart = function () {
-    this.curvingLinkList.forEach(curvingLink => {
-        if (curvingLink.valid && (curvingLink.point != null)) {
-            this.emitHypothesis(curvingLink.point.x, curvingLink.point.y, SPACE.CLOSED);
-        }
-    });
-}
-
-//--------------------
-// Undoing
-SolverCurvingRoad.prototype.undoEvent = function (p_event) {
-    if (p_event.kind == EVENT_KIND.SPACE) {
-        const x = p_event.x;
-        const y = p_event.y;
-        const symbol = p_event.symbol;
-        this.answerGrid[y][x] = SPACE.UNDECIDED;
-		this.curvingLinkArray[y][x].forEach(
-			index => {
-			this.curvingLinkList[index].undecided++;
-			if (symbol == SPACE.CLOSED) {
-				this.curvingLinkList[index].closeds--;
-			}
-		});
-		
-		
-    } else if (p_event.adjacency) {
-        const aals = this.adjacencyLimitSpacesList.pop(); //aals = added adjacency limit space
-        this.adjacencyLimitGrid[aals.y][aals.x] = aals.formerValue;
-    } else if (p_event.firstOpen) {
-        this.atLeastOneOpen = false;
-    }
-
-}
-
-SolverCurvingRoad.prototype.undoEventList = function (p_eventsList) {
-    p_eventsList.forEach(solveEvent => this.undoEvent(solveEvent));
-}
-
-/**
-Used by outside !
- */
-SolverCurvingRoad.prototype.undoToLastHypothesis = function () {
-    if (this.happenedEvents.length > 0) {
-        var lastEventsList = this.happenedEvents.pop();
-        this.undoEventList(lastEventsList);
-    }
 }
