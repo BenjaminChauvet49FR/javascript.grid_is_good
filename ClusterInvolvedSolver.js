@@ -88,8 +88,8 @@ ClusterInvolvedSolver.prototype.tryToApply = function (p_startingEvent, p_method
 						}
 					}	
 				}
+				listEventsApplied.push(eventBeingApplied);
             }
-			listEventsApplied.push(eventBeingApplied);
         }
 		
 		// listEventsToApply is empty at this point.

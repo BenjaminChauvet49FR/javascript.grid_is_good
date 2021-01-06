@@ -1,5 +1,4 @@
-
-const EVENTLIST_KIND = {HYPOTHESIS:"H",PASS:"P"};
+// Initialization
 
 function SolverChocona(p_wallArray,p_numberGrid){
 	this.construct(p_wallArray,p_numberGrid);
@@ -57,7 +56,7 @@ SolverChocona.prototype.construct = function(p_wallArray, p_numberGrid) {
 			ir = this.regionGrid[iy][ix];
 			region = this.regions[ir];
 			region.spaces.push({x:ix,y:iy});
-			if (p_numberGrid[iy][ix] && (p_numberGrid[iy][ix] != NOT_FORCED)) {
+			if ((p_numberGrid[iy][ix] != null) && (p_numberGrid[iy][ix] != NOT_FORCED)) { // L'oubli du "!= null" peut conduire à avoir des zéros non chargés.
 				region.forcedValue = p_numberGrid[iy][ix];
 			}
 		}
@@ -78,7 +77,7 @@ SolverChocona.prototype.construct = function(p_wallArray, p_numberGrid) {
 
 //--------------------------------
 
-// Drawing methods
+// Misc methods (may be used for drawing and intelligence)
 SolverChocona.prototype.getAnswer = function(p_x,p_y) {
 	return this.answerGrid[p_y][p_x];
 }
@@ -91,13 +90,6 @@ SolverChocona.prototype.getFirstSpace = function(p_ir) {
 	return this.regions[p_ir].spaces[0];
 }
 
-//--------------------------------
-SolverChocona.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
-	this.tryToPutNew(p_x,p_y,p_symbol);
-}
-
-//--------------------------------
-
 SolverChocona.prototype.getRegionIndex = function(p_x, p_y) {
 	return this.regionGrid[p_y][p_x];
 }
@@ -106,6 +98,56 @@ SolverChocona.prototype.getRegion = function(p_x, p_y) {
 	return this.regions[this.getRegionIndex(p_x, p_y)];
 }
 
+//--------------------------------
+
+// Input methods
+SolverChocona.prototype.emitHypothesis = function(p_x,p_y,p_symbol) {
+	this.tryToPutNew(p_x,p_y,p_symbol);
+}
+
+SolverChocona.prototype.undoToLastHypothesis = function(){
+	this.clusterInvolvedSolver.undoToLastHypothesis(undoEventClosure(this));
+}
+
+SolverChocona.prototype.passRegion = function(p_indexRegion) {
+	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
+	methodSet = new ApplyEventMethodNonAdjacentPack(
+		applyEventClosure(this),
+		deductionsClosure(this),
+		undoEventClosure(this)
+	);
+	methodTools = {comparisonMethod : comparison, copyMethod : copying};
+	this.clusterInvolvedSolver.passEvents(generatedEvents, methodSet, methodTools); 
+}
+
+SolverChocona.prototype.quickStart = function(){
+	var quickStartList = [];
+	for (ir = 0; ir < this.regions.length ; ir ++) {
+		quickStartList = this.alertRegionIfFullNOs(quickStartList, ir);
+		quickStartList = this.alertRegionIfFullYESs(quickStartList, ir);
+	};
+	quickStartList.forEach(eventToApply => {
+		this.tryToPutNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
+	});
+}
+
+//--------------------------------
+
+// Central method
+SolverChocona.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
+	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
+	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
+	methodPack = new ApplyEventMethodNonAdjacentPack(
+		applyEventClosure(this),
+		deductionsClosure(this),
+		undoEventClosure(this)
+	);
+	this.clusterInvolvedSolver.tryToApply( SpaceEvent(p_x, p_y, p_symbol), methodPack);
+}
+
+//--------------------------------
+
+// Doing and undoing
 SolverChocona.prototype.putNew = function(p_x,p_y,p_symbol){
 	if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerGrid[p_y][p_x] == p_symbol)){
 		return EVENT_RESULT.HARMLESS;
@@ -126,16 +168,6 @@ SolverChocona.prototype.putNew = function(p_x,p_y,p_symbol){
 	return EVENT_RESULT.SUCCESS;
 }
 
-SolverChocona.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
-	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	methodPack = new ApplyEventMethodNonAdjacentPack(
-		applyEventClosure(this),
-		deductionsClosure(this),
-		undoEventClosure(this)
-	);
-	this.clusterInvolvedSolver.tryToApply( SpaceEvent(p_x, p_y, p_symbol), methodPack);
-}
 
 applyEventClosure = function(p_solver) {
 	return function(eventToApply) {
@@ -145,6 +177,34 @@ applyEventClosure = function(p_solver) {
 		return p_solver.putNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
 	}
 }
+
+undoEventClosure = function(p_solver) {
+	return function(eventToUndo) {
+		if (!eventToUndo.failure) {
+			const x = eventToUndo.x();
+			const y = eventToUndo.y();
+			const symbol = eventToUndo.symbol;
+			var discardedSymbol = p_solver.answerGrid[y][x]; 
+			p_solver.answerGrid[y][x] = CHOCONA.UNDECIDED;
+			var ir = p_solver.regionGrid[y][x];
+			var region = p_solver.regions[ir];
+			if (region.notPlacedYet) {
+				if (discardedSymbol == CHOCONA.YES) { // if (eventToUndo.symbol) is tested, the value of notPlacedYet is increased even if the space wasn't actually affected. Which leads to surprises when undoing. Oops...
+					region.notPlacedYet.YESs++;
+				} else if (discardedSymbol == CHOCONA.NO) {
+					region.notPlacedYet.NOs++;
+				}
+			}
+		}
+	} 
+}
+
+function isSpaceEvent(p_event) {
+	return p_event.symbol;
+}
+
+//--------------------------------
+// Intelligence
 
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
@@ -192,10 +252,10 @@ SolverChocona.prototype.alertRegion = function(p_listEvents, p_region, p_missing
 			ya = alertSpace.y;
 			if (this.answerGrid[ya][xa] == CHOCONA.UNDECIDED) {
 				p_listEvents.push(SpaceEvent(xa, ya, p_missingSymbol));
-				/*remaining--;
+				remaining--;
 				if (remaining == 0){
 					break;
-				}*/
+				}
 			}
 		}
 	}
@@ -301,50 +361,8 @@ SolverChocona.prototype.spaceExists = function(p_x, p_y) {
 	return (p_x >= 0 && p_y >= 0 && p_x < this.xLength && p_y < this.yLength);
 }
 
-// --------------------
-// Quick start 
-
-/**
-Used by outside !
-*/
-SolverChocona.prototype.quickStart = function(){
-	var quickStartList = [];
-	for (ir = 0; ir < this.regions.length ; ir ++) {
-		quickStartList = this.alertRegionIfFullNOs(quickStartList, ir);
-		quickStartList = this.alertRegionIfFullYESs(quickStartList, ir);
-	};
-	quickStartList.forEach(eventToApply => {
-		this.tryToPutNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
-	});
-}
-
 //--------------------
-// Undoing
-
-function isSpaceEvent(p_event) {
-	return p_event.symbol;
-}
-
-undoEventClosure = function(p_solver) {
-	return function(eventToUndo) {
-		if (!eventToUndo.failure) {
-			const x = eventToUndo.x();
-			const y = eventToUndo.y();
-			const symbol = eventToUndo.symbol;
-			var discardedSymbol = p_solver.answerGrid[y][x]; 
-			p_solver.answerGrid[y][x] = CHOCONA.UNDECIDED;
-			var ir = p_solver.regionGrid[y][x];
-			var region = p_solver.regions[ir];
-			if (region.notPlacedYet) {
-				if (discardedSymbol == CHOCONA.YES) { // if (eventToUndo.symbol) is tested, the value of notPlacedYet is increased even if the space wasn't actually affected. Which leads to surprises when undoing. Oops...
-					region.notPlacedYet.YESs++;
-				} else if (discardedSymbol == CHOCONA.NO) {
-					region.notPlacedYet.NOs++;
-				}
-			}
-		}
-	} 
-}
+// Passing
 
 // Generate covering events for "region pass".
 SolverChocona.prototype.generateEventsForRegionPass = function(p_indexRegion) {
@@ -356,7 +374,6 @@ SolverChocona.prototype.generateEventsForRegionPass = function(p_indexRegion) {
 	});
 	return eventList;
 }
-
 
 copying = function(p_event) {
 	return p_event.copy();
@@ -376,22 +393,4 @@ comparison = function(p_event1, p_event2) {
 		var c2 = (p_event2.symbol == CHOCONA.YES ? 1 : 0); // Unstable : works because only "O" and "C" values are admitted
 		return c1-c2;
 	}
-}
-
-/**
-Used by outside !
-*/
-SolverChocona.prototype.undoToLastHypothesis = function(){
-	this.clusterInvolvedSolver.undoToLastHypothesis(undoEventClosure(this));
-}
-
-SolverChocona.prototype.passRegion = function(p_indexRegion) {
-	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	methodSet = new ApplyEventMethodNonAdjacentPack(
-		applyEventClosure(this),
-		deductionsClosure(this),
-		undoEventClosure(this)
-	);
-	methodTools = {comparisonMethod : comparison, copyMethod : copying};
-	this.clusterInvolvedSolver.passEvents(generatedEvents, methodSet, methodTools); 
 }

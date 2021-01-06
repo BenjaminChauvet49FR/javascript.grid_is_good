@@ -55,12 +55,11 @@ function drawInsideSpaces(p_context,p_drawer,p_color,p_solver){
 			space = p_solver.getSpaceCoordinates(i,0);
 			pixLeft = p_drawer.getPixInnerXLeft(space.x)+2;
 			pixUp = p_drawer.getPixInnerYUp(space.y)+2;
-			p_context.fillStyle = p_color.standardWrite;
-			/*if (p_solver.getAnswer(space.x,space.y) == FILLING.YES) {
+			if (p_solver.getAnswer(space.x,space.y) == SPACE.CLOSED) {
 				p_context.fillStyle = p_color.reflectWrite;
 			} else {
 				p_context.fillStyle = p_color.standardWrite;
-			}*/
+			}
 			p_context.fillText(p_solver.expectedNumberInRegion(i),pixLeft,pixUp);
 		}
 	}

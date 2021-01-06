@@ -1,3 +1,5 @@
+// Initialization
+
 const NOT_FORCED = -1; 
 const NOT_RELEVANT = -1;
 // const SPACE is used in the main solver
@@ -127,6 +129,9 @@ SolverHeyawake.prototype.construct = function(p_wallArray,p_numberGrid){
 	//Note : grid not purified.
 }
 
+//--------------------------------
+
+// Misc. methods
 SolverHeyawake.prototype.expectedNumberInRegion = function(ir){
 	return this.regions[ir].expectedNumberOfOsInRegion;
 }
@@ -140,38 +145,8 @@ SolverHeyawake.prototype.getAnswer = function(p_x,p_y){
 }
 
 //--------------------------------
-SolverHeyawake.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
-	this.tryToPutNew(p_x,p_y,p_symbol);
-}
 
-//--------------------------------
-
-SolverHeyawake.prototype.putNew = function(p_x,p_y,p_symbol){
-	if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerGrid[p_y][p_x] == p_symbol)){
-		return EVENT_RESULT.HARMLESS;
-	}
-	if (this.answerGrid[p_y][p_x] != SPACE.UNDECIDED){
-		return EVENT_RESULT.FAILURE;
-	}
-	this.answerGrid[p_y][p_x] = p_symbol;
-	var ir = this.regionGrid[p_y][p_x];
-	var region = this.regions[ir];
-	if (region.notPlacedYet != null){
-		if (p_symbol == SPACE.OPEN){
-			region.notPlacedYet.OPENs--;
-		} else if (p_symbol == SPACE.CLOSED){
-			region.notPlacedYet.CLOSEDs--;
-		}
-	}
-	const stripSpace = this.stripGrid[p_y][p_x];
-	this.lowerHorizontalStrip(stripSpace.leftMost,p_symbol);
-	this.lowerHorizontalStrip(stripSpace.horizIn,p_symbol);
-	this.lowerHorizontalStrip(stripSpace.rightMost,p_symbol);	
-	this.lowerVerticalStrip(stripSpace.topMost,p_symbol);
-	this.lowerVerticalStrip(stripSpace.vertIn,p_symbol);
-	this.lowerVerticalStrip(stripSpace.bottomMost,p_symbol);
-	return EVENT_RESULT.SUCCESS;
-}
+// Misc. inner methods 
 
 SolverHeyawake.prototype.lowerHorizontalStrip = function(p_index,p_symbol){
 	this.modifyHorizontalStrip(p_index,p_symbol,-1);
@@ -207,19 +182,77 @@ SolverHeyawake.prototype.modifyVerticalStrip = function(p_index,p_symbol,p_modif
 	}
 }
 
+//--------------------------------
+
+// Input methods
+SolverHeyawake.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
+	this.tryToPutNew(p_x,p_y,p_symbol);
+}
+
+SolverHeyawake.prototype.undoToLastHypothesis = function(){
+	this.clusterInvolvedSolver.undoToLastHypothesis(undoEventClosure(this));
+}
+
+SolverHeyawake.prototype.quickStart = function(){
+	this.regions.forEach(region => {
+		if (region.size == 1 && region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 1){
+			this.tryToPutNew(region.spaces[0].x,region.spaces[0].y,SPACE.CLOSED);
+		};
+		if (region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 0){
+			region.spaces.forEach(space => {
+				this.tryToPutNew(space.x,space.y,SPACE.OPEN);
+			});
+		}
+	});
+}
+
+
+//--------------------------------
+
+// Central method
+
 SolverHeyawake.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
 	this.clusterInvolvedSolver.tryToApply(
 		new SpaceEvent(p_x, p_y, p_symbol),
-		new ApplyEventMethodPack(applyEventClosure(this), deductionsClosure(this), adjacencyClosure(this), transformClosure(this), undoEventClosure(this))
+		new ApplyEventMethodPack(
+			applyEventClosure(this), 
+			deductionsClosure(this), 
+			adjacencyClosure(this), 
+			transformClosure(this), 
+			undoEventClosure(this))
 	);
 }
 
-applyEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		return p_solver.putNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
+//--------------------------------
+
+// Doing, undoing and transforming
+SolverHeyawake.prototype.putNew = function(p_x,p_y,p_symbol){
+	if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerGrid[p_y][p_x] == p_symbol)){
+		return EVENT_RESULT.HARMLESS;
 	}
+	if (this.answerGrid[p_y][p_x] != SPACE.UNDECIDED){
+		return EVENT_RESULT.FAILURE;
+	}
+	this.answerGrid[p_y][p_x] = p_symbol;
+	var ir = this.regionGrid[p_y][p_x];
+	var region = this.regions[ir];
+	if (region.notPlacedYet != null){
+		if (p_symbol == SPACE.OPEN){
+			region.notPlacedYet.OPENs--;
+		} else if (p_symbol == SPACE.CLOSED){
+			region.notPlacedYet.CLOSEDs--;
+		}
+	}
+	const stripSpace = this.stripGrid[p_y][p_x];
+	this.lowerHorizontalStrip(stripSpace.leftMost,p_symbol);
+	this.lowerHorizontalStrip(stripSpace.horizIn,p_symbol);
+	this.lowerHorizontalStrip(stripSpace.rightMost,p_symbol);	
+	this.lowerVerticalStrip(stripSpace.topMost,p_symbol);
+	this.lowerVerticalStrip(stripSpace.vertIn,p_symbol);
+	this.lowerVerticalStrip(stripSpace.bottomMost,p_symbol);
+	return EVENT_RESULT.SUCCESS;
 }
 
 /**
@@ -231,7 +264,40 @@ transformClosure = function (p_solver) {
     }
 };
 
-// C'est ici que ça devient intéressant !
+applyEventClosure = function(p_solver) {
+	return function(eventToApply) {
+		return p_solver.putNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
+	}
+}
+
+undoEventClosure = function(p_solver) {
+	return function(eventToApply) {
+		const x = eventToApply.x(); //Décidément il y en a eu à faire, des changements de x en x() depuis qu'on a mis en commun les solvers de puzzles d'adjacences
+		const y = eventToApply.y();
+		const symbol = eventToApply.symbol;
+		p_solver.answerGrid[y][x] = SPACE.UNDECIDED;
+		var ir = p_solver.regionGrid[y][x];
+		var region = p_solver.regions[ir];
+		if (region.notPlacedYet != null){
+			if (symbol == SPACE.OPEN){
+				region.notPlacedYet.OPENs++;
+			} else if (symbol == SPACE.CLOSED){
+				region.notPlacedYet.CLOSEDs++;
+			}
+		}
+		const stripSpace = p_solver.stripGrid[y][x];
+		p_solver.raiseHorizontalStrip(stripSpace.leftMost,symbol);
+		p_solver.raiseHorizontalStrip(stripSpace.horizIn,symbol);
+		p_solver.raiseHorizontalStrip(stripSpace.rightMost,symbol);	
+		p_solver.raiseVerticalStrip(stripSpace.topMost,symbol);
+		p_solver.raiseVerticalStrip(stripSpace.vertIn,symbol);
+		p_solver.raiseVerticalStrip(stripSpace.bottomMost,symbol);
+	}
+}
+
+//--------------------------------
+
+// Intelligence
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
 		var x = p_eventBeingApplied.x();
@@ -323,60 +389,4 @@ SolverHeyawake.prototype.alertRegion = function(p_listEvents,p_regionIndex,p_mis
 		}
 	}
 	return p_listEvents;
-}
-
-//--------------------
-// Quick start 
-
-/**
-Used by outside !
-*/
-SolverHeyawake.prototype.quickStart = function(){
-	this.regions.forEach(region => {
-		if (region.size == 1 && region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 1){
-			this.tryToPutNew(region.spaces[0].x,region.spaces[0].y,SPACE.CLOSED);
-		};
-		if (region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 0){
-			region.spaces.forEach(space => {
-				this.tryToPutNew(space.x,space.y,SPACE.OPEN);
-			});
-		}
-	});
-}
-
-//--------------------
-// Undoing
-
-
-
-undoEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		const x = eventToApply.x(); //Décidément il y en a eu à faire, des changements de x en x() depuis qu'on a mis en commun les solvers de puzzles d'adjacences
-		const y = eventToApply.y();
-		const symbol = eventToApply.symbol;
-		p_solver.answerGrid[y][x] = SPACE.UNDECIDED;
-		var ir = p_solver.regionGrid[y][x];
-		var region = p_solver.regions[ir];
-		if (region.notPlacedYet != null){
-			if (symbol == SPACE.OPEN){
-				region.notPlacedYet.OPENs++;
-			} else if (symbol == SPACE.CLOSED){
-				region.notPlacedYet.CLOSEDs++;
-			}
-		}
-		const stripSpace = p_solver.stripGrid[y][x];
-		p_solver.raiseHorizontalStrip(stripSpace.leftMost,symbol);
-		p_solver.raiseHorizontalStrip(stripSpace.horizIn,symbol);
-		p_solver.raiseHorizontalStrip(stripSpace.rightMost,symbol);	
-		p_solver.raiseVerticalStrip(stripSpace.topMost,symbol);
-		p_solver.raiseVerticalStrip(stripSpace.vertIn,symbol);
-		p_solver.raiseVerticalStrip(stripSpace.bottomMost,symbol);
-	}
-}
-
-/**
-Used by outside !
-*/
-SolverHeyawake.prototype.undoToLastHypothesis = function(){
-	this.clusterInvolvedSolver.undoToLastHypothesis(undoEventClosure(this));
 }
