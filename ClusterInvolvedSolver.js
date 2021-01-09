@@ -8,9 +8,9 @@ const SPACE = {
 };
 
 const EVENT_RESULT = { // WARNING : don't confuse EVENT_RESULT and RESULT, ; harmonization needed
-    SUCCESS : 3,
-    FAILURE : 1,
-    HARMLESS : 2
+    SUCCESS : 1,
+    FAILURE : 2,
+    HARMLESS : 3
 }
 
 const DEDUCTIONS_RESULT = {
@@ -18,10 +18,16 @@ const DEDUCTIONS_RESULT = {
 	FAILURE : 12
 }
 
+const PASS_RESULT = {
+	SUCCESS : 21,
+	FAILURE : 22,
+	HARMLESS : 23
+}
+
 function ClusterInvolvedSolver(p_xLength, p_yLength) {
 	this.xLength = p_xLength;
 	this.yLength = p_yLength;
-	this.happenedEvents = [];
+	this.happenedEvents = []; // List of (non-empty list of events). All events beyond the first must be logical deductions (logic of any kind, including geographic) of the first one.
     this.atLeastOneOpen = false;
     this.adjacencyLimitGrid = createAdjacencyLimitGrid(p_xLength, p_yLength);
     this.adjacencyLimitSpacesList = [];
@@ -225,6 +231,13 @@ ClusterInvolvedSolver.prototype.passEvents = function (p_listListCoveringEvent, 
 		listExtractedEvents.forEach( deductedEvent => {
 			this.tryToApply(deductedEvent, p_methodSet);	// TODO changer cette méthode "try to apply" dans son nom mais aussi dans ses arguments...
 		});
+		if (listExtractedEvents.length > 0) {
+			return PASS_RESULT.SUCCESS;
+		} else {
+			return PASS_RESULT.HARMLESS;
+		}
+	} else {
+		return PASS_RESULT.FAILURE;
 	}
 }
 
@@ -304,6 +317,43 @@ function filterExternalMethods(p_list) {
 		}
 	});
 	return answer;
+}
+
+/**
+Performs a multipass
+p_generatePassEventsMethod : method that turns an argument (of any nature) into a list of "list of covering events" usable by the passing method
+p_orderPassArgumentsMethod : method that reorders the argument list. Must take no arguments and return a list of arguments, each of which should be passed to p_generatePassEventsMethod. 
+p_methodSet, p_eventsTools : same arguments as in the pass method.
+*/
+ClusterInvolvedSolver.prototype.multiPass = function(p_generatePassEventsMethod, p_orderPassArgumentsMethod, p_methodSet ,p_eventsTools) {
+	var oneMoreLoop;
+	var orderedListPassArguments;
+	var ok = true;
+	var resultPass;
+	var i;
+	const lengthBeforeMultiPass = this.happenedEvents.length;
+	do {
+		oneMoreLoop = false;
+		orderedListPassArguments = p_orderPassArgumentsMethod();
+		const happenedEventsBeforePassingAllRegions = this.happenedEvents.length;
+		i = 0;
+		while (ok && i < orderedListPassArguments.length) {
+			p_listListCoveringEvent = p_generatePassEventsMethod(orderedListPassArguments[i]);
+			resultPass = this.passEvents(p_listListCoveringEvent, p_methodSet ,p_eventsTools);
+			if (resultPass == PASS_RESULT.SUCCESS) {
+				oneMoreLoop = true;
+			} else if (resultPass == PASS_RESULT.FAILURE) {
+				ok = false;
+			}
+			i++;
+		}
+	} while (ok && oneMoreLoop);
+	if (!ok) {
+		while (this.happenedEvents.length > lengthBeforeMultiPass) {
+			var lastEventsList = this.happenedEvents.pop();
+			this.undoEventList(lastEventsList, p_methodSet.undoEventMethod);
+		}
+	}
 }
 
 /**

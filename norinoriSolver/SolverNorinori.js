@@ -6,9 +6,10 @@ function SolverNorinori(p_wallArray){
 	this.construct(p_wallArray);
 }
 
-SolverNorinori.prototype.construct = function(p_wallArray){
+SolverNorinori.prototype.construct = function(p_wallArray) {
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
+	this.clusterInvolvedSolver = new ClusterInvolvedSolver(this.xLength, this.yLength);
 	this.wallGrid = WallGrid_data(p_wallArray); 
 	this.regionGrid = this.wallGrid.toRegionGrid(); 
 	this.answerGrid = [];
@@ -40,7 +41,6 @@ SolverNorinori.prototype.buildAnswerGrid = function(){
 	}
 }
 
-//TODO update this description
 /**
 Puts NOs into the answerGrid corresponding to banned spaces 
 Precondition : both spacesByRegion and notPlacedYetByRegion have been refreshed and answerGrid is ok.
@@ -82,7 +82,6 @@ SolverNorinori.prototype.buildNeighborsGrid = function(){
 	this.neighborsGrid[this.yLength-1][this.xLength-1].undecided = 2;
 }
 
-//TODO modify this description
 /**
 Sets the list of spaces for each row and column (might be exportated)
 Hyphothesis : all non-banned regions are numbered from 0 to n-1 ; banned spaces have lower-than-0 numbers
@@ -122,7 +121,7 @@ SolverNorinori.prototype.buildPossibilities = function(p_numberStarsPer){
 }
 
 //----------------------
-//Getters (not setters, of course)
+// Misc methods (may be used for drawing and intelligence)
 
 SolverNorinori.prototype.getAnswer = function(p_x,p_y){
 	return this.answerGrid[p_y][p_x];
@@ -138,49 +137,98 @@ SolverNorinori.prototype.getRegion = function(p_x,p_y){
 }
 
 //------------------
-//Strategy management
+// Input methods
 /**
 Admits that this space could be filled or not...
 */
-SolverNorinori.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
-	var result = this.tryToPutNew(p_x,p_y,p_symbol);
-	if (result != null && result.eventsApplied.length > 0){
-		this.happenedEvents.push(result.eventsApplied);
-		return {result:RESULT.SUCCESS,eventsApplied:result.eventsApplied};
+SolverNorinori.prototype.emitHypothesis = function(p_x,p_y,p_symbol) {
+	this.tryToPutNew(p_x,p_y,p_symbol);
+}
+
+/**
+Cancels the last list of events since the last "non-deducted" space.
+*/
+SolverNorinori.prototype.undoToLastHypothesis = function(){
+	this.clusterInvolvedSolver.undoToLastHypothesis(undoEventClosure(this));
+}
+
+/**
+Rushes the spaces with 2 regions by filling them with O (actually, fills one space and the next one follows)
+*/
+SolverNorinori.prototype.quickStart = function(){
+	var space;
+	for(var i=0;i<this.spacesByRegion.length;i++){
+		if(this.spacesByRegion[i].length == 2){
+			space = this.spacesByRegion[i][0];
+			this.emitHypothesis(space.x,space.y,FILLING.YES);
+		}
 	}
-	return {result:RESULT.FAILURE,eventsApplied:[]};
+}
+
+SolverNorinori.prototype.emitPassRegion = function(p_indexRegion) {
+	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
+	methodSet = new ApplyEventMethodNonAdjacentPack(
+		applyEventClosure(this),
+		deductionsClosure(this),
+		undoEventClosure(this)
+	);
+	methodTools = {comparisonMethod : comparison, copyMethod : copying};
+	this.clusterInvolvedSolver.passEvents(generatedEvents, methodSet, methodTools); 
+}
+
+SolverNorinori.prototype.emitMultiPass = function() {
+	methodSet = new ApplyEventMethodNonAdjacentPack(
+		applyEventClosure(this),
+		deductionsClosure(this),
+		undoEventClosure(this)
+	);
+	methodTools = {comparisonMethod : comparison, copyMethod : copying};
+	
+	this.clusterInvolvedSolver.multiPass(
+		generateEventsForRegionPassClosure(this),
+		orderedListPassArgumentsMethodClosure(this), 
+		methodSet, methodTools);
 }
 
 //------------------
-//Putting symbols into spaces. 
+// Doing and undoing
+
+applyEventClosure = function(p_solver) {
+	return function(eventToApply) {
+		return p_solver.putNew(eventToApply.x, eventToApply.y, eventToApply.symbol);
+	}
+}
 
 /**Tries to put a symbol into the space of a grid. 3 possibilities :
-RESULT.SUCCESS : it was indeed put into the grid ; the number of Os and Xs for this region, row and column are also updated.
-RESULT.HARMLESS : said symbol was either already put into that space OUT out of bounds beacuse of automatic operation. Don't change anything to the grid and remaining symbols
-ERROR : there is a different symbol in that space. We have done a wrong hypothesis somewhere ! (or the grid was wrong at the basis !)
-This is also used at grid start in order to put Xs in banned spaces, hence the check in the NO_STAR part.
+SUCCESS : it was indeed put into the grid ; the number of Os and Xs for this region, row and column are also updated.
+HARMLESS : said symbol was either already put into that space OUT out of bounds beacuse of automatic operation. Don't change anything to the grid and remaining symbols
+FAILURE : there is a different symbol in that space. We have done a wrong hypothesis somewhere ! (or the grid was wrong at the basis !)
+This is also used at grid start in order to put Xs in banned spaces, hence the check in the NO part.
 */
 SolverNorinori.prototype.putNew = function(p_x,p_y,p_symbol){
 	if ((p_x < 0) || (p_x >= this.xLength) || (p_y < 0) || (p_y >= this.yLength) || 
 	(this.answerGrid[p_y][p_x] == p_symbol)){
-		return RESULT.HARMLESS;
+		return EVENT_RESULT.HARMLESS;
 	}
 	debugTryToPutNewGold("Putting into grid : "+p_x+" "+p_y+" "+p_symbol);
-	if (this.answerGrid[p_y][p_x] == FILLING.UNDECIDED){
+	if (this.answerGrid[p_y][p_x] == FILLING.UNDECIDED) {
 		this.answerGrid[p_y][p_x] = p_symbol;
 		var indexRegion = this.getRegion(p_x,p_y);
 		if (p_symbol == FILLING.YES){
 			this.notPlacedYetByRegion[indexRegion].Os--;
-			if (p_x > 0){
+			if (p_x > 0) {
 				this.neighborsGrid[p_y][p_x-1].Os++;
 				this.neighborsGrid[p_y][p_x-1].undecided--;	
-			}if (p_y > 0){
+			} 
+			if (p_y > 0) {
 				this.neighborsGrid[p_y-1][p_x].Os++;
 				this.neighborsGrid[p_y-1][p_x].undecided--;	
-			}if (p_x < this.xLength-1){
+			}
+			if (p_x <= this.xLength-2) {
 				this.neighborsGrid[p_y][p_x+1].Os++;
 				this.neighborsGrid[p_y][p_x+1].undecided--;	
-			}if (p_y < this.yLength-1){
+			}
+			if (p_y <= this.yLength-2) {
 				this.neighborsGrid[p_y+1][p_x].Os++;
 				this.neighborsGrid[p_y+1][p_x].undecided--;	
 			}
@@ -188,320 +236,208 @@ SolverNorinori.prototype.putNew = function(p_x,p_y,p_symbol){
 			if (indexRegion >= 0){
 				this.notPlacedYetByRegion[indexRegion].Xs--;				
 			}
-			if (p_x > 0){
+			if (p_x > 0) {
 				this.neighborsGrid[p_y][p_x-1].undecided--;	
-			}if (p_y > 0){
+			}
+			if (p_y > 0) {
 				this.neighborsGrid[p_y-1][p_x].undecided--;	
-			}if (p_x < this.xLength-1){
+			}
+			if (p_x <= this.xLength-2) {
 				this.neighborsGrid[p_y][p_x+1].undecided--;	
-			}if (p_y < this.yLength-1){
+			}
+			if (p_y <= this.yLength-2) {
 				this.neighborsGrid[p_y+1][p_x].undecided--;	
 			}
 		}
-		return RESULT.SUCCESS;
+		return EVENT_RESULT.SUCCESS;
 	}
 	if (this.answerGrid[p_y][p_x] != p_symbol){
-		debugTryToPutNewGold("NOOOO !");
-		return RESULT.ERROR;
+		return EVENT_RESULT.FAILURE;
 	}
 }
 
-/**
-When you want to remove a symbol from a space !
-*/
-SolverNorinori.prototype.remove = function(p_x,p_y){
-	var indexRegion = this.regionGrid[p_y][p_x];
-	var symbol = this.answerGrid[p_y][p_x];
-	this.answerGrid[p_y][p_x] = FILLING.UNDECIDED;
-	debugTryToPutNew("Removing the following : "+p_x+" "+p_y+" "+symbol);
-	if (symbol == FILLING.YES){
-		this.notPlacedYetByRegion[indexRegion].Os++;
-		if (p_x > 0){
-			this.neighborsGrid[p_y][p_x-1].Os--;
-			this.neighborsGrid[p_y][p_x-1].undecided++;	
-		}if (p_y > 0){
-			this.neighborsGrid[p_y-1][p_x].Os--;
-			this.neighborsGrid[p_y-1][p_x].undecided++;	
-		}if (p_x < this.xLength-1){
-			this.neighborsGrid[p_y][p_x+1].Os--;
-			this.neighborsGrid[p_y][p_x+1].undecided++;	
-		}if (p_y < this.yLength-1){
-			this.neighborsGrid[p_y+1][p_x].Os--;
-			this.neighborsGrid[p_y+1][p_x].undecided++;	
+undoEventClosure = function(p_solver) {
+	return function(eventToUndo) {
+		x = eventToUndo.x;
+		y = eventToUndo.y;
+		var indexRegion = p_solver.regionGrid[y][x];
+		var symbol = p_solver.answerGrid[y][x];
+		p_solver.answerGrid[y][x] = FILLING.UNDECIDED;
+		debugTryToPutNew("Removing the following : "+x+" "+y+" "+symbol);
+		if (symbol == FILLING.YES){
+			p_solver.notPlacedYetByRegion[indexRegion].Os++;
+			if (x > 0){
+				p_solver.neighborsGrid[y][x-1].Os--;
+				p_solver.neighborsGrid[y][x-1].undecided++;	
+			}if (y > 0){
+				p_solver.neighborsGrid[y-1][x].Os--;
+				p_solver.neighborsGrid[y-1][x].undecided++;	
+			}if (x < p_solver.xLength-1){
+				p_solver.neighborsGrid[y][x+1].Os--;
+				p_solver.neighborsGrid[y][x+1].undecided++;	
+			}if (y < p_solver.yLength-1){
+				p_solver.neighborsGrid[y+1][x].Os--;
+				p_solver.neighborsGrid[y+1][x].undecided++;	
+			}
 		}
+		if (symbol == FILLING.NO){
+			p_solver.notPlacedYetByRegion[indexRegion].Xs++;
+			if (x > 0){
+				p_solver.neighborsGrid[y][x-1].undecided++;	
+			}if (y > 0){
+				p_solver.neighborsGrid[y-1][x].undecided++;	
+			}if (x < p_solver.xLength-1){
+				p_solver.neighborsGrid[y][x+1].undecided++;	
+			}if (y < p_solver.yLength-1){
+				p_solver.neighborsGrid[y+1][x].undecided++;	
+			}
+		}	
 	}
-	if (symbol == FILLING.NO){
-		this.notPlacedYetByRegion[indexRegion].Xs++;
-		if (p_x > 0){
-			this.neighborsGrid[p_y][p_x-1].undecided++;	
-		}if (p_y > 0){
-			this.neighborsGrid[p_y-1][p_x].undecided++;	
-		}if (p_x < this.xLength-1){
-			this.neighborsGrid[p_y][p_x+1].undecided++;	
-		}if (p_y < this.yLength-1){
-			this.neighborsGrid[p_y+1][p_x].undecided++;	
-		}
-	}
+}
+
+//--------------------------------
+
+// Central method
+SolverNorinori.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
+	methodPack = new ApplyEventMethodNonAdjacentPack(
+		applyEventClosure(this),
+		deductionsClosure(this),
+		undoEventClosure(this)
+	);
+	this.clusterInvolvedSolver.tryToApply(new SpaceEvent(p_symbol, p_x, p_y), methodPack);
 }
 
 //--------------
-//It's pass time !
+// Intelligence
 
-SolverNorinori.prototype.multiPass = function(){
-	var oneMoreLoop;
-	var answer;
-	if (this.indexRegionsSortedBySize == null){
-		var sortedBySize = this.spacesByRegion.slice().sort(
-			function compareSpaceEvents(p_region1,p_region2){
-				if (p_region1.length < p_region2.length)
-					return -1;
-				if (p_region1.length > p_region2.length)
-					return 1;
-				return 0;
+deductionsClosure = function (p_solver) {
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		const x = p_eventBeingApplied.x;
+		const y = p_eventBeingApplied.y;
+		const symbol = p_eventBeingApplied.symbol;
+		r = p_solver.getRegion(x,y); //(y,x) might be out of bounds, if so the putNewResult isn't supposed to be RESULT.SUCCESS. Hence the check only here.
+		//Final alert on region
+		if (p_solver.notPlacedYetByRegion[r].Os == 0) {
+			var spaceInRegion;
+			for(var si=0;si< p_solver.spacesByRegion[r].length;si++) {
+				spaceInRegion = p_solver.spacesByRegion[r][si];
+				if (p_solver.answerGrid[spaceInRegion.y][spaceInRegion.x] == FILLING.UNDECIDED) {
+					p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,spaceInRegion.x,spaceInRegion.y)));
+				}
+			}
+		}
+		if (p_solver.notPlacedYetByRegion[r].Xs == 0) {
+			var spaceInRegion;
+			for(var si=0;si< p_solver.spacesByRegion[r].length;si++) {
+				spaceInRegion = p_solver.spacesByRegion[r][si];
+				if (p_solver.answerGrid[spaceInRegion.y][spaceInRegion.x] == FILLING.UNDECIDED) {
+					p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,spaceInRegion.x,spaceInRegion.y)));
+				}
+			}
+		}
+		
+		var upward = (y>0);
+		var leftward = (x>0);
+		var rightward = (x<p_solver.xLength-1);
+		var downward = (y<p_solver.yLength-1);
+		if (symbol == FILLING.YES){
+			//Alert on formed domino (down & up)
+			//If not, if neighbors are undecided and now have exactly 2 Os neighbors (reminder : they are added one by one)
+			//If this space has exactly one undecided neighbor and no O : add an O here.
+			//Cornered O : the diagonally-opposite X.
+			var notPartOfDomino = (p_solver.neighborsGrid[y][x].Os == 0);
+			var exactlyOneUndecidedNeighbor = (p_solver.neighborsGrid[y][x].undecided == 1);
+			var toBeMerged = (notPartOfDomino && exactlyOneUndecidedNeighbor);
+
+			[DIRECTION_NORINORI.LEFT,DIRECTION_NORINORI.UP,DIRECTION_NORINORI.RIGHT,DIRECTION_NORINORI.DOWN].forEach(direction =>{
+				if (p_solver.existentDirection(direction,x,y)){
+					var alterX = alteredX(direction,x); 
+					var alterY = alteredY(direction,y);
+					if(p_solver.answerGrid[alterY][alterX] == FILLING.YES){
+						switch(direction){
+							case(DIRECTION_NORINORI.UP):
+								p_listEventsToApply=pushEventsDominoMadeVertical(p_listEventsToApply,x,y-1);break;
+							case(DIRECTION_NORINORI.RIGHT):
+								p_listEventsToApply=pushEventsDominoMadeHorizontal(p_listEventsToApply,x,y);break;
+							case(DIRECTION_NORINORI.DOWN):
+								p_listEventsToApply=pushEventsDominoMadeVertical(p_listEventsToApply,x,y);break;
+							case(DIRECTION_NORINORI.LEFT):
+								p_listEventsToApply=pushEventsDominoMadeHorizontal(p_listEventsToApply,x-1,y);break;
+						}
+					} else if (p_solver.neighborsGrid[alterY][alterX].Os == 2){
+						p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,alterX,alterY)));
+					}
+					if(toBeMerged && p_solver.answerGrid[alterY][alterX] == FILLING.UNDECIDED){
+						p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,alterX,alterY)));
+					}
+				}
 			});
-		this.indexRegionsSortedBySize = [];
-		sortedBySize.forEach(region => this.indexRegionsSortedBySize.push(this.regionGrid[region[0].y][region[0].x]));
-	}
-
-	do{
-		oneMoreLoop = false;
-		for(var indexRegion=0;indexRegion<this.indexRegionsSortedBySize.length;indexRegion++){
-			if (this.notPlacedYetByRegion[indexRegion].Os != 0){
-				answer = this.emitPassRegion(indexRegion);
-				if ((answer.consistence == RESULT.SUCCESS) && (answer.eventsApplied.length > 0)){
-					oneMoreLoop = true;
-				}
-			}
-		}
-	}while(oneMoreLoop);
-	
-}
-
-SolverNorinori.prototype.emitPassRegion = function(p_indexRegion){
-	var answer = this.passRegion(p_indexRegion,0);
-	console.log("Enfin sorti ! " + answer.eventsApplied.length);
-	if (answer.consistence == RESULT.SUCCESS && answer.eventsApplied.length > 0){
-		this.happenedEvents.push(answer.eventsApplied);
-		answer.eventsApplied.forEach(spaceEvent => {this.putNew(spaceEvent.x,spaceEvent.y,spaceEvent.symbol)});
-	}
-	return answer;
-}
-
-SolverNorinori.prototype.passRegion = function(p_indexRegion, p_indexFirstSpace){
-		var region = this.spacesByRegion[p_indexRegion];
-		var index = p_indexFirstSpace;
-		while (this.answerGrid[region[index].y][region[index].x] != FILLING.UNDECIDED)
-		{
-			index++;
-		}
-		//We MUST find an index where space is undecided.
-		var listO = null;
-		var listX = null;
-		var answerPut = this.tryToPutNew(region[index].x,region[index].y,FILLING.YES);
-		if (answerPut.coherence == COHERENCE.SUCCESS){
-			if (this.notPlacedYetByRegion[p_indexRegion].Os == 0){
-				listO = answerPut.eventsApplied;
-			}
-			else{
-				var answerPass = this.passRegion(p_indexRegion,index+1);
-				if (answerPass.consistence == RESULT.SUCCESS){
-					listO = answerPass.eventsApplied.concat(answerPut.eventsApplied);
-				}
-			}
-			this.undoList(answerPut.eventsApplied.slice());
-		}
-		if ((listO == null) || (listO.length > 0)){
-			answerPut = this.tryToPutNew(region[index].x,region[index].y,FILLING.NO);
-			if (answerPut.coherence == COHERENCE.SUCCESS){
-				if (this.notPlacedYetByRegion[p_indexRegion].Os == 0){
-					listX = answerPut.eventsApplied;
+			//First O of a region
+			if (p_solver.notPlacedYetByRegion[r].Os == 1){ 
+				if (!(p_solver.hasNeighborQualifiable(r,x,y))){ //If we have put an O into a space without a foreign undecided neighbor OR a X (a non-"qualifiable" O, word subject to change) :
+					debugTryToPutNew("Well, this has no neighbor qualifiable");
+					for(var si=0;si< p_solver.spacesByRegion[r].length;si++){ // Fill all unreachable spaces with X.
+						spaceInRegion = p_solver.spacesByRegion[r][si];
+						if (p_solver.answerGrid[spaceInRegion.y][spaceInRegion.x] == FILLING.UNDECIDED && (!adjacentOrIdentical(spaceInRegion.x,spaceInRegion.y,x,y))){
+							p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,spaceInRegion.x,spaceInRegion.y)));
+						}
+					}
 				}
 				else{
-					var answerPass = this.passRegion(p_indexRegion,index+1);
-					if (answerPass.consistence == RESULT.SUCCESS){
-						listX = answerPass.eventsApplied.concat(answerPut.eventsApplied);
-					}
-				}
-				this.undoList(answerPut.eventsApplied.slice());
-			}
-		}
-		var list;
-		if (listO == null && listX == null){
-			return {consistence : RESULT.ERROR, eventsApplied: []};
-		}
-		if (listO == null){
-			return {consistence : RESULT.SUCCESS, eventsApplied: listX};
-		}
-		if (listX == null){
-			return {consistence : RESULT.SUCCESS, eventsApplied: listO};
-		}
-		return {consistence:RESULT.SUCCESS, eventsApplied:intersect(listO.sort(compareSpaceEvents),listX.sort(compareSpaceEvents))};
-}
-
-
-/**
-Tries to either fill a space or put an X into it. Will it be consistent ?
-BIG WARNING : if the end is successful, the list of spaces will be put into eventsApplied. But this doesn't mean they are all fine !
-*/
-//TODO : do something about big warning !
-SolverNorinori.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
-	
-	if (this.answerGrid[p_y][p_x] != FILLING.UNDECIDED){
-		debugHumanMisclick("Trying to put "+p_symbol+" at "+p_x+","+p_y+" ; there is already "+this.answerGrid[p_y][p_x]+" in this place !");
-		return null;
-	}
-	
-	var eventsToAdd = [new SpaceEvent(p_symbol,p_x,p_y)];
-	var eventsApplied = [];
-	var ok = true;
-	var putNewResult;
-	var spaceEventToApply;
-	var spaceEventToAdd;
-	var x,y,r,symbol,xi,yi,roundi;
-	while ((eventsToAdd.length > 0) && ok){ 
-		spaceEventToApply = eventsToAdd.pop();
-		x = spaceEventToApply.x;
-		y = spaceEventToApply.y;
-		symbol = spaceEventToApply.symbol;
-		putNewResult = this.putNew(x, y,symbol);
-		ok = (putNewResult != RESULT.ERROR);
-		if (putNewResult == RESULT.SUCCESS){
-			r = this.getRegion(x,y); //(y,x) might be out of bounds, if so the putNewResult isn't supposed to be RESULT.SUCCESS. Hence the check only here.
-			//Final alert on region
-			if (this.notPlacedYetByRegion[r].Os == 0){
-				var spaceInRegion;
-				for(var si=0;si< this.spacesByRegion[r].length;si++){
-					spaceInRegion = this.spacesByRegion[r][si];
-					if (this.answerGrid[spaceInRegion.y][spaceInRegion.x] == FILLING.UNDECIDED){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,spaceInRegion.x,spaceInRegion.y)));
+					debugTryToPutNew("This has neighbor qualifiable");
+					for(var si=0;si< p_solver.spacesByRegion[r].length;si++){ //Fill all spaces that won't be part of a domino with X
+						spaceInRegion = p_solver.spacesByRegion[r][si];
+						if ((p_solver.answerGrid[spaceInRegion.y][spaceInRegion.x] == FILLING.UNDECIDED) && (!p_solver.hasNeighborQualifiable(r,spaceInRegion.x,spaceInRegion.y))){
+							p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,spaceInRegion.x,spaceInRegion.y)));
+						}
 					}
 				}
 			}
-			if (this.notPlacedYetByRegion[r].Xs == 0){
-				var spaceInRegion;
-				for(var si=0;si< this.spacesByRegion[r].length;si++){
-					spaceInRegion = this.spacesByRegion[r][si];
-					if (this.answerGrid[spaceInRegion.y][spaceInRegion.x] == FILLING.UNDECIDED){
-						eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,spaceInRegion.x,spaceInRegion.y)));
+			p_listEventsToApply = p_solver.pushEventsIfAloneAndCornered(p_listEventsToApply,leftward,upward,rightward,downward,x,y);
+		}
+		if (symbol == FILLING.NO){
+			var alterX; 
+			var alterY;
+			//Four checks per direction :
+			//If the neighbor cell is fully isolated => X
+			//If the neighbor cell has only one undecided neighbor and is a single half of domino => O in the correct neighbor
+			//If the neighbor cell belongs to a region with only one O and cannot be linked to any O => X into it.
+			//If the neighbor cell is O => check if it is cornered and if yes add Xs in angles opposite to the corners
+			[DIRECTION_NORINORI.LEFT,DIRECTION_NORINORI.UP,DIRECTION_NORINORI.RIGHT,DIRECTION_NORINORI.DOWN].forEach(direction =>{
+				if (p_solver.existentDirection(direction,x,y)){
+					alterX = alteredX(direction,x);
+					alterY = alteredY(direction,y);
+					if ((p_solver.neighborsGrid[alterY][alterX].undecided == 0) &&
+						(p_solver.neighborsGrid[alterY][alterX].Os == 0)){
+						p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,alterX,alterY)));
 					}
-				}
-			}
-			
-			var upward = (y>0);
-			var leftward = (x>0);
-			var rightward = (x<this.xLength-1);
-			var downward = (y<this.yLength-1);
-			if (symbol == FILLING.YES){
-				//Alert on formed domino (down & up)
-				//If not, if neighbors are undecided and now have exactly 2 Os neighbors (reminder : they are added one by one)
-				//If this space has exactly one undecided neighbor and no O : add an O here.
-				//Cornered O : the diagonally-opposite X.
-				var notPartOfDomino = (this.neighborsGrid[y][x].Os == 0);
-				var exactlyOneUndecidedNeighbor = (this.neighborsGrid[y][x].undecided == 1);
-				var toBeMerged = (notPartOfDomino && exactlyOneUndecidedNeighbor);
-
-				[DIRECTION.LEFT,DIRECTION.UP,DIRECTION.RIGHT,DIRECTION.DOWN].forEach(direction =>{
-					if (this.existentDirection(direction,x,y)){
-						var alterX = alteredX(direction,x); 
-						var alterY = alteredY(direction,y);
-						if(this.answerGrid[alterY][alterX] == FILLING.YES){
-							switch(direction){
-								case(DIRECTION.UP):
-									eventsToAdd=pushEventsDominoMadeVertical(eventsToAdd,x,y-1);break;
-								case(DIRECTION.RIGHT):
-									eventsToAdd=pushEventsDominoMadeHorizontal(eventsToAdd,x,y);break;
-								case(DIRECTION.DOWN):
-									eventsToAdd=pushEventsDominoMadeVertical(eventsToAdd,x,y);break;
-								case(DIRECTION.LEFT):
-									eventsToAdd=pushEventsDominoMadeHorizontal(eventsToAdd,x-1,y);break;
+					if (p_solver.isNotQualifiablePostPutX(alterX,alterY)){
+						p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,alterX,alterY)));
+					}
+					if ((p_solver.answerGrid[alterY][alterX] == FILLING.YES) && (p_solver.furtherExistentDirection(direction,alterX,alterY))){
+						p_listEventsToApply = p_solver.pushEventsIfAloneAndCornered(p_listEventsToApply,leftward,upward,rightward,downward,alterX,alterY);
+					}
+					if (p_solver.readyToBeCompletedDomino(alterX,alterY)){
+						[DIRECTION_NORINORI.LEFT,DIRECTION_NORINORI.UP,DIRECTION_NORINORI.RIGHT,DIRECTION_NORINORI.DOWN].forEach(direction2 =>{
+							if(direction2 != ((direction+2) % 4) ){
+								if (p_solver.existentDirection(direction2,alterX,alterY) &&
+									p_solver.answerGrid[alteredY(direction2,alterY)][alteredX(direction2,alterX)] == FILLING.UNDECIDED){
+										p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,alteredX(direction2,alterX),alteredY(direction2,alterY))));	
+									}	
 							}
-						} else if (this.neighborsGrid[alterY][alterX].Os == 2){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,alterX,alterY)));
-						}
-						if(toBeMerged && this.answerGrid[alterY][alterX] == FILLING.UNDECIDED){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,alterX,alterY)));
-						}
-					}
-				});
-				//First O of a region
-				if (this.notPlacedYetByRegion[r].Os == 1){ 
-					if (!(this.hasNeighborQualifiable(r,x,y))){ //If we have put an O into a space without a foreign undecided neighbor OR a X (a non-"qualifiable" O, word subject to change) :
-						debugTryToPutNew("Well, this has no neighbor qualifiable");
-						for(var si=0;si< this.spacesByRegion[r].length;si++){ // Fill all unreachable spaces with X.
-							spaceInRegion = this.spacesByRegion[r][si];
-							if (this.answerGrid[spaceInRegion.y][spaceInRegion.x] == FILLING.UNDECIDED && (!adjacentOrIdentical(spaceInRegion.x,spaceInRegion.y,x,y))){
-								eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,spaceInRegion.x,spaceInRegion.y)));
-							}
-						}
-					}
-					else{
-						debugTryToPutNew("This has neighbor qualifiable");
-						for(var si=0;si< this.spacesByRegion[r].length;si++){ //Fill all spaces that won't be part of a domino with X
-							spaceInRegion = this.spacesByRegion[r][si];
-							if ((this.answerGrid[spaceInRegion.y][spaceInRegion.x] == FILLING.UNDECIDED) && (!this.hasNeighborQualifiable(r,spaceInRegion.x,spaceInRegion.y))){
-								eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,spaceInRegion.x,spaceInRegion.y)));
-							}
-						}
+						});
 					}
 				}
-				eventsToAdd = this.pushEventsIfAloneAndCornered(eventsToAdd,leftward,upward,rightward,downward,x,y);
-			}
-			if (symbol == FILLING.NO){
-				var alterX; 
-				var alterY;
-				//Four checks per direction :
-				//If the neighbor cell is fully isolated => X
-				//If the neighbor cell has only one undecided neighbor and is a single half of domino => O in the correct neighbor
-				//If the neighbor cell belongs to a region with only one O and cannot be linked to any O => X into it.
-				//If the neighbor cell is O => check if it is cornered and if yes add Xs in angles opposite to the corners
-				[DIRECTION.LEFT,DIRECTION.UP,DIRECTION.RIGHT,DIRECTION.DOWN].forEach(direction =>{
-					if (this.existentDirection(direction,x,y)){
-						alterX = alteredX(direction,x);
-						alterY = alteredY(direction,y);
-						if ((this.neighborsGrid[alterY][alterX].undecided == 0) &&
-							(this.neighborsGrid[alterY][alterX].Os == 0)){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,alterX,alterY)));
-						}
-						if (this.isNotQualifiablePostPutX(alterX,alterY)){
-							eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,alterX,alterY)));
-						}
-						if ((this.answerGrid[alterY][alterX] == FILLING.YES) && (this.furtherExistentDirection(direction,alterX,alterY))){
-							eventsToAdd = this.pushEventsIfAloneAndCornered(eventsToAdd,leftward,upward,rightward,downward,alterX,alterY);
-						}
-						if (this.readyToBeCompletedDomino(alterX,alterY)){
-							[DIRECTION.LEFT,DIRECTION.UP,DIRECTION.RIGHT,DIRECTION.DOWN].forEach(direction2 =>{
-								if(direction2 != ((direction+2) % 4) ){
-									if (this.existentDirection(direction2,alterX,alterY) &&
-										this.answerGrid[alteredY(direction2,alterY)][alteredX(direction2,alterX)] == FILLING.UNDECIDED){
-											eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,alteredX(direction2,alterX),alteredY(direction2,alterY))));	
-										}	
-								}
-							});
-						}
-					}
-				});
-			}
-			eventsApplied.push(spaceEventToApply);
-		} // if RESULT.SUCCESS
-	}
-	
-	//Mistakes were made, we should undo everything 
-	if (!ok){
-		this.undoList(eventsApplied);
-		return {eventsApplied:[],coherence:COHERENCE.FAILURE};
-	} 
-	
-	//Actually it's fine !
-	else{
-		debugTryToPutNewGold("Yes !-----------------"); 
-		return {eventsApplied:eventsApplied,coherence:COHERENCE.SUCCESS};
+			});
+		}		
+		return p_listEventsToApply;
 	}
 }
 
 /**
 Pushes six events corresponding to the surroundings of an horizontal domino given the left space
 */
-function pushEventsDominoMadeHorizontal(p_eventsToAdd,p_xLeft,p_yLeft){
+function pushEventsDominoMadeHorizontal(p_eventsToAdd, p_xLeft, p_yLeft){
 	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xLeft+2,p_yLeft)));
 	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xLeft-1,p_yLeft)));
 	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,p_xLeft,p_yLeft-1)));
@@ -578,21 +514,6 @@ SolverNorinori.prototype.isBlockedDown = function(p_x,p_y){
 }
 
 
-/**
-Rushes the spaces with 2 regions by filling them with O (actually, fills one space and the next one follows)
-*/
-SolverNorinori.prototype.quickStart = function(){
-	var space;
-	for(var i=0;i<this.spacesByRegion.length;i++){
-		if(this.spacesByRegion[i].length == 2){
-			space = this.spacesByRegion[i][0];
-			this.emitHypothesis(space.x,space.y,FILLING.YES);
-		}
-	}
-}
-
-
-
 
 /**
 Tests if an O in a space is alone and "cornered" (for all four corners)
@@ -635,19 +556,19 @@ Working on four directions to limit duplicated code
 */
 SolverNorinori.prototype.existentDirection = function(p_direction,p_x,p_y){
 	switch(p_direction){
-		case DIRECTION.LEFT : return (p_x > 0);
-		case DIRECTION.UP : return (p_y > 0);
-		case DIRECTION.RIGHT : return (p_x < (this.xLength-1));
-		case DIRECTION.DOWN : return (p_y < (this.yLength-1));
+		case DIRECTION_NORINORI.LEFT : return (p_x > 0);
+		case DIRECTION_NORINORI.UP : return (p_y > 0);
+		case DIRECTION_NORINORI.RIGHT : return (p_x < (this.xLength-1));
+		case DIRECTION_NORINORI.DOWN : return (p_y < (this.yLength-1));
 	}
 }
 
 SolverNorinori.prototype.furtherExistentDirection = function(p_direction,p_x,p_y){
 	switch(p_direction){
-		case DIRECTION.LEFT : return (p_x > 1);
-		case DIRECTION.UP : return (p_y > 1);
-		case DIRECTION.RIGHT : return (p_x < (this.xLength-2));
-		case DIRECTION.DOWN : return (p_y < (this.yLength-2));
+		case DIRECTION_NORINORI.LEFT : return (p_x > 1);
+		case DIRECTION_NORINORI.UP : return (p_y > 1);
+		case DIRECTION_NORINORI.RIGHT : return (p_x < (this.xLength-2));
+		case DIRECTION_NORINORI.DOWN : return (p_y < (this.yLength-2));
 	}
 }
 
@@ -659,47 +580,70 @@ alteredY = function(p_direction,p_y){
 	return p_y+DIRECTION_Y_COORDINATES[p_direction];
 }
 
-/*
-Autres pistes à exploiter :
-->3 cases diagonalement consécutives ne peuvent être toutes coloriées (à cause de celle du milieu)
-
-->
-O..
-X?X
-O.. 
-Le ? est un X ; fonctionne aussi en remplaçant X par un mur.
-
-->
-O..
-X?X
-.X.
-Le ? est un X.
-
-TODO :
--> Ajouter la possibilité d'annuler jusqu'à ce qu'une certaine case soit effacée. (ou de rechercher le moment où une case a été effacée)
+/**Tests if two pairs of coordinates are orthogonally adjacent or identical
 */
+function adjacentOrIdentical(p_x1,p_y1,p_x2,p_y2) {
+	var dy = Math.abs(p_y1-p_y2);
+	var dx = Math.abs(p_x1-p_x2);
+	return (dx+dy <= 1);
+}
 
-/**
-Cancels the last list of events since the last "non-deducted" space.
-*/
-SolverNorinori.prototype.undoDeducted = function(){
-	if (this.happenedEvents.length == 0)
-		return;	
-	var spaceEventsListToUndo = this.happenedEvents.pop();
-	this.undoList(spaceEventsListToUndo);
-} 
+//--------------
+// Passing
 
-/**
-Cancels a list of events passed in argument
-*/
-SolverNorinori.prototype.undoList = function(p_list){
-	console.log("We are going to undo a list of : "+p_list.length);
-	var spaceEventToUndo;
-	while (p_list.length !=0){
-		spaceEventToUndo = p_list.pop();
-		this.remove(spaceEventToUndo.x,spaceEventToUndo.y);
+generateEventsForRegionPassClosure = function(p_solver) {
+	return function(p_indexRegion) {
+		return p_solver.generateEventsForRegionPass(p_indexRegion);
 	}
 }
+
+SolverNorinori.prototype.generateEventsForRegionPass = function(p_indexRegion) {
+	var eventList = [];
+	this.spacesByRegion[p_indexRegion].forEach(space => {
+		if (this.answerGrid[space.y][space.x] == FILLING.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
+			eventList.push([new SpaceEvent(FILLING.YES, space.x, space.y), new SpaceEvent(FILLING.NO, space.x, space.y)]);
+		}			 
+	});
+	return eventList;
+}
+
+copying = function(p_event) {
+	return p_event.copy();
+}
+
+comparison = function(p_event1, p_event2) {
+	if (p_event2.y > p_event1.y) {
+		return -1;
+	} else if (p_event2.y < p_event1.y) {
+		return 1;
+	} else if (p_event2.x > p_event1.x) {
+		return -1;
+	} else if (p_event2.x < p_event1.x) {
+		return 1;
+	} else {
+		const c1 = (p_event1.symbol == FILLING.YES ? 1 : 0);
+		const c2 = (p_event2.symbol == FILLING.YES ? 1 : 0); // Works because only two values are admitted
+		return c1-c2;
+	}
+}
+
+orderedListPassArgumentsMethodClosure = function(p_solver) {
+	return function() {
+		var indexList = [];
+		for (var i = 0; i < p_solver.spacesByRegion.length ; i++) {
+			indexList.push(i); //TODO faire une meilleure liste
+		}
+		indexList.sort(function(p_i1, p_i2) {
+			npy1 = p_solver.notPlacedYetByRegion[p_i1];
+			npy2 = p_solver.notPlacedYetByRegion[p_i2];
+			return (npy1.Xs-npy1.Os*3) - (npy2.Xs-npy2.Os*3);
+		});
+		return indexList;
+	}
+}
+
+//--------------
+// "To string" and logs
 
 /**
 Logs that a space event is pushed into a list (in the calling function !) and returns the space event !
@@ -708,17 +652,6 @@ function loggedSpaceEvent(spaceEvt){
 	debugTryToPutNewGold("Event pushed : "+spaceEvt.toString());
 	return spaceEvt
 }
-
-//--------------
-/**Tests if two pairs of coordinates are orthogonally adjacent or identical
-*/
-function adjacentOrIdentical(p_x1,p_y1,p_x2,p_y2){
-	var dy = Math.abs(p_y1-p_y2);
-	var dx = Math.abs(p_x1-p_x2);
-	return (dx+dy <= 1);
-}
-//--------------
-// It's "to string" time !
 
 function answerGridToString(p_grid){
 	for(yi=0;yi<p_grid.length;yi++){
@@ -752,3 +685,23 @@ SolverNorinori.prototype.happenedEventsToString = function(p_onlyAssumed){
 	}
 	return answer;
 }
+
+/*
+Pour aller plus loin :
+->3 cases diagonalement consécutives ne peuvent être toutes coloriées (à cause de celle du milieu)
+
+->
+O..
+X?X
+O.. 
+Le ? est un X ; fonctionne aussi en remplaçant X par un mur.
+
+->
+O..
+X?X
+.X.
+Le ? est un X.
+
+TODO :
+-> Ajouter la possibilité d'annuler jusqu'à ce qu'une certaine case soit effacée. (ou de rechercher le moment où une case a été effacée)
+*/

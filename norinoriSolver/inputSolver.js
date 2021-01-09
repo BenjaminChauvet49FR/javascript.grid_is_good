@@ -39,18 +39,18 @@ quickStartAction = function(p_solver,p_textArea){
 }
 
 undoAction = function(p_solver,p_textArea){
-	p_solver.undoDeducted();
+	p_solver.undoToLastHypothesis();
 	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
 }
 
 multiPassAction = function (p_solver,p_textArea){
-	p_solver.multiPass();
-	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
-	//TODO also manage the rewriting of the events.
+	p_solver.emitMultiPass();
+	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false//TODO also manage the rewriting of the events.
 }
 
-solveAction = function (p_solver,p_textArea){
-	p_solver.generalSolve();
+
+solveAction = function (p_solver,p_textArea) {
+	//p_solver.generalSolve();
 	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO see above
 }
 
