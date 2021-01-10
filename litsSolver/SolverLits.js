@@ -1,4 +1,5 @@
 // AVERTISSEMENT : ce solveur utilise le "dad solver" et n'a pas d'équivalent autonome 
+// Setup
 
 const NOT_FORCED = -1; 
 const NOT_RELEVANT = -1;
@@ -15,6 +16,15 @@ SolverLITS.prototype.construct = function(p_wallArray,p_numberGrid){
 	this.yLength = p_wallArray.length;
 	this.generalSolver = new GeneralSolver();
 	this.generalSolver.makeItGeographical(this.xLength, this.yLength);
+	this.methodSet = new ApplyEventMethodPack(
+		applyEventClosure(this),
+		deductionsClosure(this),
+		adjacencyClosure(this),
+		transformClosure(this),
+		undoEventClosure(this)
+	);
+	this.methodSet.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
+	this.methodTools = {comparisonMethod : comparison, copyMethod : copying};
 
 	this.wallGrid = WallGrid_data(p_wallArray); 
 	this.regionGrid = this.wallGrid.toRegionGrid();
@@ -92,7 +102,7 @@ SolverLITS.prototype.construct = function(p_wallArray,p_numberGrid){
 
 //--------------------------------
 
-// Drawing methods
+// Misc methods (may be used for drawing and intelligence)
 SolverLITS.prototype.getAnswer = function(p_x,p_y){
 	return this.answerGrid[p_y][p_x];
 }
@@ -101,19 +111,113 @@ SolverLITS.prototype.getShape = function(p_x,p_y){
 	return this.shapeGrid[p_y][p_x];
 }
 
-//--------------------------------
-SolverLITS.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
-	this.tryToPutNew(p_x,p_y,p_symbol);
-}
-
-//--------------------------------
-
 SolverLITS.prototype.getRegionIndex = function(p_x, p_y) {
 	return this.regionGrid[p_y][p_x];
 }
 
 SolverLITS.prototype.getRegion = function(p_x, p_y) {
 	return this.regions[this.getRegionIndex(p_x, p_y)];
+}
+
+function isSpaceEvent(p_event) {
+	return p_event.symbol;
+}
+
+
+//--------------------------------
+
+// Input methods
+SolverLITS.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
+	this.tryToPutNew(p_x,p_y,p_symbol);
+}
+
+SolverLITS.prototype.undoToLastHypothesis = function(){
+	this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
+}
+
+SolverLITS.prototype.quickStart = function(){
+	this.regions.forEach(region => {
+		if (region.size == 4){
+			for (var i = 0; i <= 3 ; i++) {
+				this.tryToPutNew(region.spaces[i].x, region.spaces[i].y, SPACE.OPEN);
+			}
+		};
+	});
+}
+
+SolverLITS.prototype.passRegionAndAdjacents = function(p_indexRegion) {
+	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
+	var alreadyAddedRegions = [];
+	var addedRegions = [];
+	var x,y,otherIR;
+	for (var i = 0; i < this.regions.size; i++) {
+		alreadyAddedRegions.push(false);
+	}
+	this.regions[p_indexRegion].spaces.forEach(space => {
+		x = space.x;
+		y = space.y;
+		if (x > 0) {
+			otherIR = this.regionGrid[y][x-1];
+			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
+				alreadyAddedRegions[otherIR] = true;
+				addedRegions.push(otherIR);
+			}
+		}
+		if (x <= this.xLength-2) {
+			otherIR = this.regionGrid[y][x+1];
+			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
+				alreadyAddedRegions[otherIR] = true;
+				addedRegions.push(otherIR);
+			}
+		}
+		if (y > 0) {
+			otherIR = this.regionGrid[y-1][x];
+			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
+				alreadyAddedRegions[otherIR] = true;
+				addedRegions.push(otherIR);
+			}
+		}
+		if (y <= this.yLength-2) {
+			otherIR = this.regionGrid[y+1][x];
+			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
+				alreadyAddedRegions[otherIR] = true;
+				addedRegions.push(otherIR);
+			}
+		}
+	});
+	 
+	addedRegions.forEach(ir => {
+		var newList = this.generateEventsForRegionPass(ir);
+		Array.prototype.push.apply(generatedEvents, newList);
+	});
+	
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools); 
+} //TODO can be improved ?
+
+SolverLITS.prototype.passRegion = function(p_indexRegion) {
+	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools); 
+}
+
+SolverLITS.prototype.multiPass = function() {
+	this.generalSolver.multiPass(
+		generateEventsForRegionPassClosure(this),
+		orderedListPassArgumentsMethodClosure(this), 
+		this.methodSet, this.methodTools);
+}
+
+//--------------------------------
+
+// Doing and undoing
+applyEventClosure = function(p_solver) {
+	return function(eventToApply) {
+		if (isSpaceEvent(eventToApply)) {
+			//console.log("Like a mistake ? "+eventToApply.x()+" "+eventToApply.y()); 551551
+			return p_solver.putNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
+		} else {
+			return p_solver.putShape(eventToApply.x(), eventToApply.y(), eventToApply.shape);
+		}
+	}
 }
 
 SolverLITS.prototype.putNew = function(p_x,p_y,p_symbol){
@@ -145,22 +249,29 @@ SolverLITS.prototype.putShape = function(p_x, p_y, p_shape) {
 	return EVENT_RESULT.SUCCESS;
 }
 
-// TODO 
-// Two regions have adjacent shapes and 4 regions in each. Let's hope both pieces are fine !
-SolverLITS.prototype.controlShapes = function(p_region1, p_region2){
-	if (false) { 
-		return EVENT_RESULT.FAILURE;
-	}
-	else {
-		return EVENT_RESULT.HARMLESS;
+undoEventClosure = function(p_solver) {
+	return function(eventToUndo) {
+		if (isSpaceEvent(eventToUndo)) {
+			const x = eventToUndo.x(); //Décidément il y en a eu à faire, des changements de x en x() depuis qu'on a mis en commun les solvers de puzzles d'adjacences
+			const y = eventToUndo.y();
+			const symbol = eventToUndo.symbol;
+			p_solver.answerGrid[y][x] = SPACE.UNDECIDED;
+			var ir = p_solver.regionGrid[y][x];
+			var region = p_solver.regions[ir];
+			if (symbol == SPACE.OPEN){
+				region.openSpaces.pop(); // This "pop" suggests that events are always undone in the order reverse they were done.
+			} else if (symbol == SPACE.CLOSED){
+				region.notPlacedYetClosed++;
+			}
+		} else {
+			p_solver.shapeGrid[eventToUndo.y()][eventToUndo.x()] = LITS.UNDECIDED;
+		}
 	}
 }
 
-// Something was seen as wrong in the detections : let's directly set an end to this with an event that always fails
-SolverLITS.prototype.abortingEvent = function() {
-	return EVENT_RESULT.FAILURE;
-}
+//--------------------------------
 
+// Central method
 SolverLITS.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
@@ -175,16 +286,9 @@ SolverLITS.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	this.generalSolver.tryToApply( SpaceEvent(p_x, p_y, p_symbol), methodPack);
 }
 
-applyEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		if (isSpaceEvent(eventToApply)) {
-			//console.log("Like a mistake ? "+eventToApply.x()+" "+eventToApply.y()); 551551
-			return p_solver.putNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
-		} else {
-			return p_solver.putShape(eventToApply.x(), eventToApply.y(), eventToApply.shape);
-		}
-	}
-}
+//--------------------------------
+
+// Exchanges solver and geographical
 
 /**
 Transforms a geographical deduction (see dedicated class GeographicalDeduction) into an appropriate event (SolveEvent in our case)
@@ -210,6 +314,10 @@ adjacencyClosure = function (p_solver) {
         }
     }
 }
+
+//--------------------------------
+
+// Intelligence
 
 // C'est ici que ça devient intéressant !
 deductionsClosure = function (p_solver) {
@@ -765,50 +873,12 @@ SolverLITS.prototype.downExists = function(p_y) {
 	return p_y <= this.yLength-2;
 }
 
-
-
-
-
 // --------------------
-// Quick start 
+// Passing
 
-/**
-Used by outside !
-*/
-SolverLITS.prototype.quickStart = function(){
-	this.regions.forEach(region => {
-		if (region.size == 4){
-			for (var i = 0; i <= 3 ; i++) {
-				this.tryToPutNew(region.spaces[i].x, region.spaces[i].y, SPACE.OPEN);
-			}
-		};
-	});
-}
-
-//--------------------
-// Undoing
-
-function isSpaceEvent(p_event) {
-	return p_event.symbol;
-}
-
-undoEventClosure = function(p_solver) {
-	return function(eventToUndo) {
-		if (isSpaceEvent(eventToUndo)) {
-			const x = eventToUndo.x(); //Décidément il y en a eu à faire, des changements de x en x() depuis qu'on a mis en commun les solvers de puzzles d'adjacences
-			const y = eventToUndo.y();
-			const symbol = eventToUndo.symbol;
-			p_solver.answerGrid[y][x] = SPACE.UNDECIDED;
-			var ir = p_solver.regionGrid[y][x];
-			var region = p_solver.regions[ir];
-			if (symbol == SPACE.OPEN){
-				region.openSpaces.pop(); // This "pop" suggests that events are always undone in the order reverse they were done.
-			} else if (symbol == SPACE.CLOSED){
-				region.notPlacedYetClosed++;
-			}
-		} else {
-			p_solver.shapeGrid[eventToUndo.y()][eventToUndo.x()] = LITS.UNDECIDED;
-		}
+generateEventsForRegionPassClosure = function(p_solver) {
+	return function(p_indexRegion) {
+		return p_solver.generateEventsForRegionPass(p_indexRegion);
 	}
 }
 
@@ -852,83 +922,21 @@ comparison = function(p_event1, p_event2) {
 	}
 }
 
-/**
-Used by outside !
-*/
-SolverLITS.prototype.undoToLastHypothesis = function(){
-	this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
-}
-
-SolverLITS.prototype.passRegionAndAdjacents = function(p_indexRegion) {
-	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	var alreadyAddedRegions = [];
-	var addedRegions = [];
-	var x,y,otherIR;
-	for (var i = 0; i < this.regions.size; i++) {
-		alreadyAddedRegions.push(false);
+orderedListPassArgumentsMethodClosure = function(p_solver) {
+	return function() {
+		var indexList = [];
+		for (var i = 0; i < p_solver.regions.length ; i++) {
+			indexList.push(i); //TODO faire une meilleure liste
+		}
+		indexList.sort(function(p_i1, p_i2) {
+			closed1 = p_solver.regions[p_i1].notPlacedYetClosed;
+			closed2 = p_solver.regions[p_i2].notPlacedYetClosed;
+			open1 = 4-p_solver.regions[p_i1].openSpaces.length;
+			open2 = 4-p_solver.regions[p_i2].openSpaces.length;
+			return (closed1-open1*3) - (closed2-open2*3);
+		});
+		return indexList;
 	}
-	this.regions[p_indexRegion].spaces.forEach(space => {
-		x = space.x;
-		y = space.y;
-		if (x > 0) {
-			otherIR = this.regionGrid[y][x-1];
-			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
-				alreadyAddedRegions[otherIR] = true;
-				addedRegions.push(otherIR);
-			}
-		}
-		if (x <= this.xLength-2) {
-			otherIR = this.regionGrid[y][x+1];
-			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
-				alreadyAddedRegions[otherIR] = true;
-				addedRegions.push(otherIR);
-			}
-		}
-		if (y > 0) {
-			otherIR = this.regionGrid[y-1][x];
-			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
-				alreadyAddedRegions[otherIR] = true;
-				addedRegions.push(otherIR);
-			}
-		}
-		if (y <= this.yLength-2) {
-			otherIR = this.regionGrid[y+1][x];
-			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
-				alreadyAddedRegions[otherIR] = true;
-				addedRegions.push(otherIR);
-			}
-		}
-	});
-	 
-	addedRegions.forEach(ir => {
-		var newList = this.generateEventsForRegionPass(ir);
-		Array.prototype.push.apply(generatedEvents, newList);
-	});
-	
-	methodSet = new ApplyEventMethodPack(
-		applyEventClosure(this),
-		deductionsClosure(this),
-		adjacencyClosure(this),
-		transformClosure(this),
-		undoEventClosure(this)
-	);
-	methodSet.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
-	methodTools = {comparisonMethod : comparison, copyMethod : copying};
-	this.generalSolver.passEvents(generatedEvents, methodSet, methodTools); 
-}
-
-SolverLITS.prototype.passRegion = function(p_indexRegion) {
-	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	methodSet = new ApplyEventMethodPack(
-		applyEventClosure(this),
-		deductionsClosure(this),
-		adjacencyClosure(this),
-		transformClosure(this),
-		undoEventClosure(this)
-	);
-	methodSet.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
-	methodTools = {comparisonMethod : comparison, copyMethod : copying};
-	this.generalSolver.passEvents(generatedEvents, methodSet, methodTools); 
 }
 
 // Les problèmes que j'ai pu rencontrer ne venaient pas de l'algorithme "passEvents" mais bel et bien des méthodes de comparaison et de copie (enfin surtout de comparaison). D'abord ne pas penser à comparer les "O" et "X" alors que c'était vital (on teste un évènement O et un évènement X qui ne peuvent être intersectés), et finalement ne plus penser à comparer les x. Oups...

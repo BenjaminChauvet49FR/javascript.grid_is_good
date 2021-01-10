@@ -42,13 +42,13 @@ undoAction = function(p_solver,p_textArea){
 	//p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
 }
 
-/*multiPassAction = function (p_solver,p_textArea){
+multiPassAction = function (p_solver,p_textArea){
 	p_solver.multiPass();
-	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
+	//p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
 	//TODO also manage the rewriting of the events.
 }
 
-solveAction = function (p_solver,p_textArea){
+/*solveAction = function (p_solver,p_textArea){
 	p_solver.generalSolve();
 	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO see above
 }*/
