@@ -23,13 +23,13 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,SYMBOL.NO_STAR); 
 		break;		
 		case ACTION_PASS_ROW.id:
-			p_solver.passRow(p_spaceIndexY);
+			p_solver.emitPassRow(p_spaceIndexY);
 		break;
 		case ACTION_PASS_COLUMN.id:
-			p_solver.passColumn(p_spaceIndexX);
+			p_solver.emitPassColumn(p_spaceIndexX);
 		break;
 		case ACTION_PASS_REGION.id:
-			p_solver.passRegion(p_solver.getRegion(p_spaceIndexX,p_spaceIndexY));
+			p_solver.emitPassRegion(p_solver.getRegion(p_spaceIndexX,p_spaceIndexY));
 		break;
 	}
 }
@@ -43,12 +43,12 @@ undoAction = function(p_solver,p_components){
 }
 
 multiPassAction = function (p_solver,p_components){
-	p_solver.multiPass();
+	p_solver.emitMultiPass();
 	p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked)
 }
 
 solveAction = function (p_solver,p_components){
-	p_solver.generalSolve();
+	//p_solver.generalSolve();
 	p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked)
 }
 
