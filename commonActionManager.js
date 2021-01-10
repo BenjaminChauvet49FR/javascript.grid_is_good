@@ -31,6 +31,8 @@ const ACTION_PUT_STAR = {id:4,htmlCaption:"Placer une étoile"};
 const ACTION_PUT_NO_STAR = {id:5,htmlCaption:"Placer un X"};
 const ACTION_OPEN_SPACE = {id:6,htmlCaption:"Déclarer case ouverte"};
 const ACTION_CLOSE_SPACE = {id:7,htmlCaption:"Déclarer case fermée"};
+const ACTION_OPEN_SPACE_FAKE = {id:8,htmlCaption:"Poser déduction case ouverte"};
+const ACTION_CLOSE_SPACE_FAKE = {id:9,htmlCaption:"Poser déduction case fermée"};
 
 
 /**

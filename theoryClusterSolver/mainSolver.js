@@ -40,6 +40,7 @@ putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("
 putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,solver,fieldName.value)});
 //putActionElementClick("submit_quickStart",function(event){quickStartAction(solver,null)});
 putActionElementClick("submit_undo",function(event){undoAction(solver,null)});
+putActionElementClick("submit_discard_hypotheses",function(event){discardDeductionsAction(solver,null)});
 
 //------
 
@@ -47,6 +48,8 @@ var textAction = document.getElementById("text_canvas_action");
 setMode(textAction,actionsManager,ENTRY.SPACE,ACTION_CLOSE_SPACE);
 addEventListenerAndCaption("submit_open_space",ACTION_OPEN_SPACE);
 addEventListenerAndCaption("submit_close_space",ACTION_CLOSE_SPACE);
+addEventListenerAndCaption("submit_open_space_fake",ACTION_OPEN_SPACE_FAKE);
+addEventListenerAndCaption("submit_close_space_fake",ACTION_CLOSE_SPACE_FAKE);
 function addEventListenerAndCaption(p_identifier,p_action){ //Shortcut action
 	addEventListenerAndCaptionForSolver(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
 }

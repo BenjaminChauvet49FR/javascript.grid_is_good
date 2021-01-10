@@ -13,12 +13,18 @@ function clickCanvas(event,p_canvas,p_drawer,p_components,p_solver,p_actionsMana
 You successfully clicked on a region space (coordinates in parameter). Then what ? 
 */
 function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
-	switch(p_action.id){
+	switch(p_action.id) {
 		case ACTION_OPEN_SPACE.id:
 			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,SPACE.OPEN); 
 		break;
 		case ACTION_CLOSE_SPACE.id:
 			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,SPACE.CLOSED); 
+		break;
+		case ACTION_OPEN_SPACE_FAKE.id:
+			p_solver.emitArtificialDeduction(p_spaceIndexX,p_spaceIndexY,SPACE.OPEN); 
+		break;
+		case ACTION_CLOSE_SPACE_FAKE.id:
+			p_solver.emitArtificialDeduction(p_spaceIndexX,p_spaceIndexY,SPACE.CLOSED); 
 		break;
 	}
 }
@@ -28,6 +34,11 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 
 undoAction = function(p_solver,p_textArea){
 	p_solver.undoToLastHypothesis();
+	//p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
+}
+
+discardDeductionsAction = function(p_solver,p_textArea){
+	p_solver.discardDeductions();
 	//p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
 }
 

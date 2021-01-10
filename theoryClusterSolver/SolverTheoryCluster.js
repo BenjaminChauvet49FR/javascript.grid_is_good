@@ -9,17 +9,27 @@ SolverTheoryCluster.prototype.construct = function (p_wallArray, p_numberGrid) {
     this.answerGrid = [];
     this.generalSolver = new GeneralSolver();
     this.generalSolver.makeItGeographical(this.xLength, this.yLength);
-
-    // Initialize the required grids (notably answerGrid) and the number of regions
+	
+	// Artifical deductions
+	this.artificialDeductionSpacesList = [];
+	this.floatingGrid = [];
+	for (iy = 0; iy < this.yLength; iy++) {
+        this.floatingGrid.push([]);
+        for (ix = 0; ix < this.xLength; ix++) {
+            this.floatingGrid[iy].push(SPACE.UNDECIDED);
+        }
+    }
+	
     for (iy = 0; iy < this.yLength; iy++) {
         this.answerGrid.push([]);
         for (ix = 0; ix < this.xLength; ix++) {
             this.answerGrid[iy].push(SPACE.UNDECIDED);
         }
     }
-
-    //IMPORTANT : Purification not performed yet !
 }
+
+//--------------------------------
+// Practical methods
 
 SolverTheoryCluster.prototype.getSpaceCoordinates = function (p_indexRegion, p_indexSpace) {
     return this.regions[p_indexRegion].spaces[p_indexSpace];
@@ -29,12 +39,39 @@ SolverTheoryCluster.prototype.getAnswer = function (p_x, p_y) {
     return this.answerGrid[p_y][p_x];
 }
 
-//--------------------------------
-SolverTheoryCluster.prototype.emitHypothesis = function (p_x, p_y, p_symbol) {
-    this.tryToPutNew(p_x, p_y, p_symbol);
+SolverTheoryCluster.prototype.getArtificialDeduction = function (p_x, p_y) {
+    return this.floatingGrid[p_y][p_x];
 }
 
 //--------------------------------
+// Input methods
+
+SolverTheoryCluster.prototype.emitHypothesis = function (p_x, p_y, p_symbol) {
+    if (this.floatingGrid[p_y][p_x] == SPACE.UNDECIDED) {
+		this.tryToPutNew(p_x, p_y, p_symbol);
+	};
+}
+
+SolverTheoryCluster.prototype.emitArtificialDeduction = function (p_x, p_y, p_symbol) {
+	if (this.floatingGrid[p_y][p_x] == SPACE.UNDECIDED) {
+		this.artificialDeductionSpacesList.push({x : p_x, y : p_y});
+	}
+	this.floatingGrid[p_y][p_x] = p_symbol;	
+}
+
+SolverTheoryCluster.prototype.discardDeductions = function () {
+    this.artificialDeductionSpacesList.forEach(space => {
+		this.floatingGrid[space.y][space.x] = SPACE.UNDECIDED;
+	});
+	this.artificialDeductionSpacesList = [];
+}
+
+SolverTheoryCluster.prototype.undoToLastHypothesis = function(){
+	this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
+}
+
+//--------------------------------
+// Doing and undoing
 
 SolverTheoryCluster.prototype.putNew = function (p_x, p_y, p_symbol) {
     if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerGrid[p_y][p_x] == p_symbol)) {
@@ -45,19 +82,6 @@ SolverTheoryCluster.prototype.putNew = function (p_x, p_y, p_symbol) {
     }
     this.answerGrid[p_y][p_x] = p_symbol;
     return EVENT_RESULT.SUCCESS;
-}
-
-SolverTheoryCluster.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	methodPack = new ApplyEventMethodPack(
-		applyEventClosure(this),
-		deductionsClosure(this),
-		adjacencyClosure(this),
-		transformClosure(this),
-		undoEventClosure(this)
-	);
-	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
-	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.generalSolver.tryToApply(new SpaceEvent(p_x, p_y, p_symbol), methodPack);
 }
 
 /**
@@ -78,19 +102,9 @@ undoEventClosure = function(p_solver) {
 	}
 }
 
-/**
-Adds events that should be added to the p_listEventsToApply (they will be applied soon) in deduction from the p_eventBeingApplied
-*/
-deductionsClosure = function (p_solver) {
-	return function(p_listEventsToApply, p_eventBeingApplied) {
-		if (p_eventBeingApplied.p_symbol == SPACE.OPEN) {
-			console.log("Perform deductions for 'open' space at " + p_eventBeingApplied.myX + " " + p_eventBeingApplied.myY);
-		} else if (p_eventBeingApplied.p_symbol == SPACE.CLOSED) {
-			console.log("Perform deductions for 'closed' space at " + p_eventBeingApplied.myX + " " + p_eventBeingApplied.myY);
-		}
-		return p_listEventsToApply;
-	}
-}
+
+//------------------------
+// Exchange between solver and geographical
 
 /**
 Closure that checks about whether a space should belong to the global adjacency or not. 
@@ -120,9 +134,44 @@ transformClosure = function (p_solver) {
     }
 };
 
+//----------------
+// Main function
+
+SolverTheoryCluster.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
+	methodPack = new ApplyEventMethodPack(
+		applyEventClosure(this),
+		deductionsClosure(this),
+		adjacencyClosure(this),
+		transformClosure(this),
+		undoEventClosure(this)
+	);
+	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
+	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
+	this.generalSolver.tryToApply(new SpaceEvent(p_x, p_y, p_symbol), methodPack);
+}
+
+//----------------
+// "Intelligence"
 /**
-Used by outside ! //TODO quand on harmonisera les noms des méthodes...
- */
-SolverTheoryCluster.prototype.undoToLastHypothesis = function () {
-    this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
+Adds events that should be added to the p_listEventsToApply (they will be applied soon) in deduction from the p_eventBeingApplied
+*/
+deductionsClosure = function (p_solver) {
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		if (p_eventBeingApplied.p_symbol == SPACE.OPEN) {
+			console.log("Perform artificial deductions for 'open' space at " + p_eventBeingApplied.myX + " " + p_eventBeingApplied.myY);
+		} else if (p_eventBeingApplied.p_symbol == SPACE.CLOSED) {
+			console.log("Perform artificial deductions for 'closed' space at " + p_eventBeingApplied.myX + " " + p_eventBeingApplied.myY);
+		}
+		p_listEventsToApply = p_solver.artificialDeductionsList(p_listEventsToApply);
+		return p_listEventsToApply; // never forget to return the list that was passed in argument (returning "p_solver.artificialDeductionSpacesList()" after having made it an argument-less function returns nothing past the 1st applied event otherwise ;) )
+	}
+}
+
+SolverTheoryCluster.prototype.artificialDeductionsList = function (p_artificialDeductionSpacesList) {
+	for (var i = 0; i < this.artificialDeductionSpacesList.length ; i++) {
+		space = this.artificialDeductionSpacesList[i];
+		p_artificialDeductionSpacesList.push(new SpaceEvent(space.x, space.y, this.floatingGrid[space.y][space.x]));		
+	}
+	this.discardDeductions();
+	return p_artificialDeductionSpacesList;	
 }
