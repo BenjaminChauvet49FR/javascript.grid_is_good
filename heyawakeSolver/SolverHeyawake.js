@@ -15,6 +15,13 @@ SolverHeyawake.prototype.construct = function(p_wallArray,p_numberGrid){
 	this.yLength = p_wallArray.length;
 	this.generalSolver = new GeneralSolver();
 	this.generalSolver.makeItGeographical(this.xLength, this.yLength);
+	this.methodSet = new ApplyEventMethodPack(
+			applyEventClosure(this), 
+			deductionsClosure(this), 
+			adjacencyClosure(this), 
+			transformClosure(this), 
+			undoEventClosure(this));
+	this.methodTools = {comparisonMethod : comparison, copyMethod : copying};
 
 	this.wallGrid = WallGrid_data(p_wallArray); 
 	this.regionGrid = this.wallGrid.toRegionGrid();
@@ -145,6 +152,10 @@ SolverHeyawake.prototype.getAnswer = function(p_x,p_y){
 	return this.answerGrid[p_y][p_x];
 }
 
+SolverHeyawake.prototype.getRegionIndex = function(p_x,p_y){
+	return this.regionGrid[p_y][p_x];
+}
+
 //--------------------------------
 
 // Misc. inner methods 
@@ -207,6 +218,17 @@ SolverHeyawake.prototype.quickStart = function(){
 	});
 }
 
+SolverHeyawake.prototype.passRegion = function(p_indexRegion) {
+	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools); 
+}
+
+SolverHeyawake.prototype.multiPass = function() {
+	this.generalSolver.multiPass(
+		generateEventsForRegionPassClosure(this),
+		orderedListPassArgumentsMethodClosure(this), 
+		this.methodSet, this.methodTools);
+}
 
 //--------------------------------
 
@@ -217,12 +239,7 @@ SolverHeyawake.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
 	this.generalSolver.tryToApply(
 		SpaceEvent(p_x, p_y, p_symbol),
-		new ApplyEventMethodPack(
-			applyEventClosure(this), 
-			deductionsClosure(this), 
-			adjacencyClosure(this), 
-			transformClosure(this), 
-			undoEventClosure(this))
+		this.methodSet
 	);
 }
 
@@ -352,8 +369,6 @@ deductionsClosure = function (p_solver) {
 	}
 }
 
-
-
 // Classic logical verifications 
 SolverHeyawake.prototype.testAlertHorizontalStrip = function(p_eventsList,p_index){
 	if (p_index != NOT_RELEVANT && this.horizontalStripes[p_index].CLOSEDs == 0 && this.horizontalStripes[p_index].UNDEFs == 1){
@@ -396,4 +411,62 @@ SolverHeyawake.prototype.alertRegion = function(p_listEvents,p_regionIndex,p_mis
 		}
 	}
 	return p_listEvents;
+}
+
+// --------------------
+// Passing
+
+generateEventsForRegionPassClosure = function(p_solver) {
+	return function(p_indexRegion) {
+		return p_solver.generateEventsForRegionPass(p_indexRegion);
+	}
+}
+
+// Generate covering events for "region pass".
+SolverHeyawake.prototype.generateEventsForRegionPass = function(p_indexRegion) {
+	var eventList = [];
+	this.regions[p_indexRegion].spaces.forEach(space => {
+		if (this.answerGrid[space.y][space.x] == SPACE.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
+			eventList.push([SpaceEvent(space.x, space.y, SPACE.OPEN), SpaceEvent(space.x, space.y, SPACE.CLOSED)]);
+		}			 
+	});
+	return eventList;
+}
+
+
+copying = function(p_event) {
+	return p_event.copy();
+}
+
+comparison = function(p_event1, p_event2) {
+	if (p_event2.coorY > p_event1.coorY) {
+		return -1;
+	} else if (p_event2.coorY < p_event1.coorY) {
+		return 1;
+	} else if (p_event2.coorX > p_event1.coorX) {
+		return -1;
+	} else if (p_event2.coorX < p_event1.coorX) {
+		return 1;
+	} else {
+		var c1 = (p_event1.symbol == SPACE.OPEN ? 1 : 0);
+		var c2 = (p_event2.symbol == SPACE.OPEN ? 1 : 0); // Unstable : works because only "O" and "C" values are admitted
+		return c1-c2;
+	}
+}
+
+orderedListPassArgumentsMethodClosure = function(p_solver) {
+	return function() {
+		var indexList = [];
+		for (var i = 0; i < p_solver.regions.length ; i++) {
+			indexList.push(i); //TODO faire une meilleure liste
+		}
+		/*indexList.sort(function(p_i1, p_i2) {
+			closed1 = p_solver.regions[p_i1].notPlacedYetClosed;
+			closed2 = p_solver.regions[p_i2].notPlacedYetClosed;
+			open1 = 4-p_solver.regions[p_i1].openSpaces.length;
+			open2 = 4-p_solver.regions[p_i2].openSpaces.length;
+			return (closed1-open1*3) - (closed2-open2*3);
+		});*/ //TODO
+		return indexList;
+	}
 }

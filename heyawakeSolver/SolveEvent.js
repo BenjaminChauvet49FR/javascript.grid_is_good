@@ -10,12 +10,12 @@ function SpaceEvent(p_x,p_y,p_symbol){
 	return solveEvent;
 }
 
-SpaceEvent.prototype.toString = function(){	
+SolveEvent.prototype.toString = function(){	
 	return "["+this.coorX+","+this.coorY+"] ("+this.symbol+")";
 }
 
-SpaceEvent.prototype.copy = function(){
-	return new SpaceEvent(this.symbol,this.coorX,this.coorY);
+SolveEvent.prototype.copy = function(){
+	return new SpaceEvent(this.coorX, this.coorY, this.symbol);
 }
 
 SolveEvent.prototype.opening = function() {

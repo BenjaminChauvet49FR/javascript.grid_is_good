@@ -1,0 +1,3 @@
+598 : Comme pour LITS, le pass n'est pas nickel, il devrait faire apparaître 2 cases ouvertes à la sortie de la région 2 en bas à droite (du fait que la région est en damier + restrictions géographiques)
+25 : Alors là c'est fou : Dans le quart bas-gauche, si on passe la région "1" au-dessus de la région 0 ça marche, mais si on passe la région 1 à droite de cette même région 0 la passe n'est pas correcte !
+644 : Dans la région à droite entourée des deux barres verticales "3", on peut se heurter à "Cannot read property '10' of undefined" après avoir passé ces deux barres ainsi que la barre en-dessous
