@@ -13,7 +13,8 @@ function SolverLITS(p_wallArray,p_numberGrid){
 SolverLITS.prototype.construct = function(p_wallArray,p_numberGrid){
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
-	this.clusterInvolvedSolver = new ClusterInvolvedSolver(this.xLength, this.yLength);
+	this.generalSolver = new GeneralSolver();
+	this.generalSolver.makeItGeographical(this.xLength, this.yLength);
 
 	this.wallGrid = WallGrid_data(p_wallArray); 
 	this.regionGrid = this.wallGrid.toRegionGrid();
@@ -171,7 +172,7 @@ SolverLITS.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 		undoEventClosure(this)
 	);
 	methodPack.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
-	this.clusterInvolvedSolver.tryToApply( SpaceEvent(p_x, p_y, p_symbol), methodPack);
+	this.generalSolver.tryToApply( SpaceEvent(p_x, p_y, p_symbol), methodPack);
 }
 
 applyEventClosure = function(p_solver) {
@@ -855,7 +856,7 @@ comparison = function(p_event1, p_event2) {
 Used by outside !
 */
 SolverLITS.prototype.undoToLastHypothesis = function(){
-	this.clusterInvolvedSolver.undoToLastHypothesis(undoEventClosure(this));
+	this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
 }
 
 SolverLITS.prototype.passRegionAndAdjacents = function(p_indexRegion) {
@@ -913,7 +914,7 @@ SolverLITS.prototype.passRegionAndAdjacents = function(p_indexRegion) {
 	);
 	methodSet.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
 	methodTools = {comparisonMethod : comparison, copyMethod : copying};
-	this.clusterInvolvedSolver.passEvents(generatedEvents, methodSet, methodTools); 
+	this.generalSolver.passEvents(generatedEvents, methodSet, methodTools); 
 }
 
 SolverLITS.prototype.passRegion = function(p_indexRegion) {
@@ -927,7 +928,7 @@ SolverLITS.prototype.passRegion = function(p_indexRegion) {
 	);
 	methodSet.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
 	methodTools = {comparisonMethod : comparison, copyMethod : copying};
-	this.clusterInvolvedSolver.passEvents(generatedEvents, methodSet, methodTools); 
+	this.generalSolver.passEvents(generatedEvents, methodSet, methodTools); 
 }
 
 // Les problèmes que j'ai pu rencontrer ne venaient pas de l'algorithme "passEvents" mais bel et bien des méthodes de comparaison et de copie (enfin surtout de comparaison). D'abord ne pas penser à comparer les "O" et "X" alors que c'était vital (on teste un évènement O et un évènement X qui ne peuvent être intersectés), et finalement ne plus penser à comparer les x. Oups...

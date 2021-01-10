@@ -7,7 +7,7 @@ function SolverChocona(p_wallArray,p_numberGrid){
 SolverChocona.prototype.construct = function(p_wallArray, p_numberGrid) {
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
-	this.clusterInvolvedSolver = new ClusterInvolvedSolver(this.xLength, this.yLength);
+	this.generalSolver = new GeneralSolver();
 
 	this.wallGrid = WallGrid_data(p_wallArray); 
 	this.regionGrid = this.wallGrid.toRegionGrid();
@@ -106,7 +106,7 @@ SolverChocona.prototype.emitHypothesis = function(p_x,p_y,p_symbol) {
 }
 
 SolverChocona.prototype.undoToLastHypothesis = function(){
-	this.clusterInvolvedSolver.undoToLastHypothesis(undoEventClosure(this));
+	this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
 }
 
 SolverChocona.prototype.passRegion = function(p_indexRegion) {
@@ -117,7 +117,7 @@ SolverChocona.prototype.passRegion = function(p_indexRegion) {
 		undoEventClosure(this)
 	);
 	methodTools = {comparisonMethod : comparison, copyMethod : copying};
-	this.clusterInvolvedSolver.passEvents(generatedEvents, methodSet, methodTools); 
+	this.generalSolver.passEvents(generatedEvents, methodSet, methodTools); 
 }
 
 SolverChocona.prototype.quickStart = function(){
@@ -142,7 +142,7 @@ SolverChocona.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.clusterInvolvedSolver.tryToApply( SpaceEvent(p_x, p_y, p_symbol), methodPack);
+	this.generalSolver.tryToApply( SpaceEvent(p_x, p_y, p_symbol), methodPack);
 }
 
 //--------------------------------

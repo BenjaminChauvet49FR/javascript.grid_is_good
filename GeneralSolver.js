@@ -24,12 +24,15 @@ const PASS_RESULT = {
 	HARMLESS : 23
 }
 
-function ClusterInvolvedSolver(p_xLength, p_yLength) {
+function GeneralSolver() {
+	this.happenedEvents = []; // List of (non-empty list of events). All events beyond the first must be logical deductions (logic of any kind, including geographic) of the first one.
+}
+
+GeneralSolver.prototype.makeItGeographical = function(p_xLength, p_yLength) {
 	this.xLength = p_xLength;
 	this.yLength = p_yLength;
-	this.happenedEvents = []; // List of (non-empty list of events). All events beyond the first must be logical deductions (logic of any kind, including geographic) of the first one.
-    this.atLeastOneOpen = false;
-    this.adjacencyLimitGrid = createAdjacencyLimitGrid(p_xLength, p_yLength);
+	this.atLeastOneOpen = false;
+    this.adjacencyLimitGrid = createAdjacencyLimitGrid(this.xLength, this.yLength);
     this.adjacencyLimitSpacesList = [];
 }
 
@@ -50,7 +53,7 @@ function ClusterInvolvedSolver(p_xLength, p_yLength) {
 		Order of filters matter for optimisation since as soon as the application of a filter returns a non-empty list, the chain breaks and returns to individual event applications (or aborts)
 		Warning : methods should be provided, not expressions of methods ! Also, don't forget the keyword "return" in both the closure and the method.
 */
-ClusterInvolvedSolver.prototype.tryToApply = function (p_startingEvent, p_methodPack) {
+GeneralSolver.prototype.tryToApply = function (p_startingEvent, p_methodPack) {
 	var listEventsToApply = [p_startingEvent]; //List of the "events" type used by the solver. 
 	// Events can be of any kind but must have the following method :
 	// A "x" method (int), a "y" method (int), a "opening" method (OPEN | CLOSED | UNDEFINED), in which case no geographical check is performed)
@@ -168,7 +171,7 @@ In exit :
 listGeographicalDeductionsToApply : a list of GeographicalDeduction(x,y, OPEN|CLOSED) items
 listGeographicalDeductionsApplied : a list of {adjacency : true} items. Whenever it should be undone, the first element of adjacencyLimitSpacesList should be undone.
 */
-ClusterInvolvedSolver.prototype.geographicalVerification = function (p_listNewXs, p_adjacencyClosure) {
+GeneralSolver.prototype.geographicalVerification = function (p_listNewXs, p_adjacencyClosure) {
     console.log("Perform geographicalVerification");
     const checking = adjacencyCheck(p_listNewXs, this.adjacencyLimitGrid, this.adjacencyLimitSpacesList, p_adjacencyClosure, this.xLength, this.yLength);
 	if (checking.success) {
@@ -205,7 +208,7 @@ ClusterInvolvedSolver.prototype.geographicalVerification = function (p_listNewXs
 }
 
 // Undoing
-ClusterInvolvedSolver.prototype.undoEventList = function (p_eventsList, p_undoEventMethod) {
+GeneralSolver.prototype.undoEventList = function (p_eventsList, p_undoEventMethod) {
 	p_eventsList.forEach(eventToUndo => {
 		if (eventToUndo.firstOpen) {
 			this.atLeastOneOpen = false;
@@ -225,7 +228,7 @@ Passes a list of covering events (for instance, if a region contains spaces "1 2
  // p_eventsTools : must contain comparisonMethod, copyMethod
 
 */
-ClusterInvolvedSolver.prototype.passEvents = function (p_listListCoveringEvent, p_methodSet ,p_eventsTools) {
+GeneralSolver.prototype.passEvents = function (p_listListCoveringEvent, p_methodSet ,p_eventsTools) {
 	var listExtractedEvents = this.passEventsAnnex(p_listListCoveringEvent, p_methodSet ,p_eventsTools, 0);
 	if (listExtractedEvents != DEDUCTIONS_RESULT.FAILURE) {
 		listExtractedEvents.forEach( deductedEvent => {
@@ -241,7 +244,7 @@ ClusterInvolvedSolver.prototype.passEvents = function (p_listListCoveringEvent, 
 	}
 }
 
-ClusterInvolvedSolver.prototype.passEventsAnnex = function (p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_indexInList) {
+GeneralSolver.prototype.passEventsAnnex = function (p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_indexInList) {
 	if (p_indexInList == p_listListCoveringEvent.length) {
 		return [];
 	} else {
@@ -325,7 +328,7 @@ p_generatePassEventsMethod : method that turns an argument (of any nature) into 
 p_orderPassArgumentsMethod : method that reorders the argument list. Must take no arguments and return a list of arguments, each of which should be passed to p_generatePassEventsMethod. 
 p_methodSet, p_eventsTools : same arguments as in the pass method.
 */
-ClusterInvolvedSolver.prototype.multiPass = function(p_generatePassEventsMethod, p_orderPassArgumentsMethod, p_methodSet ,p_eventsTools) {
+GeneralSolver.prototype.multiPass = function(p_generatePassEventsMethod, p_orderPassArgumentsMethod, p_methodSet ,p_eventsTools) {
 	var oneMoreLoop;
 	var orderedListPassArguments;
 	var ok = true;
@@ -359,7 +362,7 @@ ClusterInvolvedSolver.prototype.multiPass = function(p_generatePassEventsMethod,
 /**
 Used by outside !
  */
-ClusterInvolvedSolver.prototype.undoToLastHypothesis = function (p_undoEventMethod) {
+GeneralSolver.prototype.undoToLastHypothesis = function (p_undoEventMethod) {
     if (this.happenedEvents.length > 0) {
         var lastEventsList = this.happenedEvents.pop();
         this.undoEventList(lastEventsList, p_undoEventMethod); // TODO Impossible d'échapper à l'utilisation de p_undoEventMethod

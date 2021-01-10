@@ -13,7 +13,7 @@ SolverStarBattle.prototype.construct = function(p_wallArray,p_starNumber){
 	this.regionGrid = this.wallGrid.toRegionGrid();
 	this.xyLength = this.getWallGrid().length; //IMPORTANT : when copy-pasting this line to a non-square grid, make sure to replace ALL occurences by xLength and yLength
 	
-	this.clusterInvolvedSolver = new ClusterInvolvedSolver(this.xyLength, this.xyLength);
+	this.generalSolver = new GeneralSolver();
 	this.methodSet = new ApplyEventMethodNonAdjacentPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
@@ -148,22 +148,22 @@ SolverStarBattle.prototype.emitHypothesis = function(p_x,p_y,p_symbol) {
 }
 
 SolverStarBattle.prototype.undoToLastHypothesis = function(){
-	this.clusterInvolvedSolver.undoToLastHypothesis(undoEventClosure(this));
+	this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
 }
 
 SolverStarBattle.prototype.emitPassRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.clusterInvolvedSolver.passEvents(generatedEvents, this.methodSet, this.methodTools); 
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools); 
 }
 
 SolverStarBattle.prototype.emitPassRow = function(p_y) {
 	const generatedEvents = this.generateEventsForRowPass(p_y);
-	this.clusterInvolvedSolver.passEvents(generatedEvents, this.methodSet, this.methodTools); 
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools); 
 }
 
 SolverStarBattle.prototype.emitPassColumn = function(p_x) {
 	const generatedEvents = this.generateEventsForColumnPass(p_x);
-	this.clusterInvolvedSolver.passEvents(generatedEvents, this.methodSet, this.methodTools); 
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools); 
 }
 
 SolverStarBattle.prototype.emitMultiPass = function() {
@@ -174,7 +174,7 @@ SolverStarBattle.prototype.emitMultiPass = function() {
 	);
 	methodTools = {comparisonMethod : comparison, copyMethod : copying};
 	
-	this.clusterInvolvedSolver.multiPass(
+	this.generalSolver.multiPass(
 		generateEventsForRLCPassClosure(this),
 		orderedListPassArgumentsMethodClosure(this), 
 		methodSet, methodTools);
@@ -251,7 +251,7 @@ undoEventClosure = function(p_solver) {
 
 // Central method
 SolverStarBattle.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	this.clusterInvolvedSolver.tryToApply(new SpaceEvent(p_symbol, p_x, p_y), this.methodSet);
+	this.generalSolver.tryToApply(new SpaceEvent(p_symbol, p_x, p_y), this.methodSet);
 }
 
 //--------------------------------

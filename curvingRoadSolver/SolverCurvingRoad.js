@@ -15,7 +15,8 @@ function SolverCurvingRoad(p_wallArray, p_symbolArray) {
 SolverCurvingRoad.prototype.construct = function (p_wallArray, p_symbolArray) {
     this.xLength = p_symbolArray[0].length;
     this.yLength = p_symbolArray.length;
-	this.clusterInvolvedSolver = new ClusterInvolvedSolver(this.xLength, this.yLength);
+	this.generalSolver = new GeneralSolver();
+	this.generalSolver.makeItGeographical(this.xLength, this.yLength);
 	
     this.wallGrid = WallGrid_data(p_wallArray);
     this.happenedEvents = [];
@@ -349,7 +350,7 @@ SolverCurvingRoad.prototype.quickStart = function () {
 }
 
 SolverCurvingRoad.prototype.undoToLastHypothesis = function() {
-	this.clusterInvolvedSolver.undoToLastHypothesis(undoEventClosure(this));
+	this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
 }
 
 //--------------------------------
@@ -358,7 +359,7 @@ SolverCurvingRoad.prototype.undoToLastHypothesis = function() {
 SolverCurvingRoad.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.clusterInvolvedSolver.tryToApply(
+	this.generalSolver.tryToApply(
 		SpaceEvent(p_x, p_y, p_symbol),
 		new ApplyEventMethodPack(
 			applyEventClosure(this), 

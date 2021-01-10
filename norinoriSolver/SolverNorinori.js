@@ -9,7 +9,7 @@ function SolverNorinori(p_wallArray){
 SolverNorinori.prototype.construct = function(p_wallArray) {
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
-	this.clusterInvolvedSolver = new ClusterInvolvedSolver(this.xLength, this.yLength);
+	this.generalSolver = new GeneralSolver();
 	this.wallGrid = WallGrid_data(p_wallArray); 
 	this.regionGrid = this.wallGrid.toRegionGrid(); 
 	this.answerGrid = [];
@@ -149,7 +149,7 @@ SolverNorinori.prototype.emitHypothesis = function(p_x,p_y,p_symbol) {
 Cancels the last list of events since the last "non-deducted" space.
 */
 SolverNorinori.prototype.undoToLastHypothesis = function(){
-	this.clusterInvolvedSolver.undoToLastHypothesis(undoEventClosure(this));
+	this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
 }
 
 /**
@@ -173,7 +173,7 @@ SolverNorinori.prototype.emitPassRegion = function(p_indexRegion) {
 		undoEventClosure(this)
 	);
 	methodTools = {comparisonMethod : comparison, copyMethod : copying};
-	this.clusterInvolvedSolver.passEvents(generatedEvents, methodSet, methodTools); 
+	this.generalSolver.passEvents(generatedEvents, methodSet, methodTools); 
 }
 
 SolverNorinori.prototype.emitMultiPass = function() {
@@ -184,7 +184,7 @@ SolverNorinori.prototype.emitMultiPass = function() {
 	);
 	methodTools = {comparisonMethod : comparison, copyMethod : copying};
 	
-	this.clusterInvolvedSolver.multiPass(
+	this.generalSolver.multiPass(
 		generateEventsForRegionPassClosure(this),
 		orderedListPassArgumentsMethodClosure(this), 
 		methodSet, methodTools);
@@ -304,7 +304,7 @@ SolverNorinori.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.clusterInvolvedSolver.tryToApply(new SpaceEvent(p_symbol, p_x, p_y), methodPack);
+	this.generalSolver.tryToApply(new SpaceEvent(p_symbol, p_x, p_y), methodPack);
 }
 
 //--------------

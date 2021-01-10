@@ -13,7 +13,8 @@ function SolverHeyawake(p_wallArray,p_numberGrid){
 SolverHeyawake.prototype.construct = function(p_wallArray,p_numberGrid){
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
-	this.clusterInvolvedSolver = new ClusterInvolvedSolver(this.xLength, this.yLength);
+	this.generalSolver = new GeneralSolver();
+	this.generalSolver.makeItGeographical(this.xLength, this.yLength);
 
 	this.wallGrid = WallGrid_data(p_wallArray); 
 	this.regionGrid = this.wallGrid.toRegionGrid();
@@ -190,7 +191,7 @@ SolverHeyawake.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
 }
 
 SolverHeyawake.prototype.undoToLastHypothesis = function(){
-	this.clusterInvolvedSolver.undoToLastHypothesis(undoEventClosure(this));
+	this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
 }
 
 SolverHeyawake.prototype.quickStart = function(){
@@ -214,7 +215,7 @@ SolverHeyawake.prototype.quickStart = function(){
 SolverHeyawake.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.clusterInvolvedSolver.tryToApply(
+	this.generalSolver.tryToApply(
 		SpaceEvent(p_x, p_y, p_symbol),
 		new ApplyEventMethodPack(
 			applyEventClosure(this), 

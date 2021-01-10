@@ -7,7 +7,8 @@ SolverTheoryCluster.prototype.construct = function (p_wallArray, p_numberGrid) {
     this.yLength = p_wallArray.length;
     this.wallGrid = WallGrid_data(p_wallArray);
     this.answerGrid = [];
-    this.clusterInvolvedSolver = new ClusterInvolvedSolver(this.xLength, this.yLength);
+    this.generalSolver = new GeneralSolver();
+    this.generalSolver.makeItGeographical(this.xLength, this.yLength);
 
     // Initialize the required grids (notably answerGrid) and the number of regions
     for (iy = 0; iy < this.yLength; iy++) {
@@ -56,7 +57,7 @@ SolverTheoryCluster.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	);
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.clusterInvolvedSolver.tryToApply(new SpaceEvent(p_x, p_y, p_symbol), methodPack);
+	this.generalSolver.tryToApply(new SpaceEvent(p_x, p_y, p_symbol), methodPack);
 }
 
 /**
@@ -123,5 +124,5 @@ transformClosure = function (p_solver) {
 Used by outside ! //TODO quand on harmonisera les noms des méthodes...
  */
 SolverTheoryCluster.prototype.undoToLastHypothesis = function () {
-    this.clusterInvolvedSolver.undoToLastHypothesis(undoEventClosure(this));
+    this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
 }
