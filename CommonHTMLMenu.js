@@ -52,7 +52,8 @@ const menu2 = {
 		{name : "heyawake", displayName : "Heyawake"},
 		{name : "LITS", displayName : "LITS"},
 		{name : "curvingRoad", displayName : "Curving road"},
-		{name : "chocona", displayName : "Chocona"}
+		{name : "chocona", displayName : "Chocona"},
+		{name : "masyu", displayName : "Masyu"}
 	]
 }
 

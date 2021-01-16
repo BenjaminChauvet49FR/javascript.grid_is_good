@@ -1,4 +1,4 @@
-function Drawer() {
+function Drawer(p_colors) {
 
     this.pix = {
         sideSpace: 30,
@@ -16,21 +16,26 @@ function Drawer() {
     }
 
     //All the colors used in the scenery
-    this.colors = {
-        closed_wall: '#222222',
-        open_wall: '#dddddd',
-        edge_walls: '#000000',
-        bannedSpace: '#666666',
-        selectedSpace: '#bbffcc',
-        rainbowSpaces: ["#6666ff", "#ff6666", "#66ff66",
-            "#66ffff", "#ffff66", "#ff66ff",
-            "#cc66ff", "#ffcc66", "#66ffcc",
-            "#ff00cc", "#00ccff", "#ccff00"],
-        antiCloseWrite: '#00ffff',
-        standardWrite: '#000000',
-        path: '#006600',
-		pearl: '#222222'
-    }
+    if (p_colors) {
+		this.colors = p_colors;
+	} else {
+		this.colors = {
+			closed_wall: '#222222',
+			open_wall: '#dddddd',
+			edge_walls: '#000000',
+			bannedSpace: '#666666',
+			selectedSpace: '#bbffcc',
+			rainbowSpaces: ["#6666ff", "#ff6666", "#66ff66",
+				"#66ffff", "#ffff66", "#ff66ff",
+				"#cc66ff", "#ffcc66", "#66ffcc",
+				"#ff00cc", "#00ccff", "#ccff00"],
+			antiCloseWrite: '#00ffff',
+			standardWrite: '#000000',
+			path: '#006600',
+			pearl: '#222222'
+		}
+	}
+
 }
 
 /**
@@ -262,7 +267,7 @@ Drawer.prototype.drawPearlGrid = function (p_context, p_pearlGrid) {
 /**
 Draws a path out of a grid.
  */
-Drawer.prototype.drawWallGridAsPath = function (p_context, p_wallGrid, p_xLength, p_yLength) {
+/*Drawer.prototype.drawWallGridAsPath = function (p_context, p_wallGrid, p_xLength, p_yLength) {
     p_context.textAlign = 'left';
     p_context.textBaseline = 'top';
     p_context.fillStyle = this.colors.path;
@@ -291,7 +296,7 @@ Drawer.prototype.drawWallGridAsPath = function (p_context, p_wallGrid, p_xLength
         pixUp += this.pix.sideSpace;
 
     }
-}
+}*/ // TODO To be scrapped, soon ?
 
 /**
 (private string)

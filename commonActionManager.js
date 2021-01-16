@@ -33,7 +33,8 @@ const ACTION_OPEN_SPACE = {id:6,htmlCaption:"Déclarer case ouverte"};
 const ACTION_CLOSE_SPACE = {id:7,htmlCaption:"Déclarer case fermée"};
 const ACTION_OPEN_SPACE_FAKE = {id:8,htmlCaption:"Poser déduction case ouverte"};
 const ACTION_CLOSE_SPACE_FAKE = {id:9,htmlCaption:"Poser déduction case fermée"};
-
+const ACTION_LINK_SPACES = {id:10,htmlCaption:"Lier cases"};
+const ACTION_CLOSE_LINKS = {id:11,htmlCaption:"Fermer liaison cases"};
 
 /**
 Getter of setter for a specific mode
@@ -44,7 +45,6 @@ function getNumberMode(p_numericMode){return p_numericMode.numberToInput};
 /**
 Adds the event listener of an action submit by linking it to an action for the canvas
 */
-
 function addEventListenerAndCaptionForSolver(p_entriesManager, p_textElement, p_idSubmitElement, p_entry, p_value) {
     addEventListenerAndCaptionActionSubmit(null, p_entriesManager, p_textElement, p_idSubmitElement, p_entry, p_value);
 }

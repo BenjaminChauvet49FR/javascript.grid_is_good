@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    	<link rel="icon">
+		<link rel="icon" 
+		  type="image/png" 
+		  href="icon.png">
+        <title>Théorie sur les boucles !!!</title>
+		<link rel="stylesheet" type="text/css" href="../style.css">
+    </head>
+    <body>
+		<div id="div_common_menu"></div>
+		<img id="img_x" src="x.png" style="display:none">
+		<img id="img_map" src="mapField.png" style="display:none">
+		<canvas id="canevas" width="800" height="500">
+            Message pour les navigateurs ne supportant pas encore canvas.
+        </canvas></br>
+		
+		Grille à charger : <input type="text" id="input_grid_name" value="TheoryLoop1"></input> 
+		<input type="submit" id="submit_view_puzzle_list" value="Voir les grilles TheoryLoop"></input></br>
+		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
+		
+		Démarrage rapide :
+		<input type="submit" id="submit_quickStart" value="Démarrage rapide"></input></br>
+		
+		Action : <span id="text_canvas_action"></span>
+		<input type="submit" id="submit_open_space" value="XXX"></input>
+		<input type="submit" id="submit_close_space" value="XXX"></input></br>
+		<input type="submit" id="submit_link_spaces" value="XXX"></input>
+		<input type="submit" id="submit_close_links" value="XXX"></input></br>
+		
+		<input type="submit" id="submit_undo" value="Annuler"></input></br>	
+		
+		<script src="../commonActionManager.js"></script>
+		<script src="../Drawer.js"></script>
+		<script src="../WallGrid.js"></script>
+		<script src="../Grid.js"></script>
+		<script src="../commonInput.js"></script>
+		<script src="../commonSaveAndLoad.js"></script>
+		<script src="../CommonHTMLMenu.js"></script>
+		<script src="../DrawableItem.js"></script>
+		
+		<script src="../GeneralSolver.js"></script>
+		<script src="../SolvingMethodPacks.js"></script>
+		
+		<script src="../LoopSolver/LoopEvent.js"></script>
+		<script src="../LoopSolver/LoopSolver.js"></script>
+		<script src="../LoopSolver/Constants.js"></script>
+		<script src="SolverTheoryLoop.js"></script>
+		<script src="drawing.js"></script>
+		<script src="inputSolver.js"></script>
+		<script src="mainSolver.js"></script>
+	</body>
+</html>

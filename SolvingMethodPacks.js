@@ -16,3 +16,8 @@ ApplyEventMethodPack.prototype.addAbortAndFilters = function(p_abortMethod, p_fi
 	this.abortMethod = p_abortMethod
 	this.filters = p_filters;
 }
+
+ApplyEventMethodNonAdjacentPack.prototype.addAbortAndFilters = function(p_abortMethod, p_filters) {
+	this.abortMethod = p_abortMethod
+	this.filters = p_filters;
+}
