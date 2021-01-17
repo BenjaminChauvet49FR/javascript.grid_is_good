@@ -45,17 +45,16 @@ putActionElementClick("submit_undo",function(event){undoAction(solver,null)});
 
 //------
 
-var textAction = document.getElementById("text_canvas_action");
-setMode(textAction,actionsManager,ENTRY.SPACE,ACTION_CLOSE_SPACE);
-setMode(textAction,actionsManager,ENTRY.WALL_R,ACTION_LINK_SPACES);
-setMode(textAction,actionsManager,ENTRY.WALL_D,ACTION_LINK_SPACES); //TODO Fusionner WALL_R et WALL_D
-addEventListenerAndCaption("submit_open_space", ENTRY.SPACE, ACTION_OPEN_SPACE);
-addEventListenerAndCaption("submit_close_space", ENTRY.SPACE, ACTION_CLOSE_SPACE);
-addEventListenerAndCaption("submit_link_spaces", ENTRY.WALL_R, ACTION_LINK_SPACES);
-addEventListenerAndCaption("submit_close_links", ENTRY.WALL_R, ACTION_CLOSE_LINKS);
-addEventListenerAndCaption("submit_link_spaces", ENTRY.WALL_D, ACTION_LINK_SPACES);
-addEventListenerAndCaption("submit_close_links", ENTRY.WALL_D, ACTION_CLOSE_LINKS);
+var textActionSpace = document.getElementById("text_canvas_action_space");
+var textActionWall = document.getElementById("text_canvas_action_wall");
+setMode(textActionSpace,actionsManager,ENTRY.SPACE,ACTION_CLOSE_SPACE);
+setMode(textActionWall,actionsManager,ENTRY.WALL_R,ACTION_LINK_SPACES);
+setMode(textActionWall,actionsManager,ENTRY.WALL_D,ACTION_LINK_SPACES); 
+addEventListenerAndCaption("submit_open_space", ENTRY.SPACE, ACTION_OPEN_SPACE, textActionSpace);
+addEventListenerAndCaption("submit_close_space", ENTRY.SPACE, ACTION_CLOSE_SPACE, textActionSpace);
+addEventListenerAndCaption("submit_link_spaces", ENTRY.WALLS, ACTION_LINK_SPACES, textActionWall);
+addEventListenerAndCaption("submit_close_links", ENTRY.WALLS, ACTION_CLOSE_LINKS, textActionWall);
 
-function addEventListenerAndCaption(p_identifier, p_entry, p_action){ //Shortcut action
-	addEventListenerAndCaptionForSolver(actionsManager, textAction, p_identifier, p_entry, p_action);
+function addEventListenerAndCaption(p_identifier, p_entry, p_action, p_textAction) { //Shortcut action
+	addEventListenerAndCaptionForSolver(actionsManager, p_textAction, p_identifier, p_entry, p_action);
 }

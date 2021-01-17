@@ -56,7 +56,7 @@ saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions
 Loads the desired grid from the local storage
 p_detachedName is the detached name
 */
-loadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p_kindId, p_fieldsToUpdate) {
+editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p_kindId, p_fieldsToUpdate) {
     var localStorageName = getLocalStorageName(p_detachedName);
     if (localStorage.hasOwnProperty(localStorageName)) {
         if (confirm("Charger le puzzle " + localStorageName + " ?")) {
@@ -93,6 +93,19 @@ loadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p_kindI
             updateFieldsAfterLoad(p_fieldsToUpdate, loadedItem);
         }
     } else {
+        alert("Le stockage local n'a pas de propriété nommée '" + localStorageName + "'.");
+    }
+}
+
+/** 
+Loads a walled grid from local storage and its region grid (cf. super-function), updates intelligence, updates canvas
+*/
+loadAction = function(p_canvas, p_drawer, p_solver, p_name) {
+	const localStorageName = "grid_is_good_" + p_name;
+	const loadedString = localStorage.getItem(localStorageName);
+	if (loadedString) {
+		loadPuzzle(p_canvas, p_drawer, p_solver, loadedString);
+	} else {
         alert("Le stockage local n'a pas de propriété nommée '" + localStorageName + "'.");
     }
 }

@@ -56,8 +56,8 @@ multiPassAction = function (p_solver,p_textArea){
 //--------------------------
 
 /** 
-Loads a walled grid from local storage and its region grid (cf. super-function), updates intelligence, updates canvas
-TODO doc
+Transforms a loaded string into the appropriate item (see common save and load), updates intelligence, updates canvas.
+Called by common save and load !
 */
 loadAction = function(p_canvas,p_drawer,p_solver,p_name){
 	var loadedItem = stringToWallAndNumbersPuzzle(localStorage.getItem("grid_is_good_"+p_name));

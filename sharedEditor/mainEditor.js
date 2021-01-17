@@ -49,7 +49,7 @@ putActionElementClick("submit_save_grid", function (event) {
 });
 
 putActionElementClick("submit_load_grid", function (event) {
-    loadAction(canevas, drawer, editorCore, fieldName.value, saveLoadModeId, {
+    editorLoadAction(canevas, drawer, editorCore, fieldName.value, saveLoadModeId, {
         xLengthField: actualFieldX,
         yLengthField: actualFieldY,
 		numberStarsField : fieldStars
