@@ -43,21 +43,35 @@ const menu1 = {
 }
 
 const menu2 = {
-	displayName : "Solveurs",
+	displayName : "Solveurs binaires quelconques",
 	documentPage : "Solver",
 	typeList : [
 		{name : "starBattle", displayName : "Star battle"},
 		{name : "norinori", displayName : "Norinori"},
 		{name : "shimaguni", displayName : "Shimaguni"},
-		{name : "heyawake", displayName : "Heyawake"},
-		{name : "LITS", displayName : "LITS"},
-		{name : "curvingRoad", displayName : "Curving road"},
 		{name : "chocona", displayName : "Chocona"},
-		{name : "masyu", displayName : "Masyu"}
 	]
 }
 
 const menu3 = {
+	displayName : "Solveurs binaires avec adjacence",
+	documentPage : "Solver",
+	typeList : [
+		{name : "heyawake", displayName : "Heyawake"},
+		{name : "LITS", displayName : "LITS"},
+		{name : "curvingRoad", displayName : "Curving road"}
+	]
+}
+
+const menu4 = {
+	displayName : "Solveurs à boucle",
+	documentPage : "Solver",
+	typeList : [
+		{name : "masyu", displayName : "Masyu"}
+	]
+}
+
+const menu5 = {
 	displayName : "Solveur théorique",
 	documentPage : "Solver",
 	typeList : [
@@ -72,4 +86,8 @@ divElement.appendChild(document.createElement("br"));
 addMenu(divElement, menu2);
 divElement.appendChild(document.createElement("br"));
 addMenu(divElement, menu3);
+divElement.appendChild(document.createElement("br"));
+addMenu(divElement, menu4);
+divElement.appendChild(document.createElement("br"));
+addMenu(divElement, menu5);
 divElement.appendChild(document.createElement("br"));
