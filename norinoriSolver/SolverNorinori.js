@@ -304,7 +304,7 @@ SolverNorinori.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.generalSolver.tryToApply(new SpaceEvent(p_symbol, p_x, p_y), methodPack);
+	this.generalSolver.tryToApplyHypothesis(new SpaceEvent(p_symbol, p_x, p_y), methodPack);
 }
 
 //--------------

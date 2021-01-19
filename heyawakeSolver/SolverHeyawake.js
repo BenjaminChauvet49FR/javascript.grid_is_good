@@ -237,7 +237,7 @@ SolverHeyawake.prototype.multiPass = function() {
 SolverHeyawake.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.generalSolver.tryToApply(
+	this.generalSolver.tryToApplyHypothesis(
 		SpaceEvent(p_x, p_y, p_symbol),
 		this.methodSet
 	);

@@ -377,15 +377,15 @@ LoopSolver.prototype.undoToLastHypothesis = function() {
 // Central methods
 
 LoopSolver.prototype.tryToPutNewDown = function (p_x, p_y, p_state) {
-	this.generalSolver.tryToApply(new LinkEvent(p_x, p_y, LOOP_DIRECTION.DOWN, p_state), this.methodSet);
+	this.generalSolver.tryToApplyHypothesis(new LinkEvent(p_x, p_y, LOOP_DIRECTION.DOWN, p_state), this.methodSet);
 }
 
 LoopSolver.prototype.tryToPutNewRight = function (p_x, p_y, p_state) {
-	this.generalSolver.tryToApply(new LinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, p_state), this.methodSet);
+	this.generalSolver.tryToApplyHypothesis(new LinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, p_state), this.methodSet);
 }
 
 LoopSolver.prototype.tryToPutNewSpace = function (p_x, p_y, p_state) {
-	this.generalSolver.tryToApply(new StateEvent(p_x, p_y, p_state), this.methodSet);
+	this.generalSolver.tryToApplyHypothesis(new StateEvent(p_x, p_y, p_state), this.methodSet);
 }
 
 //--------------------------------

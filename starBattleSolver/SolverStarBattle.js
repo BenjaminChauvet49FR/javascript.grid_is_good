@@ -251,7 +251,7 @@ undoEventClosure = function(p_solver) {
 
 // Central method
 SolverStarBattle.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	this.generalSolver.tryToApply(new SpaceEvent(p_symbol, p_x, p_y), this.methodSet);
+	this.generalSolver.tryToApplyHypothesis(new SpaceEvent(p_symbol, p_x, p_y), this.methodSet);
 }
 
 //--------------------------------

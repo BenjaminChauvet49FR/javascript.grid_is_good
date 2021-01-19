@@ -139,7 +139,7 @@ SolverChocona.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.generalSolver.tryToApply( SpaceEvent(p_x, p_y, p_symbol), methodPack);
+	this.generalSolver.tryToApplyHypothesis( SpaceEvent(p_x, p_y, p_symbol), methodPack);
 }
 
 applyEventClosure = function(p_solver) {

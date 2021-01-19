@@ -283,7 +283,7 @@ SolverLITS.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 		undoEventClosure(this)
 	);
 	methodPack.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
-	this.generalSolver.tryToApply( SpaceEvent(p_x, p_y, p_symbol), methodPack);
+	this.generalSolver.tryToApplyHypothesis( SpaceEvent(p_x, p_y, p_symbol), methodPack);
 }
 
 //--------------------------------

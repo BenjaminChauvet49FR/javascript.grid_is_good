@@ -24,8 +24,14 @@ const PASS_RESULT = {
 	HARMLESS : 23
 }
 
+const SERIE_KIND = {
+	HYPOTHESIS : 'H',
+	PASS : 'P'
+}
+
 function GeneralSolver() {
 	this.myLog = 0;
+	this.separatelyStackDeductions = true; // When true, stacks a new list for a deduction ; when false, adds the events to the last array of happenedEvents. 
 	this.happenedEvents = []; // List of (non-empty list of events). All events beyond the first must be logical deductions (logic of any kind, including geographic) of the first one.
 }
 
@@ -54,7 +60,7 @@ GeneralSolver.prototype.makeItGeographical = function(p_xLength, p_yLength) {
 		Order of filters matter for optimisation since as soon as the application of a filter returns a non-empty list, the chain breaks and returns to individual event applications (or aborts)
 		Warning : methods should be provided, not expressions of methods ! Also, don't forget the keyword "return" in both the closure and the method.
 */
-GeneralSolver.prototype.tryToApply = function (p_startingEvent, p_methodPack) {
+GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_methodPack) {
 	var listEventsToApply = [p_startingEvent]; //List of the "events" type used by the solver. 
 	// Events can be of any kind but must have the following method :
 	// A "x" method (int), a "y" method (int), a "opening" method (OPEN | CLOSED | UNDEFINED), in which case no geographical check is performed)
@@ -76,17 +82,17 @@ GeneralSolver.prototype.tryToApply = function (p_startingEvent, p_methodPack) {
             // Classical verification
             eventBeingApplied = listEventsToApply.pop();
 			result = p_methodPack.applyEventMethod(eventBeingApplied);
-            if (result == EVENT_RESULT.FAILURE) {
-                ok = false;
-            }
-            if (result == EVENT_RESULT.SUCCESS) {
+			if (result == EVENT_RESULT.FAILURE) {
+				ok = false;
+			}
+			if (result == EVENT_RESULT.SUCCESS) {
 				listEventsToApply = p_methodPack.deductionsMethod(listEventsToApply, eventBeingApplied);
-                if (p_methodPack.adjacencyMethod) {
+				if (p_methodPack.adjacencyMethod) {
 					if (eventBeingApplied.opening() == SPACE.CLOSED) {
-                    newClosedSpaces.push({
-                        x: eventBeingApplied.x(),
-                        y: eventBeingApplied.y()
-                    });
+					newClosedSpaces.push({
+						x: eventBeingApplied.x(),
+						y: eventBeingApplied.y()
+					});
 					} else if (eventBeingApplied.opening() == SPACE.OPEN) {
 						//If we are putting the first open space, add a corresponding event into the list of applied events (it isn't "to apply" anymore)
 						if (!this.atLeastOneOpen) {
@@ -99,7 +105,7 @@ GeneralSolver.prototype.tryToApply = function (p_startingEvent, p_methodPack) {
 					}	
 				}
 				listEventsApplied.push(eventBeingApplied);
-            }
+			}
         }
 		
 		// listEventsToApply is empty at this point.
@@ -124,14 +130,14 @@ GeneralSolver.prototype.tryToApply = function (p_startingEvent, p_methodPack) {
         if (ok && p_methodPack.adjacencyMethod) {
             if (firstOpenThisTime) {
                 // The first open space has been added this time (ie this succession of events before a check verification) : add all previously closed to the list.
-                this.happenedEvents.forEach(eventList => {
-                    eventList.forEach(solveEvent => {
-                        if (solveEvent.opening() == SPACE.CLOSED) {
-                            newClosedSpaces.push({
-                                x: solveEvent.x(),
-                                y: solveEvent.y()
-                            });
-                        }
+                this.happenedEvents.forEach(eventSerie => {
+                    eventSerie.list.forEach(solveEvent => {
+						if (solveEvent.opening() == SPACE.CLOSED) {
+							newClosedSpaces.push({
+								x: solveEvent.x(),
+								y: solveEvent.y()
+							});
+						}
                     });
                 });
             }
@@ -162,7 +168,13 @@ GeneralSolver.prototype.tryToApply = function (p_startingEvent, p_methodPack) {
 		return DEDUCTIONS_RESULT.FAILURE;
     } else {
 		if (listEventsApplied.length > 0) {
-			this.happenedEvents.push(listEventsApplied);
+			if (this.separatelyStackDeductions) {
+				this.happenedEvents.push({kind : SERIE_KIND.HYPOTHESIS, list : listEventsApplied});
+			} else {
+				listEventsApplied.forEach(happenedEvent => {
+					this.happenedEvents[this.happenedEvents.length-1].list.push(happenedEvent);
+				});
+			}
 		}
 		return DEDUCTIONS_RESULT.SUCCESS;
     }
@@ -236,15 +248,20 @@ Passes a list of covering events (for instance, if a region contains spaces "1 2
 GeneralSolver.prototype.passEvents = function (p_listListCoveringEvent, p_methodSet ,p_eventsTools) {
 	var listExtractedEvents = this.passEventsAnnex(p_listListCoveringEvent, p_methodSet ,p_eventsTools, 0);
 	if (listExtractedEvents != DEDUCTIONS_RESULT.FAILURE) {
-		listExtractedEvents.forEach( deductedEvent => {
-			this.tryToApply(deductedEvent, p_methodSet);	// TODO changer cette méthode "try to apply" dans son nom mais aussi dans ses arguments...
-		});
+		
 		if (listExtractedEvents.length > 0) {
+			this.separatelyStackDeductions = false;
+			this.happenedEvents.push({kind : SERIE_KIND.PASS , list : []}); 
+			listExtractedEvents.forEach( deductedEvent => {
+				this.tryToApplyHypothesis(deductedEvent, p_methodSet);	
+			});
+			this.separatelyStackDeductions = true;
 			return PASS_RESULT.SUCCESS;
 		} else {
 			return PASS_RESULT.HARMLESS;
 		}
 	} else {
+		//alert("Failed pass !"); TODO mark this !
 		return PASS_RESULT.FAILURE;
 	}
 }
@@ -263,16 +280,16 @@ GeneralSolver.prototype.passEventsAnnex = function (p_listListCoveringEvent, p_m
 		while (i < listCoveringEvent.length && !emptyResult) {
 			possibleEvent = listCoveringEvent[i];
 			const happenedEventsBeforeDeduction = this.happenedEvents.length;
-			answer = this.tryToApply(possibleEvent, p_methodSet);
+			answer = this.tryToApplyHypothesis(possibleEvent, p_methodSet);
 			if (answer == DEDUCTIONS_RESULT.SUCCESS) {
 				const afterEvents = this.passEventsAnnex(p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_indexInList + 1);
 				if (afterEvents != DEDUCTIONS_RESULT.FAILURE) {
 					eventsToIntersect = afterEvents;
 					if (this.happenedEvents.length > happenedEventsBeforeDeduction) {
-						this.happenedEvents[this.happenedEvents.length-1].forEach( recentEvent => {
+						this.happenedEvents[this.happenedEvents.length-1].list.forEach( recentEvent => {
 							eventsToIntersect.push(recentEvent);
 						});
-					}					// Get events that have been deducted by tryToApply)
+					}	// Get events that have been deducted by tryToApplyHypothesis)
 					deductedEvents = intersect(deductedEvents, eventsToIntersect, p_eventsTools);
 					emptyResult = ((deductedEvents != DEDUCTIONS_RESULT.FAILURE) && (deductedEvents.length == 0));
 				}
@@ -359,9 +376,16 @@ GeneralSolver.prototype.multiPass = function(p_generatePassEventsMethod, p_order
 	if (!ok) {
 		while (this.happenedEvents.length > lengthBeforeMultiPass) {
 			var lastEventsList = this.happenedEvents.pop();
-			this.undoEventList(lastEventsList, p_methodSet.undoEventMethod);
+			this.undoEventList(lastEventsList.list, p_methodSet.undoEventMethod);
 		}
 	}
+}
+
+GeneralSolver.prototype.isPassEventList = function (p_eventsSerie) {
+	if (p_eventsSerie.kind == SERIE_KIND.PASS) {
+		return true;
+	} 
+	return false;
 }
 
 /**
@@ -369,7 +393,11 @@ Used by outside !
  */
 GeneralSolver.prototype.undoToLastHypothesis = function (p_undoEventMethod) {
     if (this.happenedEvents.length > 0) {
-        var lastEventsList = this.happenedEvents.pop();
-        this.undoEventList(lastEventsList, p_undoEventMethod); // TODO Impossible d'échapper à l'utilisation de p_undoEventMethod
+		var wasAnHypothesis;
+		do {
+			var lastEventsSerie = this.happenedEvents.pop();
+			wasAnHypothesis = this.isPassEventList(lastEventsSerie);
+			this.undoEventList(lastEventsSerie.list, p_undoEventMethod);
+		} while(wasAnHypothesis && this.happenedEvents.length > 0);
     }
 }
