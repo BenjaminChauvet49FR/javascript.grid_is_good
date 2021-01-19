@@ -25,6 +25,7 @@ const PASS_RESULT = {
 }
 
 function GeneralSolver() {
+	this.myLog = 0;
 	this.happenedEvents = []; // List of (non-empty list of events). All events beyond the first must be logical deductions (logic of any kind, including geographic) of the first one.
 }
 
@@ -136,6 +137,10 @@ GeneralSolver.prototype.tryToApply = function (p_startingEvent, p_methodPack) {
             }
             if (this.atLeastOneOpen) {
                 //Geographical verification.
+				console.log("My log : "+(this.myLog++));
+				if (this.myLog == 227 || this.myLog == 662) {
+					console.log("Fatal !");
+				}
                 geoV = this.geographicalVerification(newClosedSpaces, p_methodPack.adjacencyMethod);
 				ok = (geoV.result == EVENT_RESULT.SUCCESS);
 				if (ok) {
@@ -244,6 +249,7 @@ GeneralSolver.prototype.passEvents = function (p_listListCoveringEvent, p_method
 	}
 }
 
+
 GeneralSolver.prototype.passEventsAnnex = function (p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_indexInList) {
 	if (p_indexInList == p_listListCoveringEvent.length) {
 		return [];
@@ -256,7 +262,6 @@ GeneralSolver.prototype.passEventsAnnex = function (p_listListCoveringEvent, p_m
 		var i = 0;
 		while (i < listCoveringEvent.length && !emptyResult) {
 			possibleEvent = listCoveringEvent[i];
-			//console.log("Event is gonna be tried (lv. "+p_indexInList+") : "+possibleEvent.toString());
 			const happenedEventsBeforeDeduction = this.happenedEvents.length;
 			answer = this.tryToApply(possibleEvent, p_methodSet);
 			if (answer == DEDUCTIONS_RESULT.SUCCESS) {

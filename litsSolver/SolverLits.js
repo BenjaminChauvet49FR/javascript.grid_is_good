@@ -580,16 +580,20 @@ SolverLITS.prototype.cleanDeclarations3or4open = function() {
 // Since it is a filter it must return FAILURE or a list of deducted events
 SolverLITS.prototype.applyDeclarations3or4open = function() {
 	var eventsList = [];
-	this.checker3or4Open.list.forEach( indexRegion => {
+		//this.checker3or4Open.list.forEach( indexRegion => { // Well, this was a ".forEach( indexRegion => {...} ) " but this contained a "return ..." 
+
+	for (var i = 0 ; i < this.checker3or4Open.list.length ; i++) {
+		indexRegion = this.checker3or4Open.list[i];
+	 // Well, this was a ".forEach( indexRegion => {...} ) " but this contained a "return ..." 
 		if (4 == this.regions[indexRegion].openSpaces.length) {				
 			eventsList = this.eventsTetrominoIdentification(eventsList, indexRegion);
 		} else if (3 == this.regions[indexRegion].openSpaces.length) {				
 			eventsList = this.eventsTripletPlacement(eventsList, indexRegion);
 		}
 		if (eventsList == EVENT_RESULT.FAILURE) {
-			return EVENT_RESULT.FAILURE;
+			return EVENT_RESULT.FAILURE; // 
 		}
-	});
+	};
 	this.cleanDeclarations3or4open();
 	return eventsList;
 }
