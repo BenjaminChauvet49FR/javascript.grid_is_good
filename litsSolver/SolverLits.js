@@ -191,12 +191,12 @@ SolverLITS.prototype.passRegionAndAdjacents = function(p_indexRegion) {
 		Array.prototype.push.apply(generatedEvents, newList);
 	});
 	
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools); 
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, "Region+adj. "+p_indexRegion); 
 } //TODO can be improved ?
 
 SolverLITS.prototype.passRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools); 
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, "Region "+p_indexRegion); 
 }
 
 SolverLITS.prototype.multiPass = function() {

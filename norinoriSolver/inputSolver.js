@@ -57,11 +57,11 @@ solveAction = function (p_solver,p_textArea) {
 //--------------------------
 
 /** 
-Loads a walled grid from local storage and its region grid (cf. super-function), updates intelligence, updates canvas
+Transforms a loaded string into the appropriate item (see common save and load), updates intelligence, updates canvas.
+Called by common save and load !
 */
-loadAction = function (p_canvas, p_drawer, p_solver, p_name, p_textArea) {
-    var loadedItem = tokensToWallArray(localStorage.getItem("grid_is_good_" + p_name).split(' '));
-	p_solver.construct(loadedItem);
+loadPuzzle = function(p_canvas,p_drawer,p_solver, p_loadedString){
+	var loadedItem = stringToWallAndNumbersPuzzle(p_loadedString);
+	p_solver.construct(loadedItem.grid);
 	p_drawer.adaptCanvasDimensions(p_canvas,{xLength:p_solver.xLength,yLength:p_solver.yLength});
-	p_textArea.innerHTML = ""; //TODO manage true/false
 }

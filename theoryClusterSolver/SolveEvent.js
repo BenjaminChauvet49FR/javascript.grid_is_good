@@ -5,7 +5,7 @@ function SpaceEvent(p_x,p_y,p_symbol) {
 }
 
 SpaceEvent.prototype.toString = function() {	
-	return "["+this.myX+","+this.myY+"] ("+this.symbol+")";
+	return "["+this.symbol+" "+this.myX+","+this.myY+"]";
 }
 
 SpaceEvent.prototype.copy = function() {

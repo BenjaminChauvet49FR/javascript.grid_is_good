@@ -220,7 +220,7 @@ SolverHeyawake.prototype.quickStart = function(){
 
 SolverHeyawake.prototype.passRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools); 
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion, "Region "+p_indexRegion); 
 }
 
 SolverHeyawake.prototype.multiPass = function() {

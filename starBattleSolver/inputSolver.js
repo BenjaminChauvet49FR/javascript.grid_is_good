@@ -55,13 +55,11 @@ solveAction = function (p_solver,p_components){
 //--------------------------
 
 /** 
-Loads a puzzle from local storage and its region grid (cf. super-function), updates intelligence, updates canvas
+Transforms a loaded string into the appropriate item (see common save and load), updates intelligence, updates canvas.
+Called by common save and load !
 */
-loadAction = function(p_canvas,p_drawer,p_solver,p_name,p_components){  //TODO adapt loadAction to starSpan in other solvers
-	var loadedItem = stringToStarBattlePuzzle(localStorage.getItem("grid_is_good_"+p_name));
+loadPuzzle = function(p_canvas, p_drawer, p_solver, p_loadedString) {
+    const loadedItem = stringToStarBattlePuzzle(p_loadedString);
 	p_solver.construct(loadedItem.grid,loadedItem.starNumber);
 	p_drawer.adaptCanvasDimensions(p_canvas,{xyLength:p_solver.xyLength});
-	p_components.starSpan.innerHTML = loadedItem.starNumber;
-	p_components.textArea.innerHTML = ""; //TODO manage true/false
-}
-
+}	

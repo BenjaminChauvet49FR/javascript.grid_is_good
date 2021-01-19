@@ -153,17 +153,17 @@ SolverStarBattle.prototype.undoToLastHypothesis = function(){
 
 SolverStarBattle.prototype.emitPassRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools); 
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, "Region "+p_indexRegion); 
 }
 
 SolverStarBattle.prototype.emitPassRow = function(p_y) {
 	const generatedEvents = this.generateEventsForRowPass(p_y);
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools); 
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, "Row "+p_y); 
 }
 
 SolverStarBattle.prototype.emitPassColumn = function(p_x) {
 	const generatedEvents = this.generateEventsForColumnPass(p_x);
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools); 
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, "Column "+p_x); 
 }
 
 SolverStarBattle.prototype.emitMultiPass = function() {

@@ -96,9 +96,7 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
 					} else if (eventBeingApplied.opening() == SPACE.OPEN) {
 						//If we are putting the first open space, add a corresponding event into the list of applied events (it isn't "to apply" anymore)
 						if (!this.atLeastOneOpen) {
-							listEventsApplied.push({
-								firstOpen: true
-							});
+							listEventsApplied.push({firstOpen : true});
 							this.atLeastOneOpen = true;
 							firstOpenThisTime = true;
 						}
@@ -202,9 +200,7 @@ GeneralSolver.prototype.geographicalVerification = function (p_listNewXs, p_adja
         });
         checking.newLimits.forEach(spaceLimit => {
             //Store the ancient limit into the solved event (in case of undoing), then overwrites the limit at once and pushes it into
-            newListEventsApplied.push({
-                adjacency: true
-            });
+            newListEventsApplied.push({adjacency : true});
             this.adjacencyLimitSpacesList.push({
                 x: spaceLimit.x,
                 y: spaceLimit.y,
@@ -245,13 +241,13 @@ Passes a list of covering events (for instance, if a region contains spaces "1 2
  // p_eventsTools : must contain comparisonMethod, copyMethod
 
 */
-GeneralSolver.prototype.passEvents = function (p_listListCoveringEvent, p_methodSet ,p_eventsTools) {
+GeneralSolver.prototype.passEvents = function (p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_passArgument) {
 	var listExtractedEvents = this.passEventsAnnex(p_listListCoveringEvent, p_methodSet ,p_eventsTools, 0);
 	if (listExtractedEvents != DEDUCTIONS_RESULT.FAILURE) {
 		
 		if (listExtractedEvents.length > 0) {
 			this.separatelyStackDeductions = false;
-			this.happenedEvents.push({kind : SERIE_KIND.PASS , list : []}); 
+			this.happenedEvents.push({kind : SERIE_KIND.PASS , label : p_passArgument, list : []}); 
 			listExtractedEvents.forEach( deductedEvent => {
 				this.tryToApplyHypothesis(deductedEvent, p_methodSet);	
 			});
@@ -364,7 +360,7 @@ GeneralSolver.prototype.multiPass = function(p_generatePassEventsMethod, p_order
 		i = 0;
 		while (ok && i < orderedListPassArguments.length) {
 			p_listListCoveringEvent = p_generatePassEventsMethod(orderedListPassArguments[i]);
-			resultPass = this.passEvents(p_listListCoveringEvent, p_methodSet ,p_eventsTools);
+			resultPass = this.passEvents(p_listListCoveringEvent, p_methodSet ,p_eventsTools, orderedListPassArguments[i]); //TODO must be improved !
 			if (resultPass == PASS_RESULT.SUCCESS) {
 				oneMoreLoop = true;
 			} else if (resultPass == PASS_RESULT.FAILURE) {
@@ -386,6 +382,34 @@ GeneralSolver.prototype.isPassEventList = function (p_eventsSerie) {
 		return true;
 	} 
 	return false;
+}
+
+GeneralSolver.prototype.happenedEventsLog = function(p_options) {
+	answer = "";
+	var displayGeographical = (p_options && p_options.displayGeographical);
+	this.happenedEvents.forEach(eventSerie => {
+		if (eventSerie.kind == SERIE_KIND.PASS) {
+			answer += "Pass - " + eventSerie.label+ " ";
+		} else {
+			answer += "Hypothesis - ";
+		} 
+		eventSerie.list.forEach(event_ => {
+			if (event_.firstOpen) {
+				if (displayGeographical) {
+					answer += "<1st open>";
+				}
+			} else if (event_.adjacency) {
+				if (displayGeographical) {
+					answer += "<Adjacency>";
+				}
+			} 
+			else {
+				answer += event_.toString() + " ";
+			}
+		});
+		answer += "\n";
+	});
+	return answer;
 }
 
 /**

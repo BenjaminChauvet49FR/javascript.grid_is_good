@@ -11,7 +11,7 @@ function SpaceEvent(p_x,p_y,p_symbol) {
 }
 
 SolveEvent.prototype.toString = function(){	
-	return "["+this.coorX+","+this.coorY+"] ("+this.symbol+")";
+	return "["+this.symbol+" "+this.coorX+","+this.coorY+"]";
 }
 
 SolveEvent.prototype.copy = function(){

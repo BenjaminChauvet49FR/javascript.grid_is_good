@@ -117,7 +117,7 @@ SolverChocona.prototype.passRegion = function(p_indexRegion) {
 		undoEventClosure(this)
 	);
 	methodTools = {comparisonMethod : comparison, copyMethod : copying};
-	this.generalSolver.passEvents(generatedEvents, methodSet, methodTools); 
+	this.generalSolver.passEvents(generatedEvents, methodSet, methodTools, p_indexRegion, "Region "+p_indexRegion); 
 }
 
 SolverChocona.prototype.quickStart = function(){

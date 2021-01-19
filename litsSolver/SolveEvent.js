@@ -23,7 +23,7 @@ function ShapeEvent(p_x, p_y, p_shape) { // Item indépendant de SpaceEvent, mai
 }
 
 SolveEvent.prototype.toString = function(){	
-	return "["+this.coorX+","+this.coorY+"] ("+this.symbol+")";
+	return "["+this.symbol+" "+this.coorX+","+this.coorY+"]";
 }
 
 SolveEvent.prototype.copy = function(){
@@ -43,7 +43,7 @@ SolveEvent.prototype.y = function() {
 }
 
 ShapeEvent.prototype.toString = function(){	
-	return "["+this.coorX+","+this.coorY+"] (s-"+LITSLettersArray[this.shape]+")";
+	return "[S"+this.shape+" "+this.coorX+","+this.coorY+"]";
 }
 
 ShapeEvent.prototype.opening = function() {

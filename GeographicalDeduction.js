@@ -5,5 +5,5 @@ function GeographicalDeduction(p_x,p_y,p_opening) {
 }
 
 GeographicalDeduction.prototype.toString = function() {	
-	return "["+this.x+","+this.y+"] ("+this.opening+")";
+	return "[GD "+this.x+","+this.y+"] ("+this.opening+")";
 }

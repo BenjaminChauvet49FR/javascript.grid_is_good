@@ -22,11 +22,11 @@ SolveEvent.prototype.opening = function() {
 	return this.symbol;
 }
 
-/*SolveEvent.prototype.toString = function(){	
-	return "[" + this.coorX + "," + this.coorY + "] (" + this.symbol + ")";
+SolveEvent.prototype.toString = function(){	
+	return "["+this.symbol+" "+this.coorX+","+this.coorY+"]";
 }
 
-SolveEvent.prototype.copy = function(){
+/*SolveEvent.prototype.copy = function(){
 	return new SpaceEvent(this.symbol, this.coorX, this.coorY);
 }
 */
