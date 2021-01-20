@@ -8,7 +8,9 @@ var colors={
 	noLink:'#aa0000',
 	presentLink:'#cc00ff',
 	noLinkState:'#448844',
-	presentLinkState:'#bbffdd'
+	presentLinkState:'#bbffdd',
+	circleOut:'#000000',
+	circleIn:'#000044'
 }
 
 var drawer = new Drawer(colors);
@@ -23,11 +25,15 @@ var drawIndications;
 //--------------------
 //The main draw function (at start)
 function drawCanvas() {
-	drawer.drawWalllessGrid(context, null, 10, 10); //TODO solution provisoire
-	drawer.drawSolverLinkGrid(context, solver.loopSolver); 
-	// No drawing of banned spaces. 
+	drawer.drawWalllessGrid(context, null, solver.xLength, solver.yLength);
+	drawInsideSpaces(context, drawer, colors, solver);
+		// No drawing of banned spaces. 
 	//drawInsideSpaces(context,drawer,colors,solver);
 }
+
+
+
+
 
 var textArea = document.getElementById("textarea_happened");
 var components = {

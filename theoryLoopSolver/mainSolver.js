@@ -23,8 +23,8 @@ var drawIndications;
 //--------------------
 //The main draw function (at start)
 function drawCanvas() {
-	drawer.drawWalllessGrid(context, null, 10, 10); //TODO solution provisoire
-	drawer.drawSolverLinkGrid(context, solver.loopSolver); 
+	drawer.drawWalllessGrid(context, null, solver.xLength, solver.yLength); //TODO edit the "10 10"
+	drawer.drawSolverLinkInsideSpaces(context, solver.loopSolver); 
 	// No drawing of banned spaces. 
 	//drawInsideSpaces(context,drawer,colors,solver);
 }

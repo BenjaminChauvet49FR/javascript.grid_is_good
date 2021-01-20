@@ -13,13 +13,20 @@ SolverMasyu.prototype.construct = function(p_symbolGrid) {
 		for (var ix = 0 ; ix < this.xLength ; ix++) {
 			if (p_symbolGrid[iy][ix] == SYMBOL_ID.WHITE) {
                 this.pearlGrid[iy].push(PEARL.WHITE);
-            } else if (p_symbolGrid[iy][ix] == SYMBOL_ID.WHITE) {
+            } else if (p_symbolGrid[iy][ix] == SYMBOL_ID.BLACK) {
                 this.pearlGrid[iy].push(PEARL.BLACK);
             } else {
                 this.pearlGrid[iy].push(PEARL.EMPTY);
             }
 		}
 	}
+}
+
+// -------------------
+// Getters and setters
+
+SolverMasyu.prototype.getPearl = function(p_x, p_y) {
+	return this.pearlGrid[p_y][p_x];
 }
 
 // -------------------
