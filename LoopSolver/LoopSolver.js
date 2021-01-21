@@ -148,6 +148,15 @@ LoopSolver.prototype.getLinkUp = function(p_x, p_y) {
 	return this.getLinkDown(p_x, p_y-1);
 }
 
+LoopSolver.prototype.getLink = function(p_x, p_y, p_dir) {
+	switch(p_dir) {
+		case LOOP_DIRECTION.LEFT : return this.getLinkLeft(p_x, p_y); break;
+		case LOOP_DIRECTION.UP : return this.getLinkUp(p_x, p_y); break;
+		case LOOP_DIRECTION.RIGHT : return this.getLinkRight(p_x, p_y); break;
+		case LOOP_DIRECTION.DOWN : return this.getLinkDown(p_x, p_y); break;
+	}
+}
+
 LoopSolver.prototype.getLinkedEdges = function(p_x, p_y){
 	return this.grid[p_y][p_x].chains.length;
 }
@@ -173,6 +182,20 @@ copySpace = function(p_space) {
 		y : p_space.y
 	}
 }
+
+//--------------------------------
+// Utilitary functions
+
+LoopSolver.prototype.neighborExists = function(p_x, p_y, p_dir) {
+	switch (p_dir) {
+		case LOOP_DIRECTION.LEFT : return (p_x > 0); break;
+		case LOOP_DIRECTION.UP : return (p_y > 0); break;
+		case LOOP_DIRECTION.RIGHT : return (p_x <= this.xLength-2); break;
+		case LOOP_DIRECTION.DOWN : return (p_y <= this.yLength-2); break;
+	}
+}
+
+
 
 // -------------------
 // Doing and undoing 
@@ -564,22 +587,52 @@ abortClosure = function(p_solver) {
 	}
 }
 
-separateEndsClosure = function(p_solver) {
+separateEndsClosure = function(p_solver) { //TODO well, this function is called after all other openings and closings have been performed, which can lead to a closed loop because all linked spaces have exactly 2 linked edges except a few ones that had one linked and had one undecided edge left...
 	return function() {
 		var eventList = [];
 		if (p_solver.chainCount != 1) {
-			var opposite;
+			var opposite, opposite2;
 			p_solver.checkNewEnds.list.forEach (space => {
-				 // Warning : transition states !
-				if (p_solver.getLinkedEdges(space.x, space.y) == 1) {
+				//if (p_solver.getLinkedEdges(space.x, space.y) == 1) {
 					opposite = p_solver.getOppositeEnd(space.x, space.y);	
-					if (p_solver.getLinkedEdges(opposite.x, opposite.y) == 1) {
-						eventList = p_solver.testEndsClosingLoop(eventList, space, opposite);						
+					if (opposite.x && p_solver.getLinkedEdges(opposite.x, opposite.y) == 1) {
+						opposite2 = p_solver.getOppositeEnd(opposite.x, opposite.y);	
+						if (p_solver.getLinkedEdges(opposite2.x, opposite2.y) == 1) {
+							eventList = p_solver.testEndsClosingLoop(eventList, opposite2, opposite);						
+						}
 					}
-				}	
+					
+				//}	
 			});
 		}
 		p_solver.cleanNewEnds(); // TODO well, when we have one link and two adjacent ends and we add a chain (ie a link or a linked space) elsewhere, the close between ends is not added.
 		return eventList;
 	}
+}
+
+// ----------------
+// To string, for debug for instance
+LoopSolver.prototype.logOppositeEnd = function() {
+	var answer = "";
+	var oppositeEndSpace;
+	var stringSpace;
+	for (var iy = 0; iy < this.yLength ; iy++) {
+		for (var ix = 0; ix < this.xLength ; ix++) {
+			oppositeEndSpace = this.grid[iy][ix].oppositeEnd;
+			if (oppositeEndSpace.x) {
+				stringSpace = oppositeEndSpace.x+" "+oppositeEndSpace.y;
+				if (this.getLinkedEdges(ix, iy) == 1) {
+					stringSpace+="*";
+				}				
+			} else {
+				stringSpace = "ND";
+			}
+			while(stringSpace.length < 5) {
+				stringSpace+= " ";
+			}
+			answer+=stringSpace+"| ";
+		}
+		answer+="\n";
+	}
+	console.log(answer);
 }

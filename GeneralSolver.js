@@ -43,6 +43,10 @@ GeneralSolver.prototype.makeItGeographical = function(p_xLength, p_yLength) {
     this.adjacencyLimitSpacesList = [];
 }
 
+function FailureEvent() {
+	this.failure = true;
+}
+
 /**
 // TODO while the things defined below are accurate, the names aren't !
 	Generic method for any solver that includes a global adjacency check
@@ -81,7 +85,7 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
         while (ok && listEventsToApply.length > 0) {
             // Classical verification
             eventBeingApplied = listEventsToApply.pop();
-			result = p_methodPack.applyEventMethod(eventBeingApplied);
+			result = (eventBeingApplied.failure ? EVENT_RESULT.FAILURE : p_methodPack.applyEventMethod(eventBeingApplied));
 			if (result == EVENT_RESULT.FAILURE) {
 				ok = false;
 			}

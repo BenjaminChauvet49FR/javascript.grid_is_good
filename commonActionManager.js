@@ -71,6 +71,9 @@ function setMode(p_textElement, p_entriesManager, p_entry, p_value) {
 		case (ENTRY.SPACE):p_entriesManager.clickSpace = p_value;break; 
 		case (ENTRY.WALL_R):p_entriesManager.clickWallD = p_value;break; 
 		case (ENTRY.WALL_D):p_entriesManager.clickWallR = p_value;break; 
-		case (ENTRY.WALLS):p_entriesManager.clickWallD = p_value;break; 
+		case (ENTRY.WALLS): 
+			p_entriesManager.clickWallD = p_value;
+			p_entriesManager.clickWallR = p_value;
+		break; 
 	}
 }
