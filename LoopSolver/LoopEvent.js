@@ -28,6 +28,20 @@ const oppositeDirection = {
 	d: LOOP_DIRECTION.UP
 }
 
+const turningRightDirection = {
+	l: LOOP_DIRECTION.UP,
+	u: LOOP_DIRECTION.RIGHT,
+	r: LOOP_DIRECTION.DOWN,
+	d: LOOP_DIRECTION.LEFT
+}
+
+const turningLeftDirection = {
+	l: LOOP_DIRECTION.DOWN,
+	u: LOOP_DIRECTION.LEFT,
+	r: LOOP_DIRECTION.UP,
+	d: LOOP_DIRECTION.RIGHT
+}
+
 // ----------------------------------------
 
 function StateEvent(p_x, p_y, p_state) {

@@ -3,12 +3,10 @@ var colors={
 	open_wall:'#dddddd',
 	edge_walls:'#000000',
 	bannedSpace:'#666666',
-	openSquare:'#00ffcc',
-	closedSquare:'#cc0022',
 	noLink:'#aa0000',
 	presentLink:'#cc00ff',
 	noLinkState:'#448844',
-	presentLinkState:'#bbffdd',
+	presentLinkState:'#ddeeff',
 	circleOut:'#000000',
 	circleIn:'#000044'
 }
@@ -35,12 +33,12 @@ function drawCanvas() {
 
 
 
-var textArea = document.getElementById("textarea_happened");
+/*var textArea = document.getElementById("textarea_happened");
 var components = {
 	textArea: textArea,
 	checkBox : document.getElementById("checkbox_onlyAssumed"),
-};
-canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,components,solver,actionsManager)},false);
+};*/
+canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,null,solver,actionsManager)},false);
 setInterval(drawCanvas,30);
 var fieldName = document.getElementById("input_grid_name");
 

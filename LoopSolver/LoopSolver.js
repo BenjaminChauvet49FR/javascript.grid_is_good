@@ -205,7 +205,7 @@ LoopSolver.prototype.setLinkRight = function(p_x, p_y, p_state) {
 	const state = this.grid[p_y][p_x].linkRight;
 	if (state == p_state) {
 		return EVENT_RESULT.HARMLESS;
-	} else if (state != LOOP_STATE.UNDECIDED || (state == LOOP_STATE.LINKED && this.getLinkedEdges(p_x, p_y) == 2)) {
+	} else if (state != LOOP_STATE.UNDECIDED || (p_state == LOOP_STATE.LINKED && (this.getLinkedEdges(p_x, p_y) == 2 || this.getLinkedEdges(p_x+1, p_y) == 2))) {
 		return EVENT_RESULT.FAILURE;
 	} else {
 		this.grid[p_y][p_x].linkRight = p_state;
@@ -222,7 +222,7 @@ LoopSolver.prototype.setLinkDown = function(p_x, p_y, p_state) {
 	const state = this.grid[p_y][p_x].linkDown;
 	if (state == p_state) {
 		return EVENT_RESULT.HARMLESS;
-	} else if (state != LOOP_STATE.UNDECIDED || (state == LOOP_STATE.LINKED && this.getLinkedEdges(p_x, p_y) == 2)) {
+	} else if (state != LOOP_STATE.UNDECIDED || (p_state == LOOP_STATE.LINKED && (this.getLinkedEdges(p_x, p_y) == 2 || this.getLinkedEdges(p_x, p_y+1) == 2))) {
 		return EVENT_RESULT.FAILURE;
 	} else {
 		this.grid[p_y][p_x].linkDown = p_state;
