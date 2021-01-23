@@ -19,7 +19,7 @@ SolverStarBattle.prototype.construct = function(p_wallArray,p_starNumber){
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodTools = {comparisonMethod : comparison, copyMethod : copying};
+	this.methodTools = {comparisonMethod : comparison, copyMethod : copying,  argumentToLabelMethod : namingCategoryClosure(this)};
 	
 	
 	this.listSpacesByRegion(); //spacesByRegion
@@ -115,30 +115,8 @@ SolverStarBattle.prototype.getOsRemainColumn = function(p_i){return this.notPlac
 SolverStarBattle.prototype.getOsRemainRegion = function(p_i){return this.notPlacedYet.regions[p_i].Os;}
 SolverStarBattle.prototype.getXsRemainRow = function(p_i){return this.notPlacedYet.rows[p_i].Xs;}
 SolverStarBattle.prototype.getXsRemainColumn = function(p_i){return this.notPlacedYet.columns[p_i].Xs;}
-SolverStarBattle.prototype.getXsRemainRegion = function(p_i){return this.notPlacedYet.regions[p_i].Xs;}
-SolverStarBattle.prototype.getFirstSpaceRegion = function(p_i){return this.spacesByRegion[p_i][0];}*/
-
-//------------------
-
-/**
-For the following functions, the following returned values :
-emitHypothesis (*) (**)
-passRow/passColumn/passRegion
-pass 
-applyAnswerPass  (*)
-{result: (RESULT.SUCCESS | RESULT.ERROR), eventsApplied : list(SpaceEvent)}
-
-For the follwing, returns only (RESULT.SUCCESS | RESULT.ERROR) :
-multiPass
-generalSolve
-afterTheHypothesis
-solveByHypothesis 
-(*) : if success, adds its values to SolverObject.
-(**) : can also have a return of RESULT.HARMLESS
-
-For the Solver object : 
-{kind : KIND.HYPOTHESIS|KIND.PASS, list:list(SpaceEvent)}
-*/
+SolverStarBattle.prototype.getXsRemainRegion = function(p_i){return this.notPlacedYet.regions[p_i].Xs;}*/
+SolverStarBattle.prototype.getFirstSpaceRegion = function(p_i){return this.spacesByRegion[p_i][0];}
 
 //------------------
 // Input methods 
@@ -153,31 +131,36 @@ SolverStarBattle.prototype.undoToLastHypothesis = function(){
 
 SolverStarBattle.prototype.emitPassRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, "Region "+p_indexRegion); 
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : FAMILY.REGION, index : p_indexRegion}); 
 }
 
 SolverStarBattle.prototype.emitPassRow = function(p_y) {
 	const generatedEvents = this.generateEventsForRowPass(p_y);
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, "Row "+p_y); 
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : FAMILY.ROW, index : p_y}); 
 }
 
 SolverStarBattle.prototype.emitPassColumn = function(p_x) {
 	const generatedEvents = this.generateEventsForColumnPass(p_x);
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, "Column "+p_x); 
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : FAMILY.COLUMN, index : p_x}); 
 }
 
-SolverStarBattle.prototype.emitMultiPass = function() {
-	methodSet = new ApplyEventMethodNonAdjacentPack(
-		applyEventClosure(this),
-		deductionsClosure(this),
-		undoEventClosure(this)
-	);
-	methodTools = {comparisonMethod : comparison, copyMethod : copying};
-	
+SolverStarBattle.prototype.emitMultiPass = function() {	
 	this.generalSolver.multiPass(
 		generateEventsForRLCPassClosure(this),
 		orderedListPassArgumentsMethodClosure(this), 
-		methodSet, methodTools);
+		this.methodSet, this.methodTools,);
+}
+
+namingCategoryClosure = function(p_solver) {
+	return function(p_indexAndFamily) {
+		const index = p_indexAndFamily.index;
+		switch (p_indexAndFamily.family) {
+			case FAMILY.REGION : return "Region "+ index + " (" + p_solver.getFirstSpaceRegion(index).x +" "+ p_solver.getFirstSpaceRegion(index).y + ")"; break;
+			case FAMILY.ROW : return "Row " + index; break;
+			case FAMILY.COLUMN : return "Column " + index; break;
+			default : return "";
+		}
+	}
 }
 
 //------------------
@@ -190,9 +173,9 @@ applyEventClosure = function(p_solver) {
 }
 
 /**Tries to put a symbol into the space of a grid. 3 possibilities :
-RESULT.SUCCESS : it was indeed put into the grid ; the number of Os and Xs for this region, row and column are also updated.
-RESULT.HARMLESS : said symbol was either already put into that space OUT out of bounds beacuse of automatic operation. Don't change anything to the grid and remaining symbols
-ERROR : there is a different symbol in that space. We have done a wrong hypothesis somewhere ! (or the grid was wrong at the basis !)
+EVENT_RESULT.SUCCESS : it was indeed put into the grid ; the number of Os and Xs for this region, row and column are also updated.
+EVENT_RESULT.HARMLESS : said symbol was either already put into that space OUT out of bounds beacuse of automatic operation. Don't change anything to the grid and remaining symbols
+EVENT_RESULT.ERROR : there is a different symbol in that space. We have done a wrong hypothesis somewhere ! (or the grid was wrong at the basis !)
 This is also used at grid start in order to put Xs in banned spaces, hence the check in the SYMBOL.NO_STAR part.
 */
 SolverStarBattle.prototype.putNew = function(p_x,p_y,p_symbol){
@@ -379,7 +362,7 @@ generateEventsForRLCPassClosure = function(p_solver) {
 			case FAMILY.COLUMN : return p_solver.generateEventsForColumnPass(p_indexAndFamily.index); break;
 			case FAMILY.REGION : return p_solver.generateEventsForRegionPass(p_indexAndFamily.index); break;
 		}
-		return p_solver.generateEventsForColumnPass(p_x);
+		return [];
 	}
 }
 
@@ -471,30 +454,4 @@ function answerGridToString(p_grid){
 		}
 		console.log(row);
 	}
-}
-
-/**
-Returns the events to the text
-p_onlyAssumed : true if only the assumed events should be written.
-*/
-SolverStarBattle.prototype.happenedEventsToString = function(p_onlyAssumed){
-	var ei,li;
-	var answer = "";
-	if (p_onlyAssumed){
-		this.happenedEvents.forEach(function(eventList){
-			if (eventList.kind == EVENTLIST_KIND.HYPOTHESIS){
-				answer+=eventList.list[0].toString()+"\n";				
-			}
-		});
-	}
-	else{
-		this.happenedEvents.forEach(function(eventList){
-			answer+=eventList.kind+"\n";
-			eventList.list.forEach(function(spaceEvent){
-				answer+=spaceEvent.toString()+"\n" 
-			});
-			answer+="--------\n";
-		});
-	}
-	return answer;
 }

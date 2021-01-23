@@ -25,7 +25,7 @@ function drawInsideSpaces(p_context,p_drawer,p_color,p_solver){
 	p_context.textBaseline = 'top';
 	for(var i=0;i<p_solver.regions.length;i++) {
 		if (p_solver.getForcedValue(i) != NOT_FORCED) {
-			space = p_solver.getFirstSpace(i,0);
+			space = p_solver.getFirstSpaceRegion(i,0);
 			pixLeft = p_drawer.getPixInnerXLeft(space.x)+2;
 			pixUp = p_drawer.getPixInnerYUp(space.y)+2;
 			if (p_solver.getAnswer(space.x,space.y) == CHOCONA.YES) {

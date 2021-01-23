@@ -17,6 +17,13 @@ SolverChocona.prototype.construct = function(p_wallArray, p_numberGrid) {
 	var ix,iy;
 	var lastRegionNumber = 0;
 	
+	this.methodSet = new ApplyEventMethodNonAdjacentPack(
+		applyEventClosure(this),
+		deductionsClosure(this),
+		undoEventClosure(this)
+	);
+	this.methodTools = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
+	
 	// Initialize the required grids (notably answerGrid) and the number of regions
 	for(iy = 0;iy < this.yLength;iy++){
 		this.answerGrid.push([]);
@@ -86,7 +93,7 @@ SolverChocona.prototype.getForcedValue = function(p_ir) {
 	return this.regions[p_ir].forcedValue;
 }
 
-SolverChocona.prototype.getFirstSpace = function(p_ir) {
+SolverChocona.prototype.getFirstSpaceRegion = function(p_ir) {
 	return this.regions[p_ir].spaces[0];
 }
 
@@ -111,13 +118,7 @@ SolverChocona.prototype.undoToLastHypothesis = function(){
 
 SolverChocona.prototype.passRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	methodSet = new ApplyEventMethodNonAdjacentPack(
-		applyEventClosure(this),
-		deductionsClosure(this),
-		undoEventClosure(this)
-	);
-	methodTools = {comparisonMethod : comparison, copyMethod : copying};
-	this.generalSolver.passEvents(generatedEvents, methodSet, methodTools, p_indexRegion, "Region "+p_indexRegion); 
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion); 
 }
 
 SolverChocona.prototype.quickStart = function(){
@@ -392,5 +393,11 @@ comparison = function(p_event1, p_event2) {
 		var c1 = (p_event1.symbol == CHOCONA.YES ? 1 : 0);
 		var c2 = (p_event2.symbol == CHOCONA.YES ? 1 : 0); // Unstable : works because only "O" and "C" values are admitted
 		return c1-c2;
+	}
+}
+
+namingCategoryClosure = function(p_solver) {
+	return function (p_indexRegion) {
+		return "Region "+ p_indexRegion + " (" + p_solver.getFirstSpaceRegion(p_indexRegion).x +" "+ p_solver.getFirstSpaceRegion(p_indexRegion).y + ")"; 
 	}
 }

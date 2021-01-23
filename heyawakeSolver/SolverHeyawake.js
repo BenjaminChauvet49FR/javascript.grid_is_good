@@ -21,7 +21,7 @@ SolverHeyawake.prototype.construct = function(p_wallArray,p_numberGrid){
 			adjacencyClosure(this), 
 			transformClosure(this), 
 			undoEventClosure(this));
-	this.methodTools = {comparisonMethod : comparison, copyMethod : copying};
+	this.methodTools = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
 
 	this.wallGrid = WallGrid_data(p_wallArray); 
 	this.regionGrid = this.wallGrid.toRegionGrid();
@@ -154,6 +154,10 @@ SolverHeyawake.prototype.getAnswer = function(p_x,p_y){
 
 SolverHeyawake.prototype.getRegionIndex = function(p_x,p_y){
 	return this.regionGrid[p_y][p_x];
+}
+
+SolverHeyawake.prototype.getFirstSpaceRegion = function(p_ir) {
+	return this.regions[p_ir].spaces[0];
 }
 
 //--------------------------------
@@ -468,5 +472,11 @@ orderedListPassArgumentsMethodClosure = function(p_solver) {
 			return (closed1-open1*3) - (closed2-open2*3);
 		});*/ //TODO
 		return indexList;
+	}
+}
+
+namingCategoryClosure = function(p_solver) {
+	return function (p_indexRegion) {
+		return "Region "+ p_indexRegion + " (" + p_solver.getFirstSpaceRegion(p_indexRegion).x +" "+ p_solver.getFirstSpaceRegion(p_indexRegion).y + ")"; 
 	}
 }

@@ -251,7 +251,7 @@ GeneralSolver.prototype.passEvents = function (p_listListCoveringEvent, p_method
 		
 		if (listExtractedEvents.length > 0) {
 			this.separatelyStackDeductions = false;
-			this.happenedEvents.push({kind : SERIE_KIND.PASS , label : p_passArgument, list : []}); 
+			this.happenedEvents.push({kind : SERIE_KIND.PASS , label : p_eventsTools.argumentToLabelMethod ? p_eventsTools.argumentToLabelMethod(p_passArgument) : p_passArgument, list : []}); 
 			listExtractedEvents.forEach( deductedEvent => {
 				this.tryToApplyHypothesis(deductedEvent, p_methodSet);	
 			});
@@ -364,7 +364,7 @@ GeneralSolver.prototype.multiPass = function(p_generatePassEventsMethod, p_order
 		i = 0;
 		while (ok && i < orderedListPassArguments.length) {
 			p_listListCoveringEvent = p_generatePassEventsMethod(orderedListPassArguments[i]);
-			resultPass = this.passEvents(p_listListCoveringEvent, p_methodSet ,p_eventsTools, orderedListPassArguments[i]); //TODO must be improved !
+			resultPass = this.passEvents(p_listListCoveringEvent, p_methodSet ,p_eventsTools, orderedListPassArguments[i]); 
 			if (resultPass == PASS_RESULT.SUCCESS) {
 				oneMoreLoop = true;
 			} else if (resultPass == PASS_RESULT.FAILURE) {

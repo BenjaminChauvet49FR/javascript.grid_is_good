@@ -5,7 +5,6 @@ function clickCanvas(event,p_canvas,p_drawer,p_components,p_solver,p_actionsMana
 	var spaceClicked = drawer.getClickSpace(event,p_canvas,p_solver.xyLength,p_solver.xyLength);
     if (spaceClicked != null){
 		clickSpaceAction(p_solver,spaceClicked.x,spaceClicked.y,p_actionsManager.clickSpace);
-		p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked);
 	}
 }
 
@@ -39,17 +38,14 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 
 undoAction = function(p_solver,p_components){
 	p_solver.undoToLastHypothesis();
-	p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked)
 }
 
 multiPassAction = function (p_solver,p_components){
 	p_solver.emitMultiPass();
-	p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked)
 }
 
 solveAction = function (p_solver,p_components){
 	//p_solver.generalSolve();
-	p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked)
 }
 
 //--------------------------

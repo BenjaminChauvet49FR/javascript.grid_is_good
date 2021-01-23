@@ -5,8 +5,6 @@ const NOT_FORCED = -1;
 const NOT_RELEVANT = -1;
 // const SPACE is used in the dad solver
 
-const EVENTLIST_KIND = {HYPOTHESIS:"H",PASS:"P"};
-
 function SolverLITS(p_wallArray,p_numberGrid){
 	this.construct(p_wallArray,p_numberGrid);
 }
@@ -24,7 +22,7 @@ SolverLITS.prototype.construct = function(p_wallArray,p_numberGrid){
 		undoEventClosure(this)
 	);
 	this.methodSet.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
-	this.methodTools = {comparisonMethod : comparison, copyMethod : copying};
+	this.methodTools = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
 
 	this.wallGrid = WallGrid_data(p_wallArray); 
 	this.regionGrid = this.wallGrid.toRegionGrid();
@@ -123,6 +121,9 @@ function isSpaceEvent(p_event) {
 	return p_event.symbol;
 }
 
+SolverLITS.prototype.getFirstSpaceRegion = function(p_i) {
+	return this.regions[p_i].spaces[0];
+}
 
 //--------------------------------
 
@@ -205,6 +206,13 @@ SolverLITS.prototype.multiPass = function() {
 		orderedListPassArgumentsMethodClosure(this), 
 		this.methodSet, this.methodTools);
 }
+
+namingCategoryClosure = function(p_solver) {
+	return function (p_indexRegion) {
+		return "Region "+ p_indexRegion + " (" + p_solver.getFirstSpaceRegion(p_indexRegion).x +" "+ p_solver.getFirstSpaceRegion(p_indexRegion).y + ")"; 
+	}
+}
+
 
 //--------------------------------
 

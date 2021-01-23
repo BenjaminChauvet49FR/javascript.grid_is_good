@@ -25,6 +25,12 @@ SolverNorinori.prototype.construct = function(p_wallArray) {
 	this.purifyAnswerGrid(); 
 	this.happenedEvents = [];
 	this.indexRegionsSortedBySize = null; //Will be initialized in the first use of multipass.
+	this.methodSet = new ApplyEventMethodNonAdjacentPack(
+		applyEventClosure(this),
+		deductionsClosure(this),
+		undoEventClosure(this)
+	);
+	this.methodTools = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
 
 }
 
@@ -167,27 +173,20 @@ SolverNorinori.prototype.quickStart = function(){
 
 SolverNorinori.prototype.emitPassRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	methodSet = new ApplyEventMethodNonAdjacentPack(
-		applyEventClosure(this),
-		deductionsClosure(this),
-		undoEventClosure(this)
-	);
-	methodTools = {comparisonMethod : comparison, copyMethod : copying};
-	this.generalSolver.passEvents(generatedEvents, methodSet, methodTools, p_indexRegion, "Region "+p_indexRegion); 
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion, "Region "+p_indexRegion); 
 }
 
 SolverNorinori.prototype.emitMultiPass = function() {
-	methodSet = new ApplyEventMethodNonAdjacentPack(
-		applyEventClosure(this),
-		deductionsClosure(this),
-		undoEventClosure(this)
-	);
-	methodTools = {comparisonMethod : comparison, copyMethod : copying};
-	
 	this.generalSolver.multiPass(
 		generateEventsForRegionPassClosure(this),
 		orderedListPassArgumentsMethodClosure(this), 
-		methodSet, methodTools);
+		this.methodSet, this.methodTools);
+}
+
+namingCategoryClosure = function(p_solver) {
+	return function (p_indexRegion) {
+		return "Region "+ p_indexRegion + " (" + p_solver.getFirstSpaceRegion(p_indexRegion).x +" "+ p_solver.getFirstSpaceRegion(p_indexRegion).y + ")"; 
+	}
 }
 
 //------------------
@@ -547,9 +546,6 @@ SolverNorinori.prototype.pushEventsIfAloneAndCornered = function(p_eventsToAdd,p
 	}
 	return p_eventsToAdd;
 }
-
-
-
 
 /**
 Working on four directions to limit duplicated code
