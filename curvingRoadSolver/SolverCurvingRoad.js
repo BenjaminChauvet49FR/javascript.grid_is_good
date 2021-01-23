@@ -28,6 +28,19 @@ SolverCurvingRoad.prototype.construct = function (p_wallArray, p_symbolArray) {
     var ix,
     iy;
 
+	this.methodSet = new ApplyEventMethodPack(
+		applyEventClosure(this),
+		deductionsClosure(this),
+		adjacencyClosure(this),
+		transformClosure(this),
+		undoEventClosure(this)
+	);
+	this.methodTools = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsMultiPass = {
+		generatePassEventsMethod : generateEventsForSpacePassClosure(this),
+		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
+	};
+	
     // TODO need purification
     for (iy = 0; iy < this.yLength; iy++) {
         this.answerGrid.push([]);
@@ -63,10 +76,6 @@ SolverCurvingRoad.prototype.construct = function (p_wallArray, p_symbolArray) {
         }
     }
 
-    // Below fields are for adjacency "all spaces with ... must form a orthogonally contiguous area"
-    /*this.atLeastOneOpen = false;
-    this.adjacencyLimitGrid = createAdjacencyLimitGrid(this.xLength, this.yLength);
-    this.adjacencyLimitSpacesList = [];*/
 }
 
 SolverCurvingRoad.prototype.traceRoadsFrom = function (p_x, p_y) {
@@ -349,6 +358,15 @@ SolverCurvingRoad.prototype.quickStart = function () {
     });
 }
 
+SolverCurvingRoad.prototype.passSpace = function(p_x, p_y) {
+	const generatedEvents = this.generateEventsForSpacePass({x : p_x, y : p_y});
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, {x : p_x, y : p_y}); 
+}
+
+SolverCurvingRoad.prototype.multiPass = function() {	
+	this.generalSolver.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
+}
+
 SolverCurvingRoad.prototype.undoToLastHypothesis = function() {
 	this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
 }
@@ -359,15 +377,7 @@ SolverCurvingRoad.prototype.undoToLastHypothesis = function() {
 SolverCurvingRoad.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.generalSolver.tryToApplyHypothesis(
-		SpaceEvent(p_x, p_y, p_symbol),
-		new ApplyEventMethodPack(
-			applyEventClosure(this), 
-			deductionsClosure(this), 
-			adjacencyClosure(this), 
-			transformClosure(this), 
-			undoEventClosure(this))
-	);
+	this.generalSolver.tryToApplyHypothesis(SpaceEvent(p_x, p_y, p_symbol), this.methodSet);
 }
 
 //--------------------------------
@@ -492,4 +502,57 @@ SolverCurvingRoad.prototype.testAlertCurvingList = function (p_listEvents, p_ind
         p_listEvents.push(SpaceEvent(xSpot, ySpot, SPACE.CLOSED));
     }
     return p_listEvents;
+}
+
+//--------------------------------
+// Pass
+
+copying = function(p_event) {
+	return p_event.copy();
+}
+
+comparison = function(p_event1, p_event2) {
+	if (p_event2.coorY > p_event1.coorY) {
+		return -1;
+	} else if (p_event2.coorY < p_event1.coorY) {
+		return 1;
+	} else if (p_event2.coorX > p_event1.coorX) {
+		return -1;
+	} else if (p_event2.coorX < p_event1.coorX) {
+		return 1;
+	} else {
+		var c1 = (p_event1.symbol == SPACE.CLOSED ? 1 : 0);
+		var c2 = (p_event2.symbol == SPACE.CLOSED ? 1 : 0); // Unstable : works because only "O" and "C" values are admitted
+		return c1-c2;
+	}
+}
+
+namingCategoryClosure = function(p_solver) {
+	return function (p_space) {
+		return "Space ("+p_space.x+","+p_space.y+")"; 
+	}
+}
+
+generateEventsForSpacePassClosure = function(p_solver) {
+	return function(p_space) {
+		return p_solver.generateEventsForSpacePass(p_space);
+	}
+}
+
+SolverCurvingRoad.prototype.generateEventsForSpacePass = function(p_space) {
+	return [[SpaceEvent(p_space.x, p_space.y, SPACE.CLOSED),SpaceEvent(p_space.x, p_space.y, SPACE.OPEN)]];
+}
+
+orderedListPassArgumentsClosure = function(p_solver) {
+	return function() {
+		answer = [];
+		for(var iy = 0; iy < p_solver.yLength ; iy++) { // WARNING : putting "this" instead of "p_solver" leads to the expression in the "if" being false, but not crashing, which can lead to a quite fun debugging time !
+			for(var ix = 0; ix < p_solver.xLength ; ix++) {
+				if (p_solver.answerGrid[iy][ix] == SPACE.UNDECIDED) {
+					answer.push({x : ix, y : iy});
+				}
+			}
+		}
+		return answer;
+	}
 }

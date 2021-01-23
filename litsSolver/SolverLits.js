@@ -21,6 +21,11 @@ SolverLITS.prototype.construct = function(p_wallArray,p_numberGrid){
 		transformClosure(this),
 		undoEventClosure(this)
 	);
+	this.methodsMultiPass = {
+		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
+		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
+		skipPassMethod : skipPassClosure(this)
+	};
 	this.methodSet.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
 	this.methodTools = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
 
@@ -201,10 +206,7 @@ SolverLITS.prototype.passRegion = function(p_indexRegion) {
 }
 
 SolverLITS.prototype.multiPass = function() {
-	this.generalSolver.multiPass(
-		generateEventsForRegionPassClosure(this),
-		orderedListPassArgumentsMethodClosure(this), 
-		this.methodSet, this.methodTools);
+	this.generalSolver.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
 }
 
 namingCategoryClosure = function(p_solver) {
@@ -934,21 +936,33 @@ comparison = function(p_event1, p_event2) {
 	}
 }
 
-orderedListPassArgumentsMethodClosure = function(p_solver) {
+orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
 		var indexList = [];
+		var values = [];
 		for (var i = 0; i < p_solver.regions.length ; i++) {
-			indexList.push(i); //TODO faire une meilleure liste
+			if (p_solver.regions[i].openSpaces.length < 4) {	
+				indexList.push(i); 
+				values.push(p_solver.uncertainity(i));
+			} else {
+				values.push(-1); // There MUST be one of these per region.
+			}
 		}
 		indexList.sort(function(p_i1, p_i2) {
-			closed1 = p_solver.regions[p_i1].notPlacedYetClosed;
-			closed2 = p_solver.regions[p_i2].notPlacedYetClosed;
-			open1 = 4-p_solver.regions[p_i1].openSpaces.length;
-			open2 = 4-p_solver.regions[p_i2].openSpaces.length;
-			return (closed1-open1*3) - (closed2-open2*3);
+			return values[p_i1]-values[p_i2];
 		});
 		return indexList;
 	}
 }
 
 // Les problèmes que j'ai pu rencontrer ne venaient pas de l'algorithme "passEvents" mais bel et bien des méthodes de comparaison et de copie (enfin surtout de comparaison). D'abord ne pas penser à comparer les "O" et "X" alors que c'était vital (on teste un évènement O et un évènement X qui ne peuvent être intersectés), et finalement ne plus penser à comparer les x. Oups...
+
+SolverLITS.prototype.uncertainity = function(p_ir) {
+	return this.regions[p_ir].notPlacedYetClosed - 3*this.regions[p_ir].openSpaces.length;
+}
+
+skipPassClosure = function(p_solver) {
+	return function (p_indexRegion) {
+		return p_solver.uncertainity(p_indexRegion) > 0; // Arbitrary value
+	}
+}

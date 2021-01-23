@@ -30,6 +30,11 @@ SolverNorinori.prototype.construct = function(p_wallArray) {
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
+	this.methodsMultiPass = {
+		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
+		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
+		skipPassMethod : skipPassClosure(this)
+	};
 	this.methodTools = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
 
 }
@@ -176,11 +181,8 @@ SolverNorinori.prototype.emitPassRegion = function(p_indexRegion) {
 	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion, "Region "+p_indexRegion); 
 }
 
-SolverNorinori.prototype.emitMultiPass = function() {
-	this.generalSolver.multiPass(
-		generateEventsForRegionPassClosure(this),
-		orderedListPassArgumentsMethodClosure(this), 
-		this.methodSet, this.methodTools);
+SolverNorinori.prototype.multiPass = function() {
+	this.generalSolver.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
 }
 
 namingCategoryClosure = function(p_solver) {
@@ -623,18 +625,32 @@ comparison = function(p_event1, p_event2) {
 	}
 }
 
-orderedListPassArgumentsMethodClosure = function(p_solver) {
+orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
 		var indexList = [];
+		var values = [];
 		for (var i = 0; i < p_solver.spacesByRegion.length ; i++) {
-			indexList.push(i); //TODO faire une meilleure liste
+			if (p_solver.notPlacedYetByRegion[i].Os > 0) {
+				indexList.push(i);
+				values.push(p_solver.uncertainity(i));
+			} else {
+				values.push(-1); // There MUST be one of these per region.
+			}
 		}
 		indexList.sort(function(p_i1, p_i2) {
-			npy1 = p_solver.notPlacedYetByRegion[p_i1];
-			npy2 = p_solver.notPlacedYetByRegion[p_i2];
-			return (npy1.Xs-npy1.Os*3) - (npy2.Xs-npy2.Os*3);
+			return values[p_i1]-values[p_i2];
 		});
 		return indexList;
+	}
+}
+
+SolverNorinori.prototype.uncertainity = function(p_ir) {
+	return this.notPlacedYetByRegion[p_ir].Xs - this.notPlacedYetByRegion[p_ir].Os*3;
+}
+
+skipPassClosure = function(p_solver) {
+	return function (p_indexRegion) {
+		return p_solver.uncertainity(p_indexRegion) > 5; // Arbitrary value
 	}
 }
 
@@ -657,29 +673,6 @@ function answerGridToString(p_grid){
 		}
 		console.log(row);
 	}
-}
-
-/**
-Returns the events to the text
-p_onlyAssumed : true if only the assumed events should be written.
-*/
-SolverNorinori.prototype.happenedEventsToString = function(p_onlyAssumed){
-	var ei,li;
-	var answer = "";
-	if (p_onlyAssumed){
-		this.happenedEvents.forEach(function(eventList){
-			answer+=eventList[0].toString()+"\n";
-		});
-	}
-	else{
-		this.happenedEvents.forEach(function(eventList){
-			eventList.forEach(function(spaceEvent){
-				answer+=spaceEvent.toString()+"\n" 
-			});
-			answer+="--------\n";
-		});
-	}
-	return answer;
 }
 
 /*

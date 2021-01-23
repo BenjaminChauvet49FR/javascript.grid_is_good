@@ -41,7 +41,7 @@ undoAction = function(p_solver,p_components){
 }
 
 multiPassAction = function (p_solver,p_components){
-	p_solver.emitMultiPass();
+	p_solver.multiPass();
 }
 
 solveAction = function (p_solver,p_components){

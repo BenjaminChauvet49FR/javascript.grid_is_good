@@ -20,7 +20,11 @@ SolverStarBattle.prototype.construct = function(p_wallArray,p_starNumber){
 		undoEventClosure(this)
 	);
 	this.methodTools = {comparisonMethod : comparison, copyMethod : copying,  argumentToLabelMethod : namingCategoryClosure(this)};
-	
+	this.methodsMultiPass = {
+		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
+		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
+		skipPassMethod : skipPassClosure(this)
+	};
 	
 	this.listSpacesByRegion(); //spacesByRegion
 	this.buildPossibilities(p_starNumber); //notPlacedYet
@@ -144,11 +148,8 @@ SolverStarBattle.prototype.emitPassColumn = function(p_x) {
 	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : FAMILY.COLUMN, index : p_x}); 
 }
 
-SolverStarBattle.prototype.emitMultiPass = function() {	
-	this.generalSolver.multiPass(
-		generateEventsForRLCPassClosure(this),
-		orderedListPassArgumentsMethodClosure(this), 
-		this.methodSet, this.methodTools,);
+SolverStarBattle.prototype.multiPass = function() {	
+	this.generalSolver.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
 }
 
 namingCategoryClosure = function(p_solver) {
@@ -416,7 +417,7 @@ comparison = function(p_event1, p_event2) {
 	}
 }
 
-orderedListPassArgumentsMethodClosure = function(p_solver) {
+orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
 		var iafList = [];
 		for (var i = 0; i < p_solver.spacesByRegion.length ; i++) {
@@ -426,10 +427,8 @@ orderedListPassArgumentsMethodClosure = function(p_solver) {
 			iafList.push({index : i, family : FAMILY.ROW}); //, value : p_solver.notPlacedYet.rows[i]
 			iafList.push({index : i, family : FAMILY.COLUMN}); //, value : p_solver.notPlacedYet.columns[i]
 		}
-		iafList.sort(function(p_iaf1, p_iaf2) {
-			npy1 = p_solver.getNotPlacedYetSet(p_iaf1);
-			npy2 = p_solver.getNotPlacedYetSet(p_iaf2);
-			return (npy1.Xs-npy1.Os*2) - (npy2.Xs-npy2.Os*2);
+		indexList.sort(function(p_iaf1, p_iaf2) {
+			return p_solver.uncertainity(p_iaf1)-p_solver.uncertainity(p_iaf2); // TODO too lazy to improve it like it is on the other solvers. 
 		});
 		return iafList;
 	}
@@ -440,6 +439,16 @@ SolverStarBattle.prototype.getNotPlacedYetSet = function(p_indexAndFamily) {
 		case FAMILY.ROW : return this.notPlacedYet.rows[p_indexAndFamily.index];
 		case FAMILY.COLUMN : return this.notPlacedYet.columns[p_indexAndFamily.index];
 		case FAMILY.REGION : return this.notPlacedYet.regions[p_indexAndFamily.index];
+	}
+}
+
+SolverStarBattle.prototype.uncertainity = function(p_iaf) {
+	return this.getNotPlacedYetSet(p_iaf).Xs - this.getNotPlacedYetSet(p_iaf).Os*2;
+}
+
+skipPassClosure = function(p_solver) {
+	return function (p_iaf) {
+		return p_solver.uncertainity(p_iaf) > 5; // Arbitrary value
 	}
 }
 

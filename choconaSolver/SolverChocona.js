@@ -23,6 +23,11 @@ SolverChocona.prototype.construct = function(p_wallArray, p_numberGrid) {
 		undoEventClosure(this)
 	);
 	this.methodTools = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsMultiPass = {
+		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
+		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
+		skipPassMethod : skipPassClosure(this)
+	};
 	
 	// Initialize the required grids (notably answerGrid) and the number of regions
 	for(iy = 0;iy < this.yLength;iy++){
@@ -119,6 +124,10 @@ SolverChocona.prototype.undoToLastHypothesis = function(){
 SolverChocona.prototype.passRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
 	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion); 
+}
+
+SolverChocona.prototype.multiPass = function() {	
+	this.generalSolver.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
 }
 
 SolverChocona.prototype.quickStart = function(){
@@ -376,6 +385,12 @@ SolverChocona.prototype.generateEventsForRegionPass = function(p_indexRegion) {
 	return eventList;
 }
 
+generateEventsForRegionPassClosure = function(p_solver) {
+	return function(p_ir) {
+		return p_solver.generateEventsForRegionPass(p_ir);
+	}
+}
+
 copying = function(p_event) {
 	return p_event.copy();
 }
@@ -399,5 +414,60 @@ comparison = function(p_event1, p_event2) {
 namingCategoryClosure = function(p_solver) {
 	return function (p_indexRegion) {
 		return "Region "+ p_indexRegion + " (" + p_solver.getFirstSpaceRegion(p_indexRegion).x +" "+ p_solver.getFirstSpaceRegion(p_indexRegion).y + ")"; 
+	}
+}
+
+orderedListPassArgumentsClosure = function(p_solver) { // I don't dare to factorize these methods
+	return function() {
+		var indexList = [];
+		var values = [];
+		for (var i = 0; i < p_solver.regions.length ; i++) {
+			indexList.push(i);
+			if (p_solver.regions[i].notPlacedYet.YESs && p_solver.regions[i].notPlacedYet.YESs > 0) {
+				values.push(p_solver.uncertainity(i));
+			} else {
+				values.push(p_solver.regions[i].size); 
+			}
+		}
+		indexList.sort(function(p_i1, p_i2) {
+			const v1 = values[p_i1];
+			const v2 = values[p_i2]; 
+			const det1 = (p_solver.regions[p_i1].notPlacedYet.YESs);
+			const det2 = (p_solver.regions[p_i2].notPlacedYet.YESs);
+			if ((det1 && det2) || (!det1 && !det2)) {
+				return v1 - v2;
+			} else {
+				if (det1 && !det2) {
+					return -1;
+				} else {
+					return 1;
+				}
+			}
+			return values[p_i1]-values[p_i2];
+		});
+		return indexList;
+	}
+}
+
+SolverChocona.prototype.uncertainity = function(p_ir) {
+	// "yes among total" is a definitive choice here ! By the way, only numbered regions are concerned.
+	const nos = this.regions[p_ir].notPlacedYet.NOs;
+	const yess = this.regions[p_ir].notPlacedYet.YESs;
+	var answer = 1;
+	for (var i = nos+1 ; i <= (nos + yess); i++) {
+		answer *= i;
+	} 			
+	for (var i = 2; i <= yess; i++) {
+		answer /= i;
+	}
+	return answer;
+}
+
+skipPassClosure = function(p_solver) {
+	return function (p_indexRegion) {
+		if (p_solver.regions[p_indexRegion].notPlacedYet)
+			return true;
+		else
+			return false;
 	}
 }

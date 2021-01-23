@@ -145,7 +145,7 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
             }
             if (this.atLeastOneOpen) {
                 //Geographical verification.
-				console.log("My log : "+(this.myLog++));
+				//console.log("My log : "+(this.myLog++));
 				if (this.myLog == 227 || this.myLog == 662) {
 					console.log("Fatal !");
 				}
@@ -191,7 +191,7 @@ listGeographicalDeductionsToApply : a list of GeographicalDeduction(x,y, OPEN|CL
 listGeographicalDeductionsApplied : a list of {adjacency : true} items. Whenever it should be undone, the first element of adjacencyLimitSpacesList should be undone.
 */
 GeneralSolver.prototype.geographicalVerification = function (p_listNewXs, p_adjacencyClosure) {
-    console.log("Perform geographicalVerification");
+    //console.log("Perform geographicalVerification");
     const checking = adjacencyCheck(p_listNewXs, this.adjacencyLimitGrid, this.adjacencyLimitSpacesList, p_adjacencyClosure, this.xLength, this.yLength);
 	if (checking.success) {
         var newListEvents = [];
@@ -242,7 +242,7 @@ GeneralSolver.prototype.undoEventList = function (p_eventsList, p_undoEventMetho
 Passes a list of covering events (for instance, if a region contains spaces "1 2 3 4" and we want to apply a pass on it, it should have the following events :
  [[(open space 1),(close space 1)], [(open space 2),(close space 2)], [(open space 3),(close space 3)], [(open space 4),(close space 4)]]) 
  // p_methodSet : must contain applyEventMethod, deductionMethod, adjacencyClosureMethod, transformMethod, extras (or not)
- // p_eventsTools : must contain comparisonMethod, copyMethod
+ // p_eventsTools : must contain comparisonMethod, copyMethod, optionally argumentToLabelMethod
 
 */
 GeneralSolver.prototype.passEvents = function (p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_passArgument) {
@@ -346,29 +346,39 @@ function filterExternalMethods(p_list) {
 
 /**
 Performs a multipass
-p_generatePassEventsMethod : method that turns an argument (of any nature) into a list of "list of covering events" usable by the passing method
-p_orderPassArgumentsMethod : method that reorders the argument list. Must take no arguments and return a list of arguments, each of which should be passed to p_generatePassEventsMethod. 
+p_passTools must contain the following methods :
+- generatePassEventsMethod : method that turns a pass argument into a list of "list of covering events" usable by the passing method)
+- orderPassArgumentsMethod : method that reorders the argument list, taking no argument and returning a list of pass arguments, each of which should be passed to p_generatePassEventsMethod)
+- skipPassMethod (optional) : method that takes a pass argument and that determinates whether the set of possibilites designated by the pass argument is too big to be passed or not. The set of possibilities will have to be tested anyways if no other set has been tested so far in this cycle of multipasses.)
 p_methodSet, p_eventsTools : same arguments as in the pass method.
 */
-GeneralSolver.prototype.multiPass = function(p_generatePassEventsMethod, p_orderPassArgumentsMethod, p_methodSet ,p_eventsTools) {
+//GeneralSolver.prototype.multiPass = function(p_generatePassEventsMethod, p_orderPassArgumentsMethod, p_methodSet ,p_eventsTools) {
+GeneralSolver.prototype.multiPass = function(p_methodSet ,p_eventsTools, p_passTools) {  
 	var oneMoreLoop;
 	var orderedListPassArguments;
 	var ok = true;
 	var resultPass;
 	var i;
+	var argPass;
 	const lengthBeforeMultiPass = this.happenedEvents.length;
 	do {
 		oneMoreLoop = false;
-		orderedListPassArguments = p_orderPassArgumentsMethod();
+		orderedListPassArguments = p_passTools.orderPassArgumentsMethod();
 		const happenedEventsBeforePassingAllRegions = this.happenedEvents.length;
 		i = 0;
 		while (ok && i < orderedListPassArguments.length) {
-			p_listListCoveringEvent = p_generatePassEventsMethod(orderedListPassArguments[i]);
-			resultPass = this.passEvents(p_listListCoveringEvent, p_methodSet ,p_eventsTools, orderedListPassArguments[i]); 
-			if (resultPass == PASS_RESULT.SUCCESS) {
-				oneMoreLoop = true;
-			} else if (resultPass == PASS_RESULT.FAILURE) {
-				ok = false;
+			argPass = orderedListPassArguments[i];
+			if (!oneMoreLoop || !p_passTools.skipPassMethod || !p_passTools.skipPassMethod(argPass)) {
+				p_listListCoveringEvent = p_passTools.generatePassEventsMethod(argPass);
+				// Where the pass is performed !
+				resultPass = this.passEvents(p_listListCoveringEvent, p_methodSet ,p_eventsTools, argPass); 
+				if (resultPass == PASS_RESULT.SUCCESS) {
+					oneMoreLoop = true;
+				} else if (resultPass == PASS_RESULT.FAILURE) {
+					ok = false;
+				}
+			} else {
+				console.log("C'est trop pour nous, on passe la région "+argPass);
 			}
 			i++;
 		}

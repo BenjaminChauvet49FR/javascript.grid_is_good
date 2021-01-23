@@ -34,12 +34,14 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 
 quickStartAction = function(p_solver,p_textArea){
 	p_solver.quickStart();
-	//p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
 }
 
 undoAction = function(p_solver,p_textArea){
 	p_solver.undoToLastHypothesis();
-	//p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
+}
+
+multiPassAction = function(p_solver) {
+	p_solver.multiPass();
 }
 
 //--------------------------

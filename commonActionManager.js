@@ -22,6 +22,7 @@ const MODE_NORMAL_PATH = {id:101,html:"Chemins",submitCaption:"Changer chemins"}
 const MODE_NORMAL_WALL = {id:102,html:"Murs",submitCaption:"Changer murs"};
 
 const ACTION_PASS_REGION = {id:101,htmlCaption:"Passer région"};
+const ACTION_PASS_SPACE = {id:105,htmlCaption:"Passer case"};
 const ACTION_PASS_ROW = {id:102,htmlCaption:"Passer ligne"};
 const ACTION_PASS_COLUMN = {id:103,htmlCaption:"Passer colonne"};
 const ACTION_PASS_REGION_AND_ADJACENCY = {id:104,htmlCaption:"Passer région + adjacentes"};

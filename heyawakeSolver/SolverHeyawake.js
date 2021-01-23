@@ -21,7 +21,15 @@ SolverHeyawake.prototype.construct = function(p_wallArray,p_numberGrid){
 			adjacencyClosure(this), 
 			transformClosure(this), 
 			undoEventClosure(this));
-	this.methodTools = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodTools = {
+		comparisonMethod : comparison, 
+		copyMethod : copying, 
+		argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsMultiPass = {
+		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
+		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
+		skipPassMethod : skipPassClosure(this)
+	};
 
 	this.wallGrid = WallGrid_data(p_wallArray); 
 	this.regionGrid = this.wallGrid.toRegionGrid();
@@ -51,7 +59,7 @@ SolverHeyawake.prototype.construct = function(p_wallArray,p_numberGrid){
 	for(ir=0;ir<this.regionsNumber;ir++){
 		this.regions.push({
 			spaces : [],
-			expectedNumberOfOsInRegion : NOT_FORCED,
+			expectedNumberOfClosedsInRegion : NOT_FORCED,
 			notPlacedYet : null,
 			size : 0,
 			horizontalInnerStripesIndexes : [],
@@ -69,9 +77,9 @@ SolverHeyawake.prototype.construct = function(p_wallArray,p_numberGrid){
 			region = this.regions[ir];
 			region.spaces.push({x:ix,y:iy});
 			if (number != null){
-				region.expectedNumberOfOsInRegion = number;
+				region.expectedNumberOfClosedsInRegion = number;
 				region.notPlacedYet = {CLOSEDs : number};
-			}
+			} 
 		}
 	}
 	
@@ -80,8 +88,10 @@ SolverHeyawake.prototype.construct = function(p_wallArray,p_numberGrid){
 	for(ir = 0;ir<this.regionsNumber;ir++){
 		region = this.regions[ir];
 		region.size = region.spaces.length;
-		if (region.notPlacedYet != null){
+		if (region.notPlacedYet != null) {
 			region.notPlacedYet.OPENs = region.size-region.notPlacedYet.CLOSEDs;
+		} else {
+			region.notDecidedYet = region.size; // Alternative to regions that are not forced, for multipass purposes.
 		}
 	}
 	
@@ -141,7 +151,7 @@ SolverHeyawake.prototype.construct = function(p_wallArray,p_numberGrid){
 
 // Misc. methods
 SolverHeyawake.prototype.expectedNumberInRegion = function(ir){
-	return this.regions[ir].expectedNumberOfOsInRegion;
+	return this.regions[ir].expectedNumberOfClosedsInRegion;
 }
 
 SolverHeyawake.prototype.getSpaceCoordinates = function(p_indexRegion,p_indexSpace){
@@ -228,10 +238,7 @@ SolverHeyawake.prototype.passRegion = function(p_indexRegion) {
 }
 
 SolverHeyawake.prototype.multiPass = function() {
-	this.generalSolver.multiPass(
-		generateEventsForRegionPassClosure(this),
-		orderedListPassArgumentsMethodClosure(this), 
-		this.methodSet, this.methodTools);
+	this.generalSolver.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
 }
 
 //--------------------------------
@@ -266,6 +273,8 @@ SolverHeyawake.prototype.putNew = function(p_x,p_y,p_symbol){
 		} else if (p_symbol == SPACE.CLOSED){
 			region.notPlacedYet.CLOSEDs--;
 		}
+	} else {
+		region.notDecidedYet--;
 	}
 	const stripSpace = this.stripGrid[p_y][p_x];
 	this.lowerHorizontalStrip(stripSpace.leftMost,p_symbol);
@@ -298,6 +307,8 @@ undoEventClosure = function(p_solver) {
 			} else if (symbol == SPACE.CLOSED){
 				region.notPlacedYet.CLOSEDs++;
 			}
+		} else {
+			region.notDecidedYet++;
 		}
 		const stripSpace = p_solver.stripGrid[y][x];
 		p_solver.raiseHorizontalStrip(stripSpace.leftMost,symbol);
@@ -458,19 +469,27 @@ comparison = function(p_event1, p_event2) {
 	}
 }
 
-orderedListPassArgumentsMethodClosure = function(p_solver) {
+orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
 		var indexList = [];
+		var valueList = []; 
 		for (var i = 0; i < p_solver.regions.length ; i++) {
-			indexList.push(i); //TODO faire une meilleure liste
+			if ((p_solver.regions[i].notDecidedYet && p_solver.regions[i].notDecidedYet > 0) ||
+			(p_solver.regions[i].notPlacedYet && p_solver.regions[i].notPlacedYet.CLOSEDs > 0)) {
+				indexList.push(i); 
+				valueList.push(p_solver.incertainity(i));
+			} else {
+				valueList.push(-1); // There MUST be one of these per region.
+			}
 		}
-		/*indexList.sort(function(p_i1, p_i2) {
-			closed1 = p_solver.regions[p_i1].notPlacedYetClosed;
-			closed2 = p_solver.regions[p_i2].notPlacedYetClosed;
-			open1 = 4-p_solver.regions[p_i1].openSpaces.length;
-			open2 = 4-p_solver.regions[p_i2].openSpaces.length;
-			return (closed1-open1*3) - (closed2-open2*3);
-		});*/ //TODO
+		indexList.sort(function(p_i1, p_i2) {
+			const val1 = valueList[p_i1]-valueList[p_i2];
+			if (val1 == 0) {
+				return p_i1-p_i2;
+			} else {
+				return val1;
+			}
+		});
 		return indexList;
 	}
 }
@@ -478,5 +497,34 @@ orderedListPassArgumentsMethodClosure = function(p_solver) {
 namingCategoryClosure = function(p_solver) {
 	return function (p_indexRegion) {
 		return "Region "+ p_indexRegion + " (" + p_solver.getFirstSpaceRegion(p_indexRegion).x +" "+ p_solver.getFirstSpaceRegion(p_indexRegion).y + ")"; 
+	}
+}
+
+SolverHeyawake.prototype.incertainity = function(p_i) { // Can go below 0. The more it is, the more "uncertain" the region is. Arbitrary measurement.
+	const region = this.regions[p_i];
+	if (region.notPlacedYet) {
+		const closeds = region.notPlacedYet.CLOSEDs;
+		const total = closeds + region.notPlacedYet.OPENs;
+		var answer = 1;
+		for (var i = total-closeds+1 ; i <= total; i++) {
+			answer *= i;
+		} 			
+		for (var i = 2; i <= closeds; i++) {
+			answer /= i;
+		}
+		// answer = C (closeds, total)
+		// Now, privilege regions that have closed than opened.
+		answer *= (region.notPlacedYet.OPENs*99 - region.notPlacedYet.CLOSEDs * 100);
+		answer /= 100;
+		return answer;// C(closeds, total)
+	} else {
+		// No Os and Xs. Skip it if possible.
+		return 500 + 32768 + region.notDecidedYet;
+	}
+}
+
+skipPassClosure = function(p_solver) {
+	return function (p_indexRegion) {
+		return p_solver.incertainity(p_indexRegion) > 500; // Arbitrary value
 	}
 }

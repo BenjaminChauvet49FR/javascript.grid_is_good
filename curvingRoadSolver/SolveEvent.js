@@ -26,7 +26,6 @@ SolveEvent.prototype.toString = function(){
 	return "["+this.symbol+" "+this.coorX+","+this.coorY+"]";
 }
 
-/*SolveEvent.prototype.copy = function(){
-	return new SpaceEvent(this.symbol, this.coorX, this.coorY);
+SolveEvent.prototype.copy = function() {
+	return new SpaceEvent(this.coorX, this.coorY, this.symbol);
 }
-*/
