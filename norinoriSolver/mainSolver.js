@@ -7,10 +7,6 @@ var actionsManager = {clickSpace : null};
 var drawIndications;
 
 var colors={
-	closed_wall:'#222222',
-	open_wall:'#dddddd',
-	edge_walls:'#000000',
-	bannedSpace:'#666666',
 	validSquare:'#000088',
 	rainbowSpaces:[],
 	insideIndicationsOnWhite:'#008800',

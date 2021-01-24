@@ -21,7 +21,7 @@ SolverStarBattle.prototype.construct = function(p_wallArray,p_starNumber){
 	);
 	this.methodTools = {comparisonMethod : comparison, copyMethod : copying,  argumentToLabelMethod : namingCategoryClosure(this)};
 	this.methodsMultiPass = {
-		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
+		generatePassEventsMethod : generateEventsForRLCPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
 	};
@@ -427,7 +427,7 @@ orderedListPassArgumentsClosure = function(p_solver) {
 			iafList.push({index : i, family : FAMILY.ROW}); //, value : p_solver.notPlacedYet.rows[i]
 			iafList.push({index : i, family : FAMILY.COLUMN}); //, value : p_solver.notPlacedYet.columns[i]
 		}
-		indexList.sort(function(p_iaf1, p_iaf2) {
+		iafList.sort(function(p_iaf1, p_iaf2) {
 			return p_solver.uncertainity(p_iaf1)-p_solver.uncertainity(p_iaf2); // TODO too lazy to improve it like it is on the other solvers. 
 		});
 		return iafList;

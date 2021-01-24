@@ -6,11 +6,7 @@ var	context = canevas.getContext("2d");
 var actionsManager = {clickSpace : null}; 
 var drawIndications;
 
-var colors={
-	closed_wall:'#222222',
-	open_wall:'#dddddd',
-	edge_walls:'#000000',
-	bannedSpace:'#666666',
+var colors= {
 	openSquare:'#00ffcc',
 	closedSquare:'#cc0022',
 	rainbowSpaces:[],
@@ -18,7 +14,6 @@ var colors={
 	insideIndicationsOnFilled:'#00ff00',
 	standardWrite:'#000000',
 	reflectWrite:"#ffff88",
-	validSquare:"#000088"
 }
 
 //--------------------

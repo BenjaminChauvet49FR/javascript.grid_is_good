@@ -1,4 +1,4 @@
-function Drawer(p_colors) {
+function Drawer() {
 
     this.pix = {
         sideSpace: 30,
@@ -15,27 +15,31 @@ function Drawer(p_colors) {
         }
     }
 
-    //All the colors used in the scenery
-    if (p_colors) {
-		this.colors = p_colors;
-	} else {
-		this.colors = {
-			closed_wall: '#222222',
-			open_wall: '#dddddd',
-			edge_walls: '#000000',
-			bannedSpace: '#666666',
-			selectedSpace: '#bbffcc',
-			rainbowSpaces: ["#6666ff", "#ff6666", "#66ff66",
-				"#66ffff", "#ffff66", "#ff66ff",
-				"#cc66ff", "#ffcc66", "#66ffcc",
-				"#ff00cc", "#00ccff", "#ccff00"],
-			antiCloseWrite: '#00ffff',
-			standardWrite: '#000000',
-			path: '#006600',
-			pearl: '#222222'
-		}
+	this.colors = {
+		rainbowSpaces: ["#6666ff", "#ff6666", "#66ff66",
+			"#66ffff", "#ffff66", "#ff66ff",
+			"#cc66ff", "#ffcc66", "#66ffcc",
+			"#ff00cc", "#00ccff", "#ccff00"],
+		antiCloseWrite: '#00ffff',
+		standardWrite: '#000000',
+		path: '#006600',
+		pearl: '#222222'
 	}
+	this.wallColorSet = {
+		closed_wall: '#222222',
+		open_wall: '#dddddd',
+		edge_walls: '#000000',
+		bannedSpace: '#666666'
+	}
+	this.editorColorSet = { // No "setter function" for this
+		selectedSpace: '#bbffcc'
+	}
+}
 
+Drawer.prototype.setWallColors = function(p_wallColorSet) {
+	for (const [key, value] of Object.entries(p_wallColorSet)) {
+		this.wallColorSet[key] = value;
+	}
 }
 
 /**
@@ -67,7 +71,7 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
         for (var iy = 0; iy < yLength; iy++) {
             for (var ix = 0; ix < xLength; ix++) {
                 if (p_editorCore.getSelection(ix, iy) == SELECTED.YES) {
-                    p_context.fillStyle = this.colors.selectedSpace;
+                    p_context.fillStyle = this.editorColorSet.selectedSpace;
                     p_context.fillRect(this.getPixInnerXLeft(ix), this.getPixInnerYUp(iy), this.getPixInnerSide(), this.getPixInnerSide());
                 }
             }
@@ -85,10 +89,10 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	}
 		
     //Paths
-    if (p_editorCore.hasPathGrid()) {
+    /*if (p_editorCore.hasPathGrid()) {
         this.drawWalllessGrid(p_context, null, xLength, yLength);
 		this.drawWallGridAsPath(p_context, p_editorCore.wallGrid, xLength, yLength);
-    }
+    }*/
 }
 
 Drawer.prototype.drawWallGrid = function (p_context, p_wallGrid, p_xLength, p_yLength) {
@@ -135,7 +139,7 @@ Drawer.prototype.drawWallGrid = function (p_context, p_wallGrid, p_xLength, p_yL
             }
             //Draw inside space
             if (p_wallGrid.getState(ix, iy) == WALLGRID.CLOSED) {
-                p_context.fillStyle = this.colors.bannedSpace;
+                p_context.fillStyle = this.wallColorSet.bannedSpace;
                 p_context.fillRect(pixDrawXHoriz, pixDrawYVert, pixLength, pixLength);
             }
             pixDrawXHoriz += this.pix.sideSpace;
@@ -150,7 +154,7 @@ Drawer.prototype.drawWallGrid = function (p_context, p_wallGrid, p_xLength, p_yL
     //Draws the borders
     const pixTotalWidth = p_xLength * this.pix.sideSpace;
     const pixTotalHeight = p_yLength * this.pix.sideSpace;
-    p_context.fillStyle = this.colors.edge_walls;
+    p_context.fillStyle = this.wallColorSet.edge_walls;
     p_context.fillRect(this.pix.marginGrid.left, this.pix.marginGrid.up, this.pix.borderSpace, pixTotalHeight);
     p_context.fillRect(this.pix.marginGrid.left, this.pix.marginGrid.up, pixTotalWidth, this.pix.borderSpace);
     p_context.fillRect(this.pix.marginGrid.left + pixTotalWidth - this.pix.borderSpace, this.pix.marginGrid.up,
@@ -169,7 +173,7 @@ Drawer.prototype.drawWalllessGrid = function (p_context, p_wallGrid, p_xLength, 
     var pixY = pixYStart - this.pix.borderSpace;
     const pixInsideThickness = 2 * this.pix.borderSpace;
     const pixInnerLength = this.getPixInnerSide();
-    p_context.fillStyle = this.colors.open_wall;
+    p_context.fillStyle = this.wallColorSet.open_wall;
     for (i = 0; i < p_yLength; i++) {
         pixY += this.pix.sideSpace;
         p_context.fillRect(pixXStart, pixY, pixTotalWidth, pixInsideThickness);
@@ -179,12 +183,12 @@ Drawer.prototype.drawWalllessGrid = function (p_context, p_wallGrid, p_xLength, 
         pixX += this.pix.sideSpace;
         p_context.fillRect(pixX, pixYStart, pixInsideThickness, pixTotalHeight);
     }
-    p_context.fillStyle = this.colors.edge_walls;
+    p_context.fillStyle = this.wallColorSet.edge_walls;
     p_context.fillRect(pixXStart, pixYStart, pixTotalWidth, this.pix.borderSpace);
     p_context.fillRect(pixXStart, pixYStart, this.pix.borderSpace, pixTotalHeight);
     p_context.fillRect(pixXStart, pixY, pixTotalWidth, this.pix.borderSpace);
     p_context.fillRect(pixX, pixYStart, this.pix.borderSpace, pixTotalHeight);
-    p_context.fillStyle = this.colors.closed_wall;
+    p_context.fillStyle = this.wallColorSet.bannedSpace;
     if (p_wallGrid != null) {
         var ix;
         pixY = this.getPixInnerYUp(0);
@@ -306,10 +310,10 @@ Gives the correct wall color from a wall type (a #RRGGBB string)
 Drawer.prototype.wallToColor = function (p_wallType) {
     switch (p_wallType) {
     case (WALLGRID.OPEN):
-        return (this.colors.open_wall);
+        return (this.wallColorSet.open_wall);
         break;
     case (WALLGRID.CLOSED):
-        return (this.colors.closed_wall);
+        return (this.wallColorSet.closed_wall);
         break;
     }
     return "#ffffff";

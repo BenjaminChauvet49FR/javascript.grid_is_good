@@ -8,11 +8,6 @@ var actionsManager  = {clickSpace : null};
 var drawIndications;
 
 var colors={
-	closed_wall:'#222222',
-	open_wall:'#dddddd',
-	edge_walls:'#000000',
-	bannedSpace:'#666666',
-	//star:'#ffe101', TODO
 	cross:'#000000',
 	starIndication:"#00cccc",
 	crossIndication:"#cc0000",
