@@ -9,8 +9,11 @@ SolverMasyu.prototype.construct = function(p_symbolGrid) {
 	this.loopSolver.construct(generateWallArray(this.xLength, this.yLength), {});
 	this.loopSolver.setPuzzleSpecificMethods({
 		setEdgeLinkedPSDeductions : setEdgeLinkedDeductionsClosure(this),
-		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this)
+		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
+		otherPSDeductions : otherPSDeductionsClosure(this),
 	});
+	// comparisonLoopEvents and copyLoopEventMethod defined in LoopSolver
+	this.methodTools =  {comparisonMethod : comparisonLoopEventsMethod, copyMethod : copyLoopEventMethod,  argumentToLabelMethod : namingCategoryClosure(this)};
 	this.pearlGrid = [];
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
 		this.pearlGrid.push([]);
@@ -56,6 +59,46 @@ SolverMasyu.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 
 SolverMasyu.prototype.undoToLastHypothesis = function() {
 	this.loopSolver.undoToLastHypothesis();
+}
+
+SolverMasyu.prototype.passSpace = function(p_x, p_y) {
+	const generatedEvents = generateEventsForSpaceClosure(this)({x : p_x, y : p_y}); // Yeah, that method (returned by the closure) should have one single argument as it will be passed to multipass...
+	this.loopSolver.generalSolver.passEvents(generatedEvents, this.loopSolver.methodSet, this.methodTools, {x : p_x, y : p_y}); 
+}
+
+SolverMasyu.prototype.quickStart = function() { //Warning : this quickstart assumes that the puzzle does not have white pearls in corners
+	for (var x = 0; x < this.xLength; x++) {
+		if (this.pearlGrid[0][x] == PEARL.WHITE && (x != 0)) {
+			this.loopSolver.tryToPutNewRight(x-1, 0, LOOP_STATE.LINKED);
+		} else if (this.pearlGrid[0][x] == PEARL.BLACK) {
+			this.loopSolver.tryToPutNewDown(x, 0, LOOP_STATE.LINKED);  
+		} else if (this.pearlGrid[1][x] == PEARL.BLACK) {
+			this.loopSolver.tryToPutNewDown(x, 1, LOOP_STATE.LINKED);  
+		}
+		if (this.pearlGrid[this.yLength-1][x] == PEARL.WHITE && (x != 0)) {
+			this.loopSolver.tryToPutNewRight(x-1, this.yLength-1, LOOP_STATE.LINKED);
+		} else if (this.pearlGrid[this.yLength-1][x] == PEARL.BLACK) {
+			this.loopSolver.tryToPutNewDown(x, this.yLength-2, LOOP_STATE.LINKED);  
+		} else if (this.pearlGrid[this.yLength-2][x] == PEARL.BLACK) {
+			this.loopSolver.tryToPutNewDown(x, this.yLength-3, LOOP_STATE.LINKED);  
+		}
+	}
+	for (var y = 0 ; y < this.yLength; y++) {
+		if (this.pearlGrid[y][0] == PEARL.WHITE && (y != 0)) {
+			this.loopSolver.tryToPutNewDown(0, y-1, LOOP_STATE.LINKED);
+		} else if (this.pearlGrid[y][0] == PEARL.BLACK) {
+			this.loopSolver.tryToPutNewRight(0, y, LOOP_STATE.LINKED);  
+		} else if (this.pearlGrid[y][1] == PEARL.BLACK) {
+			this.loopSolver.tryToPutNewRight(1, y, LOOP_STATE.LINKED);  
+		}
+		if (this.pearlGrid[y][this.xLength-1] == PEARL.WHITE && (y != 0)) {
+			this.loopSolver.tryToPutNewDown(this.xLength-1, y-1, LOOP_STATE.LINKED);
+		} else if (this.pearlGrid[y][this.xLength-1] == PEARL.BLACK) {
+			this.loopSolver.tryToPutNewRight(this.xLength-2, y, LOOP_STATE.LINKED);  
+		} else if (this.pearlGrid[y][this.xLength-2] == PEARL.BLACK) {
+			this.loopSolver.tryToPutNewRight(this.xLength-3, y, LOOP_STATE.LINKED);  
+		}
+	}
 }
 
 // -------------------
@@ -127,7 +170,7 @@ setEdgeClosedDeductionsClosure = function(p_solver) {
 	}
 }
 
-// Test if space orthogonally adjacent to a link and (in the same direction if link is closed or the perpendicular one if link is open) is black and if so, close these link between
+// Test if space orthogonally adjacent to a link and (in the same direction if link is closed or the perpendicular one if link is linked) is black and if so, close these link between
 SolverMasyu.prototype.testBlackPearlAsideLink = function(p_eventList, p_x, p_y, p_dirLateral) {
 	if (this.pearlGrid[p_y+deltaY[p_dirLateral]][p_x+deltaX[p_dirLateral]] == PEARL.BLACK) {
 		p_eventList.push(new LinkEvent(p_x, p_y, p_dirLateral ,LOOP_STATE.CLOSED));
@@ -225,4 +268,66 @@ SolverMasyu.prototype.testExpansionWhitePearlSpace = function(p_eventList, p_x, 
 	return p_eventList;
 }
 
+// -------------------
+// Passing
 
+generateEventsForSpaceClosure = function(p_solver) {
+	return function(p_space) {
+		switch (p_solver.pearlGrid[p_space.y][p_space.x]) {
+			case PEARL.WHITE : return generateWhitePearlPassEvents(p_space.x, p_space.y); break;
+			//case PEARL.BLACK : return generateBlackPearlPassEvents(p_space.x, p_space.y); break;
+		}
+		return [];
+	}
+}
+
+// Precondition : the space has a white pearl and is not on the edge of fields...
+function generateWhitePearlPassEvents (p_x, p_y) {
+	return [[new LinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_STATE.LINKED), new LinkEvent(p_x, p_y, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED)]];
+} 
+
+// Precondition : the space has a black pearl and is not on the edge nor one space away from the edge of fields...
+function generateBlackPearlPassEvents (p_x, p_y) {
+	var answer = [];
+	return [[new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED), 
+			 new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED), 
+			 new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.UP, LOOP_STATE.LINKED), 
+			 new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.UP, LOOP_STATE.LINKED)]];
+	return answer;
+}
+
+function namingCategoryClosure(p_solver) {
+	return function (p_space) {
+		const x = p_space.x;
+		const y = p_space.y;
+		var answer = x+","+y;
+		switch (p_solver.pearlGrid[y][x]) {
+			case PEARL.WHITE : answer += " (white) "; break;
+			case PEARL.BLACK : answer += " (black) "; break;
+		}
+		return answer;
+	}
+}
+
+function CompoundCornerLinkEvent(p_x, p_y, p_dir1, p_dir2, p_state) {
+	this.kind = "CL";
+	this.state = p_state;
+	this.linkX = p_x;
+	this.linkY = p_y;
+	this.direction1 = p_dir1;
+	this.direction2 = p_dir2;
+	markCompoundEvent(this);
+}
+
+CompoundCornerLinkEvent.prototype.toString = function() {
+	return "";
+}
+
+// Closure for non-link deduction events. For now, only compound corner events are involved.
+otherPSDeductionsClosure = function(p_solver) {
+	return function(p_eventList, p_eventBeingApplied) {
+		p_eventList.push(new LinkEvent(p_eventBeingApplied.linkX, p_eventBeingApplied.linkY, p_eventBeingApplied.direction1, p_eventBeingApplied.state));
+		p_eventList.push(new LinkEvent(p_eventBeingApplied.linkX, p_eventBeingApplied.linkY, p_eventBeingApplied.direction2, p_eventBeingApplied.state));
+		return p_eventList;
+	}
+}

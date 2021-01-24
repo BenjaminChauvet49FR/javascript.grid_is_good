@@ -51,6 +51,10 @@ function StateEvent(p_x, p_y, p_state) {
 	this.state = p_state;
 }
 
+StateEvent.prototype.copy = function() {
+	return new StateEvent(this.x, this.y, this.state);
+}
+
 StateEvent.prototype.toString = function(){	
 	return "["+this.state+" "+this.x+","+this.y+"]";
 }
@@ -61,6 +65,12 @@ function LinkEvent(p_x, p_y, p_direction, p_state) {
 	this.linkX = p_x;
 	this.linkY = p_y;
 	this.direction = p_direction;
+}
+
+LinkEvent.prototype.copy = function() {
+	const answer = new LinkEvent(this.linkX, this.linkY, this.directon, this.state);
+	answer.direction = this.direction; // TODO complètement con, mais sinon on peut avoir des "undefined" après recopie...
+	return answer;
 }
 
 LinkEvent.prototype.toString = function(){	

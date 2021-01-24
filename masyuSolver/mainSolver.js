@@ -44,7 +44,8 @@ var fieldName = document.getElementById("input_grid_name");
 
 putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("Masyu")});
 putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,solver,fieldName.value)});
-//putActionElementClick("submit_quickStart",function(event){quickStartAction(solver,null)}); // Not relevant
+putActionElementClick("submit_quickStart",function(event){quickStartAction(solver)});
+putActionElementClick("submit_multipass",function(event){multiPassAction(solver,components)});
 putActionElementClick("submit_undo",function(event){undoAction(solver,null)});
 
 //------
@@ -57,6 +58,7 @@ addEventListenerAndCaption("submit_open_space", ENTRY.SPACE, ACTION_OPEN_SPACE, 
 addEventListenerAndCaption("submit_close_space", ENTRY.SPACE, ACTION_CLOSE_SPACE, textActionSpace);
 addEventListenerAndCaption("submit_link_spaces", ENTRY.WALLS, ACTION_LINK_SPACES, textActionWall);
 addEventListenerAndCaption("submit_close_links", ENTRY.WALLS, ACTION_CLOSE_LINKS, textActionWall);
+addEventListenerAndCaption("submit_pass_space", ENTRY.SPACE, ACTION_PASS_SPACE, textActionSpace);
 
 function addEventListenerAndCaption(p_identifier, p_entry, p_action, p_textAction) { //Shortcut action
 	addEventListenerAndCaptionForSolver(actionsManager, p_textAction, p_identifier, p_entry, p_action);

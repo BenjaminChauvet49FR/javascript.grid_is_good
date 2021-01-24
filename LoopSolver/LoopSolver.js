@@ -87,14 +87,14 @@ LoopSolver.prototype.construct = function(p_wallArray, p_puzzleSpecificMethodPac
 		undoEventClosure(this)
 	);
 	this.setPuzzleSpecificMethods(p_puzzleSpecificMethodPack);
-	this.methodSet.addAbortAndFilters(abortClosure(this), [separateEndsClosure(this)]);
-	
+	this.methodSet.addAbortAndFilters(abortClosure(this), [testLoopsClosure(this), separateEndsClosure(this)]);
     this.grid = [];
 	this.checkNewEnds = {
 		array : [],
 		list : []
 	}
-	this.chainCount = 0; // Counts at all times the number of "chains". A chain can be a lone linked space, or an actual chain of links. So it is the difference between linked spaces and links.
+	this.endedChainCount = 0; // Counts at all times the number of chains that are not loops + lone linked spaces.
+	this.loopMade = 0;
 	var x,y;
 	for (y = 0; y < this.yLength ; y++) {
 		this.grid.push([]);
@@ -244,7 +244,7 @@ LoopSolver.prototype.setLinkSpace = function(p_x, p_y, p_state) {
 	} else {
 		this.grid[p_y][p_x].state = p_state;
 		if (p_state == LOOP_STATE.LINKED) {
-			this.chainCount++;
+			this.endedChainCount++;
 			this.setSpaceLinkedPSAtomicDos({x : p_x, y : p_y});
 		} else {
 			this.setSpaceClosedPSAtomicDos({x : p_x, y : p_y});
@@ -261,7 +261,7 @@ LoopSolver.prototype.tradeLinkedSpaces = function(p_x, p_y, p_x2, p_y2, p_state,
 	} else {	
 		this.grid[p_y][p_x].chains.push(p_direction1to2); 
 		this.grid[p_y2][p_x2].chains.push(p_direction2to1); 
-		this.chainCount--;
+		this.endedChainCount--;
 		const thisChainParts = this.getLinkedEdges(p_x, p_y); //1 or 2
 		const otherChainParts = this.getLinkedEdges(p_x2, p_y2);
 		if (thisChainParts == 1 && otherChainParts == 1) {
@@ -278,6 +278,10 @@ LoopSolver.prototype.tradeLinkedSpaces = function(p_x, p_y, p_x2, p_y2, p_state,
 		} else {
 			const thisOpposite = this.getOppositeEnd(p_x, p_y);
 			const otherOpposite = this.getOppositeEnd(p_x2, p_y2);
+			if ((thisOpposite.x == p_x2) && (thisOpposite.y == p_y2) && (otherOpposite.x == p_x) && (otherOpposite.y == p_y)) { // If (p_x, p_y) and (p_x2, p_y2) were already opposed prior to be linked, a loop is made. 
+				this.loopMade++; // TODO maybe this can be sped up : if we have 2 loops or more, it should be aborted !
+			}
+			// TODO it is time to detect when more than one loop is made in one go !
 			this.grid[otherOpposite.y][otherOpposite.x].oppositeEnd = copySpace(thisOpposite);
 			this.grid[thisOpposite.y][thisOpposite.x].oppositeEnd = copySpace(otherOpposite);
 		}
@@ -314,7 +318,7 @@ LoopSolver.prototype.undoTradeLinkedSpaces = function(p_x, p_y, p_x2, p_y2, p_pr
 		this.grid[p_y2][p_x2].closedEdges--;
 		this.setEdgeClosedPSAtomicUndos({x : p_x, y : p_y, otherX : p_x2, otherY : p_y2});
 	} else {
-		this.chainCount++;
+		this.endedChainCount++;
 		this.grid[p_y][p_x].chains.pop();
 		this.grid[p_y2][p_x2].chains.pop();
 		const actualThisEnd = copySpace(this.grid[p_y][p_x].oppositeEnd); // The actual end of the other chain right now
@@ -344,7 +348,7 @@ LoopSolver.prototype.undoTradeLinkedSpaces = function(p_x, p_y, p_x2, p_y2, p_pr
 
 LoopSolver.prototype.undoLinkSpace = function(p_x, p_y) {
 	if (this.grid[p_y][p_x].state == LOOP_STATE.LINKED){
-		this.chainCount--;
+		this.endedChainCount--;
 		this.setSpaceLinkedPSAtomicUndos(p_x, p_y);
 	} else {
 		this.setSpaceClosedPSAtomicUndos(p_x, p_y);
@@ -466,7 +470,7 @@ deductionsClosure = function(p_solver) {
 			}
 			p_eventList = p_solver.testSpaceAndSurrounding2v2Open(p_eventList, x, y);			
 		} else {
-			
+			p_eventList = p_solver.otherPSDeductions(p_eventList, p_eventBeingApplied);
 		}
 		return p_eventList;
 	}
@@ -572,7 +576,7 @@ LoopSolver.prototype.testEndsClosingLoop = function (p_eventList, p_endSpace1, p
 }
 
 // --------------------------
-// Extra closures
+// Filter and abort closures
 
 LoopSolver.prototype.cleanNewEnds = function() {
 	this.checkNewEnds.list.forEach( space => {
@@ -584,30 +588,113 @@ LoopSolver.prototype.cleanNewEnds = function() {
 abortClosure = function(p_solver) {
 	return function() {
 		p_solver.cleanNewEnds();
+		p_solver.loopMade = 0;
+	}
+}
+
+// If during this deduction, either more than one loop was made OR one loop was made but there is still an unlooped chain somewhere...
+testLoopsClosure = function(p_solver) {
+	return function() {
+		if ((p_solver.loopMade > 1) || (p_solver.endedChainCount > 0 && p_solver.loopMade == 1)) {
+			return EVENT_RESULT.FAILURE;
+		} else {
+			p_solver.loopMade = 0;
+			return [];
+		}
 	}
 }
 
 separateEndsClosure = function(p_solver) { //TODO well, this function is called after all other openings and closings have been performed, which can lead to a closed loop because all linked spaces have exactly 2 linked edges except a few ones that had one linked and had one undecided edge left...
 	return function() {
 		var eventList = [];
-		if (p_solver.chainCount != 1) {
+		var ok = true;
+		var index = 0;
+		var space;
+		if (p_solver.endedChainCount != 1) {
 			var opposite, opposite2;
-			p_solver.checkNewEnds.list.forEach (space => {
-				//if (p_solver.getLinkedEdges(space.x, space.y) == 1) {
-					opposite = p_solver.getOppositeEnd(space.x, space.y);	
-					if (opposite.x && p_solver.getLinkedEdges(opposite.x, opposite.y) == 1) {
-						opposite2 = p_solver.getOppositeEnd(opposite.x, opposite.y);	
-						if (p_solver.getLinkedEdges(opposite2.x, opposite2.y) == 1) {
-							eventList = p_solver.testEndsClosingLoop(eventList, opposite2, opposite);						
-						}
+			while (ok && index < p_solver.checkNewEnds.list.length) {
+				space = p_solver.checkNewEnds.list[index];
+				opposite = p_solver.getOppositeEnd(space.x, space.y);	
+				if ((opposite.x || opposite.x == 0) && p_solver.getLinkedEdges(opposite.x, opposite.y) == 1) {
+					opposite2 = p_solver.getOppositeEnd(opposite.x, opposite.y);	
+					if (p_solver.getLinkedEdges(opposite2.x, opposite2.y) == 1) {
+						eventList = p_solver.testEndsClosingLoop(eventList, opposite2, opposite);						
 					}
-					
-				//}	
-			});
-		}
+				}
+				index++;
+			}
+		}		
 		p_solver.cleanNewEnds(); // TODO well, when we have one link and two adjacent ends and we add a chain (ie a link or a linked space) elsewhere, the close between ends is not added.
-		return eventList;
+		if (!ok) {
+			return EVENT_RESULT.FAILURE;
+		} else {
+			return eventList;
+		}
 	}
+}
+
+// --------------------------
+// Methods for passing
+
+// The events passed in comparison must be "converted", e.g. going either down or right.
+comparisonLoopEventsMethod = function(p_event1, p_event2) {
+	const cEvent1 = convertLoopEvent(p_event1);
+	const cEvent2 = convertLoopEvent(p_event2); // TODO yeah, the events must be converted for sure, but they could be converted before the function is called. Anyway, this comparison method is potentially optimizable...
+	const k1 = (cEvent1.kind == LOOP_EVENT.LINK ? 0 : 1);
+	const k2 = (cEvent2.kind == LOOP_EVENT.LINK ? 0 : 1);
+	if (k1 != k2) {
+		return (k1 - k2);		
+	} else {
+		if (k1 == 0) { // J'avais oublié de distinguer "links" et "spaces".
+		 // 25 janvier 2021, en milieu-fin de développement du solveur de Masyu et aux débuts du LoopSolver : Je sais grâce au pass sur Chocona fait la veille (ou aujourd'hui ?) que si une seule des 2 "possibilités" lors d'une passe sont exploitées, c'est parce que ça bloque au niveau de la méthode de comparaison.
+			if (cEvent2.linkY > cEvent1.linkY) {
+				return -1;
+			} else if (cEvent2.linkY < cEvent1.linkY) {
+				return 1;
+			} else if (cEvent2.linkX > cEvent1.linkX) {
+				return -1;
+			} else if (cEvent2.linkX < cEvent1.linkX) {
+				return 1;
+			} else {
+				const d1 = (cEvent1.direction == LOOP_DIRECTION.RIGHT ? 0 : 1);
+				const d2 = (cEvent2.direction == LOOP_DIRECTION.RIGHT ? 0 : 1); // Et non "LOOP_EV.NT.RIGHT" (E remplacé par un point pour ne pas perturber les recherches)"
+				if (d1 != d2) {
+					return d1-d2;
+				} else {
+					const c1 = (cEvent1.state == LOOP_STATE.LINKED ? 0 : 1); 
+					const c2 = (cEvent2.state == LOOP_STATE.LINKED ? 0 : 1); 
+					return c1-c2;
+				}
+			}
+		} else {
+			if (cEvent2.y > cEvent1.y) {
+				return -1;
+			} else if (cEvent2.y < cEvent1.y) {
+				return 1;
+			} else if (cEvent2.x > cEvent1.x) {
+				return -1;
+			} else if (cEvent2.x < cEvent1.x) {
+				return 1;
+			} else {
+				const c1 = (cEvent1.state == LOOP_STATE.LINKED ? 0 : 1);
+				const c2 = (cEvent2.state == LOOP_STATE.LINKED ? 0 : 1); 
+				return c1-c2;
+			}
+		}
+	}
+}
+
+// Convert a loop event to make it compatible with the comparison method above 
+convertLoopEvent = function(p_event) {
+	if (p_event.kind == LOOP_EVENT.LINK && (p_event.direction == LOOP_DIRECTION.LEFT || p_event.direction == LOOP_DIRECTION.UP)) {
+		return p_event.dual();
+	} else {
+		return p_event;
+	}
+}
+
+copyLoopEventMethod = function(p_event) {
+	return p_event.copy();
 }
 
 // ----------------
@@ -619,7 +706,7 @@ LoopSolver.prototype.logOppositeEnd = function() {
 	for (var iy = 0; iy < this.yLength ; iy++) {
 		for (var ix = 0; ix < this.xLength ; ix++) {
 			oppositeEndSpace = this.grid[iy][ix].oppositeEnd;
-			if (oppositeEndSpace.x) {
+			if (oppositeEndSpace.x || oppositeEndSpace.x == 0) {
 				stringSpace = oppositeEndSpace.x+" "+oppositeEndSpace.y;
 				if (this.getLinkedEdges(ix, iy) == 1) {
 					stringSpace+="*";

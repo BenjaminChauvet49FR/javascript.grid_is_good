@@ -85,7 +85,9 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
         while (ok && listEventsToApply.length > 0) {
             // Classical verification
             eventBeingApplied = listEventsToApply.pop();
-			result = (eventBeingApplied.failure ? EVENT_RESULT.FAILURE : p_methodPack.applyEventMethod(eventBeingApplied));
+			result = (eventBeingApplied.failure ? EVENT_RESULT.FAILURE :
+				(eventBeingApplied.isCompoundEvent ? EVENT_RESULT.SUCCESS :
+					p_methodPack.applyEventMethod(eventBeingApplied)));
 			if (result == EVENT_RESULT.FAILURE) {
 				ok = false;
 			}
@@ -106,7 +108,9 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
 						}
 					}	
 				}
-				listEventsApplied.push(eventBeingApplied);
+				if (!eventBeingApplied.isCompoundEvent) {
+					listEventsApplied.push(eventBeingApplied);
+				}
 			}
         }
 		
@@ -163,8 +167,8 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
         }
     }
     if (!ok) {
-		if (p_methodPack.abort) {
-			p_methodPack.abort();
+		if (p_methodPack.abortMethod) {
+			p_methodPack.abortMethod();
 		}
         this.undoEventList(listEventsApplied, p_methodPack.undoEventMethod);
 		return DEDUCTIONS_RESULT.FAILURE;
@@ -236,6 +240,13 @@ GeneralSolver.prototype.undoEventList = function (p_eventsList, p_undoEventMetho
 			p_undoEventMethod(eventToUndo);
 		}
 	});
+}
+
+// Marks an event as "compound" if its only purpose is to pile up other events to the pile of events to be applied. 
+// Compound events are not saved into happenedEvents.
+// The piled events must be returned by the deduction method of the solver.
+markCompoundEvent = function(p_event) {
+	p_event.isCompoundEvent = true;
 }
 
 /**
@@ -311,8 +322,9 @@ function intersect(p_eventsListOld, p_eventsListNew, p_eventsTools) {
 			return filterExternalMethods(p_eventsListNew).sort(p_eventsTools.comparisonMethod); // VERY IMPORTANT : apply "filter" first and "sort" then, otherwise elements supposed to be discarded by filter could be "sorted" and make the intersection bogus
 		}
 	} else {
-		eventsList1 = p_eventsListOld; //Already sorted ;)
-		eventsList2 = filterExternalMethods(p_eventsListNew).sort(p_eventsTools.comparisonMethod);
+		const eventsList1 = p_eventsListOld; //Already sorted ;)
+		var eventsList2 = filterExternalMethods(p_eventsListNew);
+		eventsList2 = eventsList2.sort(p_eventsTools.comparisonMethod);
 		var i1 = 0;
 		var i2 = 0;
 		var answer = [];
@@ -352,7 +364,6 @@ p_passTools must contain the following methods :
 - skipPassMethod (optional) : method that takes a pass argument and that determinates whether the set of possibilites designated by the pass argument is too big to be passed or not. The set of possibilities will have to be tested anyways if no other set has been tested so far in this cycle of multipasses.)
 p_methodSet, p_eventsTools : same arguments as in the pass method.
 */
-//GeneralSolver.prototype.multiPass = function(p_generatePassEventsMethod, p_orderPassArgumentsMethod, p_methodSet ,p_eventsTools) {
 GeneralSolver.prototype.multiPass = function(p_methodSet ,p_eventsTools, p_passTools) {  
 	var oneMoreLoop;
 	var orderedListPassArguments;
