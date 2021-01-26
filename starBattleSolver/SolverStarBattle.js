@@ -19,7 +19,7 @@ SolverStarBattle.prototype.construct = function(p_wallArray,p_starNumber){
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodTools = {comparisonMethod : comparison, copyMethod : copying,  argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodTools = {comparisonMethod : comparisonLoopEventsMethod, copyMethod : copyLoopEventMethod,  argumentToLabelMethod : namingCategoryClosure(this)};
 	this.methodsMultiPass = {
 		generatePassEventsMethod : generateEventsForRLCPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),

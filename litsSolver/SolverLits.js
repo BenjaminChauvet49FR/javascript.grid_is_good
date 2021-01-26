@@ -14,7 +14,7 @@ SolverLITS.prototype.construct = function(p_wallArray,p_numberGrid){
 	this.yLength = p_wallArray.length;
 	this.generalSolver = new GeneralSolver();
 	this.generalSolver.makeItGeographical(this.xLength, this.yLength);
-	this.methodSet = new ApplyEventMethodPack(
+	this.methodSet = new ApplyEventMethodPack( 
 		applyEventClosure(this),
 		deductionsClosure(this),
 		adjacencyClosure(this),
@@ -27,7 +27,7 @@ SolverLITS.prototype.construct = function(p_wallArray,p_numberGrid){
 		skipPassMethod : skipPassClosure(this)
 	};
 	this.methodSet.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
-	this.methodTools = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodTools = {comparisonMethod : comparison, copyMethod : copying}; // Warning : the argumentToLabelMethod is defined right before the pass in this solver
 
 	this.wallGrid = WallGrid_data(p_wallArray); 
 	this.regionGrid = this.wallGrid.toRegionGrid();
@@ -197,21 +197,29 @@ SolverLITS.prototype.passRegionAndAdjacents = function(p_indexRegion) {
 		Array.prototype.push.apply(generatedEvents, newList);
 	});
 	
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, "Region+adj. "+p_indexRegion); 
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion); 
 } //TODO can be improved ?
 
 SolverLITS.prototype.passRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, "Region "+p_indexRegion); 
+	this.methodTools.argumentToLabelMethod = namingRegionClosure(this);
+	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion); 
 }
 
 SolverLITS.prototype.multiPass = function() {
+	this.methodTools.argumentToLabelMethod = namingRegionClosureAdj(this);
 	this.generalSolver.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
 }
 
-namingCategoryClosure = function(p_solver) {
+namingRegionClosure = function(p_solver) {
 	return function (p_indexRegion) {
 		return "Region "+ p_indexRegion + " (" + p_solver.getFirstSpaceRegion(p_indexRegion).x +" "+ p_solver.getFirstSpaceRegion(p_indexRegion).y + ")"; 
+	}
+}
+
+namingRegionClosureAdj = function(p_solver) {
+	return function (p_indexRegion) {
+		return "Region+adj. "+ p_indexRegion + " (" + p_solver.getFirstSpaceRegion(p_indexRegion).x +" "+ p_solver.getFirstSpaceRegion(p_indexRegion).y + ")"; 
 	}
 }
 
