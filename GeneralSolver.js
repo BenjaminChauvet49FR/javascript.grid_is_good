@@ -230,7 +230,8 @@ GeneralSolver.prototype.geographicalVerification = function (p_listNewXs, p_adja
 
 // Undoing
 GeneralSolver.prototype.undoEventList = function (p_eventsList, p_undoEventMethod) {
-	p_eventsList.forEach(eventToUndo => {
+	while (p_eventsList.length > 0) {
+		eventToUndo = p_eventsList.pop();
 		if (eventToUndo.firstOpen) {
 			this.atLeastOneOpen = false;
 		} else if (eventToUndo.adjacency) {
@@ -239,7 +240,7 @@ GeneralSolver.prototype.undoEventList = function (p_eventsList, p_undoEventMetho
 		} else {
 			p_undoEventMethod(eventToUndo);
 		}
-	});
+	}
 }
 
 // Marks an event as "compound" if its only purpose is to pile up other events to the pile of events to be applied. 
