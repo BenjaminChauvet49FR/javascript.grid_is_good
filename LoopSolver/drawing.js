@@ -51,4 +51,24 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
         pixLeft = pixLeftStart;
         pixUp += this.pix.sideSpace;
     }
+	//if (displayOtherEnds) {
+		const fontSize = drawer.pix.sideSpace/3;
+		p_context.font = fontSize+"px Arial";
+		p_context.fillStyle = p_colorSet.oppositeSpaceWrite;
+		if (!p_colorSet.oppositeSpaceWrite) {
+			p_context.fillStyle = "#000000";
+		}
+		var pixLeft,pixUp;
+		var textToWrite;
+		for (var iy = 0; iy <  p_solver.yLength; iy++) {
+			for (var ix = 0; ix < p_solver.xLength; ix++) {
+				if (p_solver.getLinkedEdges(ix, iy) == 1) {
+					pixLeft = this.getPixInnerXLeft(ix);
+					pixDown = this.getPixInnerYUp(iy)+fontSize;
+					textToWrite = p_solver.getOppositeEnd(ix, iy).x+" "+p_solver.getOppositeEnd(ix, iy).y;
+					p_context.fillText(textToWrite,pixLeft,pixDown);
+				}
+			}
+		}
+	//}
 }

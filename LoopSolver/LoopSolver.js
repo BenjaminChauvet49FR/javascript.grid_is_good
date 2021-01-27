@@ -699,25 +699,34 @@ copyLoopEventMethod = function(p_event) {
 
 // ----------------
 // To string, for debug for instance
-LoopSolver.prototype.logOppositeEnd = function() {
-	var answer = "";
+LoopSolver.prototype.logOppositeEnd = function(p_xStart = 0, p_yStart = 0, p_xEnd, p_yEnd) {
+	var answer = "\n";
 	var oppositeEndSpace;
 	var stringSpace;
-	for (var iy = 0; iy < this.yLength ; iy++) {
-		for (var ix = 0; ix < this.xLength ; ix++) {
+	var stringSep;
+	if (!p_xEnd) {
+		p_xEnd = this.xLength;
+	} 
+	if (!p_yEnd) {
+		p_yEnd = this.yLength;
+	}
+	for (var iy = p_yStart; iy < p_yEnd ; iy++) {
+		for (var ix = p_xStart; ix < p_xEnd ; ix++) {
 			oppositeEndSpace = this.grid[iy][ix].oppositeEnd;
 			if (oppositeEndSpace.x || oppositeEndSpace.x == 0) {
-				stringSpace = oppositeEndSpace.x+" "+oppositeEndSpace.y;
 				if (this.getLinkedEdges(ix, iy) == 1) {
-					stringSpace+="*";
-				}				
+					stringSep="*";
+				}	else {
+					stringSep=" ";
+				}
+				stringSpace = oppositeEndSpace.x+stringSep+oppositeEndSpace.y;
 			} else {
 				stringSpace = "ND";
 			}
 			while(stringSpace.length < 5) {
 				stringSpace+= " ";
 			}
-			answer+=stringSpace+"| ";
+			answer+=stringSpace+"|";
 		}
 		answer+="\n";
 	}

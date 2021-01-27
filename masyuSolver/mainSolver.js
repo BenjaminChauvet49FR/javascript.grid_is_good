@@ -8,7 +8,8 @@ var colors={
 	noLinkState:'#448844',
 	presentLinkState:'#ddeeff',
 	circleOut:'#000000',
-	circleIn:'#000044'
+	circleIn:'#000044',
+	oppositeSpaceWrite:'#0000ff'
 }
 
 var drawer = new Drawer(colors);
