@@ -275,7 +275,7 @@ generateEventsForSpaceClosure = function(p_solver) {
 	return function(p_space) {
 		switch (p_solver.pearlGrid[p_space.y][p_space.x]) {
 			case PEARL.WHITE : return generateWhitePearlPassEvents(p_space.x, p_space.y); break;
-			//case PEARL.BLACK : return generateBlackPearlPassEvents(p_space.x, p_space.y); break;
+			case PEARL.BLACK : return generateBlackPearlPassEvents(p_space.x, p_space.y); break;
 		}
 		return [];
 	}
