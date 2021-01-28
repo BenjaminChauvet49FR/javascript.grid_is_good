@@ -88,53 +88,11 @@ putActionElementClick("submit_clear_selection", function (event) {
     actionUnselectAll(editorCore)
 });
 
-combo(document.getElementById('select_puzzle_type')); //TODO c'est comme ça que ça se passe au démarrage, j'espère que c'est chargé. On peut le mettre directement sur la combobox ? Mais ce serait peut-être un peu lourd pour le mélange fond/forme, non ?
-
-//How to use the change of a combobox. Credits : https://www.scriptol.fr/html5/combobox.php
-function combo(thelist) {
-    var idx = thelist.selectedIndex;
-    var content = thelist.options[idx].innerHTML;
-    console.log(content);
-	// Default options
-	editorCore.setModePathOff();
-	editorCore.setWallsOn();
-	// Specific options
-    switch (content) {
-		case 'CurvingRoad':
-			editorCore.setWallsOff();
-			saveLoadModeId = PUZZLES_KIND.MASYU_LIKE.id;
-			break;
-		case 'Masyu':
-			editorCore.setWallsOff();
-			saveLoadModeId = PUZZLES_KIND.MASYU_LIKE.id;
-			break;
-		case 'Koburin':
-			editorCore.setWallsOff();
-			saveLoadModeId = PUZZLES_KIND.NURIKABE_LIKE.id;
-			break;
-		case 'GrandTour':
-			editorCore.setModePathOn();
-			saveLoadModeId = PUZZLES_KIND.HEYAWAKE_LIKE.id;
-			break;	
-		case 'SternenSchlacht':
-			saveLoadModeId = PUZZLES_KIND.STAR_BATTLE.id;
-			break;
-		default:
-			saveLoadModeId = PUZZLES_KIND.HEYAWAKE_LIKE.id;
-			break;
-    }
-	const squarePuzzle = correspondsToSquarePuzzle(saveLoadModeId); 
-	if (squarePuzzle) {
-		actualFieldX = fieldXY;
-		actualFieldY = fieldXY; 
-	} else {
-		actualFieldX = fieldX;
-		actualFieldY = fieldY;
-	}
-	fieldX.disabled = squarePuzzle;
-	fieldY.disabled = squarePuzzle;
-	fieldXY.disabled = !squarePuzzle;
+function combo(p_docElt) {
+	comboChange(p_docElt, editorCore);
 }
+
+combo(document.getElementById('select_puzzle_type')); //TODO c'est comme ça que ça se passe au démarrage, j'espère que c'est chargé. On peut le mettre directement sur la combobox ? Mais ce serait peut-être un peu lourd pour le mélange fond/forme, non ?
 
 /**
 Matches true if puzzle is square-shaped. 
@@ -160,10 +118,7 @@ setupEventListenerCaption("submit_digit_region_mode", MODE_NUMBER_REGION);
 setupEventListenerCaption("submit_digit_space_mode", MODE_NUMBER_SPACE);
 setupEventListenerCaption("submit_add_white", MODE_PEARL_WHITE);
 setupEventListenerCaption("submit_add_black", MODE_PEARL_BLACK);
-setupEventListenerCaption("submit_add_combined_left", MODE_ARROW_COMBINED_LEFT);
-setupEventListenerCaption("submit_add_combined_up", MODE_ARROW_COMBINED_UP);
-setupEventListenerCaption("submit_add_combined_right", MODE_ARROW_COMBINED_RIGHT);
-setupEventListenerCaption("submit_add_combined_down", MODE_ARROW_COMBINED_DOWN);
+setupEventListenerCaption("submit_add_arrow_number_combination", MODE_ARROW_COMBINED);
 
 // Editor input symbol
 document.getElementById("submit_add_white").addEventListener('click', function () {
@@ -174,19 +129,9 @@ document.getElementById("submit_add_black").addEventListener('click', function (
     editorCore.setInputSymbol(SYMBOL_ID.BLACK)
 });
 
-document.getElementById("submit_add_combined_left").addEventListener('click', function () {
-    editorCore.setInputSymbol(SYMBOL_ID.COMBINED_LEFT)
+document.getElementById("submit_add_arrow_number_combination").addEventListener('click', function () {
+    alert("To be done");
 });
-document.getElementById("submit_add_combined_up").addEventListener('click', function () {
-    editorCore.setInputSymbol(SYMBOL_ID.COMBINED_UP)
-});
-document.getElementById("submit_add_combined_right").addEventListener('click', function () {
-    editorCore.setInputSymbol(SYMBOL_ID.COMBINED_RIGHT)
-});
-document.getElementById("submit_add_combined_down").addEventListener('click', function () {
-    editorCore.setInputSymbol(SYMBOL_ID.COMBINED_DOWN)
-});
-
 
 // Changes on spinboxes
 document.getElementById("input_number_value_region").addEventListener('change', function () {
@@ -200,9 +145,3 @@ document.getElementById("input_number_value_space").addEventListener('change', f
 	setMode(textMode, modesManager, ENTRY.SPACE, MODE_NUMBER_SPACE);
 	applyChangesForSpaceMode(editorCore);
 });
-
-document.getElementById("input_add_combined_value").addEventListener('change', function () {
-    editorCore.setCombinedInputNumber(this.value);
-});
-
-

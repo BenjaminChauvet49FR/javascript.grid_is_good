@@ -1,3 +1,5 @@
+// Setup
+
 function Drawer() {
 
     this.pix = {
@@ -42,58 +44,8 @@ Drawer.prototype.setWallColors = function(p_wallColorSet) {
 	}
 }
 
-/**
-Sets up the margin grid. Should only be set up at the beginning of the string.
- */
-Drawer.prototype.setMarginGrid = function (p_left, p_up, p_right, p_down) { //TODO inutile pour l'instant ; deviendra utile lorsqu'on réglera les ticks on/off... ?
-    this.pix.marginGrid.left = p_left;
-    this.pix.marginGrid.up = p_up;
-    this.pix.marginGrid.right = p_right;
-    this.pix.marginGrid.down = p_down;
-}
-
 //---------------------
 // All drawing functions
-
-/**
-Draw the grid on-screen on p_context, with p_editorCore informations, with this.pix and p_colors information for pixels and colors
-*/
-Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
-    const xLength = p_editorCore.getXLength();
-    const yLength = p_editorCore.getYLength();
-    if (p_editorCore.hasWallGrid()) {
-        if (p_editorCore.hasWalls()) {
-            this.drawWallGrid(p_context, p_editorCore.wallGrid, xLength, yLength);
-        } else {
-            this.drawWalllessGrid(p_context, p_editorCore.wallGrid, xLength, yLength);
-        }
-        // Selection
-        for (var iy = 0; iy < yLength; iy++) {
-            for (var ix = 0; ix < xLength; ix++) {
-                if (p_editorCore.getSelection(ix, iy) == SELECTED.YES) {
-                    p_context.fillStyle = this.editorColorSet.selectedSpace;
-                    p_context.fillRect(this.getPixInnerXLeft(ix), this.getPixInnerYUp(iy), this.getPixInnerSide(), this.getPixInnerSide());
-                }
-            }
-        }
-    }
-	
-	if (p_editorCore.getGrid(GRID_ID.NUMBER_REGION)) {
-	    this.drawNumbersLittleInCorner(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_REGION));
-	}
-	if (p_editorCore.getGrid(GRID_ID.PEARL)) {
-		this.drawPearlGrid(p_context, p_editorCore.getGrid(GRID_ID.PEARL));
-	}
-	if (p_editorCore.getGrid(GRID_ID.NUMBER_SPACE)) {
-	    this.drawNumbersGrid(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_SPACE));
-	}
-		
-    //Paths
-    /*if (p_editorCore.hasPathGrid()) {
-        this.drawWalllessGrid(p_context, null, xLength, yLength);
-		this.drawWallGridAsPath(p_context, p_editorCore.wallGrid, xLength, yLength);
-    }*/
-}
 
 Drawer.prototype.drawWallGrid = function (p_context, p_wallGrid, p_xLength, p_yLength) {
     var ix,
@@ -205,69 +157,6 @@ Drawer.prototype.drawWalllessGrid = function (p_context, p_wallGrid, p_xLength, 
     }
 }
 
-Drawer.prototype.drawNumbersLittleInCorner = function (p_context, p_numberGrid) {
-	this.drawOneNumberPerSpace(p_context, p_numberGrid, this.getPixInnerSide() / 2, {offX : 2, offY : 2});
-}
-
-
-Drawer.prototype.drawNumbersGrid = function (p_context, p_numberGrid) {
-	this.drawOneNumberPerSpace(p_context, p_numberGrid, this.getPixInnerSide() * 4 / 5, {offX : 1, offY : 1});
-}
-
-Drawer.prototype.drawOneNumberPerSpace = function (p_context, p_numberGrid, p_pixSize, p_pixInnerOffset) {
-	const yLength = p_numberGrid.getYLength();
-	if (yLength > 0) {
-		const xLength = p_numberGrid.getXLength();
-		p_context.textAlign = 'left';
-		p_context.textBaseline = 'top';
-		p_context.font = p_pixSize + "px Arial";
-		p_context.fillStyle = this.colors.standardWrite;
-		var ix,
-		iy,
-		number, pixLeft, pixDown; 
-		for (iy = 0; iy < yLength; iy++) {
-			for (ix = 0; ix < xLength; ix++) {
-				number = p_numberGrid.get(ix, iy);
-				if (number != null) {
-					pixLeft = this.getPixInnerXLeft(ix) + p_pixInnerOffset.offX;
-					pixDown = this.getPixInnerYUp(iy) + p_pixInnerOffset.offY;
-					p_context.fillText(number, pixLeft, pixDown);
-				}
-			}
-		}
-	}
-}
-
-
-Drawer.prototype.drawPearlGrid = function (p_context, p_pearlGrid) {
-	const yLength = p_pearlGrid.getYLength();
-	if (yLength > 0) {
-		const xLength = p_pearlGrid.getXLength();
-		p_context.fillStyle = this.colors.pearl;
-		var ix,
-		iy,
-		pearl;
-		const radius = this.getPixInnerSide()*1/3;
-		p_context.fillStyle = this.colors.standardWrite; 
-		for (iy = 0; iy < yLength; iy++) {
-			for (ix = 0; ix < xLength; ix++) {
-				pearl = p_pearlGrid.get(ix, iy);
-				if (pearl == SYMBOL_ID.WHITE) {
-					//Crédits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/ellipse 
-					p_context.beginPath();
-					p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
-					p_context.stroke();
-				}
-				if (pearl == SYMBOL_ID.BLACK) {
-					p_context.beginPath();
-					p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
-					p_context.fill();
-				}
-			}
-		}
-	}
-}
-
 /**
 Draws a path out of a grid.
  */
@@ -303,20 +192,148 @@ Draws a path out of a grid.
 }*/ // TODO To be scrapped, soon ?
 
 /**
-(private string)
-Gives the correct wall color from a wall type (a #RRGGBB string)
-@p_wallType : a type of wall between 2 spaces
+Draws the main content of a space into a grid.
+(It is used mainly for solver as the space is supposed to be colorized, to have an image into it...)
+
+p_drawableItems : array of items to draw.
+p_function : function to return the index.
  */
-Drawer.prototype.wallToColor = function (p_wallType) {
-    switch (p_wallType) {
-    case (WALLGRID.OPEN):
-        return (this.wallColorSet.open_wall);
-        break;
-    case (WALLGRID.CLOSED):
-        return (this.wallColorSet.closed_wall);
-        break;
+Drawer.prototype.drawSpaceContents = function (p_context, p_drawableItems, p_function, p_xLength, p_yLength) {
+    const pixStartX = this.getPixInnerXLeft(0);
+    const pixInnerSide = this.getPixInnerSide();
+    var pixDrawX = pixStartX;
+    var pixDrawY = this.getPixInnerYUp(0);
+    var item;
+    var ix,
+    iy,
+    indexItem;
+    for (iy = 0; iy < p_yLength; iy++) {
+        for (ix = 0; ix < p_xLength; ix++) {
+            indexItem = p_function(ix, iy);
+            if (indexItem >= 0 && indexItem < p_drawableItems.length) {
+                item = p_drawableItems[indexItem];
+                if (item.kind == KIND_DRAWABLE_ITEM.IMAGE) {
+                    p_context.drawImage(item.getImage(), item.x1, item.y1, item.x2, item.y2, pixDrawX, pixDrawY, pixInnerSide, pixInnerSide);
+                } else if (item.kind == KIND_DRAWABLE_ITEM.COLOR) {
+                    p_context.fillStyle = item.getColorString();
+                    p_context.fillRect(pixDrawX, pixDrawY, pixInnerSide, pixInnerSide);
+                } else if (item.kind = KIND_DRAWABLE_ITEM.CIRCLE) {
+					p_context.beginPath();
+					const radius = this.getPixInnerSide()*1/3;
+					p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
+					p_context.fillStyle = item.colorInner; //TODO j'ai repris la propriété plutôt que créer une nouvelle fonction. A voir lequel des 2 est meilleur.
+					if (p_context.fillStyle) {
+						p_context.fill();
+					}
+					p_context.fillStyle = item.colorBorder;
+					if (p_context.fillStyle) {
+						p_context.stroke();
+					}
+				}
+            }
+            pixDrawX += this.pix.sideSpace;
+        }
+        pixDrawY += this.pix.sideSpace;
+        pixDrawX = pixStartX;
     }
-    return "#ffffff";
+}
+
+// Draw a polyomino according to a 4x5-tiled picture
+Drawer.prototype.drawPolyomino4x5TiledMap = function (p_context, p_map, p_pixMapSide, p_function, p_number, p_xLength, p_yLength) {
+    const pixStartX = this.pix.marginGrid.left;
+    const pixSide = this.pix.sideSpace;
+    const pixHalfSide = pixSide / 2;
+    var upOn;
+    var leftOn;
+    var rightOn;
+    var downOn;
+    var pixOriginX = pixStartX;
+    var pixOriginY = this.pix.marginGrid.up;
+    var pixDrawX,
+    pixDrawY;
+    var coordinateXInMap,
+    coordinateYInmap;
+    const xBlockLeft = 0;
+    const yBlockUp = 0;
+    const xBlockRight = 3;
+    const yBlockDown = 3;
+
+    function xLeftContinue(p_continue) {
+        return p_continue ? 2 : 0;
+    }
+
+    function yUpContinue(p_continue) {
+        return p_continue ? 2 : 0;
+    }
+
+    function xRightContinue(p_continue) {
+        return p_continue ? 1 : 3;
+    }
+
+    function yDownContinue(p_continue) {
+        return p_continue ? 1 : 3;
+    }
+
+    function drawQuarter(x, y) {
+        p_context.drawImage(p_map, coordinateXInMap * p_pixMapSide, coordinateYInMap * p_pixMapSide, p_pixMapSide, p_pixMapSide,
+            pixOriginX + x * pixHalfSide, pixOriginY + y * pixHalfSide, pixHalfSide, pixHalfSide);
+    }
+
+    for (iy = 0; iy < p_yLength; iy++) {
+        for (ix = 0; ix < p_xLength; ix++) {
+            indexItem = p_function(ix, iy);
+            if (indexItem == p_number) {
+                upOn = (iy > 0 && (p_function(ix, iy - 1) == p_number));
+                leftOn = (ix > 0 && (p_function(ix - 1, iy) == p_number));
+                rightOn = (ix < p_xLength - 1 && (p_function(ix + 1, iy) == p_number));
+                downOn = (iy < p_yLength - 1 && (p_function(ix, iy + 1) == p_number));
+                xLeftContinue = leftOn ? 2 : 0;
+                yUpContinue = upOn ? 2 : 0;
+                xRightContinue = rightOn ? 1 : 3;
+                yDownContinue = downOn ? 1 : 3
+                    //LU corner
+                    if (leftOn && upOn && !p_function(ix - 1, iy - 1) == p_number) {
+                        coordinateXInMap = 4
+                            coordinateYInMap = 0;
+                    } else {
+                        coordinateXInMap = xLeftContinue;
+                        coordinateYInMap = yUpContinue;
+                    }
+                    drawQuarter(0, 0);
+                //RU corner
+                if (rightOn && upOn && !p_function(ix + 1, iy - 1) == p_number) {
+                    coordinateXInMap = 4
+                        coordinateYInMap = 1;
+                } else {
+                    coordinateXInMap = xRightContinue;
+                    coordinateYInMap = yUpContinue;
+                }
+                drawQuarter(1, 0);
+                //RD corner
+                if (rightOn && downOn && !p_function(ix + 1, iy + 1) == p_number) {
+                    coordinateXInMap = 4
+                        coordinateYInMap = 2;
+                } else {
+                    coordinateXInMap = xRightContinue;
+                    coordinateYInMap = yDownContinue;
+                }
+                drawQuarter(1, 1);
+                //LD corner
+                if (leftOn && downOn && !p_function(ix - 1, iy + 1) == p_number) {
+                    coordinateXInMap = 4
+                        coordinateYInMap = 3;
+                } else {
+                    coordinateXInMap = xLeftContinue;
+                    coordinateYInMap = yDownContinue;
+                }
+                drawQuarter(0, 1);
+            }
+            pixOriginX += this.pix.sideSpace;
+        }
+        pixOriginY += this.pix.sideSpace;
+        pixOriginX = pixStartX;
+    }
+
 }
 
 //---------------------
@@ -442,150 +459,6 @@ Drawer.prototype.getClickAroundWallD = function (event, p_canvas, p_xLength, p_y
     return null;
 }
 
-/**
-Draws the main content of a space into a grid.
-(It is used mainly for solver as the space is supposed to be colorized, to have an image into it...)
-
-p_drawableItems : array of items to draw.
-p_function : function to return the index.
- */
-Drawer.prototype.drawSpaceContents = function (p_context, p_drawableItems, p_function, p_xLength, p_yLength) {
-    const pixStartX = this.getPixInnerXLeft(0);
-    const pixInnerSide = this.getPixInnerSide();
-    var pixDrawX = pixStartX;
-    var pixDrawY = this.getPixInnerYUp(0);
-    var item;
-    var ix,
-    iy,
-    indexItem;
-    for (iy = 0; iy < p_yLength; iy++) {
-        for (ix = 0; ix < p_xLength; ix++) {
-            indexItem = p_function(ix, iy);
-            if (indexItem >= 0 && indexItem < p_drawableItems.length) {
-                item = p_drawableItems[indexItem];
-                if (item.kind == KIND_DRAWABLE_ITEM.IMAGE) {
-                    p_context.drawImage(item.getImage(), item.x1, item.y1, item.x2, item.y2, pixDrawX, pixDrawY, pixInnerSide, pixInnerSide);
-                } else if (item.kind == KIND_DRAWABLE_ITEM.COLOR) {
-                    p_context.fillStyle = item.getColorString();
-                    p_context.fillRect(pixDrawX, pixDrawY, pixInnerSide, pixInnerSide);
-                } else if (item.kind = KIND_DRAWABLE_ITEM.CIRCLE) {
-					p_context.beginPath();
-					const radius = this.getPixInnerSide()*1/3;
-					p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
-					p_context.fillStyle = item.colorInner; //TODO j'ai repris la propriété plutôt que créer une nouvelle fonction. A voir lequel des 2 est meilleur.
-					if (p_context.fillStyle) {
-						p_context.fill();
-					}
-					p_context.fillStyle = item.colorBorder;
-					if (p_context.fillStyle) {
-						p_context.stroke();
-					}
-				}
-            }
-            pixDrawX += this.pix.sideSpace;
-        }
-        pixDrawY += this.pix.sideSpace;
-        pixDrawX = pixStartX;
-    }
-}
-
-Drawer.prototype.drawPolyomino4x5TiledMap = function (p_context, p_map, p_pixMapSide, p_function, p_number, p_xLength, p_yLength) {
-    const pixStartX = this.pix.marginGrid.left;
-    const pixSide = this.pix.sideSpace;
-    const pixHalfSide = pixSide / 2;
-    var upOn;
-    var leftOn;
-    var rightOn;
-    var downOn;
-    var pixOriginX = pixStartX;
-    var pixOriginY = this.pix.marginGrid.up;
-    var pixDrawX,
-    pixDrawY;
-    var coordinateXInMap,
-    coordinateYInmap;
-    const xBlockLeft = 0;
-    const yBlockUp = 0;
-    const xBlockRight = 3;
-    const yBlockDown = 3;
-
-    function xLeftContinue(p_continue) {
-        return p_continue ? 2 : 0;
-    }
-
-    function yUpContinue(p_continue) {
-        return p_continue ? 2 : 0;
-    }
-
-    function xRightContinue(p_continue) {
-        return p_continue ? 1 : 3;
-    }
-
-    function yDownContinue(p_continue) {
-        return p_continue ? 1 : 3;
-    }
-
-    function drawQuarter(x, y) {
-        p_context.drawImage(p_map, coordinateXInMap * p_pixMapSide, coordinateYInMap * p_pixMapSide, p_pixMapSide, p_pixMapSide,
-            pixOriginX + x * pixHalfSide, pixOriginY + y * pixHalfSide, pixHalfSide, pixHalfSide);
-    }
-
-    for (iy = 0; iy < p_yLength; iy++) {
-        for (ix = 0; ix < p_xLength; ix++) {
-            indexItem = p_function(ix, iy);
-            if (indexItem == p_number) {
-                upOn = (iy > 0 && (p_function(ix, iy - 1) == p_number));
-                leftOn = (ix > 0 && (p_function(ix - 1, iy) == p_number));
-                rightOn = (ix < p_xLength - 1 && (p_function(ix + 1, iy) == p_number));
-                downOn = (iy < p_yLength - 1 && (p_function(ix, iy + 1) == p_number));
-                xLeftContinue = leftOn ? 2 : 0;
-                yUpContinue = upOn ? 2 : 0;
-                xRightContinue = rightOn ? 1 : 3;
-                yDownContinue = downOn ? 1 : 3
-                    //LU corner
-                    if (leftOn && upOn && !p_function(ix - 1, iy - 1) == p_number) {
-                        coordinateXInMap = 4
-                            coordinateYInMap = 0;
-                    } else {
-                        coordinateXInMap = xLeftContinue;
-                        coordinateYInMap = yUpContinue;
-                    }
-                    drawQuarter(0, 0);
-                //RU corner
-                if (rightOn && upOn && !p_function(ix + 1, iy - 1) == p_number) {
-                    coordinateXInMap = 4
-                        coordinateYInMap = 1;
-                } else {
-                    coordinateXInMap = xRightContinue;
-                    coordinateYInMap = yUpContinue;
-                }
-                drawQuarter(1, 0);
-                //RD corner
-                if (rightOn && downOn && !p_function(ix + 1, iy + 1) == p_number) {
-                    coordinateXInMap = 4
-                        coordinateYInMap = 2;
-                } else {
-                    coordinateXInMap = xRightContinue;
-                    coordinateYInMap = yDownContinue;
-                }
-                drawQuarter(1, 1);
-                //LD corner
-                if (leftOn && downOn && !p_function(ix - 1, iy + 1) == p_number) {
-                    coordinateXInMap = 4
-                        coordinateYInMap = 3;
-                } else {
-                    coordinateXInMap = xLeftContinue;
-                    coordinateYInMap = yDownContinue;
-                }
-                drawQuarter(0, 1);
-            }
-            pixOriginX += this.pix.sideSpace;
-        }
-        pixOriginY += this.pix.sideSpace;
-        pixOriginX = pixStartX;
-    }
-
-}
-
 //--------------------
 // Setting up functions
 
@@ -633,10 +506,28 @@ Drawer.prototype.adaptCanvasDimensions = function (p_canvas, p_parameters) {
 
 //--------------------
 // Private functions
+
 Drawer.prototype.getPixXWithinGrid = function (event, p_canvas) {
     return (event.clientX - p_canvas.getBoundingClientRect().left - this.pix.marginGrid.left);
 }
 
 Drawer.prototype.getPixYWithinGrid = function (event, p_canvas) {
     return (event.clientY - p_canvas.getBoundingClientRect().top - this.pix.marginGrid.up);
+}
+
+/**
+(private string)
+Gives the correct wall color from a wall type (a #RRGGBB string)
+@p_wallType : a type of wall between 2 spaces
+ */
+Drawer.prototype.wallToColor = function (p_wallType) {
+    switch (p_wallType) {
+    case (WALLGRID.OPEN):
+        return (this.wallColorSet.open_wall);
+        break;
+    case (WALLGRID.CLOSED):
+        return (this.wallColorSet.closed_wall);
+        break;
+    }
+    return "#ffffff";
 }

@@ -7,7 +7,7 @@ const GRID_ID = {
     NUMBER_REGION: 'NR',
     NUMBER_SPACE: 'NS',
     PEARL: 'P',
-	YAJILIN: 'YAJILIN' //TODO inutile pour l'instant
+	YAJILIN: 'YAJILIN' 
 }
 
 const GRID_TRANSFORMATION = {
@@ -40,6 +40,7 @@ EditorCore.prototype.restartGrid = function (p_xLength, p_yLength) {
 EditorCore.prototype.buildGrids = function (p_xLength, p_yLength) {
 	this.wallGrid = WallGrid_dim(p_xLength, p_yLength);
     this.grids = {};
+    this.visibleGrids = {};
 }
 
 // Only launched on building. ALL data are loaded here.
@@ -48,7 +49,6 @@ EditorCore.prototype.initializeGridData = function() {
 	this.inputNumber = 1; // input numbers and symbols are supposed to be defined at start but not modified when data are relaunched afterards
 	this.inputSymbol = null; // Note : No input symbol at start
 	this.possessWallGrid = true;
-	this.wallsArePaths = false;
 }
 
 // NB : fonction de convénience. //TODO devrait être renommé "extra grid data" puisque ce sont des données indépendantes des grilles
@@ -71,29 +71,35 @@ EditorCore.prototype.setupFromWallArray = function (p_wallArray) {
     this.wallGrid = WallGrid_data(p_wallArray);
 }
 
-/**
-Same as setupFromWallArray but with a path grid
- */
-EditorCore.prototype.setupFromPathArray = function (p_pathArray) {
-    this.pathGrid = WallGrid_data(p_pathArray);
+EditorCore.prototype.addCleanGrid = function (p_id, p_xLength, p_yLength) {
+    this.grids[p_id] = Grid_dim(p_xLength, p_yLength);
 }
 
-EditorCore.prototype.addCleanGrid = function (p_id,p_xLength,p_yLength) {
-    this.grids[p_id] = Grid_dim(p_xLength,p_yLength);
-}
-
-EditorCore.prototype.addGrid = function (p_id,p_array) {
+EditorCore.prototype.addGrid = function (p_id, p_array) {
 	if (p_array != null && p_array.length > 0) {
 	    this.grids[p_id] = Grid_data(p_array, p_array[0].length, p_array.length);
+		this.visibleGrids[p_id] = true;
 	}
+}
+
+EditorCore.prototype.maskAllGrids = function() {
+	Object.keys(GRID_ID).forEach(id => {
+		if (this.visibleGrids[GRID_ID[id]]) {
+			this.visibleGrids[GRID_ID[id]] = false;
+		}
+	});
+	//Credits for all fields in an item : https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Object/keys
+}
+
+EditorCore.prototype.setVisibleGrids = function(p_list) {
+	this.maskAllGrids();
+	p_list.forEach(id => {
+		this.visibleGrids[id] = true;
+	});
 }
 
 // ----------
 // Testers
-
-EditorCore.prototype.hasPathGrid = function () {
-    return this.wallsArePaths;
-}
 
 EditorCore.prototype.hasWallGrid = function () {
     return this.possessWallGrid;
@@ -117,6 +123,10 @@ EditorCore.prototype.getArray = function(p_index){
 
 EditorCore.prototype.getGrid = function(p_index){
 	return this.grids[p_index];
+}
+
+EditorCore.prototype.isVisibleGrid = function(p_index){
+	return (this.visibleGrids[p_index] == true);
 }
 
 EditorCore.prototype.getSelection = function (p_x, p_y) {
@@ -167,24 +177,6 @@ EditorCore.prototype.switchWallD = function (p_x, p_y) {
 EditorCore.prototype.switchState = function (p_x, p_y) {
     this.wallGrid.switchState(p_x, p_y);
 }
-EditorCore.prototype.getPathR = function (p_x, p_y) {
-    return this.pathGrid.getWallR(p_x, p_y);
-}
-EditorCore.prototype.getPathD = function (p_x, p_y) {
-    return this.pathGrid.getWallD(p_x, p_y);
-}
-EditorCore.prototype.setPathR = function (p_x, p_y, p_state) {
-    this.pathGrid.setWallR(p_x, p_y);
-}
-EditorCore.prototype.setPathD = function (p_x, p_y, p_state) {
-    this.pathGrid.setWallD(p_x, p_y);
-}
-EditorCore.prototype.switchPathR = function (p_x, p_y) {
-    this.pathGrid.switchWallR(p_x, p_y);
-}
-EditorCore.prototype.switchPathD = function (p_x, p_y) {
-    this.pathGrid.switchWallD(p_x, p_y);
-}
 
 EditorCore.prototype.get = function (p_idGrid, p_x, p_y) {
     return this.grids[p_idGrid].get(p_x, p_y);
@@ -213,17 +205,8 @@ EditorCore.prototype.setWallsOff = function () {
     this.isWithWalls = false;
 }
 
-//TODO revoir le nom de la fonction, wallGrid et walls c'est pas pareil (et déplacer les autres fonctions)
 EditorCore.prototype.hasWalls = function () {
     return this.isWithWalls == true;
-}
-
-EditorCore.prototype.setModePathOff = function() {
-	this.wallsArePaths = false;
-}
-
-EditorCore.prototype.setModePathOn = function() {
-	this.wallsArePaths = true;
 }
 
 // --------------------
@@ -232,18 +215,13 @@ EditorCore.prototype.setModePathOn = function() {
 
 EditorCore.prototype.transformGrid = function (p_transformation, p_xDatum, p_yDatum) {
 	this.reinitializeGridData();
-    if (this.hasWallGrid()) {
-        this.wallGrid.transform(p_transformation, p_xDatum, p_yDatum);
-    }
-	for (const id in this.grids) {
-	    this.grids[id].transform(p_transformation, p_xDatum, p_yDatum);
-	}
-	//TODO resee definitions of xLength and yLength
 	if (this.hasWallGrid()) {
+		this.wallGrid.transform(p_transformation, p_xDatum, p_yDatum);
 		this.xLength = this.wallGrid.getXLength();
 		this.yLength = this.wallGrid.getYLength();
 	} else {
 		for (const id in this.grids) {
+			this.grids[id].transform(p_transformation, p_xDatum, p_yDatum);
 			this.xLength = this.grids[id].getXLength();
 			this.yLength = this.grids[id].getYLength();
 		}
@@ -253,10 +231,8 @@ EditorCore.prototype.transformGrid = function (p_transformation, p_xDatum, p_yDa
 }
 
 //-------------------------------------------
+// Selections 
 
-/**
-Selection phase
- */
 EditorCore.prototype.switchSelectedSpace = function (p_x, p_y) {
     if (this.selectedGrid[p_y][p_x] == SELECTED.YES){
 		this.selectedGrid[p_y][p_x] = SELECTED.NO;
@@ -330,18 +306,21 @@ EditorCore.prototype.buildWallsAroundSelection = function () {
 
 EditorCore.prototype.clearWallsAround = function (p_x, p_y) {
     if (p_x > 0 && this.selectedGrid[p_y][p_x - 1] == SELECTED.NO) {
-        this.wallGrid.setWallR(p_x - 1, p_y, OPEN);
+        this.wallGrid.setWallR(p_x - 1, p_y, WALLGRID.OPEN);
     }
     if (p_x < this.getXLength() - 1 && this.selectedGrid[p_y][p_x + 1] == SELECTED.NO) {
-        this.wallGrid.setWallR(p_x, p_y, OPEN);
+        this.wallGrid.setWallR(p_x, p_y, WALLGRID.OPEN);
     }
     if (p_y > 0 && this.selectedGrid[p_y - 1][p_x] == SELECTED.NO) {
-        this.wallGrid.setWallD(p_x, p_y - 1, OPEN);
+        this.wallGrid.setWallD(p_x, p_y - 1, WALLGRID.OPEN);
     }
     if (p_y < this.getYLength() - 1 && this.selectedGrid[p_y + 1][p_x] == SELECTED.NO) {
-        this.wallGrid.setWallD(p_x, p_y, OPEN);
+        this.wallGrid.setWallD(p_x, p_y, WALLGRID.OPEN);
     }
 }
+
+//-------------------------------------------
+// Misc.
 
 EditorCore.prototype.alignToRegions = function (p_idGrid) {
     this.grids[p_idGrid].arrangeSymbols(this.wallGrid.toRegionGrid());

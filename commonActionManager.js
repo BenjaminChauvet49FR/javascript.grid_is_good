@@ -13,12 +13,7 @@ const MODE_NUMBER_REGION = {id:53,html:"Ajout numéro région",submitCaption:"R�
 const MODE_PEARL_ABSTRACT = {id:52};
 const MODE_PEARL_WHITE = {id:MODE_PEARL_ABSTRACT.id, html:"Ajout blanc",submitCaption:"Ajouter perle blanche"};
 const MODE_PEARL_BLACK = {id:MODE_PEARL_ABSTRACT.id, html:"Ajout noir",submitCaption:"Ajouter perle noire"};
-const MODE_ARROW_COMBINED_ABSTRACT = {id:61}; // "ARROW COMBINED" parce que la flèche est combinée à un nombre.
-const MODE_ARROW_COMBINED_UP = {id:MODE_ARROW_COMBINED_ABSTRACT.id, html:"Ajout haut", submitCaption:"Ajouter flèche haut combinée"};
-const MODE_ARROW_COMBINED_LEFT = {id:MODE_ARROW_COMBINED_ABSTRACT.id, html:"Ajout gauche", submitCaption:"Ajouter flèche gauche combinée"};
-const MODE_ARROW_COMBINED_RIGHT = {id:MODE_ARROW_COMBINED_ABSTRACT.id, html:"Ajout droite", submitCaption:"Ajouter flèche droite combinée"};
-const MODE_ARROW_COMBINED_DOWN = {id:MODE_ARROW_COMBINED_ABSTRACT.id, html:"Ajout bas", submitCaption:"Ajouter flèche bas combinée"};
-const MODE_NORMAL_PATH = {id:101,html:"Chemins",submitCaption:"Changer chemins"};
+const MODE_ARROW_COMBINED = {id:61, html:"Ajout flèche combinée", submitCaption:"Ajouter flèche combinée"}; // "ARROW COMBINED" parce que la flèche est combinée à un nombre.
 const MODE_NORMAL_WALL = {id:102,html:"Murs",submitCaption:"Changer murs"};
 
 const ACTION_PASS_REGION = {id:101,htmlCaption:"Passer région"};
