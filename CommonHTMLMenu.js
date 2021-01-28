@@ -67,6 +67,7 @@ const menu4 = {
 	displayName : "Solveurs à boucle",
 	documentPage : "Solver",
 	typeList : [
+		{name : "koburin", displayName : "Koburin"},
 		{name : "masyu", displayName : "Masyu"}
 	]
 }

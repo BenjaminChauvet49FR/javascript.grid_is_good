@@ -108,7 +108,7 @@ function combo(thelist) {
 			editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.MASYU_LIKE.id;
 			break;
-		case 'Nurikabe':
+		case 'Koburin':
 			editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.NURIKABE_LIKE.id;
 			break;

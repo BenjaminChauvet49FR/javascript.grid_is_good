@@ -89,6 +89,7 @@ LoopSolver.prototype.construct = function(p_wallArray, p_puzzleSpecificMethodPac
 	this.setPuzzleSpecificMethods(p_puzzleSpecificMethodPack);
 	this.methodSet.addAbortAndFilters(abortClosure(this), [testLoopsClosure(this), separateEndsClosure(this)]);
     this.grid = [];
+    this.bannedSpacesGrid = [];
 	this.checkNewEnds = {
 		array : [],
 		list : []
@@ -98,6 +99,7 @@ LoopSolver.prototype.construct = function(p_wallArray, p_puzzleSpecificMethodPac
 	var x,y;
 	for (y = 0; y < this.yLength ; y++) {
 		this.grid.push([]);
+		this.bannedSpacesGrid.push([]);
 		this.checkNewEnds.array.push([]);
 		for (x = 0 ; x < this.xLength ; x++) {
 			this.grid[y].push({
@@ -108,6 +110,7 @@ LoopSolver.prototype.construct = function(p_wallArray, p_puzzleSpecificMethodPac
 				linkDown : LOOP_STATE.UNDECIDED,
 				chains : []
 			});
+			this.bannedSpacesGrid[y].push(false);
 			this.checkNewEnds.array[y].push(false);
 		}
 	}
@@ -120,9 +123,27 @@ LoopSolver.prototype.construct = function(p_wallArray, p_puzzleSpecificMethodPac
 	for (y = 0 ; y < this.yLength ; y++) {
 		this.grid[y][0].closedEdges++;
 		this.grid[y][this.xLength-1].closedEdges++;
+	}	
+}
+
+// -------------------
+// During the build (no deductions at all)
+
+LoopSolver.prototype.banSpace = function(p_x, p_y) {
+	this.bannedSpacesGrid[p_y][p_x] = true;
+	if (this.neighborExists(p_x, p_y, LOOP_DIRECTION.RIGHT)) {
+		this.setLinkRight(p_x, p_y, LOOP_STATE.CLOSED);
 	}
-	
-	// TODO : missing banned spaces. 
+	if (this.neighborExists(p_x, p_y, LOOP_DIRECTION.UP)) {
+		this.setLinkUp(p_x, p_y, LOOP_STATE.CLOSED);
+	}
+	if (this.neighborExists(p_x, p_y, LOOP_DIRECTION.LEFT)) {
+		this.setLinkLeft(p_x, p_y, LOOP_STATE.CLOSED);
+	}
+	if (this.neighborExists(p_x, p_y, LOOP_DIRECTION.DOWN)) {
+		this.setLinkDown(p_x, p_y, LOOP_STATE.CLOSED);
+	}
+	this.setLinkSpace(p_x, p_y, LOOP_STATE.CLOSED);
 }
 
 // -------------------
@@ -173,6 +194,10 @@ LoopSolver.prototype.getSpace = function(p_space) {
 	return this.grid[p_space.y][p_space.x];
 }
 
+LoopSolver.prototype.isBanned = function(p_x, p_y){
+	return this.bannedSpacesGrid[p_y][p_x];
+}
+
 // -------------------
 // Misc. inner methods
 
@@ -194,8 +219,6 @@ LoopSolver.prototype.neighborExists = function(p_x, p_y, p_dir) {
 		case LOOP_DIRECTION.DOWN : return (p_y <= this.yLength-2); break;
 	}
 }
-
-
 
 // -------------------
 // Doing and undoing 
@@ -438,9 +461,9 @@ deductionsClosure = function(p_solver) {
 				if (y <= p_solver.yLength-2) {
 					p_eventList.push(new LinkEvent(x, y, LOOP_DIRECTION.DOWN, LOOP_STATE.CLOSED));
 				}
-				p_eventList = p_solver.setSpaceLinkedPSDeductions(p_eventList, p_eventBeingApplied);
-			} else {
 				p_eventList = p_solver.setSpaceClosedPSDeductions(p_eventList, p_eventBeingApplied);
+			} else {
+				p_eventList = p_solver.setSpaceLinkedPSDeductions(p_eventList, p_eventBeingApplied);
 			}
 			p_eventList = p_solver.testSpaceAndSurrounding2v2Open(p_eventList, x, y);
 		} else if (p_eventBeingApplied.kind == LOOP_EVENT.LINK) {

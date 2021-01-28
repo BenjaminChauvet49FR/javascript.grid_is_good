@@ -12,7 +12,7 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
 			pixInnerLeft = this.getPixInnerXLeft(ix);
 			pixInnerUp = this.getPixInnerYUp(iy);
 			// Draw space contents
-			if (p_solver.getLinkSpace(ix, iy) == LOOP_STATE.CLOSED) {
+			if (p_solver.getLinkSpace(ix, iy) == LOOP_STATE.CLOSED && !p_solver.isBanned(ix,iy)) {
                 p_context.fillStyle = p_colorSet.noLinkState;
                 p_context.fillRect(pixInnerLeft, pixInnerUp, this.getPixInnerSide(), this.getPixInnerSide());
             } else if (p_solver.getLinkSpace(ix, iy) == LOOP_STATE.LINKED) {
@@ -30,7 +30,7 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
 				if (p_solver.getLinkDown(ix, iy) == LOOP_STATE.LINKED) {
 					p_context.fillStyle = p_colorSet.presentLink;
 					p_context.fillRect(pixLeft, pixUp, shorter, longer);
-				} else if (p_solver.getLinkDown(ix, iy) == LOOP_STATE.CLOSED) {
+				} else if (p_solver.getLinkDown(ix, iy) == LOOP_STATE.CLOSED && (!p_solver.isBanned(ix,iy)) && (!p_solver.isBanned(ix,iy+1))) {
 					p_context.fillStyle = p_colorSet.noLink;
 					p_context.fillRect(pixInnerLeft, this.getPixInnerYDown(iy), this.getPixInnerSide(), pixThicknessClosedLink); 
 					p_context.fillRect(pixInnerLeft, this.getPixInnerYUp(iy+1), this.getPixInnerSide(), pixThicknessClosedLink); 
@@ -40,7 +40,7 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
 				if (p_solver.getLinkRight(ix, iy) == LOOP_STATE.LINKED) {
 					p_context.fillStyle = p_colorSet.presentLink;
 					p_context.fillRect(pixLeft, pixUp, longer, shorter);
-				} else if (p_solver.getLinkRight(ix, iy) == LOOP_STATE.CLOSED) {
+				} else if (p_solver.getLinkRight(ix, iy) == LOOP_STATE.CLOSED && (!p_solver.isBanned(ix,iy)) && (!p_solver.isBanned(ix+1,iy))) {
 					p_context.fillStyle = p_colorSet.noLink;
 					p_context.fillRect(this.getPixInnerXRight(ix), pixInnerUp, pixThicknessClosedLink, this.getPixInnerSide()); 
 					p_context.fillRect(this.getPixInnerXLeft(ix+1), pixInnerUp, pixThicknessClosedLink, this.getPixInnerSide()); 
