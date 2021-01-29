@@ -19,7 +19,7 @@ SolverStarBattle.prototype.construct = function(p_wallArray,p_starNumber){
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodTools = {comparisonMethod : comparisonLoopEventsMethod, copyMethod : copyLoopEventMethod,  argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodTools = {comparisonMethod : comparing, copyMethod : copying,  argumentToLabelMethod : namingCategoryClosure(this)};
 	this.methodsMultiPass = {
 		generatePassEventsMethod : generateEventsForRLCPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
@@ -401,7 +401,7 @@ copying = function(p_event) {
 	return p_event.copy();
 }
 
-comparison = function(p_event1, p_event2) {
+comparing = function(p_event1, p_event2) {
 	if (p_event2.y > p_event1.y) {
 		return -1;
 	} else if (p_event2.y < p_event1.y) {
