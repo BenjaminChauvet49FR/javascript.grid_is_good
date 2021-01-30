@@ -145,7 +145,7 @@ SolverLITS.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverLITS.prototype.quickStart = function() { // TODO 
+SolverLITS.prototype.quickStart = function() { 
 	this.regions.forEach(region => {
 		if (region.size == 4){
 			for (var i = 0; i <= 3 ; i++) {
@@ -297,15 +297,7 @@ undoEventClosure = function(p_solver) {
 SolverLITS.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	methodPack = new ApplyEventMethodPack(
-		applyEventClosure(this),
-		deductionsClosure(this),
-		adjacencyClosure(this),
-		transformClosure(this),
-		undoEventClosure(this)
-	);
-	methodPack.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
-	this.tryToApplyHypothesis( SpaceEvent(p_x, p_y, p_symbol), methodPack);
+	this.tryToApplyHypothesis( SpaceEvent(p_x, p_y, p_symbol), this.methodSet);
 }
 
 //--------------------------------

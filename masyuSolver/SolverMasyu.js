@@ -272,7 +272,7 @@ generateEventsForSpaceClosure = function(p_solver) {
 	return function(p_space) {
 		switch (p_solver.pearlGrid[p_space.y][p_space.x]) {
 			case PEARL.WHITE : return generateWhitePearlPassEvents(p_space.x, p_space.y); break;
-			case PEARL.BLACK : return generateBlackPearlPassEvents(p_space.x, p_space.y); break;
+			case PEARL.BLACK : return p_solver.generateBlackPearlPassEvents(p_space.x, p_space.y); break;
 		}
 		return [];
 	}
@@ -284,13 +284,25 @@ function generateWhitePearlPassEvents (p_x, p_y) {
 } 
 
 // Precondition : the space has a black pearl.
-function generateBlackPearlPassEvents (p_x, p_y) {
+SolverMasyu.prototype.generateBlackPearlPassEvents = function(p_x, p_y) {
 	var answer = [];
-	return [[new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED), 
-			 new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED), 
-			 new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.UP, LOOP_STATE.LINKED), 
-			 new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.UP, LOOP_STATE.LINKED)]];
-	return answer;
+	var okLeft = (p_x >= 2);
+	var okUp = (p_y >= 2);
+	var okRight = (p_x <= this.xLength-3);
+	var okDown = (p_y <= this.yLength-3);
+	if (okLeft && okUp) {
+		answer.push(new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.UP, LOOP_STATE.LINKED));
+	}
+	if (okRight && okUp) {
+		answer.push(new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.UP, LOOP_STATE.LINKED));
+	}
+	if (okRight && okDown) {
+		answer.push(new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED));
+	}
+	if (okLeft && okDown) {
+		answer.push(new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED));
+	}
+	return [answer];
 }
 
 function namingCategoryClosure(p_solver) {
