@@ -1,24 +1,14 @@
-const SYMBOL_ID = {
+// Many elements that are used by saving and loading. Does not contain input methods, though ! (see common input or the input in the puzzles/editors directly)
+
+// ------------------------------------------
+
+const SYMBOL_ID = { 
     WHITE: 'W',
     BLACK: 'B',
 	LEFT_COMBINED: 'l',
 	UP_COMBINED: 'u',
 	RIGHT_COMBINED: 'r',
-	DOWN_COMBINED: 'd',
-	
-}
-
-/** 
-Loads a walled grid from local storage and its region grid (cf. super-function), updates intelligence, updates canvas
-*/
-loadAction = function(p_canvas, p_drawer, p_solver, p_name) {
-	const localStorageName = "grid_is_good_" + p_name;
-	const loadedString = localStorage.getItem(localStorageName);
-	if (loadedString) {
-		loadPuzzle(p_canvas, p_drawer, p_solver, loadedString);
-	} else {
-        alert("Le stockage local n'a pas de propriété nommée '" + localStorageName + "'.");
-    }
+	DOWN_COMBINED: 'd'
 }
 
 /**

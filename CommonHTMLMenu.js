@@ -1,8 +1,8 @@
 //ATTENTION DANGER !
 //Ce fichier contient des valeurs en dur sur :
-// -les noms de dossier
-// -les noms de fichier
-// -un identifiant d'élément HTML
+// -les noms de dossier contenant les solveurs/éditeurs
+// -les noms de fichier HTML
+// -un identifiant d'élément HTML présent dans les pages de chaque solveur/éditeur (pour ne pas avoir à régenerer le HTML à chaque actualisation de page)
 
 function createReferenceElement(p_path, p_displayedText) {
 	const aNode = document.createElement("a");
@@ -11,21 +11,14 @@ function createReferenceElement(p_path, p_displayedText) {
 	return aNode;
 }
 
-function addElement(p_divElement, p_path, p_displayedText) {
-    p_divElement.appendChild(addReferenceElement(p_path, p_displayedText));
-    addText(p_divElement, " ");
-}
-
-function addMenu(p_divElement, p_menu) {
-	addText(p_divElement, p_menu.displayName+" : ");
-	p_menu.typeList.forEach( type => {
-		p_divElement.appendChild(createReferenceElement(getHTMLpath(p_menu.documentPage, type.name), type.displayName));	
+function addMenuPart(p_divElement, p_menuPart) {
+	addText(p_divElement, p_menuPart.displayName+" : ");
+	p_menuPart.typeList.forEach( type => {
+		p_divElement.appendChild(createReferenceElement(getHTMLpath(p_menuPart.documentPage, type.name), type.displayName));	
 		addText(p_divElement, " ");		
 	});
 }
 
-
-//function namingHTMLDoc(p_type, p_family) {
 function getHTMLpath(p_type, p_family) {
     return "../" + p_family + p_type + "/" + p_type + ".html";
 }
@@ -82,13 +75,13 @@ const menu5 = {
 }
 
 const divElement = document.getElementById("div_common_menu");
-addMenu(divElement, menu1);
+addMenuPart(divElement, menu1);
 divElement.appendChild(document.createElement("br"));
-addMenu(divElement, menu2);
+addMenuPart(divElement, menu2);
 divElement.appendChild(document.createElement("br"));
-addMenu(divElement, menu3);
+addMenuPart(divElement, menu3);
 divElement.appendChild(document.createElement("br"));
-addMenu(divElement, menu4);
+addMenuPart(divElement, menu4);
 divElement.appendChild(document.createElement("br"));
-addMenu(divElement, menu5);
+addMenuPart(divElement, menu5);
 divElement.appendChild(document.createElement("br"));
