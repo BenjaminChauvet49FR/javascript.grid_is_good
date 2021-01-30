@@ -6,7 +6,7 @@ var actionsManager = {clickSpace : null};
 var drawIndications;
 
 var colors={
-	cross:'#880044',
+	validSquare:'#000088',
 	rainbowSpaces:[],
 	insideIndicationsOnWhite:'#008800',
 	insideIndicationsOnFilled:'#00ff00',
@@ -24,16 +24,20 @@ function drawCanvas(){
 	}
 }
 
-
-canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)},false);
+var textArea = document.getElementById("textarea_happened");
+var components = {
+	textArea: textArea,
+	checkBox : document.getElementById("checkbox_onlyAssumed"),
+};
+canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,components,solver,actionsManager)},false);
 setInterval(drawCanvas,30);
 var fieldName = document.getElementById("input_grid_name");
 
-putActionElementClick("submit_load_grid",function(event){loadAction(canevas, drawer, solver, fieldName.value)});
-putActionElementClick("submit_undo",function(event){undoAction(solver)});
-putActionElementClick("submit_quickStart",function(event){quickStartAction(solver)});
+putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,solver,fieldName.value)});
+putActionElementClick("submit_undo",function(event){undoAction(solver,textArea)});
+putActionElementClick("submit_quickStart",function(event){quickStartAction(solver,textArea)});
 putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("Shimaguni")});
-putActionElementClick("submit_multiPass",function(event){multiPassAction(solver)});
+putActionElementClick("submit_multiPass",function(event){multiPassAction(solver,textArea)});
 
 var textAction = document.getElementById("text_canvas_action");
 setMode(textAction,actionsManager,ENTRY.SPACE,ACTION_FILL_SPACE);

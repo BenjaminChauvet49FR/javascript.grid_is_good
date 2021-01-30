@@ -1,13 +1,6 @@
-// Setup
-const NOT_FORCED = -1;
-
 function SolverShimaguni() {
-	GeneralSolver.call(this);
     this.construct(generateWallArray(1, 1), generateSymbolArray(1, 1));
 }
-
-SolverShimaguni.prototype = Object.create(GeneralSolver.prototype);
-SolverShimaguni.prototype.constructor = SolverShimaguni;
 
 SolverShimaguni.prototype.construct = function(p_wallArray,p_numberGrid){
 	this.xLength = p_wallArray[0].length;
@@ -19,19 +12,6 @@ SolverShimaguni.prototype.construct = function(p_wallArray,p_numberGrid){
 	this.happenedEvents = [];
 	var ix,iy;
 	var lastRegionNumber = 0;
-	
-	this.methodSet = new ApplyEventMethodNonAdjacentPack(
-		applyEventClosure(this),
-		deductionsClosure(this),
-		undoEventClosure(this)
-	);
-	this.methodSet.addAbortAndFilters(abortClosure(this), [filterClustersClosure(this)]);
-
-	/*this.methodsMultiPass = {
-		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
-		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
-		skipPassMethod : skipPassClosure(this)
-	};*/
 	
 	// Initialize answerGrid, clusterGrid and the number of regions
 	for(iy = 0;iy < this.yLength;iy++){
@@ -120,16 +100,9 @@ SolverShimaguni.prototype.construct = function(p_wallArray,p_numberGrid){
 		}
 		region.clustersList = [region.spaces.slice()];
 	}
-	
-	//For filtering
-	this.introducedXsByRegion = initializeArrayList(this.regionsNumber);
-	this.introducedOsByRegion = initializeArrayList(this.regionsNumber);
-	this.raisedMinsByRegion = initializeArrayList(this.regionsNumber);
 }
 
-//--------------------------------
-
-// Misc methods (may be used for drawing and intelligence)
+const NOT_FORCED = -1;
 
 SolverShimaguni.prototype.getRegion = function(ix,iy){
 	return this.regions[this.regionGrid[iy][ix]];
@@ -172,71 +145,35 @@ SolverShimaguni.prototype.validateContact = function(i,j){
 }
 
 //Getter : answer
+
 SolverShimaguni.prototype.getAnswer = function(p_x,p_y){
 	return this.answerGrid[p_y][p_x];
 }
 
 //--------------
-// Input
+// Emit 
 
 SolverShimaguni.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
 	return this.tryToPutNew(p_x,p_y,p_symbol);
 }
 
-SolverShimaguni.prototype.undo = function() {
-	this.undoToLastHypothesis(undoEventClosure(this));
-}
-
-SolverShimaguni.prototype.quickStart = function() {
-	var space;
-	//First, ban all values adjacent to regions with forced values (or ones of size 1, it works as well).
-	this.regions.forEach(region => {
-		if (region.forcedVal > 0) {
-			region.contact.forEach(irc => this.tryToBan(irc, region.forcedVal));
-		}
-		if (region.size == 1) {
-			region.contact.forEach(irc => this.tryToBan(irc, 1));
-		}
-	});
-	this.regions.forEach(region => {
-		if((region.size == region.forcedVal) || (region.size == 1)) {
-			region.spaces.forEach(space =>
-				{this.emitHypothesis(space.x,space.y,FILLING.YES)}
-			);
-		}
-	});
-}
-
 //--------------
-// Central method
+// Put new and try
 
-SolverShimaguni.prototype.tryToPutNew = function(p_x,p_y,p_symbol) {
-	this.tryToApplyHypothesis(SolveEventPosition(p_x,p_y,p_symbol), this.methodSet);
-}
-
-SolverShimaguni.prototype.tryToBan = function(p_region,p_value) {
-	this.tryToApplyHypothesis(SolveEventValue(p_region,p_value), this.methodSet);
-}
-
-//--------------------------------
-// Doing and undoing
-
-applyEventClosure = function(p_solver) {
-	return function(p_solveEvent) {
-		if (p_solveEvent.kind == KIND.SYMBOL){
-			return p_solver.putNew(p_solveEvent.x,p_solveEvent.y, p_solveEvent.symbol);
-		} else {
-			return p_solver.banValue(p_solveEvent.indexRegion, p_solveEvent.valueToBan);
-		}
+SolverShimaguni.prototype.apply = function(p_solveEvent){
+	if (p_solveEvent.kind == KIND.SYMBOL){
+		this.putNew(p_solveEvent.x,p_solveEvent.y);
+	}else{
+		this.banValue(p_solveEvent.indexRegion,p_solveEvent.valueToBan);
 	}
 }
 
-SolverShimaguni.prototype.putNew = function(p_x,p_y,p_symbol) {
+SolverShimaguni.prototype.putNew = function(p_x,p_y,p_symbol){
 	if (p_symbol == this.answerGrid[p_y][p_x]){
-		return EVENT_RESULT.HARMLESS;
+		return RESULT.HARMLESS;
 	}
 	if (this.answerGrid[p_y][p_x] != FILLING.UNDECIDED){
-		return EVENT_RESULT.FAILURE;
+		return RESULT.ERROR;
 	}
 	var region = this.getRegion(p_x,p_y);
 	this.answerGrid[p_y][p_x] = p_symbol;
@@ -249,26 +186,26 @@ SolverShimaguni.prototype.putNew = function(p_x,p_y,p_symbol) {
 		region.NOs++;
 		region.UNDEFs--;
 	}
-	return EVENT_RESULT.SUCCESS;
+	return RESULT.SUCCESS;
 }
 
 
 SolverShimaguni.prototype.banValue = function(p_indexRegion,p_value){
 	var region = this.regions[p_indexRegion];
 	if (region.spaces.length < p_value || !this.isPossibleValue(p_indexRegion,p_value)){
-		return EVENT_RESULT.HARMLESS;
+		return RESULT.HARMLESS;
 	}
 	if (region.forcedValue == p_value){
-		return EVENT_RESULT.FAILURE;
+		return RESULT.ERROR;
 	}
 	if (region.forcedValue > 0){
-		return EVENT_RESULT.HARMLESS;
+		return RESULT.HARMLESS;
 	}
 	var newMin = region.minVal;
 	var newMax = region.maxVal;
 	if (p_value == region.minVal){
 		if (p_value == region.maxVal){
-			return EVENT_RESULT.FAILURE;
+			return RESULT.ERROR;
 		}
 		do{
 			newMin++;
@@ -282,112 +219,108 @@ SolverShimaguni.prototype.banValue = function(p_indexRegion,p_value){
 	region.maxVal = newMax;
 	region.minVal = newMin;
 	this.setPossibleValueFalse(p_indexRegion,p_value);
-	return EVENT_RESULT.SUCCESS;
+	return RESULT.SUCCESS;
 }
 
-undoEventClosure = function(p_solver) {
-	return function(p_eventToUndo) {
-		if (p_eventToUndo.kind == KIND.SYMBOL){
-			p_solver.undoSymbolEvent(p_eventToUndo);
-		}
-		else{
-			p_solver.undoValueEvent(p_eventToUndo);
-		}
-	}
+SolverShimaguni.prototype.tryToPutNew = function(p_x,p_y,p_symbol){
+	return this.tryToApplyEvent([SolveEventPosition(p_x,p_y,p_symbol)]);
 }
 
-SolverShimaguni.prototype.undoSymbolEvent = function(p_event){
-	const region = this.regions[this.regionGrid[p_event.y][p_event.x]];
-	region.freshClusters = false;
-	this.answerGrid[p_event.y][p_event.x] = FILLING.UNDECIDED;
-	if (p_event.symbol == FILLING.YES){
-		region.YES--;
-		region.UNDEFs++;
-	}
-	else{
-		region.NOs--;
-		region.UNDEFs++;
-	}
+SolverShimaguni.prototype.tryToBan = function(p_region,p_value){
+	return this.tryToApplyEvent([SolveEventValue(p_region,p_value)]);
 }
 
-SolverShimaguni.prototype.undoValueEvent = function(p_event){
-	const region = this.regions[p_event.indexRegion];
-	this.setPossibleValueTrue(p_event.indexRegion,p_event.valueToBan);
-	if (p_event.valueToBan < region.minVal){
-		region.minVal = p_event.valueToBan;
-	}
-	if (p_event.valueToBan > region.maxVal){
-		region.maxVal = p_event.valueToBan;
-	}
-}
-
-//-------------------------------- 
-// Deductions
-
-deductionsClosure = function (p_solver) {
-	return function(p_listEventsToApply, p_eventBeingApplied) {
-		if (p_eventBeingApplied.kind == KIND.SYMBOL) {
-			//Put symbol into space
-			x = p_eventBeingApplied.x;
-			y = p_eventBeingApplied.y;
-			symbol = p_eventBeingApplied.symbol;
-			ir = p_solver.getRegionIndex(x,y);
-			region = p_solver.regions[ir];
-			if (symbol == FILLING.YES) {
-				tryToAddArrayListData(p_solver.introducedOsByRegion,ir,{x:x,y:y});
-				if (x>0 && (p_solver.getRegionIndex(x-1,y) != ir)){
-					p_listEventsToApply.push(SolveEventPosition(x-1,y,FILLING.NO));
-				}if (x<p_solver.xLength-1 && (p_solver.getRegionIndex(x+1,y) != ir)){
-					p_listEventsToApply.push(SolveEventPosition(x+1,y,FILLING.NO));
-				}if (y>0 && (p_solver.getRegionIndex(x,y-1) != ir)){
-					p_listEventsToApply.push(SolveEventPosition(x,y-1,FILLING.NO));
-				}if (y<p_solver.yLength-1 && (p_solver.getRegionIndex(x,y+1) != ir)){
-					p_listEventsToApply.push(SolveEventPosition(x,y+1,FILLING.NO));
+SolverShimaguni.prototype.tryToApplyEvent = function(p_singletonEvent){
+	var eventsToApply = p_singletonEvent; //list to do
+	var eventsApplied = [];//list done
+	var regionalEventsToAdd = [];
+	var currentEvent;
+	var testPutNew,testBanNew;
+	var kind,value,ir,x,y,symbol;
+	var ok = true;
+	var region;
+	var introducedXsByRegion,introducedOsByRegion,raisedMinsByRegion;
+	
+	do{
+		//Start a whole loop
+		//Initializing everything that is appliable regionally
+		introducedXsByRegion = initializeArrayList(this.regionsNumber);
+		introducedOsByRegion = initializeArrayList(this.regionsNumber);
+		raisedMinsByRegion = initializeArrayList(this.regionsNumber);
+		
+		do{
+			currentEvent = eventsToApply.pop();
+			debugTryToPutNewGold("Trying to apply : "+currentEvent.toString());
+			if (currentEvent.kind == KIND.SYMBOL ){ //Put symbol into space
+				x = currentEvent.x;
+				y = currentEvent.y;
+				symbol = currentEvent.symbol;
+				testPutNew = this.putNew(x,y,symbol);
+				if (testPutNew == RESULT.ERROR){
+					ok = false;
+					debugTryToPutNewGold("NOOOOO !");
 				}
-				if ((region.YES == p_solver.forcedValue(ir)) || (region.YES == region.maxVal)){
-					region.spaces.forEach(space=>{
-						if(p_solver.answerGrid[space.y][space.x] ==  FILLING.UNDECIDED){
-							p_listEventsToApply.push(SolveEventPosition(space.x,space.y,FILLING.NO));
-					}});
-					region.contact.forEach(irc => p_listEventsToApply.push(SolveEventValue(irc,region.YES)));
+				if (testPutNew == RESULT.SUCCESS){
+					eventsApplied.push(currentEvent);
+					ir = this.getRegionIndex(x,y);
+					region = this.regions[ir];
+					if (symbol == FILLING.YES){
+						tryToAddArrayListData(introducedOsByRegion,ir,{x:x,y:y});
+						if (x>0 && (this.getRegionIndex(x-1,y) != ir)){
+							eventsToApply.push(SolveEventPosition(x-1,y,FILLING.NO));
+						}if (x<this.xLength-1 && (this.getRegionIndex(x+1,y) != ir)){
+							eventsToApply.push(SolveEventPosition(x+1,y,FILLING.NO));
+						}if (y>0 && (this.getRegionIndex(x,y-1) != ir)){
+							eventsToApply.push(SolveEventPosition(x,y-1,FILLING.NO));
+						}if (y<this.yLength-1 && (this.getRegionIndex(x,y+1) != ir)){
+							eventsToApply.push(SolveEventPosition(x,y+1,FILLING.NO));
+						}
+						if ((region.YES == this.forcedValue(ir)) || (region.YES == region.maxVal)){
+							region.spaces.forEach(space=>{
+								if(this.answerGrid[space.y][space.x] ==  FILLING.UNDECIDED){
+									eventsToApply.push(SolveEventPosition(space.x,space.y,FILLING.NO));
+							}});
+							region.contact.forEach(irc => eventsToApply.push(SolveEventValue(irc,region.YES)));
+						}
+					}
+					if (symbol == FILLING.NO){
+						tryToAddArrayList(introducedXsByRegion,ir);
+						var potentialOs = region.YES+region.UNDEFs;
+						if (((potentialOs) == this.forcedValue(ir)) || 
+							((potentialOs) == region.minVal)){
+							eventsToApply = this.fillRegionWith(eventsToApply,ir,FILLING.YES);
+							eventsToApply = this.banAllAdjacentsFromRegion(eventsToApply,ir,potentialOs);
+						}//EVENEMENT DE REGION : Si la région est "morcelée", risque de devoir redécouper les clusters (et revoir les valeurs à bannir).
+						//EVENEMENT DE REGION : Si potentialOs < la taille max, risque de devoir revoir les valeurs à bannir.
+					}
+				}
+			} else { // Ban a value
+				eventsApplied.push(currentEvent);
+				ir = currentEvent.indexRegion;
+				tryToAddArrayList(raisedMinsByRegion,ir); //TODO nom à changer ? Même si logiquement on ne s'intéresse qu'aux minima qui diminuent car les clusters deviennent trop petits
+				value = currentEvent.valueToBan;
+				testBanNew = this.banValue(ir,value);
+				if (testBanNew == RESULT.ERROR){
+					ok = false;
+					debugTryToPutNewGold("NOOOOO !");
+				}
+				if (testBanNew == RESULT.SUCCESS){ 
+					region = this.regions[currentEvent.indexRegion];
+					if (region.minVal == region.maxVal){//Ca y'est, une seule valeur possible !
+						if ((region.YES + region.UNDEFs) == region.minVal){
+							eventsToApply = this.fillRegionWith(eventsToApply,ir,FILLING.YES);
+						}
+						eventsToApply = this.banAllAdjacentsFromRegion(eventsToApply,ir,region.minVal);
+					} //endif "one possible value"
 				}
 			}
-			if (symbol == FILLING.NO) {
-				tryToAddArrayList(p_solver.introducedXsByRegion,ir);
-				var potentialOs = region.YES+region.UNDEFs;
-				if (((potentialOs) == p_solver.forcedValue(ir)) || 
-					((potentialOs) == region.minVal)){
-					p_listEventsToApply = p_solver.fillRegionWith(p_listEventsToApply,ir,FILLING.YES);
-					p_listEventsToApply = p_solver.banAllAdjacentsFromRegion(p_listEventsToApply,ir,potentialOs);
-				}//EVENEMENT DE REGION : Si la région est "morcelée", risque de devoir redécouper les clusters (et revoir les valeurs à bannir).
-				//EVENEMENT DE REGION : Si potentialOs < la taille max, risque de devoir revoir les valeurs à bannir.
-			}		
-		} else { // Ban a value
-			ir = p_eventBeingApplied.indexRegion;
-			tryToAddArrayList(p_solver.raisedMinsByRegion,ir); 
-			region = p_solver.regions[p_eventBeingApplied.indexRegion];
-			if (region.minVal == region.maxVal){//Ca y'est, une seule valeur possible !
-				if ((region.YES + region.UNDEFs) == region.minVal){
-					p_listEventsToApply = p_solver.fillRegionWith(p_listEventsToApply,ir,FILLING.YES);
-				}
-				p_listEventsToApply = p_solver.banAllAdjacentsFromRegion(p_listEventsToApply,ir,region.minVal);
-			} //endif "one possible value"
-		}
-		return p_listEventsToApply;
-	}
-}
-
-//From this point to the end of the while loop, all clusters MUST be fresh AND max must be updated.
-filterClustersClosure = function(p_solver) {
-	return function() {
-		var eventsToApply = [];
-		var ok = true;
-		
-		p_solver.introducedXsByRegion.list.forEach(ir => {
-			region = p_solver.regions[ir];
+		}while (eventsToApply.length > 0 && ok);
+				
+		introducedXsByRegion.list.forEach(ir => {
+			region = this.regions[ir];
 			//Updates clusters ; then ban clusters that don't contain a filled space
 			if (!region.freshClusters){
-				p_solver.updateClustersRegion(ir);
+				this.updateClustersRegion(ir);
 				if (region.indexClusterWithFill == CLUSTER_WITH_FILL.MULTI){
 					ok = false;
 					debugTryToPutNewGold("NOOOOO ! (region "+ir+" has more than one cluster with filled space)");
@@ -417,18 +350,14 @@ filterClustersClosure = function(p_solver) {
 				eventsToApply.push(SolveEventValue(ir,value));
 			}
 		});
+		//From this point to the end of the while loop, all clusters MUST be fresh AND max must be updated.
 		
-		if (!ok) {
-			return EVENT_RESULT.FAILURE;
-		}
-		//From this point to the end of the function, all clusters MUST be fresh AND max must be updated.
-		
-		p_solver.introducedOsByRegion.list.forEach(introduced => {
+		introducedOsByRegion.list.forEach(introduced => {
 			var ir = introduced.index;
-			var region = p_solver.regions[ir];
+			var region = this.regions[ir];
 			// Warning : If this is our very first O placed (or several of 'em), "cluster with fill" may have not been found since the last time grid was clustered. 
 			// Should be changed when strategy of reclustering is changed !
-			var clusterBelong = (region.indexClusterWithFill == CLUSTER_WITH_FILL.NOT_FOUND) ? p_solver.clusterGrid[introduced.y][introduced.x] : region.indexClusterWithFill;
+			var clusterBelong = (region.indexClusterWithFill == CLUSTER_WITH_FILL.NOT_FOUND) ? this.clusterGrid[introduced.y][introduced.x] : region.indexClusterWithFill;
 			// Ban clusters that don't contain a filled space
 			if (clusterBelong == CLUSTER_WITH_FILL.MULTI){
 				ok = false;
@@ -448,13 +377,9 @@ filterClustersClosure = function(p_solver) {
 			}
 		});
 		
-		if (!ok) {
-			return EVENT_RESULT.FAILURE;
-		}
-		
 		//If the min has been raised, ban clusters that have become too small.
-		p_solver.raisedMinsByRegion.list.forEach(ir => {
-			region = p_solver.regions[ir];
+		raisedMinsByRegion.list.forEach(ir => {
+			region = this.regions[ir];
 			region.clusters.forEach(listCluster => {
 				if (listCluster.length < region.minVal){
 					listCluster.forEach(space => {eventsToApply.push(SolveEventPosition(space.x,space.y,FILLING.NO))});
@@ -463,30 +388,18 @@ filterClustersClosure = function(p_solver) {
 			//Peculiar case : no X has been added recently (so no too small clusters detected to ban) yet we have to fill a region with Os since we have that many spaces left.
 			//Detected by Shimaguni 188.
 			if ((region.minVal == region.maxVal) && (region.minVal == (region.size - region.NOs))){
-				eventsToApply = p_solver.fillRegionWith(eventsToApply,ir,FILLING.YES);
+				eventsToApply = this.fillRegionWith(eventsToApply,ir,FILLING.YES);
 			}
 		});
 		
-		p_solver.cleanByRegionLists();
-		
-		if (ok) {
-			return eventsToApply;
-		} else {
-			return EVENT_RESULT.FAILURE;
-		}
+	} while (eventsToApply.length > 0 && ok);
+	if (!ok){
+		this.undoList(eventsApplied);
+		return {consistence:RESULT.ERROR,eventsApplied:[]};
+	} else{
+		this.happenedEvents.push({kind:EVENTLIST_KIND.HYPOTHESIS,list:eventsApplied});
+		return {consistence:RESULT.SUCCESS,eventsApplied:eventsApplied};
 	}
-}
-
-abortClosure = function(p_solver) {
-	return function() {
-		p_solver.cleanByRegionLists();
-	}
-}
-
-SolverShimaguni.prototype.cleanByRegionLists = function() {
-	this.introducedXsByRegion = initializeArrayList(this.regionsNumber);
-	this.introducedOsByRegion = initializeArrayList(this.regionsNumber);
-	this.raisedMinsByRegion = initializeArrayList(this.regionsNumber);
 }
 
 /**
@@ -575,9 +488,205 @@ SolverShimaguni.prototype.fillCluster = function(p_x,p_y,p_indexRegion,p_value){
 	return listUpdatedSpaces;
 }
 
-// Some ArrayList methods
+//----------------
+// Undo things
 
-//TODO Maybe a class should be done of it... or maybe not.
+SolverShimaguni.prototype.undoList = function(p_list){
+	var solveEventToUndo;
+	while (p_list.length !=0){
+		solveEventToUndo = p_list.pop();
+		if (solveEventToUndo.kind == KIND.SYMBOL){
+			this.undoSymbolEvent(solveEventToUndo);
+		}
+		else{
+			this.undoValueEvent(solveEventToUndo);
+		}
+	}
+}
+
+/**
+CALLED OUTSIDE !
+*/
+//TODO annuler plus qu'un évènement...
+SolverShimaguni.prototype.undoToLastHypothesis = function(){
+	if (this.happenedEvents.length == 0)
+		return;	
+	var spaceEventsListToUndo;
+	//The last list of events to undo must come either from an hypothesis 
+	do{
+		spaceEventsListToUndo = this.happenedEvents.pop();
+		this.undoList(spaceEventsListToUndo.list);
+	}while(spaceEventsListToUndo.kind != EVENTLIST_KIND.HYPOTHESIS && this.happenedEvents.length > 0);
+}
+
+SolverShimaguni.prototype.undoSymbolEvent = function(p_event){
+	const region = this.regions[this.regionGrid[p_event.y][p_event.x]];
+	region.freshClusters = false;
+	this.answerGrid[p_event.y][p_event.x] = FILLING.UNDECIDED;
+	if (p_event.symbol == FILLING.YES){
+		region.YES--;
+		region.UNDEFs++;
+	}
+	else{
+		region.NOs--;
+		region.UNDEFs++;
+	}
+}
+
+SolverShimaguni.prototype.undoValueEvent = function(p_event){
+	const region = this.regions[p_event.indexRegion];
+	this.setPossibleValueTrue(p_event.indexRegion,p_event.valueToBan);
+	if (p_event.valueToBan < region.minVal){
+		region.minVal = p_event.valueToBan;
+	}
+	if (p_event.valueToBan > region.maxVal){
+		region.maxVal = p_event.valueToBan;
+	}
+}
+
+//----------------
+// Quick start
+
+/**
+Rushes the spaces as big as their size and bans values adjacent to the forced regions
+*/
+SolverShimaguni.prototype.quickStart = function(){
+	var space;
+	//First, ban all values adjacent to regions with forced values (or ones of size 1, it works as well).
+	this.regions.forEach(region => {
+		if (region.forcedVal > 0){
+			region.contact.forEach(irc => this.tryToBan(irc,region.forcedVal));
+		}
+		if (region.size == 1){
+			region.contact.forEach(irc => this.tryToBan(irc,1));
+		}
+	});
+	this.regions.forEach(region => {
+		if((region.size == region.forcedVal) || (region.size == 1)){
+			region.spaces.forEach(space =>
+				{this.emitHypothesis(space.x,space.y,FILLING.YES)}
+			);
+		}
+	});
+}
+
+//----------------
+// Pass
+SolverShimaguni.prototype.passRegion = function(p_indexRegion){
+	if (p_indexRegion < 0){
+		debugHumanMisclick("Passing a negative region ");
+		return; //A click might be made onto a wrong space.
+	}
+
+	//Building a copy of an array of coordinates with only the unoccuped spaces that are unnocupied before the test of the function
+	var spacesToTestArray = [];
+	var space;
+	const region = this.regions[p_indexRegion];
+	region.spaces.forEach(space => {
+		if (this.answerGrid[space.y][space.x] == FILLING.UNDECIDED){
+			spacesToTestArray.push({x:space.x,y:space.y});
+		}
+	});
+	function closure(p_region){
+		return function(){
+			console.log("Undecided : "+p_region.UNDEFs);
+			return (p_region.UNDEFs == 0);
+		}
+	}
+	var answer = this.passSpaces(spacesToTestArray,0,closure(region));
+	if (answer.consistence == RESULT.SUCCESS && answer.eventsApplied.length > 0){
+		this.happenedEvents.push({kind:EVENTLIST_KIND.PASS,list:answer.eventsApplied});
+		answer.eventsApplied.forEach(solveEvent => {
+			this.apply(solveEvent);
+		});
+	}
+}
+
+SolverShimaguni.prototype.passSpaces = function(p_spacesToTest,p_indexFirstSpace,p_functionFinishedPass){
+	if (p_functionFinishedPass()){
+		return {consistence : RESULT.SUCCESS, eventsApplied: []}; 
+	}
+	var index = p_indexFirstSpace;
+	while (this.answerGrid[p_spacesToTest[index].y][p_spacesToTest[index].x] != FILLING.UNDECIDED)
+	{
+		console.log("To test : "+p_spacesToTest[index].x+" "+p_spacesToTest[index].y+" "+index+" "+p_spacesToTest.length);
+		index++;
+	}
+	//We MUST find an index where space is undecided.
+	var listO = null;
+	var listX = null;
+	var answerPut = this.tryToPutNew(p_spacesToTest[index].x,p_spacesToTest[index].y,FILLING.YES);
+	if (answerPut.consistence == RESULT.SUCCESS){
+		if (p_functionFinishedPass()){
+			listO = answerPut.eventsApplied;
+		}
+		else{
+			var answerPass = this.passSpaces(p_spacesToTest,index+1,p_functionFinishedPass);
+			if (answerPass.consistence == RESULT.SUCCESS){
+				listO = answerPass.eventsApplied.concat(answerPut.eventsApplied);
+			}
+		}
+		this.undoList(answerPut.eventsApplied.slice());
+	}
+	if ((listO == null) || (listO.length > 0)){
+		answerPut = this.tryToPutNew(p_spacesToTest[index].x,p_spacesToTest[index].y,FILLING.NO);
+		if (answerPut.consistence == RESULT.SUCCESS){
+			if (p_functionFinishedPass()){
+				listX = answerPut.eventsApplied;
+			}
+			else{
+				var answerPass = this.passSpaces(p_spacesToTest,index+1,p_functionFinishedPass);
+				if (answerPass.consistence == RESULT.SUCCESS){
+					listX = answerPass.eventsApplied.concat(answerPut.eventsApplied);
+				}
+			}
+			this.undoList(answerPut.eventsApplied.slice());
+		}
+	}
+	var list;
+	if (listO == null && listX == null){
+		return {consistence : RESULT.ERROR, eventsApplied: []};
+	}
+	if (listO == null){
+		return {consistence : RESULT.SUCCESS, eventsApplied: listX};
+	}
+	if (listX == null){
+		return {consistence : RESULT.SUCCESS, eventsApplied: listO};
+	}
+	return {consistence:RESULT.SUCCESS, eventsApplied:intersect(listO.sort(compareSpaceEvents),listX.sort(compareSpaceEvents))};
+}
+
+//----------------
+// To string
+/**
+CALLED OUTSIDE !
+*/
+SolverShimaguni.prototype.happenedEventsToString = function(p_onlyAssumed){
+	var ei,li;
+	var answer = "";
+	if (p_onlyAssumed){
+		this.happenedEvents.forEach(function(eventList){
+			if (eventList.kind == EVENTLIST_KIND.HYPOTHESIS){
+				answer+=eventList.list[0].toString()+"\n";				
+			}
+		});
+	}
+	else{
+		this.happenedEvents.forEach(function(eventList){
+			answer+=eventList.kind+"\n";
+			eventList.list.forEach(function(spaceEvent){
+				answer+=spaceEvent.toString()+"\n" 
+			});
+			answer+="--------\n";
+		});
+	}
+	return answer;
+}
+
+//----------------
+// It's arrayList time !
+
+//TODO en faire une classe, peut-être... (array : vaut true si un élément est présent. list : liste des index des éléments à true)
 function initializeArrayList(p_length){
 	var array = [];
 	for(var i=0;i<p_length;i++){
@@ -593,7 +702,7 @@ function tryToAddArrayList(p_arrayList,p_index){
 	}
 }
 
-//Note : "index" is an injected field for data.
+//TODO : "index" is an injected field for data.
 function tryToAddArrayListData(p_arrayList,p_index,p_data){
 	if (!p_arrayList.array[p_index]){
 		var data = p_data;

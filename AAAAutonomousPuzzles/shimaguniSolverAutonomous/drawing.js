@@ -31,14 +31,15 @@ function drawAroundIndications(p_context,p_drawer,p_colorDigits,p_solver){
 /**
 Draws what's inside spaces 
 */
-function drawInsideSpaces(p_context,p_drawer,p_colorSet,p_solver){
-	var items = [DrawableX(p_colorSet.cross)];
+function drawInsideSpaces(p_context,p_drawer,p_color,p_solver){
+	//var items = [DrawableColor(p_color.validSquare),DrawableImage("img_x",0,0,64,64)];
+	var items = [DrawableImage("img_x",0,0,64,64)];
 	function selection(x,y){
 		if(p_solver.getAnswer(x,y) == FILLING.YES){
-			return 1;
+			return 1;//0;
 		}
 		if(p_solver.getAnswer(x,y) == FILLING.NO){
-			return 0;
+			return 0;//1;
 		}
 		return -1;
 	}
@@ -58,9 +59,9 @@ function drawInsideSpaces(p_context,p_drawer,p_colorSet,p_solver){
 			pixLeft = p_drawer.getPixInnerXLeft(space.x)+2;
 			pixUp = p_drawer.getPixInnerYUp(space.y)+2;
 			if (p_solver.getAnswer(space.x,space.y) == FILLING.YES) {
-				p_context.fillStyle = p_colorSet.reflectWrite;
+				p_context.fillStyle = p_color.reflectWrite;
 			} else {
-				p_context.fillStyle = p_colorSet.standardWrite;
+				p_context.fillStyle = p_color.standardWrite;
 			}
 			p_context.fillText(p_solver.forcedValue(i),pixLeft,pixUp);
 		}

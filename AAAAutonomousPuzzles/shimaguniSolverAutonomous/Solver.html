@@ -7,6 +7,7 @@
     </head>
     <body>
 		<div id="div_common_menu"></div>
+		<img id="img_x" src="x.png" style="display:none">
 		<img id="img_map_polyomino" src="mapPolyomino.png" style="display:none">
 		<canvas id="canevas" width="800" height="500">
             Message pour les navigateurs ne supportant pas encore canvas.
@@ -28,9 +29,13 @@
 		
 		Résolution : 
 		<input type="submit" id="submit_solve" value="Résolution"></input></br>
+		
 		<input type="submit" id="submit_undo" value="Annuler"></input></br>	
 		
-        Afficher données : <input type="checkbox" id="checkbox_drawIndications" value="false"></span></br>		
+
+        Afficher données : <input type="checkbox" id="checkbox_drawIndications" value="false"></span></br>
+		Affciher tous les évènements : <input type="checkbox" id="checkbox_completeWalkthrough" value="false"></span></br>
+		<textarea id="textarea_happened" style="width:100px; height:200px"></textarea> <!-- TODO ce sont des valeurs en dur-->
 		
 		<script src="../commonActionManager.js"></script>
 		<script src="../Drawer.js"></script>
@@ -41,12 +46,8 @@
 		<script src="../commonSaveAndLoad.js"></script>
 		<script src="../DrawableItem.js"></script>
 		<script src="debugRoom.js"></script>
-		<script src="constants.js"></script>
-		
-		<script src="../GeneralSolver.js"></script>
-		<script src="../SolvingMethodPacks.js"></script>
-		
 		<script src="SolveEvent.js"></script>
+		<script src="constants.js"></script>
 		<script src="SolverShimaguni.js"></script>
 		<script src="drawing.js"></script>
 		<script src="inputSolver.js"></script>

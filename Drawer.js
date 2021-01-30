@@ -295,39 +295,39 @@ Drawer.prototype.drawPolyomino4x5TiledMap = function (p_context, p_map, p_pixMap
                 xRightContinue = rightOn ? 1 : 3;
                 yDownContinue = downOn ? 1 : 3
                     //LU corner
-                    if (leftOn && upOn && !p_function(ix - 1, iy - 1) == p_number) {
-                        coordinateXInMap = 4
-                            coordinateYInMap = 0;
+                    if (leftOn && upOn && (p_function(ix - 1, iy - 1) != p_number)) {
+						coordinateXInMap = 4
+						coordinateYInMap = 0;
                     } else {
-                        coordinateXInMap = xLeftContinue;
-                        coordinateYInMap = yUpContinue;
+						coordinateXInMap = xLeftContinue;
+						coordinateYInMap = yUpContinue;
                     }
                     drawQuarter(0, 0);
                 //RU corner
-                if (rightOn && upOn && !p_function(ix + 1, iy - 1) == p_number) {
-                    coordinateXInMap = 4
-                        coordinateYInMap = 1;
+                if (rightOn && upOn && (p_function(ix + 1, iy - 1) != p_number)) {
+					coordinateXInMap = 4
+					coordinateYInMap = 1;
                 } else {
                     coordinateXInMap = xRightContinue;
                     coordinateYInMap = yUpContinue;
                 }
                 drawQuarter(1, 0);
                 //RD corner
-                if (rightOn && downOn && !p_function(ix + 1, iy + 1) == p_number) {
-                    coordinateXInMap = 4
-                        coordinateYInMap = 2;
+                if (rightOn && downOn && (p_function(ix + 1, iy + 1) != p_number)) {
+					coordinateXInMap = 4
+					coordinateYInMap = 2;
                 } else {
-                    coordinateXInMap = xRightContinue;
-                    coordinateYInMap = yDownContinue;
+					coordinateXInMap = xRightContinue;
+					coordinateYInMap = yDownContinue;
                 }
                 drawQuarter(1, 1);
                 //LD corner
-                if (leftOn && downOn && !p_function(ix - 1, iy + 1) == p_number) {
-                    coordinateXInMap = 4
-                        coordinateYInMap = 3;
+                if (leftOn && downOn && (p_function(ix - 1, iy + 1) != p_number)) {
+					coordinateXInMap = 4
+					coordinateYInMap = 3;
                 } else {
-                    coordinateXInMap = xLeftContinue;
-                    coordinateYInMap = yDownContinue;
+					coordinateXInMap = xLeftContinue;
+					coordinateYInMap = yDownContinue;
                 }
                 drawQuarter(0, 1);
             }
