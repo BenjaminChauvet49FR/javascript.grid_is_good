@@ -1,5 +1,5 @@
 function drawInsideSpaces(p_context, p_drawer, p_colorSet, p_solver) {
-	p_drawer.drawSolverLinkInsideSpaces(p_context, p_colorSet, p_solver.loopSolver); 
+	p_drawer.drawSolverLinkInsideSpaces(p_context, p_colorSet, p_solver); 
 	var supposedNumber;
 	const fontSize = p_drawer.getPixInnerSide();
 	p_context.font = fontSize+"px Arial";

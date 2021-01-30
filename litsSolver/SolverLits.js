@@ -1,19 +1,23 @@
-// AVERTISSEMENT : ce solveur utilise le "dad solver" et n'a pas d'équivalent autonome 
 // Setup
 
 const NOT_FORCED = -1; 
 const NOT_RELEVANT = -1;
 // const SPACE is used in the dad solver
 
-function SolverLITS(p_wallArray,p_numberGrid){
+function SolverLITS(p_wallArray,p_numberGrid) {
+	GeneralSolver.call(this);
 	this.construct(p_wallArray,p_numberGrid);
 }
+
+// Credits about heritage : https://developer.mozilla.org/fr/docs/Learn/JavaScript/Objects/Heritage
+
+SolverLITS.prototype = Object.create(GeneralSolver.prototype);
+SolverLITS.prototype.constructor = SolverLITS;
 
 SolverLITS.prototype.construct = function(p_wallArray,p_numberGrid){
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
-	this.generalSolver = new GeneralSolver();
-	this.generalSolver.makeItGeographical(this.xLength, this.yLength);
+	this.makeItGeographical(this.xLength, this.yLength);
 	this.methodSet = new ApplyEventMethodPack( 
 		applyEventClosure(this),
 		deductionsClosure(this),
@@ -137,11 +141,11 @@ SolverLITS.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
 	this.tryToPutNew(p_x,p_y,p_symbol);
 }
 
-SolverLITS.prototype.undoToLastHypothesis = function(){
-	this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
+SolverLITS.prototype.undo = function() {
+	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverLITS.prototype.quickStart = function(){
+SolverLITS.prototype.quickStart = function() { // TODO 
 	this.regions.forEach(region => {
 		if (region.size == 4){
 			for (var i = 0; i <= 3 ; i++) {
@@ -197,18 +201,18 @@ SolverLITS.prototype.passRegionAndAdjacents = function(p_indexRegion) {
 		Array.prototype.push.apply(generatedEvents, newList);
 	});
 	
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion); 
+	this.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion); 
 } //TODO can be improved ?
 
 SolverLITS.prototype.passRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
 	this.methodTools.argumentToLabelMethod = namingRegionClosure(this);
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion); 
+	this.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion); 
 }
 
-SolverLITS.prototype.multiPass = function() {
+SolverLITS.prototype.makeMultiPass = function() {
 	this.methodTools.argumentToLabelMethod = namingRegionClosureAdj(this);
-	this.generalSolver.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
+	this.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
 }
 
 namingRegionClosure = function(p_solver) {
@@ -301,7 +305,7 @@ SolverLITS.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 		undoEventClosure(this)
 	);
 	methodPack.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
-	this.generalSolver.tryToApplyHypothesis( SpaceEvent(p_x, p_y, p_symbol), methodPack);
+	this.tryToApplyHypothesis( SpaceEvent(p_x, p_y, p_symbol), methodPack);
 }
 
 //--------------------------------

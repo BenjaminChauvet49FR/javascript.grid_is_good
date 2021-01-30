@@ -2,14 +2,17 @@ const BANNED = -2;
 const DIRECTION_X_COORDINATES = [-1,0,1,0]; //MUST follow left/up/right/down because of code usage !
 const DIRECTION_Y_COORDINATES = [0,-1,0,1]; //Same.
 
-function SolverNorinori(p_wallArray){
+function SolverNorinori(p_wallArray) {
+	GeneralSolver.call(this);
 	this.construct(p_wallArray);
 }
+
+SolverNorinori.prototype = Object.create(GeneralSolver.prototype);
+SolverNorinori.prototype.constructor = SolverNorinori;
 
 SolverNorinori.prototype.construct = function(p_wallArray) {
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
-	this.generalSolver = new GeneralSolver();
 	this.wallGrid = WallGrid_data(p_wallArray); 
 	this.regionGrid = this.wallGrid.toRegionGrid(); 
 	this.answerGrid = [];
@@ -159,8 +162,8 @@ SolverNorinori.prototype.emitHypothesis = function(p_x,p_y,p_symbol) {
 /**
 Cancels the last list of events since the last "non-deducted" space.
 */
-SolverNorinori.prototype.undoToLastHypothesis = function(){
-	this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
+SolverNorinori.prototype.undo = function(){
+	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
 /**
@@ -178,11 +181,11 @@ SolverNorinori.prototype.quickStart = function(){
 
 SolverNorinori.prototype.emitPassRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion, "Region "+p_indexRegion); 
+	this.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion, "Region "+p_indexRegion); 
 }
 
-SolverNorinori.prototype.multiPass = function() {
-	this.generalSolver.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
+SolverNorinori.prototype.makeMultiPass = function() {
+	this.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
 }
 
 namingCategoryClosure = function(p_solver) {
@@ -305,7 +308,7 @@ SolverNorinori.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.generalSolver.tryToApplyHypothesis(new SpaceEvent(p_symbol, p_x, p_y), methodPack);
+	this.tryToApplyHypothesis(new SpaceEvent(p_symbol, p_x, p_y), methodPack);
 }
 
 //--------------

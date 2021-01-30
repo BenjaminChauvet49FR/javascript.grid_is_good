@@ -36,11 +36,11 @@ quickStartAction = function(p_solver,p_textArea){
 }
 
 undoAction = function(p_solver,p_textArea){
-	p_solver.undoToLastHypothesis();
+	p_solver.undo();
 }
 
 multiPassAction = function(p_solver) {
-	p_solver.multiPass();
+	p_solver.makeMultiPass();
 }
 
 //--------------------------

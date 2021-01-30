@@ -12,12 +12,13 @@ function SolverCurvingRoad(p_wallArray, p_symbolArray) {
     this.construct(p_wallArray, p_symbolArray);
 }
 
+SolverCurvingRoad.prototype = Object.create(GeneralSolver.prototype);
+SolverCurvingRoad.prototype.constructor = SolverCurvingRoad;
+
 SolverCurvingRoad.prototype.construct = function (p_wallArray, p_symbolArray) {
     this.xLength = p_symbolArray[0].length;
     this.yLength = p_symbolArray.length;
-	this.generalSolver = new GeneralSolver();
-	this.generalSolver.makeItGeographical(this.xLength, this.yLength);
-	
+	this.makeItGeographical(this.xLength, this.yLength);
     this.wallGrid = WallGrid_data(p_wallArray);
     this.happenedEvents = [];
     this.answerGrid = [];
@@ -360,15 +361,15 @@ SolverCurvingRoad.prototype.quickStart = function () {
 
 SolverCurvingRoad.prototype.passSpace = function(p_x, p_y) {
 	const generatedEvents = this.generateEventsForSpacePass({x : p_x, y : p_y});
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, {x : p_x, y : p_y}); 
+	this.passEvents(generatedEvents, this.methodSet, this.methodTools, {x : p_x, y : p_y}); 
 }
 
-SolverCurvingRoad.prototype.multiPass = function() {	
-	this.generalSolver.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
+SolverCurvingRoad.prototype.makeMultiPass = function() {	
+	this.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
 }
 
-SolverCurvingRoad.prototype.undoToLastHypothesis = function() {
-	this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
+SolverCurvingRoad.prototype.undo = function() {
+	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
 //--------------------------------
@@ -377,7 +378,7 @@ SolverCurvingRoad.prototype.undoToLastHypothesis = function() {
 SolverCurvingRoad.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.generalSolver.tryToApplyHypothesis(SpaceEvent(p_x, p_y, p_symbol), this.methodSet);
+	this.tryToApplyHypothesis(SpaceEvent(p_x, p_y, p_symbol), this.methodSet);
 }
 
 //--------------------------------

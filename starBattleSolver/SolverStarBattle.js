@@ -1,8 +1,12 @@
 // Setup
 
-function SolverStarBattle(p_wallArray,p_starNumber){
+function SolverStarBattle(p_wallArray,p_starNumber) {
+	GeneralSolver.call(this);
 	this.construct(p_wallArray,p_starNumber);
 }
+
+SolverStarBattle.prototype = Object.create(GeneralSolver.prototype);
+SolverStarBattle.prototype.constructor = SolverStarBattle;
 
 SolverStarBattle.prototype.construct = function(p_wallArray,p_starNumber){ 
 	this.answerGrid = [];
@@ -13,7 +17,6 @@ SolverStarBattle.prototype.construct = function(p_wallArray,p_starNumber){
 	this.regionGrid = this.wallGrid.toRegionGrid();
 	this.xyLength = this.getWallGrid().length; //IMPORTANT : when copy-pasting this line to a non-square grid, make sure to replace ALL occurences by xLength and yLength
 	
-	this.generalSolver = new GeneralSolver();
 	this.methodSet = new ApplyEventMethodNonAdjacentPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
@@ -129,27 +132,27 @@ SolverStarBattle.prototype.emitHypothesis = function(p_x,p_y,p_symbol) {
 	this.tryToPutNew(p_x,p_y,p_symbol);
 }
 
-SolverStarBattle.prototype.undoToLastHypothesis = function(){
-	this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
+SolverStarBattle.prototype.undo = function(){
+	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
 SolverStarBattle.prototype.emitPassRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : FAMILY.REGION, index : p_indexRegion}); 
+	this.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : FAMILY.REGION, index : p_indexRegion}); 
 }
 
 SolverStarBattle.prototype.emitPassRow = function(p_y) {
 	const generatedEvents = this.generateEventsForRowPass(p_y);
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : FAMILY.ROW, index : p_y}); 
+	this.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : FAMILY.ROW, index : p_y}); 
 }
 
 SolverStarBattle.prototype.emitPassColumn = function(p_x) {
 	const generatedEvents = this.generateEventsForColumnPass(p_x);
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : FAMILY.COLUMN, index : p_x}); 
+	this.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : FAMILY.COLUMN, index : p_x}); 
 }
 
-SolverStarBattle.prototype.multiPass = function() {	
-	this.generalSolver.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
+SolverStarBattle.prototype.makeMultiPass = function() {	
+	this.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
 }
 
 namingCategoryClosure = function(p_solver) {
@@ -235,7 +238,7 @@ undoEventClosure = function(p_solver) {
 
 // Central method
 SolverStarBattle.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	this.generalSolver.tryToApplyHypothesis(new SpaceEvent(p_symbol, p_x, p_y), this.methodSet);
+	this.tryToApplyHypothesis(new SpaceEvent(p_symbol, p_x, p_y), this.methodSet);
 }
 
 //--------------------------------

@@ -1,13 +1,16 @@
 // Initialization
 
-function SolverChocona(p_wallArray,p_numberGrid){
+function SolverChocona(p_wallArray, p_numberGrid) {
+	GeneralSolver.call(this);
 	this.construct(p_wallArray,p_numberGrid);
 }
+
+SolverChocona.prototype = Object.create(GeneralSolver.prototype);
+SolverChocona.prototype.constructor = SolverChocona;
 
 SolverChocona.prototype.construct = function(p_wallArray, p_numberGrid) {
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
-	this.generalSolver = new GeneralSolver();
 
 	this.wallGrid = WallGrid_data(p_wallArray); 
 	this.regionGrid = this.wallGrid.toRegionGrid();
@@ -117,17 +120,17 @@ SolverChocona.prototype.emitHypothesis = function(p_x,p_y,p_symbol) {
 	this.tryToPutNew(p_x,p_y,p_symbol);
 }
 
-SolverChocona.prototype.undoToLastHypothesis = function(){
-	this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
+SolverChocona.prototype.undo = function(){
+	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
 SolverChocona.prototype.passRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion); 
+	this.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion); 
 }
 
-SolverChocona.prototype.multiPass = function() {	
-	this.generalSolver.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
+SolverChocona.prototype.makeMultiPass = function() {	
+	this.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
 }
 
 SolverChocona.prototype.quickStart = function(){
@@ -152,7 +155,7 @@ SolverChocona.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.generalSolver.tryToApplyHypothesis( SpaceEvent(p_x, p_y, p_symbol), methodPack);
+	this.tryToApplyHypothesis( SpaceEvent(p_x, p_y, p_symbol), methodPack);
 }
 
 //--------------------------------

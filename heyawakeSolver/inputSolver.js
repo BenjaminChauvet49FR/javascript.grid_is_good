@@ -28,16 +28,16 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 //--------------------------
 // Game action buttons
 
-quickStartAction = function(p_solver,p_textArea){
+quickStartAction = function(p_solver){
 	p_solver.quickStart();
 }
 
-undoAction = function(p_solver,p_textArea){
-	p_solver.undoToLastHypothesis();
+undoAction = function(p_solver){
+	p_solver.undo();
 }
 
-multiPassAction = function (p_solver,p_textArea){
-	p_solver.multiPass();
+multiPassAction = function (p_solver){
+	p_solver.makeMultiPass();
 }
 
 /*solveAction = function (p_solver,p_textArea){

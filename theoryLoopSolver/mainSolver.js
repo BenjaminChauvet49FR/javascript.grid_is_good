@@ -12,7 +12,7 @@ var colors={
 }
 
 var drawer = new Drawer(colors);
-var solver = new SolverTheoryLoop();
+var solver = new SolverTheoryLoop(generateSymbolArray(10,10));
 var canevas = document.getElementById("canevas");
 var	context = canevas.getContext("2d");
 var actionsManager = {clickSpace : null}; 
@@ -24,7 +24,7 @@ var drawIndications;
 //The main draw function (at start)
 function drawCanvas() {
 	drawer.drawWalllessGrid(context, null, solver.xLength, solver.yLength); //TODO edit the "10 10"
-	drawer.drawSolverLinkInsideSpaces(context, colors, solver.loopSolver); 
+	drawer.drawSolverLinkInsideSpaces(context, colors, solver); 
 }
 
 var textArea = document.getElementById("textarea_happened");

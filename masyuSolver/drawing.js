@@ -1,5 +1,5 @@
 function drawInsideSpaces(p_context, p_drawer, p_colors, p_solver) {
-	p_drawer.drawSolverLinkInsideSpaces(p_context, p_colors, p_solver.loopSolver); 
+	p_drawer.drawSolverLinkInsideSpaces(p_context, p_colors, p_solver); 
 	function getPearl (x, y) {
 		if (p_solver.getPearl(x, y) == PEARL.WHITE) {
 			return 0;

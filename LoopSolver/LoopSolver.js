@@ -1,8 +1,11 @@
 // Setup
 
 function LoopSolver() {
-	
+	GeneralSolver.call(this);
 }
+
+LoopSolver.prototype = Object.create(GeneralSolver.prototype);
+LoopSolver.prototype.constructor = LoopSolver;
 
 // "PS" seen in all names stand for "puzzle specific".
 LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
@@ -77,10 +80,9 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 
 }
 
-LoopSolver.prototype.construct = function(p_wallArray, p_puzzleSpecificMethodPack) {
+LoopSolver.prototype.loopSolverConstruct = function(p_wallArray, p_puzzleSpecificMethodPack) {
 	this.xLength = p_wallArray[0].length;
     this.yLength = p_wallArray.length;
-	this.generalSolver = new GeneralSolver();
 	this.methodSet = new ApplyEventMethodNonAdjacentPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
@@ -431,23 +433,26 @@ undoEventClosure = function(p_solver) {
 	}
 }
 
-LoopSolver.prototype.undoToLastHypothesis = function() {
-	this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
+//--------------------------------
+// Input methods
+
+LoopSolver.prototype.undo = function() {
+	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
 //--------------------------------
 // Central methods
 
 LoopSolver.prototype.tryToPutNewDown = function (p_x, p_y, p_state) {
-	this.generalSolver.tryToApplyHypothesis(new LinkEvent(p_x, p_y, LOOP_DIRECTION.DOWN, p_state), this.methodSet);
+	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, LOOP_DIRECTION.DOWN, p_state), this.methodSet);
 }
 
 LoopSolver.prototype.tryToPutNewRight = function (p_x, p_y, p_state) {
-	this.generalSolver.tryToApplyHypothesis(new LinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, p_state), this.methodSet);
+	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, p_state), this.methodSet);
 }
 
 LoopSolver.prototype.tryToPutNewSpace = function (p_x, p_y, p_state) {
-	this.generalSolver.tryToApplyHypothesis(new StateEvent(p_x, p_y, p_state), this.methodSet);
+	this.tryToApplyHypothesis(new StateEvent(p_x, p_y, p_state), this.methodSet);
 }
 
 //--------------------------------

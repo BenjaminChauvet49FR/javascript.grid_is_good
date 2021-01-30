@@ -6,15 +6,18 @@ const NOT_RELEVANT = -1;
 
 const EVENTLIST_KIND = {HYPOTHESIS:"H",PASS:"P"};
 
-function SolverHeyawake(p_wallArray,p_numberGrid){
+function SolverHeyawake(p_wallArray, p_numberGrid) {
+	GeneralSolver.call(this);
 	this.construct(p_wallArray,p_numberGrid);
 }
+
+SolverHeyawake.prototype = Object.create(GeneralSolver.prototype);
+SolverHeyawake.prototype.constructor = SolverHeyawake;
 
 SolverHeyawake.prototype.construct = function(p_wallArray,p_numberGrid){
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
-	this.generalSolver = new GeneralSolver();
-	this.generalSolver.makeItGeographical(this.xLength, this.yLength);
+	this.makeItGeographical(this.xLength, this.yLength);
 	this.methodSet = new ApplyEventMethodPack(
 			applyEventClosure(this), 
 			deductionsClosure(this), 
@@ -215,8 +218,8 @@ SolverHeyawake.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
 	this.tryToPutNew(p_x,p_y,p_symbol);
 }
 
-SolverHeyawake.prototype.undoToLastHypothesis = function(){
-	this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
+SolverHeyawake.prototype.undo = function() {
+	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
 SolverHeyawake.prototype.quickStart = function(){
@@ -234,11 +237,11 @@ SolverHeyawake.prototype.quickStart = function(){
 
 SolverHeyawake.prototype.passRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.generalSolver.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion, "Region "+p_indexRegion); 
+	this.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion, "Region "+p_indexRegion); 
 }
 
-SolverHeyawake.prototype.multiPass = function() {
-	this.generalSolver.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
+SolverHeyawake.prototype.makeMultiPass = function() {
+	this.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
 }
 
 //--------------------------------
@@ -248,7 +251,7 @@ SolverHeyawake.prototype.multiPass = function() {
 SolverHeyawake.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.generalSolver.tryToApplyHypothesis(
+	this.tryToApplyHypothesis(
 		SpaceEvent(p_x, p_y, p_symbol),
 		this.methodSet
 	);
