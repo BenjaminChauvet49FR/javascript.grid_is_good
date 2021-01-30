@@ -13,8 +13,12 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
 			pixInnerUp = this.getPixInnerYUp(iy);
 			// Draw space contents
 			if (p_solver.getLinkSpace(ix, iy) == LOOP_STATE.CLOSED && !p_solver.isBanned(ix,iy)) {
-                p_context.fillStyle = p_colorSet.noLinkState;
-                p_context.fillRect(pixInnerLeft, pixInnerUp, this.getPixInnerSide(), this.getPixInnerSide());
+				if (p_solver.areActiveClosedSpaces()) {
+					p_context.fillStyle = p_colorSet.noLinkState;
+					p_context.fillRect(pixInnerLeft, pixInnerUp, this.getPixInnerSide(), this.getPixInnerSide());
+				} else {
+					this.drawCrossX(p_context, ix, iy, {color : p_colorSet.noLinkState});
+				}
             } else if (p_solver.getLinkSpace(ix, iy) == LOOP_STATE.LINKED) {
                 p_context.fillStyle = p_colorSet.presentLinkState;
                 p_context.fillRect(pixInnerLeft, pixInnerUp, this.getPixInnerSide(), this.getPixInnerSide());
@@ -32,7 +36,7 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
 					p_context.fillRect(pixLeft, pixUp, shorter, longer);
 				} else if (p_solver.getLinkDown(ix, iy) == LOOP_STATE.CLOSED && (!p_solver.isBanned(ix,iy)) && (!p_solver.isBanned(ix,iy+1))) {
 					p_context.fillStyle = p_colorSet.noLink;
-					p_context.fillRect(pixInnerLeft, this.getPixInnerYDown(iy), this.getPixInnerSide(), pixThicknessClosedLink); 
+					p_context.fillRect(pixInnerLeft, this.getPixInnerYDown(iy)-pixThicknessClosedLink, this.getPixInnerSide(), pixThicknessClosedLink); 
 					p_context.fillRect(pixInnerLeft, this.getPixInnerYUp(iy+1), this.getPixInnerSide(), pixThicknessClosedLink); 
 				}
             }
@@ -42,7 +46,7 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
 					p_context.fillRect(pixLeft, pixUp, longer, shorter);
 				} else if (p_solver.getLinkRight(ix, iy) == LOOP_STATE.CLOSED && (!p_solver.isBanned(ix,iy)) && (!p_solver.isBanned(ix+1,iy))) {
 					p_context.fillStyle = p_colorSet.noLink;
-					p_context.fillRect(this.getPixInnerXRight(ix), pixInnerUp, pixThicknessClosedLink, this.getPixInnerSide()); 
+					p_context.fillRect(this.getPixInnerXRight(ix)-pixThicknessClosedLink, pixInnerUp, pixThicknessClosedLink, this.getPixInnerSide()); 
 					p_context.fillRect(this.getPixInnerXLeft(ix+1), pixInnerUp, pixThicknessClosedLink, this.getPixInnerSide()); 
 				}
             }

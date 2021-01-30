@@ -1,11 +1,10 @@
 /**
  When you click on the canvas
 */
-function clickCanvas(event,p_canvas,p_drawer,p_components,p_solver,p_actionManager) {
+function clickCanvasAction(event,p_canvas,p_drawer,p_solver,p_actionManager) {
 	var spaceClicked = drawer.getClickSpace(event,p_canvas,p_solver.xLength,p_solver.yLength);
     if (spaceClicked != null){
 		clickSpaceAction(p_solver,spaceClicked.x,spaceClicked.y,p_actionManager.clickSpace);
-		p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked);
 	}
 }
 

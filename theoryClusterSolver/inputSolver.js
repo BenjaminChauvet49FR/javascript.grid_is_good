@@ -1,11 +1,10 @@
 /**
  When you click on the canvas
 */
-function clickCanvas(event,p_canvas,p_drawer,p_components,p_solver,p_actionsManager) { 
+function clickCanvas(event, p_canvas, p_drawer, p_solver, p_actionsManager) { 
 	var spaceClicked = drawer.getClickSpace(event,p_canvas,p_solver.xLength,p_solver.yLength);
     if (spaceClicked != null){
 		clickSpaceAction(p_solver,spaceClicked.x,spaceClicked.y,p_actionsManager.clickSpace);
-		//p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked); TODO : à gérer !
 	}
 }
 
@@ -32,14 +31,12 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 //--------------------------
 // Game action buttons
 
-undoAction = function(p_solver,p_textArea){
+undoAction = function(p_solver) {
 	p_solver.undoToLastHypothesis();
-	//p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
 }
 
-discardDeductionsAction = function(p_solver,p_textArea){
+discardDeductionsAction = function(p_solver) {
 	p_solver.discardDeductions();
-	//p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO manage true/false
 }
 
 //--------------------------
@@ -49,7 +46,7 @@ Transforms a loaded string into the appropriate item (see common save and load),
 Called by common save and load !
 */
 loadPuzzle = function(p_canvas, p_drawer, p_solver, p_loadedString) {
-    const loadedItem = stringToWallAndNumbersPuzzle(localStorage.getItem("grid_is_good_"+p_name));
+    const loadedItem = stringToWallAndNumbersPuzzle(p_loadedString);
 	p_solver.construct(loadedItem.grid,loadedItem.gridNumber);
 	p_drawer.adaptCanvasDimensions(p_canvas,{xLength:p_solver.xLength,yLength:p_solver.yLength});
 }

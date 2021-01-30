@@ -22,20 +22,15 @@ function drawCanvas(){
 	drawInsideSpaces(context,drawer,colors,solver);
 }
 
-var textArea = document.getElementById("textarea_happened");
-var components = {
-	textArea: textArea,
-	checkBox : document.getElementById("checkbox_onlyAssumed"),
-};
-canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,components,solver,actionsManager)},false);
+canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,solver,actionsManager)},false);
 setInterval(drawCanvas,30);
 var fieldName = document.getElementById("input_grid_name");
 
 putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("TheoryCluster")});
 putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,solver,fieldName.value)});
-//putActionElementClick("submit_quickStart",function(event){quickStartAction(solver,null)});
-putActionElementClick("submit_undo",function(event){undoAction(solver,null)});
-putActionElementClick("submit_discard_hypotheses",function(event){discardDeductionsAction(solver,null)});
+//putActionElementClick("submit_quickStart",function(event){quickStartAction(solver)});
+putActionElementClick("submit_undo",function(event){undoAction(solver)});
+putActionElementClick("submit_discard_hypotheses",function(event){discardDeductionsAction(solver)});
 
 //------
 

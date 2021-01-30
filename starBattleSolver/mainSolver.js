@@ -8,7 +8,7 @@ var actionsManager  = {clickSpace : null};
 var drawIndications;
 
 var colors={
-	cross:'#000000',
+	emptySquare:'#cccccc',
 	starIndication:"#00cccc",
 	crossIndication:"#cc0000",
 	regionIndication:"#008800",
@@ -19,7 +19,7 @@ var colors={
 //The main draw function (at start)
 function drawCanvas(){
 	drawer.drawWallGrid(context,solver.wallGrid,solver.xyLength,solver.xyLength); 
-	drawInsideSpaces(context,drawer,solver);
+	drawInsideSpaces(context, drawer, colors, solver);
 	if (document.getElementById("checkbox_drawIndications").checked){
 		drawAroundIndications(context,drawer,colors,solver);
 		drawInsideIndications(context,drawer,colors,solver);	
@@ -30,20 +30,14 @@ setInterval(drawCanvas,30);
 //--------------------
 
 var fieldName = document.getElementById("input_grid_name");
-var components = {
-	textArea : document.getElementById("textarea_happened"),
-	checkBox : document.getElementById("checkbox_onlyAssumed"),
-	starSpan : document.getElementById("span_stars")
-};
-
-canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,components,solver,actionsManager)},false);
+canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,solver,actionsManager)},false);
 
 putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("SternenSchlacht")});
-putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,solver,fieldName.value,components)});
-putActionElementClick("submit_undo",function(event){undoAction(solver,components)});
+putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,solver,fieldName.value)});
+putActionElementClick("submit_undo",function(event){undoAction(solver)});
 //putActionElementClick("submit_quickStart",function(event){quickStartAction(...)}); TODO
-putActionElementClick("submit_multiPass",function(event){multiPassAction(solver,components)});
-putActionElementClick("submit_solve",function(event){solveAction(solver,components)});
+putActionElementClick("submit_multiPass",function(event){multiPassAction(solver)});
+putActionElementClick("submit_solve",function(event){solveAction(solver)});
 
 var textAction = document.getElementById("text_canvas_action");
 setMode(textAction,actionsManager,ENTRY.SPACE,ACTION_PUT_STAR);

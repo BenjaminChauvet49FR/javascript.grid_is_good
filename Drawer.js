@@ -215,20 +215,23 @@ Drawer.prototype.drawSpaceContents = function (p_context, p_drawableItems, p_fun
                 if (item.kind == KIND_DRAWABLE_ITEM.IMAGE) {
                     p_context.drawImage(item.getImage(), item.x1, item.y1, item.x2, item.y2, pixDrawX, pixDrawY, pixInnerSide, pixInnerSide);
                 } else if (item.kind == KIND_DRAWABLE_ITEM.COLOR) {
-                    p_context.fillStyle = item.getColorString();
-                    p_context.fillRect(pixDrawX, pixDrawY, pixInnerSide, pixInnerSide);
-                } else if (item.kind = KIND_DRAWABLE_ITEM.CIRCLE) {
+                    p_context.fillStyle = item.getColorString(); // TODO why a function after all ?
+                    p_context.fillRect(pixDrawX, pixDrawY, pixInnerSide, pixInnerSide); 
+                } else if (item.kind == KIND_DRAWABLE_ITEM.CIRCLE) {
 					p_context.beginPath();
+					p_context.lineWidth = (item.thickness || item.thickness == 0) ? item.thickness : 1; // TODO should be managed
 					const radius = this.getPixInnerSide()*1/3;
 					p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
-					p_context.fillStyle = item.colorInner; //TODO j'ai repris la propriété plutôt que créer une nouvelle fonction. A voir lequel des 2 est meilleur.
+					p_context.fillStyle = item.colorInner; //An item property was taken rather than a method. I think this is better this way.
 					if (p_context.fillStyle) {
 						p_context.fill();
 					}
-					p_context.fillStyle = item.colorBorder;
-					if (p_context.fillStyle) {
+					p_context.strokeStyle = item.colorBorder;
+					if (p_context.strokeStyle) {
 						p_context.stroke();
 					}
+				} else if (item.kind == KIND_DRAWABLE_ITEM.X) {
+					this.drawCrossX(p_context, ix, iy, item);
 				}
             }
             pixDrawX += this.pix.sideSpace;
@@ -334,6 +337,22 @@ Drawer.prototype.drawPolyomino4x5TiledMap = function (p_context, p_map, p_pixMap
         pixOriginX = pixStartX;
     }
 
+}
+
+Drawer.prototype.drawCrossX = function(p_context, p_xSpace, p_ySpace, p_item) {
+	p_context.beginPath();
+	p_context.strokeStyle = p_item.color; 
+	p_context.lineWidth = 2; // TODO should be managed
+	const pixAway = 2;
+	const pixLeft = this.getPixInnerXLeft(p_xSpace) + pixAway;
+	const pixRight = this.getPixInnerXRight(p_xSpace) - pixAway;
+	const pixUp = this.getPixInnerYUp(p_ySpace) + pixAway;
+	const pixDown = this.getPixInnerYDown(p_ySpace) - pixAway;
+	p_context.moveTo(pixLeft, pixUp);
+	p_context.lineTo(pixRight, pixDown);
+	p_context.moveTo(pixLeft, pixDown);
+	p_context.lineTo(pixRight, pixUp);
+	p_context.stroke(); // Credits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/lineTo
 }
 
 //---------------------

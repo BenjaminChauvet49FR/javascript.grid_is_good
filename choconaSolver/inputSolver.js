@@ -1,18 +1,17 @@
 /**
  When you click on the canvas
 */
-function clickCanvas(event,p_canvas,p_drawer,p_components,p_solver,p_actionsManager) { //TODO rename this as an action ? But what about loadAction ? //TODO modifier la fonction qui a ce nom dans les autres solveurs.
-	var spaceClicked = drawer.getClickSpace(event,p_canvas,p_solver.xLength,p_solver.yLength);
-    if (spaceClicked != null){
-		clickSpaceAction(p_solver,spaceClicked.x,spaceClicked.y,p_actionsManager.clickSpace);
-		//p_components.textArea.innerHTML = p_solver.happenedEventsToString(p_components.checkBox.checked); TODO : à gérer !
+function clickCanvasAction(event, p_canvas, p_drawer, p_solver, p_actionsManager) { 
+	var spaceClicked = drawer.getClickSpace(event, p_canvas, p_solver.xLength, p_solver.yLength);
+    if (spaceClicked != null) {
+		clickSpace(p_solver, spaceClicked.x, spaceClicked.y, p_actionsManager.clickSpace);
 	}
 }
 
 /**
 You successfully clicked on a region space (coordinates in parameter). Then what ? 
 */
-function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
+function clickSpace(p_solver, p_spaceIndexX, p_spaceIndexY, p_action){
 	switch(p_action.id){
 		case ACTION_OPEN_SPACE.id:
 			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,CHOCONA.YES); 

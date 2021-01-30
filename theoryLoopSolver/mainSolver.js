@@ -38,8 +38,8 @@ var fieldName = document.getElementById("input_grid_name");
 
 putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("TheoryLoop")});
 putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,solver,fieldName.value)});
-//putActionElementClick("submit_quickStart",function(event){quickStartAction(solver,null)}); // Not relevant
-putActionElementClick("submit_undo",function(event){undoAction(solver,null)});
+//putActionElementClick("submit_quickStart",function(event){quickStartAction(solver)}); // Not relevant
+putActionElementClick("submit_undo",function(event){undoAction(solver)});
 
 //------
 

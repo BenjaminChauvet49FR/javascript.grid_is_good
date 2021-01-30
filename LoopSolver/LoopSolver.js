@@ -86,6 +86,7 @@ LoopSolver.prototype.construct = function(p_wallArray, p_puzzleSpecificMethodPac
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
+	this.closedSpacesAreActive = false;
 	this.setPuzzleSpecificMethods(p_puzzleSpecificMethodPack);
 	this.methodSet.addAbortAndFilters(abortClosure(this), [testLoopsClosure(this), separateEndsClosure(this)]);
     this.grid = [];
@@ -196,6 +197,17 @@ LoopSolver.prototype.getSpace = function(p_space) {
 
 LoopSolver.prototype.isBanned = function(p_x, p_y){
 	return this.bannedSpacesGrid[p_y][p_x];
+}
+
+LoopSolver.prototype.areActiveClosedSpaces = function(){
+	return this.closedSpacesAreActive;
+}
+
+// -------------------
+// "Protected" methods
+
+LoopSolver.prototype.activateClosedSpaces = function(){
+	this.closedSpacesAreActive = true;
 }
 
 // -------------------

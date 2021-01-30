@@ -3,7 +3,8 @@ function DrawableItem(){}
 const KIND_DRAWABLE_ITEM = {
 	IMAGE:1,
 	COLOR:2,
-	CIRCLE:3
+	CIRCLE:3,
+	X:4
 }
 
 /*
@@ -26,7 +27,14 @@ function DrawableCircle(p_colorBorder, p_colorInner, p_thickness) {
 	item.kind = KIND_DRAWABLE_ITEM.CIRCLE;
 	item.colorBorder = p_colorBorder;
 	item.colorInner = p_colorInner;
-	item.colorThickness = p_thickness;
+	item.thickness = p_thickness;
+	return item;
+}
+
+function DrawableX(p_color) { 
+	var item = new DrawableItem();
+	item.kind = KIND_DRAWABLE_ITEM.X;
+	item.color = p_color;
 	return item;
 }
 

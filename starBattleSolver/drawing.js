@@ -51,8 +51,8 @@ function drawInsideIndications(p_context,p_drawer,p_colorDigits,p_solver){
 /**
 Draws what's inside spaces
 */
-function drawInsideSpaces(p_context,p_drawer,p_solver){
-	var items = [DrawableImage("img_star",0,0,64,64),DrawableImage("img_x",0,0,64,64)];
+function drawInsideSpaces(p_context, p_drawer, p_colors, p_solver){
+	var items = [DrawableImage("img_star",0,0,64,64),DrawableX(p_colors.emptySquare)];
 	indexSelectionFunction = function(x,y){
 		if  (p_solver.getRegion(x,y) != BANNED){ // Should this condition be missed the extra "no star" in banned spaces would be added.
 			if(p_solver.getAnswer(x,y) == SYMBOL.STAR){

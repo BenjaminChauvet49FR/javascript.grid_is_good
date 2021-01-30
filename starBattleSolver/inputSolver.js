@@ -1,7 +1,7 @@
 /**
  When you click on the canvas
 */
-function clickCanvas(event,p_canvas,p_drawer,p_components,p_solver,p_actionsManager) { //TODO rename this as an action ? But what about loadAction ? //TODO modifier la fonction qui a ce nom dans les autres solveurs.
+function clickCanvas(event,p_canvas,p_drawer,p_solver,p_actionsManager) { //TODO rename this as an action ? But what about loadAction ? //TODO modifier la fonction qui a ce nom dans les autres solveurs.
 	var spaceClicked = drawer.getClickSpace(event,p_canvas,p_solver.xyLength,p_solver.xyLength);
     if (spaceClicked != null){
 		clickSpaceAction(p_solver,spaceClicked.x,spaceClicked.y,p_actionsManager.clickSpace);
@@ -36,15 +36,15 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 //--------------------------
 // Game action buttons
 
-undoAction = function(p_solver,p_components){
+undoAction = function(p_solver) {
 	p_solver.undoToLastHypothesis();
 }
 
-multiPassAction = function (p_solver,p_components){
+multiPassAction = function (p_solver) {
 	p_solver.multiPass();
 }
 
-solveAction = function (p_solver,p_components){
+solveAction = function (p_solver) {
 	//p_solver.generalSolve();
 }
 

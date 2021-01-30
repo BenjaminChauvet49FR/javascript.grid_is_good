@@ -19,5 +19,5 @@ function drawInsideSpaces(p_context, p_drawer, p_color, p_solver) {
     var yL = p_solver.yLength;
     p_drawer.drawSpaceContents(p_context, items, selection, xL, yL);
     p_drawer.drawPolyomino4x5TiledMap(p_context, document.getElementById("img_map"), 16, selection, 0, xL, yL);
-	p_drawer.drawSpaceContents(p_context, [DrawableCircle(p_color.circleOut, p_color.circleIn, 1)], getPearl, xL, yL);  //TODO thickness non prise en compte !
+	p_drawer.drawSpaceContents(p_context, [DrawableCircle(p_color.circleOut, p_color.circleIn, 2)], getPearl, xL, yL);  //TODO thickness non prise en compte !
 }

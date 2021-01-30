@@ -28,7 +28,7 @@ function drawInsideIndications(p_context,p_drawer,p_colorDigits,p_solver){
 Draws what's inside spaces 
 */
 function drawInsideSpaces(p_context,p_drawer,p_color,p_solver){
-	var items = [DrawableColor(p_color.validSquare),DrawableImage("img_x",0,0,64,64)];
+	var items = [DrawableColor(p_color.filledSquare),DrawableX(p_color.emptySquare)];
 	function selectionItem(x,y){
 		if  (p_solver.getRegion(x,y) != BANNED){ // Should this condition be missed... (see star battle)
 			if(p_solver.getAnswer(x,y) == FILLING.YES){

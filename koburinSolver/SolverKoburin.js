@@ -7,6 +7,7 @@ SolverKoburin.prototype.construct = function(p_numberGrid) {
     this.xLength = p_numberGrid[0].length;
 	this.yLength = p_numberGrid.length;
 	this.loopSolver.construct(generateWallArray(this.xLength, this.yLength), {});
+	this.loopSolver.activateClosedSpaces();
 	this.loopSolver.setPuzzleSpecificMethods({
 		setSpaceClosedPSDeductions : setSpaceClosedPSDeductionsClosure(this),
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this)

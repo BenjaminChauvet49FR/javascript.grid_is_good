@@ -4,7 +4,7 @@ Draws what's inside spaces
 */
 function drawInsideSpaces(p_context,p_drawer,p_color,p_solver){
 	var items = [DrawableColor(p_color.chocolateSquare), 
-				DrawableColor(p_color.lackingSquare)];
+				 DrawableX(p_color.lackingSquare)];
 				
 	function selection(x,y) {
 		if (p_solver.getAnswer(x,y) == CHOCONA.YES) {

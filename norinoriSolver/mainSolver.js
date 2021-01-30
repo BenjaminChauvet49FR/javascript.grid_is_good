@@ -7,7 +7,8 @@ var actionsManager = {clickSpace : null};
 var drawIndications;
 
 var colors={
-	validSquare:'#000088',
+	filledSquare:'#000088',
+	emptySquare:'#aaaaaa',
 	rainbowSpaces:[],
 	insideIndicationsOnWhite:'#008800',
 	insideIndicationsOnFilled:'#00ff00',
@@ -23,12 +24,7 @@ function drawCanvas(){
 	}
 }
 
-var components = {
-	textArea:document.getElementById("textarea_happened"),
-	checkBox : document.getElementById("checkbox_onlyAssumed"),
-};
-
-canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,components,solver,actionsManager)},false);
+canevas.addEventListener('click', function(event){clickCanvasAction(event,canevas,drawer,solver,actionsManager)},false);
 
 setInterval(drawCanvas,30);
 
