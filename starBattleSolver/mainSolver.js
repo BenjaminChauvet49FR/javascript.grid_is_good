@@ -18,7 +18,7 @@ var colors={
 //--------------------
 //The main draw function (at start)
 function drawCanvas(){
-	drawer.drawWallGrid(context,solver.wallGrid,solver.xyLength,solver.xyLength); 
+	drawer.drawWallGrid(context,solver.gridWall,solver.xyLength,solver.xyLength); 
 	drawInsideSpaces(context, drawer, colors, solver);
 	if (document.getElementById("checkbox_drawIndications").checked){
 		drawAroundIndications(context,drawer,colors,solver);

@@ -7,8 +7,8 @@ SolverStarBattle.prototype.construct = function(p_wallArray,p_starNumber){
 	this.spacesByRegion =  [];
 	this.notPlacedYet = {regions:[],rows:[],columns:[]};
 	this.happenedEvents = [];	
-	this.wallGrid = WallGrid_data(p_wallArray);
-	this.regionGrid = this.wallGrid.toRegionGrid();
+	this.gridWall = WallGrid_data(p_wallArray);
+	this.regionGrid = this.gridWall.toRegionGrid();
 	this.xyLength = this.getWallGrid().length; //IMPORTANT : when copy-pasting this line to a non-square grid, make sure to replace ALL occurences by xLength and yLength
 	this.listSpacesByRegion(); //spacesByRegion
 	this.buildPossibilities(p_starNumber); //notPlacedYet
@@ -73,8 +73,6 @@ SolverStarBattle.prototype.buildAnswerGrid = function(){
 	}
 }
 
-const BANNED = -2;
-
 /**
 Puts Xs into the answerGrid corresponding to banned spaces 
 Precondition : both spacesByRegion and notPlacedYet have been refreshed and answerGrid is ok.
@@ -83,7 +81,7 @@ SolverStarBattle.prototype.purifyAnswerGrid = function(){
 	//Removing banned spaces (hence the necessity to have things already updated)
 	for(iy = 0; iy < this.xyLength ; iy++){
 		for(ix = 0; ix < this.xyLength ; ix++){
-			if (this.regionGrid[iy][ix] == BANNED){
+			if (this.regionGrid[iy][ix] == WALLGRID.OUT_OF_REGIONS){
 				this.putNew(ix,iy,SYMBOL.NO_STAR);
 			}
 		}
@@ -93,7 +91,7 @@ SolverStarBattle.prototype.purifyAnswerGrid = function(){
 //----------------------
 //Getters (not setters, though)
 
-SolverStarBattle.prototype.getWallGrid = function(){return this.wallGrid.array;}
+SolverStarBattle.prototype.getWallGrid = function(){return this.gridWall.array;}
 
 SolverStarBattle.prototype.getAnswer = function(p_x,p_y){return this.answerGrid[p_y][p_x];}
 SolverStarBattle.prototype.getRegion = function(p_x,p_y){return this.regionGrid[p_y][p_x];}

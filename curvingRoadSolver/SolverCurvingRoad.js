@@ -19,7 +19,7 @@ SolverCurvingRoad.prototype.construct = function (p_wallArray, p_symbolArray) {
     this.xLength = p_symbolArray[0].length;
     this.yLength = p_symbolArray.length;
 	this.makeItGeographical(this.xLength, this.yLength);
-    this.wallGrid = WallGrid_data(p_wallArray);
+    this.gridWall = WallGrid_data(p_wallArray);
     this.happenedEvents = [];
     this.answerGrid = [];
     this.curvingLinkArray = [];

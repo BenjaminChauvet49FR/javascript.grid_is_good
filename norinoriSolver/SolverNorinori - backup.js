@@ -1,4 +1,3 @@
-const BANNED = -2;
 const DIRECTION_X_COORDINATES = [-1,0,1,0]; //MUST follow left/up/right/down because of code usage !
 const DIRECTION_Y_COORDINATES = [0,-1,0,1]; //Same.
 
@@ -9,8 +8,8 @@ function SolverNorinori(p_wallArray){
 SolverNorinori.prototype.construct = function(p_wallArray){
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
-	this.wallGrid = WallGrid_data(p_wallArray); 
-	this.regionGrid = this.wallGrid.toRegionGrid(); 
+	this.gridWall = WallGrid_data(p_wallArray); 
+	this.regionGrid = this.gridWall.toRegionGrid(); 
 	this.answerGrid = [];
 	this.spacesByRegion =  [];
 	this.notPlacedYetByRegion = [];
@@ -49,7 +48,7 @@ SolverNorinori.prototype.purifyAnswerGrid = function(){
 	//Removing banned spaces (hence the necessity to have things already updated)
 	for(iy = 0; iy < this.yLength ; iy++){
 		for(ix = 0; ix < this.xLength ; ix++){
-			if (this.regionGrid[iy][ix] == BANNED){
+			if (this.regionGrid[iy][ix] == WALLGRID.OUT_OF_REGIONS){
 				this.putNew(ix,iy,FILLING.NO);
 			}
 		}

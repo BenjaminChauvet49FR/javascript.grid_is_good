@@ -19,7 +19,7 @@ var colors = {
 //--------------------
 //The main draw function (at start)
 function drawCanvas(){
-	drawer.drawWalllessGrid(context,solver.wallGrid,solver.xLength,solver.yLength); 
+	drawer.drawWalllessGrid(context,solver.gridWall,solver.xLength,solver.yLength); 
 	drawInsideSpaces(context,drawer,colors,solver);
 }
 

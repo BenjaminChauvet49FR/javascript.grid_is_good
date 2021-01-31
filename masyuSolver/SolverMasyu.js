@@ -7,7 +7,7 @@ SolverMasyu.prototype = Object.create(LoopSolver.prototype);
 SolverMasyu.prototype.constructor = SolverMasyu;
 
 SolverMasyu.prototype.construct = function(p_symbolGrid) {
-	this.loopSolverConstruct(p_symbolGrid, {}); // this.xLength and yLength defined in the upper solver
+	this.loopSolverConstruct(generateWallArray(p_symbolGrid[0].length, p_symbolGrid.length), {}); // this.xLength and yLength defined in the upper solver
 	this.setPuzzleSpecificMethods({
 		setEdgeLinkedPSDeductions : setEdgeLinkedDeductionsClosure(this),
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),

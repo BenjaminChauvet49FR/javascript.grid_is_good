@@ -12,7 +12,7 @@ var colors={
 }
 
 var drawer = new Drawer(colors);
-var solver = new SolverTheoryLoop(generateSymbolArray(10,10));
+var solver = new SolverTheoryLoop(generateWallArray(1,1));
 var canevas = document.getElementById("canevas");
 var	context = canevas.getContext("2d");
 var actionsManager = {clickSpace : null}; 
@@ -23,16 +23,11 @@ var drawIndications;
 //--------------------
 //The main draw function (at start)
 function drawCanvas() {
-	drawer.drawWalllessGrid(context, null, solver.xLength, solver.yLength); //TODO edit the "10 10"
+	drawer.drawWalllessGrid(context, null, solver.xLength, solver.yLength); 
 	drawer.drawSolverLinkInsideSpaces(context, colors, solver); 
 }
 
-var textArea = document.getElementById("textarea_happened");
-var components = {
-	textArea: textArea,
-	checkBox : document.getElementById("checkbox_onlyAssumed"),
-};
-canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,components,solver,actionsManager)},false);
+canevas.addEventListener('click', function(event){clickCanvas(event, canevas, drawer, solver, actionsManager)},false);
 setInterval(drawCanvas,30);
 var fieldName = document.getElementById("input_grid_name");
 

@@ -80,9 +80,9 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 
 }
 
-LoopSolver.prototype.loopSolverConstruct = function(p_wallArray, p_puzzleSpecificMethodPack) {
-	this.xLength = p_wallArray[0].length;
-    this.yLength = p_wallArray.length;
+LoopSolver.prototype.loopSolverConstruct = function(p_array, p_puzzleSpecificMethodPack) {
+	this.xLength = p_array[0].length;
+    this.yLength = p_array.length;
 	this.methodSet = new ApplyEventMethodNonAdjacentPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
@@ -113,7 +113,7 @@ LoopSolver.prototype.loopSolverConstruct = function(p_wallArray, p_puzzleSpecifi
 				linkDown : LOOP_STATE.UNDECIDED,
 				chains : []
 			});
-			this.bannedSpacesGrid[y].push(false);
+			this.bannedSpacesGrid[y].push(p_array[y][x].state == WALLGRID.CLOSED);
 			this.checkNewEnds.array[y].push(false);
 		}
 	}

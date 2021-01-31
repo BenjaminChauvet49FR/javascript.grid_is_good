@@ -2,10 +2,14 @@ SolverTheoryLoop.prototype = Object.create(LoopSolver.prototype);
 
 function SolverTheoryLoop(p_symbolGrid) {
 	LoopSolver.call(this);
-	this.loopSolverConstruct(p_symbolGrid, {});
+	this.construct(p_symbolGrid);
 }
 
 SolverTheoryLoop.prototype.constructor = SolverTheoryLoop;
+
+SolverTheoryLoop.prototype.construct = function(p_symbolGrid) {
+	this.loopSolverConstruct(generateWallArray(p_symbolGrid.length, p_symbolGrid[0].length), {});
+}
 
 // -------------------
 // Input methods

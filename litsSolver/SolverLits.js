@@ -33,8 +33,8 @@ SolverLITS.prototype.construct = function(p_wallArray,p_numberGrid){
 	this.methodSet.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
 	this.methodTools = {comparisonMethod : comparison, copyMethod : copying}; // Warning : the argumentToLabelMethod is defined right before the pass in this solver
 
-	this.wallGrid = WallGrid_data(p_wallArray); 
-	this.regionGrid = this.wallGrid.toRegionGrid();
+	this.gridWall = WallGrid_data(p_wallArray); 
+	this.regionGrid = this.gridWall.toRegionGrid();
 	this.answerGrid = [];
 	this.proximitiesGrid = [];
 	this.shapeGrid = [];

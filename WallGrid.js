@@ -1,6 +1,6 @@
 // Constants for walls and spaces
-const UNCHARTED = -1;
-const WALLGRID = {OPEN : 0, CLOSED : 1} 
+const UNCHARTED = -1; // Only used in this file and therefore not bound to "WALLGRID"
+const WALLGRID = {OPEN : 0, CLOSED : 1, OUT_OF_REGIONS : -2} 
 
 function switchedState(p_state) {
     return 1 - p_state;
@@ -51,6 +51,30 @@ function generateSuggestedArray(p_widthGrid, p_heightGrid, p_startingStateWalls)
 }
 
 /**
+Removes walls next to banned spaces
+*/
+WallGrid.prototype.cleanRedundantWalls = function() {
+	for (var iy = 0; iy < this.yLength ; iy++) {
+		for (var ix = 0; ix < this.yLength ; ix++) {
+			if (this.array[iy][ix].state == WALLGRID.CLOSED) {
+				if (iy > 0 && this.array[iy-1][ix].wallD == WALLGRID.CLOSED) {
+					this.array[iy-1][ix].wallD = WALLGRID.OPEN;
+				}
+				if (ix > 0 && this.array[iy][ix-1].wallR == WALLGRID.CLOSED) {
+					this.array[iy][ix-1].wallR = WALLGRID.OPEN;
+				}
+				if (ix <= this.xLength-2 && this.array[iy][ix+1].wallD == WALLGRID.CLOSED) {
+					this.array[iy][ix+1].wallD = WALLGRID.OPEN;
+				}
+				if (iy <= this.yLength-2 && this.array[iy+1][ix].wallR == WALLGRID.CLOSED) {
+					this.array[iy+1][ix].wallR = WALLGRID.OPEN;
+				}
+			} 
+		}
+	}
+}
+
+/**
 Converts a grid with walls (right and down) to a "region" grid (regions 1,2,3,...)
  */
 WallGrid.prototype.toRegionGrid = function () {
@@ -60,7 +84,7 @@ WallGrid.prototype.toRegionGrid = function () {
         regionGridAnswer.push([]);
         for (var ix = 0; ix < this.xLength; ix++) {
             if (this.array[iy][ix].state == WALLGRID.CLOSED) {
-                regionGridAnswer[iy].push(BANNED);
+                regionGridAnswer[iy].push(WALLGRID.OUT_OF_REGIONS);
             } else {
                 regionGridAnswer[iy].push(UNCHARTED);
             }

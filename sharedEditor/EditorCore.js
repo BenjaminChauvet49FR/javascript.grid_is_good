@@ -326,3 +326,7 @@ EditorCore.prototype.alignToRegions = function (p_idGrid) {
     this.grids[p_idGrid].arrangeSymbols(this.wallGrid.toRegionGrid());
 }
 
+EditorCore.prototype.cleanRedundantWalls = function () { // Note : name transfer...
+    this.wallGrid.cleanRedundantWalls();
+}
+

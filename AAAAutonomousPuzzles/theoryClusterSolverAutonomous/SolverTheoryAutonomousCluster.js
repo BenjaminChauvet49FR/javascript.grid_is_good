@@ -20,7 +20,7 @@ function SolverTheoryAutonomousCluster() {
 SolverTheoryAutonomousCluster.prototype.construct = function (p_wallArray, p_numberGrid) {
     this.xLength = p_wallArray[0].length;
     this.yLength = p_wallArray.length;
-    this.wallGrid = WallGrid_data(p_wallArray);
+    this.gridWall = WallGrid_data(p_wallArray);
     this.answerGrid = [];
     this.happenedEvents = [];
     this.atLeastOneOpen = false;

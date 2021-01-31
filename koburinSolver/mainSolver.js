@@ -25,8 +25,7 @@ var drawIndications;
 function drawCanvas() {
 	drawer.drawWalllessGrid(context, null, solver.xLength, solver.yLength);
 	drawInsideSpaces(context, drawer, colors, solver);
-		// No drawing of banned spaces. 
-	//drawInsideSpaces(context,drawer,colors,solver);
+	// No drawing of non-clue banned spaces
 }
 
 canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,solver,actionsManager)},false);

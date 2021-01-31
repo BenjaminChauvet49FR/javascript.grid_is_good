@@ -60,8 +60,8 @@ function stringToWallAndNumbersPuzzle(p_string) {
 		numberGrid = fillArrayWithTokensSpaces(stringArray.slice(indexToken),numberGrid);
 	}
 	return {
-	    grid: wallGridAnswer,
-	    gridNumber: numberGrid
+	    gridWall : wallGridAnswer,
+	    gridNumber : numberGrid
 	};
 }
 
@@ -145,6 +145,6 @@ function stringToStarBattlePuzzle(p_string) {
 	var stars = stringArray[0];
 	
 	var answerGrid = tokensToWallArray(stringArray.slice(1,3),{isSquare : true});
-	return {grid:answerGrid,starNumber:stars};
+	return {wallGrid:answerGrid, starNumber:stars};
 }
 

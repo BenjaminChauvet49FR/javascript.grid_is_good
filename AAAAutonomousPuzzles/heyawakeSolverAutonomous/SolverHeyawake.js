@@ -15,8 +15,8 @@ function SolverHeyawake(p_wallArray,p_numberGrid){
 SolverHeyawake.prototype.construct = function(p_wallArray,p_numberGrid){
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
-	this.wallGrid = WallGrid_data(p_wallArray); 
-	this.regionGrid = this.wallGrid.toRegionGrid();
+	this.gridWall = WallGrid_data(p_wallArray); 
+	this.regionGrid = this.gridWall.toRegionGrid();
 	this.answerGrid = [];
 	this.stripGrid = [];
 	this.horizontalStripes = [];
@@ -87,14 +87,14 @@ SolverHeyawake.prototype.construct = function(p_wallArray,p_numberGrid){
 	for(iy = 0;iy < this.yLength;iy++){
 		for(ix = 0;ix < this.xLength;ix++){
 			//If it has a right boundary, draw an horizontal band to the right boundary if it exists.
-			if (this.wallGrid.getWallR(ix,iy) == WALLGRID.CLOSED){
+			if (this.gridWall.getWallR(ix,iy) == WALLGRID.CLOSED){
 				endStrip = ix+1;
-				while (endStrip < this.xLength-1 && this.wallGrid.getState(endStrip+1,iy) != WALLGRID.CLOSED && this.wallGrid.getWallR(endStrip,iy) != WALLGRID.CLOSED){
+				while (endStrip < this.xLength-1 && this.gridWall.getState(endStrip+1,iy) != WALLGRID.CLOSED && this.gridWall.getWallR(endStrip,iy) != WALLGRID.CLOSED){
 					endStrip++;
 				}
 				endStrip++; 
 				//Right now, endStrip corresponds to "the right of a boundary" or "a banned/out-of-bounds space"
-				if (endStrip < this.xLength && this.wallGrid.getState(endStrip,iy) != WALLGRID.CLOSED){
+				if (endStrip < this.xLength && this.gridWall.getState(endStrip,iy) != WALLGRID.CLOSED){
 					//We met a true region boundary ? Fine, to work now !
 					irInner = this.regionGrid[iy][ix+1]; //Region of the inner grid
 					indexStrip = this.horizontalStripes.length;
@@ -108,14 +108,14 @@ SolverHeyawake.prototype.construct = function(p_wallArray,p_numberGrid){
 				}
 			}
 			//Same down.
-			if (this.wallGrid.getWallD(ix,iy) == WALLGRID.CLOSED){
+			if (this.gridWall.getWallD(ix,iy) == WALLGRID.CLOSED){
 				endStrip = iy+1;
-				while (endStrip < this.yLength-1 && this.wallGrid.getState(ix,endStrip+1) != WALLGRID.CLOSED && this.wallGrid.getWallD(ix,endStrip) != WALLGRID.CLOSED){
+				while (endStrip < this.yLength-1 && this.gridWall.getState(ix,endStrip+1) != WALLGRID.CLOSED && this.gridWall.getWallD(ix,endStrip) != WALLGRID.CLOSED){
 					endStrip++;
 				}
 				endStrip++; 
 				// ... "the bottom of a boundary" ... "a banned/out-of-bounds space"
-				if (endStrip < this.yLength && this.wallGrid.getState(ix,endStrip) != WALLGRID.CLOSED){
+				if (endStrip < this.yLength && this.gridWall.getState(ix,endStrip) != WALLGRID.CLOSED){
 					irInner = this.regionGrid[iy+1][ix]; 
 					indexStrip = this.verticalStripes.length;
 					this.regions[irInner].verticalInnerStripesIndexes.push(indexStrip);

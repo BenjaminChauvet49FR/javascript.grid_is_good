@@ -184,6 +184,11 @@ saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions
     }
     if (letsSave) {
         var puzzleToSave = "";
+		if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_REGION)) {
+			p_editorCore.alignToRegions(GRID_ID.NUMBER_REGION);
+		}
+		p_editorCore.cleanRedundantWalls();
+		
         if (p_kindId == PUZZLES_KIND.STAR_BATTLE.id) {
             puzzleToSave = starBattlePuzzleToString(p_editorCore.getWallArray(), p_externalOptions.numberStars);
         } else if (p_kindId == PUZZLES_KIND.MASYU_LIKE.id) {
@@ -197,7 +202,6 @@ saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions
 			//const grid = p_editorCore.getArray(GRID_ID.NUMBER_SPACE);
             //puzzleToSave = arrayToStringRows(p_editorCore.getArray(GRID_ID.YAJILIN), true);
         } else {
-            p_editorCore.alignToRegions(GRID_ID.NUMBER_REGION);
             puzzleToSave = commonPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION), null);
         }
         localStorage.setItem(localStorageName, puzzleToSave);
@@ -217,29 +221,29 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p
 			//NB : reinitialization is supposed to be contained in setupFromWallArray
             if (p_kindId == PUZZLES_KIND.STAR_BATTLE.id){
 				loadedItem = stringToStarBattlePuzzle(localStorage.getItem(localStorageName));
-				p_editorCore.setupFromWallArray(loadedItem.wallGrid);			
+				p_editorCore.setupFromWallArray(loadedItem.gridWall);			
 			} else if (p_kindId == PUZZLES_KIND.MASYU_LIKE.id){
 				loadedItem = stringToEmptyWallsPuzzle(localStorage.getItem(localStorageName));
 				const gridPearl = loadedItem.gridSymbol;
-				loadedItem.wallGrid = generateWallArray(gridPearl[0].length, gridPearl.length); // ".wallGrid" property added to suit the updateFieldsAfterLoad method .
-				p_editorCore.setupFromWallArray(loadedItem.wallGrid);
+				loadedItem.gridWall = generateWallArray(gridPearl[0].length, gridPearl.length); // ".wallGrid" property added to suit the updateFieldsAfterLoad method .
+				p_editorCore.setupFromWallArray(loadedItem.gridWall);
 				p_editorCore.addGrid(GRID_ID.PEARL, gridPearl); 
 			} else if (p_kindId == PUZZLES_KIND.NURIKABE_LIKE.id){
 				loadedItem = stringToNurikabePuzzle(localStorage.getItem(localStorageName));
 				const gridNumber = loadedItem.gridNumber;
-				loadedItem.wallGrid = generateWallArray(gridNumber[0].length, gridNumber.length); 
-				p_editorCore.setupFromWallArray(loadedItem.wallGrid);
+				loadedItem.gridWall = generateWallArray(gridNumber[0].length, gridNumber.length); 
+				p_editorCore.setupFromWallArray(loadedItem.gridWall);
 				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE, gridNumber); 
 			} else if (p_kindId == PUZZLES_KIND.YAJILIN_LIKE.id){
 				/*loadedItem = stringToYajilinPuzzle(localStorage.getItem(localStorageName));
 				const gridNumber = loadedItem.gridNumber;
-				loadedItem.wallGrid = generateWallArray(gridNumber[0].length, gridNumber.length); 
-				p_editorCore.setupFromWallArray(loadedItem.wallGrid);			
+				loadedItem.gridWall = generateWallArray(gridNumber[0].length, gridNumber.length); 
+				p_editorCore.setupFromWallArray(loadedItem.gridWall);			
 				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE, gridNumber); */
 				alert("551551 Loading To be done ...");
 			} else {
 				loadedItem = stringToWallAndNumbersPuzzle(localStorage.getItem(localStorageName));
-				p_editorCore.setupFromWallArray(loadedItem.wallGrid);			
+				p_editorCore.setupFromWallArray(loadedItem.gridWall);			
 				p_editorCore.addGrid(GRID_ID.NUMBER_REGION,loadedItem.gridNumber); 
 			}
             adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore); 
@@ -251,8 +255,8 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p
 }
 
 function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem) {
-    p_fieldsToUpdate.xLengthField.value = p_loadedItem.wallGrid[0].length;
-    p_fieldsToUpdate.yLengthField.value = p_loadedItem.wallGrid.length;
+    p_fieldsToUpdate.xLengthField.value = p_loadedItem.gridWall[0].length;
+    p_fieldsToUpdate.yLengthField.value = p_loadedItem.gridWall.length;
 	if (p_loadedItem.starNumber) {
 		p_fieldsToUpdate.numberStarsField.value = p_loadedItem.starNumber;
 	}
