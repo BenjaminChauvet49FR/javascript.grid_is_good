@@ -145,6 +145,6 @@ function stringToStarBattlePuzzle(p_string) {
 	var stars = stringArray[0];
 	
 	var answerGrid = tokensToWallArray(stringArray.slice(1,3),{isSquare : true});
-	return {wallGrid:answerGrid, starNumber:stars};
+	return {gridWall:answerGrid, starNumber:stars};
 }
 

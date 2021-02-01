@@ -55,7 +55,7 @@ Removes walls next to banned spaces
 */
 WallGrid.prototype.cleanRedundantWalls = function() {
 	for (var iy = 0; iy < this.yLength ; iy++) {
-		for (var ix = 0; ix < this.yLength ; ix++) {
+		for (var ix = 0; ix < this.xLength ; ix++) {
 			if (this.array[iy][ix].state == WALLGRID.CLOSED) {
 				if (iy > 0 && this.array[iy-1][ix].wallD == WALLGRID.CLOSED) {
 					this.array[iy-1][ix].wallD = WALLGRID.OPEN;

@@ -23,6 +23,8 @@ function EditorCore(p_xLength, p_yLength, p_parameters) {
     this.xLength = p_xLength;
 	this.yLength = p_yLength; //TODO potentielle redondance dans la gestion des xLength et des yLength... mais au moins ça permet de savoir ce qu'on fait.
 	this.initializeGridData();
+	this.grids = {};
+    this.visibleGrids = {};
 	this.buildGrids(p_xLength, p_yLength);
     this.isWithWalls = (!p_parameters || !p_parameters.hasWalls || (p_parameters.hasWalls != false));
 }
@@ -37,10 +39,16 @@ EditorCore.prototype.restartGrid = function (p_xLength, p_yLength) {
     this.reinitializeGridData();
 }
 
+/**
+Resets the grids
+*/
 EditorCore.prototype.buildGrids = function (p_xLength, p_yLength) {
 	this.wallGrid = WallGrid_dim(p_xLength, p_yLength);
-    this.grids = {};
-    this.visibleGrids = {};
+	Object.keys(GRID_ID).forEach(id => {
+		if (this.grids[id]) {
+			this.grids[id] = Grid_dim(p_xLength, p_yLength);
+		}
+	});
 }
 
 // Only launched on building. ALL data are loaded here.
@@ -215,18 +223,12 @@ EditorCore.prototype.hasWalls = function () {
 
 EditorCore.prototype.transformGrid = function (p_transformation, p_xDatum, p_yDatum) {
 	this.reinitializeGridData();
-	if (this.hasWallGrid()) {
-		this.wallGrid.transform(p_transformation, p_xDatum, p_yDatum);
-		this.xLength = this.wallGrid.getXLength();
-		this.yLength = this.wallGrid.getYLength();
-	} else {
-		for (const id in this.grids) {
-			this.grids[id].transform(p_transformation, p_xDatum, p_yDatum);
-			this.xLength = this.grids[id].getXLength();
-			this.yLength = this.grids[id].getYLength();
-		}
+	this.wallGrid.transform(p_transformation, p_xDatum, p_yDatum);
+	this.xLength = this.wallGrid.getXLength();
+	this.yLength = this.wallGrid.getYLength();
+	for (const id in this.grids) {
+		this.grids[id].transform(p_transformation, p_xDatum, p_yDatum);
 	}
-	
 	this.resetSelection();
 }
 
