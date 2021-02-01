@@ -88,7 +88,6 @@ LoopSolver.prototype.loopSolverConstruct = function(p_array, p_puzzleSpecificMet
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.closedSpacesAreActive = false;
 	this.setPuzzleSpecificMethods(p_puzzleSpecificMethodPack);
 	this.methodSet.addAbortAndFilters(abortClosure(this), [testLoopsClosure(this), separateEndsClosure(this)]);
     this.grid = [];
@@ -127,6 +126,12 @@ LoopSolver.prototype.loopSolverConstruct = function(p_array, p_puzzleSpecificMet
 		this.grid[y][0].closedEdges++;
 		this.grid[y][this.xLength-1].closedEdges++;
 	}	
+	
+	// Ergonomic options
+	this.ergonomicOptions = {
+		displayOtherEnds : false,
+		colorChains : false
+	}
 }
 
 // -------------------
@@ -201,15 +206,32 @@ LoopSolver.prototype.isBanned = function(p_x, p_y){
 	return this.bannedSpacesGrid[p_y][p_x];
 }
 
-LoopSolver.prototype.areActiveClosedSpaces = function(){
-	return this.closedSpacesAreActive;
+// Appearance getters
+LoopSolver.prototype.areActiveClosedSpaces = function() {
+	return this.ergonomicOptions.closedSpacesAreActive;
+}
+
+LoopSolver.prototype.areAllOpenSpaces = function() {
+	return this.ergonomicOptions.allOpenSpaces;
+}
+
+LoopSolver.prototype.getColorChains = function (p_x, p_y) {
+	if (this.ergonomicOptions.colorChains == true) {
+		return this.colorChainsGrid[p_y][p_x];
+	} else {
+		return null;
+	}
 }
 
 // -------------------
 // "Protected" methods
 
-LoopSolver.prototype.activateClosedSpaces = function(){
-	this.closedSpacesAreActive = true;
+LoopSolver.prototype.activateClosedSpaces = function() {
+	this.ergonomicOptions.closedSpacesAreActive = true;
+}
+
+LoopSolver.prototype.signalAllOpenSpaces = function() {
+	this.ergonomicOptions.allOpenSpaces = true;
 }
 
 // -------------------
@@ -220,6 +242,38 @@ copySpace = function(p_space) {
 		x : p_space.x,
 		y : p_space.y
 	}
+}
+
+LoopSolver.prototype.cleanErgonomicOptions = function() {
+	this.ergonomicOptions.displayOppositeEnds = false;
+	this.ergonomicOptions.colorChains = false;
+}
+
+/** Colors a chain from a starting point. The starting point must have one single end.
+*/
+LoopSolver.prototype.colorChain = function (p_x, p_y, p_number) {
+	this.colorChainsGrid[p_y][p_x] = p_number;
+	var dir = this.grid[p_y][p_x].chains[0];
+	var newDir;
+	var x = p_x + deltaX[dir];
+	var y = p_y + deltaY[dir];
+	counter = 0;
+	while (this.getLinkedEdges(x, y) == 2 && counter < 500) {
+		this.colorChainsGrid[y][x] = p_number;
+		newDir = this.grid[y][x].chains[0];
+		if (newDir == oppositeDirection[dir]) {
+			dir = this.grid[y][x].chains[1];
+		} else {
+			dir = newDir;
+		}
+		x += deltaX[dir];
+		y += deltaY[dir];
+		counter++;
+		if (counter == 500) {
+			alert("Congratulations, you failed your while loop !");
+		}
+	}
+	this.colorChainsGrid[y][x] = p_number;
 }
 
 //--------------------------------
@@ -239,6 +293,7 @@ LoopSolver.prototype.neighborExists = function(p_x, p_y, p_dir) {
 
 // Warning : offensive programmation, no boundary check !
 LoopSolver.prototype.setLinkRight = function(p_x, p_y, p_state) {
+	this.cleanErgonomicOptions(); 
 	const state = this.grid[p_y][p_x].linkRight;
 	if (state == p_state) {
 		return EVENT_RESULT.HARMLESS;
@@ -256,6 +311,7 @@ LoopSolver.prototype.setLinkLeft = function(p_x, p_y, p_state) {
 }
 
 LoopSolver.prototype.setLinkDown = function(p_x, p_y, p_state) { 
+	this.cleanErgonomicOptions(); 
 	const state = this.grid[p_y][p_x].linkDown;
 	if (state == p_state) {
 		return EVENT_RESULT.HARMLESS;
@@ -273,6 +329,7 @@ LoopSolver.prototype.setLinkUp = function(p_x, p_y, p_state) {
 }
 
 LoopSolver.prototype.setLinkSpace = function(p_x, p_y, p_state) {
+	this.cleanErgonomicOptions(); 
 	const state = this.grid[p_y][p_x].state;
 	if (state == p_state) {
 		return EVENT_RESULT.HARMLESS;
@@ -329,6 +386,7 @@ LoopSolver.prototype.tradeLinkedSpaces = function(p_x, p_y, p_x2, p_y2, p_state,
 }
 
 LoopSolver.prototype.undoLinkRight = function(p_x, p_y) {
+	this.cleanErgonomicOptions(); 
 	previousState = this.grid[p_y][p_x].linkRight;
 	this.grid[p_y][p_x].linkRight = LOOP_STATE.UNDECIDED;
 	this.undoTradeLinkedSpaces(p_x, p_y, p_x+1, p_y, previousState);
@@ -339,6 +397,7 @@ LoopSolver.prototype.undoLinkLeft = function(p_x, p_y) {
 }
 
 LoopSolver.prototype.undoLinkDown = function(p_x, p_y) {
+	this.cleanErgonomicOptions(); 
 	previousState = this.grid[p_y][p_x].linkDown;
 	this.grid[p_y][p_x].linkDown = LOOP_STATE.UNDECIDED;
 	this.undoTradeLinkedSpaces(p_x, p_y, p_x, p_y+1, previousState);
@@ -384,7 +443,8 @@ LoopSolver.prototype.undoTradeLinkedSpaces = function(p_x, p_y, p_x2, p_y2, p_pr
 }
 
 LoopSolver.prototype.undoLinkSpace = function(p_x, p_y) {
-	if (this.grid[p_y][p_x].state == LOOP_STATE.LINKED){
+	this.cleanErgonomicOptions(); 
+	if (this.grid[p_y][p_x].state == LOOP_STATE.LINKED) {
 		this.endedChainCount--;
 		this.setSpaceLinkedPSAtomicUndos(p_x, p_y);
 	} else {
@@ -439,6 +499,36 @@ undoEventClosure = function(p_solver) {
 LoopSolver.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
+
+// Ergonomic input methods. "Action" is directly written since it is provided for inputs.
+
+LoopSolver.prototype.seeOppositeEndsAction = function() {
+	this.ergonomicOptions.displayOppositeEnds = true;
+}
+
+LoopSolver.prototype.seeColorChainsAction = function() {
+	if (!this.ergonomicOptions.colorChains) {
+		this.colorChainsGrid = [];
+		for (var y = 0 ; y < this.yLength ; y++) {
+			this.colorChainsGrid.push([]);
+			for (var x = 0 ; x < this.xLength ; x++) {
+				this.colorChainsGrid[y].push(null);
+			}
+		}
+		number = 0;
+		for (var y = 0 ; y < this.yLength ; y++) {
+			for (var x = 0 ; x < this.xLength ; x++) {
+				if (this.getLinkedEdges(x,y) == 1 && this.colorChainsGrid[y][x] == null) {
+					this.colorChain(x,y, number);
+					number++;
+				}
+			}
+		}
+	}
+	this.ergonomicOptions.colorChains = true;
+}
+
+
 
 //--------------------------------
 // Central methods

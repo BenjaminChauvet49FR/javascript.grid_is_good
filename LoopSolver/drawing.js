@@ -19,7 +19,7 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
 				} else {
 					this.drawCrossX(p_context, ix, iy, {color : p_colorSet.noLinkState});
 				}
-            } else if (p_solver.getLinkSpace(ix, iy) == LOOP_STATE.LINKED) {
+            } else if (!p_solver.areAllOpenSpaces() && p_solver.getLinkSpace(ix, iy) == LOOP_STATE.LINKED) {
                 p_context.fillStyle = p_colorSet.presentLinkState;
                 p_context.fillRect(pixInnerLeft, pixInnerUp, this.getPixInnerSide(), this.getPixInnerSide());
             }
@@ -32,7 +32,11 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
 			// Draw onto space borders
             if (iy < ( p_solver.yLength-1)) {
 				if (p_solver.getLinkDown(ix, iy) == LOOP_STATE.LINKED) {
-					p_context.fillStyle = p_colorSet.presentLink;
+					if (p_solver.getColorChains(ix, iy) != null) {
+						p_context.fillStyle = rainbowRoads[p_solver.getColorChains(ix, iy) % rainbowRoads.length];
+					} else {
+						p_context.fillStyle = p_colorSet.presentLink;
+					}
 					p_context.fillRect(pixLeft, pixUp, shorter, longer);
 				} else if (p_solver.getLinkDown(ix, iy) == LOOP_STATE.CLOSED && (!p_solver.isBanned(ix,iy)) && (!p_solver.isBanned(ix,iy+1))) {
 					p_context.fillStyle = p_colorSet.noLink;
@@ -42,7 +46,11 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
             }
             if (ix < (p_solver.xLength-1)) {
 				if (p_solver.getLinkRight(ix, iy) == LOOP_STATE.LINKED) {
-					p_context.fillStyle = p_colorSet.presentLink;
+					if (p_solver.getColorChains(ix, iy) != null) {
+						p_context.fillStyle = rainbowRoads[p_solver.getColorChains(ix, iy) % rainbowRoads.length];
+					} else {
+						p_context.fillStyle = p_colorSet.presentLink;
+					}
 					p_context.fillRect(pixLeft, pixUp, longer, shorter);
 				} else if (p_solver.getLinkRight(ix, iy) == LOOP_STATE.CLOSED && (!p_solver.isBanned(ix,iy)) && (!p_solver.isBanned(ix+1,iy))) {
 					p_context.fillStyle = p_colorSet.noLink;
@@ -55,7 +63,7 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
         pixLeft = pixLeftStart;
         pixUp += this.pix.sideSpace;
     }
-	//if (displayOtherEnds) {
+	if (p_solver.ergonomicOptions.displayOppositeEnds) {
 		const fontSize = drawer.pix.sideSpace/3;
 		p_context.font = fontSize+"px Arial";
 		p_context.fillStyle = p_colorSet.oppositeSpaceWrite;
@@ -74,5 +82,20 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
 				}
 			}
 		}
-	//}
+	}
 }
+
+rainbowRoads = [
+"#ff0000",
+"#00ff00",
+"#0000ff",
+"#ffff00",
+"#ff00ff",
+"#00ffff",
+"#ff0080",
+"#80ff00",
+"#0080ff",
+"#ff8000",
+"#00ff80",
+"#8000ff"
+]
