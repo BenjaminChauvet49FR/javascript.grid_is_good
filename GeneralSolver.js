@@ -413,26 +413,29 @@ GeneralSolver.prototype.isPassEventList = function (p_eventsSerie) {
 GeneralSolver.prototype.happenedEventsLog = function(p_options) {
 	answer = "";
 	var displayGeographical = (p_options && p_options.displayGeographical);
+	var displayQuick = (p_options && p_options.quick);
 	this.happenedEvents.forEach(eventSerie => {
 		if (eventSerie.kind == SERIE_KIND.PASS) {
 			answer += "Pass - " + eventSerie.label+ " ";
 		} else {
-			answer += "Hypothesis - ";
+			answer += "Hypothesis - " + (displayQuick ? eventSerie.list[0] : "");
 		} 
-		eventSerie.list.forEach(event_ => {
-			if (event_.firstOpen) {
-				if (displayGeographical) {
-					answer += "<1st open>";
+		if (!displayQuick) {
+			eventSerie.list.forEach(event_ => {
+				if (event_.firstOpen) {
+					if (displayGeographical) {
+						answer += "<1st open>";
+					}
+				} else if (event_.adjacency) {
+					if (displayGeographical) {
+						answer += "<Adjacency>";
+					}
+				} 
+				else {
+					answer += event_.toString() + " ";
 				}
-			} else if (event_.adjacency) {
-				if (displayGeographical) {
-					answer += "<Adjacency>";
-				}
-			} 
-			else {
-				answer += event_.toString() + " ";
-			}
-		});
+			});
+		}
 		answer += "\n";
 	});
 	return answer;
