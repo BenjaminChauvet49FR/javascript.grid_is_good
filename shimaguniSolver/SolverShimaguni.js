@@ -189,6 +189,7 @@ SolverShimaguni.prototype.undo = function() {
 
 SolverShimaguni.prototype.quickStart = function() {
 	var space;
+	this.initiateQuickStart();
 	//First, ban all values adjacent to regions with forced values (or ones of size 1, it works as well).
 	this.regions.forEach(region => {
 		if (region.forcedVal > 0) {
@@ -205,6 +206,7 @@ SolverShimaguni.prototype.quickStart = function() {
 			);
 		}
 	});
+	this.terminateQuickStart();
 }
 
 //--------------

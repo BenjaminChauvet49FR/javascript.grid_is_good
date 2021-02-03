@@ -26,7 +26,8 @@ const PASS_RESULT = {
 
 const SERIE_KIND = {
 	HYPOTHESIS : 'H',
-	PASS : 'P'
+	PASS : 'P',
+	QUICKSTART : 'QS'
 }
 
 function GeneralSolver() {
@@ -410,6 +411,29 @@ GeneralSolver.prototype.isPassEventList = function (p_eventsSerie) {
 	return false;
 }
 
+// --------------------------------
+// Quickstart
+
+/**
+As-is, quickstart events are totaly managed by solvers that call deductions methods.
+initiateQuickStart and terminateQuickStart should be called respectively when entering and leaving a quickstart method so all the applied events are concatenated into a single serie that will be logged as "Quick start".
+*/
+
+GeneralSolver.prototype.initiateQuickStart = function() {
+	this.happenedEvents.push({kind : SERIE_KIND.QUICKSTART , list : [] }); 
+	this.separatelyStackDeductions = false;
+}
+
+GeneralSolver.prototype.terminateQuickStart = function() {
+	if (this.happenedEvents[this.happenedEvents.length-1].list.length == 0) {
+		this.happenedEvents.pop();
+	}
+	this.separatelyStackDeductions = true;
+}
+
+// --------------------------------
+// Logs
+
 GeneralSolver.prototype.happenedEventsLog = function(p_options) {
 	answer = "";
 	var displayGeographical = (p_options && p_options.displayGeographical);
@@ -417,6 +441,8 @@ GeneralSolver.prototype.happenedEventsLog = function(p_options) {
 	this.happenedEvents.forEach(eventSerie => {
 		if (eventSerie.kind == SERIE_KIND.PASS) {
 			answer += "Pass - " + eventSerie.label+ " ";
+		} else if (eventSerie.kind == SERIE_KIND.QUICKSTART) {
+			answer += "Quickstart - ";
 		} else {
 			answer += "Hypothesis - " + (displayQuick ? eventSerie.list[0] : "");
 		} 
@@ -446,11 +472,11 @@ Used by outside !
  */
 GeneralSolver.prototype.undoToLastHypothesis = function (p_undoEventMethod) {
     if (this.happenedEvents.length > 0) {
-		var wasAnHypothesis;
+		var wasPass;
 		do {
 			var lastEventsSerie = this.happenedEvents.pop();
-			wasAnHypothesis = this.isPassEventList(lastEventsSerie);
+			wasPass = this.isPassEventList(lastEventsSerie);
 			this.undoEventList(lastEventsSerie.list, p_undoEventMethod);
-		} while(wasAnHypothesis && this.happenedEvents.length > 0);
+		} while(wasPass && this.happenedEvents.length > 0);
     }
 }

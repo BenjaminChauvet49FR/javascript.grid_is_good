@@ -222,7 +222,8 @@ SolverHeyawake.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverHeyawake.prototype.quickStart = function(){
+SolverHeyawake.prototype.quickStart = function() {
+	this.initiateQuickStart();
 	this.regions.forEach(region => {
 		if (region.size == 1 && region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 1){
 			this.tryToPutNew(region.spaces[0].x,region.spaces[0].y,SPACE.CLOSED);
@@ -233,6 +234,7 @@ SolverHeyawake.prototype.quickStart = function(){
 			});
 		}
 	});
+	this.terminateQuickStart();
 }
 
 SolverHeyawake.prototype.passRegion = function(p_indexRegion) {

@@ -64,6 +64,7 @@ SolverMasyu.prototype.passSpace = function(p_x, p_y) {
 }
 
 SolverMasyu.prototype.quickStart = function() { //Warning : this quickstart assumes that the puzzle does not have white pearls in corners
+	this.initiateQuickStart();
 	for (var x = 0; x < this.xLength; x++) {
 		if (this.pearlGrid[0][x] == PEARL.WHITE && (x != 0)) {
 			this.tryToPutNewRight(x-1, 0, LOOP_STATE.LINKED);
@@ -96,6 +97,7 @@ SolverMasyu.prototype.quickStart = function() { //Warning : this quickstart assu
 			this.tryToPutNewRight(this.xLength-3, y, LOOP_STATE.LINKED);  
 		}
 	}
+	this.terminateQuickStart();
 }
 
 // -------------------

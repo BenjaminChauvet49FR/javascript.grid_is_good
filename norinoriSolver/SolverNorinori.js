@@ -170,12 +170,14 @@ Rushes the spaces with 2 regions by filling them with O (actually, fills one spa
 */
 SolverNorinori.prototype.quickStart = function(){
 	var space;
+	this.initiateQuickStart();
 	for(var i=0;i<this.spacesByRegion.length;i++){
 		if(this.spacesByRegion[i].length == 2){
 			space = this.spacesByRegion[i][0];
 			this.emitHypothesis(space.x,space.y,FILLING.YES);
 		}
 	}
+	this.terminateQuickStart();
 }
 
 SolverNorinori.prototype.emitPassRegion = function(p_indexRegion) {

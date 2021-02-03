@@ -133,7 +133,8 @@ SolverChocona.prototype.makeMultiPass = function() {
 	this.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
 }
 
-SolverChocona.prototype.quickStart = function(){
+SolverChocona.prototype.quickStart = function() {
+	this.initiateQuickStart();
 	var quickStartList = [];
 	for (ir = 0; ir < this.regions.length ; ir ++) {
 		quickStartList = this.alertRegionIfFullNOs(quickStartList, ir);
@@ -142,6 +143,7 @@ SolverChocona.prototype.quickStart = function(){
 	quickStartList.forEach(eventToApply => {
 		this.tryToPutNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
 	});
+	this.terminateQuickStart();
 }
 
 //--------------------------------

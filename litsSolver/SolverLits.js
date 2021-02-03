@@ -146,6 +146,7 @@ SolverLITS.prototype.undo = function() {
 }
 
 SolverLITS.prototype.quickStart = function() { 
+	this.initiateQuickStart();
 	this.regions.forEach(region => {
 		if (region.size == 4){
 			for (var i = 0; i <= 3 ; i++) {
@@ -153,6 +154,7 @@ SolverLITS.prototype.quickStart = function() {
 			}
 		};
 	});
+	this.terminateQuickStart();
 }
 
 SolverLITS.prototype.passRegionAndAdjacents = function(p_indexRegion) {

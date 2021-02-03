@@ -352,11 +352,13 @@ SolverCurvingRoad.prototype.undoToLastHypothesis = function () {
 }
 
 SolverCurvingRoad.prototype.quickStart = function () {
+	this.initiateQuickStart();
     this.curvingLinkList.forEach(curvingLink => {
         if (curvingLink.valid && (curvingLink.point != null)) {
             this.emitHypothesis(curvingLink.point.x, curvingLink.point.y, SPACE.CLOSED);
         }
     });
+	this.terminateQuickStart();
 }
 
 SolverCurvingRoad.prototype.passSpace = function(p_x, p_y) {
