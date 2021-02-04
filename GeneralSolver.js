@@ -109,7 +109,7 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
 						}
 					}	
 				}
-				if (!eventBeingApplied.isCompoundEvent) {
+				if (!eventBeingApplied.isCompoundEvent && !eventBeingApplied.nothingHappened) {
 					listEventsApplied.push(eventBeingApplied);
 				}
 			}

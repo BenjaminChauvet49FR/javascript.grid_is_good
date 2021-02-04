@@ -213,7 +213,7 @@ SolverLITS.prototype.passRegion = function(p_indexRegion) {
 }
 
 SolverLITS.prototype.makeMultiPass = function() {
-	this.methodTools.argumentToLabelMethod = namingRegionClosureAdj(this);
+	this.methodTools.argumentToLabelMethod = namingRegionClosure(this);
 	this.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
 }
 
@@ -239,7 +239,13 @@ applyEventClosure = function(p_solver) {
 			//console.log("Like a mistake ? "+eventToApply.x()+" "+eventToApply.y()); 551551
 			return p_solver.putNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
 		} else {
-			return p_solver.putShape(eventToApply.x(), eventToApply.y(), eventToApply.shape);
+			const result = p_solver.putShape(eventToApply.x(), eventToApply.y(), eventToApply.shape); // Returning this wasn't enough because of the definition of shapegrid. See this function implementation.
+			if (result == "Special 2-shapes case") {
+				eventToApply.nothingHappened = true;
+				return EVENT_RESULT.SUCCESS;
+			} else {
+				return result;
+			}
 		}
 	}
 }
@@ -263,11 +269,15 @@ SolverLITS.prototype.putNew = function(p_x,p_y,p_symbol){
 }
 
 SolverLITS.prototype.putShape = function(p_x, p_y, p_shape) {
-	if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.shapeGrid[p_y][p_x] == p_shape)){
+	if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) ||  (this.answerGrid[p_y][p_x] == SPACE.CLOSED) || (this.shapeGrid[p_y][p_x] == p_shape)) { // this.answerGrid added after.
 		return EVENT_RESULT.HARMLESS;
 	}
-	if (this.shapeGrid[p_y][p_x] != LITS.UNDECIDED) {
-		return EVENT_RESULT.FAILURE;
+	if (this.shapeGrid[p_y][p_x] != LITS.UNDECIDED) { // It's VERY important to recall the meaning of this grid. This is the grid of "if the space is open, then it should contain this shape" shapes, not the grid of "this space must absolutely contain this shape" ! Like this, it could lead to the region 8 in puzzle LITS54 having a L-related space (in pink as I write this) in its bottom-left corner (deductible by a specific pass) despite that space being impossible to open (deductible by another specific pass)
+		if (this.answerGrid[p_y][p_x] == SPACE.OPEN) {
+			return EVENT_RESULT.FAILURE; // If this space is open (it is !) it should contain 2 different shapes. Hence the mistake...			
+		} else {
+			return "Special 2-shapes case"; // If this space is open, it should contain 2 different shapes. Luckily it isn't. So you know what ? Nothing happened, this event isn't even worth mentioning, and therefore not worth cancelling either. It should be notified in the main applying event method.
+		}
 	}
 	this.shapeGrid[p_y][p_x] = p_shape;
 	return EVENT_RESULT.SUCCESS;
@@ -349,6 +359,9 @@ deductionsClosure = function (p_solver) {
 				if (region.notPlacedYetClosed == 0) {
 					p_listEventsToApply = p_solver.alertRegion(p_listEventsToApply,ir,SPACE.OPEN, 4-region.openSpaces.length);			
 				}
+				if (region.openSpaces.length == 3) { // Now that a space is closed, maybe something new is found in that region.
+					p_solver.declareRegion3or4open(ir);	
+				}
 			} else {
 				// Alert on 2x2 areas
 				p_listEventsToApply = p_solver.alert2x2Areas(p_listEventsToApply, x, y);
@@ -379,14 +392,18 @@ deductionsClosure = function (p_solver) {
 				}
 			}
 		} else {
-			// A shape event : if 2 spaces are affected the same shape, if either of them is open, close the other one. 
+			// A shape event : if 2 spaces across borders are affected the same shape, if either of them is open, close the other one. 
 			shape = p_eventBeingApplied.shape;
 			if (p_solver.answerGrid[y][x] == SPACE.OPEN) {
 				p_listEventsToApply = p_solver.closeUpTo4NeighborsOrNotSameShapeWhileOpen(p_listEventsToApply, x, y, ir, shape);
 			} else if ((p_solver.leftExists(x) && (p_solver.answerGrid[y][x-1] == SPACE.OPEN) && p_solver.sameShapesNeighbors(x-1, y, ir, shape) ) ||
 				(p_solver.upExists(y) && (p_solver.answerGrid[y-1][x] == SPACE.OPEN) && p_solver.sameShapesNeighbors(x, y-1, ir, shape)) ||
 				(p_solver.rightExists(x) && (p_solver.answerGrid[y][x+1] == SPACE.OPEN) && p_solver.sameShapesNeighbors(x+1, y, ir, shape)) ||
-				(p_solver.downExists(y) && (p_solver.answerGrid[y+1][x] == SPACE.OPEN) && p_solver.sameShapesNeighbors(x, y+1, ir, shape)) ) {
+				(p_solver.downExists(y) && (p_solver.answerGrid[y+1][x] == SPACE.OPEN) && p_solver.sameShapesNeighbors(x, y+1, ir, shape)) || 
+				p_solver.shapeGrid[y][x] != shape) {
+					 // Close this space in either of these cases : 
+					 //-there was already a different shape in this space (famous event that never happened) (if the space was open it would already have been spotted in the application part and failed)
+					 //-there is already an adjacent space that is accross a border, that is open, and with the same shape 
 				p_listEventsToApply.push(SpaceEvent(x, y, SPACE.CLOSED));
 			}
 		}
@@ -784,7 +801,7 @@ const spaceDelta_MM1 = {x:-2, y:1};
 
 
 // For each of the configurations, give : list of L-placements, list of I-placements, list of T-placements, list of S-placements
-const arrayOfEventsByConfig = [
+const arrayOfEventsBy3SpaceConfig = [
 [[],[],[],[]], // config 0, nonexistent (numerotation starts at 1)
 [[spaceDelta_0M, spaceDelta_01, spaceDelta_2M, spaceDelta_21],  [spaceDelta_M0, spaceDelta_30], [spaceDelta_1M, spaceDelta_11],[]], // config 1 Ooo
 [[spaceDelta_M0, spaceDelta_10, spaceDelta_M2, spaceDelta_12],  [spaceDelta_0M, spaceDelta_03], [spaceDelta_M1, spaceDelta_11],[]], //config 2 going down
@@ -802,25 +819,81 @@ const arrayOfEventsByConfig = [
 [[spaceDelta_M0], [], [], [spaceDelta_01]] // Config 14 : 2-then-1 left down
 ];
 
+const arrayOfSpaceDeltasBy3SpaceConfig = [ // List of space-deltas of spaces 2 and 3 from the first space of the config to obtain all the 3-space configs 
+[],
+[spaceDelta_10, spaceDelta_20],
+[spaceDelta_01, spaceDelta_02],
+[spaceDelta_10, spaceDelta_01],
+[spaceDelta_10, spaceDelta_11],
+[spaceDelta_M1, spaceDelta_01],
+[spaceDelta_01, spaceDelta_11],
+[spaceDelta_11, spaceDelta_21],
+[spaceDelta_11, spaceDelta_12],
+[spaceDelta_M1, spaceDelta_M2],
+[spaceDelta_M1, spaceDelta_MM1],
+[spaceDelta_10, spaceDelta_21],
+[spaceDelta_01, spaceDelta_12],
+[spaceDelta_01, spaceDelta_M2],
+[spaceDelta_10, spaceDelta_M1]
+];
+
 /**
-Creates events from 3 open spaces, closing any unneeded spaces and affecting shapes to spaces
+3 spaces are open - deduce events from it, e.g. placing shapes L,I,T,S for the 4th missing spaces. Also, if there is only one possible new space, make it open (the "4th deduction" will clear the work) and if there are at least 2 deductions with all the same shape, affect shapes to all 3 open spaces.
 p_ix, p_iy : origin space (1st in lexical order), p_ir : region index,
 p_identifiant : identifiant of the triplet of spaces. See text doc for list of shapes.
-*/
+*/ 
 SolverLITS.prototype.shapeFrom3Open = function(p_eventsList, p_x, p_y, p_ir, p_identifiant) {
-	const eventsByConfig = arrayOfEventsByConfig[p_identifiant];
+	const eventsByConfig = arrayOfEventsBy3SpaceConfig[p_identifiant];
+	
+	const startingEventsLength = p_eventsList.length;
+	var currentEventsLength = p_eventsList.length;
 	p_eventsList = this.pushShapeEventsDelta(p_eventsList, p_x, p_y, p_ir, eventsByConfig[0], LITS.L);
+	const noLFound = (p_eventsList.length == currentEventsLength);
+	
+	currentEventsLength = p_eventsList.length;
 	p_eventsList = this.pushShapeEventsDelta(p_eventsList, p_x, p_y, p_ir, eventsByConfig[1], LITS.I);
+	const noIFound = (p_eventsList.length == currentEventsLength);
+	
+	currentEventsLength = p_eventsList.length;
 	p_eventsList = this.pushShapeEventsDelta(p_eventsList, p_x, p_y, p_ir, eventsByConfig[2], LITS.T);
+	const noTFound = (p_eventsList.length == currentEventsLength);
+	
+	currentEventsLength = p_eventsList.length;
 	p_eventsList = this.pushShapeEventsDelta(p_eventsList, p_x, p_y, p_ir, eventsByConfig[3], LITS.S);
+	const noSFound = (p_eventsList.length == currentEventsLength);
+	
+	if (p_eventsList.length == startingEventsLength + 1) {
+		// Only one event ! That means only one possibility of 4th open space ! 
+		const onlyShapeEvent = p_eventsList[p_eventsList.length-1];
+		p_eventsList.push(SpaceEvent(onlyShapeEvent.coorX, onlyShapeEvent.coorY, SPACE.OPEN));
+	} else if (noLFound && noIFound && noTFound) {
+		if (noSFound) {
+			return EVENT_RESULT.FAILURE;
+		} else {
+			p_eventsList = this.affectShapes(p_eventsList, p_x, p_y, p_identifiant, LITS.S);
+		}
+	} else if (noSFound) {
+		if (noLFound) {
+			if (noIFound) {
+				p_eventsList = this.affectShapes(p_eventsList, p_x, p_y, p_identifiant, LITS.T);
+			} else if (noTFound) {
+				p_eventsList = this.affectShapes(p_eventsList, p_x, p_y, p_identifiant, LITS.I);
+			}
+		} else if (noIFound && noTFound) {
+			p_eventsList = this.affectShapes(p_eventsList, p_x, p_y, p_identifiant, LITS.L);
+		}
+	}
+
 	return p_eventsList;
 }
 
+// TODO peut-on avoir un cas de figure où 2 cases peuvent être ouvertes, dans la même région, et avec des formes différentes ? Peut-être ai-je déjà traité ce cas de figure dans les déductions mais j'ai la flemme de vérifier...
+// Add shape-affectation events where it can be useful among the "potential spaces" (e.g. not on closed spaces for instance)
 SolverLITS.prototype.pushShapeEventsDelta = function (p_eventsList, p_x, p_y, p_ir, p_spaceDeltas, p_shape) {
 	p_spaceDeltas.forEach(delta => {
 		const x = p_x + delta.x;
 		const y = p_y + delta.y;
-		if ((y >= 0) && (y < this.yLength) && (x >= 0) && (x < this.xLength) && (this.regionGrid[y][x] == p_ir)) {
+		if ((y >= 0) && (y < this.yLength) && (x >= 0) && (x < this.xLength) && (this.regionGrid[y][x] == p_ir) && (this.answerGrid[y][x] != SPACE.CLOSED)) {
 			p_eventsList.push(new ShapeEvent(x, y, p_shape));
 		}
 	});
@@ -865,6 +938,16 @@ function getFirstLexicalOrderSpace(p_spaceArray) {
 	return answer;
 }
 
+// Fills all 3 spaces (one at x,y, the other 2 given by the "array of deltas by 3-spaces config") with shapes. Precondition : the 3 spaces are already open.
+SolverLITS.prototype.affectShapes = function(p_eventsList, p_x, p_y, p_config, p_shape) {
+	const spaceDeltas = arrayOfSpaceDeltasBy3SpaceConfig[p_config];
+	p_eventsList.push(new ShapeEvent(p_x, p_y, p_shape));
+	p_eventsList.push(new ShapeEvent(p_x+spaceDeltas[0].x, p_y+spaceDeltas[0].y, p_shape));
+	p_eventsList.push(new ShapeEvent(p_x+spaceDeltas[1].x, p_y+spaceDeltas[1].y, p_shape));
+	return p_eventsList;
+}
+
+// -------------------------------------------------
 // Extra closures
 abortClosure = function(solver) {
 	return function() {
