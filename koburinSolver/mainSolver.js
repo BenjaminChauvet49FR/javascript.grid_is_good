@@ -35,7 +35,7 @@ var fieldName = document.getElementById("input_grid_name");
 putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("Koburin")});
 putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,solver,fieldName.value)});
 putActionElementClick("submit_quickStart",function(event){quickStartAction(solver)});
-putActionElementClick("submit_multipass",function(event){multiPassAction(solver,components)});
+putActionElementClick("submit_multipass",function(event){multiPassAction(solver)});
 putActionElementClick("submit_undo",function(event){undoAction(solver)});
 putActionElementClick("submit_color_chains",function(event){solver.seeColorChainsAction()}); 
 putActionElementClick("submit_see_opposite_ends",function(event){solver.seeOppositeEndsAction()});

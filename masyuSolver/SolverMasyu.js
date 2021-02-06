@@ -14,7 +14,7 @@ SolverMasyu.prototype.construct = function(p_symbolGrid) {
 	});
 	// comparisonLoopEvents and copyLoopEventMethod defined in LoopSolver
 	this.methodSetPass = {comparisonMethod : comparisonLoopEventsMethod, copyMethod : copyLoopEventMethod,  argumentToLabelMethod : namingCategoryClosure(this)};
-	this.setMultipass = {numberPSCategories : 2, PSCategoryMethod : multiPassMasyuCategoryClosure(this)}
+	this.setMultipass = {numberPSCategories : 2, PSCategoryMethod : multiPassMasyuCategoryClosure(this), generatePassEventsMethod : generateEventsForSpaceClosure(this)}
 	this.pearlGrid = [];
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
 		this.pearlGrid.push([]);
