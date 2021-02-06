@@ -3,7 +3,7 @@
 
 const LOOP_STATE = {LINKED : 2, CLOSED : 1, UNDECIDED : 0};
 const LOOP_DIRECTION = {LEFT : "l", UP : "u", RIGHT : "r", DOWN : "d", UNDECIDED: "-"};
-const LOOP_EVENT = {LINK : "L", STATE : "S"}
+const LOOP_EVENT = {LINK : "L", STATE : "S", COMPOUND_LINK : "CL"}
 
 // ----------------------------------------
 
@@ -80,4 +80,3 @@ LinkEvent.prototype.toString = function(){
 LinkEvent.prototype.dual = function () {
 	return new LinkEvent(this.linkX + deltaX[this.direction], this.linkY + deltaY[this.direction], oppositeDirection[this.direction], this.state);
 }
-

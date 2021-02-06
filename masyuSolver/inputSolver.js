@@ -68,6 +68,10 @@ quickStartAction = function(p_solver){
 	p_solver.quickStart();
 }
 
+multiPassAction = function(p_solver){
+	p_solver.makeMultipass();
+}
+
 undoAction = function(p_solver,p_textArea){
 	p_solver.undo();
 }

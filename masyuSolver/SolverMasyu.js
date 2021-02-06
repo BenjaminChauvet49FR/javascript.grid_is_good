@@ -10,11 +10,11 @@ SolverMasyu.prototype.construct = function(p_symbolGrid) {
 	this.loopSolverConstruct(generateWallArray(p_symbolGrid[0].length, p_symbolGrid.length), {}); // this.xLength and yLength defined in the upper solver
 	this.setPuzzleSpecificMethods({
 		setEdgeLinkedPSDeductions : setEdgeLinkedDeductionsClosure(this),
-		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
-		otherPSDeductions : otherPSDeductionsClosure(this),
+		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this)
 	});
 	// comparisonLoopEvents and copyLoopEventMethod defined in LoopSolver
-	this.methodTools =  {comparisonMethod : comparisonLoopEventsMethod, copyMethod : copyLoopEventMethod,  argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodSetPass = {comparisonMethod : comparisonLoopEventsMethod, copyMethod : copyLoopEventMethod,  argumentToLabelMethod : namingCategoryClosure(this)};
+	this.setMultipass = {numberPSCategories : 2, PSCategoryMethod : multiPassMasyuCategoryClosure(this)}
 	this.pearlGrid = [];
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
 		this.pearlGrid.push([]);
@@ -60,7 +60,8 @@ SolverMasyu.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 
 SolverMasyu.prototype.passSpace = function(p_x, p_y) {
 	const generatedEvents = generateEventsForSpaceClosure(this)({x : p_x, y : p_y}); // Yeah, that method (returned by the closure) should have one single argument as it will be passed to multipass...
-	this.passEvents(generatedEvents, this.methodSet, this.methodTools, {x : p_x, y : p_y}); 
+	this.passEvents(generatedEvents, this.methodSetDeductions, this.methodSetPass, {x : p_x, y : p_y}); 
+	
 }
 
 SolverMasyu.prototype.quickStart = function() { //Warning : this quickstart assumes that the puzzle does not have white pearls in corners
@@ -98,6 +99,10 @@ SolverMasyu.prototype.quickStart = function() { //Warning : this quickstart assu
 		}
 	}
 	this.terminateQuickStart();
+}
+
+SolverMasyu.prototype.makeMultipass = function() {
+	this.multiPass(this.methodSetDeductions, this.methodSetPass, this.setMultipass); 
 }
 
 // -------------------
@@ -275,6 +280,7 @@ generateEventsForSpaceClosure = function(p_solver) {
 		switch (p_solver.pearlGrid[p_space.y][p_space.x]) {
 			case PEARL.WHITE : return generateWhitePearlPassEvents(p_space.x, p_space.y); break;
 			case PEARL.BLACK : return p_solver.generateBlackPearlPassEvents(p_space.x, p_space.y); break;
+			default : return p_solver.standardSpacePassEvents(p_space.x, p_space.y); break;
 		}
 		return [];
 	}
@@ -293,19 +299,20 @@ SolverMasyu.prototype.generateBlackPearlPassEvents = function(p_x, p_y) {
 	var okRight = (p_x <= this.xLength-3);
 	var okDown = (p_y <= this.yLength-3);
 	if (okLeft && okUp) {
-		answer.push(new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.UP, LOOP_STATE.LINKED));
+		answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.UP, LOOP_STATE.LINKED));
 	}
 	if (okRight && okUp) {
-		answer.push(new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.UP, LOOP_STATE.LINKED));
+		answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.UP, LOOP_STATE.LINKED));
 	}
 	if (okRight && okDown) {
-		answer.push(new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED));
+		answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED));
 	}
 	if (okLeft && okDown) {
-		answer.push(new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED));
+		answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED));
 	}
 	return [answer];
 }
+
 
 function namingCategoryClosure(p_solver) {
 	return function (p_space) {
@@ -320,25 +327,14 @@ function namingCategoryClosure(p_solver) {
 	}
 }
 
-function CompoundCornerLinkEvent(p_x, p_y, p_dir1, p_dir2, p_state) {
-	this.kind = "CL";
-	this.state = p_state;
-	this.linkX = p_x;
-	this.linkY = p_y;
-	this.direction1 = p_dir1;
-	this.direction2 = p_dir2;
-	markCompoundEvent(this);
-}
-
-CompoundCornerLinkEvent.prototype.toString = function() {
-	return "";
-}
-
-// Closure for non-link deduction events. For now, only compound corner events are involved.
-otherPSDeductionsClosure = function(p_solver) {
-	return function(p_eventList, p_eventBeingApplied) {
-		p_eventList.push(new LinkEvent(p_eventBeingApplied.linkX, p_eventBeingApplied.linkY, p_eventBeingApplied.direction1, p_eventBeingApplied.state));
-		p_eventList.push(new LinkEvent(p_eventBeingApplied.linkX, p_eventBeingApplied.linkY, p_eventBeingApplied.direction2, p_eventBeingApplied.state));
-		return p_eventList;
+// Category determination for multipass order for Masyu only (see LoopSolver multipass for more details)
+multiPassMasyuCategoryClosure = function(p_solver) {
+	return function (p_x, p_y) {
+		if (p_solver.getPearl(p_x, p_y) == PEARL.WHITE) {
+			return 0;
+		} else if (p_solver.getPearl(p_x, p_y) == PEARL.BLACK) {
+			return 1;
+		}
 	}
+	return -1;
 }

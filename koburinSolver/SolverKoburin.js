@@ -16,7 +16,7 @@ SolverKoburin.prototype.construct = function(p_numberGrid) {
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this)
 	});
 	// comparisonLoopEvents and copyLoopEventMethod defined in LoopSolver
-	this.methodTools = {comparisonMethod : comparisonLoopEventsMethod, copyMethod : copyLoopEventMethod,  argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodSetPass = {comparisonMethod : comparisonLoopEventsMethod, copyMethod : copyLoopEventMethod,  argumentToLabelMethod : namingCategoryClosure(this)};
 	this.numberGrid = [];
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
 		this.numberGrid.push([]);
@@ -57,7 +57,7 @@ SolverKoburin.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 
 SolverKoburin.prototype.passSpace = function(p_x, p_y) {
 	const generatedEvents = generateEventsForSpaceClosure(this)({x : p_x, y : p_y}); // Yeah, that method (returned by the closure) should have one single argument as it will be passed to multipass...
-	this.passEvents(generatedEvents, this.methodSet, this.methodTools, {x : p_x, y : p_y}); 
+	this.passEvents(generatedEvents, this.methodSetDeductions, this.methodSetPass, {x : p_x, y : p_y}); 
 }
 
 SolverKoburin.prototype.quickStart = function() { //Warning : this quickstart assumes that the puzzle does not have white pearls in corners
@@ -109,32 +109,13 @@ function setEdgeClosedDeductionsClosure(p_solver) {
 // -------------------
 // Passing
 
-/* generateEventsForSpaceClosure = function(p_solver) {
+generateEventsForSpaceClosure = function(p_solver) {
 	return function(p_space) {
-		switch (p_solver.pearlGrid[p_space.y][p_space.x]) {
-			case PEARL.WHITE : return generateWhitePearlPassEvents(p_space.x, p_space.y); break;
-			case PEARL.BLACK : return generateBlackPearlPassEvents(p_space.x, p_space.y); break;
-		}
-		return [];
+		return p_solver.standardSpacePassEvents(p_space.x, p_space.y);
 	}
 }
 
-// Precondition : the space has a white pearl and is not on the edge of fields...
-function generateWhitePearlPassEvents (p_x, p_y) {
-	return [[new LinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_STATE.LINKED), new LinkEvent(p_x, p_y, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED)]];
-} 
-
-// Precondition : the space has a black pearl and is not on the edge nor one space away from the edge of fields...
-function generateBlackPearlPassEvents (p_x, p_y) {
-	var answer = [];
-	return [[new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED), 
-			 new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED), 
-			 new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.UP, LOOP_STATE.LINKED), 
-			 new CompoundCornerLinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.UP, LOOP_STATE.LINKED)]];
-	return answer;
-}*/
-
-function namingCategoryClosure(p_solver) {
+function namingCategoryClosure(p_solver) { // TODO factorize with other solvers that pass spaces
 	return function (p_space) {
 		const x = p_space.x;
 		const y = p_space.y;

@@ -83,13 +83,13 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 LoopSolver.prototype.loopSolverConstruct = function(p_array, p_puzzleSpecificMethodPack) {
 	this.xLength = p_array[0].length;
     this.yLength = p_array.length;
-	this.methodSet = new ApplyEventMethodNonAdjacentPack(
+	this.methodSetDeductions = new ApplyEventMethodNonAdjacentPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
 	this.setPuzzleSpecificMethods(p_puzzleSpecificMethodPack);
-	this.methodSet.addAbortAndFilters(abortClosure(this), [testLoopsClosure(this), separateEndsClosure(this)]);
+	this.methodSetDeductions.addAbortAndFilters(abortClosure(this), [testLoopsClosure(this), separateEndsClosure(this)]);
     this.grid = [];
     this.bannedSpacesGrid = [];
 	this.checkNewEnds = {
@@ -534,15 +534,15 @@ LoopSolver.prototype.seeColorChainsAction = function() {
 // Central methods
 
 LoopSolver.prototype.tryToPutNewDown = function (p_x, p_y, p_state) {
-	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, LOOP_DIRECTION.DOWN, p_state), this.methodSet);
+	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, LOOP_DIRECTION.DOWN, p_state), this.methodSetDeductions);
 }
 
 LoopSolver.prototype.tryToPutNewRight = function (p_x, p_y, p_state) {
-	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, p_state), this.methodSet);
+	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, p_state), this.methodSetDeductions);
 }
 
 LoopSolver.prototype.tryToPutNewSpace = function (p_x, p_y, p_state) {
-	this.tryToApplyHypothesis(new StateEvent(p_x, p_y, p_state), this.methodSet);
+	this.tryToApplyHypothesis(new StateEvent(p_x, p_y, p_state), this.methodSetDeductions);
 }
 
 //--------------------------------
@@ -599,6 +599,10 @@ deductionsClosure = function(p_solver) {
 				p_eventList = p_solver.setEdgeClosedPSDeductions(p_eventList, p_eventBeingApplied);			
 			}
 			p_eventList = p_solver.testSpaceAndSurrounding2v2Open(p_eventList, x, y);			
+		} else if (p_eventBeingApplied.kind == LOOP_EVENT.COMPOUND_LINK) {
+			p_eventList.push(new LinkEvent(p_eventBeingApplied.linkX, p_eventBeingApplied.linkY, p_eventBeingApplied.direction1, p_eventBeingApplied.state));
+			p_eventList.push(new LinkEvent(p_eventBeingApplied.linkX, p_eventBeingApplied.linkY, p_eventBeingApplied.direction2, p_eventBeingApplied.state));
+			return p_eventList;
 		} else {
 			p_eventList = p_solver.otherPSDeductions(p_eventList, p_eventBeingApplied);
 		}
@@ -766,6 +770,40 @@ separateEndsClosure = function(p_solver) { //TODO well, this function is called 
 // --------------------------
 // Methods for passing
 
+/**
+ Pass absolutely any space. TODO : Really cound be optimized.
+*/
+LoopSolver.prototype.standardSpacePassEvents = function(p_x, p_y) {
+	var answer = [new StateEvent(p_x, p_y, LOOP_STATE.CLOSED)];
+	const okLeft = (p_x >= 1);
+	const okUp = (p_y >= 1);
+	const okRight = (p_x <= this.xLength-2);
+	const okDown = (p_y <= this.yLength-2);
+	if (okLeft) {
+		if (okUp) {
+			answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.UP, LOOP_STATE.LINKED));
+		}
+		if (okRight) {
+			answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.RIGHT, LOOP_STATE.LINKED));
+		}
+		if (okDown) {
+			answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED));
+		}
+	}
+	if (okUp) {
+		if (okRight) {
+			answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.UP, LOOP_STATE.LINKED));
+		}
+		if (okDown) {
+			answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.DOWN, LOOP_DIRECTION.UP, LOOP_STATE.LINKED));
+		}
+	}
+	if (okRight && okDown) {
+		answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED));
+	}
+	return [answer];
+}
+
 // The events passed in comparison must be "converted", e.g. going either down or right.
 comparisonLoopEventsMethod = function(p_event1, p_event2) {
 	const cEvent1 = convertLoopEvent(p_event1);
@@ -825,6 +863,127 @@ convertLoopEvent = function(p_event) {
 
 copyLoopEventMethod = function(p_event) {
 	return p_event.copy();
+}
+
+// ----------------
+// Multipass
+
+/**
+Multipass that may be exported to other loop solvers
+*/
+// TODO may be optimized considering cases where the undecided links are consecutive in direction order or opposite.
+LoopSolver.prototype.multiPass = function(p_methodSetDeductions, p_methodSetPass, p_setMultipass) {
+	const numberPSCategories = (p_setMultipass.numberPSCategories ? p_setMultipass.numberPSCategories : 0);
+	var categoriesSpaces = [];
+	for (var i = 0; i < numberPSCategories ; i++) {
+		categoriesSpaces.push([]);
+	}
+	this.arrayPassStandardOrderIndexes(categoriesSpaces);
+	var cat;
+	for (var y = 0; y < this.yLength ; y++) {
+		for (var x = 0; x < this.xLength ; x++) {
+			cat = this.getPassOrderIndex(p_setMultipass, x, y);
+			if (cat >= 0 && cat < categoriesSpaces.length) {
+				categoriesSpaces[cat].push({x : x, y : y});
+			}
+		}
+	}
+	
+	var oneMoreLoop = false;
+	var space;
+	var ok = true;
+	const lengthBeforeMultiPass = this.happenedEvents.length;
+	do {
+		oneMoreLoop = false;
+		const happenedEventsBeforePassingAllRegions = this.happenedEvents.length;
+		i = 0;
+		
+		// "break" porte sur les boucles for, while, do..while et la bien connue switch.
+		// Crédits : https://developer.mozilla.org/fr/docs/Web/JavaScript/Guide/Boucles_et_it%C3%A9ration#linstruction_break 
+		for (var ic = 0; ic < categoriesSpaces.length ; ic++) {
+			for (var is = 0 ; is < categoriesSpaces[ic].length ; is++) {
+				space = categoriesSpaces[ic][is];
+				resultPass = this.passEvents(this.standardSpacePassEvents(space.x, space.y), this.methodSetDeductions ,this.methodSetPass, space); 
+				if (resultPass == PASS_RESULT.SUCCESS) {
+					oneMoreLoop = true;
+				} else if (resultPass == PASS_RESULT.FAILURE) {
+					ok = false;
+					break;
+				}
+			}
+			if (!ok) {
+				break;
+			}
+		}
+		if (ok && oneMoreLoop) {
+			var newCategoriesSpaces = [[],[]];
+			this.arrayPassStandardOrderIndexes(newCategoriesSpaces);
+			var trash = [];
+			for (var ic = 0; ic < categoriesSpaces.length ; ic++) {
+				for (var is = 0 ; is < categoriesSpaces[ic].length ; is++) {
+					space = categoriesSpaces[ic][is];
+					cat = this.getPassOrderIndex(p_setMultipass, space.x, space.y);
+					if (cat >= 0 && cat < newCategoriesSpaces.length) {
+						newCategoriesSpaces[cat].push({x : space.x, y : space.y});
+					}
+					if (cat == -1) {
+						trash.push({x : space.x, y : space.y});
+					}
+				}
+			}
+			categoriesSpaces = newCategoriesSpaces;
+		}
+	} while (ok && oneMoreLoop);
+	if (!ok) {
+		while (this.happenedEvents.length > lengthBeforeMultiPass) {
+			var lastEventsList = this.happenedEvents.pop();
+			this.undoEventList(lastEventsList.list, this.methodSetDeductions.undoEventMethod);
+		}
+	}
+}
+
+// Returns the index of a passing-priority category the space should be pushed into. I guess this can be accelerated.
+LoopSolver.prototype.getPassOrderIndex = function(p_setMultipass, p_x, p_y) {
+	if (this.getLinkSpace(p_x, p_y) != LOOP_STATE.CLOSED && this.getLinkedEdges(p_x, p_y) != 2) {
+		if (p_setMultipass.numberPSCategories > 0 && p_setMultipass.PSCategoryMethod) {
+			const cat = p_setMultipass.PSCategoryMethod(p_x, p_y);
+			if (cat >= 0 && cat < p_setMultipass.numberPSCategories) {
+				return cat;
+			} else {
+				return this.getPassStandardPriorityIndex(p_x, p_y) + p_setMultipass.numberPSCategories;
+			}
+		}
+	}
+	return -1;
+}
+
+// WARNING : assumes that the space isn't already determined. (space is closed or has 2 linked edges)
+// Returns an "order index" : 0 for a space that should be passed first, 1 for a space that should be passed then, etc...
+LoopSolver.prototype.getPassStandardPriorityIndex = function(p_x, p_y) {
+	if (this.getClosedEdges(p_x, p_y) == 2) {
+		return 0; // Two edges closed.
+	} else if (this.getLinkedEdges(p_x, p_y) == 1) {	
+		if (this.getClosedEdges(p_x, p_y) == 1) {
+			return 1; // One closed, one open
+		} else {
+			return 2; // One open and that's it
+		}
+	} else {
+		const oneClosed = this.getClosedEdges(p_x, p_y) == 1;
+		const isOpen = (this.getLinkSpace(p_x, p_y) == LOOP_STATE.LINKED);
+		return 3 + (oneClosed ? 0 : 2) + (isOpen ? 0 : 1);
+		// 3 4 5 6 : oneClosed not open ; oneClosed not open ; open only ; totally unknown (or already fully known)
+	}
+}
+
+/**
+Returns an array of empty arrays ; there should be one for each standard order index, since spaces will be deposed into these arrays afterwards
+*/
+LoopSolver.prototype.arrayPassStandardOrderIndexes = function(p_passCategorySpaces) {
+	for (var i = 0; i < 7 ; i++ ) { // This loop size may have to be changed.
+		p_passCategorySpaces.push([]);
+	}
+	return p_passCategorySpaces;
 }
 
 // ----------------
