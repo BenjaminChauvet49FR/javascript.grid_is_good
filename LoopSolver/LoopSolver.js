@@ -81,6 +81,7 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 }
 
 LoopSolver.prototype.loopSolverConstruct = function(p_array, p_puzzleSpecificMethodPack) {
+	this.generalConstruct();
 	this.xLength = p_array[0].length;
     this.yLength = p_array.length;
 	this.methodSetDeductions = new ApplyEventMethodNonAdjacentPack(

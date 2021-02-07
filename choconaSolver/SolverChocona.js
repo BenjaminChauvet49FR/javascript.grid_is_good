@@ -9,6 +9,7 @@ SolverChocona.prototype = Object.create(GeneralSolver.prototype);
 SolverChocona.prototype.constructor = SolverChocona;
 
 SolverChocona.prototype.construct = function(p_wallArray, p_numberGrid) {
+	this.generalConstruct();
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
 

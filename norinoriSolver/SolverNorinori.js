@@ -10,6 +10,7 @@ SolverNorinori.prototype = Object.create(GeneralSolver.prototype);
 SolverNorinori.prototype.constructor = SolverNorinori;
 
 SolverNorinori.prototype.construct = function(p_wallArray) {
+	this.generalConstruct();
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
 	this.gridWall = WallGrid_data(p_wallArray); 

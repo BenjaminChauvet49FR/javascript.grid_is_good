@@ -30,10 +30,13 @@ const SERIE_KIND = {
 	QUICKSTART : 'QS'
 }
 
-function GeneralSolver() {
+function GeneralSolver() { }
+
+// This method should be called by the inheriting "construct".
+GeneralSolver.prototype.generalConstruct = function() {
 	this.myLog = 0;
 	this.separatelyStackDeductions = true; // When true, stacks a new list for a deduction ; when false, adds the events to the last array of happenedEvents. 
-	this.happenedEvents = []; // List of (non-empty list of events). All events beyond the first must be logical deductions (logic of any kind, including geographic) of the first one.
+	this.happenedEvents = []; // List of (non-empty list of events). All events beyond the first must be logical deductions (logic of any kind, including geographic) of the first one.	
 }
 
 GeneralSolver.prototype.makeItGeographical = function(p_xLength, p_yLength) {

@@ -14,7 +14,8 @@ function SolverHeyawake(p_wallArray, p_numberGrid) {
 SolverHeyawake.prototype = Object.create(GeneralSolver.prototype);
 SolverHeyawake.prototype.constructor = SolverHeyawake;
 
-SolverHeyawake.prototype.construct = function(p_wallArray,p_numberGrid){
+SolverHeyawake.prototype.construct = function(p_wallArray, p_numberGrid) {
+	this.generalConstruct();
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
 	this.makeItGeographical(this.xLength, this.yLength);

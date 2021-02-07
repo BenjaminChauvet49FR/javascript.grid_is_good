@@ -8,7 +8,8 @@ function SolverStarBattle(p_wallArray,p_starNumber) {
 SolverStarBattle.prototype = Object.create(GeneralSolver.prototype);
 SolverStarBattle.prototype.constructor = SolverStarBattle;
 
-SolverStarBattle.prototype.construct = function(p_wallArray,p_starNumber){ 
+SolverStarBattle.prototype.construct = function(p_wallArray, p_starNumber) { 
+	this.generalConstruct();
 	this.answerGrid = [];
 	this.spacesByRegion =  [];
 	this.notPlacedYet = {regions:[],rows:[],columns:[]};

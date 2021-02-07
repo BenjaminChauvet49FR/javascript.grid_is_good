@@ -16,6 +16,7 @@ SolverCurvingRoad.prototype = Object.create(GeneralSolver.prototype);
 SolverCurvingRoad.prototype.constructor = SolverCurvingRoad;
 
 SolverCurvingRoad.prototype.construct = function (p_wallArray, p_symbolArray) {
+	this.generalConstruct();
     this.xLength = p_symbolArray[0].length;
     this.yLength = p_symbolArray.length;
 	this.makeItGeographical(this.xLength, this.yLength);

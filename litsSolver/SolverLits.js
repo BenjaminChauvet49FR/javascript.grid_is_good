@@ -14,7 +14,8 @@ function SolverLITS(p_wallArray,p_numberGrid) {
 SolverLITS.prototype = Object.create(GeneralSolver.prototype);
 SolverLITS.prototype.constructor = SolverLITS;
 
-SolverLITS.prototype.construct = function(p_wallArray,p_numberGrid){
+SolverLITS.prototype.construct = function(p_wallArray, p_numberGrid) {
+	this.generalConstruct();
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
 	this.makeItGeographical(this.xLength, this.yLength);

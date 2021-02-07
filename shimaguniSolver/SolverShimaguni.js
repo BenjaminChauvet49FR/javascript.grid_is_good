@@ -9,7 +9,8 @@ function SolverShimaguni() {
 SolverShimaguni.prototype = Object.create(GeneralSolver.prototype);
 SolverShimaguni.prototype.constructor = SolverShimaguni;
 
-SolverShimaguni.prototype.construct = function(p_wallArray,p_numberGrid){
+SolverShimaguni.prototype.construct = function(p_wallArray, p_numberGrid) {
+	this.generalConstruct();
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
 	this.gridWall = WallGrid_data(p_wallArray); 

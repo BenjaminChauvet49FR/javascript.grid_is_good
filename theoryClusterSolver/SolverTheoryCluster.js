@@ -1,14 +1,18 @@
 function SolverTheoryCluster() {
-    this.construct(generateWallArray(1,1),generateSymbolArray(1,1));
+	GeneralSolver.call(this);
+	this.construct(generateWallArray(1,1),generateSymbolArray(1,1));
 }
 
+SolverTheoryCluster.prototype = Object.create(GeneralSolver.prototype);
+SolverTheoryCluster.prototype.constructor = SolverTheoryCluster;
+
 SolverTheoryCluster.prototype.construct = function (p_wallArray, p_numberGrid) {
+	this.generalConstruct();
     this.xLength = p_wallArray[0].length;
     this.yLength = p_wallArray.length;
     this.gridWall = WallGrid_data(p_wallArray);
     this.answerGrid = [];
-    this.generalSolver = new GeneralSolver();
-    this.generalSolver.makeItGeographical(this.xLength, this.yLength);
+    this.makeItGeographical(this.xLength, this.yLength);
 	
 	// Artifical deductions
 	this.artificialDeductionSpacesList = [];
@@ -67,7 +71,7 @@ SolverTheoryCluster.prototype.discardDeductions = function () {
 }
 
 SolverTheoryCluster.prototype.undoToLastHypothesis = function(){
-	this.generalSolver.undoToLastHypothesis(undoEventClosure(this));
+	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
 //--------------------------------
@@ -147,7 +151,7 @@ SolverTheoryCluster.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	);
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.generalSolver.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol), methodPack);
+	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol), methodPack);
 }
 
 //----------------
