@@ -96,7 +96,11 @@ SolverEntryExit.prototype.quickStart = function() {
 // -------------------
 // Closures
 
-// Deductions to be done...
+function setEdgeLinkedEntryExitDeductionsClosure(p_solver) {
+	return function(p_eventList, p_eventBeingApplied) {
+		
+	}
+}
 
 function namingCategoryClosure(p_solver) {
 	return function (p_space) {

@@ -21,12 +21,13 @@ SolverShimaguni.prototype.construct = function(p_wallArray, p_numberGrid) {
 	var ix,iy;
 	var lastRegionNumber = 0;
 	
-	this.methodSet = new ApplyEventMethodNonAdjacentPack(
+	this.methodSetDeductions = new ApplyEventMethodNonAdjacentPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodSet.addAbortAndFilters(abortClosure(this), [filterClustersClosure(this)]);
+	this.methodSetDeductions.addAbortAndFilters(abortClosure(this), [filterClustersClosure(this)]);
+	this.methodSetPass = {comparisonMethod : compareSolveEvents, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
 
 	/*this.methodsMultiPass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
@@ -61,7 +62,7 @@ SolverShimaguni.prototype.construct = function(p_wallArray, p_numberGrid) {
 			minVal : 1,
 			maxVal : 0,
 			forcedVal : NOT_FORCED,
-			freshClusters : true,
+			freshClusters : false,
 			clusters : [],
 			indexClusterWithFill : CLUSTER_WITH_FILL.NOT_FOUND,
 		});
@@ -210,15 +211,20 @@ SolverShimaguni.prototype.quickStart = function() {
 	this.terminateQuickStart();
 }
 
+SolverShimaguni.prototype.passRegion = function(p_indexRegion) {
+	generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
+	this.passEvents(generatedEvents, this.methodSetDeductions, this.methodSetPass, p_indexRegion); 
+}
+
 //--------------
 // Central method
 
-SolverShimaguni.prototype.tryToPutNew = function(p_x,p_y,p_symbol) {
-	this.tryToApplyHypothesis(SolveEventPosition(p_x,p_y,p_symbol), this.methodSet);
+SolverShimaguni.prototype.tryToPutNew = function(p_x, p_y, p_symbol) {
+	this.tryToApplyHypothesis(SolveEventPosition(p_x, p_y, p_symbol), this.methodSetDeductions);
 }
 
-SolverShimaguni.prototype.tryToBan = function(p_region,p_value) {
-	this.tryToApplyHypothesis(SolveEventValue(p_region,p_value), this.methodSet);
+SolverShimaguni.prototype.tryToBan = function(p_region, p_value) {
+	this.tryToApplyHypothesis(SolveEventValue(p_region, p_value), this.methodSetDeductions);
 }
 
 //--------------------------------
@@ -313,13 +319,13 @@ SolverShimaguni.prototype.undoSymbolEvent = function(p_event){
 	}
 }
 
-SolverShimaguni.prototype.undoValueEvent = function(p_event){
+SolverShimaguni.prototype.undoValueEvent = function(p_event) {
 	const region = this.regions[p_event.indexRegion];
 	this.setPossibleValueTrue(p_event.indexRegion,p_event.valueToBan);
-	if (p_event.valueToBan < region.minVal){
+	if (p_event.valueToBan < region.minVal) {
 		region.minVal = p_event.valueToBan;
 	}
-	if (p_event.valueToBan > region.maxVal){
+	if (p_event.valueToBan > region.maxVal) {
 		region.maxVal = p_event.valueToBan;
 	}
 }
@@ -424,14 +430,16 @@ filterClustersClosure = function(p_solver) {
 		if (!ok) {
 			return EVENT_RESULT.FAILURE;
 		}
-		//From this point to the end of the function, all clusters MUST be fresh AND max must be updated.
 		
 		p_solver.introducedOsByRegion.list.forEach(introduced => {
 			var ir = introduced.index;
 			var region = p_solver.regions[ir];
-			// Warning : If this is our very first O placed (or several of 'em), "cluster with fill" may have not been found since the last time grid was clustered. 
-			// Should be changed when strategy of reclustering is changed !
+			if (!region.freshClusters){
+				p_solver.updateClustersRegion(ir);
+			}
+			// If this is our very first O placed (or several of 'em) in this region, an update is mandatory so a "cluster with fill" is found.
 			var clusterBelong = (region.indexClusterWithFill == CLUSTER_WITH_FILL.NOT_FOUND) ? p_solver.clusterGrid[introduced.y][introduced.x] : region.indexClusterWithFill;
+			//var clusterBelong = region.indexClusterWithFill;
 			// Ban clusters that don't contain a filled space
 			if (clusterBelong == CLUSTER_WITH_FILL.MULTI){
 				ok = false;
@@ -454,6 +462,8 @@ filterClustersClosure = function(p_solver) {
 		if (!ok) {
 			return EVENT_RESULT.FAILURE;
 		}
+		
+		//From this point to the end of the filter function, all clusters MUST be fresh AND max must be updated.
 		
 		//If the min has been raised, ban clusters that have become too small.
 		p_solver.raisedMinsByRegion.list.forEach(ir => {
@@ -605,3 +615,95 @@ function tryToAddArrayListData(p_arrayList,p_index,p_data){
 		p_arrayList.array[p_index] = true;
 	}
 }
+
+// ---------------------
+// Pass methods
+
+generateEventsForRegionPassClosure = function(p_solver) {
+	return function(p_indexRegion) {
+		return p_solver.generateEventsForRegionPass(p_indexRegion);
+	}
+}
+
+SolverShimaguni.prototype.generateEventsForRegionPass = function(p_indexRegion) {
+	var eventList = [];
+	this.regions[p_indexRegion].spaces.forEach(space => {
+		if (this.answerGrid[space.y][space.x] == FILLING.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
+			eventList.push([SolveEventPosition(space.x, space.y, FILLING.YES), SolveEventPosition(space.x, space.y, FILLING.NO)]);
+		}			 
+	});
+	return eventList;
+}
+
+copying = function(p_event) {
+	return p_event.copy();
+}
+
+/**
+Compares two space events for sorting (left is "superior" : 1 ; right is "superior" : -1)
+*/
+function compareSolveEvents(p_spaceEvent1, p_spaceEvent2) {
+	if (p_spaceEvent1.kind != p_spaceEvent2.kind){
+		return p_spaceEvent1.kind-p_spaceEvent2.kind;
+	}
+	if (p_spaceEvent1.kind == KIND.SYMBOL) {
+		if (p_spaceEvent1.y < p_spaceEvent2.y)
+			return -1;
+		if ((p_spaceEvent1.y > p_spaceEvent2.y) || (p_spaceEvent1.x > p_spaceEvent2.x))
+			return 1;
+		if (p_spaceEvent1.x < p_spaceEvent2.x)
+			return -1;
+		const c1 = (p_spaceEvent1.symbol == FILLING.YES ? 1 : 0);
+		const c2 = (p_spaceEvent2.symbol == FILLING.YES ? 1 : 0); // Works because only two values are admitted
+		return c1-c2; // IF COMPARISON OF STATES IS FORGOTTEN, THE INTERSECTION OF TWO CORRECT EVENT LISTS IS INCORRECT DURING PASSES.
+	} else {
+		if (p_spaceEvent1.indexRegion < p_spaceEvent2.indexRegion)
+			return -1;
+		if ((p_spaceEvent1.indexRegion > p_spaceEvent2.indexRegion) || (p_spaceEvent1.valueToBan > p_spaceEvent2.valueToBan))
+			return 1;
+		if (p_spaceEvent1.valueToBan < p_spaceEvent2.valueToBan)
+			return -1;
+		return 0;
+	}
+}
+
+function namingCategoryClosure(p_solver) {
+	return function (p_indexRegion) {
+		const firstSpaceRegion = p_solver.getSpaceCoordinates(p_indexRegion, 0);
+		return "Region "+ p_indexRegion + " (" + firstSpaceRegion.x +" "+ firstSpaceRegion.y + ")"; 
+	}
+}
+
+
+// ---------------------
+// Multipass methods
+
+/*orderedListPassArgumentsClosure = function(p_solver) {
+	return function() {
+		var indexList = [];
+		var values = [];
+		for (var i = 0; i < p_solver.spacesByRegion.length ; i++) {
+			if (p_solver.notPlacedYetByRegion[i].Os > 0) {
+				indexList.push(i);
+				values.push(p_solver.uncertainity(i));
+			} else {
+				values.push(-1); // There MUST be one of these per region.
+			}
+		}
+		indexList.sort(function(p_i1, p_i2) {
+			return values[p_i1]-values[p_i2];
+		});
+		return indexList;
+	}
+}
+
+SolverNorinori.prototype.uncertainity = function(p_ir) {
+	return this.notPlacedYetByRegion[p_ir].Xs - this.notPlacedYetByRegion[p_ir].Os*3;
+}
+
+skipPassClosure = function(p_solver) {
+	return function (p_indexRegion) {
+		return p_solver.uncertainity(p_indexRegion) > 5; // Arbitrary value
+	}
+}
+*/
