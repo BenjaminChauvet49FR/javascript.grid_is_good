@@ -40,7 +40,7 @@ SolverShimaguni.prototype.construct = function(p_wallArray,p_numberGrid){
 			minVal : 1,
 			maxVal : 0,
 			forcedVal : NOT_FORCED,
-			freshClusters : true,
+			freshClusters : true, // Mistake ! Should have been false at very beginning for the first Os in regions.
 			clusters : [],
 			indexClusterWithFill : CLUSTER_WITH_FILL.NOT_FOUND,
 		});
@@ -325,7 +325,7 @@ SolverShimaguni.prototype.tryToApplyEvent = function(p_singletonEvent){
 					ok = false;
 					debugTryToPutNewGold("NOOOOO ! (region "+ir+" has more than one cluster with filled space)");
 				} else if (region.indexClusterWithFill != CLUSTER_WITH_FILL.NOT_FOUND){
-					for(var ic = 0;ic < region.clusters; ic++){
+					for(var ic = 0;ic < region.clusters; ic++){ // Mistake ! Compare with length please.
 						if (ic != region.indexClusterWithFill){
 							region.clusters[ic].forEach(
 								space => {eventsToApply.push(SolveEventPosition(space.x,space.y,FILLING.NO))}
@@ -351,7 +351,7 @@ SolverShimaguni.prototype.tryToApplyEvent = function(p_singletonEvent){
 			}
 		});
 		//From this point to the end of the while loop, all clusters MUST be fresh AND max must be updated.
-		
+		// MISTAKE : flawed reasoning ! 
 		introducedOsByRegion.list.forEach(introduced => {
 			var ir = introduced.index;
 			var region = this.regions[ir];
@@ -446,7 +446,7 @@ SolverShimaguni.prototype.updateClustersRegion = function(p_indexRegion){
 		}
 		if (this.answerGrid[space.y][space.x] == FILLING.YES){
 			indexClusterNow = this.clusterGrid[space.y][space.x];
-			if (this.indexClusterWithFill == CLUSTER_WITH_FILL.NOT_FOUND){
+			if (this.indexClusterWithFill == CLUSTER_WITH_FILL.NOT_FOUND){ // Mistake ! Not "this.indexClusterWithFill" !
 				this.indexClusterWithFill = indexClusterNow;
 			}else if (this.indexClusterWithFill != indexClusterNow){
 				this.indexClusterWithFill = CLUSTER_WITH_FILL.MULTI;

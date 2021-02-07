@@ -37,7 +37,7 @@ undoAction = function(p_solver,p_textArea){
 }
 
 multiPassAction = function (p_solver,p_textArea){
-	//p_solver.makeMultiPass();
+	p_solver.makeMultiPass();
 }
 
 solveAction = function (p_solver,p_textArea){
