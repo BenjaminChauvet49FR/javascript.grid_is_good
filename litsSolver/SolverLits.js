@@ -557,9 +557,9 @@ SolverLITS.prototype.fillOpenGaps = function(p_listEventsToApply, p_x, p_y, p_ir
 	return p_listEventsToApply;
 }
 
-SolverLITS.prototype.fillOpenGapOrNot = function(p_listEventsToApply, p_x, p_y, p_deltaX, p_deltaY, p_indexRegion) {
-	if ((this.regionGrid[p_y + p_deltaY * 2][p_x + p_deltaX * 2] == p_indexRegion) && (this.answerGrid[p_y + p_deltaY * 2][p_x + p_deltaX * 2] == SPACE.OPEN)) {
-		p_listEventsToApply.push(SpaceEvent(p_x + p_deltaX ,p_y + p_deltaY ,SPACE.OPEN));
+SolverLITS.prototype.fillOpenGapOrNot = function(p_listEventsToApply, p_x, p_y, p_DeltaX, p_DeltaY, p_indexRegion) {
+	if ((this.regionGrid[p_y + p_DeltaY * 2][p_x + p_DeltaX * 2] == p_indexRegion) && (this.answerGrid[p_y + p_DeltaY * 2][p_x + p_DeltaX * 2] == SPACE.OPEN)) {
+		p_listEventsToApply.push(SpaceEvent(p_x + p_DeltaX ,p_y + p_DeltaY ,SPACE.OPEN));
 	}
 	return p_listEventsToApply;
 }
@@ -704,12 +704,12 @@ SolverLITS.prototype.eventsTetrominoIdentification = function(p_eventsList, p_in
 }
 
 // Fills a region with the 4 spaces below
-shape4 = function(p_x1, p_y1, p_deltaX1, p_deltaY1, p_deltaX2, p_deltaY2, p_deltaX3, p_deltaY3, p_form) {
+shape4 = function(p_x1, p_y1, p_DeltaX1, p_DeltaY1, p_DeltaX2, p_DeltaY2, p_DeltaX3, p_DeltaY3, p_form) {
 	eventList = [];
 	eventList.push(new ShapeEvent(p_x1, p_y1, p_form));
-	eventList.push(new ShapeEvent(p_x1 + p_deltaX1, p_y1 + p_deltaY1, p_form));
-	eventList.push(new ShapeEvent(p_x1 + p_deltaX2, p_y1 + p_deltaY2, p_form));
-	eventList.push(new ShapeEvent(p_x1 + p_deltaX3, p_y1 + p_deltaY3, p_form));
+	eventList.push(new ShapeEvent(p_x1 + p_DeltaX1, p_y1 + p_DeltaY1, p_form));
+	eventList.push(new ShapeEvent(p_x1 + p_DeltaX2, p_y1 + p_DeltaY2, p_form));
+	eventList.push(new ShapeEvent(p_x1 + p_DeltaX3, p_y1 + p_DeltaY3, p_form));
 	return eventList;
 }
 

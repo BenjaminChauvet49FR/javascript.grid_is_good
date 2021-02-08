@@ -12,8 +12,7 @@ function clickCanvas(event, p_canvas, p_drawer, p_solver, p_actionsManager) {
 		} else {
 			clicked = drawer.getClickSpace(event, p_canvas, p_solver.xLength, p_solver.yLength);
 			if (clicked != null) {
-				//p_solver.passSpace(clicked.x, clicked.y);
-				//clickSpaceAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickSpace); // Since all spaces are open, there is little interest to click on a space. Unless it is a region ?
+				clickSpaceAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickSpace);
 			}
 		}
 	}
@@ -45,15 +44,34 @@ function clickWallRAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 	}
 }
 
+function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
+	switch(p_action.id){
+		case ACTION_OPEN_SPACE.id:
+			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, LOOP_STATE.LINKED); 
+		break;
+		case ACTION_CLOSE_SPACE.id:
+			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, LOOP_STATE.CLOSED); 
+		break;
+		case ACTION_PASS_SPACE.id:
+			p_solver.passSpace(p_spaceIndexX, p_spaceIndexY);
+		break;
+	}
+}
+
+
 //--------------------------
 // Game action buttons
 
-quickStartAction = function(p_solver){
+quickStartAction = function(p_solver) {
 	p_solver.quickStart();
 }
 
-undoAction = function(p_solver,p_textArea){
+undoAction = function(p_solver) {
 	p_solver.undo();
+}
+
+multiPassAction = function(p_solver) {
+	alert("To be done");
 }
 
 //--------------------------

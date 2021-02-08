@@ -71,13 +71,16 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 	if (!this.otherPSDeductions) {
 		this.otherPSDeductions = function(p_eventList, p_eventBeingApplied) {return p_eventList};
 	}
-	
 	// setSpaceClosedPSAtomicDos (2) setSpaceLinkedPSAtomicDos (2) setEdgeClosedPSAtomicDos (5) setEdgeLinkedPSAtomicDos (7)
 	// setSpaceClosedPSAtomicUndos (2) setSpaceLinkedPSAtomicUndos (2) setEdgeClosedPSAtomicUndos (5) setEdgeLinkedPSAtomicUndos (5)
 	// otherPSAtomicDos(1) otherPSAtomicUndos(1)
 	// setSpaceClosedPSDeductions (2) setSpaceLinkedPSDeductions (2) setEdgeClosedPSDeductions (2) setEdgeLinkedPSDeductions (2)
 	// otherPSDeductions(2)
-
+	
+	this.PSQuickStart = p_packMethods.PSQuickStart;
+	if (!this.PSQuickStart) {
+		this.PSQuickStart = function() {}
+	}
 }
 
 LoopSolver.prototype.loopSolverConstruct = function(p_array, p_puzzleSpecificMethodPack) {
@@ -256,19 +259,19 @@ LoopSolver.prototype.colorChain = function (p_x, p_y, p_number) {
 	this.colorChainsGrid[p_y][p_x] = p_number;
 	var dir = this.grid[p_y][p_x].chains[0];
 	var newDir;
-	var x = p_x + deltaX[dir];
-	var y = p_y + deltaY[dir];
+	var x = p_x + DeltaX[dir];
+	var y = p_y + DeltaY[dir];
 	counter = 0;
 	while (this.getLinkedEdges(x, y) == 2 && counter < 500) {
 		this.colorChainsGrid[y][x] = p_number;
 		newDir = this.grid[y][x].chains[0];
-		if (newDir == oppositeDirection[dir]) {
+		if (newDir == OppositeDirection[dir]) {
 			dir = this.grid[y][x].chains[1];
 		} else {
 			dir = newDir;
 		}
-		x += deltaX[dir];
-		y += deltaY[dir];
+		x += DeltaX[dir];
+		y += DeltaY[dir];
 		counter++;
 		if (counter == 500) {
 			alert("Congratulations, you failed your while loop !");
@@ -542,9 +545,14 @@ LoopSolver.prototype.tryToPutNewRight = function (p_x, p_y, p_state) {
 	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, p_state), this.methodSetDeductions);
 }
 
+LoopSolver.prototype.tryToPutNewLink = function (p_x, p_y, p_dir, p_state) {
+	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, p_dir, p_state), this.methodSetDeductions);
+}
+
 LoopSolver.prototype.tryToPutNewSpace = function (p_x, p_y, p_state) {
 	this.tryToApplyHypothesis(new StateEvent(p_x, p_y, p_state), this.methodSetDeductions);
 }
+
 
 //--------------------------------
 // otherPSDeductions
@@ -766,6 +774,26 @@ separateEndsClosure = function(p_solver) { //TODO well, this function is called 
 			return eventList;
 		}
 	}
+}
+
+// --------------------------
+// Quick start
+
+LoopSolver.prototype.quickStart = function() {
+	this.initiateQuickStart("Standard loop");
+	for (var y = 0 ; y < this.yLength ; y++) {
+		for (var x = 0 ; x < this.xLength ; x++) {
+			if (this.getLinkSpace(x, y) == LOOP_STATE.LINKED && this.getClosedEdges(x, y) == 2) {
+				LoopKnownDirections.forEach(dir => {
+					if (this.neighborExists(x, y, dir) && this.getLinkSpace(x, y) == LOOP_STATE.LINKED) {
+						this.tryToPutNewLink(x, y, dir, LOOP_STATE.LINKED);
+					}
+				});
+			}
+		}
+	}
+	this.terminateQuickStart();
+	this.PSQuickStart();
 }
 
 // --------------------------

@@ -18,7 +18,8 @@ SolverKoburin.prototype.construct = function(p_numberGrid) {
 		setSpaceClosedPSAtomicUndos : setSpaceClosedPSAtomicUndosClosure(this),
 		setSpaceLinkedPSDeductions : setSpaceLinkedPSDeductionsClosure(this),
 		setSpaceClosedPSDeductions : setSpaceClosedPSDeductionsClosure(this),
-		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this)
+		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
+		PSQuickStart : quickStartClosure(this)
 	});
 	// comparisonLoopEvents and copyLoopEventMethod defined in LoopSolver
 	this.methodSetPass = {comparisonMethod : comparisonLoopEventsMethod, copyMethod : copyLoopEventMethod,  argumentToLabelMethod : namingCategoryClosure(this)};
@@ -114,17 +115,6 @@ SolverKoburin.prototype.passSpace = function(p_x, p_y) {
 	this.passEvents(generatedEvents, this.methodSetDeductions, this.methodSetPass, {x : p_x, y : p_y}); 
 }
 
-SolverKoburin.prototype.quickStart = function() { //Warning : this quickstart assumes that the puzzle does not have white pearls in corners
-	this.initiateQuickStart();
-	this.numericCoordinatesList.forEach(space => {
-		const list = this.testNumericSpace([], space.x, space.y);
-		list.forEach(p_event => {
-			this.tryToPutNewSpace(p_event.x, p_event.y, p_event.state);
-		});
-	});
-	this.terminateQuickStart();
-}
-
 SolverKoburin.prototype.makeMultipass = function() {
 	this.multiPass(this.methodSetDeductions, this.methodSetPass, this.setMultipass); 
 }
@@ -171,9 +161,9 @@ function setSpaceClosedPSDeductionsClosure(p_solver) {
 	return function(p_listEvents, p_eventToApply) {
 		const x = p_eventToApply.x;
 		const y = p_eventToApply.y;
-		[LOOP_DIRECTION.LEFT, LOOP_DIRECTION.UP, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.DOWN].forEach(dir => {
-			if (p_solver.neighborExists(x, y, dir) && !p_solver.isBanned(x+deltaX[dir], y+deltaY[dir])) {
-				p_listEvents.push(new StateEvent(x+deltaX[dir], y+deltaY[dir], LOOP_STATE.LINKED));
+		LoopKnownDirections.forEach(dir => {
+			if (p_solver.neighborExists(x, y, dir) && !p_solver.isBanned(x+DeltaX[dir], y+DeltaY[dir])) {
+				p_listEvents.push(new StateEvent(x+DeltaX[dir], y+DeltaY[dir], LOOP_STATE.LINKED));
 			}
 		});
 		p_solver.neighborsNumbersGrid[y][x].forEach(space => {
@@ -200,19 +190,19 @@ function setEdgeClosedDeductionsClosure(p_solver) {
 		const x = p_eventToApply.linkX;
 		const y = p_eventToApply.linkY;
 		const dir = p_eventToApply.direction;
-		const dx = p_eventToApply.linkX + deltaX[dir];
-		const dy = p_eventToApply.linkY + deltaY[dir];
+		const dx = p_eventToApply.linkX + DeltaX[dir];
+		const dy = p_eventToApply.linkY + DeltaY[dir];
 		if (this.getClosedEdges(x, y) == 2) {
-			[LOOP_DIRECTION.LEFT, LOOP_DIRECTION.UP, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.DOWN].forEach(dir => {
+			LoopKnownDirections.forEach(dir => {
 				if (p_solver.neighborExists(x, y, dir) && p_solver.getLink(x, y, dir) != LOOP_STATE.CLOSED) {
-					p_listEvents.push(new StateEvent(x+deltaX[dir], y+deltaY[dir], LOOP_STATE.LINKED));
+					p_listEvents.push(new StateEvent(x+DeltaX[dir], y+DeltaY[dir], LOOP_STATE.LINKED));
 				}
 			});
 		}
 		if (this.getClosedEdges(dx, dy) == 2) {
-			[LOOP_DIRECTION.LEFT, LOOP_DIRECTION.UP, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.DOWN].forEach(dir => {
+			LoopKnownDirections.forEach(dir => {
 				if (p_solver.neighborExists(dx, dy, dir) && p_solver.getLink(dx, dy, dir) != LOOP_STATE.CLOSED) {
-					p_listEvents.push(new StateEvent(dx+deltaX[dir], dy+deltaY[dir], LOOP_STATE.LINKED));
+					p_listEvents.push(new StateEvent(dx+DeltaX[dir], dy+DeltaY[dir], LOOP_STATE.LINKED));
 				}
 			});
 		}
@@ -223,19 +213,35 @@ function setEdgeClosedDeductionsClosure(p_solver) {
 // Precondition : p_x, p_y is a numeric space
 SolverKoburin.prototype.testNumericSpace = function(p_listEvents, p_x, p_y) {
 	if (this.numericGrid[p_y][p_x].notClosedYet == 0) {
-		[LOOP_DIRECTION.LEFT, LOOP_DIRECTION.UP, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.DOWN].forEach(dir => {
-			if (this.neighborExists(p_x, p_y, dir) && this.getLinkSpace(p_x+deltaX[dir], p_y+deltaY[dir], dir) != LOOP_STATE.CLOSED) {
-				p_listEvents.push(new StateEvent(p_x+deltaX[dir], p_y+deltaY[dir], LOOP_STATE.LINKED));
+		LoopKnownDirections.forEach(dir => {
+			if (this.neighborExists(p_x, p_y, dir) && this.getLinkSpace(p_x+DeltaX[dir], p_y+DeltaY[dir], dir) != LOOP_STATE.CLOSED) {
+				p_listEvents.push(new StateEvent(p_x+DeltaX[dir], p_y+DeltaY[dir], LOOP_STATE.LINKED));
 			}
 		});
 	} else if (this.numericGrid[p_y][p_x].notLinkedYet == 0) {
-		[LOOP_DIRECTION.LEFT, LOOP_DIRECTION.UP, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.DOWN].forEach(dir => {
-			if (this.neighborExists(p_x, p_y, dir) && this.getLinkSpace(p_x+deltaX[dir], p_y+deltaY[dir], dir) != LOOP_STATE.LINKED) {
-				p_listEvents.push(new StateEvent(p_x+deltaX[dir], p_y+deltaY[dir], LOOP_STATE.CLOSED));
+		LoopKnownDirections.forEach(dir => {
+			if (this.neighborExists(p_x, p_y, dir) && this.getLinkSpace(p_x+DeltaX[dir], p_y+DeltaY[dir], dir) != LOOP_STATE.LINKED) {
+				p_listEvents.push(new StateEvent(p_x+DeltaX[dir], p_y+DeltaY[dir], LOOP_STATE.CLOSED));
 			}
 		});
 	}
 	return p_listEvents;
+}
+
+// -------------------
+// Quickstart
+
+quickStartClosure = function(p_solver) {
+	return function() { 
+		p_solver.initiateQuickStart("Koburin");
+		p_solver.numericCoordinatesList.forEach(space => {
+			const list = p_solver.testNumericSpace([], space.x, space.y);
+			list.forEach(p_event => {
+				p_solver.tryToPutNewSpace(p_event.x, p_event.y, p_event.state);
+			});
+		});
+		p_solver.terminateQuickStart();
+	}
 }
 
 // -------------------

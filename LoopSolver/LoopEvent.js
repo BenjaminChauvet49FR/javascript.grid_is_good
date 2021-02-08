@@ -7,40 +7,42 @@ const LOOP_EVENT = {LINK : "L", STATE : "S", COMPOUND_LINK : "CL"}
 
 // ----------------------------------------
 
-const deltaX = {
+const DeltaX = {
 	l: -1,
 	u: 0,
 	r: 1,
 	d: 0
 }
 
-const deltaY = {
+const DeltaY = {
 	l: 0,
 	u: -1,
 	r: 0,
 	d: 1
 }
 
-const oppositeDirection = {
+const OppositeDirection = {
 	l: LOOP_DIRECTION.RIGHT,
 	u: LOOP_DIRECTION.DOWN,
 	r: LOOP_DIRECTION.LEFT,
 	d: LOOP_DIRECTION.UP
 }
 
-const turningRightDirection = {
+const TurningRightDirection = {
 	l: LOOP_DIRECTION.UP,
 	u: LOOP_DIRECTION.RIGHT,
 	r: LOOP_DIRECTION.DOWN,
 	d: LOOP_DIRECTION.LEFT
 }
 
-const turningLeftDirection = {
+const TurningLeftDirection = {
 	l: LOOP_DIRECTION.DOWN,
 	u: LOOP_DIRECTION.LEFT,
 	r: LOOP_DIRECTION.UP,
 	d: LOOP_DIRECTION.RIGHT
 }
+
+const LoopKnownDirections = [LOOP_DIRECTION.LEFT, LOOP_DIRECTION.UP, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.DOWN];
 
 // ----------------------------------------
 
@@ -78,5 +80,5 @@ LinkEvent.prototype.toString = function(){
 }
 
 LinkEvent.prototype.dual = function () {
-	return new LinkEvent(this.linkX + deltaX[this.direction], this.linkY + deltaY[this.direction], oppositeDirection[this.direction], this.state);
+	return new LinkEvent(this.linkX + DeltaX[this.direction], this.linkY + DeltaY[this.direction], OppositeDirection[this.direction], this.state);
 }

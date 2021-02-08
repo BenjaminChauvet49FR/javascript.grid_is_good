@@ -280,10 +280,10 @@ SolverChocona.prototype.alertRegion = function(p_listEvents, p_region, p_missing
 
 // for a space, test all 8 spaces around it if a 2x2 square is entirely defined
 SolverChocona.prototype.closeSquares = function(p_listEvents, p_x, p_y) {
-	const deltaXCircle = [-1,0,1,1,1,0,-1,-1];
-	const deltaYCircle = [-1,-1,-1,0,1,1,1,0];
+	const DeltaXCircle = [-1,0,1,1,1,0,-1,-1];
+	const DeltaYCircle = [-1,-1,-1,0,1,1,1,0];
 	for(var i = 0; i <= 7 ; i++) {
-		this.testLastUndecided2x2(p_listEvents, p_x + deltaXCircle[i], p_y + deltaYCircle[i]);
+		this.testLastUndecided2x2(p_listEvents, p_x + DeltaXCircle[i], p_y + DeltaYCircle[i]);
 	}
 	return p_listEvents; 
 }

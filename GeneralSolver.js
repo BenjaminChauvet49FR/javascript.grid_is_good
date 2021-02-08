@@ -422,8 +422,11 @@ As-is, quickstart events are totaly managed by solvers that call deductions meth
 initiateQuickStart and terminateQuickStart should be called respectively when entering and leaving a quickstart method so all the applied events are concatenated into a single serie that will be logged as "Quick start".
 */
 
-GeneralSolver.prototype.initiateQuickStart = function() {
-	this.happenedEvents.push({kind : SERIE_KIND.QUICKSTART , list : [] }); 
+GeneralSolver.prototype.initiateQuickStart = function(p_label) {
+	if (!p_label) {
+		p_label = "";
+	}
+	this.happenedEvents.push({kind : SERIE_KIND.QUICKSTART , label : p_label, list : [] }); 
 	this.separatelyStackDeductions = false;
 }
 
@@ -443,9 +446,9 @@ GeneralSolver.prototype.happenedEventsLog = function(p_options) {
 	var displayQuick = (p_options && p_options.quick);
 	this.happenedEvents.forEach(eventSerie => {
 		if (eventSerie.kind == SERIE_KIND.PASS) {
-			answer += "Pass - " + eventSerie.label+ " ";
+			answer += "Pass - " + eventSerie.label + " ";
 		} else if (eventSerie.kind == SERIE_KIND.QUICKSTART) {
-			answer += "Quickstart - ";
+			answer += "Quickstart - " + eventSerie.label + " ";
 		} else {
 			answer += "Hypothesis - " + (displayQuick ? eventSerie.list[0] : "");
 		} 

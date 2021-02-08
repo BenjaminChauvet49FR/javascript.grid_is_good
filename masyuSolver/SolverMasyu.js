@@ -10,7 +10,8 @@ SolverMasyu.prototype.construct = function(p_symbolGrid) {
 	this.loopSolverConstruct(generateWallArray(p_symbolGrid[0].length, p_symbolGrid.length), {}); // this.xLength and yLength defined in the upper solver
 	this.setPuzzleSpecificMethods({
 		setEdgeLinkedPSDeductions : setEdgeLinkedDeductionsClosure(this),
-		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this)
+		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
+		PSQuickStart : quickStartClosure(this)
 	});
 	// comparisonLoopEvents and copyLoopEventMethod defined in LoopSolver
 	this.methodSetPass = {comparisonMethod : comparisonLoopEventsMethod, copyMethod : copyLoopEventMethod,  argumentToLabelMethod : namingCategoryClosure(this)};
@@ -64,41 +65,43 @@ SolverMasyu.prototype.passSpace = function(p_x, p_y) {
 	
 }
 
-SolverMasyu.prototype.quickStart = function() { //Warning : this quickstart assumes that the puzzle does not have white pearls in corners
-	this.initiateQuickStart();
-	for (var x = 0; x < this.xLength; x++) {
-		if (this.pearlGrid[0][x] == PEARL.WHITE && (x != 0)) {
-			this.tryToPutNewRight(x-1, 0, LOOP_STATE.LINKED);
-		} else if (this.pearlGrid[0][x] == PEARL.BLACK) {
-			this.tryToPutNewDown(x, 0, LOOP_STATE.LINKED);  
-		} else if (this.pearlGrid[1][x] == PEARL.BLACK) {
-			this.tryToPutNewDown(x, 1, LOOP_STATE.LINKED);  
+quickStartClosure = function(p_solver) {
+	return function() { //Warning : this quickstart assumes that the puzzle does not have white pearls in corners
+		p_solver.initiateQuickStart("Masyu");
+		for (var x = 0; x < p_solver.xLength; x++) {
+			if (p_solver.pearlGrid[0][x] == PEARL.WHITE && (x != 0)) {
+				p_solver.tryToPutNewRight(x-1, 0, LOOP_STATE.LINKED);
+			} else if (p_solver.pearlGrid[0][x] == PEARL.BLACK) {
+				p_solver.tryToPutNewDown(x, 0, LOOP_STATE.LINKED);  
+			} else if (p_solver.pearlGrid[1][x] == PEARL.BLACK) {
+				p_solver.tryToPutNewDown(x, 1, LOOP_STATE.LINKED);  
+			}
+			if (p_solver.pearlGrid[p_solver.yLength-1][x] == PEARL.WHITE && (x != 0)) {
+				p_solver.tryToPutNewRight(x-1, p_solver.yLength-1, LOOP_STATE.LINKED);
+			} else if (p_solver.pearlGrid[p_solver.yLength-1][x] == PEARL.BLACK) {
+				p_solver.tryToPutNewDown(x, p_solver.yLength-2, LOOP_STATE.LINKED);  
+			} else if (p_solver.pearlGrid[p_solver.yLength-2][x] == PEARL.BLACK) {
+				p_solver.tryToPutNewDown(x, p_solver.yLength-3, LOOP_STATE.LINKED);  
+			}
 		}
-		if (this.pearlGrid[this.yLength-1][x] == PEARL.WHITE && (x != 0)) {
-			this.tryToPutNewRight(x-1, this.yLength-1, LOOP_STATE.LINKED);
-		} else if (this.pearlGrid[this.yLength-1][x] == PEARL.BLACK) {
-			this.tryToPutNewDown(x, this.yLength-2, LOOP_STATE.LINKED);  
-		} else if (this.pearlGrid[this.yLength-2][x] == PEARL.BLACK) {
-			this.tryToPutNewDown(x, this.yLength-3, LOOP_STATE.LINKED);  
+		for (var y = 0 ; y < p_solver.yLength; y++) {
+			if (p_solver.pearlGrid[y][0] == PEARL.WHITE && (y != 0)) {
+				p_solver.tryToPutNewDown(0, y-1, LOOP_STATE.LINKED);
+			} else if (p_solver.pearlGrid[y][0] == PEARL.BLACK) {
+				p_solver.tryToPutNewRight(0, y, LOOP_STATE.LINKED);  
+			} else if (p_solver.pearlGrid[y][1] == PEARL.BLACK) {
+				p_solver.tryToPutNewRight(1, y, LOOP_STATE.LINKED);  
+			}
+			if (p_solver.pearlGrid[y][p_solver.xLength-1] == PEARL.WHITE && (y != 0)) {
+				p_solver.tryToPutNewDown(p_solver.xLength-1, y-1, LOOP_STATE.LINKED);
+			} else if (p_solver.pearlGrid[y][p_solver.xLength-1] == PEARL.BLACK) {
+				p_solver.tryToPutNewRight(p_solver.xLength-2, y, LOOP_STATE.LINKED);  
+			} else if (p_solver.pearlGrid[y][p_solver.xLength-2] == PEARL.BLACK) {
+				p_solver.tryToPutNewRight(p_solver.xLength-3, y, LOOP_STATE.LINKED);  
+			}
 		}
+		p_solver.terminateQuickStart();
 	}
-	for (var y = 0 ; y < this.yLength; y++) {
-		if (this.pearlGrid[y][0] == PEARL.WHITE && (y != 0)) {
-			this.tryToPutNewDown(0, y-1, LOOP_STATE.LINKED);
-		} else if (this.pearlGrid[y][0] == PEARL.BLACK) {
-			this.tryToPutNewRight(0, y, LOOP_STATE.LINKED);  
-		} else if (this.pearlGrid[y][1] == PEARL.BLACK) {
-			this.tryToPutNewRight(1, y, LOOP_STATE.LINKED);  
-		}
-		if (this.pearlGrid[y][this.xLength-1] == PEARL.WHITE && (y != 0)) {
-			this.tryToPutNewDown(this.xLength-1, y-1, LOOP_STATE.LINKED);
-		} else if (this.pearlGrid[y][this.xLength-1] == PEARL.BLACK) {
-			this.tryToPutNewRight(this.xLength-2, y, LOOP_STATE.LINKED);  
-		} else if (this.pearlGrid[y][this.xLength-2] == PEARL.BLACK) {
-			this.tryToPutNewRight(this.xLength-3, y, LOOP_STATE.LINKED);  
-		}
-	}
-	this.terminateQuickStart();
 }
 
 SolverMasyu.prototype.makeMultipass = function() {
@@ -115,14 +118,14 @@ setEdgeLinkedDeductionsClosure = function(p_solver) {
 		dir = p_eventBeingApplied.direction;
 		dx = p_eventBeingApplied.dual().linkX;
 		dy = p_eventBeingApplied.dual().linkY;
-		fwdX = dx+deltaX[dir]; // The space forward the link (remember : a link is considered, not a space)
-		fwdY = dy+deltaY[dir];
-		bwdX = x-deltaX[dir]; // The space when going backward the link 
-		bwdY = y-deltaY[dir];
+		fwdX = dx+DeltaX[dir]; // The space forward the link (remember : a link is considered, not a space)
+		fwdY = dy+DeltaY[dir];
+		bwdX = x-DeltaX[dir]; // The space when going backward the link 
+		bwdY = y-DeltaY[dir];
 		
 
 		ddir = p_eventBeingApplied.dual().direction;
-		antiDir = oppositeDirection[dir];
+		antiDir = OppositeDirection[dir];
 		p_eventList = p_solver.testWhitePearlSpace(p_eventList, x, y, dir, LOOP_STATE.LINKED); // Test white pearl here
 		p_eventList = p_solver.testWhitePearlSpace(p_eventList, dx, dy, ddir, LOOP_STATE.LINKED); // Test white pearl on next space
 		if (p_solver.neighborExists(dx, dy, dir) && p_solver.pearlGrid[fwdY][fwdX] == PEARL.WHITE) { // Test white spaces 2 spaces forward
@@ -135,8 +138,8 @@ setEdgeLinkedDeductionsClosure = function(p_solver) {
 		p_eventList = p_solver.testOnBlackPearlSpace(p_eventList, x, y, dir);
 		p_eventList = p_solver.testOnBlackPearlSpace(p_eventList, dx, dy, antiDir);
 		
-		const dirR = turningRightDirection[dir];
-		const dirL = turningLeftDirection[dir];
+		const dirR = TurningRightDirection[dir];
+		const dirL = TurningLeftDirection[dir];
 		if (p_solver.neighborExists(x, y, dirR)) {
 			p_eventList = p_solver.testBlackPearlAsideLink(p_eventList, x, y, dirR);
 			p_eventList = p_solver.testBlackPearlAsideLink(p_eventList, dx, dy, dirR);
@@ -176,7 +179,7 @@ setEdgeClosedDeductionsClosure = function(p_solver) {
 
 // Test if space orthogonally adjacent to a link and (in the same direction if link is closed or the perpendicular one if link is linked) is black and if so, close these link between
 SolverMasyu.prototype.testBlackPearlAsideLink = function(p_eventList, p_x, p_y, p_dirLateral) {
-	if (this.pearlGrid[p_y+deltaY[p_dirLateral]][p_x+deltaX[p_dirLateral]] == PEARL.BLACK) {
+	if (this.pearlGrid[p_y+DeltaY[p_dirLateral]][p_x+DeltaX[p_dirLateral]] == PEARL.BLACK) {
 		p_eventList.push(new LinkEvent(p_x, p_y, p_dirLateral ,LOOP_STATE.CLOSED));
 	}
 	return p_eventList;
@@ -185,7 +188,7 @@ SolverMasyu.prototype.testBlackPearlAsideLink = function(p_eventList, p_x, p_y, 
 // Test if we are on a white pearl space and make a link of the same state accordingly
 SolverMasyu.prototype.testWhitePearlSpace = function(p_eventList, p_x, p_y, p_dir, p_state) {
 	if (this.pearlGrid[p_y][p_x] == PEARL.WHITE) {
-		if (!this.neighborExists(p_x, p_y, oppositeDirection[p_dir])) {
+		if (!this.neighborExists(p_x, p_y, OppositeDirection[p_dir])) {
 			if (p_state == LOOP_STATE.LINKED) {
 				p_eventList.push(new FailureEvent());
 			}
@@ -193,7 +196,7 @@ SolverMasyu.prototype.testWhitePearlSpace = function(p_eventList, p_x, p_y, p_di
 			if (p_state == LOOP_STATE.LINKED) {
 				p_eventList = this.testExpansionWhitePearlSpace(p_eventList, p_x, p_y, p_dir);
 			}			
-			p_eventList.push(new LinkEvent(p_x, p_y, oppositeDirection[p_dir], p_state));
+			p_eventList.push(new LinkEvent(p_x, p_y, OppositeDirection[p_dir], p_state));
 		}
 	}
 	return p_eventList;
@@ -202,14 +205,14 @@ SolverMasyu.prototype.testWhitePearlSpace = function(p_eventList, p_x, p_y, p_di
 SolverMasyu.prototype.testOnBlackPearlSpace = function(p_eventList, p_x, p_y) {
 	if (this.pearlGrid[p_y][p_x] == PEARL.BLACK) {
 		var detectedLink;
-		[LOOP_DIRECTION.LEFT, LOOP_DIRECTION.UP, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.DOWN].forEach(dir => {
-			const bx = p_x-deltaX[dir];
-			const by = p_y-deltaY[dir];
-			const fx = p_x+deltaX[dir];
-			const fy = p_y+deltaY[dir];
-			const antiDir = oppositeDirection[dir];
+		LoopKnownDirections.forEach(dir => {
+			const bx = p_x-DeltaX[dir];
+			const by = p_y-DeltaY[dir];
+			const fx = p_x+DeltaX[dir];
+			const fy = p_y+DeltaY[dir];
+			const antiDir = OppositeDirection[dir];
 			detectedLink = false;
-			if (!this.neighborExists(p_x, p_y, oppositeDirection[dir]) || this.getLink(p_x, p_y, oppositeDirection[dir]) == LOOP_STATE.CLOSED) {
+			if (!this.neighborExists(p_x, p_y, OppositeDirection[dir]) || this.getLink(p_x, p_y, OppositeDirection[dir]) == LOOP_STATE.CLOSED) {
 				if (this.neighborExists(p_x, p_y, dir)) {
 					p_eventList.push(new LinkEvent(p_x, p_y, dir, LOOP_STATE.LINKED));
 					detectedLink = true;
@@ -246,13 +249,13 @@ SolverMasyu.prototype.testOnBlackPearlSpace = function(p_eventList, p_x, p_y) {
 // 2) if the pearl is taken between 2 aligned links in the geographical direction of p_dir. If yes, close a link (it will deduce everything else for the chain)
 // 3) if the pearl is taken between a pearl and a straight link. If yes, same as 2)
 SolverMasyu.prototype.testExpansionWhitePearlSpace = function(p_eventList, p_x, p_y, p_dir) {
-	const bx = p_x-deltaX[p_dir];
-	const by = p_y-deltaY[p_dir];
+	const bx = p_x-DeltaX[p_dir];
+	const by = p_y-DeltaY[p_dir];
 	const x = p_x; // b = "backward", f = "forward"
 	const y = p_y;
-	const fx = p_x+deltaX[p_dir];
-	const fy = p_y+deltaY[p_dir];
-	const antiDir = oppositeDirection[p_dir];
+	const fx = p_x+DeltaX[p_dir];
+	const fy = p_y+DeltaY[p_dir];
+	const antiDir = OppositeDirection[p_dir];
 	if (this.neighborExists(bx, by, antiDir) &&
 	    this.neighborExists(fx, fy, p_dir)) {
 		if (this.getLink(x, y, antiDir) == LOOP_STATE.LINKED && // Part 1
