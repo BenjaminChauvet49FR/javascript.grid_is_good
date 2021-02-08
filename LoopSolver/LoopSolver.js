@@ -883,6 +883,7 @@ WARNING : standardSpacePassEvents uses (p_x, p_y) as arguments instead of p_spac
 LoopSolver.prototype.multiPass = function(p_methodSetDeductions, p_methodSetPass, p_setMultipass) {
 	const numberPSCategories = (p_setMultipass.numberPSCategories ? p_setMultipass.numberPSCategories : 0);
 	var categoriesSpaces = [];
+			var trash = [];
 	for (var i = 0; i < numberPSCategories ; i++) {
 		categoriesSpaces.push([]);
 	}
@@ -893,6 +894,8 @@ LoopSolver.prototype.multiPass = function(p_methodSetDeductions, p_methodSetPass
 			cat = this.getPassOrderIndex(p_setMultipass, x, y);
 			if (cat >= 0 && cat < categoriesSpaces.length) {
 				categoriesSpaces[cat].push({x : x, y : y});
+			} else {
+				trash.push({x : x, y : y});
 			}
 		}
 	}
@@ -905,6 +908,7 @@ LoopSolver.prototype.multiPass = function(p_methodSetDeductions, p_methodSetPass
 		oneMoreLoop = false;
 		const happenedEventsBeforePassingAllRegions = this.happenedEvents.length;
 		i = 0;
+		var trash = [];
 		
 		// "break" porte sur les boucles for, while, do..while et la bien connue switch.
 		// Crédits : https://developer.mozilla.org/fr/docs/Web/JavaScript/Guide/Boucles_et_it%C3%A9ration#linstruction_break 
@@ -930,7 +934,10 @@ LoopSolver.prototype.multiPass = function(p_methodSetDeductions, p_methodSetPass
 			}
 		}
 		if (ok && oneMoreLoop) {
-			var newCategoriesSpaces = [[],[]];
+			var newCategoriesSpaces = [];
+			for (var i = 0; i < numberPSCategories ; i++) {
+				newCategoriesSpaces.push([]);
+			}
 			this.arrayPassStandardOrderIndexes(newCategoriesSpaces);
 			var trash = [];
 			for (var ic = 0; ic < categoriesSpaces.length ; ic++) {
