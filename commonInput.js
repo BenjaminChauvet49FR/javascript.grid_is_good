@@ -40,8 +40,11 @@ function viewPuzzleList(p_puzzleName) {
         var key = localStorage.key(i);
         if (key.startsWith(baseString)) {
 			suffix = key.substring(baseString.length);
-			intToTest = parseInt(suffix); // Credits for NaN test : https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/isNaN 
-            if (!isNaN(intToTest)) { // By the way, "NaN" are produced by parseInt. Good to know for when solving.
+			//intToTest = parseInt(suffix); // Credits for NaN test : https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/isNaN 
+            //if (!isNaN(intToTest)) { // By the way, "NaN" are produced by parseInt. Good to know for when solving.
+				// MISTAKE : go here : https://stackoverflow.com/questions/175739/built-in-way-in-javascript-to-check-if-a-string-is-a-valid-number
+			if (!isNaN(suffix) && suffix != "") { // NB : isNaN("") == true, yet parseInt("") == NaN
+				intToTest = parseInt(suffix);
 				numericListToSort.push(intToTest);
 			} else {
 				puzzleNamedListToSort.push(suffix);
@@ -62,12 +65,17 @@ function viewPuzzleList(p_puzzleName) {
 	} 
 	puzzleNamedListToSort = puzzleNamedListToSort.sort();
 	if (puzzleNamedListToSort.length > 0) {
-		answer += conditionalBackLine+"Valeurs non numériques : "
+		answer += conditionalBackLine+"Valeurs non numériques : ";
+		conditionalComma = "";
+		var start = 0;
 		if (puzzleNamedListToSort[0] == "") {// Since the 0 entry may be different, no need for a conditionalComma
 			answer += "<valeur vide>"
+			conditionalComma = ", ";
+			start = 1;
 		}
-		for (var i = 1; i < puzzleNamedListToSort.length; i++) {
-			answer += (", " + puzzleNamedListToSort[i]);
+		for (var i = start; i < puzzleNamedListToSort.length; i++) {
+			answer += (conditionalComma + puzzleNamedListToSort[i]);
+			conditionalComma = ", ";
 		}
 		conditionalBackLine = "\n";
 	} 

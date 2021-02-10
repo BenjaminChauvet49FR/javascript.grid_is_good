@@ -158,6 +158,40 @@ function actionBuildWallsAroundSelection(p_editorCore) {
 }
 
 //------------------------
+// Name management actions
+
+removeAction = function (p_detachedName) {
+	var localStorageName = getLocalStorageName(p_detachedName);
+    if (localStorage.hasOwnProperty(localStorageName)) {
+        if (confirm("Supprimer la propriété '" + localStorageName + "' du stockage local ?")) {
+            localStorage.removeItem(localStorageName);
+        }
+    } else {
+		alertMissingPuzzle(localStorageName);
+	}
+}
+
+// TODO : will local storage properties always be prefixed by grid_is_good ?
+renameAction = function (p_fieldValue) { 
+	var localStorageName = getLocalStorageName(p_fieldValue.value);
+    if (localStorage.hasOwnProperty(localStorageName)) {
+        const newDetachedName = prompt("Renommer la propriété "+ localStorageName+" (nom préfixé par 'grid_is_good_') : ", p_fieldValue.value);
+		if (newDetachedName != null) {
+			const localStorageName2 = getLocalStorageName(newDetachedName);
+			if (localStorageName2 == "" || localStorage.hasOwnProperty(localStorageName2)) {
+				alert("Nom "+localStorageName2+" invalide ou déjà pris.");
+			} else {
+				localStorage.setItem(localStorageName2, localStorage.getItem(localStorageName));
+				localStorage.removeItem(localStorageName);
+				p_fieldValue.value = newDetachedName;
+			}
+		}
+    } else {
+		alertMissingPuzzle(localStorageName);
+	}
+}
+
+//------------------------
 // Saving and loading
 
 const PUZZLES_KIND = {
@@ -166,7 +200,8 @@ const PUZZLES_KIND = {
 	STAR_BATTLE : {id:101, squareGrid : true},
 	GRAND_TOUR : {id:102},
 	NURIKABE_LIKE : {id:4},
-	YAJILIN_LIKE : {id:5}
+	YAJILIN_LIKE : {id:5},
+	HAKYUU_LIKE : {id:6}
 }
 
 /** 
@@ -201,7 +236,9 @@ saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions
             alert("551551 Saving To be done ...");
 			//const grid = p_editorCore.getArray(GRID_ID.NUMBER_SPACE);
             //puzzleToSave = arrayToStringRows(p_editorCore.getArray(GRID_ID.YAJILIN), true);
-        } else {
+        } else if (p_kindId == PUZZLES_KIND.HAKYUU_LIKE.id) {
+			puzzleToSave = commonPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_SPACE), null);
+		} else {
             puzzleToSave = commonPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION), null);
         }
         localStorage.setItem(localStorageName, puzzleToSave);
@@ -241,6 +278,10 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p
 				p_editorCore.setupFromWallArray(loadedItem.gridWall);			
 				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE, gridNumber); */
 				alert("551551 Loading To be done ...");
+			} else if (p_kindId == PUZZLES_KIND.HAKYUU_LIKE.id) {
+				loadedItem = stringToWallAndNumbersPuzzle(localStorage.getItem(localStorageName));
+				p_editorCore.setupFromWallArray(loadedItem.gridWall);			
+				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE,loadedItem.gridNumber); 
 			} else {
 				loadedItem = stringToWallAndNumbersPuzzle(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.gridWall);			
@@ -250,8 +291,12 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p
             updateFieldsAfterLoad(p_fieldsToUpdate, loadedItem);
         }
     } else {
-        alert("Le stockage local n'a pas de propriété nommée '" + localStorageName + "'.");
+        alertMissingPuzzle(localStorageName);
     }
+}
+
+function alertMissingPuzzle(p_localStorageName) {
+	alert("Le stockage local n'a pas de propriété nommée '" + p_localStorageName + "'.");
 }
 
 function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem) {
@@ -288,6 +333,10 @@ function comboChange(p_thelist, p_editorCore) {
 		case 'Chocona': case 'Heyawake': case 'Shimaguni' :
 			saveLoadModeId = PUZZLES_KIND.HEYAWAKE_LIKE.id;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_REGION]);
+			break;
+		case 'Hakyuu':
+			saveLoadModeId = PUZZLES_KIND.HAKYUU_LIKE.id;
+			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]);
 			break;
 		default: // norinori, lits, entryExit... no numbers, only regions
 			saveLoadModeId = PUZZLES_KIND.HEYAWAKE_LIKE.id;

@@ -44,6 +44,14 @@ putActionElementClick("submit_view_puzzle_list", function (event) {
     viewPuzzleList(puzzleTypeComboBox.options[puzzleTypeComboBox.selectedIndex].innerHTML)
 });
 
+putActionElementClick("submit_remove_puzzle", function (event) {
+    removeAction(fieldName.value)
+});
+
+putActionElementClick("submit_rename_puzzle", function (event) {
+    renameAction(fieldName)
+});
+
 putActionElementClick("submit_save_grid", function (event) {
     saveAction(editorCore, fieldName.value, saveLoadModeId, {numberStars : fieldStars.value}) 
 });
