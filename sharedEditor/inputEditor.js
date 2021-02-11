@@ -258,34 +258,34 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p
 			//NB : reinitialization is supposed to be contained in setupFromWallArray
             if (p_kindId == PUZZLES_KIND.STAR_BATTLE.id){
 				loadedItem = stringToStarBattlePuzzle(localStorage.getItem(localStorageName));
-				p_editorCore.setupFromWallArray(loadedItem.gridWall);			
+				p_editorCore.setupFromWallArray(loadedItem.wallArray);			
 			} else if (p_kindId == PUZZLES_KIND.MASYU_LIKE.id){
 				loadedItem = stringToEmptyWallsPuzzle(localStorage.getItem(localStorageName));
-				const gridPearl = loadedItem.gridSymbol;
-				loadedItem.gridWall = generateWallArray(gridPearl[0].length, gridPearl.length); // ".wallGrid" property added to suit the updateFieldsAfterLoad method .
-				p_editorCore.setupFromWallArray(loadedItem.gridWall);
+				const gridPearl = loadedItem.symbolArray;
+				loadedItem.wallArray = generateWallArray(gridPearl[0].length, gridPearl.length); // ".wallGrid" property added to suit the updateFieldsAfterLoad method .
+				p_editorCore.setupFromWallArray(loadedItem.wallArray);
 				p_editorCore.addGrid(GRID_ID.PEARL, gridPearl); 
 			} else if (p_kindId == PUZZLES_KIND.NURIKABE_LIKE.id){
 				loadedItem = stringToNurikabePuzzle(localStorage.getItem(localStorageName));
-				const gridNumber = loadedItem.gridNumber;
-				loadedItem.gridWall = generateWallArray(gridNumber[0].length, gridNumber.length); 
-				p_editorCore.setupFromWallArray(loadedItem.gridWall);
+				const gridNumber = loadedItem.numberArray;
+				loadedItem.wallArray = generateWallArray(gridNumber[0].length, gridNumber.length); 
+				p_editorCore.setupFromWallArray(loadedItem.wallArray);
 				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE, gridNumber); 
 			} else if (p_kindId == PUZZLES_KIND.YAJILIN_LIKE.id){
 				/*loadedItem = stringToYajilinPuzzle(localStorage.getItem(localStorageName));
-				const gridNumber = loadedItem.gridNumber;
-				loadedItem.gridWall = generateWallArray(gridNumber[0].length, gridNumber.length); 
-				p_editorCore.setupFromWallArray(loadedItem.gridWall);			
+				const gridNumber = loadedItem.numberArray;
+				loadedItem.wallArray = generateWallArray(gridNumber[0].length, gridNumber.length); 
+				p_editorCore.setupFromWallArray(loadedItem.wallArray);			
 				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE, gridNumber); */
 				alert("551551 Loading To be done ...");
 			} else if (p_kindId == PUZZLES_KIND.HAKYUU_LIKE.id) {
 				loadedItem = stringToWallAndNumbersPuzzle(localStorage.getItem(localStorageName));
-				p_editorCore.setupFromWallArray(loadedItem.gridWall);			
-				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE,loadedItem.gridNumber); 
+				p_editorCore.setupFromWallArray(loadedItem.wallArray);			
+				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE,loadedItem.numberArray); 
 			} else {
 				loadedItem = stringToWallAndNumbersPuzzle(localStorage.getItem(localStorageName));
-				p_editorCore.setupFromWallArray(loadedItem.gridWall);			
-				p_editorCore.addGrid(GRID_ID.NUMBER_REGION,loadedItem.gridNumber); 
+				p_editorCore.setupFromWallArray(loadedItem.wallArray);			
+				p_editorCore.addGrid(GRID_ID.NUMBER_REGION,loadedItem.numberArray); 
 			}
             adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore); 
             updateFieldsAfterLoad(p_fieldsToUpdate, loadedItem);
@@ -300,8 +300,8 @@ function alertMissingPuzzle(p_localStorageName) {
 }
 
 function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem) {
-    p_fieldsToUpdate.xLengthField.value = p_loadedItem.gridWall[0].length;
-    p_fieldsToUpdate.yLengthField.value = p_loadedItem.gridWall.length;
+    p_fieldsToUpdate.xLengthField.value = p_loadedItem.wallArray[0].length;
+    p_fieldsToUpdate.yLengthField.value = p_loadedItem.wallArray.length;
 	if (p_loadedItem.starNumber) {
 		p_fieldsToUpdate.numberStarsField.value = p_loadedItem.starNumber;
 	}

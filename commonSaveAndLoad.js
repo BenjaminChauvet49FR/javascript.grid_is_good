@@ -60,8 +60,8 @@ function stringToWallAndNumbersPuzzle(p_string) {
 		numberGrid = fillArrayWithTokensSpaces(stringArray.slice(indexToken),numberGrid);
 	}
 	return {
-	    gridWall : wallGridAnswer,
-	    gridNumber : numberGrid
+	    wallArray : wallGridAnswer,
+	    numberArray : numberGrid
 	};
 }
 
@@ -100,12 +100,12 @@ function stringToEmptyWallsPuzzle(p_string) {
 		}
 	}
 	return {
-	    gridSymbol: array
+	    symbolArray : array
 	};
 }
 
 /**
-Transforms a space-representation string with only its width and height before into a gridnumber 
+Transforms a space-representation string with only its width and height before into a numberArray 
 4 4 1 2 15 =>
 ....
 ....
@@ -118,7 +118,7 @@ function stringToNurikabePuzzle(p_string) {
 	var yLength = stringArray[1];
 	var numberGrid = generateSymbolArray(xLength,yLength);
 	return {
-	    gridNumber : numberGrid = fillArrayWithTokensSpaces(stringArray.slice(2),numberGrid)
+	    numberArray : numberGrid = fillArrayWithTokensSpaces(stringArray.slice(2),numberGrid)
 	}
 }
 
@@ -128,7 +128,7 @@ X-empty ; 0 sides right and down open ; 1 side right closed ; 2 side down closed
 p_grid : the grid to be stringed
 */
 function starBattlePuzzleToString(p_grid,p_starBattleNumber){
-	return p_starBattleNumber+" "+wallArrayToString(p_grid,{isSquare:true});
+	return p_starBattleNumber+" "+wallArrayToString(p_grid, {isSquare : true});
 }
 
 /**
@@ -145,6 +145,9 @@ function stringToStarBattlePuzzle(p_string) {
 	var stars = stringArray[0];
 	
 	var answerGrid = tokensToWallArray(stringArray.slice(1,3),{isSquare : true});
-	return {gridWall:answerGrid, starNumber:stars};
+	return {
+		wallArray : answerGrid, 
+		starNumber : stars
+	};
 }
 

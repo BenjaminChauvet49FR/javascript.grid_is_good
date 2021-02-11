@@ -56,6 +56,6 @@ Called by common save and load !
 */
 loadPuzzle = function(p_canvas, p_drawer, p_solver, p_loadedString) {
     const loadedItem = stringToStarBattlePuzzle(p_loadedString);
-	p_solver.construct(loadedItem.gridWall,loadedItem.starNumber);
+	p_solver.construct(loadedItem.wallArray,loadedItem.starNumber);
 	p_drawer.adaptCanvasDimensions(p_canvas,{xyLength:p_solver.xyLength});
 }	

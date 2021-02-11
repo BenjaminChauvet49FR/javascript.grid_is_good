@@ -52,7 +52,7 @@ Called by common save and load !
 */
 loadPuzzle = function(p_canvas, p_drawer, p_solver, p_loadedString) {
 	const loadedItem = stringToEmptyWallsPuzzle(p_loadedString);
-	p_solver.construct(loadedItem.gridWall, loadedItem.gridSymbol);
+	p_solver.construct(loadedItem.wallArray, loadedItem.symbolArray);
 	p_drawer.adaptCanvasDimensions(p_canvas,{xLength:p_solver.xLength,yLength:p_solver.yLength});
 }
 
