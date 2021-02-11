@@ -1,8 +1,8 @@
 // Drawer expansion (not a big deal, as the drawer could've been a parameter as well. Referring to Drawer regularly could be good.)
 
 Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p_solver) {
-    const pixThicknessClosedLink = 2;
-    const shorter = this.pix.pathThickness;
+    const pixThicknessClosedLink = Math.max(Math.floor(this.getPixInnerSide()) / 8,1);
+    const shorter = Math.max(Math.floor(this.getPixInnerSide() / 16)*2, 2);
     const longer = shorter + this.pix.sideSpace;
     const pixLeftStart = this.getPixCenterX(0) - shorter / 2;
     var pixLeft = pixLeftStart;

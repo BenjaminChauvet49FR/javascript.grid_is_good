@@ -9,17 +9,15 @@ var drawIndications;
 var colors={
 	openSquare:'#00ffcc',
 	chocolateSquare:'#ffcccc',
-	lackingSquare:'#888888',
+	lackingSquare:'#bbbbbb',
 	rainbowSpaces:[],
 	insideIndicationsOnWhite:'#008800',
-	insideIndicationsOnFilled:'#00ff00',
-	standardWrite:'#000000',
-	reflectWrite:"#ffff88",
+	insideIndicationsOnFilled:'#0000ff',
 }
 
 //--------------------
 //The main draw function (at start)
-function drawCanvas(){
+function drawCanvas() {
 	drawer.drawWallGrid(context,solver.gridWall,solver.xLength,solver.yLength); 
 	drawInsideSpaces(context,drawer,colors,solver);
 }

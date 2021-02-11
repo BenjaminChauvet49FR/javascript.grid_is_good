@@ -2,9 +2,9 @@
 /**
 Draws what's inside spaces 
 */
-function drawInsideSpaces(p_context,p_drawer,p_color,p_solver){
-	var items = [DrawableColor(p_color.chocolateSquare), 
-				 DrawableX(p_color.lackingSquare)];
+function drawInsideSpaces(p_context, p_drawer, p_colours, p_solver) {
+	var items = [DrawableColor(p_colours.chocolateSquare), 
+				 DrawableX(p_colours.lackingSquare)];
 				
 	function selection(x,y) {
 		if (p_solver.getAnswer(x,y) == CHOCONA.YES) {
@@ -15,27 +15,18 @@ function drawInsideSpaces(p_context,p_drawer,p_color,p_solver){
 		return -1;
 	}
 	
-	p_drawer.drawSpaceContents(p_context,items,selection,p_solver.xLength,p_solver.yLength);
+	p_drawer.drawSpaceContents(p_context, items, selection, p_solver.xLength, p_solver.yLength);
 	p_drawer.drawPolyomino4x5TiledMap(p_context,document.getElementById("img_map"),16,selection,0,p_solver.xLength,p_solver.yLength);
 
-	var pixLeft,pixDown,space;
-	const fontSize = p_drawer.getPixInnerSide()/2;
-	p_context.font = fontSize+"px Arial";
-	p_context.textAlign = 'left'; 
-	p_context.textBaseline = 'top';
-	for(var i=0;i<p_solver.regions.length;i++) {
-		if (p_solver.getForcedValue(i) != NOT_FORCED) {
-			space = p_solver.getFirstSpaceRegion(i,0);
-			pixLeft = p_drawer.getPixInnerXLeft(space.x)+2;
-			pixUp = p_drawer.getPixInnerYUp(space.y)+2;
-			if (p_solver.getAnswer(space.x,space.y) == CHOCONA.YES) {
-				p_context.fillStyle = p_color.insideIndicationsOnWhite;
-			} else {
-				p_context.fillStyle = p_color.insideIndicationsOnFilled;
-			}
-			p_context.fillText(p_solver.getForcedValue(i),pixLeft,pixUp);
+	function selectionRegion(p_index) {
+		const forcedValue = p_solver.getForcedValue(p_index);
+		if (forcedValue == NOT_FORCED) {
+			return null;
+		} else {
+			const space = p_solver.getFirstSpaceRegion(p_index, 0);
+			const writeColour = p_solver.getAnswer(space.x,space.y) == CHOCONA.YES ? p_colours.insideIndicationsOnFilled : p_colours.insideIndicationsOnWhite;
+			return new DrawRegionArgument(space.x, space.y, forcedValue, writeColour) ;
 		}
 	}
-	
+	p_drawer.drawRegionValues(p_context, selectionRegion, p_solver.regions.length, "Arial");
 }
-

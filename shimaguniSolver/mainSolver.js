@@ -8,8 +8,6 @@ var drawIndications;
 var colors={
 	cross:'#880044',
 	rainbowSpaces:[],
-	insideIndicationsOnWhite:'#008800',
-	insideIndicationsOnFilled:'#00ff00',
 	standardWrite:'#000000',
 	reflectWrite:"#ffff88",
 }

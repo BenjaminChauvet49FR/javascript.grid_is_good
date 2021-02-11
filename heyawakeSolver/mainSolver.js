@@ -10,10 +10,8 @@ var colors= {
 	openSquare:'#00ffcc',
 	closedSquare:'#cc0022',
 	rainbowSpaces:[],
-	insideIndicationsOnWhite:'#008800',
-	insideIndicationsOnFilled:'#00ff00',
 	standardWrite:'#000000',
-	reflectWrite:"#ffff88",
+	reflectWrite:"#ffff88"
 }
 
 //--------------------

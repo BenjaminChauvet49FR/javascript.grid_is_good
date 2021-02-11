@@ -5,7 +5,6 @@ function Drawer() {
     this.pix = {
         sideSpace: 30,
         borderSpace: 2, //Inner border
-        pathThickness: 4, //Divided by 2 at a point
         borderClickDetection: 5, //How many pixels from the side of a space can you click to trigger the border ?
         canvasWidth: 800,
         canvasHeight: 512,
@@ -45,7 +44,10 @@ Drawer.prototype.setWallColors = function(p_wallColorSet) {
 }
 
 //---------------------
-// All drawing functions
+// All draw functions are below
+
+//---------------------
+// Drawing grids
 
 Drawer.prototype.drawWallGrid = function (p_context, p_wallGrid, p_xLength, p_yLength) {
     var ix,
@@ -190,6 +192,9 @@ Draws a path out of a grid.
 
     }
 }*/ // TODO To be scrapped, soon ?
+
+// -----------------
+// Drawing values inside the grid
 
 /**
 Draws the main content of a space into a grid.
@@ -342,8 +347,8 @@ Drawer.prototype.drawPolyomino4x5TiledMap = function (p_context, p_map, p_pixMap
 Drawer.prototype.drawCrossX = function(p_context, p_xSpace, p_ySpace, p_item) {
 	p_context.beginPath();
 	p_context.strokeStyle = p_item.color; 
-	p_context.lineWidth = 2; // TODO should be managed
-	const pixAway = 2;
+	p_context.lineWidth = Math.min(Math.floor(this.getPixInnerSide()/10,1));
+	const pixAway = Math.floor(this.getPixInnerSide()/10);
 	const pixLeft = this.getPixInnerXLeft(p_xSpace) + pixAway;
 	const pixRight = this.getPixInnerXRight(p_xSpace) - pixAway;
 	const pixUp = this.getPixInnerYUp(p_ySpace) + pixAway;
@@ -353,6 +358,44 @@ Drawer.prototype.drawCrossX = function(p_context, p_xSpace, p_ySpace, p_item) {
 	p_context.moveTo(pixLeft, pixDown);
 	p_context.lineTo(pixRight, pixUp);
 	p_context.stroke(); // Credits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/lineTo
+}
+
+// -----------------
+// Drawing "one value per region" in the upper-left corner of the space
+
+function DrawRegionArgument(p_x, p_y, p_value, p_color) {
+	this.x = p_x;
+	this.y = p_y;
+	this.value = p_value;
+	this.writeColor = p_color;
+}
+
+/**
+Draws values in (presumably) first spaces of region in the same grid as where drawSpaceContents is used.
+p_functionRegion : function that transforms an integer in 0 .. p_numberRegions-1 into an item containing properties {x, y, value, color}, or null
+p_numberRegions : number of regions
+p_police : police in which values are drawn.
+*/ 
+Drawer.prototype.drawRegionValues = function(p_context, p_functionRegion, p_numberRegions, p_police) {
+	const fontSize = this.getPixInnerSide()/2;
+	const policeName = p_police; 
+	var pixLeft, pixDown;
+	var valueToDraw;
+	p_context.font = fontSize+"px "+policeName;
+	if (!p_context.font) {
+		p_context.font = fontSize+"px Arial";
+	}
+	p_context.textAlign = 'left'; 
+	p_context.textBaseline = 'top';
+	for(var i=0 ; i < p_numberRegions ; i++) {
+		valueToDraw = p_functionRegion(i);
+		if (valueToDraw && valueToDraw != null) {
+			pixLeft = this.getPixInnerXLeft(valueToDraw.x) + this.getPixInnerSide()*1/5; // TODO, soon it may have to be pushed more on the edges for loop puzzles (wait, only Country road is concerned)
+			pixUp = this.getPixInnerYUp(valueToDraw.y) + this.getPixInnerSide()*1/5;
+			p_context.fillStyle = valueToDraw.writeColor;
+			p_context.fillText(valueToDraw.value, pixLeft, pixUp);
+		}
+	}
 }
 
 //---------------------
