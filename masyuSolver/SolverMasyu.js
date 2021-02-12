@@ -7,12 +7,11 @@ SolverMasyu.prototype = Object.create(LoopSolver.prototype);
 SolverMasyu.prototype.constructor = SolverMasyu;
 
 SolverMasyu.prototype.construct = function(p_symbolGrid) {
-	this.loopSolverConstruct(generateWallArray(p_symbolGrid[0].length, p_symbolGrid.length), {}); // this.xLength and yLength defined in the upper solver
-	this.setPuzzleSpecificMethods({
+	this.loopSolverConstruct(generateWallArray(p_symbolGrid[0].length, p_symbolGrid.length), {
 		setEdgeLinkedPSDeductions : setEdgeLinkedDeductionsClosure(this),
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
 		PSQuickStart : quickStartClosure(this)
-	});
+	}); // this.xLength and yLength defined in the upper solver
 	// comparisonLoopEvents and copyLoopEventMethod defined in LoopSolver
 	this.methodSetPass = {comparisonMethod : comparisonLoopEventsMethod, copyMethod : copyLoopEventMethod,  argumentToLabelMethod : namingCategoryClosure(this)};
 	this.setMultipass = {numberPSCategories : 2, PSCategoryMethod : multiPassMasyuCategoryClosure(this), generatePassEventsMethod : generateEventsForSpaceClosure(this)}

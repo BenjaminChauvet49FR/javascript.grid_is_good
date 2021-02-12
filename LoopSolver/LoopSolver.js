@@ -931,10 +931,10 @@ LoopSolver.prototype.multiPass = function(p_methodSetDeductions, p_methodSetPass
 	var oneMoreLoop = false;
 	var space;
 	var ok = true;
-	const lengthBeforeMultiPass = this.happenedEvents.length;
+	const lengthBeforeMultiPass = this.happenedEventsSeries.length;
 	do {
 		oneMoreLoop = false;
-		const happenedEventsBeforePassingAllRegions = this.happenedEvents.length;
+		const happenedEventsBeforePassingAllRegions = this.happenedEventsSeries.length;
 		i = 0;
 		var trash = [];
 		
@@ -984,8 +984,8 @@ LoopSolver.prototype.multiPass = function(p_methodSetDeductions, p_methodSetPass
 		}
 	} while (ok && oneMoreLoop);
 	if (!ok) {
-		while (this.happenedEvents.length > lengthBeforeMultiPass) {
-			var lastEventsList = this.happenedEvents.pop();
+		while (this.happenedEventsSeries.length > lengthBeforeMultiPass) {
+			var lastEventsList = this.happenedEventsSeries.pop();
 			this.undoEventList(lastEventsList.list, this.methodSetDeductions.undoEventMethod);
 		}
 	}

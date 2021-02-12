@@ -7,16 +7,13 @@ SolverEntryExit.prototype = Object.create(LoopSolver.prototype);
 SolverEntryExit.prototype.constructor = SolverEntryExit;
 
 SolverEntryExit.prototype.construct = function(p_wallArray) {
-	this.loopSolverConstruct(p_wallArray, {});
-	this.activateClosedSpaces();
-	this.setPuzzleSpecificMethods({
+	this.loopSolverConstruct(p_wallArray, {		
 		PSQuickStart : quickStartClosure(this)
 	});
+	this.activateClosedSpaces();
 	this.methodTools = {comparisonMethod : comparisonLoopEventsMethod, copyMethod : copyLoopEventMethod,  argumentToLabelMethod : namingCategoryClosure(this)};
 	this.numberGrid = [];
 	this.gridWall = WallGrid_data(p_wallArray);
-	
-	
 	this.regionGrid = this.gridWall.toRegionGrid();
 
 	// Initialize the number of regions

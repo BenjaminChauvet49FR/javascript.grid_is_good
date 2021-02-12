@@ -21,7 +21,6 @@ SolverCurvingRoad.prototype.construct = function (p_wallArray, p_symbolArray) {
     this.yLength = p_symbolArray.length;
 	this.makeItGeographical(this.xLength, this.yLength);
     this.gridWall = WallGrid_data(p_wallArray);
-    this.happenedEvents = [];
     this.answerGrid = [];
     this.curvingLinkArray = [];
     this.curvingLinkList = [];
@@ -341,15 +340,9 @@ SolverCurvingRoad.prototype.getPearl = function (p_x, p_y) {
 }
 
 //--------------------------------
+
 SolverCurvingRoad.prototype.emitHypothesis = function (p_x, p_y, p_symbol) {
     this.tryToPutNew(p_x, p_y, p_symbol);
-}
-
-SolverCurvingRoad.prototype.undoToLastHypothesis = function () {
-    if (this.happenedEvents.length > 0) {
-        var lastEventsList = this.happenedEvents.pop();
-        this.undoEventList(lastEventsList);
-    }
 }
 
 SolverCurvingRoad.prototype.quickStart = function () {

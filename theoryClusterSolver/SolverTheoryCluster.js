@@ -70,7 +70,7 @@ SolverTheoryCluster.prototype.discardDeductions = function () {
 	this.artificialDeductionSpacesList = [];
 }
 
-SolverTheoryCluster.prototype.undoToLastHypothesis = function(){
+SolverTheoryCluster.prototype.undo = function(){
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 

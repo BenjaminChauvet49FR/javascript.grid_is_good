@@ -9,10 +9,8 @@ SolverKoburin.prototype.constructor = SolverKoburin;
 SolverKoburin.prototype.construct = function(p_numberGrid) {
     this.xLength = p_numberGrid[0].length;
 	this.yLength = p_numberGrid.length;
-	this.loopSolverConstruct(generateWallArray(this.xLength, this.yLength), {});
-	this.activateClosedSpaces();
-	this.setPuzzleSpecificMethods({
-		setSpaceLinkedPSAtomicDos : setSpaceLinkedPSAtomicDosClosure(this),
+	this.loopSolverConstruct(generateWallArray(this.xLength, this.yLength), 
+	{	setSpaceLinkedPSAtomicDos : setSpaceLinkedPSAtomicDosClosure(this),
 		setSpaceClosedPSAtomicDos : setSpaceClosedPSAtomicDosClosure(this),
 		setSpaceLinkedPSAtomicUndos : setSpaceLinkedPSAtomicUndosClosure(this),
 		setSpaceClosedPSAtomicUndos : setSpaceClosedPSAtomicUndosClosure(this),
@@ -21,6 +19,7 @@ SolverKoburin.prototype.construct = function(p_numberGrid) {
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
 		PSQuickStart : quickStartClosure(this)
 	});
+	this.activateClosedSpaces();
 	// comparisonLoopEvents and copyLoopEventMethod defined in LoopSolver
 	this.methodSetPass = {comparisonMethod : comparisonLoopEventsMethod, copyMethod : copyLoopEventMethod,  argumentToLabelMethod : namingCategoryClosure(this)};
 	this.setMultipass = {numberPSCategories : 1, PSCategoryMethod : multiPassKoburinCategoryClosure(this), tolerateClosedSpaces : true, generatePassEventsMethod : generateEventsForSpaceClosure(this)}

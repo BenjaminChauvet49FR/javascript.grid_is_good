@@ -39,7 +39,6 @@ SolverLITS.prototype.construct = function(p_wallArray, p_numberGrid) {
 	this.answerGrid = [];
 	this.proximitiesGrid = [];
 	this.shapeGrid = [];
-	this.happenedEvents = [];
 	var ix,iy;
 	var lastRegionNumber = 0;
 	// Below fields are for adjacency "all spaces with ... must form a orthogonally contiguous area"

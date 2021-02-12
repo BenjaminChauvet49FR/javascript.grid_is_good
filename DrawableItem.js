@@ -47,15 +47,11 @@ DrawableItem.prototype.setupImage = function(p_idElement,p_x1,p_y1,p_x2,p_y2){
 	this.y2 = p_y2;
 }
 
-DrawableItem.prototype.setupColor = function(p_colorString){
+DrawableItem.prototype.setupColor = function(p_colorString) {
 	this.kind = KIND_DRAWABLE_ITEM.COLOR;
 	this.color = p_colorString;
 }
 
-DrawableItem.prototype.getImage = function(){
-	return this.picture;
-}
-
-DrawableItem.prototype.getColorString = function(){
+DrawableItem.prototype.getColour = function() {
 	return this.color;
 }

@@ -19,14 +19,12 @@ SolverNorinori.prototype.construct = function(p_wallArray) {
 	this.spacesByRegion =  [];
 	this.notPlacedYetByRegion = [];
 	this.neighborsGrid = [];
-	this.happenedEvents = [];	
 	//Build intelligence !
 	this.listSpacesByRegion(); //spacesByRegion
 	this.buildPossibilities(); //notPlacedYetByRegion
 	this.buildAnswerGrid(); //answerGrid
 	this.buildNeighborsGrid(); //neighborsGrid
 	this.purifyAnswerGrid(); 
-	this.happenedEvents = [];
 	this.indexRegionsSortedBySize = null; //Will be initialized in the first use of multipass.
 	this.methodSet = new ApplyEventMethodNonAdjacentPack(
 		applyEventClosure(this),
@@ -321,7 +319,7 @@ deductionsClosure = function (p_solver) {
 		const x = p_eventBeingApplied.x;
 		const y = p_eventBeingApplied.y;
 		const symbol = p_eventBeingApplied.symbol;
-		r = p_solver.getRegion(x,y); //(y,x) might be out of bounds, if so the putNewResult isn't supposed to be RESULT.SUCCESS. Hence the check only here.
+		r = p_solver.getRegion(x,y); //(y,x) might be out of bounds, if so the putNewResult isn't supposed to be EVENT_RESULT.SUCCESS. Hence the check only here.
 		//Final alert on region
 		if (p_solver.notPlacedYetByRegion[r].Os == 0) {
 			var spaceInRegion;

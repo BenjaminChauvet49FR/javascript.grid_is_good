@@ -218,9 +218,9 @@ Drawer.prototype.drawSpaceContents = function (p_context, p_drawableItems, p_fun
             if (indexItem >= 0 && indexItem < p_drawableItems.length) {
                 item = p_drawableItems[indexItem];
                 if (item.kind == KIND_DRAWABLE_ITEM.IMAGE) {
-                    p_context.drawImage(item.getImage(), item.x1, item.y1, item.x2, item.y2, pixDrawX, pixDrawY, pixInnerSide, pixInnerSide);
+                    p_context.drawImage(item.picture, item.x1, item.y1, item.x2, item.y2, pixDrawX, pixDrawY, pixInnerSide, pixInnerSide);
                 } else if (item.kind == KIND_DRAWABLE_ITEM.COLOR) {
-                    p_context.fillStyle = item.getColorString(); // TODO why a function after all ?
+                    p_context.fillStyle = item.getColour();
                     p_context.fillRect(pixDrawX, pixDrawY, pixInnerSide, pixInnerSide); 
                 } else if (item.kind == KIND_DRAWABLE_ITEM.CIRCLE) {
 					p_context.beginPath();

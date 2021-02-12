@@ -30,6 +30,6 @@ SolverTheoryLoop.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 	this.tryToPutNewSpace(p_x, p_y, p_state);
 }
 
-SolverTheoryLoop.prototype.undoToLastHypothesis = function() {
+SolverTheoryLoop.prototype.undo = function() {
 	this.undoToLastHypothesis();
 }

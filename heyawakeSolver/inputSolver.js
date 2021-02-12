@@ -40,11 +40,6 @@ multiPassAction = function (p_solver){
 	p_solver.makeMultiPass();
 }
 
-/*solveAction = function (p_solver,p_textArea){
-	p_solver.generalSolve();
-	p_textArea.innerHTML = p_solver.happenedEventsToString(false); //TODO see above
-}*/
-
 //--------------------------
 
 /** 

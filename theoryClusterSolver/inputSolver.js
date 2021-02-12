@@ -32,7 +32,7 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 // Game action buttons
 
 undoAction = function(p_solver) {
-	p_solver.undoToLastHypothesis();
+	p_solver.undo();
 }
 
 discardDeductionsAction = function(p_solver) {

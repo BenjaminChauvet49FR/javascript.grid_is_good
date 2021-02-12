@@ -1,4 +1,4 @@
-/** Limitation : only one "global cluster" at a time may be managed. */
+// Constants and items
 
 const SPACE = {
     OPEN: 'O',
@@ -7,7 +7,7 @@ const SPACE = {
     NOT_APPLICABLE: 'n',
 };
 
-const EVENT_RESULT = { // WARNING : don't confuse EVENT_RESULT and RESULT, ; harmonization needed
+const EVENT_RESULT = { 
     SUCCESS : 1,
     FAILURE : 2,
     HARMLESS : 3
@@ -30,13 +30,21 @@ const SERIE_KIND = {
 	QUICKSTART : 'QS'
 }
 
+function FailureEvent() {
+	this.failure = true;
+}
+
+
+// ----------------
+// Initialisation
+
 function GeneralSolver() { }
 
 // This method should be called by the inheriting "construct".
 GeneralSolver.prototype.generalConstruct = function() {
 	this.myLog = 0;
-	this.separatelyStackDeductions = true; // When true, stacks a new list for a deduction ; when false, adds the events to the last array of happenedEvents. 
-	this.happenedEvents = []; // List of (non-empty list of events). All events beyond the first must be logical deductions (logic of any kind, including geographic) of the first one.	
+	this.separatelyStackDeductions = true; // When true, stacks a new list for a deduction ; when false, adds the events to the last array of happenedEventsSeries. 
+	this.happenedEventsSeries = []; // List of (non-empty list of events). All events beyond the first must be logical deductions (logic of any kind, including geographic) of the first one.	
 }
 
 GeneralSolver.prototype.makeItGeographical = function(p_xLength, p_yLength) {
@@ -47,31 +55,35 @@ GeneralSolver.prototype.makeItGeographical = function(p_xLength, p_yLength) {
     this.adjacencyLimitSpacesList = [];
 }
 
-function FailureEvent() {
-	this.failure = true;
-}
+// ----------------
+// Deductions, geographical verification, undoing
 
 /**
-// TODO while the things defined below are accurate, the names aren't !
 	Generic method for any solver that includes a global adjacency check
+	
 	p_startingEvent : PRE (puzzle-related event, described below ; it must have a set of methods) that can lead to consequences
-	p_applyEvent : method that states how to apply the PRE (e.g. fill a space in a grid and modify numbers in the cluster). 
-	If the PRE has several potential forms, this method must give the behaviour for each forms. Must return EVENT_RESULT.FAILURE, EVENT_RESULT.SUCCESS or EVENT_RESULT.HARMLESS
-	p_deductions : method that updates the list of events to apply as deductions to the one being applied. Must return the list of PREs potentially updated with new PRE's.
-	p_adjacencyClosure : method that takes (x,y) and must return whether the space (x,y) must be considered open. The limitation of one global cluster makes sense here.
-	p_transform : transforms the GeographicalDeduction (see corresponding class) into a PRE.
-	p_undoEvent : method to undo a PRE.
-	p_extras : may contain stuff that wasn't planned in the first place when this generic solver was written :
-		abort : method so the puzzle solver is authorized to do vital stuff such as cleaning environment when a mistake is made. (If no aborting, this method isn't automatically called)
-		filters : list of methods that must each take no argument and return either a PRE list (that may be empty) or EVENT_RESULT.FAILURE if something went wrong. 
-		These methods should allow to add new events that cannot/ should not be deducted by the application of a single PRE.
-		Order of filters matter for optimisation since as soon as the application of a filter returns a non-empty list, the chain breaks and returns to individual event applications (or aborts)
-		Warning : methods should be provided, not expressions of methods ! Also, don't forget the keyword "return" in both the closure and the method.
+	
+	p_methodPack : object that must contain the following methods (may be closures) :
+	applyEventMethod : method that states how to apply the PRE (e.g. fill a space in a grid and modify numbers in the cluster). 
+	If the PRE has several potential forms, this method must give the behaviour for each form. Must return EVENT_RESULT.FAILURE, EVENT_RESULT.SUCCESS or EVENT_RESULT.HARMLESS
+	deductionsMethod : method that updates the list of events to apply as deductions to the one being applied. Must return the list of PREs potentially updated with new PRE's.
+	undoEventMethod : method to undo a PRE.
+	
+	If the puzzle is geographical (one unique cluster), the following methods must be added : 
+	adjacencyMethod : method that takes (x,y) and must return whether the space (x,y) must be considered open. The limitation of one global cluster makes sense here.
+	retrieveGeographicalDeductionMethod : transforms the GeographicalDeduction (see corresponding class) into a PRE.
+
+	Also, a few optionnal methods :
+	abortMethod : method so the puzzle solver is authorized to do vital stuff such as cleaning environment when a mistake is made. (If no aborting, this method isn't automatically called)
+	filters : list of methods that must each take no argument and return either a PRE list (that may be empty) or EVENT_RESULT.FAILURE if something went wrong. 
+	These methods should allow to add new events that cannot/ should not be deducted by the application of a single PRE.
+	Order of filters matter for optimisation since as soon as the application of a filter returns a non-empty list, the chain breaks and returns to individual event applications (or aborts)
+	Warning : methods should be provided, not expressions of methods ! Also, don't forget the keyword "return" in both the closure and the method.
 */
 GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_methodPack) {
 	var listEventsToApply = [p_startingEvent]; //List of the "events" type used by the solver. 
-	// Events can be of any kind but must have the following method :
-	// A "x" method (int), a "y" method (int), a "opening" method (OPEN | CLOSED | UNDEFINED), in which case no geographical check is performed)
+	// Events can be of any kind but, if the puzzle is geographical, must have the following methods :
+	// A "x" method (int), a "y" method (int), a "opening" method (SPACE.OPEN | SPACE.CLOSED | SPACE.UNDEFINED), in which case no geographical check is performed)
     var eventBeingApplied;
     var listEventsApplied = [];
     var ok = true;
@@ -140,7 +152,7 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
         if (ok && p_methodPack.adjacencyMethod) {
             if (firstOpenThisTime) {
                 // The first open space has been added this time (ie this succession of events before a check verification) : add all previously closed to the list.
-                this.happenedEvents.forEach(eventSerie => {
+                this.happenedEventsSeries.forEach(eventSerie => {
                     eventSerie.list.forEach(solveEvent => {
 						if (solveEvent.opening() == SPACE.CLOSED) {
 							newClosedSpaces.push({
@@ -179,10 +191,10 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
     } else {
 		if (listEventsApplied.length > 0) {
 			if (this.separatelyStackDeductions) {
-				this.happenedEvents.push({kind : SERIE_KIND.HYPOTHESIS, list : listEventsApplied});
+				this.happenedEventsSeries.push({kind : SERIE_KIND.HYPOTHESIS, list : listEventsApplied});
 			} else {
 				listEventsApplied.forEach(happenedEvent => {
-					this.happenedEvents[this.happenedEvents.length-1].list.push(happenedEvent);
+					this.happenedEventsSeries[this.happenedEventsSeries.length-1].list.push(happenedEvent);
 				});
 			}
 		}
@@ -193,14 +205,14 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
 /**
 In entry : 
 p_listNewXs : a list of {x,y} items with the position of all "closed" spaces, 
-p_adjacencyClosure : a method that determines through (x,y) grid if a ... must be opened or not.
+p_adjacencyMethod : a method that determines through (x,y) grid if a ... must be opened or not.
 In exit :
 listGeographicalDeductionsToApply : a list of GeographicalDeduction(x,y, OPEN|CLOSED) items
 listGeographicalDeductionsApplied : a list of {adjacency : true} items. Whenever it should be undone, the first element of adjacencyLimitSpacesList should be undone.
 */
-GeneralSolver.prototype.geographicalVerification = function (p_listNewXs, p_adjacencyClosure) {
+GeneralSolver.prototype.geographicalVerification = function (p_listNewXs, p_adjacencyMethod) {
     //console.log("Perform geographicalVerification");
-    const checking = adjacencyCheck(p_listNewXs, this.adjacencyLimitGrid, this.adjacencyLimitSpacesList, p_adjacencyClosure, this.xLength, this.yLength);
+    const checking = adjacencyCheck(p_listNewXs, this.adjacencyLimitGrid, this.adjacencyLimitSpacesList, p_adjacencyMethod, this.xLength, this.yLength);
 	if (checking.success) {
         var newListEvents = [];
         var newListEventsApplied = [];
@@ -247,12 +259,28 @@ GeneralSolver.prototype.undoEventList = function (p_eventsList, p_undoEventMetho
 	}
 }
 
-// Marks an event as "compound" if its only purpose is to pile up other events to the pile of events to be applied. 
-// Compound events are not saved into happenedEvents.
-// The piled events must be returned by the deduction method of the solver.
+GeneralSolver.prototype.undoToLastHypothesis = function (p_undoEventMethod) {
+    if (this.happenedEventsSeries.length > 0) {
+		var wasPass;
+		do {
+			var lastEventsSerie = this.happenedEventsSeries.pop();
+			wasPass = this.isPassSerie(lastEventsSerie);
+			this.undoEventList(lastEventsSerie.list, p_undoEventMethod);
+		} while(wasPass && this.happenedEventsSeries.length > 0);
+    }
+}
+
+/** 
+Marks an event as "compound" if its only purpose is to pile up other events to the pile of events to be applied. 
+Compound events are not saved into happenedEventsSeries.
+The piled events must be returned by the deduction method of the solver.
+*/
 markCompoundEvent = function(p_event) {
 	p_event.isCompoundEvent = true;
 }
+
+// ----------------
+// Pass and multipass
 
 /**
 Passes a list of covering events (for instance, if a region contains spaces "1 2 3 4" and we want to apply a pass on it, it should have the following events :
@@ -267,7 +295,7 @@ GeneralSolver.prototype.passEvents = function (p_listListCoveringEvent, p_method
 		
 		if (listExtractedEvents.length > 0) {
 			this.separatelyStackDeductions = false;
-			this.happenedEvents.push({kind : SERIE_KIND.PASS , label : p_eventsTools.argumentToLabelMethod ? p_eventsTools.argumentToLabelMethod(p_passArgument) : p_passArgument, list : []}); 
+			this.happenedEventsSeries.push({kind : SERIE_KIND.PASS , label : p_eventsTools.argumentToLabelMethod ? p_eventsTools.argumentToLabelMethod(p_passArgument) : p_passArgument, list : []}); 
 			listExtractedEvents.forEach( deductedEvent => {
 				this.tryToApplyHypothesis(deductedEvent, p_methodSet);	
 			});
@@ -295,21 +323,21 @@ GeneralSolver.prototype.passEventsAnnex = function (p_listListCoveringEvent, p_m
 		var i = 0;
 		while (i < listCoveringEvent.length && !emptyResult) {
 			possibleEvent = listCoveringEvent[i];
-			const happenedEventsBeforeDeduction = this.happenedEvents.length;
+			const happenedEventsBeforeDeduction = this.happenedEventsSeries.length;
 			answer = this.tryToApplyHypothesis(possibleEvent, p_methodSet);
 			if (answer == DEDUCTIONS_RESULT.SUCCESS) {
 				const afterEvents = this.passEventsAnnex(p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_indexInList + 1);
 				if (afterEvents != DEDUCTIONS_RESULT.FAILURE) {
 					eventsToIntersect = afterEvents;
-					if (this.happenedEvents.length > happenedEventsBeforeDeduction) {
-						this.happenedEvents[this.happenedEvents.length-1].list.forEach( recentEvent => {
+					if (this.happenedEventsSeries.length > happenedEventsBeforeDeduction) {
+						this.happenedEventsSeries[this.happenedEventsSeries.length-1].list.forEach( recentEvent => {
 							eventsToIntersect.push(recentEvent);
 						});
 					}	// Get events that have been deducted by tryToApplyHypothesis)
 					deductedEvents = intersect(deductedEvents, eventsToIntersect, p_eventsTools);
 					emptyResult = ((deductedEvents != DEDUCTIONS_RESULT.FAILURE) && (deductedEvents.length == 0));
 				}
-				if (this.happenedEvents.length > happenedEventsBeforeDeduction) {
+				if (this.happenedEventsSeries.length > happenedEventsBeforeDeduction) {
 					this.undoToLastHypothesis(p_methodSet.undoEventMethod);
 				}
 			} 
@@ -376,11 +404,11 @@ GeneralSolver.prototype.multiPass = function(p_methodSet ,p_eventsTools, p_passT
 	var resultPass;
 	var i;
 	var argPass;
-	const lengthBeforeMultiPass = this.happenedEvents.length;
+	const lengthBeforeMultiPass = this.happenedEventsSeries.length;
 	do {
 		oneMoreLoop = false;
 		orderedListPassArguments = p_passTools.orderPassArgumentsMethod();
-		const happenedEventsBeforePassingAllRegions = this.happenedEvents.length;
+		const happenedEventsBeforePassingAllRegions = this.happenedEventsSeries.length;
 		i = 0;
 		while (ok && i < orderedListPassArguments.length) {
 			argPass = orderedListPassArguments[i];
@@ -400,14 +428,14 @@ GeneralSolver.prototype.multiPass = function(p_methodSet ,p_eventsTools, p_passT
 		}
 	} while (ok && oneMoreLoop);
 	if (!ok) {
-		while (this.happenedEvents.length > lengthBeforeMultiPass) {
-			var lastEventsList = this.happenedEvents.pop();
+		while (this.happenedEventsSeries.length > lengthBeforeMultiPass) {
+			var lastEventsList = this.happenedEventsSeries.pop();
 			this.undoEventList(lastEventsList.list, p_methodSet.undoEventMethod);
 		}
 	}
 }
 
-GeneralSolver.prototype.isPassEventList = function (p_eventsSerie) {
+GeneralSolver.prototype.isPassSerie = function (p_eventsSerie) {
 	if (p_eventsSerie.kind == SERIE_KIND.PASS) {
 		return true;
 	} 
@@ -426,13 +454,13 @@ GeneralSolver.prototype.initiateQuickStart = function(p_label) {
 	if (!p_label) {
 		p_label = "";
 	}
-	this.happenedEvents.push({kind : SERIE_KIND.QUICKSTART , label : p_label, list : [] }); 
+	this.happenedEventsSeries.push({kind : SERIE_KIND.QUICKSTART , label : p_label, list : [] }); 
 	this.separatelyStackDeductions = false;
 }
 
 GeneralSolver.prototype.terminateQuickStart = function() {
-	if (this.happenedEvents[this.happenedEvents.length-1].list.length == 0) {
-		this.happenedEvents.pop();
+	if (this.happenedEventsSeries[this.happenedEventsSeries.length-1].list.length == 0) {
+		this.happenedEventsSeries.pop();
 	}
 	this.separatelyStackDeductions = true;
 }
@@ -440,11 +468,15 @@ GeneralSolver.prototype.terminateQuickStart = function() {
 // --------------------------------
 // Logs
 
+GeneralSolver.prototype.happenedEventsLogQuick = function() {
+	return this.happenedEventsLog({quick : true});
+}
+
 GeneralSolver.prototype.happenedEventsLog = function(p_options) {
 	answer = "";
 	var displayGeographical = (p_options && p_options.displayGeographical);
 	var displayQuick = (p_options && p_options.quick);
-	this.happenedEvents.forEach(eventSerie => {
+	this.happenedEventsSeries.forEach(eventSerie => {
 		if (eventSerie.kind == SERIE_KIND.PASS) {
 			answer += "Pass - " + eventSerie.label + " ";
 		} else if (eventSerie.kind == SERIE_KIND.QUICKSTART) {
@@ -471,18 +503,4 @@ GeneralSolver.prototype.happenedEventsLog = function(p_options) {
 		answer += "\n";
 	});
 	return answer;
-}
-
-/**
-Used by outside !
- */
-GeneralSolver.prototype.undoToLastHypothesis = function (p_undoEventMethod) {
-    if (this.happenedEvents.length > 0) {
-		var wasPass;
-		do {
-			var lastEventsSerie = this.happenedEvents.pop();
-			wasPass = this.isPassEventList(lastEventsSerie);
-			this.undoEventList(lastEventsSerie.list, p_undoEventMethod);
-		} while(wasPass && this.happenedEvents.length > 0);
-    }
 }
