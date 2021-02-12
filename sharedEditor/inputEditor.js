@@ -311,7 +311,7 @@ function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem) {
 function comboChange(p_thelist, p_editorCore) {
     var idx = p_thelist.selectedIndex;
     var content = p_thelist.options[idx].innerHTML;
-    console.log(content);
+    autoLogInput(content);
 	// Default options
 	p_editorCore.setWallsOn();
 	// Specific options

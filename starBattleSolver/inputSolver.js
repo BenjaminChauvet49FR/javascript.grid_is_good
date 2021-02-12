@@ -14,11 +14,11 @@ You successfully clicked on a region space (coordinates in parameter). Then what
 function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action){
 	switch(p_action.id){
 		case ACTION_PUT_STAR.id:
-			console.log("HYPOTHESIS : "+p_spaceIndexX+" "+p_spaceIndexY+" "+SYMBOL.STAR);
+			autoLogInput("HYPOTHESIS : "+p_spaceIndexX+" "+p_spaceIndexY+" "+SYMBOL.STAR);
 			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,SYMBOL.STAR); 
 		break;
 		case ACTION_PUT_NO_STAR.id:
-			console.log("HYPOTHESIS : "+p_spaceIndexX+" "+p_spaceIndexY+" "+SYMBOL.NO_STAR);
+			autoLogInput("HYPOTHESIS : "+p_spaceIndexX+" "+p_spaceIndexY+" "+SYMBOL.NO_STAR);
 			p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, SYMBOL.NO_STAR); 
 		break;		
 		case ACTION_PASS_ROW.id:

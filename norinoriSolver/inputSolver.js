@@ -14,16 +14,16 @@ You successfully clicked on a region space (coordinates in parameter). Then what
 function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 	switch(p_action.id){
 		case ACTION_FILL_SPACE.id:
-			console.log("HYPOTHESIS : "+p_spaceIndexX+" "+p_spaceIndexY+" "+FILLING.YES);
+			autoLogInput("HYPOTHESIS : "+p_spaceIndexX+" "+p_spaceIndexY+" "+FILLING.YES);
 			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,FILLING.YES); 
 		break;
 		case ACTION_PUT_NO_FILL.id:
-			console.log("HYPOTHESIS : "+p_spaceIndexX+" "+p_spaceIndexY+" "+FILLING.NO);
+			autoLogInput("HYPOTHESIS : "+p_spaceIndexX+" "+p_spaceIndexY+" "+FILLING.NO);
 			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,FILLING.NO); 
 		break;		
 		case ACTION_PASS_REGION.id:
 			var indexRegion = p_solver.getRegion(p_spaceIndexX,p_spaceIndexY);
-			console.log("PASSING REGION : "+indexRegion+" (Restent : "+p_solver.getOsRemainRegion(indexRegion)+" "+p_solver.getXsRemainRegion(indexRegion)+")");
+			autoLogInput("PASSING REGION : "+indexRegion+" (Restent : "+p_solver.getOsRemainRegion(indexRegion)+" "+p_solver.getXsRemainRegion(indexRegion)+")");
 			p_solver.emitPassRegion(indexRegion);
 		break;
 	}

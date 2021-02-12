@@ -165,9 +165,9 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
             }
             if (this.atLeastOneOpen) {
                 //Geographical verification.
-				//console.log("My log : "+(this.myLog++));
+				autoLogDebug("My log : "+(this.myLog++));
 				if (this.myLog == 227 || this.myLog == 662) {
-					console.log("Fatal !");
+					autoLogDebug("Fatal !");
 				}
                 geoV = this.geographicalVerification(newClosedSpaces, p_methodPack.adjacencyMethod);
 				ok = (geoV.result == EVENT_RESULT.SUCCESS);
@@ -211,7 +211,7 @@ listGeographicalDeductionsToApply : a list of GeographicalDeduction(x,y, OPEN|CL
 listGeographicalDeductionsApplied : a list of {adjacency : true} items. Whenever it should be undone, the first element of adjacencyLimitSpacesList should be undone.
 */
 GeneralSolver.prototype.geographicalVerification = function (p_listNewXs, p_adjacencyMethod) {
-    //console.log("Perform geographicalVerification");
+    //autoLogGeographical("Perform geographicalVerification");
     const checking = adjacencyCheck(p_listNewXs, this.adjacencyLimitGrid, this.adjacencyLimitSpacesList, p_adjacencyMethod, this.xLength, this.yLength);
 	if (checking.success) {
         var newListEvents = [];
@@ -422,7 +422,7 @@ GeneralSolver.prototype.multiPass = function(p_methodSet ,p_eventsTools, p_passT
 					ok = false;
 				}
 			} else {
-				console.log("C'est trop pour nous, on passe la région "+argPass);
+				autoLogMultipass("C'est trop pour nous, on passe la région "+argPass);
 			}
 			i++;
 		}
@@ -466,7 +466,7 @@ GeneralSolver.prototype.terminateQuickStart = function() {
 }
 
 // --------------------------------
-// Logs
+// Manual logs
 
 GeneralSolver.prototype.happenedEventsLogQuick = function() {
 	return this.happenedEventsLog({quick : true});
@@ -503,4 +503,26 @@ GeneralSolver.prototype.happenedEventsLog = function(p_options) {
 		answer += "\n";
 	});
 	return answer;
+}
+
+// --------------------------------
+// Automatic logs
+
+function autoLogMultipass(p_string) {
+	//console.log(p_string);
+}
+function autoLogDebug(p_string) {
+	//console.log(p_string);
+}
+function autoLogGeographical(p_string) {
+	//console.log(p_string);
+}
+function autoLogInput(p_string) {
+	//console.log(p_string);
+}
+function autoLogTryToPutNewGold(p_string){
+	//console.log(p_string)
+}
+function autoLogTryToPutNew(p_string){
+	//console.log(p_string)
 }
