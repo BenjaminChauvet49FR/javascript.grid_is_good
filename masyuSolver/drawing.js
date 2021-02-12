@@ -9,7 +9,7 @@ function drawInsideSpaces(p_context, p_drawer, p_colors, p_solver) {
 		return -1;
 	}
 	p_drawer.drawSpaceContents(p_context, 
-	[DrawableCircle(p_colors.circleOut, "#ffffff", 1), 
-	DrawableCircle(p_colors.circleOut, p_colors.circleIn, 1)], 
-	getPearl, solver.xLength, solver.yLength);  //TODO thickness non prise en compte !
+	[DrawableCircle(p_colors.circleOut, "#ffffff"), 
+	DrawableCircle(p_colors.circleOut, p_colors.circleIn)], 
+	getPearl, solver.xLength, solver.yLength); 
 }

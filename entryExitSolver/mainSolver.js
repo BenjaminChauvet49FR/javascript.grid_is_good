@@ -4,6 +4,7 @@ var colors={
 	edge_walls:'#000000',
 	bannedSpace:'#666666',
 	noLink:'#aa0000',
+	noLinkWall:'#ff8800',
 	presentLink:'#cc00ff',
 	noLinkState:'#448844',
 	presentLinkState:'#ddeeff',
@@ -24,7 +25,7 @@ var drawIndications;
 //The main draw function (at start)
 function drawCanvas() {
 	drawer.drawWallGrid(context, solver.gridWall, solver.xLength, solver.yLength);
-	drawInsideSpaces(context, drawer, colors, solver);
+	drawer.drawSolverLinkInsideSpaces(context, colors, solver, solver.gridWall);
 }
 
 canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,solver,actionsManager)},false);
