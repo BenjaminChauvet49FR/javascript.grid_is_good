@@ -60,7 +60,7 @@ SolverKoburin.prototype.construct = function(p_numberGrid) {
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
 		for (var ix = 0 ; ix < this.xLength ; ix++) {
 			if (this.getNumber(ix, iy) != null) {
-				this.banSpace(ix, iy);
+				this.banSpace(ix, iy); 
 			}
 		}
 	}

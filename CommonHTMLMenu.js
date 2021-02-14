@@ -71,7 +71,8 @@ const menu5 = {
 	documentPage : "Solver",
 	typeList : [
 		{name : "theoryCluster", displayName : "Clusters d'adjacence"},
-		{name : "theoryLoop", displayName : "Boucles"}
+		{name : "theoryLoop", displayName : "Boucles"},
+		{name : "theoryLoopRegion", displayName : "Boucles à régions"}
 	]
 }
 
