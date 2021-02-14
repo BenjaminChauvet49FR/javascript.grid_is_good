@@ -116,7 +116,7 @@ LoopSolver.prototype.loopSolverConstruct = function(p_array, p_puzzleSpecificMet
 				linkDown : LOOP_STATE.UNDECIDED,
 				chains : []
 			});
-			this.bannedSpacesGrid[y].push(p_array[y][x].state == WALLGRID.CLOSED);
+			this.bannedSpacesGrid[y].push(false);
 			this.checkNewEnds.array[y].push(false);
 		}
 	}
@@ -130,6 +130,16 @@ LoopSolver.prototype.loopSolverConstruct = function(p_array, p_puzzleSpecificMet
 		this.grid[y][0].closedEdges++;
 		this.grid[y][this.xLength-1].closedEdges++;
 	}	
+	if (!p_puzzleSpecificMethodPack.setEdgeClosedPSAtomicDos) { // This setup is performed before puzzle specific setup, but if puzzle has events for closed links or closed spaces, it should perform its own ban.
+		for (y = 0 ; y < this.yLength ; y++) {
+			for (x = 0 ; x < this.xLength ; x++) {
+				if (p_array[p_y][p_x].state == WALLGRID.CLOSED) {
+					this.banSpace(x, y);
+				}
+			}
+		}	
+	}
+	// Warning : if this puzzle has regular banned spaces, it is better to let the puzzle perform its own ban of spaces.
 	
 	// Ergonomic options
 	this.ergonomicOptions = {

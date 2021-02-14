@@ -61,6 +61,10 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action) {
 //--------------------------
 // Game action buttons
 
+quickStartAction = function(p_solver) {
+	p_solver.quickStart();
+}
+
 undoAction = function(p_solver) {
 	p_solver.undo();
 }

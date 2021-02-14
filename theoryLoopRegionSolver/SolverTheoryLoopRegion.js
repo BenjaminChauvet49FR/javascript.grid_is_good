@@ -32,6 +32,6 @@ SolverTheoryLoopRegion.prototype.emitHypothesisSpace = function(p_x, p_y, p_stat
 	this.tryToPutNewSpace(p_x, p_y, p_state);
 }
 
-SolverTheoryLoopRegion.prototype.undo = function() {
+/*SolverTheoryLoopRegion.prototype.undo = function() {
 	this.undoToLastHypothesis();
-}
+}*/ // Already defined in LoopSolver
