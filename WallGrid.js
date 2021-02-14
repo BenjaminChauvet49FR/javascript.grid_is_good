@@ -63,11 +63,11 @@ WallGrid.prototype.cleanRedundantWalls = function() {
 				if (ix > 0 && this.array[iy][ix-1].wallR == WALLGRID.CLOSED) {
 					this.array[iy][ix-1].wallR = WALLGRID.OPEN;
 				}
-				if (ix <= this.xLength-2 && this.array[iy][ix+1].wallD == WALLGRID.CLOSED) {
-					this.array[iy][ix+1].wallD = WALLGRID.OPEN;
+				if (ix <= this.xLength-2 && this.array[iy][ix].wallD == WALLGRID.CLOSED) {
+					this.array[iy][ix].wallD = WALLGRID.OPEN;
 				}
-				if (iy <= this.yLength-2 && this.array[iy+1][ix].wallR == WALLGRID.CLOSED) {
-					this.array[iy+1][ix].wallR = WALLGRID.OPEN;
+				if (iy <= this.yLength-2 && this.array[iy][ix].wallR == WALLGRID.CLOSED) {
+					this.array[iy][ix].wallR = WALLGRID.OPEN;
 				}
 			} 
 		}
