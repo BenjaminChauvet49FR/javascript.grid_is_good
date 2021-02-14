@@ -311,7 +311,6 @@ function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem) {
 function comboChange(p_thelist, p_editorCore) {
     var idx = p_thelist.selectedIndex;
     var content = p_thelist.options[idx].innerHTML;
-    autoLogInput(content);
 	// Default options
 	p_editorCore.setWallsOn();
 	// Specific options
@@ -326,10 +325,6 @@ function comboChange(p_thelist, p_editorCore) {
 			saveLoadModeId = PUZZLES_KIND.NURIKABE_LIKE.id;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]);
 			break;
-		case 'SternenSchlacht':
-			saveLoadModeId = PUZZLES_KIND.STAR_BATTLE.id;
-			p_editorCore.maskAllGrids();
-			break;
 		case 'Chocona': case 'Heyawake': case 'Shimaguni' :
 			saveLoadModeId = PUZZLES_KIND.HEYAWAKE_LIKE.id;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_REGION]);
@@ -337,6 +332,10 @@ function comboChange(p_thelist, p_editorCore) {
 		case 'Hakyuu':
 			saveLoadModeId = PUZZLES_KIND.HAKYUU_LIKE.id;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]);
+			break;
+		case 'SternenSchlacht':
+			saveLoadModeId = PUZZLES_KIND.STAR_BATTLE.id;
+			p_editorCore.maskAllGrids();
 			break;
 		default: // norinori, lits, entryExit... no numbers, only regions
 			saveLoadModeId = PUZZLES_KIND.HEYAWAKE_LIKE.id;
