@@ -19,19 +19,24 @@ function RegionLoopSolver() {
 
 RegionLoopSolver.prototype.constructor = RegionLoopSolver;
 
-RegionLoopSolver.prototype.regionLoopSolverConstruct = function(p_wallArray) {
+RegionLoopSolver.prototype.regionLoopSolverConstruct = function(p_wallArray, p_packMethods) {
 	this.loopSolverConstruct(p_wallArray, {
+		setSpaceClosedPSAtomicDos : p_packMethods.setSpaceClosedPSAtomicDos,
+		setSpaceLinkedPSAtomicDos : p_packMethods.setSpaceLinkedPSAtomicDos,
 		setEdgeClosedPSAtomicDos : setEdgeClosedAtomicDoRLSClosure(this),
 		setEdgeLinkedPSAtomicDos : setEdgeLinkedAtomicDoRLSClosure(this),
 		otherPSAtomicDos : otherAtomicDoRLSClosure(this),
+		setSpaceClosedPSAtomicUndos : p_packMethods.setSpaceClosedPSAtomicUndos,
+		setSpaceLinkedPSAtomicUndos : p_packMethods.setSpaceLinkedPSAtomicUndos,
 		setEdgeClosedPSAtomicUndos : setEdgeClosedAtomicUndosRLSClosure(this),
 		setEdgeLinkedPSAtomicUndos : setEdgeLinkedAtomicUndosRLSClosure(this),
 		otherPSAtomicUndos : otherAtomicUndosRLSClosure(this),
+		setSpaceClosedPSDeductions : p_packMethods.setSpaceClosedPSDeductions,
+		setSpaceLinkedPSDeductions : p_packMethods.setSpaceLinkedPSDeductions,
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsRLSClosure(this),
 		setEdgeLinkedPSDeductions : setEdgeLinkedDeductionsRLSClosure(this),
 		otherPSDeductions : otherDeductionsRLSClosure(this),
-		
-		PSQuickStart : quickStartClosure(this)
+		PSQuickStart : quickStartRegionLoopSolverClosure(this, p_packMethods.PSQuickStart)
 	}); 
 	this.gridWall = WallGrid_data(p_wallArray);
 	this.borders = []; // Triangular array of borders
@@ -39,15 +44,18 @@ RegionLoopSolver.prototype.regionLoopSolverConstruct = function(p_wallArray) {
 	//giving the index of these edges in this border [y][x][dir]
 	this.regionGrid = this.gridWall.toRegionGrid();
 	this.regions = [];
+	this.adjacentRegionsGrid = []; // contains list of {direction : dir, index : ir}. Indicates spaces that belong to a foreign region and their neighbors.
 
 	var ix,iy;
 	var lastRegionNumber = 0;
 	
-	// Number of regions + this.bordersEdgesIndexesGrid
+	// Number of regions + adjacentRegionsGrid // + this.bordersEdgesIndexesGrid
 	for(iy = 0; iy < this.yLength; iy++) {
+		this.adjacentRegionsGrid.push([]);
 		//this.bordersEdgesIndexesGrid.push([]);
 		for(ix = 0; ix < this.xLength; ix++) {
 			lastRegionNumber = Math.max(this.regionGrid[iy][ix], lastRegionNumber);
+			this.adjacentRegionsGrid[iy].push([]);
 			//this.bordersEdgesIndexesGrid[ix].push({});
 		}
 	}
@@ -141,6 +149,8 @@ RegionLoopSolver.prototype.buildBorders = function() {
 							y : dy, 
 							direction : OppositeDirection[dir]
 						}); 
+						this.adjacentRegionsGrid[y][x].push({direction : dir, index : dr});
+						this.adjacentRegionsGrid[dy][dx].push({direction : OppositeDirection[dir], index : ir});
 						//this.bordersEdgesIndexesGrid[y][x][dir] = l;
 						//this.bordersEdgesIndexesGrid[dy][dx][OppositeDirection[dir]] = l;
 					}
@@ -228,6 +238,13 @@ RegionLoopSolver.prototype.areRegionsAdjacentSafe = function(p_i1, p_i2) {
 	} else {
 		return this.borders[p_i1][p_i2].length > 0;
 	}
+}
+
+// ---------------------------
+// Classic getters
+
+RegionLoopSolver.prototype.getSpaceCoordinates = function(p_indexRegion, p_indexSpace) {
+	return this.regions[p_indexRegion].spaces[p_indexSpace];
 }
 
 // ---------------------------
@@ -428,27 +445,6 @@ otherDeductionsRLSClosure = function(p_solver) {
 				// When a border  has a linked edge, close the other edges.
 				if (border.edgesLinked == 1) { // Warning : different behaviour in 2-region grid !
 					p_eventList = p_solver.closeNotLinkedEdgesBorder(p_eventList, border);
-					/*var indexOpening = 0;
-					var foundOpening = false;
-					
-					while (!foundOpening && indexOpening < border.length) { // Also warning ! 
-						edge = border.edges[indexOpening];
-						foundOpening = (p_solver.getLink(edge.x, edge.y, edge.direction) == LOOP_STATE.LINKED);
-						if (!foundOpening) {
-							p_eventList.push(new LinkEvent(edge.x, edge.y, edge.direction, LOOP_STATE.CLOSED));							
-						}
-						indexOpening++;
-					} // indexOpening == (index of the linked edge in the border plus 1. (if found)
-					if (!foundOpening) {
-						p_eventList.push(new FailureEvent());
-						return p_eventList;
-					} else {
-						var edge;
-						for (var i = indexOpening; i < border.length ; i++) { 
-							edge = border.edges[i];
-							p_eventList.push(new LinkEvent(edge.x, edge.y, edge.direction, LOOP_STATE.CLOSED));
-						} 
-					}*/
 				}
 
 				// If a region is fully crossed
@@ -547,7 +543,7 @@ RegionLoopSolver.prototype.alertClosedBorders = function(p_eventList, p_region) 
 // ---------------------------
 // Quick start
 
-quickStartClosure = function(p_solver) {
+quickStartRegionLoopSolverClosure = function(p_solver, p_PSQuickStart) {
 	return function() {
 		p_solver.initiateQuickStart("Region loop");
 		var events = [];
@@ -555,8 +551,11 @@ quickStartClosure = function(p_solver) {
 			events = p_solver.alertClosedBorders(events, p_solver.regions[i]);
 		}
 		events.forEach(event_ => {
-			this.tryToApplyHypothesis(event_, this.methodSetDeductions);
+			p_solver.tryToApplyHypothesis(event_, p_solver.methodSetDeductions);
 		});
 		p_solver.terminateQuickStart();
+		if (p_PSQuickStart) {
+			p_PSQuickStart();			
+		}
 	}
 }

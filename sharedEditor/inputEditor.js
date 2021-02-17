@@ -325,7 +325,7 @@ function comboChange(p_thelist, p_editorCore) {
 			saveLoadModeId = PUZZLES_KIND.NURIKABE_LIKE.id;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]);
 			break;
-		case 'Chocona': case 'Heyawake': case 'Shimaguni' :
+		case 'Chocona': case 'CountryRoad': case 'Heyawake': case 'Shimaguni' :
 			saveLoadModeId = PUZZLES_KIND.HEYAWAKE_LIKE.id;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_REGION]);
 			break;
