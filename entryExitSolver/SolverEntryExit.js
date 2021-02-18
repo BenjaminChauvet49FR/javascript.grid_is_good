@@ -1,75 +1,48 @@
 function SolverEntryExit(p_wallArray) {
-	LoopSolver.call(this);
+	RegionLoopSolver.call(this);
 	this.construct(p_wallArray);
 }
 
-SolverEntryExit.prototype = Object.create(LoopSolver.prototype);
+SolverEntryExit.prototype = Object.create(RegionLoopSolver.prototype);
 SolverEntryExit.prototype.constructor = SolverEntryExit;
 
 SolverEntryExit.prototype.construct = function(p_wallArray) {
-	this.loopSolverConstruct(p_wallArray, {		
+	this.regionLoopSolverConstruct(p_wallArray, {		
 		PSQuickStart : quickStartClosure(this)
-	});
-	this.activateClosedSpaces();
-	this.methodTools = {comparisonMethod : comparisonLoopEventsMethod, copyMethod : copyLoopEventMethod,  argumentToLabelMethod : namingCategoryClosure(this)};
-	this.numberGrid = [];
-	this.gridWall = WallGrid_data(p_wallArray);
-	this.regionGrid = this.gridWall.toRegionGrid();
-
-	// Initialize the number of regions
-	var lastRegionNumber = 0;
-	for(iy = 0;iy < this.yLength;iy++){
-		for(ix = 0;ix < this.xLength;ix++){
-			lastRegionNumber = Math.max(this.regionGrid[iy][ix],lastRegionNumber);
-		}
-	}
-	this.regionsNumber = lastRegionNumber+1;
+	})
 	
-	var ir;
-	this.regions = [];
-	for(ir=0 ; ir<this.regionsNumber ; ir++) {
-		this.regions.push({
-			index : ir,
-			spaces : [],
-			size : 0,
-			endSpaces : [] //Only in regions of size >= 2 : spaces that have only one neighbor in the same region
-		});
-	}
+	var region, ir;
+	var severalNeighbors, direction;
+	for(ir=0 ; ir < this.regions.length ; ir++) {
+		this.regions[ir].endSpaces = [];
+	};
 	
-	// Now that region data are created : 
-	// Initialize all spaces by data (region + declare all of 'em open)
-	var region, ri;
-	var countNeighborsInRegion;
 	for(iy = 0 ; iy < this.yLength ; iy++) {
 		for(ix = 0 ; ix < this.xLength ; ix++) {
 			ir = this.regionGrid[iy][ix];
-			region = this.regions[ir];
-			region.spaces.push({x:ix,y:iy});
 			if (!this.isBanned(ix, iy)) {
+				region = this.regions[ir];
 				this.setLinkSpace(ix, iy, LOOP_STATE.LINKED);
-				countNeighborsInRegion = 0;
-				ri = this.regionGrid[iy][ix];
+				ir = this.regionGrid[iy][ix];
+				direction = LOOP_DIRECTION.UNDECIDED;
+				severalNeighbors = false;
 				LoopKnownDirections.forEach(dir => {
-					if (this.neighborExists(ix, iy, dir) && this.regionGrid[iy+DeltaY[dir]][ix+DeltaX[dir]] == ri) {
-						countNeighborsInRegion++;
-						// TODO : optimize this loop to stop at countNeighborsInRegion = 2
+					if (this.neighborExists(ix, iy, dir) && this.regionGrid[iy+DeltaY[dir]][ix+DeltaX[dir]] == ir) {
+						if (direction != LOOP_DIRECTION.UNDECIDED) {
+							severalNeighbors = true;
+						} else {
+							direction = dir;	// TODO can it be optimized ? It is a forEach loop... (no way to break a forEach loop : https://stackoverflow.com/questions/2641347/short-circuit-array-foreach-like-calling-break )						
+						}
 					}
 				});
-				if (countNeighborsInRegion == 1) {
-					region.endSpaces.push({x : ix, y : iy});
+				if (!severalNeighbors && (direction != LOOP_DIRECTION.UNDECIDED)) {
+					region.endSpaces.push({x : ix, y : iy, directionMyRegion : direction});
 				}
+				if (region.endSpaces.length == 3) {
+					alert("Impossible puzzle : a region contains at least 3 dead end spaces");
+				} // Note : should not happen if we try to resolve an already soluble puzzle
 			}
-			if (region.endSpaces.length == 3) {
-				alert("Impossible puzzle : a region contains at least 3 dead end spaces");
-			} // Note : should not happen if we try to resolve an already soluble puzzle
 		}
-	}
-	// TODO : other management of banned spaces ?
-	
-	// Initialize datas dependant to region size (now that all region spaces are known) such as X to place
-	// Also initialize regions sizes for shortcut
-	for(ir = 0 ; ir < this.regionsNumber ; ir++) {
-		this.regions[ir].size = this.regions[ir].spaces.length;
 	}
 	
 	this.signalAllOpenSpaces();
@@ -116,11 +89,11 @@ quickStartClosure = function(p_solver) {
 			if (region.endSpaces.length == 2) {
 				eventsToApply = p_solver.buildPatrioticBorderNoEnds(eventsToApply, region);
 			} else if (region.endSpaces.length == 1) {
-				eventsToApply = p_solver.buildPatrioticBorderParity(eventsToApply, region, ix, iy);
+				eventsToApply = p_solver.buildPatrioticBorderParity(eventsToApply, region);
 			}
 		});
 		eventsToApply.forEach(event_ => {
-			this.tryToApplyHypothesis(event_, this.methodSetDeductions);
+			p_solver.tryToApplyHypothesis(event_, p_solver.methodSetDeductions);
 		});
 		p_solver.terminateQuickStart();
 	}
@@ -132,40 +105,41 @@ Adds closed link events to all spaces outside the bound of the region
 SolverEntryExit.prototype.buildPatrioticBorderNoEnds = function(p_eventsToApply, p_region) {
 	var x,y;
 	const ir = p_region.index;
-	const xBan1 = p_region.endSpaces[0].x;
-	const yBan1 = p_region.endSpaces[0].y;
-	const xBan2 = p_region.endSpaces[1].x;
-	const yBan2 = p_region.endSpaces[1].y;
+	const xEnd1 = p_region.endSpaces[0].x;
+	const yEnd1 = p_region.endSpaces[0].y;
+	const xEnd2 = p_region.endSpaces[1].x;
+	const yEnd2 = p_region.endSpaces[1].y;
 	p_region.spaces.forEach(space => {
 		x = space.x;
 		y = space.y;
-		if ( ((x != xBan1) || (y != yBan1)) && ((x != xBan2) || (y != yBan2)) ) {
-			LoopKnownDirections.forEach(dir => {
-				if (this.neighborExists(x, y, dir) && this.regionGrid[y+DeltaY[dir]][x+DeltaX[dir]] != ir) {
-					p_eventsToApply.push(new LinkEvent(x, y, dir, LOOP_STATE.CLOSED));
-				}
+		if ( ((x != xEnd1) || (y != yEnd1)) && ((x != xEnd2) || (y != yEnd2)) ) {
+			this.adjacentRegionsGrid[y][x].forEach(indication => {
+				p_eventsToApply.push(new LinkEvent(x, y, indication.direction, LOOP_STATE.CLOSED));
 			});
 		}
 	});
+	p_eventsToApply.push(new LinkEvent(xEnd1, yEnd1, p_region.endSpaces[0].directionMyRegion, LOOP_STATE.LINKED)); 
+	p_eventsToApply.push(new LinkEvent(xEnd2, yEnd2, p_region.endSpaces[1].directionMyRegion, LOOP_STATE.LINKED));
 	return p_eventsToApply;
 }
 
-SolverEntryExit.prototype.buildPatrioticBorderParity = function(p_eventsToApply, p_region, p_x, p_y) {
+SolverEntryExit.prototype.buildPatrioticBorderParity = function(p_eventsToApply, p_region) {
 	const ir = p_region.index;
-	const xEnd = p_region.endSpaces[0].x %2;
-	const yEnd = p_region.endSpaces[0].y %2;
+	const xEnd = p_region.endSpaces[0].x;
+	const yEnd = p_region.endSpaces[0].y;
+	const xEndMod2 = xEnd % 2;
+	const yEndMod2 = yEnd % 2;
 	const parityNumberSpaces = p_region.size % 2;
 	p_region.spaces.forEach(space => {
 		x = space.x;
 		y = space.y;
-		if ((x+xEnd+y+yEnd %2 == parityNumberSpaces) && ((x != xEnd) || (y != yEnd))) {
-			LoopKnownDirections.forEach(dir => {
-				if (this.neighborExists(x, y, dir) && this.regionGrid[y+DeltaY[dir]][x+DeltaX[dir]] != ir) {
-					p_eventsToApply.push(new LinkEvent(x, y, dir, LOOP_STATE.CLOSED));
-				}
+		if (((x + xEndMod2 + y + yEndMod2) %2 == parityNumberSpaces) && ((x != xEnd) || (y != yEnd))) {
+			this.adjacentRegionsGrid[y][x].forEach(indication => {
+				p_eventsToApply.push(new LinkEvent(x, y, indication.direction, LOOP_STATE.CLOSED));
 			});
 		}
 	});
+	p_eventsToApply.push(new LinkEvent(xEnd, yEnd, p_region.endSpaces[0].directionMyRegion, LOOP_STATE.LINKED));
 	return p_eventsToApply;
 }
 
