@@ -6,15 +6,15 @@ const NOT_RELEVANT = -1;
 
 const EVENTLIST_KIND = {HYPOTHESIS:"H",PASS:"P"};
 
-function SolverHeyawake(p_wallArray, p_numberGrid) {
+function SolverHeyawake(p_wallArray, p_indications) {
 	GeneralSolver.call(this);
-	this.construct(p_wallArray,p_numberGrid);
+	this.construct(p_wallArray, p_indications);
 }
 
 SolverHeyawake.prototype = Object.create(GeneralSolver.prototype);
 SolverHeyawake.prototype.constructor = SolverHeyawake;
 
-SolverHeyawake.prototype.construct = function(p_wallArray, p_numberGrid) {
+SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 	this.generalConstruct();
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
@@ -49,7 +49,7 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_numberGrid) {
 		this.answerGrid.push([]);
 		this.stripGrid.push([]);
 		for(ix = 0;ix < this.xLength;ix++){
-			lastRegionNumber = Math.max(this.regionGrid[iy][ix],lastRegionNumber);
+			lastRegionNumber = Math.max(this.regionGrid[iy][ix], lastRegionNumber);
 			this.answerGrid[iy].push(SPACE.UNDECIDED);
 			this.stripGrid[iy].push({leftMost:NOT_RELEVANT,horizIn:NOT_RELEVANT,rightMost:NOT_RELEVANT,topMost:NOT_RELEVANT,vertIn:NOT_RELEVANT,bottomMost:NOT_RELEVANT});
 		}
@@ -70,21 +70,18 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_numberGrid) {
 		});
 	}
 	
-	// Now that region data are created : 
-	// Initialize spaces by region + for those with a value, numbers of Os to place in notPlaced yet
-	var number, region;
+	var ir, region;
 	for(iy = 0;iy < this.yLength;iy++){
 		for(ix = 0;ix < this.xLength;ix++){
 			ir = this.regionGrid[iy][ix];
-			number = p_numberGrid[iy][ix];
-			region = this.regions[ir];
-			region.spaces.push({x:ix,y:iy});
-			if (number != null){
-				region.expectedNumberOfClosedsInRegion = number;
-				region.notPlacedYet = {CLOSEDs : number};
-			} 
+			this.regions[ir].spaces.push({x:ix,y:iy});
 		}
 	}
+	p_indications.forEach(indic => {
+		region = this.regions[indic.index];
+		region.expectedNumberOfClosedsInRegion = indic.value;
+		region.notPlacedYet = {CLOSEDs : indic.value};
+	});
 	
 	// Initialize numbers of Xs to place (now that all region spaces are known)
 	// Also initialize regions sizes for shortcut

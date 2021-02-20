@@ -13,7 +13,7 @@ var colours={
 }
 
 var drawer = new Drawer(colours);
-var solver = new SolverCountryRoad(generateWallArray(1,1), generateSymbolArray(1,1));
+var solver = new SolverCountryRoad(generateWallArray(1,1), []);
 var canevas = document.getElementById("canevas");
 var	context = canevas.getContext("2d");
 var actionsManager = {clickSpace : null}; 

@@ -1,13 +1,13 @@
 SolverCountryRoad.prototype = Object.create(RegionLoopSolver.prototype);
 
-function SolverCountryRoad(p_wallArray, p_numberArray) {
+function SolverCountryRoad(p_wallArray, p_indications) {
 	RegionLoopSolver.call(this);
-	this.construct(p_wallArray, p_numberArray);
+	this.construct(p_wallArray, p_indications);
 }
 
 SolverCountryRoad.prototype.constructor = SolverCountryRoad;
 
-SolverCountryRoad.prototype.construct = function(p_wallArray, p_numberArray) {
+SolverCountryRoad.prototype.construct = function(p_wallArray, p_indications) {
 	this.regionLoopSolverConstruct(p_wallArray, {
 		setSpaceLinkedPSDeductions : setSpaceLinkedDeductionsClosure(this),
 		setSpaceClosedPSDeductions : setSpaceClosedDeductionsClosure(this),
@@ -18,9 +18,12 @@ SolverCountryRoad.prototype.construct = function(p_wallArray, p_numberArray) {
 		PSQuickStart : quickStartClosure(this)
 	});
 	
-	// Affecting regions (TODO : should be optimized soon)
+	// Affecting regions
 	this.regions.forEach(region => {
 		forcedValue : null
+	});
+	p_indications.forEach(indic => {
+		this.regions[indic.index].forcedValue = indic.value;
 	});
 	
 	this.gridWall = WallGrid_data(p_wallArray); 
@@ -28,12 +31,10 @@ SolverCountryRoad.prototype.construct = function(p_wallArray, p_numberArray) {
 	for(iy = 0;iy < this.yLength;iy++) {
 		for(ix = 0;ix < this.xLength;ix++) {
 			ir = this.regionGrid[iy][ix];
-			number = p_numberArray[iy][ix];
-			if (number != null){
-				region = this.regions[ir]; 
-				region.forcedValue = number;
-				region.spacesNotLinkedYet = number;
-				region.spacesNotClosedYet = region.size - number;
+			region = this.regions[ir];
+			if (region.forcedValue != null) {
+				region.spacesNotLinkedYet = region.forcedValue;
+				region.spacesNotClosedYet = region.size - region.forcedValue;
 			} 
 		}
 	}
@@ -45,7 +46,6 @@ SolverCountryRoad.prototype.construct = function(p_wallArray, p_numberArray) {
 SolverCountryRoad.prototype.expectedNumberInRegion = function(p_ir) {
 	return this.regions[p_ir].forcedValue;
 }
-
 
 // -------------------
 // Input methods

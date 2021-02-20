@@ -65,6 +65,116 @@ function stringToWallAndNumbersPuzzle(p_string) {
 	};
 }
 
+/**
+This time, a wall grid is stocked and then, an array of one indication per region is stored.
+Input : p_wallArray classic ; p_numbersArray = array of already aligned numbers, p_regionArray : array of region values
+String output meaning :
+X : one region is skipped.
+XX : two regions are skipped.
+X5 : five regions are skipped.
+But what if the symbol has a name starting with X ? Well, a lower x will be added before.
+*/
+function puzzleRegionIndicationsToString(p_wallArray, p_numbersArray) {
+	const regionGrid = WallGrid_data(p_wallArray).toRegionGrid(); // This assumes toRegionGrid() returns a double-entry array of region numbers ordered by "first spaces in lexical order" in lexical order.
+	var regionsIndications = [];
+	for(var iy = 0 ; iy < regionGrid.length ; iy++) {
+		for(var ix = 0 ; ix < regionGrid[0].length; ix++) {
+			if (regionGrid[iy][ix] == regionsIndications.length) {
+				regionsIndications.push(p_numbersArray[iy][ix]);
+			}
+		}
+	}
+	const wallsString = wallArrayToString(p_wallArray);
+	var regionString = "";
+	var skippedRegions = 0;
+	var value;
+	for (var i = 0; i < regionsIndications.length ; i++) {
+		value = regionsIndications[i];
+		if (value == null) {
+			skippedRegions++;
+		} else {
+			if (skippedRegions == 1) {
+				regionString += " X";
+			} else if (skippedRegions == 2) {
+				regionString += " XX";
+			} else if (skippedRegions >= 3) {
+				regionString += " X"+skippedRegions;
+			}
+			regionString += " " + ((typeof(value) == "string" && value.charAt(0) == 'X') ? ('x' + value) : value); // No parentheses to circle the whole ternary (from "(typeof"  to ": value)" ) = small cap Xs everywhere.
+			skippedRegions = 0;
+		}
+	}
+	return wallsString + regionString;
+}
+
+// Output : {wallArray : (wallarray classique), indications : [{index, value}]
+function stringToPuzzleRegionsIndications(p_string) {
+	var stringArray = p_string.split(' ');
+	var xLength = stringArray[0];
+	var yLength = stringArray[1];
+	var stringArray = p_string.split(' ');
+	// Wrapper for compatibility with previous formats
+	const wallGridAnswer = tokensToWallArray(stringArray.slice(0,3));
+	var indications = [];
+	var indexToken = 3;	
+	var token;
+	var regionIndex = 0;
+	var value;
+	while(indexToken < stringArray.length && stringArray[indexToken].length == 0) {
+		indexToken++;
+	}
+	while (stringArray.length > indexToken) {
+		token = stringArray[indexToken];
+		if (token.charAt(0) == 'X') {
+			if (token == "X") {
+				// Region skipped ! 
+			} else if (token == "XX") {
+				regionIndex += 1; // and not 2 (because of regionIndex increment at end)
+			} else {
+				regionIndex += parseInt(token.substring(1), 10) - 1;
+			}
+		} else {
+			if (token.startsWith("xX")) {
+				value = token.subString(1);
+			} else {
+				value = token;
+			}
+			indications.push({index : regionIndex, value : value});			
+		}
+		regionIndex++;
+		indexToken++; // This is the risk with while loops. 
+	}
+	return {
+	    wallArray : wallGridAnswer,
+	    indications : indications
+	}
+}
+
+// Utilitary method with the retured item right above (wallArray, indications)
+function getRegionIndicArray(p_loadedItem) {
+	const regionArray = WallGrid_data(p_loadedItem.wallArray).toRegionGrid(); // This supposes toRegionGrid() returns a double-entry array of region numbers ordered by "first spaces in lexical order" in lexical order.
+	var regionIndicArray = [];
+	var nextIndex = (p_loadedItem.indications.length > 0 ? p_loadedItem.indications[0].index : -1);
+	var indicIndex = 0;
+	for(var iy = 0 ; iy < regionArray.length ; iy++) {
+		regionIndicArray.push([]);
+		for(var ix = 0 ; ix < regionArray[0].length; ix++) {
+			if ((nextIndex == regionArray[iy][ix]) && nextIndex != -1) {
+				regionIndicArray[iy].push(parseInt(p_loadedItem.indications[indicIndex].value, 10));
+				indicIndex++;
+				if (indicIndex != p_loadedItem.indications.length) {
+					nextIndex = p_loadedItem.indications[indicIndex].index;
+				} else {
+					nextIndex = -1;
+				}
+			} else {
+				regionIndicArray[iy].push(null);
+			}
+		}
+	}
+	return regionIndicArray;
+}
+
 /*
 p_symbolsArray : grid to save
 p_symbolsToSave : list of symbols that should be saved (if any, otherwise the grid is saved directly)

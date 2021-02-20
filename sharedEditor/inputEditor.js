@@ -219,9 +219,6 @@ saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions
     }
     if (letsSave) {
         var puzzleToSave = "";
-		if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_REGION)) {
-			p_editorCore.alignToRegions(GRID_ID.NUMBER_REGION);
-		}
 		p_editorCore.cleanRedundantWalls();
 		
         if (p_kindId == PUZZLES_KIND.STAR_BATTLE.id) {
@@ -239,7 +236,8 @@ saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions
         } else if (p_kindId == PUZZLES_KIND.HAKYUU_LIKE.id) {
 			puzzleToSave = commonPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_SPACE), null);
 		} else {
-            puzzleToSave = commonPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION), null);
+			p_editorCore.alignToRegions(GRID_ID.NUMBER_REGION);
+			puzzleToSave = puzzleRegionIndicationsToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION));
         }
         localStorage.setItem(localStorageName, puzzleToSave);
     }
@@ -283,9 +281,10 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);			
 				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE,loadedItem.numberArray); 
 			} else {
-				loadedItem = stringToWallAndNumbersPuzzle(localStorage.getItem(localStorageName));
-				p_editorCore.setupFromWallArray(loadedItem.wallArray);			
-				p_editorCore.addGrid(GRID_ID.NUMBER_REGION,loadedItem.numberArray); 
+				loadedItem = stringToPuzzleRegionsIndications(localStorage.getItem(localStorageName));
+				p_editorCore.setupFromWallArray(loadedItem.wallArray);
+				regionIndicArray = getRegionIndicArray(loadedItem);			; 
+				p_editorCore.addGrid(GRID_ID.NUMBER_REGION, regionIndicArray);
 			}
             adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore); 
             updateFieldsAfterLoad(p_fieldsToUpdate, loadedItem);

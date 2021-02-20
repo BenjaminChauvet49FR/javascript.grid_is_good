@@ -1,14 +1,14 @@
 // Initialization
 
-function SolverChocona(p_wallArray, p_numberGrid) {
+function SolverChocona(p_wallArray, p_indications) {
 	GeneralSolver.call(this);
-	this.construct(p_wallArray,p_numberGrid);
+	this.construct(p_wallArray, p_indications);
 }
 
 SolverChocona.prototype = Object.create(GeneralSolver.prototype);
 SolverChocona.prototype.constructor = SolverChocona;
 
-SolverChocona.prototype.construct = function(p_wallArray, p_numberGrid) {
+SolverChocona.prototype.construct = function(p_wallArray, p_indications) {
 	this.generalConstruct();
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
@@ -63,23 +63,23 @@ SolverChocona.prototype.construct = function(p_wallArray, p_numberGrid) {
 		this.checker3or4Open.arrayPresence.push(false);
 	}
 	
+	// Give indications in each region
+	p_indications.forEach(indic => {
+		this.regions[indic.index].forcedValue = indic.value;
+	});
+	
 	// Now that region data are created : 
 	// Initialize spaces by region
-	var region;
-	for(iy = 0;iy < this.yLength;iy++){
-		for(ix = 0;ix < this.xLength;ix++){
-			ir = this.regionGrid[iy][ix];
-			region = this.regions[ir];
-			region.spaces.push({x:ix,y:iy});
-			if ((p_numberGrid[iy][ix] != null) && (p_numberGrid[iy][ix] != NOT_FORCED)) { // L'oubli du "!= null" peut conduire à avoir des zéros non chargés.
-				region.forcedValue = p_numberGrid[iy][ix];
-			}
+	for(iy = 0 ; iy < this.yLength ; iy++) {
+		for(ix = 0 ; ix < this.xLength ; ix++) {
+			this.regions[this.regionGrid[iy][ix]].spaces.push({x:ix, y:iy});
 		}
 	}
 	
+	var region;
 	// Initialize datas dependant to region size (now that all region spaces are known) such as X to place
 	// Also initialize regions sizes for shortcut
-	for(ir = 0;ir<this.regionsNumber;ir++) {
+	for(ir = 0 ; ir<this.regionsNumber ; ir++) {
 		region = this.regions[ir];
 		region.size = region.spaces.length;
 		if (region.forcedValue != NOT_FORCED) {

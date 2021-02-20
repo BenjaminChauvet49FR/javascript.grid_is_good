@@ -1,5 +1,5 @@
 var drawer = new Drawer();
-var solver = new SolverChocona(generateWallArray(1,1),generateSymbolArray(1,1));
+var solver = new SolverChocona(generateWallArray(1,1), []);
 //TODO (dummy grid problem)
 var canevas = document.getElementById("canevas");
 var	context = canevas.getContext("2d");

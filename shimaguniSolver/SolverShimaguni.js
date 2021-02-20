@@ -3,13 +3,13 @@ const NOT_FORCED = -1;
 
 function SolverShimaguni() {
 	GeneralSolver.call(this);
-    this.construct(generateWallArray(1, 1), generateSymbolArray(1, 1));
+    this.construct(generateWallArray(1, 1), []);
 }
 
 SolverShimaguni.prototype = Object.create(GeneralSolver.prototype);
 SolverShimaguni.prototype.constructor = SolverShimaguni;
 
-SolverShimaguni.prototype.construct = function(p_wallArray, p_numberGrid) {
+SolverShimaguni.prototype.construct = function(p_wallArray, p_indicationsRegions) {
 	this.generalConstruct();
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
@@ -74,17 +74,13 @@ SolverShimaguni.prototype.construct = function(p_wallArray, p_numberGrid) {
 	}
 	
 	// Initialize data of regions spaces + contact between regions (triangle and region data)
-	var ir,number;
+	var ir;
 	var iOtherR;
 	var region;
 	for(iy = 0;iy < this.yLength;iy++){
 		for(ix = 0;ix < this.xLength;ix++){
 			ir = this.regionGrid[iy][ix];
-			number = p_numberGrid[iy][ix];
 			this.regions[ir].spaces.push({x:ix,y:iy});
-			if (number > 0){
-				this.regions[ir].forcedVal = number;
-			}
 			if (iy < this.yLength-1){
 				iOtherR = this.regionGrid[iy+1][ix];
 				if (iOtherR != ir){
@@ -101,6 +97,10 @@ SolverShimaguni.prototype.construct = function(p_wallArray, p_numberGrid) {
 	}
 	
 	// Initialize data of all regions that are possible only now that spaces by region are known.
+	p_indicationsRegions.forEach(indic => {
+		region = this.regions[indic.index];
+		region.forcedVal = indic.value;
+	});
 	for(var ir = 0;ir<this.regionsNumber;ir++){
 		region = this.regions[ir];
 		region.size = region.spaces.length;
@@ -401,7 +401,7 @@ filterClustersClosure = function(p_solver) {
 				p_solver.updateClustersRegion(ir);
 				if (region.indexClusterWithFill == CLUSTER_WITH_FILL.MULTI){
 					ok = false;
-					debugTryToPutNewGold("NOOOOO ! (region "+ir+" has more than one cluster with filled space)");
+					autoLogTryToPutNewGold("NOOOOO ! (region "+ir+" has more than one cluster with filled space)");
 				} else if (region.indexClusterWithFill != CLUSTER_WITH_FILL.NOT_FOUND){
 					for(var ic = 0;ic < region.clusters.length; ic++){
 						if (ic != region.indexClusterWithFill){
@@ -445,7 +445,7 @@ filterClustersClosure = function(p_solver) {
 			// Ban clusters that don't contain a filled space
 			if (clusterBelong == CLUSTER_WITH_FILL.MULTI){
 				ok = false;
-				debugTryToPutNewGold("NOOOOO ! (region "+ir+" has more than one cluster with filled space)");
+				autoLogTryToPutNewGold("NOOOOO ! (region "+ir+" has more than one cluster with filled space)");
 			} else{
 				for(var ic = 0;ic < region.clusters.length; ic++){
 					if (ic != clusterBelong){
