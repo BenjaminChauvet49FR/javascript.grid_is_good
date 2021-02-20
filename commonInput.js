@@ -1,21 +1,6 @@
 // Methods that are used by many inputs
 
 //--------------------
-
-/**
-Adapts canvas to global grid
-p_canvas : the canvas to adapt
-p_pix : the Pix item to calculate coordinates
-p_editorCore : the Global item the canvas should be adapted to
- */
-function adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore) {
-    p_drawer.adaptCanvasDimensions(p_canvas, {
-        xLength: p_editorCore.getXLength(),
-        yLength: p_editorCore.getYLength()
-    });
-}
-
-//--------------------
 /**
 A generic straightforward function
 */

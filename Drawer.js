@@ -17,14 +17,7 @@ function Drawer() {
     }
 
 	this.colors = {
-		rainbowSpaces: ["#6666ff", "#ff6666", "#66ff66",
-			"#66ffff", "#ffff66", "#ff66ff",
-			"#cc66ff", "#ffcc66", "#66ffcc",
-			"#ff00cc", "#00ccff", "#ccff00"],
-		antiCloseWrite: '#00ffff',
-		standardWrite: '#000000',
-		path: '#006600',
-		pearl: '#222222'
+		combinedArrowRingIndications: '#440000'
 	}
 	this.wallColorSet = {
 		closed_wall: '#222222',
@@ -358,6 +351,83 @@ Drawer.prototype.drawCrossX = function(p_context, p_xSpace, p_ySpace, p_item) {
 	p_context.moveTo(pixLeft, pixDown);
 	p_context.lineTo(pixRight, pixUp);
 	p_context.stroke(); // Credits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/lineTo
+}
+
+// Combined arrow = Yajilin-like. This method is a better deal than reusing drawSpaceContents since it doesn't draw spaces.
+Drawer.prototype.drawCombinedArrowGridIndications = function (p_context, p_combinedArrowGrid) {
+	const yLength = p_combinedArrowGrid.getYLength();
+	if (yLength > 0) {
+		const xLength = p_combinedArrowGrid.getXLength();
+		var ix, iy, clue, isX; 
+		const pixBack = this.getPixInnerSide()/4
+		p_context.fillStyle = this.colors.combinedArrowRingIndications; 
+		p_context.strokeStyle = this.colors.combinedArrowRingIndications; 
+		p_context.textAlign = "center"; // Credits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/textAlign
+		p_context.textBaseline = "middle"; // Credits : https://stackoverflow.com/questions/39294065/vertical-alignment-of-canvas-text https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/textBaseline
+		var pixX1, pixY1, pixX2, pixY2, pixX3, pixY3, pixTextX, pixTextY;
+		for (iy = 0; iy < yLength; iy++) {
+			for (ix = 0; ix < xLength; ix++) {
+				clue = p_combinedArrowGrid.get(ix, iy);
+				//Credits on drawing polygon : https://stackoverflow.com/questions/4839993/how-to-draw-polygons-on-an-html5-canvas
+				if (clue != null) {
+					p_context.beginPath();
+					switch (clue.charAt(0)) {
+						case 'L': case 'R': 
+							isX = false;
+							pixY1 = this.getPixCenterY(iy);
+							pixY2 = pixY1 - pixBack;
+							pixY3 = pixY1 + pixBack;
+							pixTextY = pixY1;
+							if (clue.charAt(0) == 'L') {
+								pixX1 = this.getPixInnerXLeft(ix) + 1;
+								pixX2 = pixX1 + pixBack;
+								pixX3 = pixX2;
+								pixX3 = pixX2;
+								pixTextX = (pixX2 + this.getPixInnerXRight(ix)) / 2;
+							} else {
+								pixX1 = this.getPixInnerXRight(ix) - 1;
+								pixX2 = pixX1 - pixBack;
+								pixX3 = pixX2;
+								pixTextX = (pixX2 + this.getPixInnerXLeft(ix)) / 2;
+							}
+						break;
+						case 'U': case 'D': 
+							isX = false;
+							pixX1 = this.getPixCenterX(ix);
+							pixX2 = pixX1 - pixBack;
+							pixX3 = pixX1 + pixBack;
+							pixTextX = pixX1;
+							if (clue.charAt(0) == 'U') {
+								pixY1 = this.getPixInnerYUp(iy) + 1;
+								pixY2 = pixY1 + pixBack;
+								pixY3 = pixY2;
+								pixTextY = (pixY2 + this.getPixInnerYDown(iy)) / 2;
+							} else {
+								pixY1 = this.getPixInnerYDown(iy) - 1;
+								pixY2 = pixY1 - pixBack;
+								pixY3 = pixY2;
+								pixTextY = (pixY2 + this.getPixInnerYUp(iy)) / 2;
+							}
+						break;
+						case 'X': {
+							isX = true;
+						}
+					}
+					if (isX) {
+						this.drawCrossX(p_context, ix, iy, p_context.strokeStyle);
+					} else {
+						p_context.moveTo(pixX1, pixY1);
+						p_context.lineTo(pixX2, pixY2);
+						p_context.lineTo(pixX3, pixY3);
+						p_context.lineTo(pixX1, pixY1);
+						p_context.fillText(clue.substring(1), pixTextX, pixTextY);
+						p_context.closePath();
+						p_context.fill();
+					}
+				}
+			}
+		}
+	}
 }
 
 // -----------------

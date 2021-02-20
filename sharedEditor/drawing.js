@@ -31,6 +31,9 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_SPACE)) {
 	    this.drawNumbersGrid(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_SPACE));
 	}
+	if (p_editorCore.isVisibleGrid(GRID_ID.YAJILIN_LIKE)) {
+	    this.drawCombinedArrowGridIndications(p_context, p_editorCore.getGrid(GRID_ID.YAJILIN_LIKE));
+	}
 }
 
 Drawer.prototype.drawNumbersLittleInCorner = function (p_context, p_numberGrid) {
@@ -93,3 +96,4 @@ Drawer.prototype.drawPearlGrid = function (p_context, p_pearlGrid) {
 		}
 	}
 }
+

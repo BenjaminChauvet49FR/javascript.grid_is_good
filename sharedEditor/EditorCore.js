@@ -7,7 +7,7 @@ const GRID_ID = {
     NUMBER_REGION: 'NR',
     NUMBER_SPACE: 'NS',
     PEARL: 'P',
-	YAJILIN: 'YAJILIN' 
+	YAJILIN_LIKE: 'YAJILIN' 
 }
 
 const GRID_TRANSFORMATION = {
@@ -45,8 +45,8 @@ Resets the grids
 EditorCore.prototype.buildGrids = function (p_xLength, p_yLength) {
 	this.wallGrid = WallGrid_dim(p_xLength, p_yLength);
 	Object.keys(GRID_ID).forEach(id => {
-		if (this.grids[id]) {
-			this.grids[id] = Grid_dim(p_xLength, p_yLength);
+		if (this.grids[GRID_ID[id]]) {
+			this.grids[GRID_ID[id]] = Grid_dim(p_xLength, p_yLength);
 		}
 	});
 }
@@ -144,17 +144,20 @@ EditorCore.prototype.getSelection = function (p_x, p_y) {
 EditorCore.prototype.getInputNumber = function () {
     return this.inputNumber;
 }
-
 EditorCore.prototype.setInputNumber = function (p_inputNumber) {
     this.inputNumber = p_inputNumber
 }
-
 EditorCore.prototype.getInputSymbol = function () {
     return this.inputSybol;
 }
-
 EditorCore.prototype.setInputSymbol = function (p_inputSymbol) {
     this.inputSybol = p_inputSymbol
+}
+EditorCore.prototype.getInputCombinedArrow = function () {
+    return this.inputCombinedArrow;
+}
+EditorCore.prototype.setInputCombinedArrow = function (p_inputCombinedArrow) {
+    this.inputCombinedArrow = p_inputCombinedArrow
 }
 
 

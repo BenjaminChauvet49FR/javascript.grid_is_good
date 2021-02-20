@@ -2,9 +2,10 @@
 // All the main variables
 var drawer = new Drawer();
 var editorCore = new EditorCore(10, 10);
-editorCore.addCleanGrid(GRID_ID.NUMBER_REGION, 10, 10);
-editorCore.addCleanGrid(GRID_ID.NUMBER_SPACE, 10, 10);
-editorCore.addCleanGrid(GRID_ID.PEARL, 10, 10);
+Object.keys(GRID_ID).forEach(id => {
+	editorCore.addCleanGrid(GRID_ID[id], 10, 10); //  See GRID_ID in EditorCore
+});
+
 var canevas = document.getElementById("canevas");
 var context = canevas.getContext("2d");
 var modesManager = {
@@ -138,7 +139,7 @@ document.getElementById("submit_add_black").addEventListener('click', function (
 });
 
 document.getElementById("submit_add_arrow_number_combination").addEventListener('click', function () {
-    alert("To be done");
+    editorCore.setInputSymbol("L1");
 });
 
 // Changes on spinboxes

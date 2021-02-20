@@ -272,3 +272,38 @@ function fillArrayWithTokensRows(p_tokens, p_array, p_indexToken, p_symbol) {
 	return {newArray : p_array, newIndexToken : p_indexToken};
 }
 
+/**
+Inspired by puzzleRegionIndicationsToString in commonSaveAndLoad (that calls this function). This time, it is about saving data in spaces in lexical order. In the long run, this could replace the classical save/load methods.
+E.g. let's have a 5x5 grid : 
+..A..
+.B..C
+.D.E.
+FGH..
+It is saved this way : ' XX A X3 B X3 C X D X E X F G H'
+A mix of a lot of different values are possible
+Space at start of string !
+*/
+function lexicalSpacesValuesToString(p_valuesArray) {
+	var answer = "";
+	var skippedSpaces = 0;
+	var value;
+	for(var iy = 0 ; iy < p_valuesArray.length ; iy++) {
+		for(var ix = 0 ; ix < p_valuesArray[0].length; ix++) {
+			value = p_valuesArray[iy][ix];
+			if (value != null) {
+				if (skippedSpaces == 1) {
+					answer += " X";
+				} else if (skippedSpaces == 2) {
+					answer += " XX";
+				} else if (skippedSpaces >= 3) {
+					answer += " X"+skippedSpaces;
+				}
+				answer += " " + ((typeof(value) == "string" && value.charAt(0) == 'X') ? ('x' + value) : value); // No parentheses to circle the whole ternary (from "(typeof"  to ": value)" ) = small cap Xs everywhere.
+				skippedSpaces = 0;
+			} else {
+				skippedSpaces++;
+			}
+		}
+	}
+	return answer;
+}

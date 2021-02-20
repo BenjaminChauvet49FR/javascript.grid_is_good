@@ -49,6 +49,7 @@ clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
 			p_editorCore.clear(GRID_ID.NUMBER_REGION, p_x, p_y);
 			p_editorCore.clear(GRID_ID.NUMBER_SPACE, p_x, p_y);
 			p_editorCore.clear(GRID_ID.NUMBER_PEARL, p_x, p_y);
+			p_editorCore.clear(GRID_ID.YAJILIN_LIKE, p_x, p_y);
 		break;
 		case (MODE_SELECTION_RECTANGLE.id) :
 		    p_editorCore.selectRectangleMechanism(p_x, p_y);
@@ -63,7 +64,28 @@ clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
 			manageValueInSpaceGrid(p_x, p_y, GRID_ID.PEARL, p_editorCore, p_editorCore.getInputSymbol());
 		break;
 		case (MODE_ARROW_COMBINED.id) :	
-			var clue = prompt("Entrer indice Yajilin (L|U|R|D)(nombre)", "L1");
+			var defaultVal = p_editorCore.getInputCombinedArrow();
+			if (!defaultVal || (defaultVal == null)) {
+				defaultVal = "L1";
+			}
+			var clue = prompt("Entrer indice Yajilin (L|U|R|D)(nombre) ou X", defaultVal);
+			if (clue != null) {
+				const charClue = clue.charAt(0);
+				var ok = false;
+				if (charClue == 'L' || charClue == 'U' || charClue == 'R' || charClue == 'D' || charClue == 'X') {
+					if (charClue == 'X') {
+						clue = 'X';
+					}
+					if ((clue == 'X') || ((clue.length > 1) && !isNaN(clue.substring(1)))) {
+						manageValueInSpaceGrid(p_x, p_y, GRID_ID.YAJILIN_LIKE, p_editorCore, clue);
+						p_editorCore.setInputCombinedArrow(clue);
+						ok = true;
+					}
+				}
+				if (!ok) {
+					manageValueInSpaceGrid(p_x, p_y, GRID_ID.YAJILIN_LIKE, p_editorCore, null);
+				}
+			}
 		break;
 		default :
 			p_editorCore.switchState(p_x,p_y);
@@ -94,6 +116,9 @@ p_yLength : vertical dimension
 restartAction = function (p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength) {
     if (confirm("Redémarrer la grille ?")) {
         p_editorCore.restartGrid(p_xLength, p_yLength);
+		Object.keys(GRID_ID).forEach(id => {
+			editorCore.addCleanGrid(id, p_xLength, p_yLength); //  See GRID_ID in EditorCore
+		});
 		p_editorCore.addCleanGrid(GRID_ID.NUMBER_REGION, p_xLength, p_yLength);
 		p_editorCore.addCleanGrid(GRID_ID.NUMBER_SPACE, p_xLength, p_yLength);
 		p_editorCore.addCleanGrid(GRID_ID.PEARL, p_xLength, p_yLength);
@@ -135,7 +160,7 @@ function resizeAction(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength) {
 	}
 	if (confirm("Redimensionner la grille ?")) {
 		p_editorCore.transformGrid(GRID_TRANSFORMATION.RESIZE, p_xLength, p_yLength);
-		adaptCanvasAndGrid(p_canvas, p_drawer,p_editorCore);	
+		adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);	
 	}
 }
 
@@ -224,15 +249,11 @@ saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions
         if (p_kindId == PUZZLES_KIND.STAR_BATTLE.id) {
             puzzleToSave = starBattlePuzzleToString(p_editorCore.getWallArray(), p_externalOptions.numberStars);
         } else if (p_kindId == PUZZLES_KIND.MASYU_LIKE.id) {
-            const grid = p_editorCore.getArray(GRID_ID.PEARL);
             puzzleToSave = commonPuzzleEmptyWallsToString(p_editorCore.getXLength(), p_editorCore.getYLength(), p_editorCore.getArray(GRID_ID.PEARL), [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK]);
         } else if (p_kindId == PUZZLES_KIND.NURIKABE_LIKE.id) {
-            const grid = p_editorCore.getArray(GRID_ID.NUMBER_SPACE);
             puzzleToSave = arrayToStringSpaces(p_editorCore.getArray(GRID_ID.NUMBER_SPACE), true);
         } else if (p_kindId == PUZZLES_KIND.YAJILIN_LIKE.id) {
-            alert("551551 Saving To be done ...");
-			//const grid = p_editorCore.getArray(GRID_ID.NUMBER_SPACE);
-            //puzzleToSave = arrayToStringRows(p_editorCore.getArray(GRID_ID.YAJILIN), true);
+            puzzleToSave = puzzleLexicalSpacesToString(p_editorCore.getArray(GRID_ID.YAJILIN_LIKE));
         } else if (p_kindId == PUZZLES_KIND.HAKYUU_LIKE.id) {
 			puzzleToSave = commonPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_SPACE), null);
 		} else {
@@ -270,12 +291,11 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);
 				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE, gridNumber); 
 			} else if (p_kindId == PUZZLES_KIND.YAJILIN_LIKE.id){
-				/*loadedItem = stringToYajilinPuzzle(localStorage.getItem(localStorageName));
-				const gridNumber = loadedItem.numberArray;
-				loadedItem.wallArray = generateWallArray(gridNumber[0].length, gridNumber.length); 
+				loadedItem = stringToLexicalSpacesPuzzle(localStorage.getItem(localStorageName));
+				const values = loadedItem.valuesArray;
+				loadedItem.wallArray = generateWallArray(values[0].length, values.length); 
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);			
-				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE, gridNumber); */
-				alert("551551 Loading To be done ...");
+				p_editorCore.addGrid(GRID_ID.YAJILIN_LIKE, values);
 			} else if (p_kindId == PUZZLES_KIND.HAKYUU_LIKE.id) {
 				loadedItem = stringToWallAndNumbersPuzzle(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);			
@@ -336,6 +356,11 @@ function comboChange(p_thelist, p_editorCore) {
 			saveLoadModeId = PUZZLES_KIND.STAR_BATTLE.id;
 			p_editorCore.maskAllGrids();
 			break;
+		case 'Yajilin': // Can also include Yajisan-Kazusan
+			p_editorCore.setWallsOff();
+			saveLoadModeId = PUZZLES_KIND.YAJILIN_LIKE.id;
+			p_editorCore.setVisibleGrids([GRID_ID.YAJILIN_LIKE]);
+			break;
 		default: // norinori, lits, entryExit... no numbers, only regions
 			saveLoadModeId = PUZZLES_KIND.HEYAWAKE_LIKE.id;
 			p_editorCore.maskAllGrids();	
@@ -351,4 +376,17 @@ function comboChange(p_thelist, p_editorCore) {
 	fieldX.disabled = squarePuzzle;
 	fieldY.disabled = squarePuzzle;
 	fieldXY.disabled = !squarePuzzle;
+}
+
+/**
+Adapts canvas to global grid
+p_canvas : the canvas to adapt
+p_pix : the Pix item to calculate coordinates
+p_editorCore : the Global item the canvas should be adapted to
+ */
+function adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore) {
+    p_drawer.adaptCanvasDimensions(p_canvas, {
+        xLength: p_editorCore.getXLength(),
+        yLength: p_editorCore.getYLength()
+    });
 }

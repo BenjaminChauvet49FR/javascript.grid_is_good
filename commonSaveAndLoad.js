@@ -4,11 +4,7 @@
 
 const SYMBOL_ID = { 
     WHITE: 'W',
-    BLACK: 'B',
-	LEFT_COMBINED: 'l',
-	UP_COMBINED: 'u',
-	RIGHT_COMBINED: 'r',
-	DOWN_COMBINED: 'd'
+    BLACK: 'B'
 }
 
 /**
@@ -175,6 +171,64 @@ function getRegionIndicArray(p_loadedItem) {
 	return regionIndicArray;
 }
 
+/**
+Inspirated by puzzleRegionIndicationsToString - saves a spare puzzle with diverse values
+*/
+function puzzleLexicalSpacesToString(p_valuesArray) {
+	const dimensionsString = p_valuesArray[0].length + " " + p_valuesArray.length;
+	return dimensionsString + lexicalSpacesValuesToString(p_valuesArray);
+}
+
+function stringToLexicalSpacesPuzzle(p_string) { // This code will likely be moved somewhere else on the day its usage will be generalised
+	const stringArray = p_string.split(' ');
+	const xLength = stringArray[0];
+	const yLength = stringArray[1];
+	var indexToken = 2;	
+	var token;
+	var x = -1; // (x,y) = coordinates of "the spaces we were before putting a new non-null value". (see evolutions of x and y values below)
+	var y = 0;
+	var value;
+	var spacesToSkip = 0;
+	var array = [];
+	for (var i = 0; i < yLength; i++) {
+		array.push([]);
+		for (var j = 0; j < xLength; j++) {
+			array[i].push(null);
+		}
+	}
+	while(indexToken < stringArray.length && stringArray[indexToken].length == 0) {
+		indexToken++;
+	}
+	while (stringArray.length > indexToken) {
+		token = stringArray[indexToken];
+		if (token.charAt(0) == 'X') {
+			if (token == "X") {
+				spacesToSkip++;
+			} else if (token == "XX") {
+				spacesToSkip += 2;
+			} else {
+				spacesToSkip += parseInt(token.substring(1), 10);
+			}
+		} else {
+			if (token.startsWith("xX")) {
+				value = token.subString(1);
+			} else {
+				value = token;
+			}
+			x++;
+			x += spacesToSkip;
+			y += Math.floor(x / xLength);
+			x %= xLength;
+			array[y][x] = value;		
+			spacesToSkip = 0;
+		}
+		indexToken++;
+	}
+	return {
+	    valuesArray : array
+	}
+}
+
 /*
 p_symbolsArray : grid to save
 p_symbolsToSave : list of symbols that should be saved (if any, otherwise the grid is saved directly)
@@ -228,7 +282,7 @@ function stringToNurikabePuzzle(p_string) {
 	var yLength = stringArray[1];
 	var numberGrid = generateSymbolArray(xLength,yLength);
 	return {
-	    numberArray : numberGrid = fillArrayWithTokensSpaces(stringArray.slice(2),numberGrid)
+	    numberArray : numberGrid = fillArrayWithTokensSpaces(stringArray.slice(2), numberGrid)
 	}
 }
 
