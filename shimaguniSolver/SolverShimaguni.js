@@ -20,12 +20,12 @@ SolverShimaguni.prototype.construct = function(p_wallArray, p_indicationsRegions
 	var ix,iy;
 	var lastRegionNumber = 0;
 	
-	this.methodSetDeductions = new ApplyEventMethodNonAdjacentPack(
+	this.methodSetDeductions = new ApplyEventMethodPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodSetDeductions.addAbortAndFilters(abortClosure(this), [filterClustersClosure(this)]);
+	this.methodSetDeductions.addOneAbortAndFilters(abortClosure(this), [filterClustersClosure(this)]);
 	this.methodSetPass = {comparisonMethod : compareSolveEvents, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
 	this.methodsMultiPass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),

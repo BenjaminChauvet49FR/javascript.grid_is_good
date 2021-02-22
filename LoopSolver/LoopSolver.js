@@ -81,19 +81,30 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 	if (!this.PSQuickStart) {
 		this.PSQuickStart = function() {}
 	}
+	
+	this.PSFilters = p_packMethods.PSFilters;
+	if (!this.PSFilters) {
+		this.PSFilters = [];
+	}
+	this.PSAbortMethods = p_packMethods.PSAbortMethods;
+	if (!this.PSAbortMethods) {
+		this.PSAbortMethods = [];
+	}
 }
 
 LoopSolver.prototype.loopSolverConstruct = function(p_array, p_puzzleSpecificMethodPack) {
 	this.generalConstruct();
 	this.xLength = p_array[0].length;
     this.yLength = p_array.length;
-	this.methodSetDeductions = new ApplyEventMethodNonAdjacentPack(
+	this.methodSetDeductions = new ApplyEventMethodPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
 	this.setPuzzleSpecificMethods(p_puzzleSpecificMethodPack);
-	this.methodSetDeductions.addAbortAndFilters(abortClosure(this), [testLoopsClosure(this), separateEndsClosure(this)]);
+	this.methodSetDeductions.addOneAbortAndFilters(abortClosure(this), [testLoopsClosure(this), separateEndsClosure(this)]);
+	this.methodSetDeductions.addMoreFilters(this.PSFilters);
+	this.methodSetDeductions.addMoreAborts(this.PSAbortMethods);
     this.grid = [];
     this.bannedSpacesGrid = [];
 	this.checkNewEnds = {
@@ -133,7 +144,7 @@ LoopSolver.prototype.loopSolverConstruct = function(p_array, p_puzzleSpecificMet
 	if (!p_puzzleSpecificMethodPack.setEdgeClosedPSAtomicDos) { // This setup is performed before puzzle specific setup, but if puzzle has events for closed links or closed spaces, it should perform its own ban.
 		for (y = 0 ; y < this.yLength ; y++) {
 			for (x = 0 ; x < this.xLength ; x++) {
-				if (p_array[p_y][p_x].state == WALLGRID.CLOSED) {
+				if (p_array[y][x].state == WALLGRID.CLOSED) {
 					this.banSpace(x, y);
 				}
 			}

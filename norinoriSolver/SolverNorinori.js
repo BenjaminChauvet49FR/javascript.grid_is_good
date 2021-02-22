@@ -26,7 +26,7 @@ SolverNorinori.prototype.construct = function(p_wallArray) {
 	this.buildNeighborsGrid(); //neighborsGrid
 	this.purifyAnswerGrid(); 
 	this.indexRegionsSortedBySize = null; //Will be initialized in the first use of multipass.
-	this.methodSet = new ApplyEventMethodNonAdjacentPack(
+	this.methodSet = new ApplyEventMethodPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		undoEventClosure(this)
@@ -303,7 +303,7 @@ undoEventClosure = function(p_solver) {
 
 // Central method
 SolverNorinori.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	methodPack = new ApplyEventMethodNonAdjacentPack(
+	methodPack = new ApplyEventMethodPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		undoEventClosure(this)

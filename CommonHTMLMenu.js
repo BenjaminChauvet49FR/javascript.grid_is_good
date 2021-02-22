@@ -63,7 +63,8 @@ const menu4 = {
 		{name : "countryRoad", displayName : "CountryRoad"},
 		{name : "entryExit", displayName : "EntryExit"},
 		{name : "koburin", displayName : "Koburin"},
-		{name : "masyu", displayName : "Masyu"}
+		{name : "masyu", displayName : "Masyu"},
+		{name : "yajilin", displayName : "Yajilin"}
 	]
 }
 

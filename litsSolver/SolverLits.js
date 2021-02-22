@@ -19,7 +19,7 @@ SolverLITS.prototype.construct = function(p_wallArray, p_numberGrid) {
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
 	this.makeItGeographical(this.xLength, this.yLength);
-	this.methodSet = new ApplyEventMethodPack( 
+	this.methodSet = new ApplyEventMethodGeographicalPack( 
 		applyEventClosure(this),
 		deductionsClosure(this),
 		adjacencyClosure(this),
@@ -31,7 +31,7 @@ SolverLITS.prototype.construct = function(p_wallArray, p_numberGrid) {
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
 	};
-	this.methodSet.addAbortAndFilters(abortClosure(this), [filterClosure(this)]);
+	this.methodSet.addOneAbortAndFilters(abortClosure(this), [filterClosure(this)]);
 	this.methodTools = {comparisonMethod : comparison, copyMethod : copying}; // Warning : the argumentToLabelMethod is defined right before the pass in this solver
 
 	this.gridWall = WallGrid_data(p_wallArray); 

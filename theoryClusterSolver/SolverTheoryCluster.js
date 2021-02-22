@@ -142,7 +142,7 @@ transformClosure = function (p_solver) {
 // Main function
 
 SolverTheoryCluster.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	methodPack = new ApplyEventMethodPack(
+	methodPack = new ApplyEventMethodGeographicalPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		adjacencyClosure(this),

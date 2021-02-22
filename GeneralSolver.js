@@ -183,8 +183,10 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
         }
     }
     if (!ok) {
-		if (p_methodPack.abortMethod) {
-			p_methodPack.abortMethod();
+		if (p_methodPack.abortMethods) {
+			p_methodPack.abortMethods.forEach( abortMethod => {
+				abortMethod();
+			});
 		}
         this.undoEventList(listEventsApplied, p_methodPack.undoEventMethod);
 		return DEDUCTIONS_RESULT.FAILURE;

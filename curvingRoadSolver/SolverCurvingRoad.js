@@ -29,7 +29,7 @@ SolverCurvingRoad.prototype.construct = function (p_wallArray, p_symbolArray) {
     var ix,
     iy;
 
-	this.methodSet = new ApplyEventMethodPack(
+	this.methodSet = new ApplyEventMethodGeographicalPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		adjacencyClosure(this),

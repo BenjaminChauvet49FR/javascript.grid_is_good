@@ -18,7 +18,7 @@ SolverStarBattle.prototype.construct = function(p_wallArray, p_starNumber) {
 	this.regionGrid = this.gridWall.toRegionGrid();
 	this.xyLength = this.getWallGrid().length; //IMPORTANT : when copy-pasting this line to a non-square grid, make sure to replace ALL occurences by xLength and yLength
 	
-	this.methodSet = new ApplyEventMethodNonAdjacentPack(
+	this.methodSet = new ApplyEventMethodPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		undoEventClosure(this)

@@ -19,7 +19,7 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
 	this.makeItGeographical(this.xLength, this.yLength);
-	this.methodSet = new ApplyEventMethodPack(
+	this.methodSet = new ApplyEventMethodGeographicalPack(
 			applyEventClosure(this), 
 			deductionsClosure(this), 
 			adjacencyClosure(this), 
