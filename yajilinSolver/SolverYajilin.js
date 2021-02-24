@@ -258,7 +258,7 @@ function setSpaceClosedPSDeductionsClosure(p_solver) {
 		}
 		LoopKnownDirections.forEach(dir => {
 			if (p_solver.neighborExists(x, y, dir) && !p_solver.isBanned(x+DeltaX[dir], y+DeltaY[dir])) {
-				p_listEvents.push(new StateEvent(x+DeltaX[dir], y+DeltaY[dir], LOOP_STATE.LINKED));
+				p_listEvents.push(new SpaceEvent(x+DeltaX[dir], y+DeltaY[dir], LOOP_STATE.LINKED));
 			}
 		});
 		return p_listEvents;
@@ -290,20 +290,6 @@ function setEdgeClosedDeductionsClosure(p_solver) {
 		const dy = p_eventToApply.linkY + DeltaY[dir];
 		p_listEvents = p_solver.tryAndCloseBeforeAndAfter2Closed(p_listEvents, x, y);
 		p_listEvents = p_solver.tryAndCloseBeforeAndAfter2Closed(p_listEvents, dx, dy);
-		/*if (this.getClosedEdges(x, y) == 2) {
-			LoopKnownDirections.forEach(dir => {
-				if (p_solver.neighborExists(x, y, dir) && p_solver.getLink(x, y, dir) != LOOP_STATE.CLOSED) {
-					p_listEvents.push(new StateEvent(x+DeltaX[dir], y+DeltaY[dir], LOOP_STATE.LINKED));
-				}
-			});
-		}
-		if (this.getClosedEdges(dx, dy) == 2) {
-			LoopKnownDirections.forEach(dir => {
-				if (p_solver.neighborExists(dx, dy, dir) && p_solver.getLink(dx, dy, dir) != LOOP_STATE.CLOSED) {
-					p_listEvents.push(new StateEvent(dx+DeltaX[dir], dy+DeltaY[dir], LOOP_STATE.LINKED));
-				}
-			});
-		}*/
 		return p_listEvents;
 	}
 }
@@ -315,7 +301,7 @@ SolverYajilin.prototype.tryAndCloseBeforeAndAfter2Closed = function(p_listEvents
 	LoopKnownDirections.forEach(dir => {
 		if (this.getClosedEdges(p_x, p_y) == 2) {
 			if (this.neighborExists(p_x, p_y, dir) && this.getLink(p_x, p_y, dir) != LOOP_STATE.CLOSED) {
-				p_listEvents.push(new StateEvent(p_x + DeltaX[dir], p_y + DeltaY[dir], LOOP_STATE.LINKED));
+				p_listEvents.push(new SpaceEvent(p_x + DeltaX[dir], p_y + DeltaY[dir], LOOP_STATE.LINKED));
 			}
 		}
 	});
@@ -373,7 +359,7 @@ SolverYajilin.prototype.testStrip = function(p_listEvents, p_strip) {
 				undecidedChainTracker.odd.forEach(indicationInOdd => {
 					var y = indicationInOdd.first;
 					for (i = 0; i < indicationInOdd.number; i++) {
-						p_listEvents.push(new StateEvent(x, y, LOOP_STATE.CLOSED));
+						p_listEvents.push(new SpaceEvent(x, y, LOOP_STATE.CLOSED));
 						y+=2;
 					}
 				});
@@ -407,7 +393,7 @@ SolverYajilin.prototype.testStrip = function(p_listEvents, p_strip) {
 				undecidedChainTracker.odd.forEach(indicationInOdd => {
 					var x = indicationInOdd.first;
 					for (i = 0; i < indicationInOdd.number; i++) {
-						p_listEvents.push(new StateEvent(x, y, LOOP_STATE.CLOSED));
+						p_listEvents.push(new SpaceEvent(x, y, LOOP_STATE.CLOSED));
 						x+=2;
 					}
 				});
@@ -428,7 +414,7 @@ SolverYajilin.prototype.fillVerticalStripWithEvents = function(p_listEvents, p_s
 	const x = p_strip.x;
 	for (var y = p_strip.yMin ; y <= p_strip.yMax ; y++) {
 		if (this.getLinkSpace(x, y) == LOOP_STATE.UNDECIDED) {
-			p_listEvents.push(new StateEvent(x, y, p_state));
+			p_listEvents.push(new SpaceEvent(x, y, p_state));
 		}
 	}
 	return p_listEvents;
@@ -438,7 +424,7 @@ SolverYajilin.prototype.fillHorizontalStripWithEvents = function(p_listEvents, p
 	const y = p_strip.y;
 	for (x = p_strip.xMin ; x <= p_strip.xMax ; x++) {
 		if (this.getLinkSpace(x, y) == LOOP_STATE.UNDECIDED) {
-			p_listEvents.push(new StateEvent(x, y, p_state));
+			p_listEvents.push(new SpaceEvent(x, y, p_state));
 		}
 	}
 	return p_listEvents;

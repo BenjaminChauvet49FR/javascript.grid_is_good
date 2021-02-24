@@ -114,7 +114,7 @@ setSpaceClosedDeductionsClosure = function(p_solver) {
 		var dir;
 		p_solver.adjacentRegionsGrid[y][x].forEach(indication => {
 			dir = indication.direction;
-			p_listEvents.push(new StateEvent(x + DeltaX[dir], y + DeltaY[dir], LOOP_STATE.LINKED));
+			p_listEvents.push(new SpaceEvent(x + DeltaX[dir], y + DeltaY[dir], LOOP_STATE.LINKED));
 		});
 		p_listEvents = p_solver.alertClosedSpacesRegion(p_listEvents, p_solver.getRegionIndex(x, y));
 		return p_listEvents;
@@ -130,7 +130,7 @@ SolverCountryRoad.prototype.alertLinkedSpacesRegion = function(p_listEvents, p_i
 			eventsYetToPlace = region.spacesNotClosedYet;
 			if (this.getLinkSpace(space.x, space.y) == LOOP_STATE.UNDECIDED) {
 				eventsYetToPlace--;
-				p_listEvents.push(new StateEvent(space.x, space.y, LOOP_STATE.CLOSED));
+				p_listEvents.push(new SpaceEvent(space.x, space.y, LOOP_STATE.CLOSED));
 			}
 		}
 	}
@@ -147,7 +147,7 @@ SolverCountryRoad.prototype.alertClosedSpacesRegion = function(p_listEvents, p_i
 			eventsYetToPlace = region.spacesNotLinkedYet;
 			if (this.getLinkSpace(space.x, space.y) == LOOP_STATE.UNDECIDED) {
 				eventsYetToPlace--;
-				p_listEvents.push(new StateEvent(space.x, space.y, LOOP_STATE.LINKED));
+				p_listEvents.push(new SpaceEvent(space.x, space.y, LOOP_STATE.LINKED));
 			}
 		}
 	}

@@ -162,7 +162,7 @@ function setSpaceClosedPSDeductionsClosure(p_solver) {
 		const y = p_eventToApply.y;
 		LoopKnownDirections.forEach(dir => {
 			if (p_solver.neighborExists(x, y, dir) && !p_solver.isBanned(x+DeltaX[dir], y+DeltaY[dir])) {
-				p_listEvents.push(new StateEvent(x+DeltaX[dir], y+DeltaY[dir], LOOP_STATE.LINKED));
+				p_listEvents.push(new SpaceEvent(x+DeltaX[dir], y+DeltaY[dir], LOOP_STATE.LINKED));
 			}
 		});
 		p_solver.neighborsNumbersGrid[y][x].forEach(space => {
@@ -191,20 +191,8 @@ function setEdgeClosedDeductionsClosure(p_solver) {
 		const dir = p_eventToApply.direction;
 		const dx = p_eventToApply.linkX + DeltaX[dir];
 		const dy = p_eventToApply.linkY + DeltaY[dir];
-		if (this.getClosedEdges(x, y) == 2) {
-			LoopKnownDirections.forEach(dir => {
-				if (p_solver.neighborExists(x, y, dir) && p_solver.getLink(x, y, dir) != LOOP_STATE.CLOSED) {
-					p_listEvents.push(new StateEvent(x+DeltaX[dir], y+DeltaY[dir], LOOP_STATE.LINKED));
-				}
-			});
-		}
-		if (this.getClosedEdges(dx, dy) == 2) {
-			LoopKnownDirections.forEach(dir => {
-				if (p_solver.neighborExists(dx, dy, dir) && p_solver.getLink(dx, dy, dir) != LOOP_STATE.CLOSED) {
-					p_listEvents.push(new StateEvent(dx+DeltaX[dir], dy+DeltaY[dir], LOOP_STATE.LINKED));
-				}
-			});
-		}
+		p_listEvents = p_solver.tryAndCloseBeforeAndAfter2Closed(p_listEvents, x, y);
+		p_listEvents = p_solver.tryAndCloseBeforeAndAfter2Closed(p_listEvents, dx, dy);
 		return p_listEvents;
 	}
 }
@@ -214,16 +202,28 @@ SolverKoburin.prototype.testNumericSpace = function(p_listEvents, p_x, p_y) {
 	if (this.numericGrid[p_y][p_x].notClosedYet == 0) {
 		LoopKnownDirections.forEach(dir => {
 			if (this.neighborExists(p_x, p_y, dir) && this.getLinkSpace(p_x+DeltaX[dir], p_y+DeltaY[dir], dir) != LOOP_STATE.CLOSED) {
-				p_listEvents.push(new StateEvent(p_x+DeltaX[dir], p_y+DeltaY[dir], LOOP_STATE.LINKED));
+				p_listEvents.push(new SpaceEvent(p_x+DeltaX[dir], p_y+DeltaY[dir], LOOP_STATE.LINKED));
 			}
 		});
 	} else if (this.numericGrid[p_y][p_x].notLinkedYet == 0) {
 		LoopKnownDirections.forEach(dir => {
 			if (this.neighborExists(p_x, p_y, dir) && this.getLinkSpace(p_x+DeltaX[dir], p_y+DeltaY[dir], dir) != LOOP_STATE.LINKED) {
-				p_listEvents.push(new StateEvent(p_x+DeltaX[dir], p_y+DeltaY[dir], LOOP_STATE.CLOSED));
+				p_listEvents.push(new SpaceEvent(p_x+DeltaX[dir], p_y+DeltaY[dir], LOOP_STATE.CLOSED));
 			}
 		});
 	}
+	return p_listEvents;
+}
+
+// C/C from Solver Yajilin
+SolverKoburin.prototype.tryAndCloseBeforeAndAfter2Closed = function(p_listEvents, p_x, p_y) {
+	LoopKnownDirections.forEach(dir => {
+		if (this.getClosedEdges(p_x, p_y) == 2) {
+			if (this.neighborExists(p_x, p_y, dir) && this.getLink(p_x, p_y, dir) != LOOP_STATE.CLOSED) {
+				p_listEvents.push(new SpaceEvent(p_x + DeltaX[dir], p_y + DeltaY[dir], LOOP_STATE.LINKED));
+			}
+		}
+	});
 	return p_listEvents;
 }
 
@@ -233,11 +233,20 @@ SolverKoburin.prototype.testNumericSpace = function(p_listEvents, p_x, p_y) {
 quickStartClosure = function(p_solver) {
 	return function() { 
 		p_solver.initiateQuickStart("Koburin");
+		var list = [];
 		p_solver.numericCoordinatesList.forEach(space => {
-			const list = p_solver.testNumericSpace([], space.x, space.y);
-			list.forEach(p_event => {
-				p_solver.tryToPutNewSpace(p_event.x, p_event.y, p_event.state);
-			});
+			 list = p_solver.testNumericSpace(list, space.x, space.y);
+		});
+		for (var y = 0 ; y < p_solver.yLength ; y++) {
+			for (var x = 0 ; x < p_solver.xLength ; x++) {
+				// Smartness of Koburin C/C from Yajilin
+				if (!p_solver.isBanned(x, y)) {
+					list = p_solver.tryAndCloseBeforeAndAfter2Closed(list, x, y);
+				}
+			}
+		}
+		list.forEach(p_event => {
+			p_solver.tryToPutNewSpace(p_event.x, p_event.y, p_event.state);
 		});
 		p_solver.terminateQuickStart();
 	}
@@ -251,16 +260,16 @@ generateEventsForSpaceClosure = function(p_solver) {
 		if (p_solver.getNumber(p_space.x, p_space.y) != null) {
 			var answer = [];
 			if (p_space.x > 0) {
-				answer.push([new StateEvent(p_space.x-1, p_space.y, LOOP_STATE.CLOSED),new StateEvent(p_space.x-1, p_space.y, LOOP_STATE.LINKED)]);
+				answer.push([new SpaceEvent(p_space.x-1, p_space.y, LOOP_STATE.CLOSED),new SpaceEvent(p_space.x-1, p_space.y, LOOP_STATE.LINKED)]);
 			}
 			if (p_space.y > 0) {				
-				answer.push([new StateEvent(p_space.x, p_space.y-1, LOOP_STATE.CLOSED),new StateEvent(p_space.x, p_space.y-1, LOOP_STATE.LINKED)]);
+				answer.push([new SpaceEvent(p_space.x, p_space.y-1, LOOP_STATE.CLOSED),new SpaceEvent(p_space.x, p_space.y-1, LOOP_STATE.LINKED)]);
 			}
 			if (p_space.x <= p_solver.xLength-2) {
-				answer.push([new StateEvent(p_space.x+1, p_space.y, LOOP_STATE.CLOSED),new StateEvent(p_space.x+1, p_space.y, LOOP_STATE.LINKED)]);
+				answer.push([new SpaceEvent(p_space.x+1, p_space.y, LOOP_STATE.CLOSED),new SpaceEvent(p_space.x+1, p_space.y, LOOP_STATE.LINKED)]);
 			}
 			if (p_space.y <= p_solver.yLength-2) {	
-				answer.push([new StateEvent(p_space.x, p_space.y+1, LOOP_STATE.CLOSED),new StateEvent(p_space.x, p_space.y+1, LOOP_STATE.LINKED)]);
+				answer.push([new SpaceEvent(p_space.x, p_space.y+1, LOOP_STATE.CLOSED),new SpaceEvent(p_space.x, p_space.y+1, LOOP_STATE.LINKED)]);
 			}
 			return answer; // If the first events of the lists are applied in a glutton-algorithm style (here, closed in up and closed in left around a numeric space with value 2) are applied, the brackets are forgotten this is not a (list of list of events).
 		} else {

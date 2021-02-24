@@ -549,6 +549,10 @@ quickStartRegionLoopSolverClosure = function(p_solver, p_PSQuickStart) {
 		var events = [];
 		for (var i = 0; i < p_solver.regions.length ; i++) {
 			events = p_solver.alertClosedBorders(events, p_solver.regions[i]);
+			if (p_solver.regions[i].size == 1) { // "Each region must be crossed exactly once"
+				const space = p_solver.regions[i].spaces[0];
+				events.push(new SpaceEvent(space.x, space.y, LOOP_STATE.LINKED));
+			}
 		}
 		events.forEach(event_ => {
 			p_solver.tryToApplyHypothesis(event_, p_solver.methodSetDeductions);

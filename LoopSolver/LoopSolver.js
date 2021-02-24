@@ -574,7 +574,7 @@ LoopSolver.prototype.tryToPutNewLink = function (p_x, p_y, p_dir, p_state) {
 }
 
 LoopSolver.prototype.tryToPutNewSpace = function (p_x, p_y, p_state) {
-	this.tryToApplyHypothesis(new StateEvent(p_x, p_y, p_state), this.methodSetDeductions);
+	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_state), this.methodSetDeductions);
 }
 
 
@@ -615,8 +615,8 @@ deductionsClosure = function(p_solver) {
 			const nx = neighborCoors.x;
 			const ny = neighborCoors.y;
 			if (state == LOOP_STATE.LINKED) {
-				p_eventList.push(new StateEvent(x, y, LOOP_STATE.LINKED));
-				p_eventList.push(new StateEvent(nx, ny, LOOP_STATE.LINKED));
+				p_eventList.push(new SpaceEvent(x, y, LOOP_STATE.LINKED));
+				p_eventList.push(new SpaceEvent(nx, ny, LOOP_STATE.LINKED));
 				if (! p_solver.checkNewEnds.array[ny][nx]) {
 					p_solver.checkNewEnds.array[ny][nx] = true;
 					p_solver.checkNewEnds.list.push({x : nx, y : ny});
@@ -657,7 +657,7 @@ Tests if the space in x, y has 3 edges closed. If yes, close this space (the 4th
 */
 LoopSolver.prototype.test3closed = function(p_eventList, p_x, p_y) {
 	if (this.getClosedEdges(p_x, p_y) == 3) {
-		p_eventList.push(new StateEvent(p_x, p_y, LOOP_STATE.CLOSED));
+		p_eventList.push(new SpaceEvent(p_x, p_y, LOOP_STATE.CLOSED));
 	}
 	return p_eventList;
 }
@@ -716,13 +716,14 @@ LoopSolver.prototype.test2v2OpenSpace = function(p_eventList, p_x, p_y) {
 	return p_eventList;
 }
 
-// Tests if 2 spaces that are known to be both ends of the same chain are 1) adjacent and 2) not directly linked together
+// Tests if 2 spaces that are known to be both ends of the same chain are 1) adjacent and not directly linked together 2) separated by one space. 
 LoopSolver.prototype.testEndsClosingLoop = function (p_eventList, p_endSpace1, p_endSpace2) {
 	const direction1 = this.getSpace(p_endSpace1).chains[0];
 	const x1 = p_endSpace1.x;
 	const y1 = p_endSpace1.y;
 	const x2 = p_endSpace2.x;
 	const y2 = p_endSpace2.y;
+	// Adjacent and not directly linked ?
 	if (x1 == x2) {
 		if (y1 == (y2 + 1) && direction1 != LOOP_DIRECTION.UP) {
 			p_eventList.push(new LinkEvent(x1, y1, LOOP_DIRECTION.UP, LOOP_STATE.CLOSED));
@@ -738,6 +739,43 @@ LoopSolver.prototype.testEndsClosingLoop = function (p_eventList, p_endSpace1, p
 		if (x1 == (x2 - 1) && direction1 != LOOP_DIRECTION.RIGHT) {
 			p_eventList.push(new LinkEvent(x1, y1, LOOP_DIRECTION.RIGHT, LOOP_STATE.CLOSED));
 		} 
+	}	
+	// Opposites are separated by one spaces that has 2 closed edges
+	const xMin = Math.min(x1, x2);
+	const xMax = Math.max(x1, x2);
+	const yMin = Math.min(y1, y2);
+	const yMax = Math.max(y1, y2);
+	/*if (((xMax - xMin) == 2) && (yMax == yMin) && (this.getClosedEdges(xMin+1, yMin) == 2)) {
+		p_eventList.push(new SpaceEvent(xMin+1, yMin, LOOP_STATE.CLOSED));
+	}
+	if (((yMax - yMin) == 2) && (xMax == xMin) && (this.getClosedEdges(xMin, yMin+1) == 2)) {
+		p_eventList.push(new SpaceEvent(xMin, yMin+1, LOOP_STATE.CLOSED));
+	}*/ // TODO bug to correct (cf. Yajilin puzzles 378, 430, 460) + add case where the state in between is opened and has one closed wall... but it requires the number of chains to be >2 !
+	if (((xMax - xMin) == 1) && ((yMax - yMin) == 1)) {
+		const isDiagLUtoRD = (xMax == x1) ? (yMax == y1) : (yMax == y2); // Boolean to check whether both linked spaces are in a diagonal left-up to right-down
+		if (isDiagLUtoRD) {
+			if (this.getClosedEdges(xMin, yMax) == 2) {
+				if ((this.getLinkRight(xMin, yMax) == LOOP_STATE.UNDECIDED) && (this.getLinkUp(xMin, yMax) == LOOP_STATE.UNDECIDED)) {
+					p_eventList.push(new SpaceEvent(xMin, yMax, LOOP_STATE.CLOSED));
+				}
+			} 
+			if (this.getClosedEdges(xMax, yMin) == 2) {
+				if ((this.getLinkDown(xMax, yMin) == LOOP_STATE.UNDECIDED) && (this.getLinkLeft(xMax, yMin) == LOOP_STATE.UNDECIDED)) {
+					p_eventList.push(new SpaceEvent(xMax, yMin, LOOP_STATE.CLOSED));
+				}
+			} 
+		} else {
+			if (this.getClosedEdges(xMax, yMax) == 2) {
+				if ((this.getLinkLeft(xMax, yMax) == LOOP_STATE.UNDECIDED) && (this.getLinkUp(xMax, yMax) == LOOP_STATE.UNDECIDED)) {
+					p_eventList.push(new SpaceEvent(xMax, yMax, LOOP_STATE.CLOSED));
+				}
+			} 
+			if (this.getClosedEdges(xMin, yMin) == 2) {
+				if ((this.getLinkDown(xMin, yMin) == LOOP_STATE.UNDECIDED) && (this.getLinkRight(xMin, yMin) == LOOP_STATE.UNDECIDED)) {
+					p_eventList.push(new SpaceEvent(xMin, yMin, LOOP_STATE.CLOSED));
+				}
+			}
+		}
 	}
 	return p_eventList;
 }
@@ -775,10 +813,10 @@ separateEndsClosure = function(p_solver) { //TODO well, this function is called 
 	return function() {
 		var eventList = [];
 		var ok = true;
-		var index = 0;
-		var space;
 		if (p_solver.endedChainCount != 1) {
-			var opposite, opposite2;
+			var index = 0;
+			var space;		
+			var opposite, opposite2;			
 			while (ok && index < p_solver.checkNewEnds.list.length) {
 				space = p_solver.checkNewEnds.list[index];
 				opposite = p_solver.getOppositeEnd(space.x, space.y);	
@@ -789,8 +827,8 @@ separateEndsClosure = function(p_solver) { //TODO well, this function is called 
 					}
 				}
 				index++;
-			}
-		}		
+			}	
+		}
 		p_solver.cleanNewEnds(); // TODO well, when we have one link and two adjacent ends and we add a chain (ie a link or a linked space) elsewhere, the close between ends is not added.
 		if (!ok) {
 			return EVENT_RESULT.FAILURE;
@@ -814,6 +852,9 @@ LoopSolver.prototype.quickStart = function() {
 					}
 				});
 			}
+			if (this.getClosedEdges(x, y) > 2) {
+				this.tryToPutNewSpace(x, y, LOOP_STATE.CLOSED);
+			}
 		}
 	}
 	this.terminateQuickStart();
@@ -827,7 +868,7 @@ LoopSolver.prototype.quickStart = function() {
  Pass absolutely any space. TODO : Really cound be optimized.
 */
 LoopSolver.prototype.standardSpacePassEvents = function(p_x, p_y) { // TODO Warning : this one uses argument coorginates instead of an argument item ! Don't get confused.
-	var answer = [new StateEvent(p_x, p_y, LOOP_STATE.CLOSED)];
+	var answer = [new SpaceEvent(p_x, p_y, LOOP_STATE.CLOSED)];
 	const okLeft = (p_x >= 1);
 	const okUp = (p_y >= 1);
 	const okRight = (p_x <= this.xLength-2);

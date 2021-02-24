@@ -46,18 +46,18 @@ const LoopKnownDirections = [LOOP_DIRECTION.LEFT, LOOP_DIRECTION.UP, LOOP_DIRECT
 
 // ----------------------------------------
 
-function StateEvent(p_x, p_y, p_state) {
+function SpaceEvent(p_x, p_y, p_state) {
 	this.kind = LOOP_EVENT.STATE;
 	this.x = p_x;
 	this.y = p_y;
 	this.state = p_state;
 }
 
-StateEvent.prototype.copy = function() {
-	return new StateEvent(this.x, this.y, this.state);
+SpaceEvent.prototype.copy = function() {
+	return new SpaceEvent(this.x, this.y, this.state);
 }
 
-StateEvent.prototype.toString = function(){	
+SpaceEvent.prototype.toString = function(){	
 	return "["+this.state+" "+this.x+","+this.y+"]";
 }
 
