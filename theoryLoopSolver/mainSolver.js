@@ -6,6 +6,7 @@ var colors={
 	openSquare:'#00ffcc',
 	closedSquare:'#cc0022',
 	noLink:'#aa0000',
+	noLinkWall:'#ff8800',
 	presentLink:'#cc00ff',
 	noLinkState:'#448844',
 	presentLinkState:'#bbffdd'
@@ -37,6 +38,7 @@ putActionElementClick("submit_load_grid",function(event){loadAction(canevas,draw
 putActionElementClick("submit_undo",function(event){undoAction(solver)});
 putActionElementClick("submit_color_chains",function(event){solver.seeColorChainsAction()}); 
 putActionElementClick("submit_see_opposite_ends",function(event){solver.seeOppositeEndsAction()});
+putActionElementClick("submit_mask_information_chains",function(event){solver.maskChainsInformation()});
 
 //------
 

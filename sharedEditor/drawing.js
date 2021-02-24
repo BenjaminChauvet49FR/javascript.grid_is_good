@@ -37,21 +37,22 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 }
 
 Drawer.prototype.drawNumbersLittleInCorner = function (p_context, p_numberGrid) {
-	this.drawOneNumberPerSpace(p_context, p_numberGrid, this.getPixInnerSide() / 2, {offX : 2, offY : 2});
+	this.drawOneNumberPerSpace(p_context, p_numberGrid, this.getPixInnerSide() / 2, {offX : 2, offY : 2}, {alignH : "left", alignV : "top"});
 }
 
 Drawer.prototype.drawNumbersGrid = function (p_context, p_numberGrid) {
-	this.drawOneNumberPerSpace(p_context, p_numberGrid, this.getPixInnerSide() * 4 / 5, {offX : 1, offY : 1});
+	this.drawOneNumberPerSpace(p_context, p_numberGrid, this.getPixInnerSide() * 4 / 5, {offX : this.getPixInnerSide()/2, offY : this.getPixInnerSide()/2}, {alignH : "center", alignV : "middle"});
 }
 
-Drawer.prototype.drawOneNumberPerSpace = function (p_context, p_numberGrid, p_pixSize, p_pixInnerOffset) {
+Drawer.prototype.drawOneNumberPerSpace = function (p_context, p_numberGrid, p_pixSize, p_pixInnerOffset, p_textAlign) {
 	const yLength = p_numberGrid.getYLength();
 	if (yLength > 0) {
 		const xLength = p_numberGrid.getXLength();
-		p_context.textAlign = 'left';
-		p_context.textBaseline = 'top';
+		p_context.textAlign = p_textAlign.alignH;
+		p_context.textBaseline = p_textAlign.alignV;
 		p_context.font = p_pixSize + "px Arial";
 		p_context.fillStyle = this.colors.standardWrite;
+		p_context.mix_blend_mode = "exclusion";
 		var ix,
 		iy,
 		number, pixLeft, pixDown; 

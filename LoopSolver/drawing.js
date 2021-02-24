@@ -40,7 +40,7 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
 					p_context.fillRect(pixLeft, pixUp, shorter, longer);
 				} else if (p_solver.getLinkDown(ix, iy) == LOOP_STATE.CLOSED && (p_solver.getLinkSpace(ix,iy) != LOOP_STATE.CLOSED) && (p_solver.getLinkSpace(ix,iy+1) != LOOP_STATE.CLOSED)) {
 					if (p_wallGrid && p_wallGrid.getWallD(ix, iy)) {
-						p_context.fillStyle = p_colorSet.noLinkWall ? p_colorSet.noLinkWall : p_colorSet.noLink;
+						p_context.fillStyle = p_colorSet.noLinkWall ? p_colorSet.noLinkWall : p_colorSet.noLink; // For region loop solvers
 					} else {
 						p_context.fillStyle = p_colorSet.noLink;
 					}
@@ -59,7 +59,7 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
 				} else if (p_solver.getLinkRight(ix, iy) == LOOP_STATE.CLOSED && (p_solver.getLinkSpace(ix,iy) != LOOP_STATE.CLOSED) && (p_solver.getLinkSpace(ix+1,iy) != LOOP_STATE.CLOSED)) {
 					p_context.fillStyle = p_colorSet.noLink;
 					if (p_wallGrid && p_wallGrid.getWallR(ix, iy)) {
-						p_context.fillStyle = p_colorSet.noLinkWall ? p_colorSet.noLinkWall : p_colorSet.noLink;
+						p_context.fillStyle = p_colorSet.noLinkWall ? p_colorSet.noLinkWall : p_colorSet.noLink; // For region loop solvers
 					} else {
 						p_context.fillStyle = p_colorSet.noLink;
 					}
@@ -72,6 +72,8 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
         pixUp += this.pix.sideSpace;
     }
 	if (p_solver.ergonomicOptions.displayOppositeEnds) {
+		p_context.textAlign = "center"; // Credits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/textAlign
+		p_context.textBaseline = "middle";
 		const fontSize = drawer.pix.sideSpace/3;
 		p_context.font = fontSize+"px Arial";
 		p_context.fillStyle = p_colorSet.oppositeSpaceWrite;
@@ -83,8 +85,8 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
 		for (var iy = 0; iy <  p_solver.yLength; iy++) {
 			for (var ix = 0; ix < p_solver.xLength; ix++) {
 				if (p_solver.getLinkedEdges(ix, iy) == 1) {
-					pixLeft = this.getPixInnerXLeft(ix);
-					pixDown = this.getPixInnerYUp(iy)+fontSize;
+					pixLeft = this.getPixCenterX(ix);
+					pixDown = this.getPixInnerYUp(iy) + fontSize;
 					textToWrite = p_solver.getOppositeEnd(ix, iy).x+" "+p_solver.getOppositeEnd(ix, iy).y;
 					p_context.fillText(textToWrite,pixLeft,pixDown);
 				}

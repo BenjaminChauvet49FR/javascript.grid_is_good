@@ -37,6 +37,7 @@ putActionElementClick("submit_quickStart",function(event){quickStartAction(solve
 putActionElementClick("submit_undo",function(event){undoAction(solver)});
 putActionElementClick("submit_color_chains",function(event){solver.seeColorChainsAction()}); 
 putActionElementClick("submit_see_opposite_ends",function(event){solver.seeOppositeEndsAction()});
+putActionElementClick("submit_mask_information_chains",function(event){solver.maskChainsInformation()});
 
 //------
 

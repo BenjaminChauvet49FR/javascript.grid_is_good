@@ -553,7 +553,10 @@ LoopSolver.prototype.seeColorChainsAction = function() {
 	this.ergonomicOptions.colorChains = true;
 }
 
-
+LoopSolver.prototype.maskChainsInformation = function() {
+	this.ergonomicOptions.displayOppositeEnds = false;
+	this.ergonomicOptions.colorChains = false;
+}
 
 //--------------------------------
 // Central methods
