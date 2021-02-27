@@ -131,7 +131,7 @@ function stringToPuzzleRegionsIndications(p_string) {
 			}
 		} else {
 			if (token.startsWith("xX")) {
-				value = token.subString(1);
+				value = token.substring(1);
 			} else {
 				value = token;
 			}
@@ -211,7 +211,7 @@ function stringToLexicalSpacesPuzzle(p_string) { // This code will likely be mov
 			}
 		} else {
 			if (token.startsWith("xX")) {
-				value = token.subString(1);
+				value = token.substring(1);
 			} else {
 				value = token;
 			}
