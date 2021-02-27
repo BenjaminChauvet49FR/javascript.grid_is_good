@@ -528,3 +528,6 @@ function autoLogTryToPutNewGold(p_string){
 function autoLogTryToPutNew(p_string){
 	//console.log(p_string)
 }
+function autoLogFail(p_string) {
+	console.log("FAILURE ! " + p_string);
+}

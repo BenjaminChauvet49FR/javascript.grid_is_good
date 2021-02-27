@@ -3,7 +3,6 @@ const NOT_FORCED = -1;
 
 function SolverShimaguni() {
 	GeneralSolver.call(this);
-    this.construct(generateWallArray(1, 1), []);
 }
 
 SolverShimaguni.prototype = Object.create(GeneralSolver.prototype);

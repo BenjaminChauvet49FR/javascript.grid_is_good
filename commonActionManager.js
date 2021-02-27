@@ -31,6 +31,8 @@ const ACTION_OPEN_SPACE_FAKE = {id:8,htmlCaption:"Poser déduction case ouverte"
 const ACTION_CLOSE_SPACE_FAKE = {id:9,htmlCaption:"Poser déduction case fermée"};
 const ACTION_LINK_SPACES = {id:10,htmlCaption:"Lier cases"};
 const ACTION_CLOSE_LINKS = {id:11,htmlCaption:"Fermer liaison cases"};
+const ACTION_OPEN_FENCE = {id:12,htmlCaption:"Déclarer cloison ouverte"};
+const ACTION_CLOSE_FENCE = {id:13,htmlCaption:"Déclarer cloison fermée"};
 
 /**
 Getter of setter for a specific mode

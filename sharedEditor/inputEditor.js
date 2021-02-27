@@ -339,7 +339,7 @@ function comboChange(p_thelist, p_editorCore) {
 			saveLoadModeId = PUZZLES_KIND.MASYU_LIKE.id;
 			p_editorCore.setVisibleGrids([GRID_ID.PEARL]);
 			break;
-		case 'Koburin':
+		case 'Koburin': case 'Usotatami':
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.NURIKABE_LIKE.id;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]);

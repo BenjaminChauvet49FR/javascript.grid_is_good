@@ -25,6 +25,11 @@ function Drawer() {
 		edge_walls: '#000000',
 		bannedSpace: '#666666'
 	}
+	this.fenceColorSet = {
+		closed_fence: '#222222',
+		undecided_fence: '#cccccc',
+		open_fence: '#eeeeff'
+	}
 	this.editorColorSet = { // No "setter function" for this
 		selectedSpace: '#bbffcc'
 	}
@@ -88,6 +93,64 @@ Drawer.prototype.drawWallGrid = function (p_context, p_wallGrid, p_xLength, p_yL
             if (p_wallGrid.getState(ix, iy) == WALLGRID.CLOSED) {
                 p_context.fillStyle = this.wallColorSet.bannedSpace;
                 p_context.fillRect(pixDrawXHoriz, pixDrawYVert, pixLength, pixLength);
+            }
+            pixDrawXHoriz += this.pix.sideSpace;
+            pixDrawXVert += this.pix.sideSpace;
+        }
+        pixDrawYHoriz += this.pix.sideSpace;
+        pixDrawYVert += this.pix.sideSpace;
+        pixDrawXHoriz = pixStartXHoriz;
+        pixDrawXVert = pixStartXVert;
+    }
+
+    //Draws the borders
+    const pixTotalWidth = p_xLength * this.pix.sideSpace;
+    const pixTotalHeight = p_yLength * this.pix.sideSpace;
+    p_context.fillStyle = this.wallColorSet.edge_walls;
+    p_context.fillRect(this.pix.marginGrid.left, this.pix.marginGrid.up, this.pix.borderSpace, pixTotalHeight);
+    p_context.fillRect(this.pix.marginGrid.left, this.pix.marginGrid.up, pixTotalWidth, this.pix.borderSpace);
+    p_context.fillRect(this.pix.marginGrid.left + pixTotalWidth - this.pix.borderSpace, this.pix.marginGrid.up,
+        this.pix.borderSpace, pixTotalHeight);
+    p_context.fillRect(this.pix.marginGrid.left, this.pix.marginGrid.up + pixTotalHeight - this.pix.borderSpace,
+        pixTotalWidth, this.pix.borderSpace);
+}
+
+// TODO factoriser avec la méthode ci-dessus car hormis les couleurs et le fait qu'on ne dessine pas les cases + quelques dimensions, rien ne change. Ah au fait : j'ai copié la méthode ci-dessus.
+Drawer.prototype.drawFenceArray = function (p_context, p_xLength, p_yLength, p_fenceMethodRight, p_fenceMethodDown) {
+    var ix,
+    iy,
+    indexRegion;
+	p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight); 
+	
+    //Upper-left pixel of the horizontal walls (Horiz) and vertical walls (Vert) ; pillars aren't part of walls (meeting of 4 walls)
+    const pixStartXVert = this.pix.marginGrid.left + this.pix.sideSpace - this.pix.borderSpace;
+    const pixStartXHoriz = this.pix.marginGrid.left + this.pix.borderSpace;
+    var pixDrawXHoriz = pixStartXHoriz;
+    var pixDrawYHoriz = this.pix.marginGrid.up + this.pix.sideSpace - this.pix.borderSpace;
+    var pixDrawXVert = pixStartXVert;
+    var pixDrawYVert = this.pix.marginGrid.up + this.pix.borderSpace;
+
+    //Rectangle dimensions
+    const pixLength = this.pix.sideSpace - 2 * this.pix.borderSpace;
+    const pixThickness = 2 * this.pix.borderSpace;
+
+    //Go !
+    for (iy = 0; iy < p_yLength; iy++) {
+        for (ix = 0; ix < p_xLength; ix++) {
+            //Draw down fence
+            if (iy <= p_yLength - 2) {
+                p_context.fillStyle = this.fenceToColor(p_fenceMethodDown(ix, iy));
+                p_context.fillRect(pixDrawXHoriz, pixDrawYHoriz, pixLength, pixThickness);
+            }
+            //Draw right fence
+            if (ix <= p_xLength - 2) {
+                p_context.fillStyle = this.fenceToColor(p_fenceMethodRight(ix, iy));
+                p_context.fillRect(pixDrawXVert, pixDrawYVert, pixThickness, pixLength);
+            }
+            //Draw pillar
+            if ((ix <= p_xLength - 2) && (iy <= p_yLength - 2)) {
+                p_context.fillStyle = this.wallToColor(WALLGRID.CLOSED);
+                p_context.fillRect(pixDrawXVert, pixDrawYHoriz, pixThickness, pixThickness);
             }
             pixDrawXHoriz += this.pix.sideSpace;
             pixDrawXVert += this.pix.sideSpace;
@@ -676,4 +739,17 @@ Drawer.prototype.wallToColor = function (p_wallType) {
         break;
     }
     return "#ffffff";
+}
+
+// With fences
+Drawer.prototype.fenceToColor = function (p_wallType) {
+    switch (p_wallType) {
+    case (FENCE_STATE.OPEN):
+        return (this.fenceColorSet.open_fence);
+        break;
+    case (FENCE_STATE.CLOSED):
+        return (this.fenceColorSet.closed_fence);
+        break;
+    }
+    return this.fenceColorSet.undecided_fence;
 }

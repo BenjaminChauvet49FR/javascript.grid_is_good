@@ -69,6 +69,14 @@ const menu4 = {
 }
 
 const menu5 = {
+	displayName : "Solveurs de découpage en région",
+	documentPage : "Solver",
+	typeList : [
+		{name : "usotatami", displayName : "Usotatami"}
+	]
+}
+
+const menu6 = {
 	displayName : "Solveur théorique",
 	documentPage : "Solver",
 	typeList : [
@@ -88,4 +96,6 @@ divElement.appendChild(document.createElement("br"));
 addMenuPart(divElement, menu4);
 divElement.appendChild(document.createElement("br"));
 addMenuPart(divElement, menu5);
+divElement.appendChild(document.createElement("br"));
+addMenuPart(divElement, menu6);
 divElement.appendChild(document.createElement("br"));
