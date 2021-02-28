@@ -160,7 +160,7 @@ function setSpaceClosedPSDeductionsClosure(p_solver) {
 	return function(p_listEvents, p_eventToApply) {
 		const x = p_eventToApply.x;
 		const y = p_eventToApply.y;
-		LoopKnownDirections.forEach(dir => {
+		KnownDirections.forEach(dir => {
 			if (p_solver.neighborExists(x, y, dir) && !p_solver.isBanned(x+DeltaX[dir], y+DeltaY[dir])) {
 				p_listEvents.push(new SpaceEvent(x+DeltaX[dir], y+DeltaY[dir], LOOP_STATE.LINKED));
 			}
@@ -200,13 +200,13 @@ function setEdgeClosedDeductionsClosure(p_solver) {
 // Precondition : p_x, p_y is a numeric space
 SolverKoburin.prototype.testNumericSpace = function(p_listEvents, p_x, p_y) {
 	if (this.numericGrid[p_y][p_x].notClosedYet == 0) {
-		LoopKnownDirections.forEach(dir => {
+		KnownDirections.forEach(dir => {
 			if (this.neighborExists(p_x, p_y, dir) && this.getLinkSpace(p_x+DeltaX[dir], p_y+DeltaY[dir], dir) != LOOP_STATE.CLOSED) {
 				p_listEvents.push(new SpaceEvent(p_x+DeltaX[dir], p_y+DeltaY[dir], LOOP_STATE.LINKED));
 			}
 		});
 	} else if (this.numericGrid[p_y][p_x].notLinkedYet == 0) {
-		LoopKnownDirections.forEach(dir => {
+		KnownDirections.forEach(dir => {
 			if (this.neighborExists(p_x, p_y, dir) && this.getLinkSpace(p_x+DeltaX[dir], p_y+DeltaY[dir], dir) != LOOP_STATE.LINKED) {
 				p_listEvents.push(new SpaceEvent(p_x+DeltaX[dir], p_y+DeltaY[dir], LOOP_STATE.CLOSED));
 			}
@@ -217,7 +217,7 @@ SolverKoburin.prototype.testNumericSpace = function(p_listEvents, p_x, p_y) {
 
 // C/C from Solver Yajilin
 SolverKoburin.prototype.tryAndCloseBeforeAndAfter2Closed = function(p_listEvents, p_x, p_y) {
-	LoopKnownDirections.forEach(dir => {
+	KnownDirections.forEach(dir => {
 		if (this.getClosedEdges(p_x, p_y) == 2) {
 			if (this.neighborExists(p_x, p_y, dir) && this.getLink(p_x, p_y, dir) != LOOP_STATE.CLOSED) {
 				p_listEvents.push(new SpaceEvent(p_x + DeltaX[dir], p_y + DeltaY[dir], LOOP_STATE.LINKED));

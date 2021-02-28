@@ -136,7 +136,7 @@ RegionLoopSolver.prototype.buildBorders = function() {
 			space = region.spaces[is];
 			x = space.x;
 			y = space.y;
-			LoopKnownDirections.forEach(dir => {
+			KnownDirections.forEach(dir => {
 				if (this.neighborExists(x, y, dir)) {
 					dx = x + DeltaX[dir];
 					dy = y + DeltaY[dir];

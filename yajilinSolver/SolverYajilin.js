@@ -256,7 +256,7 @@ function setSpaceClosedPSDeductionsClosure(p_solver) {
 				return p_listEvents;
 			}
 		}
-		LoopKnownDirections.forEach(dir => {
+		KnownDirections.forEach(dir => {
 			if (p_solver.neighborExists(x, y, dir) && !p_solver.isBanned(x+DeltaX[dir], y+DeltaY[dir])) {
 				p_listEvents.push(new SpaceEvent(x+DeltaX[dir], y+DeltaY[dir], LOOP_STATE.LINKED));
 			}
@@ -298,7 +298,7 @@ function setEdgeClosedDeductionsClosure(p_solver) {
 Smartness of Yajilin / Koburin ! Tests if (p_x, p_y) space has exactly 2 closed neighbors : since 2 adjacent spaces cannot be closed and a loop is required to cross, the undecided spaces around must be open in any case.
 */
 SolverYajilin.prototype.tryAndCloseBeforeAndAfter2Closed = function(p_listEvents, p_x, p_y) {
-	LoopKnownDirections.forEach(dir => {
+	KnownDirections.forEach(dir => {
 		if (this.getClosedEdges(p_x, p_y) == 2) {
 			if (this.neighborExists(p_x, p_y, dir) && this.getLink(p_x, p_y, dir) != LOOP_STATE.CLOSED) {
 				p_listEvents.push(new SpaceEvent(p_x + DeltaX[dir], p_y + DeltaY[dir], LOOP_STATE.LINKED));

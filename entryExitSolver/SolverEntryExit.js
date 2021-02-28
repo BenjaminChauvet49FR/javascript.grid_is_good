@@ -24,18 +24,18 @@ SolverEntryExit.prototype.construct = function(p_wallArray) {
 				region = this.regions[ir];
 				this.setLinkSpace(ix, iy, LOOP_STATE.LINKED);
 				ir = this.regionGrid[iy][ix];
-				direction = LOOP_DIRECTION.UNDECIDED;
+				direction = DIRECTION.UNDECIDED;
 				severalNeighbors = false;
-				LoopKnownDirections.forEach(dir => {
+				KnownDirections.forEach(dir => {
 					if (this.neighborExists(ix, iy, dir) && this.regionGrid[iy+DeltaY[dir]][ix+DeltaX[dir]] == ir) {
-						if (direction != LOOP_DIRECTION.UNDECIDED) {
+						if (direction != DIRECTION.UNDECIDED) {
 							severalNeighbors = true;
 						} else {
 							direction = dir;	// TODO can it be optimized ? It is a forEach loop... (no way to break a forEach loop : https://stackoverflow.com/questions/2641347/short-circuit-array-foreach-like-calling-break )						
 						}
 					}
 				});
-				if (!severalNeighbors && (direction != LOOP_DIRECTION.UNDECIDED)) {
+				if (!severalNeighbors && (direction != DIRECTION.UNDECIDED)) {
 					region.endSpaces.push({x : ix, y : iy, directionMyRegion : direction});
 				}
 				if (region.endSpaces.length == 3) {

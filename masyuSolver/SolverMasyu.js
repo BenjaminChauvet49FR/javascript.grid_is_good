@@ -204,7 +204,7 @@ SolverMasyu.prototype.testWhitePearlSpace = function(p_eventList, p_x, p_y, p_di
 SolverMasyu.prototype.testOnBlackPearlSpace = function(p_eventList, p_x, p_y) {
 	if (this.pearlGrid[p_y][p_x] == PEARL.BLACK) {
 		var detectedLink;
-		LoopKnownDirections.forEach(dir => {
+		KnownDirections.forEach(dir => {
 			const bx = p_x-DeltaX[dir];
 			const by = p_y-DeltaY[dir];
 			const fx = p_x+DeltaX[dir];
@@ -290,7 +290,7 @@ generateEventsForSpaceClosure = function(p_solver) {
 
 // Precondition : the space has a white pearl and is not on the edge of fields...
 function generateWhitePearlPassEvents (p_x, p_y) {
-	return [[new LinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_STATE.LINKED), new LinkEvent(p_x, p_y, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED)]];
+	return [[new LinkEvent(p_x, p_y, DIRECTION.RIGHT, LOOP_STATE.LINKED), new LinkEvent(p_x, p_y, DIRECTION.DOWN, LOOP_STATE.LINKED)]];
 } 
 
 // Precondition : the space has a black pearl.
@@ -301,16 +301,16 @@ SolverMasyu.prototype.generateBlackPearlPassEvents = function(p_x, p_y) {
 	var okRight = (p_x <= this.xLength-3);
 	var okDown = (p_y <= this.yLength-3);
 	if (okLeft && okUp) {
-		answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.UP, LOOP_STATE.LINKED));
+		answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.LEFT, DIRECTION.UP, LOOP_STATE.LINKED));
 	}
 	if (okRight && okUp) {
-		answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.UP, LOOP_STATE.LINKED));
+		answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.RIGHT, DIRECTION.UP, LOOP_STATE.LINKED));
 	}
 	if (okRight && okDown) {
-		answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED));
+		answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.RIGHT, DIRECTION.DOWN, LOOP_STATE.LINKED));
 	}
 	if (okLeft && okDown) {
-		answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED));
+		answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.LEFT, DIRECTION.DOWN, LOOP_STATE.LINKED));
 	}
 	return [answer];
 }

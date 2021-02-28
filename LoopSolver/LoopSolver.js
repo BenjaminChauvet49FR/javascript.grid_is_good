@@ -164,16 +164,16 @@ LoopSolver.prototype.loopSolverConstruct = function(p_array, p_puzzleSpecificMet
 
 LoopSolver.prototype.banSpace = function(p_x, p_y) {
 	this.bannedSpacesGrid[p_y][p_x] = true;
-	if (this.neighborExists(p_x, p_y, LOOP_DIRECTION.RIGHT)) {
+	if (this.neighborExists(p_x, p_y, DIRECTION.RIGHT)) {
 		this.setLinkRight(p_x, p_y, LOOP_STATE.CLOSED);
 	}
-	if (this.neighborExists(p_x, p_y, LOOP_DIRECTION.UP)) {
+	if (this.neighborExists(p_x, p_y, DIRECTION.UP)) {
 		this.setLinkUp(p_x, p_y, LOOP_STATE.CLOSED);
 	}
-	if (this.neighborExists(p_x, p_y, LOOP_DIRECTION.LEFT)) {
+	if (this.neighborExists(p_x, p_y, DIRECTION.LEFT)) {
 		this.setLinkLeft(p_x, p_y, LOOP_STATE.CLOSED);
 	}
-	if (this.neighborExists(p_x, p_y, LOOP_DIRECTION.DOWN)) {
+	if (this.neighborExists(p_x, p_y, DIRECTION.DOWN)) {
 		this.setLinkDown(p_x, p_y, LOOP_STATE.CLOSED);
 	}
 	this.setLinkSpace(p_x, p_y, LOOP_STATE.CLOSED);
@@ -204,10 +204,10 @@ LoopSolver.prototype.getLinkUp = function(p_x, p_y) {
 
 LoopSolver.prototype.getLink = function(p_x, p_y, p_dir) {
 	switch(p_dir) {
-		case LOOP_DIRECTION.LEFT : return this.getLinkLeft(p_x, p_y); break;
-		case LOOP_DIRECTION.UP : return this.getLinkUp(p_x, p_y); break;
-		case LOOP_DIRECTION.RIGHT : return this.getLinkRight(p_x, p_y); break;
-		case LOOP_DIRECTION.DOWN : return this.getLinkDown(p_x, p_y); break;
+		case DIRECTION.LEFT : return this.getLinkLeft(p_x, p_y); break;
+		case DIRECTION.UP : return this.getLinkUp(p_x, p_y); break;
+		case DIRECTION.RIGHT : return this.getLinkRight(p_x, p_y); break;
+		case DIRECTION.DOWN : return this.getLinkDown(p_x, p_y); break;
 	}
 }
 
@@ -306,10 +306,10 @@ LoopSolver.prototype.colorChain = function (p_x, p_y, p_number) {
 
 LoopSolver.prototype.neighborExists = function(p_x, p_y, p_dir) {
 	switch (p_dir) {
-		case LOOP_DIRECTION.LEFT : return (p_x > 0); break;
-		case LOOP_DIRECTION.UP : return (p_y > 0); break;
-		case LOOP_DIRECTION.RIGHT : return (p_x <= this.xLength-2); break;
-		case LOOP_DIRECTION.DOWN : return (p_y <= this.yLength-2); break;
+		case DIRECTION.LEFT : return (p_x > 0); break;
+		case DIRECTION.UP : return (p_y > 0); break;
+		case DIRECTION.RIGHT : return (p_x <= this.xLength-2); break;
+		case DIRECTION.DOWN : return (p_y <= this.yLength-2); break;
 	}
 }
 
@@ -326,7 +326,7 @@ LoopSolver.prototype.setLinkRight = function(p_x, p_y, p_state) {
 		return EVENT_RESULT.FAILURE;
 	} else {
 		this.grid[p_y][p_x].linkRight = p_state;
-		this.tradeLinkedSpaces(p_x, p_y, p_x+1, p_y, p_state, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.LEFT);
+		this.tradeLinkedSpaces(p_x, p_y, p_x+1, p_y, p_state, DIRECTION.RIGHT, DIRECTION.LEFT);
 		return EVENT_RESULT.SUCCESS;
 	}
 }
@@ -344,7 +344,7 @@ LoopSolver.prototype.setLinkDown = function(p_x, p_y, p_state) {
 		return EVENT_RESULT.FAILURE;
 	} else {
 		this.grid[p_y][p_x].linkDown = p_state;
-		this.tradeLinkedSpaces(p_x, p_y, p_x, p_y+1, p_state, LOOP_DIRECTION.DOWN, LOOP_DIRECTION.UP);
+		this.tradeLinkedSpaces(p_x, p_y, p_x, p_y+1, p_state, DIRECTION.DOWN, DIRECTION.UP);
 		return EVENT_RESULT.SUCCESS;
 	}
 }
@@ -483,11 +483,11 @@ applyEventClosure = function(p_solver) {
 		if (p_event.kind == LOOP_EVENT.STATE) {
 			return p_solver.setLinkSpace(p_event.x, p_event.y, p_event.state);
 		} else if (p_event.kind == LOOP_EVENT.LINK) {
-			if (p_event.direction == LOOP_DIRECTION.UP) {
+			if (p_event.direction == DIRECTION.UP) {
 				return p_solver.setLinkUp(p_event.linkX, p_event.linkY, p_event.state);
-			} else if (p_event.direction == LOOP_DIRECTION.DOWN) {
+			} else if (p_event.direction == DIRECTION.DOWN) {
 				return p_solver.setLinkDown(p_event.linkX, p_event.linkY, p_event.state);
-			} else if (p_event.direction == LOOP_DIRECTION.LEFT) {
+			} else if (p_event.direction == DIRECTION.LEFT) {
 				return p_solver.setLinkLeft(p_event.linkX, p_event.linkY, p_event.state);
 			} else {
 				return p_solver.setLinkRight(p_event.linkX, p_event.linkY, p_event.state);
@@ -503,11 +503,11 @@ undoEventClosure = function(p_solver) {
 		if (p_event.kind == LOOP_EVENT.STATE) {
 			p_solver.undoLinkSpace(p_event.x, p_event.y);
 		} else if (p_event.kind == LOOP_EVENT.LINK) {
-			if (p_event.direction == LOOP_DIRECTION.UP) {
+			if (p_event.direction == DIRECTION.UP) {
 				p_solver.undoLinkUp(p_event.linkX, p_event.linkY);
-			} else if (p_event.direction == LOOP_DIRECTION.DOWN) {
+			} else if (p_event.direction == DIRECTION.DOWN) {
 				p_solver.undoLinkDown(p_event.linkX, p_event.linkY);
-			} else if (p_event.direction == LOOP_DIRECTION.LEFT) {
+			} else if (p_event.direction == DIRECTION.LEFT) {
 				p_solver.undoLinkLeft(p_event.linkX, p_event.linkY);
 			} else {
 				p_solver.undoLinkRight(p_event.linkX, p_event.linkY);
@@ -562,11 +562,11 @@ LoopSolver.prototype.maskChainsInformation = function() {
 // Central methods
 
 LoopSolver.prototype.tryToPutNewDown = function (p_x, p_y, p_state) {
-	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, LOOP_DIRECTION.DOWN, p_state), this.methodSetDeductions);
+	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, DIRECTION.DOWN, p_state), this.methodSetDeductions);
 }
 
 LoopSolver.prototype.tryToPutNewRight = function (p_x, p_y, p_state) {
-	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, p_state), this.methodSetDeductions);
+	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, DIRECTION.RIGHT, p_state), this.methodSetDeductions);
 }
 
 LoopSolver.prototype.tryToPutNewLink = function (p_x, p_y, p_dir, p_state) {
@@ -590,16 +590,16 @@ deductionsClosure = function(p_solver) {
 			const y = p_eventBeingApplied.y;
 			if (state == LOOP_STATE.CLOSED) {
 				if (x > 0) {
-					p_eventList.push(new LinkEvent(x, y, LOOP_DIRECTION.LEFT, LOOP_STATE.CLOSED));
+					p_eventList.push(new LinkEvent(x, y, DIRECTION.LEFT, LOOP_STATE.CLOSED));
 				}
 				if (y > 0) {
-					p_eventList.push(new LinkEvent(x, y, LOOP_DIRECTION.UP, LOOP_STATE.CLOSED));
+					p_eventList.push(new LinkEvent(x, y, DIRECTION.UP, LOOP_STATE.CLOSED));
 				} 
 				if (x <= p_solver.xLength-2) {
-					p_eventList.push(new LinkEvent(x, y, LOOP_DIRECTION.RIGHT, LOOP_STATE.CLOSED));
+					p_eventList.push(new LinkEvent(x, y, DIRECTION.RIGHT, LOOP_STATE.CLOSED));
 				} 
 				if (y <= p_solver.yLength-2) {
-					p_eventList.push(new LinkEvent(x, y, LOOP_DIRECTION.DOWN, LOOP_STATE.CLOSED));
+					p_eventList.push(new LinkEvent(x, y, DIRECTION.DOWN, LOOP_STATE.CLOSED));
 				}
 				p_eventList = p_solver.setSpaceClosedPSDeductions(p_eventList, p_eventBeingApplied);
 			} else {
@@ -645,9 +645,9 @@ deductionsClosure = function(p_solver) {
 
 function getNeighborCoors(p_x, p_y, p_direction) {
 	switch(p_direction) {
-		case LOOP_DIRECTION.LEFT : return {x: p_x-1, y:p_y};
-		case LOOP_DIRECTION.UP : return {x: p_x, y:p_y-1};
-		case LOOP_DIRECTION.RIGHT : return {x: p_x+1, y:p_y};
+		case DIRECTION.LEFT : return {x: p_x-1, y:p_y};
+		case DIRECTION.UP : return {x: p_x, y:p_y-1};
+		case DIRECTION.RIGHT : return {x: p_x+1, y:p_y};
 		default : return {x: p_x, y:p_y+1};
 	}
 }
@@ -686,30 +686,30 @@ LoopSolver.prototype.test2v2OpenSpace = function(p_eventList, p_x, p_y) {
 	if (this.getLinkSpace(p_x,p_y) == LOOP_STATE.LINKED) {
 		if (this.getClosedEdges(p_x, p_y) == 2 && this.getLinkedEdges(p_x,p_y) < 2) {
 			if (p_x > 0 && this.getLinkLeft(p_x, p_y) == LOOP_STATE.UNDECIDED) {
-				p_eventList.push(new LinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_STATE.LINKED));
+				p_eventList.push(new LinkEvent(p_x, p_y, DIRECTION.LEFT, LOOP_STATE.LINKED));
 			}
 			if (p_y > 0 && this.getLinkUp(p_x, p_y) == LOOP_STATE.UNDECIDED) {
-				p_eventList.push(new LinkEvent(p_x, p_y, LOOP_DIRECTION.UP, LOOP_STATE.LINKED));
+				p_eventList.push(new LinkEvent(p_x, p_y, DIRECTION.UP, LOOP_STATE.LINKED));
 			}
 			if (p_x <= this.xLength-2 && this.getLinkRight(p_x, p_y) == LOOP_STATE.UNDECIDED) {
-				p_eventList.push(new LinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_STATE.LINKED));
+				p_eventList.push(new LinkEvent(p_x, p_y, DIRECTION.RIGHT, LOOP_STATE.LINKED));
 			}
 			if (p_y <= this.yLength-2 && this.getLinkDown(p_x, p_y) == LOOP_STATE.UNDECIDED) {
-				p_eventList.push(new LinkEvent(p_x, p_y, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED));
+				p_eventList.push(new LinkEvent(p_x, p_y, DIRECTION.DOWN, LOOP_STATE.LINKED));
 			}
 		}
 		if (this.getLinkedEdges(p_x,p_y) == 2 && this.getClosedEdges(p_x, p_y) < 2) {
 			if (p_x > 0 && this.getLinkLeft(p_x, p_y) == LOOP_STATE.UNDECIDED) {
-				p_eventList.push(new LinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_STATE.CLOSED));
+				p_eventList.push(new LinkEvent(p_x, p_y, DIRECTION.LEFT, LOOP_STATE.CLOSED));
 			}
 			if (p_y > 0 && this.getLinkUp(p_x, p_y) == LOOP_STATE.UNDECIDED) {
-				p_eventList.push(new LinkEvent(p_x, p_y, LOOP_DIRECTION.UP, LOOP_STATE.CLOSED));
+				p_eventList.push(new LinkEvent(p_x, p_y, DIRECTION.UP, LOOP_STATE.CLOSED));
 			}
 			if (p_x <= this.xLength-2 && this.getLinkRight(p_x, p_y) == LOOP_STATE.UNDECIDED) {
-				p_eventList.push(new LinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_STATE.CLOSED));
+				p_eventList.push(new LinkEvent(p_x, p_y, DIRECTION.RIGHT, LOOP_STATE.CLOSED));
 			}
 			if (p_y <= this.yLength-2 && this.getLinkDown(p_x, p_y) == LOOP_STATE.UNDECIDED) {
-				p_eventList.push(new LinkEvent(p_x, p_y, LOOP_DIRECTION.DOWN, LOOP_STATE.CLOSED));
+				p_eventList.push(new LinkEvent(p_x, p_y, DIRECTION.DOWN, LOOP_STATE.CLOSED));
 			}
 		}
 	}
@@ -725,19 +725,19 @@ LoopSolver.prototype.testEndsClosingLoop = function (p_eventList, p_endSpace1, p
 	const y2 = p_endSpace2.y;
 	// Adjacent and not directly linked ?
 	if (x1 == x2) {
-		if (y1 == (y2 + 1) && direction1 != LOOP_DIRECTION.UP) {
-			p_eventList.push(new LinkEvent(x1, y1, LOOP_DIRECTION.UP, LOOP_STATE.CLOSED));
+		if (y1 == (y2 + 1) && direction1 != DIRECTION.UP) {
+			p_eventList.push(new LinkEvent(x1, y1, DIRECTION.UP, LOOP_STATE.CLOSED));
 		} 
-		if (y1 == (y2 - 1) && direction1 != LOOP_DIRECTION.DOWN) {
-			p_eventList.push(new LinkEvent(x1, y1, LOOP_DIRECTION.DOWN, LOOP_STATE.CLOSED));
+		if (y1 == (y2 - 1) && direction1 != DIRECTION.DOWN) {
+			p_eventList.push(new LinkEvent(x1, y1, DIRECTION.DOWN, LOOP_STATE.CLOSED));
 		} 
 	}
 	if (y1 == y2) {
-		if (x1 == (x2 + 1) && direction1 != LOOP_DIRECTION.LEFT) {
-			p_eventList.push(new LinkEvent(x1, y1, LOOP_DIRECTION.LEFT, LOOP_STATE.CLOSED));
+		if (x1 == (x2 + 1) && direction1 != DIRECTION.LEFT) {
+			p_eventList.push(new LinkEvent(x1, y1, DIRECTION.LEFT, LOOP_STATE.CLOSED));
 		} 
-		if (x1 == (x2 - 1) && direction1 != LOOP_DIRECTION.RIGHT) {
-			p_eventList.push(new LinkEvent(x1, y1, LOOP_DIRECTION.RIGHT, LOOP_STATE.CLOSED));
+		if (x1 == (x2 - 1) && direction1 != DIRECTION.RIGHT) {
+			p_eventList.push(new LinkEvent(x1, y1, DIRECTION.RIGHT, LOOP_STATE.CLOSED));
 		} 
 	}	
 	// Opposites are separated by one spaces that has 2 closed edges
@@ -846,7 +846,7 @@ LoopSolver.prototype.quickStart = function() {
 	for (var y = 0 ; y < this.yLength ; y++) {
 		for (var x = 0 ; x < this.xLength ; x++) {
 			if (this.getLinkSpace(x, y) == LOOP_STATE.LINKED && this.getClosedEdges(x, y) == 2) {
-				LoopKnownDirections.forEach(dir => {
+				KnownDirections.forEach(dir => {
 					if (this.neighborExists(x, y, dir) && this.getLinkSpace(x, y) == LOOP_STATE.LINKED) {
 						this.tryToPutNewLink(x, y, dir, LOOP_STATE.LINKED);
 					}
@@ -875,25 +875,25 @@ LoopSolver.prototype.standardSpacePassEvents = function(p_x, p_y) { // TODO Warn
 	const okDown = (p_y <= this.yLength-2);
 	if (okLeft) {
 		if (okUp) {
-			answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.UP, LOOP_STATE.LINKED));
+			answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.LEFT, DIRECTION.UP, LOOP_STATE.LINKED));
 		}
 		if (okRight) {
-			answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.RIGHT, LOOP_STATE.LINKED));
+			answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.LEFT, DIRECTION.RIGHT, LOOP_STATE.LINKED));
 		}
 		if (okDown) {
-			answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.LEFT, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED));
+			answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.LEFT, DIRECTION.DOWN, LOOP_STATE.LINKED));
 		}
 	}
 	if (okUp) {
 		if (okRight) {
-			answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.UP, LOOP_STATE.LINKED));
+			answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.RIGHT, DIRECTION.UP, LOOP_STATE.LINKED));
 		}
 		if (okDown) {
-			answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.DOWN, LOOP_DIRECTION.UP, LOOP_STATE.LINKED));
+			answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.DOWN, DIRECTION.UP, LOOP_STATE.LINKED));
 		}
 	}
 	if (okRight && okDown) {
-		answer.push(new CompoundLinkEvent(p_x, p_y, LOOP_DIRECTION.RIGHT, LOOP_DIRECTION.DOWN, LOOP_STATE.LINKED));
+		answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.RIGHT, DIRECTION.DOWN, LOOP_STATE.LINKED));
 	}
 	return [answer];
 }
@@ -918,8 +918,8 @@ comparisonLoopEventsMethod = function(p_event1, p_event2) {
 			} else if (cEvent2.linkX < cEvent1.linkX) {
 				return 1;
 			} else {
-				const d1 = (cEvent1.direction == LOOP_DIRECTION.RIGHT ? 0 : 1);
-				const d2 = (cEvent2.direction == LOOP_DIRECTION.RIGHT ? 0 : 1); // Et non "LOOP_EV.NT.RIGHT" (E remplacé par un point pour ne pas perturber les recherches)"
+				const d1 = (cEvent1.direction == DIRECTION.RIGHT ? 0 : 1);
+				const d2 = (cEvent2.direction == DIRECTION.RIGHT ? 0 : 1); // Et non "LOOP_EV.NT.RIGHT" (E remplacé par un point pour ne pas perturber les recherches)"
 				if (d1 != d2) {
 					return d1-d2;
 				} else {
@@ -948,7 +948,7 @@ comparisonLoopEventsMethod = function(p_event1, p_event2) {
 
 // Convert a loop event to make it compatible with the comparison method above 
 convertLoopEvent = function(p_event) {
-	if (p_event.kind == LOOP_EVENT.LINK && (p_event.direction == LOOP_DIRECTION.LEFT || p_event.direction == LOOP_DIRECTION.UP)) {
+	if (p_event.kind == LOOP_EVENT.LINK && (p_event.direction == DIRECTION.LEFT || p_event.direction == DIRECTION.UP)) {
 		return p_event.dual();
 	} else {
 		return p_event;
