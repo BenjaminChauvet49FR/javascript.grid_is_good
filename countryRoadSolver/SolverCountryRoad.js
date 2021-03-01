@@ -27,10 +27,10 @@ SolverCountryRoad.prototype.construct = function(p_wallArray, p_indications) {
 	});
 	
 	this.gridWall = WallGrid_data(p_wallArray); 
-	this.regionGrid = this.gridWall.toRegionGrid();
+	this.regionArray = this.gridWall.toRegionGrid();
 	for(iy = 0;iy < this.yLength;iy++) {
 		for(ix = 0;ix < this.xLength;ix++) {
-			ir = this.regionGrid[iy][ix];
+			ir = this.regionArray[iy][ix];
 			region = this.regions[ir];
 			if (region.forcedValue != null) {
 				region.spacesNotLinkedYet = region.forcedValue;

@@ -14,7 +14,7 @@ SolverShimaguni.prototype.construct = function(p_wallArray, p_indicationsRegions
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
 	this.gridWall = WallGrid_data(p_wallArray); 
-	this.regionGrid = this.gridWall.toRegionGrid();
+	this.regionArray = this.gridWall.toRegionGrid();
 	this.answerGrid = [];
 	this.clusterGrid = [];
 	var ix,iy;
@@ -38,7 +38,7 @@ SolverShimaguni.prototype.construct = function(p_wallArray, p_indicationsRegions
 		this.answerGrid.push([]);
 		this.clusterGrid.push([]);
 		for(ix = 0;ix < this.xLength;ix++){
-			lastRegionNumber = Math.max(this.regionGrid[iy][ix],lastRegionNumber);
+			lastRegionNumber = Math.max(this.regionArray[iy][ix],lastRegionNumber);
 			this.answerGrid[iy].push(FILLING.UNDECIDED);
 			this.clusterGrid[iy].push(0); // 0 = indice cluster par défaut. Au départ, tout est cluster. J'espère qu'on n'augmentera jamais la valeur par défaut...
 		}
@@ -79,16 +79,16 @@ SolverShimaguni.prototype.construct = function(p_wallArray, p_indicationsRegions
 	var region;
 	for(iy = 0;iy < this.yLength;iy++){
 		for(ix = 0;ix < this.xLength;ix++){
-			ir = this.regionGrid[iy][ix];
+			ir = this.regionArray[iy][ix];
 			this.regions[ir].spaces.push({x:ix,y:iy});
 			if (iy < this.yLength-1){
-				iOtherR = this.regionGrid[iy+1][ix];
+				iOtherR = this.regionArray[iy+1][ix];
 				if (iOtherR != ir){
 					this.validateContact(ir,iOtherR);
 				}
 			}			
 			if (ix < this.xLength-1){
-				iOtherR = this.regionGrid[iy][ix+1];
+				iOtherR = this.regionArray[iy][ix+1];
 				if (iOtherR != ir){
 					this.validateContact(ir,iOtherR);
 				}
@@ -132,11 +132,11 @@ SolverShimaguni.prototype.construct = function(p_wallArray, p_indicationsRegions
 // Misc methods (may be used for drawing and intelligence)
 
 SolverShimaguni.prototype.getRegion = function(ix,iy){
-	return this.regions[this.regionGrid[iy][ix]];
+	return this.regions[this.regionArray[iy][ix]];
 }
 
 SolverShimaguni.prototype.getRegionIndex = function(ix,iy){
-	return this.regionGrid[iy][ix];
+	return this.regionArray[iy][ix];
 }
 
 SolverShimaguni.prototype.forcedValue = function(ir){
@@ -308,7 +308,7 @@ undoEventClosure = function(p_solver) {
 }
 
 SolverShimaguni.prototype.undoSymbolEvent = function(p_event){
-	const region = this.regions[this.regionGrid[p_event.y][p_event.x]];
+	const region = this.regions[this.regionArray[p_event.y][p_event.x]];
 	region.freshClusters = false;
 	this.answerGrid[p_event.y][p_event.x] = FILLING.UNDECIDED;
 	if (p_event.symbol == FILLING.YES){
@@ -573,7 +573,7 @@ SolverShimaguni.prototype.fillCluster = function(p_x,p_y,p_indexRegion,p_value){
 		space = listSpacesToUpdate.pop();
 		x = space.x;
 		y = space.y;
-		if (this.clusterGrid[y][x] == NOT_CLUSTERED && this.regionGrid[y][x] == p_indexRegion && this.answerGrid[y][x] != FILLING.NO){
+		if (this.clusterGrid[y][x] == NOT_CLUSTERED && this.regionArray[y][x] == p_indexRegion && this.answerGrid[y][x] != FILLING.NO){
 			this.clusterGrid[y][x] = p_value;
 			listUpdatedSpaces.push(space);
 			if (y > 0){

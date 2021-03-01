@@ -42,7 +42,7 @@ RegionLoopSolver.prototype.regionLoopSolverConstruct = function(p_wallArray, p_p
 	this.borders = []; // Triangular array of borders
 	//this.bordersEdgesIndexesGrid = []; // Array that gives spaces that share edges with regions border, 
 	//giving the index of these edges in this border [y][x][dir]
-	this.regionGrid = this.gridWall.toRegionGrid();
+	this.regionArray = this.gridWall.toRegionGrid();
 	this.regions = [];
 	this.adjacentRegionsGrid = []; // contains list of {direction : dir, index : ir}. Indicates spaces that belong to a foreign region and their neighbors.
 
@@ -54,7 +54,7 @@ RegionLoopSolver.prototype.regionLoopSolverConstruct = function(p_wallArray, p_p
 		this.adjacentRegionsGrid.push([]);
 		//this.bordersEdgesIndexesGrid.push([]);
 		for(ix = 0; ix < this.xLength; ix++) {
-			lastRegionNumber = Math.max(this.regionGrid[iy][ix], lastRegionNumber);
+			lastRegionNumber = Math.max(this.regionArray[iy][ix], lastRegionNumber);
 			this.adjacentRegionsGrid[iy].push([]);
 			//this.bordersEdgesIndexesGrid[ix].push({});
 		}
@@ -78,8 +78,8 @@ RegionLoopSolver.prototype.regionLoopSolverConstruct = function(p_wallArray, p_p
 	// Spaces in each region
 	for(iy = 0;iy < this.yLength;iy++) {
 		for(ix = 0;ix < this.xLength;ix++) {
-			if(this.regionGrid[iy][ix] >= 0) {
-				this.regions[this.regionGrid[iy][ix]].spaces.push({x:ix, y:iy});
+			if(this.regionArray[iy][ix] >= 0) {
+				this.regions[this.regionArray[iy][ix]].spaces.push({x:ix, y:iy});
 			}
 		}
 	}
@@ -206,12 +206,12 @@ RegionLoopSolver.prototype.setContact = function(p_i1, p_i2) {
 // Getters
 
 RegionLoopSolver.prototype.getRegionIndex = function(p_x, p_y) {
-	return this.regionGrid[p_y][p_x];
+	return this.regionArray[p_y][p_x];
 }
 
 RegionLoopSolver.prototype.getRegion = function(p_x, p_y) {
 	if (p_y || p_y == 0) {
-		return this.regions[this.regionGrid[p_y][p_x]];
+		return this.regions[this.regionArray[p_y][p_x]];
 	} else {
 		return this.regions[p_x];
 	}

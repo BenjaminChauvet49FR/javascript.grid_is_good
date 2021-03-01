@@ -16,7 +16,7 @@ SolverFILLING.prototype.construct = function(p_wallArray, p_indications) {
 	this.yLength = p_wallArray.length;
 
 	this.gridWall = WallGrid_data(p_wallArray); 
-	this.regionGrid = this.gridWall.toRegionGrid();
+	this.regionArray = this.gridWall.toRegionGrid();
 	this.answerGrid = [];
 
 	var ix,iy;
@@ -38,7 +38,7 @@ SolverFILLING.prototype.construct = function(p_wallArray, p_indications) {
 	for(iy = 0;iy < this.yLength;iy++){
 		this.answerGrid.push([]);
 		for(ix = 0;ix < this.xLength;ix++){
-			lastRegionNumber = Math.max(this.regionGrid[iy][ix],lastRegionNumber);
+			lastRegionNumber = Math.max(this.regionArray[iy][ix],lastRegionNumber);
 			this.answerGrid[iy].push(FILLING.UNDECIDED);
 		}
 	}
@@ -74,7 +74,7 @@ SolverFILLING.prototype.construct = function(p_wallArray, p_indications) {
 	// Initialize spaces by region
 	for(iy = 0 ; iy < this.yLength ; iy++) {
 		for(ix = 0 ; ix < this.xLength ; ix++) {
-			this.regions[this.regionGrid[iy][ix]].spaces.push({x:ix, y:iy});
+			this.regions[this.regionArray[iy][ix]].spaces.push({x:ix, y:iy});
 		}
 	}
 	
@@ -108,7 +108,7 @@ SolverFILLING.prototype.getFirstSpaceRegion = function(p_ir) {
 }
 
 SolverFILLING.prototype.getRegionIndex = function(p_x, p_y) {
-	return this.regionGrid[p_y][p_x];
+	return this.regionArray[p_y][p_x];
 }
 
 SolverFILLING.prototype.getRegion = function(p_x, p_y) {
@@ -173,7 +173,7 @@ SolverFILLING.prototype.putNew = function(p_x,p_y,p_symbol){
 		return EVENT_RESULT.FAILURE;
 	}
 	this.answerGrid[p_y][p_x] = p_symbol;
-	var ir = this.regionGrid[p_y][p_x];
+	var ir = this.regionArray[p_y][p_x];
 	var region = this.regions[ir];
 	if (region.notPlacedYet) {
 		if (p_symbol == FILLING.YES) {
@@ -203,7 +203,7 @@ undoEventClosure = function(p_solver) {
 			const symbol = eventToUndo.symbol;
 			var discardedSymbol = p_solver.answerGrid[y][x]; 
 			p_solver.answerGrid[y][x] = FILLING.UNDECIDED;
-			var ir = p_solver.regionGrid[y][x];
+			var ir = p_solver.regionArray[y][x];
 			var region = p_solver.regions[ir];
 			if (region.notPlacedYet) {
 				if (discardedSymbol == FILLING.YES) { // if (eventToUndo.symbol) is tested, the value of notPlacedYet is increased even if the space wasn't actually affected. Which leads to surprises when undoing. Oops...
@@ -227,7 +227,7 @@ deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
 		var x = p_eventBeingApplied.x();
 		var y = p_eventBeingApplied.y();
-		var ir = p_solver.regionGrid[y][x];
+		var ir = p_solver.regionArray[y][x];
 		var region = p_solver.regions[ir];
 		symbol = p_eventBeingApplied.symbol;
 		p_solver.closeSquares(p_listEventsToApply, x, y);

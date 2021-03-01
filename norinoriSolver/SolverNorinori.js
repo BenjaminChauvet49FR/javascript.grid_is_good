@@ -11,7 +11,7 @@ SolverNorinori.prototype.construct = function(p_wallArray) {
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
 	this.gridWall = WallGrid_data(p_wallArray); 
-	this.regionGrid = this.gridWall.toRegionGrid(); 
+	this.regionArray = this.gridWall.toRegionGrid(); 
 	this.answerGrid = [];
 	this.spacesByRegion =  [];
 	this.notPlacedYetByRegion = [];
@@ -58,7 +58,7 @@ SolverNorinori.prototype.purifyAnswerGrid = function(){
 	//Removing banned spaces (hence the necessity to have things already updated)
 	for(iy = 0; iy < this.yLength ; iy++){
 		for(ix = 0; ix < this.xLength ; ix++){
-			if (this.regionGrid[iy][ix] == WALLGRID.OUT_OF_REGIONS){
+			if (this.regionArray[iy][ix] == WALLGRID.OUT_OF_REGIONS){
 				this.putNew(ix,iy,FILLING.NO);
 			}
 		}
@@ -101,7 +101,7 @@ SolverNorinori.prototype.listSpacesByRegion = function(){
 	var lastRegionNumber = 0;
 	for(iy = 0;iy < this.yLength;iy++){
 		for(ix = 0;ix < this.xLength;ix++){
-			lastRegionNumber = Math.max(this.regionGrid[iy][ix],lastRegionNumber);
+			lastRegionNumber = Math.max(this.regionArray[iy][ix],lastRegionNumber);
 		}
 	}
 	
@@ -111,8 +111,8 @@ SolverNorinori.prototype.listSpacesByRegion = function(){
 	}
 	for(iy = 0;iy < this.yLength;iy++){
 		for(ix = 0;ix < this.xLength;ix++){
-			if(this.regionGrid[iy][ix] >= 0){
-				this.spacesByRegion[this.regionGrid[iy][ix]].push({x:ix,y:iy});
+			if(this.regionArray[iy][ix] >= 0){
+				this.spacesByRegion[this.regionArray[iy][ix]].push({x:ix,y:iy});
 			}
 		}
 	}
@@ -142,7 +142,7 @@ SolverNorinori.prototype.getFirstSpaceRegion = function(p_i){return this.spacesB
 SolverNorinori.prototype.getRegionsNumber = function(){return this.spacesByRegion.length;}
 
 SolverNorinori.prototype.getRegion = function(p_x,p_y){
-	return this.regionGrid[p_y][p_x];
+	return this.regionArray[p_y][p_x];
 }
 
 //------------------
@@ -261,7 +261,7 @@ undoEventClosure = function(p_solver) {
 	return function(eventToUndo) {
 		x = eventToUndo.x;
 		y = eventToUndo.y;
-		var indexRegion = p_solver.regionGrid[y][x];
+		var indexRegion = p_solver.regionArray[y][x];
 		var symbol = p_solver.answerGrid[y][x];
 		p_solver.answerGrid[y][x] = FILLING.UNDECIDED;
 		autoLogDeduction("Removing the following : "+x+" "+y+" "+symbol);
@@ -479,7 +479,7 @@ SolverNorinori.prototype.readyToBeCompletedDomino = function(p_x,p_y){
 }
 
 SolverNorinori.prototype.isNeighborQualifiable = function(p_indexRegion,p_x,p_y){
-	return ((this.answerGrid[p_y][p_x] == FILLING.YES) || ((this.regionGrid[p_y][p_x] != p_indexRegion) && (this.answerGrid[p_y][p_x] == FILLING.UNDECIDED)));
+	return ((this.answerGrid[p_y][p_x] == FILLING.YES) || ((this.regionArray[p_y][p_x] != p_indexRegion) && (this.answerGrid[p_y][p_x] == FILLING.UNDECIDED)));
 }
 
 SolverNorinori.prototype.hasNeighborQualifiable = function(p_indexRegion,p_x,p_y){
@@ -493,7 +493,7 @@ SolverNorinori.prototype.hasNeighborQualifiable = function(p_indexRegion,p_x,p_y
 Tests if an X should be put into a neighbor space of a newly put X because it is unqualifiable and in a region with already one O.
 */
 SolverNorinori.prototype.isNotQualifiablePostPutX = function(p_x,p_y){
-	var indexRegion = this.regionGrid[p_y][p_x];
+	var indexRegion = this.regionArray[p_y][p_x];
 	return ((this.answerGrid[p_y][p_x] == FILLING.UNDECIDED) && (this.notPlacedYetByRegion[indexRegion].Os == 1) && !this.hasNeighborQualifiable(indexRegion,p_x,p_y));
 }
 

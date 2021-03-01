@@ -19,15 +19,15 @@ SolverEntryExit.prototype.construct = function(p_wallArray) {
 	
 	for(iy = 0 ; iy < this.yLength ; iy++) {
 		for(ix = 0 ; ix < this.xLength ; ix++) {
-			ir = this.regionGrid[iy][ix];
+			ir = this.regionArray[iy][ix];
 			if (!this.isBanned(ix, iy)) {
 				region = this.regions[ir];
 				this.setLinkSpace(ix, iy, LOOP_STATE.LINKED);
-				ir = this.regionGrid[iy][ix];
+				ir = this.regionArray[iy][ix];
 				direction = DIRECTION.UNDECIDED;
 				severalNeighbors = false;
 				KnownDirections.forEach(dir => {
-					if (this.neighborExists(ix, iy, dir) && this.regionGrid[iy+DeltaY[dir]][ix+DeltaX[dir]] == ir) {
+					if (this.neighborExists(ix, iy, dir) && this.regionArray[iy+DeltaY[dir]][ix+DeltaX[dir]] == ir) {
 						if (direction != DIRECTION.UNDECIDED) {
 							severalNeighbors = true;
 						} else {

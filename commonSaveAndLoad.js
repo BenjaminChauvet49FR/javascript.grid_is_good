@@ -71,11 +71,11 @@ X5 : five regions are skipped.
 But what if the symbol has a name starting with X ? Well, a lower x will be added before.
 */
 function puzzleRegionIndicationsToString(p_wallArray, p_numbersArray) {
-	const regionGrid = WallGrid_data(p_wallArray).toRegionGrid(); // This assumes toRegionGrid() returns a double-entry array of region numbers ordered by "first spaces in lexical order" in lexical order.
+	const regionArray = WallGrid_data(p_wallArray).toRegionGrid(); // This assumes toRegionGrid() returns a double-entry array of region numbers ordered by "first spaces in lexical order" in lexical order.
 	var regionsIndications = [];
-	for(var iy = 0 ; iy < regionGrid.length ; iy++) {
-		for(var ix = 0 ; ix < regionGrid[0].length; ix++) {
-			if (regionGrid[iy][ix] == regionsIndications.length) {
+	for(var iy = 0 ; iy < regionArray.length ; iy++) {
+		for(var ix = 0 ; ix < regionArray[0].length; ix++) {
+			if (regionArray[iy][ix] == regionsIndications.length) {
 				regionsIndications.push(p_numbersArray[iy][ix]);
 			}
 		}

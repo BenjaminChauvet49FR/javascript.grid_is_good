@@ -35,7 +35,7 @@ SolverLITS.prototype.construct = function(p_wallArray, p_numberGrid) {
 	this.methodTools = {comparisonMethod : comparison, copyMethod : copying}; // Warning : the argumentToLabelMethod is defined right before the pass in this solver
 
 	this.gridWall = WallGrid_data(p_wallArray); 
-	this.regionGrid = this.gridWall.toRegionGrid();
+	this.regionArray = this.gridWall.toRegionGrid();
 	this.answerGrid = [];
 	this.proximitiesGrid = [];
 	this.shapeGrid = [];
@@ -52,7 +52,7 @@ SolverLITS.prototype.construct = function(p_wallArray, p_numberGrid) {
 		this.proximitiesGrid.push([]);
 		this.shapeGrid.push([]);
 		for(ix = 0;ix < this.xLength;ix++){
-			lastRegionNumber = Math.max(this.regionGrid[iy][ix],lastRegionNumber);
+			lastRegionNumber = Math.max(this.regionArray[iy][ix],lastRegionNumber);
 			this.answerGrid[iy].push(SPACE.UNDECIDED);
 			this.proximitiesGrid[iy].push(-1);
 			this.shapeGrid[iy].push(LITS.UNDECIDED);
@@ -85,7 +85,7 @@ SolverLITS.prototype.construct = function(p_wallArray, p_numberGrid) {
 	var region;
 	for(iy = 0;iy < this.yLength;iy++){
 		for(ix = 0;ix < this.xLength;ix++){
-			ir = this.regionGrid[iy][ix];
+			ir = this.regionArray[iy][ix];
 			region = this.regions[ir];
 			region.spaces.push({x:ix,y:iy});
 		}
@@ -119,7 +119,7 @@ SolverLITS.prototype.getShape = function(p_x,p_y){
 }
 
 SolverLITS.prototype.getRegionIndex = function(p_x, p_y) {
-	return this.regionGrid[p_y][p_x];
+	return this.regionArray[p_y][p_x];
 }
 
 SolverLITS.prototype.getRegion = function(p_x, p_y) {
@@ -169,28 +169,28 @@ SolverLITS.prototype.passRegionAndAdjacents = function(p_indexRegion) {
 		x = space.x;
 		y = space.y;
 		if (x > 0) {
-			otherIR = this.regionGrid[y][x-1];
+			otherIR = this.regionArray[y][x-1];
 			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
 				alreadyAddedRegions[otherIR] = true;
 				addedRegions.push(otherIR);
 			}
 		}
 		if (x <= this.xLength-2) {
-			otherIR = this.regionGrid[y][x+1];
+			otherIR = this.regionArray[y][x+1];
 			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
 				alreadyAddedRegions[otherIR] = true;
 				addedRegions.push(otherIR);
 			}
 		}
 		if (y > 0) {
-			otherIR = this.regionGrid[y-1][x];
+			otherIR = this.regionArray[y-1][x];
 			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
 				alreadyAddedRegions[otherIR] = true;
 				addedRegions.push(otherIR);
 			}
 		}
 		if (y <= this.yLength-2) {
-			otherIR = this.regionGrid[y+1][x];
+			otherIR = this.regionArray[y+1][x];
 			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
 				alreadyAddedRegions[otherIR] = true;
 				addedRegions.push(otherIR);
@@ -258,7 +258,7 @@ SolverLITS.prototype.putNew = function(p_x,p_y,p_symbol){
 		return EVENT_RESULT.FAILURE;
 	}
 	this.answerGrid[p_y][p_x] = p_symbol;
-	var ir = this.regionGrid[p_y][p_x];
+	var ir = this.regionArray[p_y][p_x];
 	var region = this.regions[ir];
 	if (p_symbol == SPACE.OPEN){
 		region.openSpaces.push({x : p_x, y : p_y});
@@ -290,7 +290,7 @@ undoEventClosure = function(p_solver) {
 			const y = eventToUndo.y();
 			const symbol = eventToUndo.symbol;
 			p_solver.answerGrid[y][x] = SPACE.UNDECIDED;
-			var ir = p_solver.regionGrid[y][x];
+			var ir = p_solver.regionArray[y][x];
 			var region = p_solver.regions[ir];
 			if (symbol == SPACE.OPEN){
 				region.openSpaces.pop(); // This "pop" suggests that events are always undone in the order reverse they were done.
@@ -350,7 +350,7 @@ deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
 		var x = p_eventBeingApplied.x();
 		var y = p_eventBeingApplied.y();
-		var ir = p_solver.regionGrid[y][x];
+		var ir = p_solver.regionArray[y][x];
 		var region = p_solver.regions[ir];
 		if (isSpaceEvent(p_eventBeingApplied)) {
 			symbol = p_eventBeingApplied.symbol;
@@ -511,7 +511,7 @@ SolverLITS.prototype.discriminateUnreachable = function(p_listEvents, p_x, p_y, 
 // Test to propagate or not a space in a direction (left, up, right, down), whose coordinates have been passed by the above method
 // By the way, no check for values of p_xx and p_yy as it is done above.
 SolverLITS.prototype.updateSpacesToPropagate = function (p_listSpacesToPropagate, p_xx, p_yy, p_indexRegion, p_originalProximity){
-	if ((this.regionGrid[p_yy][p_xx] == p_indexRegion) && this.isNotClosed(p_xx,p_yy) && (this.proximitiesGrid[p_yy][p_xx] < p_originalProximity-1)) {
+	if ((this.regionArray[p_yy][p_xx] == p_indexRegion) && this.isNotClosed(p_xx,p_yy) && (this.proximitiesGrid[p_yy][p_xx] < p_originalProximity-1)) {
 		this.proximitiesGrid[p_yy][p_xx] = p_originalProximity-1;
 		p_listSpacesToPropagate.push({x : p_xx, y : p_yy});
 	}
@@ -557,7 +557,7 @@ SolverLITS.prototype.fillOpenGaps = function(p_listEventsToApply, p_x, p_y, p_ir
 }
 
 SolverLITS.prototype.fillOpenGapOrNot = function(p_listEventsToApply, p_x, p_y, p_DeltaX, p_DeltaY, p_indexRegion) {
-	if ((this.regionGrid[p_y + p_DeltaY * 2][p_x + p_DeltaX * 2] == p_indexRegion) && (this.answerGrid[p_y + p_DeltaY * 2][p_x + p_DeltaX * 2] == SPACE.OPEN)) {
+	if ((this.regionArray[p_y + p_DeltaY * 2][p_x + p_DeltaX * 2] == p_indexRegion) && (this.answerGrid[p_y + p_DeltaY * 2][p_x + p_DeltaX * 2] == SPACE.OPEN)) {
 		p_listEventsToApply.push(SpaceEvent(p_x + p_DeltaX ,p_y + p_DeltaY ,SPACE.OPEN));
 	}
 	return p_listEventsToApply;
@@ -893,7 +893,7 @@ SolverLITS.prototype.pushShapeEventsDelta = function (p_eventsList, p_x, p_y, p_
 	p_spaceDeltas.forEach(delta => {
 		const x = p_x + delta.x;
 		const y = p_y + delta.y;
-		if ((y >= 0) && (y < this.yLength) && (x >= 0) && (x < this.xLength) && (this.regionGrid[y][x] == p_ir) && (this.answerGrid[y][x] != SPACE.CLOSED)) {
+		if ((y >= 0) && (y < this.yLength) && (x >= 0) && (x < this.xLength) && (this.regionArray[y][x] == p_ir) && (this.answerGrid[y][x] != SPACE.CLOSED)) {
 			p_eventsList.push(new ShapeEvent(x, y, p_shape));
 		}
 	});
@@ -902,7 +902,7 @@ SolverLITS.prototype.pushShapeEventsDelta = function (p_eventsList, p_x, p_y, p_
 
 
 SolverLITS.prototype.isOpenInRegion = function(p_x, p_y, p_ir) {
-	return (this.answerGrid[p_y][p_x] == SPACE.OPEN) && (this.regionGrid[p_y][p_x] == p_ir);
+	return (this.answerGrid[p_y][p_x] == SPACE.OPEN) && (this.regionArray[p_y][p_x] == p_ir);
 }	
 
 SolverLITS.prototype.isOpenInRegionAtLeft = function(p_x, p_y, p_ir) {

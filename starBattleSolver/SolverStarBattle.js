@@ -15,7 +15,7 @@ SolverStarBattle.prototype.construct = function(p_wallArray, p_starNumber) {
 	this.notPlacedYet = {regions:[],rows:[],columns:[]};
 	this.happenedEventsSeries = [];	
 	this.gridWall = WallGrid_data(p_wallArray);
-	this.regionGrid = this.gridWall.toRegionGrid();
+	this.regionArray = this.gridWall.toRegionGrid();
 	this.xyLength = this.getWallGrid().length; //IMPORTANT : when copy-pasting this line to a non-square grid, make sure to replace ALL occurences by xLength and yLength
 	
 	this.methodSet = new ApplyEventMethodPack(
@@ -47,7 +47,7 @@ SolverStarBattle.prototype.listSpacesByRegion = function(){
 	var lastRegionNumber = 0;
 	for(iy = 0;iy < this.xyLength;iy++){
 		for(ix = 0;ix < this.xyLength;ix++){
-			lastRegionNumber = Math.max(this.regionGrid[iy][ix],lastRegionNumber);
+			lastRegionNumber = Math.max(this.regionArray[iy][ix],lastRegionNumber);
 		}
 	}
 	
@@ -57,8 +57,8 @@ SolverStarBattle.prototype.listSpacesByRegion = function(){
 	}
 	for(iy = 0;iy < this.xyLength;iy++){
 		for(ix = 0;ix < this.xyLength;ix++){
-			if(this.regionGrid[iy][ix] >= 0){
-				this.spacesByRegion[this.regionGrid[iy][ix]].push({x:ix,y:iy});
+			if(this.regionArray[iy][ix] >= 0){
+				this.spacesByRegion[this.regionArray[iy][ix]].push({x:ix,y:iy});
 			}
 		}
 	}
@@ -101,7 +101,7 @@ SolverStarBattle.prototype.purifyAnswerGrid = function(){
 	//Removing banned spaces (hence the necessity to have things already updated)
 	for(iy = 0; iy < this.xyLength ; iy++){
 		for(ix = 0; ix < this.xyLength ; ix++){
-			if (this.regionGrid[iy][ix] == WALLGRID.OUT_OF_REGIONS){
+			if (this.regionArray[iy][ix] == WALLGRID.OUT_OF_REGIONS){
 				this.putNew(ix,iy,SYMBOL.NO_STAR);
 			}
 		}
@@ -114,7 +114,7 @@ SolverStarBattle.prototype.purifyAnswerGrid = function(){
 SolverStarBattle.prototype.getWallGrid = function(){return this.gridWall.array;} //TODO may be improved...
 
 SolverStarBattle.prototype.getAnswer = function(p_x,p_y){return this.answerGrid[p_y][p_x];}
-SolverStarBattle.prototype.getRegion = function(p_x,p_y){return this.regionGrid[p_y][p_x];}
+SolverStarBattle.prototype.getRegion = function(p_x,p_y){return this.regionArray[p_y][p_x];}
 
 /*SolverStarBattle.prototype.getOsRemainRow = function(p_i){return this.notPlacedYet.rows[p_i].Os;}
 SolverStarBattle.prototype.getOsRemainColumn = function(p_i){return this.notPlacedYet.columns[p_i].Os;}
@@ -216,7 +216,7 @@ undoEventClosure = function(p_solver) {
 	return function(eventToUndo) {
 		y = eventToUndo.y;
 		x = eventToUndo.x;
-		var indexRegion = p_solver.regionGrid[y][x];
+		var indexRegion = p_solver.regionArray[y][x];
 		var symbol = p_solver.answerGrid[y][x];
 		p_solver.answerGrid[y][x] = SYMBOL.UNDECIDED;
 		autoLogDeduction("Removing the following : "+x+" "+y+" "+symbol);

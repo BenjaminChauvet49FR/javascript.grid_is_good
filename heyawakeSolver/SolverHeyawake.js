@@ -36,7 +36,7 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 	};
 
 	this.gridWall = WallGrid_data(p_wallArray); 
-	this.regionGrid = this.gridWall.toRegionGrid();
+	this.regionArray = this.gridWall.toRegionGrid();
 	this.answerGrid = [];
 	this.stripGrid = [];
 	this.horizontalStripes = [];
@@ -49,7 +49,7 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 		this.answerGrid.push([]);
 		this.stripGrid.push([]);
 		for(ix = 0;ix < this.xLength;ix++){
-			lastRegionNumber = Math.max(this.regionGrid[iy][ix], lastRegionNumber);
+			lastRegionNumber = Math.max(this.regionArray[iy][ix], lastRegionNumber);
 			this.answerGrid[iy].push(SPACE.UNDECIDED);
 			this.stripGrid[iy].push({leftMost:NOT_RELEVANT,horizIn:NOT_RELEVANT,rightMost:NOT_RELEVANT,topMost:NOT_RELEVANT,vertIn:NOT_RELEVANT,bottomMost:NOT_RELEVANT});
 		}
@@ -73,7 +73,7 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 	var ir, region;
 	for(iy = 0;iy < this.yLength;iy++){
 		for(ix = 0;ix < this.xLength;ix++){
-			ir = this.regionGrid[iy][ix];
+			ir = this.regionArray[iy][ix];
 			this.regions[ir].spaces.push({x:ix,y:iy});
 		}
 	}
@@ -110,7 +110,7 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 				//Right now, endStrip corresponds to "the right of a boundary" or "a banned/out-of-bounds space"
 				if (endStrip < this.xLength && this.gridWall.getState(endStrip,iy) != WALLGRID.CLOSED){
 					//We met a true region boundary ? Fine, to work now !
-					irInner = this.regionGrid[iy][ix+1]; //Region of the inner grid
+					irInner = this.regionArray[iy][ix+1]; //Region of the inner grid
 					indexStrip = this.horizontalStripes.length;
 					this.regions[irInner].horizontalInnerStripesIndexes.push(indexStrip);
 					this.stripGrid[iy][ix].leftMost = indexStrip;
@@ -130,7 +130,7 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 				endStrip++; 
 				// ... "the bottom of a boundary" ... "a banned/out-of-bounds space"
 				if (endStrip < this.yLength && this.gridWall.getState(ix,endStrip) != WALLGRID.CLOSED){
-					irInner = this.regionGrid[iy+1][ix]; 
+					irInner = this.regionArray[iy+1][ix]; 
 					indexStrip = this.verticalStripes.length;
 					this.regions[irInner].verticalInnerStripesIndexes.push(indexStrip);
 					this.stripGrid[iy][ix].topMost = indexStrip;
@@ -163,7 +163,7 @@ SolverHeyawake.prototype.getAnswer = function(p_x,p_y){
 }
 
 SolverHeyawake.prototype.getRegionIndex = function(p_x,p_y){
-	return this.regionGrid[p_y][p_x];
+	return this.regionArray[p_y][p_x];
 }
 
 SolverHeyawake.prototype.getFirstSpaceRegion = function(p_ir) {
@@ -267,7 +267,7 @@ SolverHeyawake.prototype.putNew = function(p_x,p_y,p_symbol){
 		return EVENT_RESULT.FAILURE;
 	}
 	this.answerGrid[p_y][p_x] = p_symbol;
-	var ir = this.regionGrid[p_y][p_x];
+	var ir = this.regionArray[p_y][p_x];
 	var region = this.regions[ir];
 	if (region.notPlacedYet != null){
 		if (p_symbol == SPACE.OPEN){
@@ -301,7 +301,7 @@ undoEventClosure = function(p_solver) {
 		const y = eventToApply.y();
 		const symbol = eventToApply.symbol;
 		p_solver.answerGrid[y][x] = SPACE.UNDECIDED;
-		var ir = p_solver.regionGrid[y][x];
+		var ir = p_solver.regionArray[y][x];
 		var region = p_solver.regions[ir];
 		if (region.notPlacedYet != null){
 			if (symbol == SPACE.OPEN){
@@ -357,7 +357,7 @@ deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
 		var x = p_eventBeingApplied.x();
 		var y = p_eventBeingApplied.y();
-		var ir = p_solver.regionGrid[y][x];
+		var ir = p_solver.regionArray[y][x];
 		var region = p_solver.regions[ir];
 		symbol = p_eventBeingApplied.symbol;
 		if (symbol == SPACE.CLOSED) {

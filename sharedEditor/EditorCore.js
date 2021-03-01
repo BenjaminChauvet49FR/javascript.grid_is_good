@@ -61,7 +61,7 @@ EditorCore.prototype.initializeGridData = function() {
 
 // NB : fonction de convénience. //TODO devrait être renommé "extra grid data" puisque ce sont des données indépendantes des grilles
 EditorCore.prototype.reinitializeGridData = function() {
-	this.regionGrid = null;
+	this.regionArray = null;
     this.isRegionGridValid = true;
     this.isSelectionMode = false;
     this.selectedCornerSpace = null;
