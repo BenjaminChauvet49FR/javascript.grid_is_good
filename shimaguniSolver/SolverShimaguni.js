@@ -1,8 +1,9 @@
 // Setup
 const NOT_FORCED = -1;
 
-function SolverShimaguni() {
+function SolverShimaguni(p_wallArray, p_indicationsRegions) {
 	GeneralSolver.call(this);
+	this.construct(p_wallArray, p_indicationsRegions);
 }
 
 SolverShimaguni.prototype = Object.create(GeneralSolver.prototype);

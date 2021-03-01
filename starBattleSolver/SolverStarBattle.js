@@ -204,7 +204,7 @@ SolverStarBattle.prototype.putNew = function(p_x,p_y,p_symbol){
 		return EVENT_RESULT.SUCCESS;
 	}
 	if (this.answerGrid[p_y][p_x] != p_symbol){
-		debugTryToPutNew("NOOOO !");
+		autoLogDeduction("NOOOO !");
 		return EVENT_RESULT.FAILURE;
 	}
 }
@@ -219,7 +219,7 @@ undoEventClosure = function(p_solver) {
 		var indexRegion = p_solver.regionGrid[y][x];
 		var symbol = p_solver.answerGrid[y][x];
 		p_solver.answerGrid[y][x] = SYMBOL.UNDECIDED;
-		debugTryToPutNew("Removing the following : "+x+" "+y+" "+symbol);
+		autoLogDeduction("Removing the following : "+x+" "+y+" "+symbol);
 		if (symbol == SYMBOL.STAR){
 			p_solver.notPlacedYet.regions[indexRegion].Os++;
 			p_solver.notPlacedYet.rows[y].Os++;
@@ -262,7 +262,7 @@ deductionsClosure = function (p_solver) {
 			for(roundi=0;roundi<=7;roundi++) {
 				spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR,x+ROUND_X_COORDINATES[roundi],y+ROUND_Y_COORDINATES[roundi]);
 				p_listEventsToApply.push(spaceEventToAdd);
-				debugTryToPutNew("Event pushed : "+spaceEventToAdd.toString());
+				autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
 			}
 			//Final alert on column : fill the missing spaces in the column 
 			if (p_solver.notPlacedYet.columns[x].Os == 0){
@@ -271,7 +271,7 @@ deductionsClosure = function (p_solver) {
 					if (p_solver.answerGrid[yi][x] == SYMBOL.UNDECIDED){
 						spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR,x,yi);
 						p_listEventsToApply.push(spaceEventToAdd);
-						debugTryToPutNew("Event pushed : "+spaceEventToAdd.toString()); 
+						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString()); 
 					}
 				}
 			}
@@ -281,7 +281,7 @@ deductionsClosure = function (p_solver) {
 					if (p_solver.answerGrid[y][xi] == SYMBOL.UNDECIDED){
 						spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR,xi,y);
 						p_listEventsToApply.push(spaceEventToAdd);
-						debugTryToPutNew("Event pushed : "+spaceEventToAdd.toString());
+						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
 					}
 				}
 			}
@@ -293,7 +293,7 @@ deductionsClosure = function (p_solver) {
 					if (p_solver.answerGrid[spaceInRegion.y][spaceInRegion.x] == SYMBOL.UNDECIDED){
 						spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR,spaceInRegion.x,spaceInRegion.y);
 						p_listEventsToApply.push(spaceEventToAdd);
-						debugTryToPutNew("Event pushed : "+spaceEventToAdd.toString());
+						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
 					}
 				}
 			}
@@ -306,7 +306,7 @@ deductionsClosure = function (p_solver) {
 					if (p_solver.answerGrid[yi][x] == SYMBOL.UNDECIDED){
 						spaceEventToAdd = new SpaceEvent(SYMBOL.STAR,x,yi);
 						p_listEventsToApply.push(spaceEventToAdd);
-						debugTryToPutNew("Event pushed : "+spaceEventToAdd.toString());
+						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
 					}
 				}
 			}
@@ -316,7 +316,7 @@ deductionsClosure = function (p_solver) {
 					if (p_solver.answerGrid[y][xi] == SYMBOL.UNDECIDED){
 						spaceEventToAdd = new SpaceEvent(SYMBOL.STAR,xi,y);
 						p_listEventsToApply.push(spaceEventToAdd);
-						debugTryToPutNew("Event pushed : "+spaceEventToAdd.toString());
+						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
 					}
 				}
 			}
@@ -328,7 +328,7 @@ deductionsClosure = function (p_solver) {
 					if (p_solver.answerGrid[spaceInRegion.y][spaceInRegion.x] == SYMBOL.UNDECIDED){
 						spaceEventToAdd = new SpaceEvent(SYMBOL.STAR,spaceInRegion.x,spaceInRegion.y);
 						p_listEventsToApply.push(spaceEventToAdd);
-						debugTryToPutNew("Event pushed : "+spaceEventToAdd.toString());
+						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
 					}
 				}
 			}

@@ -14,10 +14,10 @@ You successfully clicked on a region space (coordinates in parameter). Then what
 function clickSpace(p_solver, p_spaceIndexX, p_spaceIndexY, p_action){
 	switch(p_action.id){
 		case ACTION_OPEN_SPACE.id:
-			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,CHOCONA.YES); 
+			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,FILLING.YES); 
 		break;
 		case ACTION_CLOSE_SPACE.id:
-			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,CHOCONA.NO); 
+			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,FILLING.NO); 
 		break;
 		case ACTION_PASS_REGION.id:
 			p_solver.passRegion(p_solver.getRegionIndex(p_spaceIndexX,p_spaceIndexY));

@@ -1,6 +1,3 @@
-const DIRECTION_X_COORDINATES = [-1,0,1,0]; //MUST follow left/up/right/down because of code usage !
-const DIRECTION_Y_COORDINATES = [0,-1,0,1]; //Same.
-
 function SolverNorinori(p_wallArray) {
 	GeneralSolver.call(this);
 	this.construct(p_wallArray);
@@ -214,7 +211,7 @@ SolverNorinori.prototype.putNew = function(p_x,p_y,p_symbol){
 	(this.answerGrid[p_y][p_x] == p_symbol)){
 		return EVENT_RESULT.HARMLESS;
 	}
-	debugTryToPutNewGold("Putting into grid : "+p_x+" "+p_y+" "+p_symbol);
+	autoLogTryToPutNewGold("Putting into grid : "+p_x+" "+p_y+" "+p_symbol);
 	if (this.answerGrid[p_y][p_x] == FILLING.UNDECIDED) {
 		this.answerGrid[p_y][p_x] = p_symbol;
 		var indexRegion = this.getRegion(p_x,p_y);
@@ -267,7 +264,7 @@ undoEventClosure = function(p_solver) {
 		var indexRegion = p_solver.regionGrid[y][x];
 		var symbol = p_solver.answerGrid[y][x];
 		p_solver.answerGrid[y][x] = FILLING.UNDECIDED;
-		debugTryToPutNew("Removing the following : "+x+" "+y+" "+symbol);
+		autoLogDeduction("Removing the following : "+x+" "+y+" "+symbol);
 		if (symbol == FILLING.YES){
 			p_solver.notPlacedYetByRegion[indexRegion].Os++;
 			if (x > 0){
@@ -353,19 +350,19 @@ deductionsClosure = function (p_solver) {
 			var exactlyOneUndecidedNeighbor = (p_solver.neighborsGrid[y][x].undecided == 1);
 			var toBeMerged = (notPartOfDomino && exactlyOneUndecidedNeighbor);
 
-			[DIRECTION_NORINORI.LEFT,DIRECTION_NORINORI.UP,DIRECTION_NORINORI.RIGHT,DIRECTION_NORINORI.DOWN].forEach(direction =>{
-				if (p_solver.existentDirection(direction,x,y)){
-					var alterX = alteredX(direction,x); 
-					var alterY = alteredY(direction,y);
+			KnownDirections.forEach(direction =>{
+				if (p_solver.existentDirection(direction, x, y)){
+					var alterX = x + DeltaX[direction]; 
+					var alterY = y + DeltaY[direction];
 					if(p_solver.answerGrid[alterY][alterX] == FILLING.YES){
-						switch(direction){
-							case(DIRECTION_NORINORI.UP):
+						switch(direction) {
+							case(DIRECTION.UP):
 								p_listEventsToApply=pushEventsDominoMadeVertical(p_listEventsToApply,x,y-1);break;
-							case(DIRECTION_NORINORI.RIGHT):
+							case(DIRECTION.RIGHT):
 								p_listEventsToApply=pushEventsDominoMadeHorizontal(p_listEventsToApply,x,y);break;
-							case(DIRECTION_NORINORI.DOWN):
+							case(DIRECTION.DOWN):
 								p_listEventsToApply=pushEventsDominoMadeVertical(p_listEventsToApply,x,y);break;
-							case(DIRECTION_NORINORI.LEFT):
+							case(DIRECTION.LEFT):
 								p_listEventsToApply=pushEventsDominoMadeHorizontal(p_listEventsToApply,x-1,y);break;
 						}
 					} else if (p_solver.neighborsGrid[alterY][alterX].Os == 2){
@@ -379,7 +376,7 @@ deductionsClosure = function (p_solver) {
 			//First O of a region
 			if (p_solver.notPlacedYetByRegion[r].Os == 1){ 
 				if (!(p_solver.hasNeighborQualifiable(r,x,y))){ //If we have put an O into a space without a foreign undecided neighbor OR a X (a non-"qualifiable" O, word subject to change) :
-					debugTryToPutNew("Well, this has no neighbor qualifiable");
+					autoLogDeduction("Well, this has no neighbor qualifiable");
 					for(var si=0;si< p_solver.spacesByRegion[r].length;si++){ // Fill all unreachable spaces with X.
 						spaceInRegion = p_solver.spacesByRegion[r][si];
 						if (p_solver.answerGrid[spaceInRegion.y][spaceInRegion.x] == FILLING.UNDECIDED && (!adjacentOrIdentical(spaceInRegion.x,spaceInRegion.y,x,y))){
@@ -388,7 +385,7 @@ deductionsClosure = function (p_solver) {
 					}
 				}
 				else{
-					debugTryToPutNew("This has neighbor qualifiable");
+					autoLogDeduction("This has neighbor qualifiable");
 					for(var si=0;si< p_solver.spacesByRegion[r].length;si++){ //Fill all spaces that won't be part of a domino with X
 						spaceInRegion = p_solver.spacesByRegion[r][si];
 						if ((p_solver.answerGrid[spaceInRegion.y][spaceInRegion.x] == FILLING.UNDECIDED) && (!p_solver.hasNeighborQualifiable(r,spaceInRegion.x,spaceInRegion.y))){
@@ -407,10 +404,10 @@ deductionsClosure = function (p_solver) {
 			//If the neighbor cell has only one undecided neighbor and is a single half of domino => O in the correct neighbor
 			//If the neighbor cell belongs to a region with only one O and cannot be linked to any O => X into it.
 			//If the neighbor cell is O => check if it is cornered and if yes add Xs in angles opposite to the corners
-			[DIRECTION_NORINORI.LEFT,DIRECTION_NORINORI.UP,DIRECTION_NORINORI.RIGHT,DIRECTION_NORINORI.DOWN].forEach(direction =>{
+			KnownDirections.forEach(direction =>{
 				if (p_solver.existentDirection(direction,x,y)){
-					alterX = alteredX(direction,x);
-					alterY = alteredY(direction,y);
+					alterX = x + DeltaX[direction];
+					alterY = y + DeltaY[direction];
 					if ((p_solver.neighborsGrid[alterY][alterX].undecided == 0) &&
 						(p_solver.neighborsGrid[alterY][alterX].Os == 0)){
 						p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(FILLING.NO,alterX,alterY)));
@@ -421,12 +418,12 @@ deductionsClosure = function (p_solver) {
 					if ((p_solver.answerGrid[alterY][alterX] == FILLING.YES) && (p_solver.furtherExistentDirection(direction,alterX,alterY))){
 						p_listEventsToApply = p_solver.pushEventsIfAloneAndCornered(p_listEventsToApply,leftward,upward,rightward,downward,alterX,alterY);
 					}
-					if (p_solver.readyToBeCompletedDomino(alterX,alterY)){
-						[DIRECTION_NORINORI.LEFT,DIRECTION_NORINORI.UP,DIRECTION_NORINORI.RIGHT,DIRECTION_NORINORI.DOWN].forEach(direction2 =>{
-							if(direction2 != ((direction+2) % 4) ){
-								if (p_solver.existentDirection(direction2,alterX,alterY) &&
-									p_solver.answerGrid[alteredY(direction2,alterY)][alteredX(direction2,alterX)] == FILLING.UNDECIDED){
-										p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES,alteredX(direction2,alterX),alteredY(direction2,alterY))));	
+					if (p_solver.readyToBeCompletedDomino(alterX, alterY)){
+						KnownDirections.forEach(direction2 => {
+							if(direction2 != OppositeDirection[direction]){
+								if (p_solver.existentDirection(direction2, alterX, alterY) &&
+									p_solver.answerGrid[alterY + DeltaY[direction2]][alterX + DeltaX[direction2]] == FILLING.UNDECIDED) {
+										p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(FILLING.YES, alterX + DeltaX[direction2], alterY + DeltaY[direction2])));	
 									}	
 							}
 						});
@@ -557,28 +554,20 @@ Working on four directions to limit duplicated code
 */
 SolverNorinori.prototype.existentDirection = function(p_direction,p_x,p_y){
 	switch(p_direction){
-		case DIRECTION_NORINORI.LEFT : return (p_x > 0);
-		case DIRECTION_NORINORI.UP : return (p_y > 0);
-		case DIRECTION_NORINORI.RIGHT : return (p_x < (this.xLength-1));
-		case DIRECTION_NORINORI.DOWN : return (p_y < (this.yLength-1));
+		case DIRECTION.LEFT : return (p_x > 0);
+		case DIRECTION.UP : return (p_y > 0);
+		case DIRECTION.RIGHT : return (p_x < (this.xLength-1));
+		case DIRECTION.DOWN : return (p_y < (this.yLength-1));
 	}
 }
 
 SolverNorinori.prototype.furtherExistentDirection = function(p_direction,p_x,p_y){
 	switch(p_direction){
-		case DIRECTION_NORINORI.LEFT : return (p_x > 1);
-		case DIRECTION_NORINORI.UP : return (p_y > 1);
-		case DIRECTION_NORINORI.RIGHT : return (p_x < (this.xLength-2));
-		case DIRECTION_NORINORI.DOWN : return (p_y < (this.yLength-2));
+		case DIRECTION.LEFT : return (p_x > 1);
+		case DIRECTION.UP : return (p_y > 1);
+		case DIRECTION.RIGHT : return (p_x < (this.xLength-2));
+		case DIRECTION.DOWN : return (p_y < (this.yLength-2));
 	}
-}
-
-alteredX = function(p_direction,p_x){
-	return p_x+DIRECTION_X_COORDINATES[p_direction];
-}
-
-alteredY = function(p_direction,p_y){
-	return p_y+DIRECTION_Y_COORDINATES[p_direction];
 }
 
 /**Tests if two pairs of coordinates are orthogonally adjacent or identical
@@ -664,7 +653,7 @@ skipPassClosure = function(p_solver) {
 Logs that a space event is pushed into a list (in the calling function !) and returns the space event !
 */
 function loggedSpaceEvent(spaceEvt){
-	debugTryToPutNewGold("Event pushed : "+spaceEvt.toString());
+	autoLogTryToPutNewGold("Event pushed : "+spaceEvt.toString());
 	return spaceEvt
 }
 

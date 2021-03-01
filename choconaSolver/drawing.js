@@ -7,9 +7,9 @@ function drawInsideSpaces(p_context, p_drawer, p_colours, p_solver) {
 				 DrawableX(p_colours.lackingSquare)];
 				
 	function selection(x,y) {
-		if (p_solver.getAnswer(x,y) == CHOCONA.YES) {
+		if (p_solver.getAnswer(x,y) == FILLING.YES) {
 			return 0;
-		} else if(p_solver.getAnswer(x,y) == CHOCONA.NO){
+		} else if(p_solver.getAnswer(x,y) == FILLING.NO){
 			return 1;
 		}
 		return -1;
@@ -24,7 +24,7 @@ function drawInsideSpaces(p_context, p_drawer, p_colours, p_solver) {
 			return null;
 		} else {
 			const space = p_solver.getFirstSpaceRegion(p_index, 0);
-			const writeColour = p_solver.getAnswer(space.x,space.y) == CHOCONA.YES ? p_colours.insideIndicationsOnFilled : p_colours.insideIndicationsOnWhite;
+			const writeColour = p_solver.getAnswer(space.x,space.y) == FILLING.YES ? p_colours.insideIndicationsOnFilled : p_colours.insideIndicationsOnWhite;
 			return new DrawRegionArgument(space.x, space.y, forcedValue, writeColour) ;
 		}
 	}
