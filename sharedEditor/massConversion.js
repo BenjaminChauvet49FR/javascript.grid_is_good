@@ -1,10 +1,12 @@
 // This script should be copy-pasted and used in the console when running the editor and not included in any page !
 
-function massConversion() {
-	// Full name
-	
-	puzzleName = "CountryRoad";
-	baseString = "grid_is_good_" + puzzleName; 
+function massConversion(p_puzzleName) {
+	// Last use : "CountryRoad";
+	if (!p_puzzleName || !p_puzzleName.length || p_puzzleName.length < 3) {
+		return;
+	}
+
+	const baseString = "grid_is_good_" + p_puzzleName; 
     for (var i = 0, len = localStorage.length; i < len; i++) {
         name = localStorage.key(i);
         if (name.startsWith(baseString)) {
@@ -12,6 +14,53 @@ function massConversion() {
 			loadedItemOld = stringToWallAndNumbersPuzzle(stringPuzzleOld); // former puzzle -> string method
 			puzzleString = puzzleRegionIndicationsToString(loadedItemOld.wallArray, loadedItemOld.numberArray); // new string -> puzzle method
 			localStorage.setItem(name, puzzleString);
+        } 
+    }
+	
+	// Isolated test (but what if the console runs in strict mode, with 'const' and 'var' items required here and there ? Well, is it even possible ?)
+	/*name = "grid_is_good_Shimaguni87";
+	newName = "grid_is_good_Shimaguni"
+	stringPuzzleOld = localStorage.getItem(name);
+	loadedItemOld = stringToWallAndNumbersPuzzle(stringPuzzleOld); // former puzzle -> string method
+	puzzleString = puzzleRegionIndicationsToString(loadedItemOld.wallArray, loadedItemOld.numberArray); // new string -> puzzle method
+	localStorage.setItem(newName, puzzleString);*/
+}
+
+function massConversionSelected(p_puzzleName, p_arrayNames) {
+	// Full name
+	if (!p_puzzleName || !p_puzzleName.length || p_puzzleName.length < 3) {
+		return;
+	}
+	
+	//puzzleName = "Heyawake";
+	const baseString = "grid_is_good_" + p_puzzleName; 
+	var stringPuzzleOld, name;
+    for (var i = 0 ; i < p_arrayNames.length; i++) {
+        name = baseString + p_arrayNames[i];
+		stringPuzzleOld = localStorage.getItem(name);
+        if (stringPuzzleOld) {
+			loadedItemOld = stringToWallAndNumbersPuzzle(stringPuzzleOld); // former puzzle -> string method
+			puzzleString = puzzleRegionIndicationsToString(loadedItemOld.wallArray, loadedItemOld.numberArray); // new string -> puzzle method
+			localStorage.setItem(name, puzzleString);
+        } 
+    }
+	
+	// Isolated test (but what if the console runs in strict mode, with 'const' and 'var' items required here and there ? Well, is it even possible ?)
+	/*name = "grid_is_good_Shimaguni87";
+	newName = "grid_is_good_Shimaguni"
+	stringPuzzleOld = localStorage.getItem(name);
+	loadedItemOld = stringToWallAndNumbersPuzzle(stringPuzzleOld); // former puzzle -> string method
+	puzzleString = puzzleRegionIndicationsToString(loadedItemOld.wallArray, loadedItemOld.numberArray); // new string -> puzzle method
+	localStorage.setItem(newName, puzzleString);*/
+}
+// example : massConversionSelected("Heyawake", [583,579,483,320]) ; puzzles names and strings seen thanks to view puzzles
+
+function viewPuzzles(p_puzzleName) {
+	const baseString = "grid_is_good_" + p_puzzleName; 
+    for (var i = 0, len = localStorage.length; i < len; i++) {
+        name = localStorage.key(i);
+        if (name.startsWith(baseString)) {
+			console.log(name + " " + localStorage.getItem(name));
         } 
     }
 	
