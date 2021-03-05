@@ -8,12 +8,7 @@ const MODE_NORMAL = {id:1,html:"Etat case",submitCaption:"Changer case grille"};
 const MODE_SELECTION = {id:2,html:"Sélection",submitCaption:"Sélectionner cases"};
 const MODE_SELECTION_RECTANGLE = {id:3,html:"Sélection rectangulaire",submitCaption:"Sélectionner cases en rectangle"};
 const MODE_ERASE = {id:4,html:"Effaçage",submitCaption:"Effacer murs autour case"};
-const MODE_NUMBER_SPACE = {id:51,html:"Ajout numéro case",submitCaption:"Case : ajouter le n° ",numberToInput:0};
-const MODE_NUMBER_REGION = {id:53,html:"Ajout numéro région",submitCaption:"Région : ajouter le n° ",numberToInput:0};
-const MODE_PEARL_ABSTRACT = {id:52};
-const MODE_PEARL_WHITE = {id:MODE_PEARL_ABSTRACT.id, html:"Ajout blanc",submitCaption:"Ajouter perle blanche"};
-const MODE_PEARL_BLACK = {id:MODE_PEARL_ABSTRACT.id, html:"Ajout noir",submitCaption:"Ajouter perle noire"};
-const MODE_ARROW_COMBINED = {id:61, html:"Ajout flèche combinée", submitCaption:"Ajouter flèche combinée"}; // "ARROW COMBINED" parce que la flèche est combinée à un nombre.
+const MODE_SYMBOLS_PROMPT = {id:101,html:"Symboles en chaîne",submitCaption:"Ajouter symboles en chaîne"};
 const MODE_NORMAL_WALL = {id:102,html:"Murs",submitCaption:"Changer murs"};
 
 const ACTION_PASS_REGION = {id:101,htmlCaption:"Passer région"};

@@ -51,7 +51,7 @@ Drawer.prototype.drawOneNumberPerSpace = function (p_context, p_numberGrid, p_pi
 		p_context.textAlign = p_textAlign.alignH;
 		p_context.textBaseline = p_textAlign.alignV;
 		p_context.font = p_pixSize + "px Arial";
-		p_context.fillStyle = this.colors.standardWrite;
+		p_context.fillStyle = "#000000";
 		p_context.mix_blend_mode = "exclusion";
 		var ix,
 		iy,
@@ -73,12 +73,11 @@ Drawer.prototype.drawPearlGrid = function (p_context, p_pearlGrid) {
 	const yLength = p_pearlGrid.getYLength();
 	if (yLength > 0) {
 		const xLength = p_pearlGrid.getXLength();
-		p_context.fillStyle = this.colors.pearl;
 		var ix,
 		iy,
 		pearl;
 		const radius = this.getPixInnerSide()*1/3;
-		p_context.fillStyle = this.colors.standardWrite; 
+		p_context.fillStyle = "#000000";
 		for (iy = 0; iy < yLength; iy++) {
 			for (ix = 0; ix < xLength; ix++) {
 				pearl = p_pearlGrid.get(ix, iy);

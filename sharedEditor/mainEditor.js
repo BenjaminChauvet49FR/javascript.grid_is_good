@@ -30,6 +30,8 @@ setInterval(drawCanvas, 30);
 const fieldX = document.getElementById("input_number_xLength");
 const fieldY = document.getElementById("input_number_yLength");
 const fieldXY = document.getElementById("input_number_xyLength");
+const fieldXMove = document.getElementById("input_number_xMove");
+const fieldYMove = document.getElementById("input_number_yMove");
 const fieldName = document.getElementById("input_grid_name");
 const puzzleTypeComboBox = document.getElementById("select_puzzle_type");
 
@@ -96,6 +98,12 @@ putActionElementClick("submit_wall_selection", function (event) {
 putActionElementClick("submit_clear_selection", function (event) {
     actionUnselectAll(editorCore)
 });
+putActionElementClick("submit_move_selection", function (event) {
+    actionMoveSelection(editorCore, parseInt(fieldXMove.value, 10), parseInt(fieldYMove.value, 10));
+});
+putActionElementClick("submit_copy_selection", function (event) {
+    actionCopySelection(editorCore, parseInt(fieldXMove.value, 10), parseInt(fieldYMove.value, 10));
+});
 
 function combo(p_docElt) {
 	comboChange(p_docElt, editorCore);
@@ -123,27 +131,10 @@ setupEventListenerCaption("submit_normal_mode", MODE_NORMAL);
 setupEventListenerCaption("submit_select_mode", MODE_SELECTION);
 setupEventListenerCaption("submit_select_rectangles_mode", MODE_SELECTION_RECTANGLE);
 setupEventListenerCaption("submit_erase_mode", MODE_ERASE);
-setupEventListenerCaption("submit_digit_region_mode", MODE_NUMBER_REGION);
-setupEventListenerCaption("submit_digit_space_mode", MODE_NUMBER_SPACE);
-setupEventListenerCaption("submit_add_white", MODE_PEARL_WHITE);
-setupEventListenerCaption("submit_add_black", MODE_PEARL_BLACK);
-setupEventListenerCaption("submit_add_arrow_number_combination", MODE_ARROW_COMBINED);
+setupEventListenerCaption("submit_add_symbols_prompt", MODE_SYMBOLS_PROMPT);
 
-// Editor input symbol
-document.getElementById("submit_add_white").addEventListener('click', function () {
-    editorCore.setInputSymbol(SYMBOL_ID.WHITE)
-});
-
-document.getElementById("submit_add_black").addEventListener('click', function () {
-    editorCore.setInputSymbol(SYMBOL_ID.BLACK)
-});
-
-document.getElementById("submit_add_arrow_number_combination").addEventListener('click', function () {
-    editorCore.setInputSymbol("L1");
-});
-
-// Changes on spinboxes
-document.getElementById("input_number_value_region").addEventListener('change', function () {
+// Changes on spinboxes (relic of when buttons and spinboxes were used for regions and spaces)
+/*document.getElementById("input_number_value_region").addEventListener('change', function () {
     editorCore.setInputNumber(this.value);
 	setMode(textMode, modesManager, ENTRY.SPACE, MODE_NUMBER_REGION);
 	applyChangesForSpaceMode(editorCore);
@@ -153,4 +144,4 @@ document.getElementById("input_number_value_space").addEventListener('change', f
     editorCore.setInputNumber(this.value);
 	setMode(textMode, modesManager, ENTRY.SPACE, MODE_NUMBER_SPACE);
 	applyChangesForSpaceMode(editorCore);
-});
+});*/

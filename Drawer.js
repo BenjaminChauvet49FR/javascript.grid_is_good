@@ -17,7 +17,7 @@ function Drawer() {
     }
 
 	this.colors = {
-		combinedArrowRingIndications: '#440000'
+		combinedArrowRingIndications: '#440000',
 	}
 	this.wallColorSet = {
 		closed_wall: '#222222',

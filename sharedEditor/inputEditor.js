@@ -54,37 +54,15 @@ clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
 		case (MODE_SELECTION_RECTANGLE.id) :
 		    p_editorCore.selectRectangleMechanism(p_x, p_y);
 		break;
-		case (MODE_NUMBER_REGION.id) :
-			manageValueInSpaceGrid(p_x, p_y, GRID_ID.NUMBER_REGION, p_editorCore, p_editorCore.getInputNumber());
-		break;
-		case (MODE_NUMBER_SPACE.id) :
-			manageValueInSpaceGrid(p_x, p_y, GRID_ID.NUMBER_SPACE, p_editorCore, p_editorCore.getInputNumber());
-		break;			
-		case (MODE_PEARL_ABSTRACT.id) :
-			manageValueInSpaceGrid(p_x, p_y, GRID_ID.PEARL, p_editorCore, p_editorCore.getInputSymbol());
-		break;
-		case (MODE_ARROW_COMBINED.id) :	
-			var defaultVal = p_editorCore.getInputCombinedArrow();
-			if (!defaultVal || (defaultVal == null)) {
-				defaultVal = "L1";
-			}
-			var clue = prompt("Entrer indice Yajilin (L|U|R|D)(nombre) ou X", defaultVal);
-			if (clue != null) {
-				const charClue = clue.charAt(0);
-				var ok = false;
-				if (charClue == 'L' || charClue == 'U' || charClue == 'R' || charClue == 'D' || charClue == 'X') {
-					if (charClue == 'X') {
-						clue = 'X';
-					}
-					if ((clue == 'X') || ((clue.length > 1) && !isNaN(clue.substring(1)))) {
-						manageValueInSpaceGrid(p_x, p_y, GRID_ID.YAJILIN_LIKE, p_editorCore, clue);
-						p_editorCore.setInputCombinedArrow(clue);
-						ok = true;
-					}
-				}
-				if (!ok) {
-					manageValueInSpaceGrid(p_x, p_y, GRID_ID.YAJILIN_LIKE, p_editorCore, null);
-				}
+		case (MODE_SYMBOLS_PROMPT.id) :
+			if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_SPACE)) {
+				p_editorCore.insertChain("Entrer valeur numérique >= 0", GRID_ID.NUMBER_SPACE, "1", validityTokenNumber, "<", false, p_x, p_y); 
+			} else if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_REGION)) {
+				p_editorCore.insertChain("Entrer valeur numérique >= 0 ", GRID_ID.NUMBER_REGION, "1", validityTokenNumber, "<", false, p_x, p_y);
+			} else if (p_editorCore.isVisibleGrid(GRID_ID.PEARL)) {
+				p_editorCore.insertChain("Entrer suite de perles (B|W)", GRID_ID.PEARL, "W", validityTokenPearl, " ", true, p_x, p_y);
+			} else if (p_editorCore.isVisibleGrid(GRID_ID.YAJILIN_LIKE)) {
+				p_editorCore.insertChain("Entrer suite d'indices Yajilin (L|U|R|D)(nombre) ou X", GRID_ID.YAJILIN_LIKE, "L1", validityTokenYajilin, "<", false, p_x, p_y);
 			}
 		break;
 		default :
@@ -100,6 +78,28 @@ function manageValueInSpaceGrid(p_x, p_y, p_gridId, p_editorCore, p_value) {
 	} else {
 		p_editorCore.clear(p_gridId, p_x, p_y);
 	}
+}
+
+//------------------------
+// Validity tokens
+
+validityTokenNumber = function(p_clue) {
+	return (!isNaN(p_clue));
+}
+
+validityTokenPearl = function(p_clue) {
+	return (p_clue == "B") || (p_clue == "W");
+}
+
+validityTokenYajilin = function(p_clue) {
+	const charClue = p_clue.charAt(0);
+	if (charClue == 'X') {
+		return true;
+	}
+	if (charClue == 'L' || charClue == 'U' || charClue == 'R' || charClue == 'D') {
+		return ((p_clue.length > 1) && !isNaN(p_clue.substring(1)));
+	}
+	return false;
 }
 
 //------------------------
@@ -182,6 +182,28 @@ function actionBuildWallsAroundSelection(p_editorCore) {
 	p_editorCore.buildWallsAroundSelection();
 }
 
+function actionMoveSelection(p_editorCore, p_xValue, p_yValue) {
+	actionMoveCopySelection(p_editorCore, p_xValue, p_yValue, true, "Déplacer", " ainsi ?");
+}
+
+function actionCopySelection(p_editorCore, p_xValue, p_yValue) {
+	actionMoveCopySelection(p_editorCore, p_xValue, p_yValue, false, "Copier", "vers la destination ?");
+}
+
+function actionMoveCopySelection(p_editorCore, p_xValue, p_yValue, p_mode, p_verb, p_part2) {
+	const number = p_editorCore.countSpacesSelection();
+	if (number > 0 && (p_xValue != 0 || p_yValue != 0)) {
+		const confirmString1 = p_verb + number + " case"+ (number > 1 ? "s" : "") + p_part2 + " ainsi ?";
+		const confirmString2 = (p_xValue != 0) ? ("\n -> " + Math.abs(p_xValue)+" vers la " + (p_xValue > 0 ? "droite" : "gauche")) : "";
+		const confirmString3 = (p_yValue != 0) ? ("\n -> " + Math.abs(p_yValue)+" vers le " + (p_yValue > 0 ? "bas" : "haut")) : "";
+		if (confirm(confirmString1 + confirmString2 + confirmString3)) {
+			p_editorCore.moveCopySelection(p_xValue, p_yValue, p_mode);
+		}
+	} else {
+		alert("Aucune case sélectionnée ou aucun déplacement.");
+	}
+}
+
 //------------------------
 // Name management actions
 
@@ -196,7 +218,7 @@ removeAction = function (p_detachedName) {
 	}
 }
 
-// TODO : will local storage properties always be prefixed by grid_is_good ?
+// TODO : potentially create a constant for "grid_is_good".
 renameAction = function (p_fieldValue) { 
 	var localStorageName = getLocalStorageName(p_fieldValue.value);
     if (localStorage.hasOwnProperty(localStorageName)) {

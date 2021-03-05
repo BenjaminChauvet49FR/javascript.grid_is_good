@@ -65,7 +65,7 @@ EditorCore.prototype.reinitializeGridData = function() {
     this.isRegionGridValid = true;
     this.isSelectionMode = false;
     this.selectedCornerSpace = null;
-    this.selectedGrid = null;
+    this.selectedArray = null;
 	this.resetSelection();
 }
 
@@ -138,7 +138,7 @@ EditorCore.prototype.isVisibleGrid = function(p_index){
 }
 
 EditorCore.prototype.getSelection = function (p_x, p_y) {
-    return this.selectedGrid[p_y][p_x];
+    return this.selectedArray[p_y][p_x];
 }
 
 EditorCore.prototype.getInputNumber = function () {
@@ -158,6 +158,12 @@ EditorCore.prototype.getInputCombinedArrow = function () {
 }
 EditorCore.prototype.setInputCombinedArrow = function (p_inputCombinedArrow) {
     this.inputCombinedArrow = p_inputCombinedArrow
+}
+EditorCore.prototype.getPromptValue = function () {
+    return this.promptValue;
+}
+EditorCore.prototype.setPromptValue = function (p_promptValue) {
+    this.promptValue = p_promptValue
 }
 
 
@@ -236,14 +242,69 @@ EditorCore.prototype.transformGrid = function (p_transformation, p_xDatum, p_yDa
 }
 
 //-------------------------------------------
+// Chain insertion
+
+EditorCore.prototype.insertChain = function(p_promptText, p_gridId, p_defaultValue, p_validityMethod, p_blankCharacter, p_monoCharacter, p_x, p_y) {
+	var defaultVal = this.getPromptValue();
+	if ((!defaultVal && (defaultVal == 0)) || (defaultVal == null) || (defaultVal == "")) {
+		defaultVal = p_defaultValue;
+	}
+	var clueChain = prompt(p_promptText + " ou " + p_blankCharacter + " pour case vide :", p_defaultValue);
+	if (clueChain != null) {
+		var tokens;
+		var tokensNumber;
+		if (p_monoCharacter) {
+			tokensNumber = clueChain.length;
+		} else {
+			tokens = clueChain.split(" ");
+			tokensNumber = tokens.length;
+		}
+		var x = p_x;
+		var indexToken = 0;
+		while (x < this.getXLength() && indexToken < tokensNumber) {
+			clue = (p_monoCharacter ? clueChain.charAt(indexToken) : tokens[indexToken]);
+			var ok = false;
+			if (p_validityMethod(clue)) {
+				this.set(p_gridId, x, p_y, clue);
+				ok = true;
+			}
+			if (!p_monoCharacter && (clue.charAt(0) == p_blankCharacter)) {
+				this.set(p_gridId, x, p_y, null);
+				var indexClue = 1;
+				while((indexClue < clue.length) && (clue.charAt(indexClue) == p_blankCharacter) && (x <= this.getXLength()-2)) {
+					x++;
+					this.set(p_gridId, x, p_y, null);
+					indexClue++;
+				}
+				ok = (indexClue == clue.length);
+			}
+			if (p_monoCharacter && (clue == p_blankCharacter)) {
+				this.set(p_gridId, x, p_y, null);
+				ok = true;
+			}
+			if (!ok) {
+				break;
+			}
+			if (clue != "") {
+				x++;
+			}
+			indexToken++;
+		}
+		if ((tokensNumber == 1) && ok) { // If only one symbol, save it
+			this.setPromptValue(clue);
+		}
+	}
+}
+
+//-------------------------------------------
 // Selections 
 
 EditorCore.prototype.switchSelectedSpace = function (p_x, p_y) {
-    if (this.selectedGrid[p_y][p_x] == SELECTED.YES){
-		this.selectedGrid[p_y][p_x] = SELECTED.NO;
+    if (this.selectedArray[p_y][p_x] == SELECTED.YES){
+		this.selectedArray[p_y][p_x] = SELECTED.NO;
 		return;
 	}
-	this.selectedGrid[p_y][p_x] = SELECTED.YES;
+	this.selectedArray[p_y][p_x] = SELECTED.YES;
 }
 
 EditorCore.prototype.selectRectangleMechanism = function (p_x, p_y) {
@@ -259,7 +320,7 @@ EditorCore.prototype.selectRectangleMechanism = function (p_x, p_y) {
         const yMax = Math.max(this.selectedCornerSpace.y, p_y);
         for (var ix = xMin; ix <= xMax; ix++) {
             for (var iy = yMin; iy <= yMax; iy++) {
-                this.selectedGrid[iy][ix] = SELECTED.YES;
+                this.selectedArray[iy][ix] = SELECTED.YES;
             }
         }
         this.selectedCornerSpace = null;
@@ -269,7 +330,7 @@ EditorCore.prototype.selectRectangleMechanism = function (p_x, p_y) {
 EditorCore.prototype.unselectAll = function () {
     for (var iy = 0; iy < this.getYLength(); iy++) {
         for (var ix = 0; ix < this.getXLength(); ix++) {
-            this.selectedGrid[iy][ix] = SELECTED.NO;
+            this.selectedArray[iy][ix] = SELECTED.NO;
         }
     }
     this.selectedCornerSpace = null;
@@ -277,11 +338,11 @@ EditorCore.prototype.unselectAll = function () {
 
 EditorCore.prototype.resetSelection = function () {
     this.isSelectionMode = false;
-    this.selectedGrid = [];
+    this.selectedArray = [];
     for (var iy = 0; iy < this.getYLength(); iy++) {
-        this.selectedGrid.push([]);
+        this.selectedArray.push([]);
         for (var ix = 0; ix < this.getXLength(); ix++) {
-            this.selectedGrid[iy].push(SELECTED.NO);
+            this.selectedArray[iy].push(SELECTED.NO);
         }
     }
     this.selectedCornerSpace = null;
@@ -290,17 +351,17 @@ EditorCore.prototype.resetSelection = function () {
 EditorCore.prototype.buildWallsAroundSelection = function () {
     for (var y = 0; y < this.getYLength(); y++) {
         for (var x = 0; x < this.getXLength(); x++) {
-            if (this.selectedGrid[y][x] == SELECTED.YES) {
-                if (x > 0 && this.selectedGrid[y][x - 1] == SELECTED.NO) {
+            if (this.selectedArray[y][x] == SELECTED.YES) {
+                if (x > 0 && this.selectedArray[y][x - 1] == SELECTED.NO) {
                     this.wallGrid.setWallR(x - 1, y, WALLGRID.CLOSED);
                 }
-                if (x < this.getXLength() - 1 && this.selectedGrid[y][x + 1] == SELECTED.NO) {
+                if (x < this.getXLength() - 1 && this.selectedArray[y][x + 1] == SELECTED.NO) {
                     this.wallGrid.setWallR(x, y, WALLGRID.CLOSED);
                 }
-                if (y > 0 && this.selectedGrid[y - 1][x] == SELECTED.NO) {
+                if (y > 0 && this.selectedArray[y - 1][x] == SELECTED.NO) {
                     this.wallGrid.setWallD(x, y - 1, WALLGRID.CLOSED);
                 }
-                if (y < this.getYLength() - 1 && this.selectedGrid[y + 1][x] == SELECTED.NO) {
+                if (y < this.getYLength() - 1 && this.selectedArray[y + 1][x] == SELECTED.NO) {
                     this.wallGrid.setWallD(x, y, WALLGRID.CLOSED);
                 }
             }
@@ -310,18 +371,86 @@ EditorCore.prototype.buildWallsAroundSelection = function () {
 }
 
 EditorCore.prototype.clearWallsAround = function (p_x, p_y) {
-    if (p_x > 0 && this.selectedGrid[p_y][p_x - 1] == SELECTED.NO) {
+    if (p_x > 0 && this.selectedArray[p_y][p_x - 1] == SELECTED.NO) {
         this.wallGrid.setWallR(p_x - 1, p_y, WALLGRID.OPEN);
     }
-    if (p_x < this.getXLength() - 1 && this.selectedGrid[p_y][p_x + 1] == SELECTED.NO) {
+    if (p_x < this.getXLength() - 1 && this.selectedArray[p_y][p_x + 1] == SELECTED.NO) {
         this.wallGrid.setWallR(p_x, p_y, WALLGRID.OPEN);
     }
-    if (p_y > 0 && this.selectedGrid[p_y - 1][p_x] == SELECTED.NO) {
+    if (p_y > 0 && this.selectedArray[p_y - 1][p_x] == SELECTED.NO) {
         this.wallGrid.setWallD(p_x, p_y - 1, WALLGRID.OPEN);
     }
-    if (p_y < this.getYLength() - 1 && this.selectedGrid[p_y + 1][p_x] == SELECTED.NO) {
+    if (p_y < this.getYLength() - 1 && this.selectedArray[p_y + 1][p_x] == SELECTED.NO) {
         this.wallGrid.setWallD(p_x, p_y, WALLGRID.OPEN);
     }
+}
+
+EditorCore.prototype.countSpacesSelection = function() {
+	var answer = 0;
+	for (var y = 0; y < this.getYLength(); y++) {
+        for (var x = 0; x < this.getXLength(); x++) {
+			if (this.selectedArray[y][x] == SELECTED.YES) {
+				answer ++;
+			}
+		}
+	}
+	return answer;
+}
+
+EditorCore.prototype.moveCopySelection = function(p_deltaX, p_deltaY, p_move) {
+	const progressX = p_deltaX >= 0 ? -1 : 1;
+	const startX = p_deltaX >= 0 ? this.getXLength()-1 : 0;
+	const overEndX = p_deltaX >= 0 ? -1 : this.getXLength();
+	const progressY = p_deltaY >= 0 ? -1 : 1;
+	const startY = p_deltaY >= 0 ? this.getYLength()-1 : 0;
+	const overEndY = p_deltaY >= 0 ? -1 : this.getYLength();
+	for (var y = startY ; y != overEndY ; y += progressY) {
+		for (var x = startX ; x != overEndX ; x += progressX) {
+			this.moveCopySpace(x, y, p_deltaX, p_deltaY, p_move);
+		}
+	}
+}
+
+EditorCore.prototype.moveCopySpace = function(p_x, p_y, p_deltaX, p_deltaY, p_move) {
+	const xDest = p_x + p_deltaX;
+	const yDest = p_y + p_deltaY;
+	if (this.selectedArray[p_y][p_x]) { 
+		this.selectedArray[p_y][p_x] = false;
+		if ((xDest < 0) || (xDest >= this.getXLength()) || (yDest < 0) || (yDest >= this.getYLength())) {
+			if (p_move) {
+				Object.keys(GRID_ID).forEach(id => {
+					if (this.visibleGrids[GRID_ID[id]]) {
+						this.set(GRID_ID[id], p_x, p_y, null);
+					}
+				});
+				if (this.isWithWalls) {
+					this.setWallR(p_x, p_y, WALLGRID.OPEN);
+					this.setWallD(p_x, p_y, WALLGRID.OPEN);
+					this.setState(p_x, p_y, WALLGRID.OPEN);
+				}
+			}
+		} else {
+			this.selectedArray[yDest][xDest] = true;
+			Object.keys(GRID_ID).forEach(id => {
+				if (this.grids[GRID_ID[id]] && (this.get(GRID_ID[id], p_x, p_y) != null)) {
+					this.set(GRID_ID[id], xDest, yDest, this.get(GRID_ID[id], p_x, p_y));
+					if (p_move) {
+						this.set(GRID_ID[id], p_x, p_y, null);
+					}
+				}
+			});
+			if (this.isWithWalls) {
+				this.setWallR(xDest, yDest, this.getWallR(p_x, p_y));
+				this.setWallD(xDest, yDest, this.getWallD(p_x, p_y));
+				this.setState(xDest, yDest, this.getState(p_x, p_y));
+				if (p_move) {
+					this.setWallR(p_x, p_y, WALLGRID.OPEN);
+					this.setWallD(p_x, p_y, WALLGRID.OPEN);
+					this.setState(p_x, p_y, WALLGRID.OPEN);
+				}
+			}
+		}
+	}
 }
 
 //-------------------------------------------
