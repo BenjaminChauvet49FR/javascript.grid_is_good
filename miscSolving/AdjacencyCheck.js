@@ -47,7 +47,7 @@ function restartGrid(p_array, p_xLength, p_yLength, p_value) {
     return p_array;
 }
 
-function restartGridComplex(p_array, p_xLength, p_yLength, p_value) {
+function restartGridTBD(p_array, p_xLength, p_yLength) {
     if ((p_array == null) || (p_yLength != p_array.length) || (p_xLength != p_array[0].length)) {
         p_array = [];
         var x;
@@ -55,13 +55,11 @@ function restartGridComplex(p_array, p_xLength, p_yLength, p_value) {
             p_array.push([]);
             for (x = 0; x < p_xLength; x++) {
                 p_array[y].push({
-                    L: p_value.L,
-                    U: p_value.U,
-                    R: p_value.R,
-                    D: p_value.D
-                });
-                // Si on avait mis p_value, on passerait directement un pointeur sur un objet dans le tableau, et toutes les cases contiendraient la même valeur, juste accédée via des pointeurs différents.
-                // Une modification dans une seule des cases entraînerait une modification sur toutes les cases puisque cette valeur serait partagée.
+                    L: TASK.TBD,
+                    U: TASK.TBD,
+                    R: TASK.TBD,
+                    D: TASK.TBD
+                }); // A copy of the item is required here
             }
         }
     }
@@ -75,15 +73,15 @@ function cleanGridList(p_array, p_list, p_value) {
     return p_array;
 }
 
-function cleanGridListComplex(p_array, p_list, p_value) {
+function cleanGridListTBD(p_array, p_list) {
     p_list.forEach(space => {
         p_array[space.y][space.x] = {
-            L: p_value.L,
-            U: p_value.U,
-            R: p_value.R,
-            D: p_value.D
+            L: TASK.TBD,
+            U: TASK.TBD,
+            R: TASK.TBD,
+            D: TASK.TBD
         }
-        // Même remarque que dans la version "non naturelle" de restartGrid (aka restartGridComplex sauf si changement de nom)
+        // Même remarque que dans la version "non naturelle" de restartGrid (aka restartGridTBD sauf si changement de nom)
     });
     return p_array;
 }
@@ -98,17 +96,20 @@ p_function returns true or false depending on whether it is open or not.
 function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, p_function, p_xLength, p_yLength) {
     amountGrid = restartGrid(amountGrid, p_xLength, p_yLength, 0);
     indexClustersGrid = restartGrid(indexClustersGrid, p_xLength, p_yLength, UNDEFINED_INDEX);
-    turningLeftGrid = restartGridComplex(turningLeftGrid, p_xLength, p_yLength, TBD_DIRECTIONS);
+    turningLeftGrid = restartGridTBD(turningLeftGrid, p_xLength, p_yLength);
 
     //Create "clusters"
     var clusterList = [];
-    var index = 0;
+    var clusterIndex = 0;
     var spacesToCheck = [];
 
+    /**
+		Creates clusters for each spaces that are "adjacent to a newly entered 'adjacency_no' space"
+    */
     function testAdjacentToADJACENCY_NO(p_xx, p_yy) {
         const value = p_function(p_xx, p_yy);
         if ((value != ADJACENCY.NO) && (indexClustersGrid[p_yy][p_xx] == UNDEFINED_INDEX)) {
-            indexClustersGrid[p_yy][p_xx] = index;
+            indexClustersGrid[p_yy][p_xx] = clusterIndex;
             spacesToCheck.push({
                 x: p_xx,
                 y: p_yy
@@ -122,7 +123,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
                 containADJACENCY: (value == ADJACENCY.YES),
                 linked: -1
             });
-            index++;
+            clusterIndex++;
         }
     }
 
@@ -142,12 +143,16 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
             testAdjacentToADJACENCY_NO(x, y + 1);
         }
     });
+	/**
+	Now, clusterList should be initialized as a list of clusters of size 1 ('spaces' field), of unique indexes and they are not linked to another cluster (see below)
+	spacesToCheck should have the list of spaces contained in clusters
+	*/
 
-    var space,
-    x,
-    y,
-    clusterIndex;
+    var space, x, y, clusterIndex;
 
+    /**
+    Returns the cluster index that the one passed as argument depends upon and which depends on no one else. (if ClusterList == [0, 0, 2, 1, 2], dependance chains are : 3 -> 1 -> 0, 4 -> 2)
+     */
     function actualClusterIndex(p_clusterIndex) {
         while (clusterList[p_clusterIndex].linked != UNDEFINED_INDEX) {
             p_clusterIndex = clusterList[p_clusterIndex].linked;
@@ -155,12 +160,19 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
         return p_clusterIndex;
     }
 
-    function checkSpace(p_xx, p_yy, p_clusterIndexOrigin) {
+	/**
+	For each space in "spacesToCheck", checks all (up to 4) spaces around : if an around space is not closed, 
+	either join it to its cluster (modifying indexClustersGrid and an entry of clusterList) or merge two clusters together according to its index (the receiver cluster is the one which is already bigger - 
+	only "unlinked" clusters + their indexes are taken into consideration for merging, all linked clusters have invalid information
+	
+	*/
+    function checkSpace(p_spacesToCheck, p_xx, p_yy, p_clusterIndexOrigin) {
         var value = p_function(p_xx, p_yy);
         if (value != ADJACENCY.NO) {
             var actualIndex = actualClusterIndex(p_clusterIndexOrigin);
             var clusterIndexNewSpace = indexClustersGrid[p_yy][p_xx];
             if (clusterIndexNewSpace == UNDEFINED_INDEX) {
+				// Adding space to the cluster
                 indexClustersGrid[p_yy][p_xx] = actualIndex;
                 if (value == ADJACENCY.YES) {
                     clusterList[actualIndex].containADJACENCY = true;
@@ -169,7 +181,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
                     x: p_xx,
                     y: p_yy
                 });
-                futureSpacesToCheck.push({
+                p_spacesToCheck.push({
                     x: p_xx,
                     y: p_yy
                 });
@@ -178,7 +190,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
                 var secondActualIndex = actualClusterIndex(clusterIndexNewSpace);
                 var indexReceiver = actualIndex;
                 if (actualIndex != secondActualIndex) {
-                    //Opération de fusion entre 2 clusters
+                    // Merging two clusters
                     indexReceiver = (clusterList[actualIndex].spaces.length > clusterList[secondActualIndex].spaces.length) ? actualIndex : secondActualIndex;
                     var indexGiver = (indexReceiver == secondActualIndex) ? actualIndex : secondActualIndex;
                     Array.prototype.push.apply(clusterList[indexReceiver].spaces, clusterList[indexGiver].spaces);
@@ -187,6 +199,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
                 }
             }
         }
+		return p_spacesToCheck;
     }
 
     function getActualClusterIndexFromSpace(p_space) {
@@ -200,26 +213,31 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
     var failureClustersWithAdjacency = false;
     while (spacesToCheck.length > 0 && moreToDig && !failureClustersWithAdjacency) {
         futureSpacesToCheck = [];
+		// For each spaces in spacesToCheck, control the neighboring spaces by either adding it to the current cluster or future spaces to check or by merging both clusters.
         for (i = 0; i < spacesToCheck.length; i++) {
             space = spacesToCheck[i];
             x = space.x;
             y = space.y;
             clusterIndex = actualClusterIndex(indexClustersGrid[y][x]);
             if (x > 0) {
-                checkSpace(x - 1, y, clusterIndex);
+                futureSpacesToCheck = checkSpace(futureSpacesToCheck, x - 1, y, clusterIndex);
             }
             if (y > 0) {
-                checkSpace(x, y - 1, clusterIndex);
+                futureSpacesToCheck = checkSpace(futureSpacesToCheck, x, y - 1, clusterIndex);
             }
             if (x < p_xLength - 1) {
-                checkSpace(x + 1, y, clusterIndex);
+                futureSpacesToCheck = checkSpace(futureSpacesToCheck, x + 1, y, clusterIndex);
             }
             if (y < p_yLength - 1) {
-                checkSpace(x, y + 1, clusterIndex);
+                futureSpacesToCheck = checkSpace(futureSpacesToCheck, x, y + 1, clusterIndex);
             }
         }
+		// Right now, futureSpacesToCheck contains spaces that were adjacent to the previous "spacesToCheck", not closed, and didn't belong to a cluster before the for loop.
         spacesToCheck = futureSpacesToCheck;
-        //TODO voilà la fameuse fin de boucle où j'effectue les tests
+        // Now, check all clusters 
+		// Declare failure if a cluster contains adjacency and another cluser with adjacency is fully digged
+		// Declare a cluster fully digged if it doesn't have any of its spaces in futureSpacesToCheck
+		
         clusterList.forEach(cluster => {
             cluster.fullyDigged = true;
         });
@@ -236,30 +254,33 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
                     }
                 }
             });
+			// It's quite rare, but sometimes, two unlinked clusters can become fully digged at the same time (e.g. "fully digged" remain true at the same pasage in this loop) 
+			// This was the case for puzzle 678, and the problem was that the failure check was in this "if (futureSpacesToCheck.length > 0)" block, which made no sense after all, despite the fact that the problem can indeed be detected without all the spaces checked.
             moreToDig = ((numberNonFullyDiggedClusters > 1) || (numberNonFullyDiggedClustersWithoutADJACENCY > 0));
-            var alreadyHas1ClosedClusterWithADJ = false;
-            var alreadyHasSomeClusterWithADJ = false;
-            clusterList.forEach(cluster => {
-                if (cluster.linked == UNDEFINED_INDEX && cluster.containADJACENCY) {
-                    if (cluster.fullyDigged) {
-                        if (alreadyHas1ClosedClusterWithADJ || alreadyHasSomeClusterWithADJ) {
-                            failureClustersWithAdjacency = true;
-                        }
-                        alreadyHas1ClosedClusterWithADJ = true;
-                    } else {
-                        if (alreadyHas1ClosedClusterWithADJ) {
-                            failureClustersWithAdjacency = true;
-                        }
-                        alreadyHasSomeClusterWithADJ = true;
-                    }
-                }
-            });
-
         } else {
             moreToDig = false;
         }
     }
-
+	
+	// Check if among all clusters, failure is not to be declared (see conditions above)
+	var alreadyHas1ClosedClusterWithADJ = false;
+	var alreadyHasSomeClusterWithADJ = false;
+	clusterList.forEach(cluster => {
+		if (cluster.linked == UNDEFINED_INDEX && cluster.containADJACENCY) {
+			if (cluster.fullyDigged) {
+				if (alreadyHas1ClosedClusterWithADJ || alreadyHasSomeClusterWithADJ) {
+					failureClustersWithAdjacency = true;
+				}
+				alreadyHas1ClosedClusterWithADJ = true;
+			} else {
+				if (alreadyHas1ClosedClusterWithADJ) {
+					failureClustersWithAdjacency = true;
+				}
+				alreadyHasSomeClusterWithADJ = true;
+			}
+		}
+	});
+	
     clusterList.forEach(cluster => {
         indexClustersGrid = cleanGridList(indexClustersGrid, cluster.spaces, UNDEFINED_INDEX);
     });
@@ -343,7 +364,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
         var newPointingDirection;
         while (i < 4 && (newSpaceDir == null)) {
             i++;
-            purgeLog("Looking for turning left ("+p_x+" "+p_y+") : "+pointingDirection);
+            purgeLog("Looking for turning left (" + p_x + " " + p_y + ") : " + pointingDirection);
             newPointingDirection = null;
             if (pointingDirection == DIRECTION.LEFT) {
                 newSpaceDir = tryToGoLeft(p_x, p_y);
@@ -447,18 +468,18 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
         Array.prototype.push.apply(spacesLargerThan1, spacesLargerThan1Local);
     });
 
-    turningLeftGrid = cleanGridListComplex(turningLeftGrid, spacesLargerThan0, TBD_DIRECTIONS);
-    turningLeftGrid = cleanGridListComplex(turningLeftGrid, spacesLargerThan1, TBD_DIRECTIONS);
-    newBarriersGrid = cleanGridListComplex(newBarriersGrid, listSpacesClustersBarriered, false);
+    turningLeftGrid = cleanGridListTBD(turningLeftGrid, spacesLargerThan0);
+    turningLeftGrid = cleanGridListTBD(turningLeftGrid, spacesLargerThan1);
+    newBarriersGrid = cleanGridList(newBarriersGrid, listSpacesClustersBarriered, false);
 
     // Next step : calculate new list spaces + update ancient ones + make emerge some adjacency spaces.
 
     function isWorthDiggingLeft(p_x, p_y, p_origin) {
-        return (p_x > 0) && isPotentiallyAdjacent(p_x-1, p_y); //&& p_limitArray[p_y][p_x - 1].isAccessible(DIRECTION.LEFT, p_origin);
+        return (p_x > 0) && isPotentiallyAdjacent(p_x - 1, p_y); //&& p_limitArray[p_y][p_x - 1].isAccessible(DIRECTION.LEFT, p_origin);
     }
 
     function isWorthDiggingUp(p_x, p_y, p_origin) {
-        return (p_y > 0) && isPotentiallyAdjacent(p_x, p_y-1); //&& p_limitArray[p_y - 1][p_x].isAccessible(DIRECTION.UP, p_origin);
+        return (p_y > 0) && isPotentiallyAdjacent(p_x, p_y - 1); //&& p_limitArray[p_y - 1][p_x].isAccessible(DIRECTION.UP, p_origin);
     }
 
     function isWorthDiggingRight(p_x, p_y, p_origin) {
@@ -470,7 +491,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
     }
 
     var riskySpacesToCheck = spacesLargerThan1;
-    Array.prototype.push.apply(riskySpacesToCheck,p_formerLimitSpaceList);
+    Array.prototype.push.apply(riskySpacesToCheck, p_formerLimitSpaceList);
     var listSpacesConfirmedAdjacency = [];
     var listSpacesLimitsAndTheirLimits = [];
     if (riskySpacesToCheck.length > 0) {
@@ -480,10 +501,10 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
     riskySpacesToCheck.forEach(space => {
         var xRisk = space.x;
         var yRisk = space.y;
-		limitsLog("Starting 'risky' space "+xRisk+","+yRisk+" (adjacency : "+p_function(xRisk, yRisk)+")");
-        if (p_function(xRisk, yRisk) != ADJACENCY.NO) { 
+        limitsLog("Starting 'risky' space " + xRisk + "," + yRisk + " (adjacency : " + p_function(xRisk, yRisk) + ")");
+        if (p_function(xRisk, yRisk) != ADJACENCY.NO) {
             const exploList = {
-				//WARNING : the code below is dependent from the labels ! Unfortunately, this seems to be the cost of defining an object with properties...
+                //WARNING : the code below is dependent from the labels ! Unfortunately, this seems to be the cost of defining an object with properties...
                 L: {
                     spacesExploToDo: [],
                     containADJACENCY: false,
@@ -508,9 +529,9 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
                     linked: DIRECTION.UNDEFINED,
                     id: DIRECTION.DOWN
                 }
-            }; 
-			
-			//Setting starting points
+            };
+
+            //Setting starting points
             if (xRisk > 0 && isPotentiallyAdjacent(xRisk - 1, yRisk)) {
                 exploList[DIRECTION.LEFT].spacesExploToDo.push({
                     x: xRisk - 1,
@@ -567,13 +588,17 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
             var stopThere = false;
             var numberNotFullyDiggedDirections,
             numberNotFullyDiggedDirectionsWithAdjacency;
-			var spacesMadeDirty = [{x:xRisk,y:yRisk}];
+            var spacesMadeDirty = [{
+                    x: xRisk,
+                    y: yRisk
+                }
+            ];
             while (!stopThere) {
                 for (i = 0; i < 4; i++) {
                     myActualIndex = getActualIndex(directionsArray[i]);
-					/*if (exploList[myActualIndex].containADJACENCY){
-						limitsLog("Already detected adjacency for "+myActualIndex);
-					}*/
+                    /*if (exploList[myActualIndex].containADJACENCY){
+                    limitsLog("Already detected adjacency for "+myActualIndex);
+                    }*/
                     if (exploList[myActualIndex].spacesExploToDo.length > 0) {
                         spaceExplo = exploList[myActualIndex].spacesExploToDo.pop();
                         x = spaceExplo.x;
@@ -582,8 +607,11 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
                         index = directionsGrid[y][x];
                         if (index == DIRECTION.UNDEFINED) { //Exploring
                             directionsGrid[y][x] = myActualIndex;
-							spacesMadeDirty.push({x:x,y:y});
-                            if (p_function(x, y) == ADJACENCY.YES) { 
+                            spacesMadeDirty.push({
+                                x: x,
+                                y: y
+                            });
+                            if (p_function(x, y) == ADJACENCY.YES) {
                                 exploList[myActualIndex].containADJACENCY = true;
                             }
                             if (isWorthDiggingLeft(x, y, origin)) {
@@ -623,7 +651,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
                             newActualIndex = getActualIndex(index);
                             if (newActualIndex != myActualIndex) {
                                 //Merging
-								limitsLog("Merging "+newActualIndex+" and "+myActualIndex+" in "+x+","+y);
+                                limitsLog("Merging " + newActualIndex + " and " + myActualIndex + " in " + x + "," + y);
                                 const indexReceiver = (exploList[newActualIndex].spacesExploToDo.length > exploList[myActualIndex].spacesExploToDo.length) ? newActualIndex : myActualIndex;
                                 const indexGiver = (indexReceiver == newActualIndex) ? myActualIndex : newActualIndex;
                                 Array.prototype.push.apply(exploList[indexReceiver].spacesExploToDo, exploList[indexGiver].spacesExploToDo);
@@ -650,11 +678,11 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
                 }
                 stopThere = (numberNotFullyDiggedDirections == 0) || (numberNotFullyDiggedDirections == 1 && numberNotFullyDiggedDirectionsWithAdjacency == 1);
             } // Leaving while loop.
-			
-			if (spacesMadeDirty.length > 0) {
-				limitsLog("Directions grid : ");
-				directionsGrid.forEach(row => limitsLog(row));
-			}
+
+            if (spacesMadeDirty.length > 0) {
+                limitsLog("Directions grid : ");
+                directionsGrid.forEach(row => limitsLog(row));
+            }
             directionsGrid = cleanGridList(directionsGrid, spacesMadeDirty, DIRECTION.UNDEFINED);
 
             // For this space : 1) create a new limit (TODO : On considère que c'est une nouvelle limite !) 2) put an adjacency if at least 2 branches contain one.
@@ -671,25 +699,25 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
                     adjacencyLimit.bindDirections(directionsArray[i], getActualIndex(directionsArray[i]));
                 }
             }
-			
-			// If this is a limit for the former list, the newly computed limit may be equal to the former one, hence it's not worth adding it. Let's give a check.
-			if (!adjacencyLimit.equals(p_limitArray[space.y][space.x])){	 //TODO warning, ça force la convention de nommage "formerValue"		
-				listSpacesLimitsAndTheirLimits.push({
-					x: space.x,
-					y: space.y,
-					limit: adjacencyLimit
-				});	
-				// p_limitArray[space.y][space.x] = adjacencyLimit; TODO et merd.... ça modifie le tableau passé en paramètre ! La prochaine fois je me contenterai d'une grille annexe semblable à amountGrid,turningLeftGrid et compagnie...
-			}
-			
-			//Make sure we add only NEW adjacency spaces, because this will be passed as a list of new events (and the lists should be empty if there is nothing to report)
-            if (sideNumberWithAdjacency >= 2 && (p_function(space.x,space.y) != ADJACENCY.YES)) { 
+
+            // If this is a limit for the former list, the newly computed limit may be equal to the former one, hence it's not worth adding it. Let's give a check.
+            if (!adjacencyLimit.equals(p_limitArray[space.y][space.x])) { //TODO warning, ça force la convention de nommage "formerValue"
+                listSpacesLimitsAndTheirLimits.push({
+                    x: space.x,
+                    y: space.y,
+                    limit: adjacencyLimit
+                });
+                // p_limitArray[space.y][space.x] = adjacencyLimit; TODO et merd.... ça modifie le tableau passé en paramètre ! La prochaine fois je me contenterai d'une grille annexe semblable à amountGrid,turningLeftGrid et compagnie...
+            }
+
+            //Make sure we add only NEW adjacency spaces, because this will be passed as a list of new events (and the lists should be empty if there is nothing to report)
+            if (sideNumberWithAdjacency >= 2 && (p_function(space.x, space.y) != ADJACENCY.YES)) {
                 listSpacesConfirmedAdjacency.push({
                     x: space.x,
                     y: space.y
                 });
             }
-			limitsLog(space.x+","+space.y+" : created limit "+adjacencyLimit.toString()+" ; sides with Adjacency : "+sideNumberWithAdjacency);
+            limitsLog(space.x + "," + space.y + " : created limit " + adjacencyLimit.toString() + " ; sides with Adjacency : " + sideNumberWithAdjacency);
         }
     });
 
@@ -701,20 +729,17 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
     }
 }
 
-
-
-
 //----------------------
 //Debug room !
 
-function purgeLog(p_message){
-	//console.log("Purging - "+p_message);
+function purgeLog(p_message) {
+    //console.log("Purging - "+p_message);
 }
 
-function turningLog(p_message){
-	//console.log("Turning - "+p_message);
+function turningLog(p_message) {
+    //console.log("Turning - "+p_message);
 }
 
-function limitsLog(p_message){
-	//console.log("Limits - "+p_message);
+function limitsLog(p_message) {
+    //console.log("Limits - "+p_message);
 }
