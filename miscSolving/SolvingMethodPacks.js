@@ -4,6 +4,8 @@ function ApplyEventMethodPack(p_applyEventMethod, p_deductionsMethod, p_undoEven
 	this.undoEventMethod = p_undoEventMethod;
 }
 
+ApplyEventMethodGeographicalPack.prototype = Object.create(ApplyEventMethodPack.prototype);
+
 function ApplyEventMethodGeographicalPack(p_applyEventMethod, p_deductionsMethod, p_adjacencyMethod, p_transformMethod, p_undoEventMethod) {
 	ApplyEventMethodPack.call(this, p_applyEventMethod, p_deductionsMethod, p_undoEventMethod);
 	this.adjacencyMethod = p_adjacencyMethod;
