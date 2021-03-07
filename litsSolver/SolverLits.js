@@ -4,9 +4,9 @@ const NOT_FORCED = -1;
 const NOT_RELEVANT = -1;
 // const SPACE is used in the dad solver
 
-function SolverLITS(p_wallArray,p_numberGrid) {
+function SolverLITS(p_wallArray) {
 	GeneralSolver.call(this);
-	this.construct(p_wallArray,p_numberGrid);
+	this.construct(p_wallArray);
 }
 
 // Credits about heritage : https://developer.mozilla.org/fr/docs/Learn/JavaScript/Objects/Heritage
@@ -14,7 +14,7 @@ function SolverLITS(p_wallArray,p_numberGrid) {
 SolverLITS.prototype = Object.create(GeneralSolver.prototype);
 SolverLITS.prototype.constructor = SolverLITS;
 
-SolverLITS.prototype.construct = function(p_wallArray, p_numberGrid) {
+SolverLITS.prototype.construct = function(p_wallArray) {
 	this.generalConstruct();
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
@@ -31,14 +31,14 @@ SolverLITS.prototype.construct = function(p_wallArray, p_numberGrid) {
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
 	};
-	this.methodSet.addOneAbortAndFilters(abortClosure(this), [filterClosure3or4Open(this), filterClosureNewlyClosed(this)]);
+	this.methodSet.addOneAbortAndFilters(abortClosure(this), [filterClosure3or4Open(this), filterClosureNewlyClosed(this), filterClosure1or2Open(this)]);
 	this.methodTools = {comparisonMethod : comparison, copyMethod : copying}; // Warning : the argumentToLabelMethod is defined right before the pass in this solver
 
 	this.gridWall = WallGrid_data(p_wallArray); 
 	this.regionArray = this.gridWall.toRegionGrid();
-	this.answerGrid = [];
+	this.answerArray = [];
 	this.proximitiesGrid = [];
-	this.shapeGrid = [];
+	this.shapeArray = [];
 	var ix,iy;
 	var lastRegionNumber = 0;
 	// Below fields are for adjacency "all spaces with ... must form a orthogonally contiguous area"
@@ -46,16 +46,16 @@ SolverLITS.prototype.construct = function(p_wallArray, p_numberGrid) {
 	this.adjacencyLimitGrid = createAdjacencyLimitGrid(this.xLength, this.yLength);
     this.adjacencyLimitSpacesList = [];
 	
-	// Initialize the required grids (notably answerGrid) and the number of regions
+	// Initialize the required grids (notably answerArray) and the number of regions
 	for(iy = 0;iy < this.yLength;iy++){
-		this.answerGrid.push([]);
+		this.answerArray.push([]);
 		this.proximitiesGrid.push([]);
-		this.shapeGrid.push([]);
+		this.shapeArray.push([]);
 		for(ix = 0;ix < this.xLength;ix++){
 			lastRegionNumber = Math.max(this.regionArray[iy][ix],lastRegionNumber);
-			this.answerGrid[iy].push(SPACE.UNDECIDED);
+			this.answerArray[iy].push(SPACE.UNDECIDED);
 			this.proximitiesGrid[iy].push(-1);
-			this.shapeGrid[iy].push(LITS.UNDECIDED);
+			this.shapeArray[iy].push(LITS.UNDECIDED);
 		}
 	}
 	this.regionsNumber = lastRegionNumber+1;
@@ -66,55 +66,80 @@ SolverLITS.prototype.construct = function(p_wallArray, p_numberGrid) {
 	for(ir=0;ir<this.regionsNumber;ir++){
 		this.regions.push({
 			spaces : [],
+			neighborSpaces : [],
 			openSpaces : [], // List of open spaces. //TODO : Typescript "space" ? 
-			size : 0
+			size : 0,
+			shape : LITS.UNDECIDED
 		});
 	}
 	
 	this.checker3or4Open = new CheckCollection(this.regionsNumber);
+	this.checker1or2Open = new CheckCollection(this.regionsNumber);
 	this.checkerNewlyClosed = new CheckCollectionDoubleEntry(this.xLength, this.yLength);
-	this.checkClusterInRegion = new CheckCollectionDoubleEntry(this.xLength, this.yLength);
 	
+	this.checkClusterInRegion = new CheckCollectionDoubleEntry(this.xLength, this.yLength); // Only used in applyDeclarations1or2Open
 	// Now that region data are created : 
-	// Initialize spaces by region + (TODO) affect possible shapes
+	// Initialize spaces by region +  purify grid
 	var region;
 	for(iy = 0;iy < this.yLength;iy++){
 		for(ix = 0;ix < this.xLength;ix++){
 			ir = this.regionArray[iy][ix];
-			region = this.regions[ir];
-			region.spaces.push({x:ix,y:iy});
+			if (this.regionArray[iy][ix] == WALLGRID.OUT_OF_REGIONS) { 
+				this.answerArray[iy][ix] = SPACE.CLOSED;
+			} else {
+				region = this.regions[ir];
+				region.spaces.push({x:ix,y:iy});
+			}
 		}
 	}
 	
 	// Initialize datas dependant to region size (now that all region spaces are known) such as X to place
 	// Also initialize regions sizes for shortcut
+	const addedSpacesNeighborToRegion = new CheckCollectionDoubleEntry(this.xLength, this.yLength);
+	var dx;
+	var dy;
 	for(ir = 0;ir<this.regionsNumber;ir++){
 		region = this.regions[ir];
 		region.size = region.spaces.length;
 		region.notPlacedYetClosed = region.size - 4;
-		/*region.notPlacedYet = {}
-		region.notPlacedYet.OPENs : 4,
-		region.notPlacedYet.CLOSEDs : region.size - 4;
-		}*/
-		// No "notPlacedYet" items this time but a single variable instead because : 1) the OPENs is unneccessary, since it is always equal to 4-openSpaces.length (openSpaces added quite lately), 2) in LITS each region must have a check on remaining closed or open spaces, it is not optional for a region like in Heyawake.
+		// No "notPlacedYet.OPENs" and "notPlacedYet.CLOSEDs" this time but a single variable instead because : 1) the OPENs is unneccessary, since it is always equal to 4-openSpaces.length (openSpaces added quite lately), 2) in LITS each region must have a check on remaining closed or open spaces, it is not optional for a region like in Heyawake.
+		region.spaces.forEach(space => {
+			x = space.x;
+			y = space.y;
+			if (this.leftExists(x) && addedSpacesNeighborToRegion.add(x-1, y) && !this.isBanned(x-1, y) && (this.getRegionIndex(x-1, y) != ir)) { //TODO a "direction factorization" sure is necessary.
+				region.neighborSpaces.push({x : x-1, y : y});
+			}
+			if (this.upExists(y) && addedSpacesNeighborToRegion.add(x, y-1) && !this.isBanned(x, y-1) && (this.getRegionIndex(x, y-1) != ir)) {
+				region.neighborSpaces.push({x : x, y : y-1});
+			}
+			if (this.rightExists(x) && addedSpacesNeighborToRegion.add(x+1, y) && !this.isBanned(x+1, y) && (this.getRegionIndex(x+1, y) != ir)) {
+				region.neighborSpaces.push({x : x+1, y : y});
+			}
+			if (this.downExists(y) && addedSpacesNeighborToRegion.add(x, y+1) && !this.isBanned(x, y+1) && (this.getRegionIndex(x, y+1) != ir)) {
+				region.neighborSpaces.push({x : x, y : y+1});
+			}
+		});
+		addedSpacesNeighborToRegion.clean();
 	}
-	
-	//Note : grid not purified.
 }
 
 //--------------------------------
 
 // Misc methods (may be used for drawing and intelligence)
 SolverLITS.prototype.getAnswer = function(p_x,p_y){
-	return this.answerGrid[p_y][p_x];
+	return this.answerArray[p_y][p_x];
 }
 
 SolverLITS.prototype.getShape = function(p_x,p_y){
-	return this.shapeGrid[p_y][p_x];
+	return this.shapeArray[p_y][p_x];
 }
 
 SolverLITS.prototype.getRegionIndex = function(p_x, p_y) {
 	return this.regionArray[p_y][p_x];
+}
+
+SolverLITS.prototype.isBanned = function(p_x, p_y) {
+	return this.regionArray[p_y][p_x] == WALLGRID.OUT_OF_REGIONS;
 }
 
 SolverLITS.prototype.getRegion = function(p_x, p_y) {
@@ -123,6 +148,10 @@ SolverLITS.prototype.getRegion = function(p_x, p_y) {
 
 function isSpaceEvent(p_event) {
 	return p_event.symbol;
+}
+
+function isShapeRegionEvent(p_event) {
+	return p_event.region || (p_event.region == 0);
 }
 
 SolverLITS.prototype.getFirstSpaceRegion = function(p_i) {
@@ -152,7 +181,17 @@ SolverLITS.prototype.quickStart = function() {
 	this.terminateQuickStart();
 }
 
-SolverLITS.prototype.passRegionAndAdjacents = function(p_indexRegion) {
+SolverLITS.prototype.passRegionAndAdjacentSpaces = function(p_indexRegion) {
+	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
+	this.regions[p_indexRegion].neighborSpaces.forEach(space => {
+		if (this.answerArray[space.y][space.x] == SPACE.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
+			generatedEvents.push([new SpaceEvent(space.x, space.y, SPACE.OPEN), new SpaceEvent(space.x, space.y, SPACE.CLOSED)]);
+		}	
+	});
+	this.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion); 
+}
+
+/*SolverLITS.prototype.passRegionAndAdjacents = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
 	var alreadyAddedRegions = [];
 	var addedRegions = [];
@@ -199,7 +238,7 @@ SolverLITS.prototype.passRegionAndAdjacents = function(p_indexRegion) {
 	});
 	
 	this.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion); 
-} //TODO can be improved ?
+} */
 
 SolverLITS.prototype.passRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
@@ -229,30 +268,31 @@ namingRegionClosureAdj = function(p_solver) {
 
 // Doing and undoing
 applyEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		if (isSpaceEvent(eventToApply)) {
-			//console.log("Like a mistake ? "+eventToApply.x()+" "+eventToApply.y()); 551551
-			return p_solver.putNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
+	return function(p_eventToApply) {
+		if (isShapeRegionEvent(p_eventToApply)) {
+			return p_solver.putShapeRegion(p_eventToApply.region, p_eventToApply.shape);
+		}
+		if (isSpaceEvent(p_eventToApply)) {
+			return p_solver.putNew(p_eventToApply.x(), p_eventToApply.y(), p_eventToApply.symbol);
+		} 
+		const result = p_solver.putShape(p_eventToApply.x(), p_eventToApply.y(), p_eventToApply.shape); // Returning this wasn't enough because of the definition of shapeArray. See this function implementation.
+		if (result == "Special 2-shapes case") {
+			p_eventToApply.nothingHappened = true;
+			return EVENT_RESULT.SUCCESS;
 		} else {
-			const result = p_solver.putShape(eventToApply.x(), eventToApply.y(), eventToApply.shape); // Returning this wasn't enough because of the definition of shapegrid. See this function implementation.
-			if (result == "Special 2-shapes case") {
-				eventToApply.nothingHappened = true;
-				return EVENT_RESULT.SUCCESS;
-			} else {
-				return result;
-			}
+			return result;
 		}
 	}
 }
 
 SolverLITS.prototype.putNew = function(p_x,p_y,p_symbol){
-	if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerGrid[p_y][p_x] == p_symbol)){
+	if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerArray[p_y][p_x] == p_symbol)){
 		return EVENT_RESULT.HARMLESS;
 	}
-	if (this.answerGrid[p_y][p_x] != SPACE.UNDECIDED) {
+	if (this.answerArray[p_y][p_x] != SPACE.UNDECIDED) {
 		return EVENT_RESULT.FAILURE;
 	}
-	this.answerGrid[p_y][p_x] = p_symbol;
+	this.answerArray[p_y][p_x] = p_symbol;
 	var ir = this.regionArray[p_y][p_x];
 	var region = this.regions[ir];
 	if (p_symbol == SPACE.OPEN){
@@ -264,17 +304,29 @@ SolverLITS.prototype.putNew = function(p_x,p_y,p_symbol){
 }
 
 SolverLITS.prototype.putShape = function(p_x, p_y, p_shape) {
-	if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) ||  (this.answerGrid[p_y][p_x] == SPACE.CLOSED) || (this.shapeGrid[p_y][p_x] == p_shape)) { // this.answerGrid added after.
+	if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) ||  (this.answerArray[p_y][p_x] == SPACE.CLOSED) || (this.shapeArray[p_y][p_x] == p_shape)) { // this.answerArray added after.
 		return EVENT_RESULT.HARMLESS;
 	}
-	if (this.shapeGrid[p_y][p_x] != LITS.UNDECIDED) { // It's VERY important to recall the meaning of this grid. This is the grid of "if the space is open, then it should contain this shape" shapes, not the grid of "this space must absolutely contain this shape" ! Like this, it could lead to the region 8 in puzzle LITS54 having a L-related space (in pink as I write this) in its bottom-left corner (deductible by a specific pass) despite that space being impossible to open (deductible by another specific pass)
-		if (this.answerGrid[p_y][p_x] == SPACE.OPEN) {
+	if (this.shapeArray[p_y][p_x] != LITS.UNDECIDED) { // It's VERY important to recall the meaning of this grid. This is the grid of "if the space is open, then it should contain this shape" shapes, not the grid of "this space must absolutely contain this shape" ! Like this, it could lead to the region 8 in puzzle LITS54 having a L-related space (in pink as I write this) in its bottom-left corner (deductible by a specific pass) despite that space being impossible to open (deductible by another specific pass)
+		if (this.answerArray[p_y][p_x] == SPACE.OPEN) {
 			return EVENT_RESULT.FAILURE; // If this space is open (it is !) it should contain 2 different shapes. Hence the mistake...			
 		} else {
 			return "Special 2-shapes case"; // If this space is open, it should contain 2 different shapes. Luckily it isn't. So you know what ? Nothing happened, this event isn't even worth mentioning, and therefore not worth cancelling either. It should be notified in the main applying event method.
 		}
 	}
-	this.shapeGrid[p_y][p_x] = p_shape;
+	this.shapeArray[p_y][p_x] = p_shape;
+	return EVENT_RESULT.SUCCESS;
+}
+
+SolverLITS.prototype.putShapeRegion = function(p_regionIndex, p_shape) {
+	const region = this.regions[p_regionIndex];
+	if (p_shape == region.shape) {
+		return EVENT_RESULT.HARMLESS;
+	} 
+	if (region.shape != LITS.UNDECIDED) {
+		return EVENT_RESULT.FAILURE;
+	}
+	region.shape = p_shape;
 	return EVENT_RESULT.SUCCESS;
 }
 
@@ -284,7 +336,7 @@ undoEventClosure = function(p_solver) {
 			const x = eventToUndo.x(); //Décidément il y en a eu à faire, des changements de x en x() depuis qu'on a mis en commun les solvers de puzzles d'adjacences
 			const y = eventToUndo.y();
 			const symbol = eventToUndo.symbol;
-			p_solver.answerGrid[y][x] = SPACE.UNDECIDED;
+			p_solver.answerArray[y][x] = SPACE.UNDECIDED;
 			var ir = p_solver.regionArray[y][x];
 			var region = p_solver.regions[ir];
 			if (symbol == SPACE.OPEN){
@@ -292,8 +344,10 @@ undoEventClosure = function(p_solver) {
 			} else if (symbol == SPACE.CLOSED){
 				region.notPlacedYetClosed++;
 			}
+		} else if (isShapeRegionEvent(eventToUndo)) {
+			p_solver.regions[eventToUndo.region].shape = LITS.UNDECIDED;
 		} else {
-			p_solver.shapeGrid[eventToUndo.y()][eventToUndo.x()] = LITS.UNDECIDED;
+			p_solver.shapeArray[eventToUndo.y()][eventToUndo.x()] = LITS.UNDECIDED;
 		}
 	}
 }
@@ -304,7 +358,7 @@ undoEventClosure = function(p_solver) {
 SolverLITS.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.tryToApplyHypothesis( SpaceEvent(p_x, p_y, p_symbol), this.methodSet);
+	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol), this.methodSet);
 }
 
 //--------------------------------
@@ -316,13 +370,13 @@ Transforms a geographical deduction (see dedicated class GeographicalDeduction) 
 */
 transformClosure = function (p_solver) {
     return function (p_geographicalDeduction) {
-		return SpaceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, p_geographicalDeduction.opening);
+		return new SpaceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, p_geographicalDeduction.opening);
     }
 };
 
 adjacencyClosure = function (p_solver) {
     return function (p_x, p_y) {
-        switch (p_solver.answerGrid[p_y][p_x]) {
+        switch (p_solver.answerArray[p_y][p_x]) {
         case SPACE.OPEN:
             return ADJACENCY.YES;
             break;
@@ -343,11 +397,24 @@ adjacencyClosure = function (p_solver) {
 // Deductions closure. Where intelligence begins !
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
-		var x = p_eventBeingApplied.x();
-		var y = p_eventBeingApplied.y();
-		var ir = p_solver.regionArray[y][x];
-		var region = p_solver.regions[ir];
-		if (isSpaceEvent(p_eventBeingApplied)) {
+		if (isShapeRegionEvent(p_eventBeingApplied)) {
+			const shape = p_eventBeingApplied.shape;
+			var x, y;
+			p_solver.regions[p_eventBeingApplied.region].spaces.forEach(space => {
+				x = space.x;
+				y = space.y;
+				if ((p_solver.shapeArray[y][x] != LITS.UNDECIDED) && (p_solver.shapeArray[y][x] != shape)) {
+					p_listEventsToApply.push(new SpaceEvent(x, y, SPACE.CLOSED));
+				} else {
+					p_listEventsToApply.push(new ShapeEvent(x, y, shape));
+				}
+				// TODO : also close adjacent spaces that would be too curious. But there is still to put adjacent spaces.
+			});
+		} else if (isSpaceEvent(p_eventBeingApplied)) {
+			const x = p_eventBeingApplied.x();
+			const y = p_eventBeingApplied.y();
+			const ir = p_solver.regionArray[y][x];
+			const region = p_solver.regions[ir];
 			symbol = p_eventBeingApplied.symbol;
 			if (symbol == SPACE.CLOSED) {	
 				p_solver.checkerNewlyClosed.add(x, y);
@@ -358,21 +425,16 @@ deductionsClosure = function (p_solver) {
 				if (region.openSpaces.length == 3) { // Now that a space is closed, maybe something new is found in that region.
 					p_solver.checker3or4Open.add(ir);
 				}
-			} else {
+			} else { // Space is open
 				// Alert on 2x2 areas
 				p_listEventsToApply = p_solver.alert2x2Areas(p_listEventsToApply, x, y);
 				// If there are 3 or 4 spaces open, mark the region as "to be checked in the filter". 
 				if (region.openSpaces.length >= 3) {
 					p_solver.checker3or4Open.add(ir);
 				} else {
-					// Plan events to discard any space that is too far away (distance > 3) or separated by closed spaces : once the 1st space in a region is set open, all those that are too far away won't be legally set open.
-					// If an open space is in a too small non-closed cluster, this leads to a situation where there are spaces left to reach the number of 4 and open-set events are planned on those same spaces : imminent crash, this will be a failed attempt and everything will be undone.
-					// One exception though : if the 4th open space of a region is put in a way that all 4 are not-contiguous at a distance of each other < 4, it may fail. Unless we perform a check, see below.
-					if (region.notPlacedYetClosed > 0) {
-						p_listEventsToApply = p_solver.discriminateUnreachable(p_listEventsToApply, x, y, ir);
-					}
+					p_solver.checker1or2Open.add(ir);
 				}
-				
+
 				// If 2 spaces are open, in the same region, in the same row/column and they are 1 space apart, then : this space must be open AND belong to this region. Otherwise, this is an immediate failure !
 				p_listEventsToApply = p_solver.fillOpenGaps(p_listEventsToApply, x, y, ir);
 				
@@ -381,49 +443,53 @@ deductionsClosure = function (p_solver) {
 					p_listEventsToApply = p_solver.alertRegion(p_listEventsToApply,ir,SPACE.CLOSED,region.notPlacedYetClosed);			
 				}
 				
-				// Test the non-adjacency of same shapes
-				shape = p_solver.shapeGrid[y][x];
+				// Test the non-adjacency of same shapes + affect a shape to the region
+				shape = p_solver.shapeArray[y][x];
 				if (shape != LITS.UNDECIDED) {
 					p_listEventsToApply = p_solver.closeUpTo4NeighborsOrNotSameShapeWhileOpen(p_listEventsToApply, x, y, ir, shape);
+					p_listEventsToApply.push(new ShapeRegionEvent(ir, shape));
 				}
 			}
 		} else {
+			const x = p_eventBeingApplied.x();
+			const y = p_eventBeingApplied.y();
+			const ir = p_solver.regionArray[y][x];
 			// A shape event : if 2 spaces across borders are affected the same shape, if either of them is open, close the other one. 
 			shape = p_eventBeingApplied.shape;
-			if (p_solver.answerGrid[y][x] == SPACE.OPEN) {
+			if (p_solver.answerArray[y][x] == SPACE.OPEN) {
 				p_listEventsToApply = p_solver.closeUpTo4NeighborsOrNotSameShapeWhileOpen(p_listEventsToApply, x, y, ir, shape);
-			} else if ((p_solver.leftExists(x) && (p_solver.answerGrid[y][x-1] == SPACE.OPEN) && p_solver.sameShapesNeighbors(x-1, y, ir, shape) ) ||
-				(p_solver.upExists(y) && (p_solver.answerGrid[y-1][x] == SPACE.OPEN) && p_solver.sameShapesNeighbors(x, y-1, ir, shape)) ||
-				(p_solver.rightExists(x) && (p_solver.answerGrid[y][x+1] == SPACE.OPEN) && p_solver.sameShapesNeighbors(x+1, y, ir, shape)) ||
-				(p_solver.downExists(y) && (p_solver.answerGrid[y+1][x] == SPACE.OPEN) && p_solver.sameShapesNeighbors(x, y+1, ir, shape)) || 
-				p_solver.shapeGrid[y][x] != shape) {
+				p_listEventsToApply.push(new ShapeRegionEvent(ir, shape));
+			} else if ((p_solver.leftExists(x) && (p_solver.answerArray[y][x-1] == SPACE.OPEN) && p_solver.sameShapesNeighbors(x-1, y, ir, shape) ) ||
+				(p_solver.upExists(y) && (p_solver.answerArray[y-1][x] == SPACE.OPEN) && p_solver.sameShapesNeighbors(x, y-1, ir, shape)) ||
+				(p_solver.rightExists(x) && (p_solver.answerArray[y][x+1] == SPACE.OPEN) && p_solver.sameShapesNeighbors(x+1, y, ir, shape)) ||
+				(p_solver.downExists(y) && (p_solver.answerArray[y+1][x] == SPACE.OPEN) && p_solver.sameShapesNeighbors(x, y+1, ir, shape)) || 
+				p_solver.shapeArray[y][x] != shape) {
 					 // Close this space in either of these cases : 
 					 //-there was already a different shape in this space (famous event that never happened) (if the space was open it would already have been spotted in the application part and failed)
 					 //-there is already an adjacent space that is accross a border, that is open, and with the same shape 
-				p_listEventsToApply.push(SpaceEvent(x, y, SPACE.CLOSED));
+				p_listEventsToApply.push(new SpaceEvent(x, y, SPACE.CLOSED));
 			}
 		}
 		return p_listEventsToApply;
 	}
 }
 
-// States whether the p_x, p_y space is occupied or not. (TODO : take banned spaces into account)
+// States whether the p_x, p_y space is occupied or not.
 SolverLITS.prototype.isOccupied = function (p_x,p_y) {
-	return (this.answerGrid[p_y][p_x] == SPACE.OPEN);
+	return (this.answerArray[p_y][p_x] == SPACE.OPEN);
 }
 
-// TODO : take banned spaces into account
 SolverLITS.prototype.isNotClosed = function (p_x,p_y) {
-	return (this.answerGrid[p_y][p_x] != SPACE.CLOSED);
+	return (this.answerArray[p_y][p_x] != SPACE.CLOSED);
 }
 
 // If (x1, x2) is occupied, add event (x3, x4). Then, if (x3, x4) is occupied, add event (x1, x2)
 SolverLITS.prototype.duelOccupation = function (p_listEvents, p_x1, p_y1, p_x2, p_y2) {
-	if (this.answerGrid[p_y1][p_x1] == SPACE.OPEN) {
-		p_listEvents.push(SpaceEvent(p_x2, p_y2, SPACE.CLOSED));
+	if (this.answerArray[p_y1][p_x1] == SPACE.OPEN) {
+		p_listEvents.push(new SpaceEvent(p_x2, p_y2, SPACE.CLOSED));
 	}
-	if (this.answerGrid[p_y2][p_x2] == SPACE.OPEN) {
-		p_listEvents.push(SpaceEvent(p_x1, p_y1, SPACE.CLOSED));
+	if (this.answerArray[p_y2][p_x2] == SPACE.OPEN) {
+		p_listEvents.push(new SpaceEvent(p_x1, p_y1, SPACE.CLOSED));
 	}
 	return p_listEvents;
 }
@@ -441,7 +507,7 @@ SolverLITS.prototype.alert2x2Areas = function(p_listEvents, p_x, p_y) {
 		} else { // Left space unoccupied : check if spaces above/below are occupied.
 			if (((p_y > 0) && (this.isOccupied(p_x-1, p_y-1)) && this.isOccupied(p_x, p_y-1)) ||
 				((p_y <= this.yLength-2) && (this.isOccupied(p_x-1, p_y+1)) && this.isOccupied(p_x, p_y+1))) {
-				p_listEvents.push(SpaceEvent(p_x-1, p_y, SPACE.CLOSED));
+				p_listEvents.push(new SpaceEvent(p_x-1, p_y, SPACE.CLOSED));
 			} 
 		}
 	}
@@ -456,62 +522,11 @@ SolverLITS.prototype.alert2x2Areas = function(p_listEvents, p_x, p_y) {
 		} else { // Right space unoccupied : check if spaces above/below are occupied.
 			if (((p_y > 0) && (this.isOccupied(p_x+1, p_y-1)) && this.isOccupied(p_x, p_y-1)) ||
 				((p_y <= this.yLength-2) && (this.isOccupied(p_x+1, p_y+1)) && this.isOccupied(p_x, p_y+1))) {
-				p_listEvents.push(SpaceEvent(p_x+1, p_y, SPACE.CLOSED));
+				p_listEvents.push(new SpaceEvent(p_x+1, p_y, SPACE.CLOSED));
 			} 
 		}
 	}
 	return p_listEvents;
-}
-
-// List of closed events to declare closed all spaces that cannot be reached at a distance of 4 of the given (p_x, p_y) open space.
-// Note : a non-closed (eg. open + undecided) cluster too small can remain for a while, and by default no event is placed to close such a cluster. But any attempt to try to put an open space into a too small cluster will lead to a failure !
-// That is, unless a detector of too small non-closed clusters is made.
-SolverLITS.prototype.discriminateUnreachable = function(p_listEvents, p_x, p_y, p_indexRegion) {
-	var list_spacesToPropagate = [{x: p_x, y:p_y}];
-	var x,y;
-	this.proximitiesGrid[p_y][p_x] = 3; // The central space is worth 3, then the proximities values will descend by one at each successive space, comparatively to lava flowing from a volcano...
-	var spaceToPropagate;
-	while (list_spacesToPropagate.length > 0) {
-		// Propagate in each direction until all "non-closed spaces in the region that are close enough" have been visited
-		spaceToPropagate = list_spacesToPropagate.pop();
-		x = spaceToPropagate.x;
-		y = spaceToPropagate.y;
-		proximity = this.proximitiesGrid[y][x];
-		if (x > 0) {
-			list_spacesToPropagate = this.updateSpacesToPropagate(list_spacesToPropagate, x-1, y, p_indexRegion, proximity);
-		}
-		if (x <= this.xLength-2) {
-			list_spacesToPropagate = this.updateSpacesToPropagate(list_spacesToPropagate, x+1, y, p_indexRegion, proximity);
-		}
-		if (y > 0) {
-			list_spacesToPropagate = this.updateSpacesToPropagate(list_spacesToPropagate, x, y-1, p_indexRegion, proximity);
-		}
-		if (y <= this.yLength-2) {
-			list_spacesToPropagate = this.updateSpacesToPropagate(list_spacesToPropagate, x, y+1, p_indexRegion, proximity);
-		}
-	}
-	
-	// List events for non-visited spaces + clean visited spaces
-	this.regions[p_indexRegion].spaces.forEach(space => {
-		x = space.x;
-		y = space.y;
-		if (this.proximitiesGrid[y][x] == -1) {
-			p_listEvents.push(SpaceEvent(x, y, SPACE.CLOSED));
-		} else {
-			this.proximitiesGrid[y][x] = -1;	
-		}
-	});
-	return p_listEvents;
-}
-
-// Test to propagate or not a space in a direction (left, up, right, down), whose coordinates have been passed by the above method
-// By the way, no check for values of p_xx and p_yy as it is done above.
-SolverLITS.prototype.updateSpacesToPropagate = function (p_listSpacesToPropagate, p_xx, p_yy, p_indexRegion, p_originalProximity){
-	if ((this.regionArray[p_yy][p_xx] == p_indexRegion) && this.isNotClosed(p_xx,p_yy) && (this.proximitiesGrid[p_yy][p_xx] < p_originalProximity-1)) {
-		this.proximitiesGrid[p_yy][p_xx] = p_originalProximity-1;
-		p_listSpacesToPropagate.push({x : p_xx, y : p_yy});
-	}
-	return p_listSpacesToPropagate;
 }
 
 // The classical "when the remaining spaces of a region must be closed/open to reach the numbers"
@@ -523,8 +538,8 @@ SolverLITS.prototype.alertRegion = function(p_listEvents,p_regionIndex,p_missing
 		alertSpace = region.spaces[i];
 		xa = alertSpace.x;
 		ya = alertSpace.y;
-		if (this.answerGrid[ya][xa] == SPACE.UNDECIDED){
-			p_listEvents.push(SpaceEvent(xa,ya,p_missingSymbol));
+		if (this.answerArray[ya][xa] == SPACE.UNDECIDED){
+			p_listEvents.push(new SpaceEvent(xa,ya,p_missingSymbol));
 			remaining--;
 			if (remaining == 0){
 				break;
@@ -553,8 +568,8 @@ SolverLITS.prototype.fillOpenGaps = function(p_listEventsToApply, p_x, p_y, p_ir
 }
 
 SolverLITS.prototype.fillOpenGapOrNot = function(p_listEventsToApply, p_x, p_y, p_DeltaX, p_DeltaY, p_indexRegion) {
-	if ((this.regionArray[p_y + p_DeltaY * 2][p_x + p_DeltaX * 2] == p_indexRegion) && (this.answerGrid[p_y + p_DeltaY * 2][p_x + p_DeltaX * 2] == SPACE.OPEN)) {
-		p_listEventsToApply.push(SpaceEvent(p_x + p_DeltaX ,p_y + p_DeltaY ,SPACE.OPEN));
+	if ((this.regionArray[p_y + p_DeltaY * 2][p_x + p_DeltaX * 2] == p_indexRegion) && (this.answerArray[p_y + p_DeltaY * 2][p_x + p_DeltaX * 2] == SPACE.OPEN)) {
+		p_listEventsToApply.push(new SpaceEvent(p_x + p_DeltaX ,p_y + p_DeltaY ,SPACE.OPEN));
 	}
 	return p_listEventsToApply;
 }
@@ -579,7 +594,7 @@ SolverLITS.prototype.closeUpTo4NeighborsOrNotSameShapeWhileOpen = function (p_li
 // Close adjacent space if it is "same shape across region border" (the "home" space is known to be open)
 SolverLITS.prototype.closeNeighborSpaceOrNotSameShape = function (p_listEventsToApply, p_xOther, p_yOther, p_ir, p_shape) {
 	if (this.sameShapesNeighbors(p_xOther, p_yOther, p_ir, p_shape)) {
-		p_listEventsToApply.push(SpaceEvent(p_xOther, p_yOther, SPACE.CLOSED));
+		p_listEventsToApply.push(new SpaceEvent(p_xOther, p_yOther, SPACE.CLOSED));
 	}
 	return p_listEventsToApply;
 }
@@ -590,12 +605,16 @@ SolverLITS.prototype.sameShapesNeighbors = function(p_xOther, p_yOther, p_ir, p_
 }
 
 // Abortion 
-SolverLITS.prototype.cleanDeclarations3or4open = function() {
+SolverLITS.prototype.cleanDeclarations3or4Open = function() {
 	this.checker3or4Open.clean();
 }
 
 SolverLITS.prototype.cleanDeclarationsNewlyClosed = function() {
 	this.checkerNewlyClosed.clean();
+}
+
+SolverLITS.prototype.cleanDeclarations1or2Open = function() {
+	this.checker1or2Open.clean();
 }
 
 // Post-indiviual-events filter : for each region that has 3 or 4 spaces, apply the consequences... and clean the environment afterwards !
@@ -616,90 +635,100 @@ SolverLITS.prototype.applyDeclarations3or4open = function() {
 			return EVENT_RESULT.FAILURE; // 
 		}
 	};
-	this.cleanDeclarations3or4open();
+	this.cleanDeclarations3or4Open();
 	return eventsList;
 }
 
 // When a region contains 4 open spaces
 SolverLITS.prototype.eventsTetrominoIdentification = function(p_eventsList, p_indexRegion) {
-	eventsList = [];
-	firstSpace = getFirstLexicalOrderSpace(this.regions[p_indexRegion].openSpaces);
-	x1 = firstSpace.x;
-	y1 = firstSpace.y;
+	//var eventsList = []; //TODO erase these comments later, but somehow keep displayed the deltax and deltay.
+	const firstSpace = getFirstLexicalOrderSpace(this.regions[p_indexRegion].openSpaces);
+	const x1 = firstSpace.x;
+	const y1 = firstSpace.y;
+	var shape = LITS.UNDECIDED;
 	if (this.isOpenInRegionAtRight(x1+1, y1, p_indexRegion)) { //10
 		if (this.isOpenInRegionAtRight(x1+2, y1, p_indexRegion)) { //10 20
 			if (this.isOpenInRegionAtRight(x1+3, y1, p_indexRegion)) {
-				eventsList = shape4(x1, y1, 1, 0, 2, 0, 3, 0, LITS.I);
+				shape = LITS.I;//eventsList.push(new ShapeRegionEvent(p_indexRegion, LITS.L));//eventsList = shape4(x1, y1, 1, 0, 2, 0, 3, 0, LITS.I);
 			} else if (y1 <= this.yLength-2) {
 				if (this.isOpenInRegion(x1+2, y1+1, p_indexRegion)) {
-					eventsList = shape4(x1, y1, 1, 0, 2, 0, 2, 1, LITS.L);
+					shape = LITS.L;//eventsList = shape4(x1, y1, 1, 0, 2, 0, 2, 1, LITS.L);
 				} else if (this.isOpenInRegion(x1+1, y1+1, p_indexRegion)) {
-					eventsList = shape4(x1, y1, 1, 0, 2, 0, 1, 1, LITS.T);
+					shape = LITS.T;//eventsList = shape4(x1, y1, 1, 0, 2, 0, 1, 1, LITS.T);
 				} else if (this.isOpenInRegion(x1, y1+1, p_indexRegion)) {
-					eventsList = shape4(x1, y1, 1, 0, 2, 0, 0, 1, LITS.L);
+					shape = LITS.L;//eventsList = shape4(x1, y1, 1, 0, 2, 0, 0, 1, LITS.L);
 				} 
 			}
 		} else if (this.isOpenInRegionAtDown(x1+1, y1+1, p_indexRegion)) { //10 11
 			if (this.isOpenInRegionAtRight(x1+2, y1+1, p_indexRegion)) {
-				eventsList = shape4(x1, y1, 1, 0, 1, 1, 2, 1, LITS.S);
+				shape = LITS.S;//eventsList = shape4(x1, y1, 1, 0, 1, 1, 2, 1, LITS.S);
 			} else if (this.isOpenInRegionAtDown(x1+1, y1+2, p_indexRegion)) {
-				eventsList = shape4(x1, y1, 1, 0, 1, 1, 1, 2, LITS.L);
+				shape = LITS.L;//eventsList = shape4(x1, y1, 1, 0, 1, 1, 1, 2, LITS.L);
 			} 
 		} else if (this.isOpenInRegionAtDown(x1, y1+1, p_indexRegion)) {// 10 01
 			if (this.isOpenInRegionAtDown(x1, y1+2, p_indexRegion)) {
-				eventsList = shape4(x1, y1, 1, 0, 0, 1, 0, 2, LITS.L);
+				shape = LITS.L;//eventsList = shape4(x1, y1, 1, 0, 0, 1, 0, 2, LITS.L);
 			} else if (this.isOpenInRegionAtLeft(x1-1, y1+1, p_indexRegion)) {
-				eventsList = shape4(x1, y1, 1, 0, 0, 1, -1, 1, LITS.S);
+				shape = LITS.S;//eventsList = shape4(x1, y1, 1, 0, 0, 1, -1, 1, LITS.S);
 			}
 		}
 	} else if (this.isOpenInRegionAtDown(x1, y1+1, p_indexRegion)) { // 01
 		if (this.isOpenInRegionAtRight(x1+1, y1+1, p_indexRegion)) { // 01 11
 			if (this.isOpenInRegionAtRight(x1+2, y1+1, p_indexRegion)) {
-				eventsList = shape4(x1, y1, 0, 1, 1, 1, 2, 1, LITS.L);
+				shape = LITS.L;//eventsList = shape4(x1, y1, 0, 1, 1, 1, 2, 1, LITS.L);
 			} else if (this.isOpenInRegionAtDown(x1+1, y1+2, p_indexRegion)) { //TODO factoriser avec ci-dessous
-				eventsList = shape4(x1, y1, 0, 1, 1, 1, 1, 2, LITS.S);
+				shape = LITS.S;//eventsList = shape4(x1, y1, 0, 1, 1, 1, 1, 2, LITS.S);
 			} else if (this.isOpenInRegionAtDown(x1, y1+2, p_indexRegion)) {
-				eventsList = shape4(x1, y1, 0, 1, 1, 1, 0, 2, LITS.T);
+				shape = LITS.T;//eventsList = shape4(x1, y1, 0, 1, 1, 1, 0, 2, LITS.T);
 			} else if (this.isOpenInRegionAtLeft(x1-1, y1+1, p_indexRegion)) {
-				eventsList = shape4(x1, y1, 0, 1, 1, 1, -1, 1, LITS.T);
+				shape = LITS.T;//eventsList = shape4(x1, y1, 0, 1, 1, 1, -1, 1, LITS.T);
 			}
 		} else if (this.isOpenInRegionAtDown(x1, y1+2, p_indexRegion)) { // 01 02
 			if (this.isOpenInRegionAtRight(x1+1, y1+2, p_indexRegion)) {
-				eventsList = shape4(x1, y1, 0, 1, 0, 2, 1, 2, LITS.L);
+				shape = LITS.L;//eventsList = shape4(x1, y1, 0, 1, 0, 2, 1, 2, LITS.L);
 			} else if (this.isOpenInRegionAtDown(x1, y1+3, p_indexRegion)) {
-				eventsList = shape4(x1, y1, 0, 1, 0, 2, 0, 3, LITS.I);
+				shape = LITS.I;//eventsList = shape4(x1, y1, 0, 1, 0, 2, 0, 3, LITS.I);
 			} else if (this.isOpenInRegionAtLeft(x1-1, y1+2, p_indexRegion)) { // TODO factoriser avec ci-dessous
-				eventsList = shape4(x1, y1, 0, 1, 0, 2, -1, 2, LITS.L);
+				shape = LITS.L;//eventsList = shape4(x1, y1, 0, 1, 0, 2, -1, 2, LITS.L);
 			}  else if (this.isOpenInRegionAtLeft(x1-1, y1+1, p_indexRegion)) {
-				eventsList = shape4(x1, y1, 0, 1, 0, 2, -1, 1, LITS.T);
+				shape = LITS.T;//eventsList = shape4(x1, y1, 0, 1, 0, 2, -1, 1, LITS.T);
 			}
 		} else if (this.isOpenInRegionAtLeft(x1-1, y1+1, p_indexRegion)) { // 01 -11 
 			if (this.isOpenInRegionAtDown(x1-1, y1+2, p_indexRegion)) {
-				eventsList = shape4(x1, y1, 0, 1, -1, 1, -1, 2, LITS.S);
+				shape = LITS.S;//eventsList = shape4(x1, y1, 0, 1, -1, 1, -1, 2, LITS.S);
 			} else if (this.isOpenInRegionAtLeft(x1-2, y1+1, p_indexRegion)) {
-				eventsList = shape4(x1, y1, 0, 1, -1, 1, -2, 1, LITS.L);
+				shape = LITS.L;//eventsList = shape4(x1, y1, 0, 1, -1, 1, -2, 1, LITS.L);
 			}
 		}
 	}
 	
-	if (eventsList.length == 0) {
+	/*if (eventsList.length == 0) {
 		return EVENT_RESULT.FAILURE;
 	}
 	else {
 		Array.prototype.push.apply(p_eventsList, eventsList);
 		return p_eventsList;
+	}*/
+	
+	if (shape == LITS.UNDECIDED) {
+		return EVENT_RESULT.FAILURE;
+	} else {
+		p_eventsList.push(new ShapeRegionEvent(p_indexRegion, shape));
+		return p_eventsList;
 	}
 }
 
-// Fills a region with the 4 spaces below
-shape4 = function(p_x1, p_y1, p_DeltaX1, p_DeltaY1, p_DeltaX2, p_DeltaY2, p_DeltaX3, p_DeltaY3, p_form) {
-	eventList = [];
+/*// Fills a region with the 4 spaces below
+//SolverLITS.prototype.shape4 = function(p_indexRegion, p_shape) {
+	 eventList = [];
 	eventList.push(new ShapeEvent(p_x1, p_y1, p_form));
 	eventList.push(new ShapeEvent(p_x1 + p_DeltaX1, p_y1 + p_DeltaY1, p_form));
 	eventList.push(new ShapeEvent(p_x1 + p_DeltaX2, p_y1 + p_DeltaY2, p_form));
 	eventList.push(new ShapeEvent(p_x1 + p_DeltaX3, p_y1 + p_DeltaY3, p_form));
-	return eventList;
-}
+	return eventList; 
+	//return [new ShapeRegionEvent(p_indexRegion, p_shape)];
+	
+//}*/
 
 // When a region contains 3 open spaces
 SolverLITS.prototype.eventsTripletPlacement = function(p_eventsList, p_indexRegion) {
@@ -854,8 +883,8 @@ SolverLITS.prototype.shapeFrom3Open = function(p_eventsList, p_x, p_y, p_ir, p_i
 	if (p_eventsList.length == startingEventsLength + 1) {
 		// Only one event ! That means only one possibility of 4th open space ! 
 		const onlyShapeEvent = p_eventsList[p_eventsList.length-1];
-		p_eventsList.push(SpaceEvent(onlyShapeEvent.coorX, onlyShapeEvent.coorY, SPACE.OPEN));
-	} else if (noLFound && noIFound && noTFound) {
+		p_eventsList.push(new SpaceEvent(onlyShapeEvent.coorX, onlyShapeEvent.coorY, SPACE.OPEN));
+	} else if (noLFound && noIFound && noTFound) { //If only one shape is possible, place it in all 3 open spaces. If no shape is possible, failure.
 		if (noSFound) {
 			return EVENT_RESULT.FAILURE;
 		} else {
@@ -882,7 +911,7 @@ SolverLITS.prototype.pushShapeEventsDelta = function (p_eventsList, p_x, p_y, p_
 	p_spaceDeltas.forEach(delta => {
 		const x = p_x + delta.x;
 		const y = p_y + delta.y;
-		if ((y >= 0) && (y < this.yLength) && (x >= 0) && (x < this.xLength) && (this.regionArray[y][x] == p_ir) && (this.answerGrid[y][x] != SPACE.CLOSED)) {
+		if ((y >= 0) && (y < this.yLength) && (x >= 0) && (x < this.xLength) && (this.regionArray[y][x] == p_ir) && (this.answerArray[y][x] != SPACE.CLOSED)) {
 			p_eventsList.push(new ShapeEvent(x, y, p_shape));
 		}
 	});
@@ -891,7 +920,7 @@ SolverLITS.prototype.pushShapeEventsDelta = function (p_eventsList, p_x, p_y, p_
 
 
 SolverLITS.prototype.isOpenInRegion = function(p_x, p_y, p_ir) {
-	return (this.answerGrid[p_y][p_x] == SPACE.OPEN) && (this.regionArray[p_y][p_x] == p_ir);
+	return (this.answerArray[p_y][p_x] == SPACE.OPEN) && (this.regionArray[p_y][p_x] == p_ir);
 }	
 
 SolverLITS.prototype.isOpenInRegionAtLeft = function(p_x, p_y, p_ir) {
@@ -1012,27 +1041,105 @@ SolverLITS.prototype.checkNotAddedNotClosedInRegion = function (p_spacesToCheck,
 	return p_spacesToCheck;
 }
 
+// Filters for distance (initially in deductions)
+
+// Plan events to discard any space that is too far away (distance > 3) or separated by closed spaces : once the 1st space in a region is set open, all those that are too far away won't be legally set open.
+					// If an open space is in a too small non-closed cluster, this leads to a situation where there are spaces left to reach the number of 4 and open-set events are planned on those same spaces : imminent failure, and everything will be undone.
+SolverLITS.prototype.applyDeclarations1or2Open = function() {
+	var eventsToApply = [];
+	var region;
+	this.checker1or2Open.list.forEach(ir => {
+		region = this.regions[ir];
+		if (region.notPlacedYetClosed > 0) {
+			region.openSpaces.forEach(space => {
+				eventsToApply = this.discriminateUnreachable(eventsToApply, space.x, space.y, ir);
+			});
+		}
+	});
+	this.cleanDeclarations1or2Open();
+	return eventsToApply;
+}
+
+// List of closed events to declare closed all spaces that cannot be reached at a distance of 4 of the given (p_x, p_y) open space.
+// Note : a non-closed (eg. open + undecided) cluster too small can remain for a while, and by default no event is placed to close such a cluster. But any attempt to try to put an open space into a too small cluster will lead to a failure !
+// That is, unless a detector of too small non-closed clusters is made.
+SolverLITS.prototype.discriminateUnreachable = function(p_listEvents, p_x, p_y, p_indexRegion) {
+	var list_spacesToPropagate = [{x: p_x, y:p_y}];
+	var x,y;
+	this.proximitiesGrid[p_y][p_x] = 3; // The central space is worth 3, then the proximities values will descend by one at each successive space, comparatively to lava flowing from a volcano...
+	var spaceToPropagate;
+	while (list_spacesToPropagate.length > 0) {
+		// Propagate in each direction until all "non-closed spaces in the region that are close enough" have been visited
+		spaceToPropagate = list_spacesToPropagate.pop();
+		x = spaceToPropagate.x;
+		y = spaceToPropagate.y;
+		proximity = this.proximitiesGrid[y][x];
+		if (x > 0) {
+			list_spacesToPropagate = this.updateSpacesToPropagate(list_spacesToPropagate, x-1, y, p_indexRegion, proximity);
+		}
+		if (x <= this.xLength-2) {
+			list_spacesToPropagate = this.updateSpacesToPropagate(list_spacesToPropagate, x+1, y, p_indexRegion, proximity);
+		}
+		if (y > 0) {
+			list_spacesToPropagate = this.updateSpacesToPropagate(list_spacesToPropagate, x, y-1, p_indexRegion, proximity);
+		}
+		if (y <= this.yLength-2) {
+			list_spacesToPropagate = this.updateSpacesToPropagate(list_spacesToPropagate, x, y+1, p_indexRegion, proximity);
+		}
+	}
+	
+	// List events for non-visited spaces + clean visited spaces
+	this.regions[p_indexRegion].spaces.forEach(space => {
+		x = space.x;
+		y = space.y;
+		if (this.proximitiesGrid[y][x] == -1) {
+			p_listEvents.push(new SpaceEvent(x, y, SPACE.CLOSED));
+		} else {
+			this.proximitiesGrid[y][x] = -1;	
+		}
+	});
+	return p_listEvents;
+}
+
+// Test to propagate or not a space in a direction (left, up, right, down), whose coordinates have been passed by the above method
+// By the way, no check for values of p_xx and p_yy as it is done above.
+SolverLITS.prototype.updateSpacesToPropagate = function (p_listSpacesToPropagate, p_xx, p_yy, p_indexRegion, p_originalProximity){
+	if ((this.regionArray[p_yy][p_xx] == p_indexRegion) && this.isNotClosed(p_xx,p_yy) && (this.proximitiesGrid[p_yy][p_xx] < p_originalProximity-1)) {
+		this.proximitiesGrid[p_yy][p_xx] = p_originalProximity-1;
+		p_listSpacesToPropagate.push({x : p_xx, y : p_yy});
+	}
+	return p_listSpacesToPropagate;
+}
+
 // -------------------------------------------------
 // Extra closures
-abortClosure = function(solver) {
+abortClosure = function(p_solver) {
 	return function() {
-		solver.cleanDeclarations3or4open();
-		solver.cleanDeclarationsNewlyClosed();
+		p_solver.cleanDeclarations3or4Open();
+		p_solver.cleanDeclarationsNewlyClosed();
+		p_solver.cleanDeclarations1or2Open();
 	}
 }
 
-filterClosure3or4Open = function(solver) {
+filterClosure3or4Open = function(p_solver) {
 	return function() {
-		return solver.applyDeclarations3or4open();
+		return p_solver.applyDeclarations3or4open();
 	}
 }
 
-filterClosureNewlyClosed = function(solver) {
+filterClosureNewlyClosed = function(p_solver) {
 	return function() {
-		return solver.applyDeclarationsNewlyClosed();
+		return p_solver.applyDeclarationsNewlyClosed();
 	}
 }
 
+filterClosure1or2Open = function(p_solver) {
+	return function() {
+		return p_solver.applyDeclarations1or2Open();
+	}
+}
+
+// -------------------------------------------------
 // Methods for safety check
 SolverLITS.prototype.leftExists = function(p_x) {
 	return p_x > 0;
@@ -1047,6 +1154,8 @@ SolverLITS.prototype.downExists = function(p_y) {
 	return p_y <= this.yLength-2;
 }
 
+
+
 // --------------------
 // Passing
 
@@ -1060,8 +1169,8 @@ generateEventsForRegionPassClosure = function(p_solver) {
 SolverLITS.prototype.generateEventsForRegionPass = function(p_indexRegion) {
 	var eventList = [];
 	this.regions[p_indexRegion].spaces.forEach(space => {
-		if (this.answerGrid[space.y][space.x] == SPACE.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
-			eventList.push([SpaceEvent(space.x, space.y, SPACE.OPEN), SpaceEvent(space.x, space.y, SPACE.CLOSED)]);
+		if (this.answerArray[space.y][space.x] == SPACE.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
+			eventList.push([new SpaceEvent(space.x, space.y, SPACE.OPEN), new SpaceEvent(space.x, space.y, SPACE.CLOSED)]);
 		}			 
 	});
 	return eventList;
@@ -1073,11 +1182,23 @@ copying = function(p_event) {
 }
 
 comparison = function(p_event1, p_event2) {
-	if (p_event1.shape && p_event2.symbol) {
-		return -1;
-	} else if (p_event2.shape && p_event1.symbol) {
-		return 1;
-	} else if (p_event2.coorY > p_event1.coorY) {
+	// Event kind
+	const kind1 = (isShapeRegionEvent(p_event1) ? 0 : (isSpaceEvent(p_event1) ? 1 : 2));
+	const kind2 = (isShapeRegionEvent(p_event2) ? 0 : (isSpaceEvent(p_event2) ? 1 : 2));
+	if (kind1 != kind2) {
+		return kind1 - kind2;
+	}
+	if (kind1 == 0) { // Both events are shapeRegion
+		if (p_event1.region < p_event2.region) {
+			return -1;
+		} else if (p_event1.region > p_event2.region) {
+			return 1;
+		} else {
+			return p_event1.shape - p_event2.shape;
+		}
+	}
+	// Events are identical and not shapeRegion
+	if (p_event2.coorY > p_event1.coorY) {
 		return -1;
 	} else if (p_event2.coorY < p_event1.coorY) {
 		return 1;
@@ -1086,7 +1207,7 @@ comparison = function(p_event1, p_event2) {
 	} else if (p_event2.coorX < p_event1.coorX) {
 		return 1;
 	} else {
-		if (p_event1.shape) {
+		if (kind1 == 2) {
 			return p_event1.shape - p_event2.shape; // Unstable : works because "shape" values are numbers
 		} else {
 			var c1 = (p_event1.symbol == SPACE.OPEN ? 1 : 0);

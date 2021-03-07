@@ -1,5 +1,5 @@
 var drawer = new Drawer();
-var solver = new SolverLITS(generateWallArray(1,1),generateSymbolArray(1,1));
+var solver = new SolverLITS(generateWallArray(1,1));
 //TODO (dummy grid problem)
 var canevas = document.getElementById("canevas");
 var	context = canevas.getContext("2d");
@@ -45,7 +45,7 @@ setMode(textAction,actionsManager,ENTRY.SPACE,ACTION_CLOSE_SPACE);
 addEventListenerAndCaption("submit_open_space",ACTION_OPEN_SPACE);
 addEventListenerAndCaption("submit_close_space",ACTION_CLOSE_SPACE);
 addEventListenerAndCaption("submit_pass_region",ACTION_PASS_REGION);
-addEventListenerAndCaption("submit_pass_region_and_adjacency",ACTION_PASS_REGION_AND_ADJACENCY);
+addEventListenerAndCaption("submit_pass_region_and_adjacency", ACTION_PASS_REGION_AND_ADJACENCY_SPACES);
 function addEventListenerAndCaption(p_identifier,p_action){ //Shortcut action
 	addEventListenerAndCaptionForSolver(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
 }

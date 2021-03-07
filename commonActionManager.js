@@ -16,6 +16,7 @@ const ACTION_PASS_SPACE = {id:105,htmlCaption:"Passer case"};
 const ACTION_PASS_ROW = {id:102,htmlCaption:"Passer ligne"};
 const ACTION_PASS_COLUMN = {id:103,htmlCaption:"Passer colonne"};
 const ACTION_PASS_REGION_AND_ADJACENCY = {id:104,htmlCaption:"Passer région + adjacentes"};
+const ACTION_PASS_REGION_AND_ADJACENCY_SPACES = {id:104,htmlCaption:"Passer région + cases adjacentes"};
 const ACTION_FILL_SPACE = {id:2,htmlCaption:"Colorier case"};
 const ACTION_PUT_NO_FILL = {id:3,htmlCaption:"Placer un X"};
 const ACTION_PUT_STAR = {id:4,htmlCaption:"Placer une étoile"};

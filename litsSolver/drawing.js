@@ -10,7 +10,7 @@ function drawInsideSpaces(p_context,p_drawer,p_color,p_solver){
 				DrawableColor(p_color.SSquare)];
 				
 	function selectionShape(x,y){
-		if(p_solver.getAnswer(x,y) != SPACE.CLOSED){
+		if(p_solver.getAnswer(x,y) != SPACE.CLOSED) {
 			switch (p_solver.getShape(x, y)) {
 				case LITS.L : return 2; break;
 				case LITS.I : return 3; break;
@@ -20,13 +20,13 @@ function drawInsideSpaces(p_context,p_drawer,p_color,p_solver){
 			}
 		}
 		else {
-			return 1;
+			return (p_solver.isBanned(x, y)) ? -1 : 1; // Don't confuse selectionShape and selectionOpening ! 
 		}
 	}
 	function selectionOpening(x,y) {
 		if (p_solver.getAnswer(x,y) == SPACE.OPEN) {
 			return 0;
-		} else if(p_solver.getAnswer(x,y) == SPACE.CLOSED){
+		} else if (p_solver.getAnswer(x, y) == SPACE.CLOSED) {
 			return 1;
 		}
 		return -1;
