@@ -31,7 +31,7 @@ SolverLITS.prototype.construct = function(p_wallArray, p_numberGrid) {
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
 	};
-	this.methodSet.addOneAbortAndFilters(abortClosure(this), [filterClosure(this)]);
+	this.methodSet.addOneAbortAndFilters(abortClosure(this), [filterClosure3or4Open(this), filterClosureNewlyClosed(this)]);
 	this.methodTools = {comparisonMethod : comparison, copyMethod : copying}; // Warning : the argumentToLabelMethod is defined right before the pass in this solver
 
 	this.gridWall = WallGrid_data(p_wallArray); 
@@ -71,14 +71,9 @@ SolverLITS.prototype.construct = function(p_wallArray, p_numberGrid) {
 		});
 	}
 	
-	// Regions to be checked by the "3 or 4 open"
-	this.checker3or4Open = {
-		list : [],
-		arrayPresence : []
-	}
-	for (ir = 0 ; ir < this.regionsNumber ; ir++) {
-		this.checker3or4Open.arrayPresence.push(false);
-	}
+	this.checker3or4Open = new CheckCollection(this.regionsNumber);
+	this.checkerNewlyClosed = new CheckCollectionDoubleEntry(this.xLength, this.yLength);
+	this.checkClusterInRegion = new CheckCollectionDoubleEntry(this.xLength, this.yLength);
 	
 	// Now that region data are created : 
 	// Initialize spaces by region + (TODO) affect possible shapes
@@ -345,7 +340,7 @@ adjacencyClosure = function (p_solver) {
 
 // Intelligence
 
-// C'est ici que ça devient intéressant !
+// Deductions closure. Where intelligence begins !
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
 		var x = p_eventBeingApplied.x();
@@ -355,19 +350,20 @@ deductionsClosure = function (p_solver) {
 		if (isSpaceEvent(p_eventBeingApplied)) {
 			symbol = p_eventBeingApplied.symbol;
 			if (symbol == SPACE.CLOSED) {	
+				p_solver.checkerNewlyClosed.add(x, y);
 				//Alert on region
 				if (region.notPlacedYetClosed == 0) {
 					p_listEventsToApply = p_solver.alertRegion(p_listEventsToApply,ir,SPACE.OPEN, 4-region.openSpaces.length);			
 				}
 				if (region.openSpaces.length == 3) { // Now that a space is closed, maybe something new is found in that region.
-					p_solver.declareRegion3or4open(ir);	
+					p_solver.checker3or4Open.add(ir);
 				}
 			} else {
 				// Alert on 2x2 areas
 				p_listEventsToApply = p_solver.alert2x2Areas(p_listEventsToApply, x, y);
 				// If there are 3 or 4 spaces open, mark the region as "to be checked in the filter". 
 				if (region.openSpaces.length >= 3) {
-					p_solver.declareRegion3or4open(ir);
+					p_solver.checker3or4Open.add(ir);
 				} else {
 					// Plan events to discard any space that is too far away (distance > 3) or separated by closed spaces : once the 1st space in a region is set open, all those that are too far away won't be legally set open.
 					// If an open space is in a too small non-closed cluster, this leads to a situation where there are spaces left to reach the number of 4 and open-set events are planned on those same spaces : imminent crash, this will be a failed attempt and everything will be undone.
@@ -563,14 +559,6 @@ SolverLITS.prototype.fillOpenGapOrNot = function(p_listEventsToApply, p_x, p_y, 
 	return p_listEventsToApply;
 }
 
-// Declare a region that should be checked in filter
-SolverLITS.prototype.declareRegion3or4open = function(p_indexRegion) {
-	if (! this.checker3or4Open.arrayPresence[p_indexRegion]) {
-		this.checker3or4Open.arrayPresence[p_indexRegion] = true;
-		this.checker3or4Open.list.push(p_indexRegion);
-	}
-}
-
 // Potentially close all 4 spaces (but not the space itself) as the space p_x, p_y is open
 SolverLITS.prototype.closeUpTo4NeighborsOrNotSameShapeWhileOpen = function (p_listEventsToApply, p_x, p_y, p_ir, p_shape) {
 	if (p_x > 0) {
@@ -603,10 +591,11 @@ SolverLITS.prototype.sameShapesNeighbors = function(p_xOther, p_yOther, p_ir, p_
 
 // Abortion 
 SolverLITS.prototype.cleanDeclarations3or4open = function() {
-	this.checker3or4Open.list.forEach( indexRegion => {
-		this.checker3or4Open.arrayPresence[indexRegion] = false;
-	});
-	this.checker3or4Open.list = [];
+	this.checker3or4Open.clean();
+}
+
+SolverLITS.prototype.cleanDeclarationsNewlyClosed = function() {
+	this.checkerNewlyClosed.clean();
 }
 
 // Post-indiviual-events filter : for each region that has 3 or 4 spaces, apply the consequences... and clean the environment afterwards !
@@ -947,20 +936,102 @@ SolverLITS.prototype.affectShapes = function(p_eventsList, p_x, p_y, p_config, p
 	return p_eventsList;
 }
 
+// ---
+// Second filter, a far easier-to-understand one :
+// Detects clusters in regions of size < 4 and does nothing else ! (the pass will do the job (TM))
+// checkClusterInRegion is used only in this function and the descending ones and is always cleaned before it returns, hence no cleans outside.
+SolverLITS.prototype.applyDeclarationsNewlyClosed = function() {
+	var listEvents = [];
+	var x, y, ir; // TODO : we detect non-closed in-region clusters in their whole, so we can plan to do something about clusters with open spaces
+	this.checkerNewlyClosed.list.forEach(space => {
+		x = space.x;
+		y = space.y;
+		ir = this.regionArray[y][x];
+		if (this.leftExists(x)) {
+			listEvents = this.getNotClosedClusterInRegionAndCloseIfTooSmall(listEvents, x-1, y, ir);
+		}
+		if (this.upExists(y)) {
+			listEvents = this.getNotClosedClusterInRegionAndCloseIfTooSmall(listEvents, x, y-1, ir);
+		}
+		if (this.rightExists(x)) {
+			listEvents = this.getNotClosedClusterInRegionAndCloseIfTooSmall(listEvents, x+1, y, ir);
+		}
+		if (this.downExists(y)) {
+			listEvents = this.getNotClosedClusterInRegionAndCloseIfTooSmall(listEvents, x, y+1, ir);
+		}
+	});
+	this.checkClusterInRegion.clean();
+	this.cleanDeclarationsNewlyClosed();
+	return listEvents;
+}
+
+// Starting from p_x, p_y, tests if the space is not closed, has its "non-closed cluster in region" (checkClusterInRegion) not formed yet and forms it.
+// Also adds closing events if a cluster is too small.
+SolverLITS.prototype.getNotClosedClusterInRegionAndCloseIfTooSmall = function(p_listEvents, p_x, p_y, p_ir) {
+	var spacesInCluster = [];
+	if ((this.regionArray[p_y][p_x] == p_ir) && (this.isNotClosed(p_x, p_y))) {
+		if (this.checkClusterInRegion.add(p_x, p_y)) {
+			var spacesToCheck = [{x : p_x, y : p_y}];
+			var x, y;
+			while (spacesToCheck.length > 0) { 
+				spaceChecked = spacesToCheck.pop();
+				x = spaceChecked.x;
+				y = spaceChecked.y;
+				spacesInCluster.push({x : x, y : y});
+				
+				if (this.leftExists(x)) {
+					spacesToCheck = this.checkNotAddedNotClosedInRegion(spacesToCheck, x-1, y, p_ir);
+				}
+				if (this.upExists(y)) {
+					spacesToCheck = this.checkNotAddedNotClosedInRegion(spacesToCheck, x, y-1, p_ir);
+				}
+				if (this.rightExists(x)) {
+					spacesToCheck = this.checkNotAddedNotClosedInRegion(spacesToCheck, x+1, y, p_ir);
+				}
+				if (this.downExists(y)) {
+					spacesToCheck = this.checkNotAddedNotClosedInRegion(spacesToCheck, x, y+1, p_ir);
+				}
+			}
+		}
+	}
+	
+	if (spacesInCluster.length < 4) {
+		spacesInCluster.forEach(space => {
+			p_listEvents.push(new SpaceEvent(space.x, space.y, SPACE.CLOSED));
+		});
+	}
+	return p_listEvents;
+}
+
+SolverLITS.prototype.checkNotAddedNotClosedInRegion = function (p_spacesToCheck, p_xx, p_yy, p_indexRegion) {
+	if ((this.regionArray[p_yy][p_xx] == p_indexRegion) && this.isNotClosed(p_xx, p_yy)) {
+		if (this.checkClusterInRegion.add(p_xx, p_yy)) {
+			p_spacesToCheck.push({x : p_xx, y : p_yy});
+		}
+	}
+	return p_spacesToCheck;
+}
+
 // -------------------------------------------------
 // Extra closures
 abortClosure = function(solver) {
 	return function() {
 		solver.cleanDeclarations3or4open();
+		solver.cleanDeclarationsNewlyClosed();
 	}
 }
 
-filterClosure = function(solver) {
+filterClosure3or4Open = function(solver) {
 	return function() {
 		return solver.applyDeclarations3or4open();
 	}
 }
 
+filterClosureNewlyClosed = function(solver) {
+	return function() {
+		return solver.applyDeclarationsNewlyClosed();
+	}
+}
 
 // Methods for safety check
 SolverLITS.prototype.leftExists = function(p_x) {
