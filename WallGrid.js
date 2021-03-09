@@ -375,9 +375,9 @@ WallGrid.prototype.resizeGrid = function (p_xLength, p_yLength) {
 
 //-----------
 
-function wallArrayToString(p_wallGrid, p_parameters) {
-    var xLength = p_wallGrid[0].length;
-    var yLength = p_wallGrid.length;
+function wallArrayToString(p_wallArray, p_parameters) {
+    var xLength = p_wallArray[0].length;
+    var yLength = p_wallArray.length;
     var answer;
     if (p_parameters && p_parameters.isSquare) {
         answer = xLength + " ";
@@ -385,21 +385,11 @@ function wallArrayToString(p_wallGrid, p_parameters) {
         answer = xLength + " " + yLength + " ";
     }
     var valueSpace;
-    for (var iy = 0; iy < yLength; iy++)
+    for (var iy = 0; iy < yLength; iy++) {
         for (var ix = 0; ix < xLength; ix++) {
-            if (p_wallGrid[iy][ix].state == WALLGRID.CLOSED) {
-                answer += 'X';
-            } else {
-                valueSpace = 0;
-                if (p_wallGrid[iy][ix].wallR == WALLGRID.CLOSED) {
-                    valueSpace += 1;
-                }
-                if (p_wallGrid[iy][ix].wallD == WALLGRID.CLOSED) {
-                    valueSpace += 2;
-                }
-                answer += valueSpace;
-            }
+            answer += spaceToChar(p_wallArray[iy][ix]);
         }
+	}
     return answer;
 }
 
@@ -472,3 +462,50 @@ function charToSpace(p_char) {
         break;
     }
 }
+
+function spaceToChar(p_space) {
+	if (p_space.state == WALLGRID.CLOSED) {
+		return 'X';		
+	}
+	var valueSpace = 0;
+	if (p_space.wallR == WALLGRID.CLOSED) {
+		valueSpace += 1;
+	}
+	if (p_space.wallD == WALLGRID.CLOSED) {
+		valueSpace += 2;
+	}
+	return valueSpace;
+}
+
+// TODO peculiar case of square spaces (SternenSchlacht)
+function wallArrayToString64(p_wallArray) {
+	// Encode walls by strings of 3 spaces (no banned spaces here)
+	var streamIn = new StreamEncodingString64();
+	const xLength = p_wallArray[0].length;
+	const yLength = p_wallArray.length;
+	streamIn.encode64Number(xLength);
+	streamIn.encode64Number(yLength);
+	// Encode all walls of spaces that are not rightmost and downmost. 
+	// Then, binary encode of right wallD (top to bottom) and down wallR (left to right) without the bottom-right space.
+	const binaryBlockStream = new StreamBinaryBlock7Encoder();
+	const binaryStreamRDEdges = new StreamEncodingFullBase(2);
+	const base4StreamWalls = new StreamEncodingFullBase(4);
+	for (var y = 0; y < yLength-1 ; y++) {
+		for (var x = 0 ; x < xLength-1 ; x++) {
+			base4StreamWalls.encodeDigit(spaceToChar(p_wallArray[y][x]));
+		}
+	}
+	for (var y = 0; y < yLength-1 ; y++) {
+		binaryStreamRDEdges.encodeDigit(p_wallArray[y][xLength-1].wallD == WALLGRID.CLOSED);
+	}
+	for (var x = 0; x < xLength-1 ; x++) {
+		binaryStreamRDEdges.encodeDigit(p_wallArray[yLength-1][x].wallR == WALLGRID.CLOSED);
+	}
+	for (var y = 0; y < yLength ; y++) {
+		for (var x = 0 ; x < xLength ; x++) {
+			binaryBlockStream.encodeBit(p_wallArray[y][x].state == WALLGRID.CLOSED);
+		}
+	}
+	return streamIn.string + base4StreamWalls.getString() + binaryStreamRDEdges.getString() + binaryBlockStream.getString();
+}
+// testing : wallArrayToString64(editorCore.wallGrid.array)
