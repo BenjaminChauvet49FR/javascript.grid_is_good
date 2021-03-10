@@ -477,19 +477,25 @@ function spaceToChar(p_space) {
 	return valueSpace;
 }
 
+
+/*
+		var streamIn = new StreamEncodingString64();
+
+	streamIn.encode64Number(xLength);
+	streamIn.encode64Number(yLength);
+	*/
+
 // TODO peculiar case of square spaces (SternenSchlacht)
 function wallArrayToString64(p_wallArray) {
 	// Encode walls by strings of 3 spaces (no banned spaces here)
-	var streamIn = new StreamEncodingString64();
 	const xLength = p_wallArray[0].length;
 	const yLength = p_wallArray.length;
-	streamIn.encode64Number(xLength);
-	streamIn.encode64Number(yLength);
+	
 	// Encode all walls of spaces that are not rightmost and downmost. 
 	// Then, binary encode of right wallD (top to bottom) and down wallR (left to right) without the bottom-right space.
-	const binaryBlockStream = new StreamBinaryBlock7Encoder();
-	const binaryStreamRDEdges = new StreamEncodingFullBase(2);
 	const base4StreamWalls = new StreamEncodingFullBase(4);
+	const binaryStreamRDEdges = new StreamEncodingFullBase(2);
+	const binaryBlockStream = new StreamEncodingSparseBinary();
 	for (var y = 0; y < yLength-1 ; y++) {
 		for (var x = 0 ; x < xLength-1 ; x++) {
 			base4StreamWalls.encodeDigit(spaceToChar(p_wallArray[y][x]));
@@ -503,9 +509,33 @@ function wallArrayToString64(p_wallArray) {
 	}
 	for (var y = 0; y < yLength ; y++) {
 		for (var x = 0 ; x < xLength ; x++) {
-			binaryBlockStream.encodeBit(p_wallArray[y][x].state == WALLGRID.CLOSED);
+			binaryBlockStream.encode(p_wallArray[y][x].state == WALLGRID.CLOSED);
 		}
 	}
-	return streamIn.string + base4StreamWalls.getString() + binaryStreamRDEdges.getString() + binaryBlockStream.getString();
+	return base4StreamWalls.getString() + binaryStreamRDEdges.getString() + binaryBlockStream.getString();
 }
 // testing : wallArrayToString64(editorCore.wallGrid.array)
+
+function string64toWallArray(p_string, p_xLength, p_yLength) {
+	var answer = [];
+	for(var y = 0; y < yLength; y++) {
+		answer.push([]);
+		for (var x = 0; x < p_xLength; x++) {
+			answer[y].push(null);
+		}
+	}
+	const base4StreamWalls = new StreamEncodingFullBase(p_string, 4);
+	for(var y = 0; y < yLength-1; y++) {
+		for (var x = 0; x < p_xLength-1; x++) {
+			answer[y][x] = charToSpace(""+base4StreamWalls.decode());
+		}
+	}
+	const binaryStreamRDEdges = new StreamEncodingFullBase(2, p_string.substring( Math.ceil((p_yLength-1)*(p_xLength-1)/3)));
+	for (var y = 0; y < yLength-1 ; y++) {
+		p_wallArray[y][xLength-1] = charToSpace(""+binaryStreamRDEdges.decode());
+	}
+	for (var x = 0; x < xLength-1 ; x++) {
+		p_wallArray[yLength-1][x] = charToSpace(""+binaryStreamRDEdges.decode());
+	}
+	return answer;
+}

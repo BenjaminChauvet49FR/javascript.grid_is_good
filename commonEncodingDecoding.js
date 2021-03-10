@@ -153,7 +153,7 @@ function StreamBinaryBlock7Encoder() {
 	this.value0to63 = 0;
 }
 
-StreamBinaryBlock7Encoder.prototype.encodeBit = function(p_bit) {
+StreamBinaryBlock7Encoder.prototype.encode = function(p_bit) {
 	if (this.numberBitsInBlock >= 0) {
 		this.value0to63 *= 2;
 		if (p_bit) {
