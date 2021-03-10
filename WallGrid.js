@@ -498,14 +498,16 @@ function wallArrayToString64(p_wallArray) {
 	const binaryBlockStream = new StreamEncodingSparseBinary();
 	for (var y = 0; y < yLength-1 ; y++) {
 		for (var x = 0 ; x < xLength-1 ; x++) {
-			base4StreamWalls.encodeDigit(spaceToChar(p_wallArray[y][x]));
+			base4StreamWalls.encode(
+				((p_wallArray[y][x].wallD == WALLGRID.CLOSED) ? 2 : 0) + (p_wallArray[y][x].wallR == WALLGRID.CLOSED ? 1 : 0)
+			); // spaceToChar is not enough, we need only walls, not something that may be valued to X
 		}
 	}
 	for (var y = 0; y < yLength-1 ; y++) {
-		binaryStreamRDEdges.encodeDigit(p_wallArray[y][xLength-1].wallD == WALLGRID.CLOSED);
+		binaryStreamRDEdges.encode(p_wallArray[y][xLength-1].wallD == WALLGRID.CLOSED);
 	}
 	for (var x = 0; x < xLength-1 ; x++) {
-		binaryStreamRDEdges.encodeDigit(p_wallArray[yLength-1][x].wallR == WALLGRID.CLOSED);
+		binaryStreamRDEdges.encode(p_wallArray[yLength-1][x].wallR == WALLGRID.CLOSED);
 	}
 	for (var y = 0; y < yLength ; y++) {
 		for (var x = 0 ; x < xLength ; x++) {
@@ -518,24 +520,35 @@ function wallArrayToString64(p_wallArray) {
 
 function string64toWallArray(p_string, p_xLength, p_yLength) {
 	var answer = [];
-	for(var y = 0; y < yLength; y++) {
+	for(var y = 0; y < p_yLength; y++) {
 		answer.push([]);
 		for (var x = 0; x < p_xLength; x++) {
 			answer[y].push(null);
 		}
 	}
-	const base4StreamWalls = new StreamEncodingFullBase(p_string, 4);
-	for(var y = 0; y < yLength-1; y++) {
+	const base4StreamWalls = new StreamDecodingFullBase(4, p_string);
+	for(var y = 0; y < p_yLength-1; y++) {
 		for (var x = 0; x < p_xLength-1; x++) {
 			answer[y][x] = charToSpace(""+base4StreamWalls.decode());
 		}
 	}
-	const binaryStreamRDEdges = new StreamEncodingFullBase(2, p_string.substring( Math.ceil((p_yLength-1)*(p_xLength-1)/3)));
-	for (var y = 0; y < yLength-1 ; y++) {
-		p_wallArray[y][xLength-1] = charToSpace(""+binaryStreamRDEdges.decode());
+	
+	const binaryStreamRDEdges = new StreamDecodingFullBase(2, p_string.substring(base4StreamWalls.getConsumedCharacters()));
+	for (var y = 0; y < p_yLength-1 ; y++) {
+		answer[y][p_xLength-1] = charToSpace("0");
+		answer[y][p_xLength-1].wallD = (binaryStreamRDEdges.decode() ? WALLGRID.CLOSED : WALLGRID.OPEN);
 	}
-	for (var x = 0; x < xLength-1 ; x++) {
-		p_wallArray[yLength-1][x] = charToSpace(""+binaryStreamRDEdges.decode());
+	for (var x = 0; x < p_xLength-1 ; x++) {
+		answer[p_yLength-1][x] = charToSpace("0");
+		answer[p_yLength-1][x].wallR = (binaryStreamRDEdges.decode() ? WALLGRID.CLOSED : WALLGRID.OPEN);
 	}
+	answer[p_yLength-1][p_xLength-1] = charToSpace("0");
+	const binaryStreamBan = new StreamDecodingSparseBinary(p_string.substring(binaryStreamRDEdges.getConsumedCharacters() + base4StreamWalls.getConsumedCharacters())); // When several decoding streams decode a same string, take the first index not read yet. Should be obtained through getNextIndex calls.
+	for (var y = 0; y < p_yLength; y++) {
+		for (var x = 0; x < p_xLength; x++) {
+			answer[y][x].state = ((binaryStreamBan.decode() == 1) ? WALLGRID.CLOSED : WALLGRID.OPEN); // decode can return END_OF_DECODING_STREAM.
+		}
+	} // When decoding, make sure that the streaming are the ones corresponding to the ones of encoding
+	
 	return answer;
 }

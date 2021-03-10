@@ -1,29 +1,41 @@
 // This script should be copy-pasted and used in the console when running the editor and not included in any page !
 
-function massConversion(p_puzzleName) {
+const WARNING_REPLACEMENT_LOCAL_STORAGE_STRINGS = "ATTENTION : plusieurs chaînes correspondant à des puzzles vont être modifiées dans le stockage local ! Cette opération est irréversible et ne doit être menée que si plusieurs tests concluants ont été effectués et les méthodes sollicitées bien recopiées dans le code ! Continuer ?";
+
+/**
+When changing the saving method of a puzzle type
+*/
+function massConversionLocalStorageString(p_puzzleName) {
 	// Last use : "CountryRoad";
 	if (!p_puzzleName || !p_puzzleName.length || p_puzzleName.length < 3) {
 		return;
 	}
 
 	const baseString = "grid_is_good_" + p_puzzleName; 
-    for (var i = 0, len = localStorage.length; i < len; i++) {
-        name = localStorage.key(i);
-        if (name.startsWith(baseString)) {
-			stringPuzzleOld = localStorage.getItem(name);
-			loadedItemOld = stringToWallAndNumbersPuzzle(stringPuzzleOld); // former puzzle -> string method
-			puzzleString = puzzleRegionIndicationsToString(loadedItemOld.wallArray, loadedItemOld.numberArray); // new string -> puzzle method
-			localStorage.setItem(name, puzzleString);
-        } 
-    }
+	if (confirm(WARNING_REPLACEMENT_LOCAL_STORAGE_STRINGS)) {
+		for (var i = 0, len = localStorage.length; i < len; i++) {
+			name = localStorage.key(i);
+			newName = name;
+			if (name.startsWith(baseString)) {
+				stringPuzzleOld = localStorage.getItem(name);
+				loadedItemOld = stringToWallAndNumbersPuzzle(stringPuzzleOld); // former (puzzle -> string) method
+				puzzleString = puzzleWallsOnlyToString(loadedItemOld.wallArray); // new (string -> puzzle) method
+				localStorage.setItem(newName, puzzleString)
+			} 
+		}
+	}
+
 	
 	// Isolated test (but what if the console runs in strict mode, with 'const' and 'var' items required here and there ? Well, is it even possible ?)
-	/*name = "grid_is_good_Shimaguni87";
-	newName = "grid_is_good_Shimaguni"
-	stringPuzzleOld = localStorage.getItem(name);
-	loadedItemOld = stringToWallAndNumbersPuzzle(stringPuzzleOld); // former puzzle -> string method
-	puzzleString = puzzleRegionIndicationsToString(loadedItemOld.wallArray, loadedItemOld.numberArray); // new string -> puzzle method
+	/*name = "grid_is_good_LITS59"; // Name of a known puzzle
+	newName = "grid_is_good_LITS" // Name of a puzzle we are ready to overwrite
+	
+	stringPuzzleOld = localStorage.getItem(name); 	// Copy-paste these lines into the if block of the for loop when ready
+	loadedItemOld = stringToWallAndNumbersPuzzle(stringPuzzleOld); // former (puzzle -> string) method
+	puzzleString = puzzleWallsOnlyToString(loadedItemOld.wallArray); // new (string -> puzzle) method
 	localStorage.setItem(newName, puzzleString);*/
+	
+	
 }
 
 function massConversionSelected(p_puzzleName, p_arrayNames) {
@@ -35,15 +47,18 @@ function massConversionSelected(p_puzzleName, p_arrayNames) {
 	//puzzleName = "Heyawake";
 	const baseString = "grid_is_good_" + p_puzzleName; 
 	var stringPuzzleOld, name;
-    for (var i = 0 ; i < p_arrayNames.length; i++) {
-        name = baseString + p_arrayNames[i];
-		stringPuzzleOld = localStorage.getItem(name);
-        if (stringPuzzleOld) {
-			loadedItemOld = stringToWallAndNumbersPuzzle(stringPuzzleOld); // former puzzle -> string method
-			puzzleString = puzzleRegionIndicationsToString(loadedItemOld.wallArray, loadedItemOld.numberArray); // new string -> puzzle method
-			localStorage.setItem(name, puzzleString);
-        } 
-    }
+	if (confirm(WARNING_REPLACEMENT_LOCAL_STORAGE_STRINGS)) {
+		for (var i = 0 ; i < p_arrayNames.length; i++) {
+			name = baseString + p_arrayNames[i];
+			stringPuzzleOld = localStorage.getItem(name);
+			if (stringPuzzleOld) {
+				loadedItemOld = stringToWallAndNumbersPuzzle(stringPuzzleOld); // former puzzle -> string method
+				puzzleString = puzzleRegionIndicationsToString(loadedItemOld.wallArray, loadedItemOld.numberArray); // new string -> puzzle method
+				localStorage.setItem(name, puzzleString);
+			} 
+		}
+	}		
+    
 	
 	// Isolated test (but what if the console runs in strict mode, with 'const' and 'var' items required here and there ? Well, is it even possible ?)
 	/*name = "grid_is_good_Shimaguni87";

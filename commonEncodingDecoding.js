@@ -97,12 +97,22 @@ StreamEncodingString64.prototype.addString = function(p_string) {
 	this.string += p_string;
 }
 
+// Unlike other methods, this one is not closing
+StreamEncodingString64.prototype.getString = function(p_string) {
+	this.closeNumber();
+	return this.string; 
+}
+
 function StreamDecodingString64(p_string) {
 	this.string = p_string;
 	this.index = 0;
 }
 
-StreamDecodingString64.prototype.decode = function () {
+StreamDecodingString64.prototype.decodeWithPrefix = function() {
+	return this.decode(true);
+}
+
+StreamDecodingString64.prototype.decode = function (p_withPrefix) {
 	if (this.index == this.string.length) {
 		return END_OF_DECODING_STREAM;
 	}
@@ -126,10 +136,17 @@ StreamDecodingString64.prototype.decode = function () {
 	} else {
 		value = decode64FromCharacter(this.string.charAt(this.index));
 		this.index++;
-		return {prefix : preNumber, value : value};	
+		if (p_withPrefix) {
+			return {prefix : preNumber, value : value};	
+		} else {
+			return value;
+		}
 	}
 }
 
+StreamDecodingString64.prototype.getNextIndex = function() {
+	return this.index;
+}
 
 
 // For test :
@@ -208,7 +225,7 @@ function StreamEncodingFullBase(p_base) {
 	}
 }
 
-StreamEncodingFullBase.prototype.encodeDigit = function(p_digit) {
+StreamEncodingFullBase.prototype.encode = function(p_digit) {
 	this.value0to63 *= this.base;
 	this.value0to63 += p_digit;
 	this.numberDigits++;
@@ -242,7 +259,7 @@ StreamDecodingFullBase = function(p_base, p_string) {
 		this.capDigits = 2;
 	}
 	this.privateString = p_string;
-	this.indexInString = 0;
+	this.indexInString = 0; // Since the first number is consumed...
 	this.arrayDigits = [];
 	if (this.privateString.length != 0) {
 		this.arrayDigits = arrayDigitsBase(decode64FromCharacter(this.privateString.charAt(0)), this.base, this.capDigits);
@@ -250,7 +267,7 @@ StreamDecodingFullBase = function(p_base, p_string) {
 	this.indexInArrayDigits = 0;
 }
 
-StreamDecodingFullBase.prototype.getValue = function() {
+StreamDecodingFullBase.prototype.decode = function() {
 	if (this.indexInString == this.privateString.length) {
 		return END_OF_DECODING_STREAM;
 	}
@@ -281,6 +298,11 @@ arrayDigitsBase = function(p_value0to63, p_base, p_capDigits) {
 	return answer;
 }
 
+StreamDecodingFullBase.prototype.getConsumedCharacters = function() {
+	return (this.indexInArrayDigits == 0) ? this.indexInString : (this.indexInString+1);
+}
+
+
 // ----
 // Encode values as they come (in base 64), including potentially null ones.
 // If one value is skipped (null), add a "-"
@@ -310,7 +332,7 @@ StreamEncodingSparseAny.prototype.encode = function(p_value) {
 }
 
 StreamEncodingSparseAny.prototype.getString = function() {
-	return this.privateStream.string;
+	return this.privateStream.getString();
 }
 // Test : 
 /*encoder = new StreamEncodingSparseAny(); 
@@ -335,7 +357,7 @@ StreamDecodingSparseAny.prototype.decode = function() {
 			this.reservedValue = NOT_DECODED_CHARACTER;
 			return answer;
 		} else {
-			const val = this.privateStream.decode();
+			const val = this.privateStream.decodeWithPrefix();
 			switch(val.prefix) {
 				case "" : return val.value; break;
 				case "--" : 
@@ -360,6 +382,9 @@ StreamDecodingSparseAny.prototype.decode = function() {
 /*decoder = new StreamDecodingSparseAny("3-5-1_2A"); 
 decoder.decode();*/
 
+StreamDecodingSparseAny.prototype.getNextIndex = function() {
+	return this.privateStream.getNextIndex();
+}
 
 // ----
 // Encode binary as they come (in base 64), but with only 2 possible values 0 and 1 and the 1 are sparse.
@@ -405,7 +430,7 @@ StreamEncodingSparseBinary.prototype.getString = function() {
 	if (this.lastBit1) {
 		this.encodeSerieOf1();
 	}
-	const answer = this.privateStream.string;
+	const answer = this.privateStream.getString();
 	this.privateStream.string = "";
 	this.currentSameBits = 0;
 	this.lastBit1 = false; // C/P from initialization 
@@ -457,7 +482,7 @@ StreamDecodingSparseBinary.prototype.decode = function(p_string) {
 		return true;
 	} else {
 		if (this.future0s == 0) {
-			const val = this.privateStream.decode();
+			const val = this.privateStream.decodeWithPrefix();
 			if (val != END_OF_DECODING_STREAM) {
 				switch(val.prefix) {
 					case "" : 
@@ -487,6 +512,10 @@ StreamDecodingSparseBinary.prototype.decode = function(p_string) {
 		this.future0s--
 		return false;	
 	}
+}
+
+StreamDecodingSparseBinary.prototype.getNextIndex = function() {
+	return this.privateStream.getNextIndex();
 }
 // Test 
 /*

@@ -81,7 +81,7 @@ Transforms a loaded string into the appropriate item (see common save and load),
 Called by common save and load !
 */
 loadPuzzle = function(p_canvas, p_drawer, p_solver, p_loadedString) {
-	const loadedItem = stringToWallAndNumbersPuzzle(p_loadedString);
+	const loadedItem = stringToPuzzleWallsOnly(p_loadedString);
 	p_solver.construct(loadedItem.wallArray);
 	p_drawer.adaptCanvasDimensions(p_canvas,{xLength:p_solver.xLength,yLength:p_solver.yLength});
 }	

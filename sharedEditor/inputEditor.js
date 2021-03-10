@@ -242,13 +242,15 @@ renameAction = function (p_fieldValue) {
 // Saving and loading
 
 const PUZZLES_KIND = {
-	HEYAWAKE_LIKE : {id:2},
-	MASYU_LIKE : {id:3},
-	STAR_BATTLE : {id:101, squareGrid : true},
-	GRAND_TOUR : {id:102},
-	NURIKABE_LIKE : {id:4},
-	YAJILIN_LIKE : {id:5},
-	HAKYUU_LIKE : {id:6}
+	WALLS_ONLY : {id : 1},
+	HEYAWAKE_LIKE : {id:992},
+	STAR_BATTLE : {id:99101, squareGrid : true},
+	MASYU_LIKE : {id:993},
+	STAR_BATTLE : {id:99101, squareGrid : true},
+	GRAND_TOUR : {id:99102},
+	NURIKABE_LIKE : {id:994},
+	YAJILIN_LIKE : {id:995},
+	HAKYUU_LIKE : {id:996}
 }
 
 /** 
@@ -265,24 +267,26 @@ saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions
         }
     }
     if (letsSave) {
-        var puzzleToSave = "";
+        var puzzleToSaveString = "";
 		p_editorCore.cleanRedundantWalls();
 		
         if (p_kindId == PUZZLES_KIND.STAR_BATTLE.id) {
-            puzzleToSave = starBattlePuzzleToString(p_editorCore.getWallArray(), p_externalOptions.numberStars);
+            puzzleToSaveString = starBattlePuzzleToString(p_editorCore.getWallArray(), p_externalOptions.numberStars);
         } else if (p_kindId == PUZZLES_KIND.MASYU_LIKE.id) {
-            puzzleToSave = commonPuzzleEmptyWallsToString(p_editorCore.getXLength(), p_editorCore.getYLength(), p_editorCore.getArray(GRID_ID.PEARL), [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK]);
+            puzzleToSaveString = commonPuzzleEmptyWallsToString(p_editorCore.getXLength(), p_editorCore.getYLength(), p_editorCore.getArray(GRID_ID.PEARL), [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK]);
         } else if (p_kindId == PUZZLES_KIND.NURIKABE_LIKE.id) {
-            puzzleToSave = arrayToStringSpaces(p_editorCore.getArray(GRID_ID.NUMBER_SPACE), true);
+            puzzleToSaveString = arrayToStringSpaces(p_editorCore.getArray(GRID_ID.NUMBER_SPACE), true);
         } else if (p_kindId == PUZZLES_KIND.YAJILIN_LIKE.id) {
-            puzzleToSave = puzzleLexicalSpacesToString(p_editorCore.getArray(GRID_ID.YAJILIN_LIKE));
+            puzzleToSaveString = puzzleLexicalSpacesToString(p_editorCore.getArray(GRID_ID.YAJILIN_LIKE));
         } else if (p_kindId == PUZZLES_KIND.HAKYUU_LIKE.id) {
-			puzzleToSave = commonPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_SPACE), null);
-		} else {
+			puzzleToSaveString = commonPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_SPACE), null);
+		} else if (p_kindId == PUZZLES_KIND.HEYAWAKE_LIKE.id) {
 			p_editorCore.alignToRegions(GRID_ID.NUMBER_REGION);
-			puzzleToSave = puzzleRegionIndicationsToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION));
-        }
-        localStorage.setItem(localStorageName, puzzleToSave);
+			puzzleToSaveString = puzzleRegionIndicationsToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION));
+        } else {
+			puzzleToSaveString = puzzleWallsOnlyToString(p_editorCore.getWallArray());
+		}
+        localStorage.setItem(localStorageName, puzzleToSaveString);
     }
 }
 
@@ -322,11 +326,14 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p
 				loadedItem = stringToWallAndNumbersPuzzle(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);			
 				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE,loadedItem.numberArray); 
-			} else {
+			} else if (p_kindId == PUZZLES_KIND.HEYAWAKE_LIKE.id) {
 				loadedItem = stringToPuzzleRegionsIndications(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);
 				regionIndicArray = getRegionIndicArray(loadedItem);			; 
 				p_editorCore.addGrid(GRID_ID.NUMBER_REGION, regionIndicArray);
+			} else {
+				loadedItem = stringToPuzzleWallsOnly(localStorage.getItem(localStorageName));
+				p_editorCore.setupFromWallArray(loadedItem.wallArray);
 			}
             adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore); 
             updateFieldsAfterLoad(p_fieldsToUpdate, loadedItem);
@@ -384,7 +391,7 @@ function comboChange(p_thelist, p_editorCore) {
 			p_editorCore.setVisibleGrids([GRID_ID.YAJILIN_LIKE]);
 			break;
 		default: // norinori, lits, entryExit... no numbers, only regions
-			saveLoadModeId = PUZZLES_KIND.HEYAWAKE_LIKE.id;
+			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY.id;
 			p_editorCore.maskAllGrids();	
     } // Credits for multiple statements in cases : https://stackoverflow.com/questions/13207927/switch-statement-multiple-cases-in-javascript
 	const squarePuzzle = correspondsToSquarePuzzle(saveLoadModeId); 

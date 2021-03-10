@@ -16,6 +16,25 @@ function getLocalStorageName(p_name) {
 
 // ------------------------------------------
 
+function puzzleWallsOnlyToString(p_wallArray) {
+	const streamDim = new StreamEncodingString64();
+	streamDim.encode(p_wallArray[0].length);
+	streamDim.encode(p_wallArray.length);
+	return streamDim.getString() + " " + wallArrayToString64(p_wallArray);
+}
+
+function stringToPuzzleWallsOnly(p_string) {
+	const tokens = p_string.split(" ");
+	const streamDim = new StreamDecodingString64(tokens[0]);
+	const p_xLength = streamDim.decode();
+	const p_yLength = streamDim.decode();
+	return {wallArray : string64toWallArray(tokens[1], p_xLength, p_yLength)}; // "wallArray" is necessary for updating fields in the editor, we cannot just return an array.
+}
+
+// ------------------------------------------
+
+
+
 // Savers and loaders
 // Note : for commodity, a saver has been associated with its loader rather than having all savers together and all loaders together
 
