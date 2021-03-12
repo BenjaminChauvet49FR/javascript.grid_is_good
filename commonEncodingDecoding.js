@@ -358,6 +358,9 @@ StreamDecodingSparseAny.prototype.decode = function() {
 			return answer;
 		} else {
 			const val = this.privateStream.decodeWithPrefix();
+			if (val == END_OF_DECODING_STREAM) {
+				return END_OF_DECODING_STREAM;
+			}
 			switch(val.prefix) {
 				case "" : return val.value; break;
 				case "--" : 

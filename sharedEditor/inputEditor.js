@@ -243,8 +243,8 @@ renameAction = function (p_fieldValue) {
 
 const PUZZLES_KIND = {
 	WALLS_ONLY : {id : 1},
-	HEYAWAKE_LIKE : {id:992},
-	STAR_BATTLE : {id:99101, squareGrid : true},
+	REGIONS_NUMERICAL_INDICATIONS : {id:2},
+	STAR_BATTLE : {id:1001, squareGrid : true},
 	MASYU_LIKE : {id:993},
 	GRAND_TOUR : {id:99102},
 	NURIKABE_LIKE : {id:994},
@@ -279,7 +279,7 @@ saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions
             puzzleToSaveString = puzzleLexicalSpacesToString(p_editorCore.getArray(GRID_ID.YAJILIN_LIKE));
         } else if (p_kindId == PUZZLES_KIND.HAKYUU_LIKE.id) {
 			puzzleToSaveString = commonPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_SPACE), null);
-		} else if (p_kindId == PUZZLES_KIND.HEYAWAKE_LIKE.id) {
+		} else if (p_kindId == PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS.id) {
 			p_editorCore.alignToRegions(GRID_ID.NUMBER_REGION);
 			puzzleToSaveString = puzzleRegionIndicationsToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION));
         } else {
@@ -325,8 +325,8 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p
 				loadedItem = stringToWallAndNumbersPuzzle(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);			
 				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE,loadedItem.numberArray); 
-			} else if (p_kindId == PUZZLES_KIND.HEYAWAKE_LIKE.id) {
-				loadedItem = stringToPuzzleRegionsIndications(localStorage.getItem(localStorageName));
+			} else if (p_kindId == PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS.id) {
+				loadedItem = stringToPuzzleRegionsNumericIndications(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);
 				regionIndicArray = getRegionIndicArray(loadedItem);			; 
 				p_editorCore.addGrid(GRID_ID.NUMBER_REGION, regionIndicArray);
@@ -373,7 +373,7 @@ function comboChange(p_thelist, p_editorCore) {
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]);
 			break;
 		case 'Chocona': case 'CountryRoad': case 'Heyawake': case 'Shimaguni' :
-			saveLoadModeId = PUZZLES_KIND.HEYAWAKE_LIKE.id;
+			saveLoadModeId = PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS.id;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_REGION]);
 			break;
 		case 'Hakyuu':
