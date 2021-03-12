@@ -56,7 +56,7 @@ putActionElementClick("submit_rename_puzzle", function (event) {
 });
 
 putActionElementClick("submit_save_grid", function (event) {
-    saveAction(editorCore, fieldName.value, saveLoadModeId, {numberStars : fieldStars.value}) 
+    saveAction(editorCore, fieldName.value, saveLoadModeId, {numberStars : parseInt(fieldStars.value, 10)}) 
 });
 
 putActionElementClick("submit_load_grid", function (event) {

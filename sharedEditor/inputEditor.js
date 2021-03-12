@@ -246,7 +246,6 @@ const PUZZLES_KIND = {
 	HEYAWAKE_LIKE : {id:992},
 	STAR_BATTLE : {id:99101, squareGrid : true},
 	MASYU_LIKE : {id:993},
-	STAR_BATTLE : {id:99101, squareGrid : true},
 	GRAND_TOUR : {id:99102},
 	NURIKABE_LIKE : {id:994},
 	YAJILIN_LIKE : {id:995},
