@@ -244,10 +244,11 @@ renameAction = function (p_fieldValue) {
 const PUZZLES_KIND = {
 	WALLS_ONLY : {id : 1},
 	REGIONS_NUMERICAL_INDICATIONS : {id:2},
+	NUMBERS_ONLY : {id:3},
+	CURVING_ROAD : {id:4},
+	MASYU : {id:5},
 	STAR_BATTLE : {id:1001, squareGrid : true},
-	MASYU_LIKE : {id:993},
 	GRAND_TOUR : {id:99102},
-	NURIKABE_LIKE : {id:994},
 	YAJILIN_LIKE : {id:995},
 	HAKYUU_LIKE : {id:996}
 }
@@ -271,9 +272,11 @@ saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions
 		
         if (p_kindId == PUZZLES_KIND.STAR_BATTLE.id) {
             puzzleToSaveString = starBattlePuzzleToString(p_editorCore.getWallArray(), p_externalOptions.numberStars);
-        } else if (p_kindId == PUZZLES_KIND.MASYU_LIKE.id) {
-            puzzleToSaveString = commonPuzzleEmptyWallsToString(p_editorCore.getXLength(), p_editorCore.getYLength(), p_editorCore.getArray(GRID_ID.PEARL), [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK]);
-        } else if (p_kindId == PUZZLES_KIND.NURIKABE_LIKE.id) {
+        } else if (p_kindId == PUZZLES_KIND.MASYU.id) {
+            puzzleToSaveString = SSS(p_editorCore.getXLength(), p_editorCore.getYLength(), p_editorCore.getArray(GRID_ID.PEARL), [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK]);
+        } else if (p_kindId == PUZZLES_KIND.CURVING_ROAD.id) {
+            puzzleToSaveString = SSS(p_editorCore.getXLength(), p_editorCore.getYLength(), p_editorCore.getArray(GRID_ID.PEARL), [SYMBOL_ID.WHITE]);
+		} else if (p_kindId == PUZZLES_KIND.NUMBERS_ONLY.id) {
             puzzleToSaveString = arrayToStringSpaces(p_editorCore.getArray(GRID_ID.NUMBER_SPACE), true);
         } else if (p_kindId == PUZZLES_KIND.YAJILIN_LIKE.id) {
             puzzleToSaveString = puzzleLexicalSpacesToString(p_editorCore.getArray(GRID_ID.YAJILIN_LIKE));
@@ -303,14 +306,22 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p
             if (p_kindId == PUZZLES_KIND.STAR_BATTLE.id){
 				loadedItem = stringToStarBattlePuzzle(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);			
-			} else if (p_kindId == PUZZLES_KIND.MASYU_LIKE.id){
+			} else if (p_kindId == PUZZLES_KIND.MASYU.id){
+				loadedItem = stringToEmptyWallsPuzzle(localStorage.getItem(localStorageName));
+				//loadedItem = stringToLimitedSymbolsWalllessPuzzle(localStorage.getItem(localStorageName), [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK]);
+				const gridPearl = loadedItem.symbolArray;
+				loadedItem.wallArray = generateWallArray(gridPearl[0].length, gridPearl.length); // ".wallGrid" property added to suit the updateFieldsAfterLoad method .
+				p_editorCore.setupFromWallArray(loadedItem.wallArray);
+				p_editorCore.addGrid(GRID_ID.PEARL, gridPearl); 
+			} else if (p_kindId == PUZZLES_KIND.CURVING_ROAD.id){
+				//loadedItem = stringToLimitedSymbolsWalllessPuzzle(localStorage.getItem(localStorageName), [SYMBOL_ID.WHITE]);
 				loadedItem = stringToEmptyWallsPuzzle(localStorage.getItem(localStorageName));
 				const gridPearl = loadedItem.symbolArray;
 				loadedItem.wallArray = generateWallArray(gridPearl[0].length, gridPearl.length); // ".wallGrid" property added to suit the updateFieldsAfterLoad method .
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);
 				p_editorCore.addGrid(GRID_ID.PEARL, gridPearl); 
-			} else if (p_kindId == PUZZLES_KIND.NURIKABE_LIKE.id){
-				loadedItem = stringToNurikabePuzzle(localStorage.getItem(localStorageName));
+			} else if (p_kindId == PUZZLES_KIND.NUMBERS_ONLY.id){
+				loadedItem = stringToPuzzleNumbersOnly(localStorage.getItem(localStorageName));
 				const gridNumber = loadedItem.numberArray;
 				loadedItem.wallArray = generateWallArray(gridNumber[0].length, gridNumber.length); 
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);
@@ -362,14 +373,19 @@ function comboChange(p_thelist, p_editorCore) {
 	p_editorCore.setWallsOn();
 	// Specific options
     switch (content) {
-		case 'CurvingRoad' : case 'Masyu':
+		case 'CurvingRoad' : 
 			p_editorCore.setWallsOff();
-			saveLoadModeId = PUZZLES_KIND.MASYU_LIKE.id;
+			saveLoadModeId = PUZZLES_KIND.CURVING_ROAD.id;
+			p_editorCore.setVisibleGrids([GRID_ID.PEARL]);
+			break;
+		case 'Masyu':
+			p_editorCore.setWallsOff();
+			saveLoadModeId = PUZZLES_KIND.MASYU.id;
 			p_editorCore.setVisibleGrids([GRID_ID.PEARL]);
 			break;
 		case 'Koburin': case 'Usotatami':
 			p_editorCore.setWallsOff();
-			saveLoadModeId = PUZZLES_KIND.NURIKABE_LIKE.id;
+			saveLoadModeId = PUZZLES_KIND.NUMBERS_ONLY.id;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]);
 			break;
 		case 'Chocona': case 'CountryRoad': case 'Heyawake': case 'Shimaguni' :

@@ -113,6 +113,60 @@ function getRegionIndicArray(p_loadedItem) {
 	return regionIndicArray;
 }
 
+function puzzleNumbersOnlyToString(p_numbersArray) {
+	const streamDim = new StreamEncodingString64();
+	streamDim.encode(p_numbersArray[0].length);
+	streamDim.encode(p_numbersArray.length);
+	const streamValues = new StreamEncodingSparseAny();
+	for(var iy = 0 ; iy < p_numbersArray.length ; iy++) {
+		for(var ix = 0 ; ix < p_numbersArray[0].length; ix++) {
+			streamValues.encode(p_numbersArray[iy][ix]);
+		}
+	}
+	return streamDim.getString() + " " + streamValues.getString();
+}
+
+function stringToPuzzleNumbersOnly(p_string) {
+	const tokens = p_string.split(" ");
+	const streamDim = new StreamDecodingString64(tokens[0]);
+	const xLength = streamDim.decode();
+	const yLength = streamDim.decode();
+	const streamValues = new StreamDecodingSparseAny(tokens[1]);
+	var answer = [];
+	for(var iy = 0 ; iy < xLength ; iy++) {
+		answer.push([]);
+		for(var ix = 0 ; ix < xLength; ix++) {
+			decode = streamValues.decode();
+			if (decode != END_OF_DECODING_STREAM) {
+				answer[iy].push(decode);
+			}  else {
+				answer[iy].push(null);
+			}
+		}
+	}
+	return {
+	    numberArray : answer
+	}
+}
+
+function limitedSymbolsWalllessPuzzleToString(p_symbolsArray, p_symbolsList) {
+	const streamDim = new StreamEncodingString64();
+	streamDim.encode(p_symbolsArray[0].length);
+	streamDim.encode(p_symbolsArray.length);
+	const streamValues = new StreamEncodingSparseBinary();
+	var separator = "";
+	var tokens = "";
+	p_symbolsList.forEach(symbol => {
+		for(var iy = 0 ; iy < p_symbolsArray.length ; iy++) {
+			for(var ix = 0 ; ix < p_symbolsArray[0].length ; ix++) {
+				streamValues.encode(p_symbolsArray[iy][ix] == symbol);
+			}
+		}
+		tokens += separator + streamValues.getString();
+		separator = "#";
+	});
+	return streamDim.getString() + " " + tokens;
+}
 
 // ------------------------------------------
 
@@ -259,22 +313,4 @@ function stringToEmptyWallsPuzzle(p_string) {
 	return {
 	    symbolArray : array
 	};
-}
-
-/**
-Transforms a space-representation string with only its width and height before into a numberArray 
-4 4 1 2 15 =>
-....
-....
-.{15}..
-....
-*/
-function stringToNurikabePuzzle(p_string) {
-	var stringArray = p_string.split(' ');
-	var xLength = stringArray[0];
-	var yLength = stringArray[1];
-	var numberGrid = generateSymbolArray(xLength,yLength);
-	return {
-	    numberArray : numberGrid = fillArrayWithTokensSpaces(stringArray.slice(2), numberGrid)
-	}
 }

@@ -18,8 +18,8 @@ function massConversionLocalStorageString(p_puzzleName) {
 			newName = name;
 			if (name.startsWith(baseString)) {
 				stringPuzzleOld = localStorage.getItem(name); 	// Copy-paste these lines into the if block of the for loop when ready
-				loadedItemOld = stringToPuzzleRegionsIndications(stringPuzzleOld); // former (string -> puzzle) method
-				puzzleString = puzzleRegionsNumericIndicationsToString(loadedItemOld.wallArray, getRegionIndicArray(loadedItemOld)); // new (puzzle -> string) method (in order to save)
+				loadedItemOld = stringToNurikabePuzzleOld(stringPuzzleOld); // former (string -> puzzle) method
+				puzzleString = limitedSymbolsWalllessPuzzleToString(loadedItemOld.symbolArray); // new (puzzle -> string) method (in order to save)
 				localStorage.setItem(newName, puzzleString);
 			} 
 		}
@@ -28,12 +28,12 @@ function massConversionLocalStorageString(p_puzzleName) {
 	
 	// Isolated test (but what if the console runs in strict mode, with 'const' and 'var' items required here and there ? Well, is it even possible ?)
 	/*
-	name = "grid_is_good_CountryRoad99"; // Name of a known puzzle
-	newName = "grid_is_good_CountryRoad" // Name of a puzzle we are ready to overwrite
+	name = "grid_is_good_Masyu598"; // Name of a known puzzle
+	newName = "grid_is_good_Masyu" // Name of a puzzle we are ready to overwrite
 
 	stringPuzzleOld = localStorage.getItem(name); 	// Copy-paste these lines into the if block of the for loop when ready
-	loadedItemOld = stringToPuzzleRegionsIndications(stringPuzzleOld); // former (string -> puzzle) method
-	puzzleString = puzzleRegionsNumericIndicationsToString(loadedItemOld.wallArray, getRegionIndicArray(loadedItemOld)); // new (puzzle -> string) method (in order to save)
+	loadedItemOld = stringToEmptyWallsPuzzle(stringPuzzleOld); // former (string -> puzzle) method
+	puzzleString = limitedSymbolsWalllessPuzzleToString(loadedItemOld.symbolArray, [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK]); // new (puzzle -> string) method (in order to save)
 	localStorage.setItem(newName, puzzleString);
 	*/
 	

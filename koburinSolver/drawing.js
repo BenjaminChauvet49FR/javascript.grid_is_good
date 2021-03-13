@@ -10,7 +10,7 @@ function drawInsideSpaces(p_context, p_drawer, p_colorSet, p_solver) {
 		for(var ix=0; ix<p_solver.xLength; ix++) {
 			supposedNumber = p_solver.getNumber(ix, iy);
 			if (supposedNumber != null) {
-				p_context.fillText(supposedNumber, p_drawer.getPixInnerXLeft(ix)+2, p_drawer.getPixInnerYUp(iy)+2);
+				p_context.fillText(supposedNumber, p_drawer.getPixCenterX(ix), p_drawer.getPixCenterY(iy));
 			}
 		}
 	}
