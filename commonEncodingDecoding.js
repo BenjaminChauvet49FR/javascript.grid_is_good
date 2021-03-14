@@ -391,61 +391,59 @@ StreamDecodingSparseAny.prototype.getNextIndex = function() {
 
 // ----
 // Encode binary as they come (in base 64), but with only 2 possible values 0 and 1 and the 1 are sparse.
-// If one value is true : "-"
-// If two bits are true : "--" 
-// Three bits or more in a row : "_?" where ? is the number of bits at 1 (0 if exactly 3 bits were at 1)
-// Also, distance with the previous (or the beginning) if series of 0.
+// Encoding only the distance between the beginning and the first 1 bit and then between two 1-bits. If series of 1, replace it by _? where ? is the length of the serie minus 3.
 // No 0 encoded at start if a 1-bit is provided first.
 StreamEncodingSparseBinary = function() {
 	this.privateStream = new StreamEncodingString64();
-	this.currentSameBits = 0;
-	this.lastBit1 = false;
+	this.previous0s = 0;
+	this.previous1s = 0;
+	this.noDigitsYet = true;
 }
 
 StreamEncodingSparseBinary.prototype.encode = function(p_bit) {
 	if (!p_bit) {
-		if (this.lastBit1) { // From 1 to 0 : copy all 1s met as a "-", "--" or "_?" (see below)
-			this.encodeSerieOf1();			
+		if (this.previous1s > 0) {
+			this.encodeSerieOf1();
+			this.previous1s = 0;
 		}
+		this.previous0s++;
 	} else {
-		if (!this.lastBit1 && this.currentSameBits != 0) { // From 0 to 1 : copy all 0s met... as a value. Do not encode 0 if the string starts with 0.
-			this.privateStream.encode(this.currentSameBits);					
-			this.currentSameBits = 0;			
+		if (this.previous0s > 0) {
+			this.privateStream.encode(this.previous0s);
+			this.previous0s = 0;
+		} else if (this.noDigitsYet) {
+			this.privateStream.encode(0);
 		}
+		this.previous1s++;
 	}
-	this.currentSameBits++;
-	this.lastBit1 = p_bit;
+	this.noDigitsYet = false;
 }
 
 StreamEncodingSparseBinary.prototype.encodeSerieOf1 = function() {
-	if (this.currentSameBits >= 3) {
+	if (this.previous1s >= 3) {
 		this.privateStream.addString("_");
-		this.privateStream.encode(this.currentSameBits-3);				
-	} else if (this.currentSameBits == 2) {
-		this.privateStream.addString("--");
-	} else {
-		this.privateStream.addString("-");
-	}
-	this.currentSameBits = 0;
+		this.privateStream.encode(this.previous1s - 3);
+	} else if (this.previous1s == 2) {
+		this.privateStream.encode(0);
+	}		
 }
 
 StreamEncodingSparseBinary.prototype.getString = function() {
-	if (this.lastBit1) {
-		this.encodeSerieOf1();
-	}
+	this.encodeSerieOf1();
 	const answer = this.privateStream.getString();
 	this.privateStream.string = "";
-	this.currentSameBits = 0;
-	this.lastBit1 = false; // C/P from initialization 
+	this.previous0s = 0;
+	this.previous1s = 0;
+	this.noDigitsYet = true;
 	return answer; 
 }
 
 /* Test :
 encoder = new StreamEncodingSparseBinary(); 
-encoder.encode(1); encoder.encode(1); encoder.encode(1); encoder.encode(1); encoder.encode(1); 
-encoder.encode(1); encoder.encode(1); encoder.encode(0); encoder.encode(0); encoder.encode(0); 
-encoder.encode(0); encoder.encode(0); encoder.encode(0); encoder.encode(0); encoder.encode(0); // _48
-encoder.encode(1); encoder.encode(0); encoder.encode(1); encoder.encode(1); encoder.encode(1); // -1_0 
+encoder.encode(1);encoder.encode(1);encoder.encode(1);encoder.encode(1);encoder.encode(1);encoder.encode(1);
+encoder.encode(1);encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(0);
+encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(1);encoder.encode(0);encoder.encode(1);
+encoder.encode(1);encoder.encode(1); //0_481_0
 encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(0);
 encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(0);
 encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(0);
@@ -471,62 +469,146 @@ encoder.encode(1);encoder.encode(1);encoder.encode(1);encoder.encode(1);encoder.
 encoder.encode(1);encoder.encode(1);encoder.encode(1);encoder.encode(1);encoder.encode(1);encoder.encode(1);
 encoder.encode(1);encoder.encode(1); // _[11
 encoder.getString();
+
+encoder.encode(1);encoder.encode(0);encoder.encode(1);encoder.encode(0);encoder.encode(1);
+encoder.encode(1);encoder.encode(0);encoder.encode(1);encoder.encode(0);encoder.encode(1);
+encoder.encode(1);encoder.encode(0);encoder.encode(1);encoder.encode(0);encoder.encode(1);
+encoder.encode(1);encoder.encode(0);encoder.encode(1);encoder.encode(0);encoder.encode(1); //011011011011
+encoder.getString();
+
+encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(1);
+encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(1);
+encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(1);
+encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(1); //4444
+encoder.getString();
+
+encoder.encode(1);encoder.encode(1);encoder.encode(1);encoder.encode(0);encoder.encode(1); encoder.getString(); // 0_01
+encoder.encode(1);encoder.encode(1);encoder.encode(0);encoder.encode(0);encoder.encode(1); encoder.getString(); // 002
+
+encoder.encode(0);encoder.encode(1);encoder.encode(1);encoder.encode(1); encoder.getString(); // 1_0
+encoder.encode(0);encoder.encode(0);encoder.encode(1);encoder.encode(1); encoder.getString(); //20
+encoder.encode(0);encoder.encode(0);encoder.encode(0);encoder.encode(1);encoder.encode(1);encoder.encode(1); encoder.getString(); //3_0 
+for(var i = 0; i < 5 ; i++) {encoder.encode(0);} encoder.getString(); // Chaîne vide
+for(var i = 0; i < 64 ; i++) {encoder.encode(0);} encoder.getString(); // Chaîne vide
+for(var i = 0; i < 64 ; i++) {encoder.encode(0);} 
+encoder.encode(1); encoder.getString(); // [10]
+for(var i = 0; i < 64 ; i++) {encoder.encode(0);} 
+encoder.encode(1);
+encoder.encode(1); encoder.getString(); // [10]0
+for(var i = 0; i < 64 ; i++) {encoder.encode(0);} 
+encoder.encode(1); 
+for(var i = 0; i < 64 ; i++) {encoder.encode(0);} encoder.getString();  // [10]
+for(var i = 0; i < 64 ; i++) {encoder.encode(0);} 
+for(var i = 0; i < 64 ; i++) {encoder.encode(1);} encoder.getString(); // [10]_z
+for(var i = 0; i < 64 ; i++) {encoder.encode(0);} 
+for(var i = 0; i < 67 ; i++) {encoder.encode(1);} encoder.getString(); // [10]_[10]
+for(var i = 0; i < 63 ; i++) {encoder.encode(0);} 
+for(var i = 0; i < 66 ; i++) {encoder.encode(1);}
+for(var i = 0; i < 62 ; i++) {encoder.encode(0);} 
+for(var i = 0; i < 65 ; i++) {encoder.encode(1);}
+for(var i = 0; i < 61 ; i++) {encoder.encode(0);} 
+for(var i = 0; i < 64 ; i++) {encoder.encode(1);} encoder.getString(); // $_$@_@z_z
+
+
+
 */
 
 StreamDecodingSparseBinary = function(p_string) {
 	this.privateStream = new StreamDecodingString64(p_string);
 	this.future1s = 0;
 	this.future0s = 0;
+	this.noDecodedYet = true;
+	this.finalOne = false; // Useful when we have no character to see left but still an expected '1'
 }
 
 StreamDecodingSparseBinary.prototype.decode = function(p_string) {
-	if (this.future1s > 0) {
-		this.future1s--;
-		return true;
-	} else {
-		if (this.future0s == 0) {
-			const val = this.privateStream.decodeWithPrefix();
-			if (val != END_OF_DECODING_STREAM) {
-				switch(val.prefix) {
-					case "" : 
-						this.future0s = val.value; 
-					break;
-					case "--" : 
-						this.future1s = 2; 
-						this.future0s = val.value; 
-					break;
-					case "-" : 
-						this.future1s = 1; 
-						this.future0s = val.value;
-					break;
-					case "_" : 
-						this.future1s = val.value + 3; 
-						this.future0s = 0;
-					break;
-				}		
+	if (this.noDecodedYet) {
+		this.noDecodedYet = false;
+		const decode1stChar = this.privateStream.decodeWithPrefix();
+		if (decode1stChar == END_OF_DECODING_STREAM) {
+			return END_OF_DECODING_STREAM;
+		} else {
+			if (decode1stChar.prefix == "" && decode1stChar.value == 0) { // We must decode the next char to have a set of 0s or 1s
+				const decode2ndChar = this.privateStream.decodeWithPrefix();
+				if (decode2ndChar != END_OF_DECODING_STREAM) {
+					if (decode2ndChar.prefix == "_") {
+						this.future1s = decode2ndChar.value + 1; // See below
+						this.oneFi = false;
+					} else {
+						this.future0s = decode2ndChar.value;
+						this.finalOne = true;
+					}
+				}
+				return true;
 			} else {
-				return END_OF_DECODING_STREAM;
-			}				
+				this.future0s = decode1stChar.value-1; // We consume one 0-bit right here
+				return false;
+			}
 		}
+	} else {
 		if (this.future1s > 0) {
 			this.future1s--;
 			return true;
+		} else if (this.future0s > 0) {
+			this.future0s--;
+			return false;
+		} else {
+			const decode = this.privateStream.decodeWithPrefix();
+			if (decode == END_OF_DECODING_STREAM) {
+				if (this.finalOne) {
+					this.finalOne = false;
+					return true;
+				} else {
+					return END_OF_DECODING_STREAM;
+				}
+			} else {
+				if (decode.prefix == "_") {
+					this.future1s = decode.value + 1;  // One "1" is consumed here, hence not +3. BUT one "1" will be consumed when retrieving the next character (or the first end of stream) hence not +2 either. Hence +1.
+					this.finalOne = true;
+				} else {
+					this.finalOne = true;
+					this.future0s = decode.value;
+				}
+				return true;
+			}
 		}
-		this.future0s--
-		return false;	
 	}
 }
 
-StreamDecodingSparseBinary.prototype.getNextIndex = function() {
-	return this.privateStream.getNextIndex();
-}
+//TODO : remove "getNextIndex" as it turned out to be useless ?
+
 // Test 
 /*
-decoder = new StreamDecodingSparseBinary("3-4-1_21_[10]"); // 3 + 1 + 4 + 1 + 1 + 5 + 1 + 67 = 83
-for(var i = 0; i < 83 ; i++) {
-	console.log(decoder.decode())
-} 
-console.log("Done");*/
+myString = "010101" // => 101101101
+decoder = new StreamDecodingSparseBinary(myString);
+for (var i = 0; i <= 9; i++) { console.log(decoder.decode())};
+console.log("Done");
 
+myString = "0010102" // => 11011011001
+decoder = new StreamDecodingSparseBinary(myString);
+for (var i = 0; i <= 11; i++) { console.log(decoder.decode())};
+console.log("Done");
+
+
+myString = "0_23_3[10][10]_[10]a" // => 11111000111111(64 0s)1(64 0s)(67 1s)(36 0s)1, total length 246
+decoder = new StreamDecodingSparseBinary(myString);
+for (var i = 0; i <= 255; i++) { console.log(decoder.decode())};
+console.log("Done");
+
+myString = "21_2" // => 001011111
+decoder = new StreamDecodingSparseBinary(myString);
+for (var i = 0; i <= 9; i++) { console.log(decoder.decode())};
+console.log("Done");
+
+myString = "" // 
+decoder = new StreamDecodingSparseBinary(myString);
+for (var i = 0; i <= 3; i++) { console.log(decoder.decode())};
+console.log("Done");
+*/
+
+myString = "a_ab_bc_cd" // => (36 0s, 39 1s, 37 0s, 40 1s, 38 0s, 41 1s, 39 0s, 1, total length 271
+decoder = new StreamDecodingSparseBinary(myString);
+for (var i = 0; i <= 271; i++) { console.log(decoder.decode())};
+console.log("Done");
 
 // TODO well, not perfect but if mistakes happen I'll realize it before I've saved and loaded strings into local storage, riiight ?
