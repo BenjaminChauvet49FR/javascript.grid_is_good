@@ -273,9 +273,9 @@ saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions
         if (p_kindId == PUZZLES_KIND.STAR_BATTLE.id) {
             puzzleToSaveString = starBattlePuzzleToString(p_editorCore.getWallArray(), p_externalOptions.numberStars);
         } else if (p_kindId == PUZZLES_KIND.MASYU.id) {
-            puzzleToSaveString = SSS(p_editorCore.getXLength(), p_editorCore.getYLength(), p_editorCore.getArray(GRID_ID.PEARL), [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK]);
+            puzzleToSaveString = limitedSymbolsWalllessPuzzleToString(p_editorCore.getArray(GRID_ID.PEARL), [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK]);
         } else if (p_kindId == PUZZLES_KIND.CURVING_ROAD.id) {
-            puzzleToSaveString = SSS(p_editorCore.getXLength(), p_editorCore.getYLength(), p_editorCore.getArray(GRID_ID.PEARL), [SYMBOL_ID.WHITE]);
+            puzzleToSaveString = limitedSymbolsWalllessPuzzleToString(p_editorCore.getArray(GRID_ID.PEARL), [SYMBOL_ID.WHITE]);
 		} else if (p_kindId == PUZZLES_KIND.NUMBERS_ONLY.id) {
             puzzleToSaveString = arrayToStringSpaces(p_editorCore.getArray(GRID_ID.NUMBER_SPACE), true);
         } else if (p_kindId == PUZZLES_KIND.YAJILIN_LIKE.id) {
@@ -307,15 +307,13 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p
 				loadedItem = stringToStarBattlePuzzle(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);			
 			} else if (p_kindId == PUZZLES_KIND.MASYU.id){
-				loadedItem = stringToEmptyWallsPuzzle(localStorage.getItem(localStorageName));
-				//loadedItem = stringToLimitedSymbolsWalllessPuzzle(localStorage.getItem(localStorageName), [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK]);
+				loadedItem = stringToLimitedSymbolsWalllessPuzzle(localStorage.getItem(localStorageName), [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK]);
 				const gridPearl = loadedItem.symbolArray;
 				loadedItem.wallArray = generateWallArray(gridPearl[0].length, gridPearl.length); // ".wallGrid" property added to suit the updateFieldsAfterLoad method .
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);
 				p_editorCore.addGrid(GRID_ID.PEARL, gridPearl); 
 			} else if (p_kindId == PUZZLES_KIND.CURVING_ROAD.id){
-				//loadedItem = stringToLimitedSymbolsWalllessPuzzle(localStorage.getItem(localStorageName), [SYMBOL_ID.WHITE]);
-				loadedItem = stringToEmptyWallsPuzzle(localStorage.getItem(localStorageName));
+				loadedItem = stringToLimitedSymbolsWalllessPuzzle(localStorage.getItem(localStorageName), [SYMBOL_ID.WHITE]);
 				const gridPearl = loadedItem.symbolArray;
 				loadedItem.wallArray = generateWallArray(gridPearl[0].length, gridPearl.length); // ".wallGrid" property added to suit the updateFieldsAfterLoad method .
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);

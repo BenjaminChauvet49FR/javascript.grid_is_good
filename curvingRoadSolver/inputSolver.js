@@ -1,7 +1,7 @@
 /**
  When you click on the canvas
 */
-function clickCanvasAction(event,p_canvas,p_drawer,p_components,p_solver,p_actionsManager) { //TODO rename this as an action ? But what about loadAction ? //TODO modifier la fonction qui a ce nom dans les autres solveurs.
+function clickCanvasAction(event, p_canvas, p_drawer, p_solver, p_actionsManager) { //TODO rename this as an action ? But what about loadAction ? //TODO modifier la fonction qui a ce nom dans les autres solveurs.
 	var spaceClicked = drawer.getClickSpace(event,p_canvas,p_solver.xLength,p_solver.yLength);
     if (spaceClicked != null){
 		clickSpaceAction(p_solver,spaceClicked.x,spaceClicked.y,p_actionsManager.clickSpace);
@@ -51,7 +51,7 @@ Transforms a loaded string into the appropriate item (see common save and load),
 Called by common save and load !
 */
 loadPuzzle = function(p_canvas, p_drawer, p_solver, p_loadedString) {
-	const loadedItem = stringToEmptyWallsPuzzle(p_loadedString);
+	const loadedItem = stringToLimitedSymbolsWalllessPuzzle(p_loadedString, [SYMBOL_ID.WHITE]);
 	p_solver.construct(loadedItem.wallArray, loadedItem.symbolArray);
 	p_drawer.adaptCanvasDimensions(p_canvas,{xLength:p_solver.xLength,yLength:p_solver.yLength});
 }

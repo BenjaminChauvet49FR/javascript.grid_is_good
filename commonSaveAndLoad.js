@@ -168,6 +168,35 @@ function limitedSymbolsWalllessPuzzleToString(p_symbolsArray, p_symbolsList) {
 	return streamDim.getString() + " " + tokens;
 }
 
+function stringToLimitedSymbolsWalllessPuzzle(p_string, p_symbolsList) {
+	const tokens = p_string.split(" ");
+	const streamDim = new StreamDecodingString64(tokens[0]);
+	const xLength = streamDim.decode();
+	const yLength = streamDim.decode();
+	const tokensSymbols = tokens[1].split("#");
+	const answer = [];
+	for(var iy = 0 ; iy < yLength ; iy++) {
+		answer.push([]);
+		for(var ix = 0 ; ix < xLength ; ix++) {
+			answer[iy].push(null);
+		}
+	}
+	var symbol;
+	var streamPearl;
+	for (var i = 0 ; i < p_symbolsList.length ; i++) {
+		symbol = p_symbolsList[i];
+		streamPearl = new StreamDecodingSparseBinary(tokensSymbols[i]);
+		for(var iy = 0 ; iy < yLength ; iy++) {
+			for(var ix = 0 ; ix < xLength ; ix++) {
+				if (streamPearl.decode() == true) {
+					answer[iy][ix] = symbol;
+				}
+			}
+		}
+	}
+	return {symbolArray : answer};
+}
+
 // ------------------------------------------
 
 
