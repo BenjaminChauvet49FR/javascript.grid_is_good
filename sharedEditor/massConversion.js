@@ -18,8 +18,8 @@ function massConversionLocalStorageString(p_puzzleName) {
 			newName = name;
 			if (name.startsWith(baseString)) {
 				stringPuzzleOld = localStorage.getItem(name); 	// Copy-paste these lines into the if block of the for loop when ready
-				loadedItemOld = stringToEmptyWallsPuzzle(stringPuzzleOld); // former (string -> puzzle) method
-				puzzleString = limitedSymbolsWalllessPuzzleToString(loadedItemOld.symbolArray, [SYMBOL_ID.WHITE]); // new (puzzle -> string) method (in order to save)
+				loadedItemOld = stringToWallAndNumbersPuzzle(stringPuzzleOld); // former (string -> puzzle) method
+				puzzleString = puzzleWallsNumbersToString(loadedItemOld.wallArray, loadedItemOld.numberArray); // new (puzzle -> string) method (in order to save)
 				localStorage.setItem(newName, puzzleString);
 			} 
 		}
@@ -28,12 +28,12 @@ function massConversionLocalStorageString(p_puzzleName) {
 	
 	// Isolated test (but what if the console runs in strict mode, with 'const' and 'var' items required here and there ? Well, is it even possible ?)
 	/*
-	name = "grid_is_good_CurvingRoad129"; // Name of a known puzzle
-	newName = "grid_is_good_CurvingRoad" // Name of a puzzle we are ready to overwrite
+	name = "grid_is_good_HakyuuHack1"; // Name of a known puzzle
+	newName = "grid_is_good_Hakyuu" // Name of a puzzle we are ready to overwrite
 
 	stringPuzzleOld = localStorage.getItem(name); 	// Copy-paste these lines into the if block of the for loop when ready
-	loadedItemOld = stringToEmptyWallsPuzzle(stringPuzzleOld); // former (string -> puzzle) method
-	puzzleString = limitedSymbolsWalllessPuzzleToString(loadedItemOld.symbolArray, [SYMBOL_ID.WHITE]); // new (puzzle -> string) method (in order to save)
+	loadedItemOld = stringToWallAndNumbersPuzzle(stringPuzzleOld); // former (string -> puzzle) method
+	puzzleString = puzzleWallsNumbersToString(loadedItemOld.wallArray, loadedItemOld.numberArray); // new (puzzle -> string) method (in order to save)
 	localStorage.setItem(newName, puzzleString);
 	*/
 	

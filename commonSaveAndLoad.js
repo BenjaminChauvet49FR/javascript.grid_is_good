@@ -16,6 +16,9 @@ function getLocalStorageName(p_name) {
 
 // ------------------------------------------
 
+// All "new" (as to beginning March 2021) puzzle save and load methods
+
+//----
 function puzzleWallsOnlyToString(p_wallArray) {
 	const streamDim = new StreamEncodingString64();
 	streamDim.encode(p_wallArray[0].length);
@@ -31,6 +34,7 @@ function stringToPuzzleWallsOnly(p_string) {
 	return {wallArray : string64toWallArray(tokens[1], xLength, yLength)}; // "wallArray" is necessary for updating fields in the editor, we cannot just return an array.
 }
 
+//----
 // Star battle is square and has a puzzle-related parameter.
 function starBattlePuzzleToString(p_wallArray, p_numberStars) { 
 	const streamParam = new StreamEncodingString64();
@@ -47,6 +51,7 @@ function stringToStarBattlePuzzle(p_string) {
 	return {wallArray : string64toWallArray(tokens[1], xyLength, xyLength), starNumber : numberStars}; // "wallArray" is necessary for updating fields in the editor, we cannot just return an array.
 }
 
+//----
 //Puzzle with regions indications. 1) dimensions, 2) grid, 3) indications for each region
 function puzzleRegionsNumericIndicationsToString(p_wallArray, p_numbersArray) {
 	const streamDim = new StreamEncodingString64();
@@ -113,6 +118,8 @@ function getRegionIndicArray(p_loadedItem) {
 	return regionIndicArray;
 }
 
+//----
+// No walls, only numbers
 function puzzleNumbersOnlyToString(p_numbersArray) {
 	const streamDim = new StreamEncodingString64();
 	streamDim.encode(p_numbersArray[0].length);
@@ -149,6 +156,8 @@ function stringToPuzzleNumbersOnly(p_string) {
 	}
 }
 
+//----
+// Wall-less and limited different symbols
 function limitedSymbolsWalllessPuzzleToString(p_symbolsArray, p_symbolsList) {
 	const streamDim = new StreamEncodingString64();
 	streamDim.encode(p_symbolsArray[0].length);
@@ -197,30 +206,52 @@ function stringToLimitedSymbolsWalllessPuzzle(p_string, p_symbolsList) {
 	return {symbolArray : answer};
 }
 
+//----
+// Walls and numbers in spaces
+function puzzleWallsNumbersToString(p_wallArray, p_numbersArray) {
+	const streamDim = new StreamEncodingString64();
+	streamDim.encode(p_numbersArray[0].length);
+	streamDim.encode(p_numbersArray.length);
+	const streamValues = new StreamEncodingSparseAny();
+	for(var iy = 0 ; iy < p_numbersArray.length ; iy++) {
+		for(var ix = 0 ; ix < p_numbersArray[0].length; ix++) {
+			streamValues.encode(p_numbersArray[iy][ix]);
+		}
+	}
+	return streamDim.getString() + " " + wallArrayToString64(p_wallArray) + " " + streamValues.getString();
+}
+
+function stringToPuzzleWallsNumbers(p_string) {
+	const tokens = p_string.split(" ");
+	const streamDim = new StreamDecodingString64(tokens[0]);
+	const xLength = streamDim.decode();
+	const yLength = streamDim.decode();
+	const streamValues = new StreamDecodingSparseAny(tokens[2]);
+	var answer = [];
+	for(var iy = 0 ; iy < yLength ; iy++) {
+		answer.push([]);
+		for(var ix = 0 ; ix < xLength; ix++) {
+			decode = streamValues.decode();
+			if (decode != END_OF_DECODING_STREAM) {
+				answer[iy].push(decode);
+			}  else {
+				answer[iy].push(null);
+			}
+		}
+	}
+	return {
+		wallArray : string64toWallArray(tokens[1], xLength, yLength),
+	    numberArray : answer
+	}
+}
+
+
 // ------------------------------------------
 
 
 
 // Savers and loaders
 // Note : for commodity, a saver has been associated with its loader rather than having all savers together and all loaders together
-
-function commonPuzzleToString(p_wallArray,p_numbersArray,p_symbolsArray,p_symbolsToSave) {
-	var wallsString = "";
-	var rowsString = "";
-	var spacesString = "";
-	if (p_wallArray && (p_wallArray != null)) {
-		wallsString = wallArrayToString(p_wallArray);
-	}
-	if (p_numbersArray && (p_numbersArray != null)) {
-		spacesString = arrayToStringSpaces(p_numbersArray, false);
-	}
-	if (p_symbolsToSave) {
-		p_symbolsToSave.forEach(symbol => {
-			rowsString += symbol+" "+arrayToStringRows(p_symbolsArray,symbol);
-		});
-	}
-	return wallsString+" "+spacesString+" "+rowsString;
-}
 
 function stringToWallAndNumbersPuzzle(p_string) {
 	var stringArray = p_string.split(' ');

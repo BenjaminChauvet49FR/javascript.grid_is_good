@@ -244,41 +244,45 @@ EditorCore.prototype.transformGrid = function (p_transformation, p_xDatum, p_yDa
 //-------------------------------------------
 // Chain insertion
 
-EditorCore.prototype.insertChain = function(p_promptText, p_gridId, p_defaultValue, p_validityMethod, p_blankCharacter, p_monoCharacter, p_x, p_y) {
-	var defaultVal = this.getPromptValue();
+//EditorCore.prototype.insertChain = function(p_promptText, p_gridId, p_defaultValue, p_validityMethod, p_parameters, p_x, p_y) {
+EditorCore.prototype.insertChain = function(p_gridId, p_clueChain, p_validityMethod, p_parameters, p_x, p_y) {
+	// Blank character and monocharacter
+	/*var defaultVal = this.getPromptValue();
 	if ((!defaultVal && (defaultVal == 0)) || (defaultVal == null) || (defaultVal == "")) {
 		defaultVal = p_defaultValue;
 	}
-	var clueChain = prompt(p_promptText + " ou " + p_blankCharacter + " pour case vide :", p_defaultValue);
-	if (clueChain != null) {
+	var clueChain = prompt(p_promptText + " ou " + p_parameters.emptySpaceChar + " pour case vide :", p_defaultValue);*/
+	if (p_clueChain != null) {
 		var tokens;
 		var tokensNumber;
-		if (p_monoCharacter) {
-			tokensNumber = clueChain.length;
+		if (p_parameters.isMonoChar) {
+			tokensNumber = p_clueChain.length;
 		} else {
-			tokens = clueChain.split(" ");
+			tokens = p_clueChain.split(" ");
 			tokensNumber = tokens.length;
 		}
 		var x = p_x;
 		var indexToken = 0;
 		while (x < this.getXLength() && indexToken < tokensNumber) {
-			clue = (p_monoCharacter ? clueChain.charAt(indexToken) : tokens[indexToken]);
+			clue = (p_parameters.isMonoChar ? p_clueChain.charAt(indexToken) : tokens[indexToken]);
 			var ok = false;
 			if (p_validityMethod(clue)) {
-				this.set(p_gridId, x, p_y, clue);
+				var realClue = (clue != "" ? clue : null);
+				realClue = (p_parameters.isNumeric && realClue != null) ? parseInt(realClue, 10) : realClue;
+				this.set(p_gridId, x, p_y, realClue);
 				ok = true;
 			}
-			if (!p_monoCharacter && (clue.charAt(0) == p_blankCharacter)) {
+			if (!p_parameters.isMonoChar && (clue.charAt(0) == p_parameters.emptySpaceChar)) {
 				this.set(p_gridId, x, p_y, null);
 				var indexClue = 1;
-				while((indexClue < clue.length) && (clue.charAt(indexClue) == p_blankCharacter) && (x <= this.getXLength()-2)) {
+				while((indexClue < clue.length) && (clue.charAt(indexClue) == p_parameters.emptySpaceChar) && (x <= this.getXLength()-2)) {
 					x++;
 					this.set(p_gridId, x, p_y, null);
 					indexClue++;
 				}
 				ok = (indexClue == clue.length);
 			}
-			if (p_monoCharacter && (clue == p_blankCharacter)) {
+			if (p_parameters.isMonoChar && (clue == p_parameters.emptySpaceChar)) {
 				this.set(p_gridId, x, p_y, null);
 				ok = true;
 			}
