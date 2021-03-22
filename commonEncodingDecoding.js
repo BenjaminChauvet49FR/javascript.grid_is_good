@@ -606,9 +606,9 @@ for (var i = 0; i <= 3; i++) { console.log(decoder.decode())};
 console.log("Done");
 */
 
-myString = "a_ab_bc_cd" // => (36 0s, 39 1s, 37 0s, 40 1s, 38 0s, 41 1s, 39 0s, 1, total length 271
+/*myString = "a_ab_bc_cd" // => (36 0s, 39 1s, 37 0s, 40 1s, 38 0s, 41 1s, 39 0s, 1, total length 271
 decoder = new StreamDecodingSparseBinary(myString);
 for (var i = 0; i <= 271; i++) { console.log(decoder.decode())};
-console.log("Done");
+console.log("Done");*/
 
 // TODO well, not perfect but if mistakes happen I'll realize it before I've saved and loaded strings into local storage, riiight ?

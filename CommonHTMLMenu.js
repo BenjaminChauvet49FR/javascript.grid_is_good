@@ -27,7 +27,7 @@ function addText(p_divElement, p_text) {
     p_divElement.appendChild(document.createTextNode(p_text));
 }
 
-const menu1 = {
+const menuEditor = {
 	displayName : "Editeur",
 	documentPage : "Editor",
 	typeList : [
@@ -35,8 +35,10 @@ const menu1 = {
 	]
 }
 
-const menu2 = {
-	displayName : "Solveurs binaires quelconques",
+var menuSolvers = [];
+
+menuSolvers.push({
+	displayName : "Binaires quelconques",
 	documentPage : "Solver",
 	typeList : [
 		{name : "starBattle", displayName : "Star battle"},
@@ -44,20 +46,20 @@ const menu2 = {
 		{name : "shimaguni", displayName : "Shimaguni"},
 		{name : "chocona", displayName : "Chocona"},
 	]
-}
+});
 
-const menu3 = {
-	displayName : "Solveurs binaires avec adjacence",
+menuSolvers.push({
+	displayName : "Binaires avec adjacence",
 	documentPage : "Solver",
 	typeList : [
 		{name : "heyawake", displayName : "Heyawake"},
 		{name : "LITS", displayName : "LITS"},
 		{name : "curvingRoad", displayName : "Curving road"}
 	]
-}
+});
 
-const menu4 = {
-	displayName : "Solveurs à boucle",
+menuSolvers.push({
+	displayName : "Boucles",
 	documentPage : "Solver",
 	typeList : [
 		{name : "countryRoad", displayName : "CountryRoad"},
@@ -66,36 +68,40 @@ const menu4 = {
 		{name : "masyu", displayName : "Masyu"},
 		{name : "yajilin", displayName : "Yajilin"}
 	]
-}
+});
 
-const menu5 = {
-	displayName : "Solveurs de découpage en région",
+menuSolvers.push({
+	displayName : "Découpage en région",
 	documentPage : "Solver",
 	typeList : [
 		{name : "usotatami", displayName : "Usotatami"}
 	]
-}
+});
 
-const menu6 = {
-	displayName : "Solveur théorique",
+menuSolvers.push({
+	displayName : "Remplissages de régions avec des nombres",
+	documentPage : "Solver",
+	typeList : [
+		{name : "hakyuu", displayName : "Hakyuu"}
+	]
+});
+
+menuSolvers.push({
+	displayName : "Théorique",
 	documentPage : "Solver",
 	typeList : [
 		{name : "theoryCluster", displayName : "Clusters d'adjacence"},
 		{name : "theoryLoop", displayName : "Boucles"},
 		{name : "theoryLoopRegion", displayName : "Boucles à régions"}
 	]
-}
+});
 
 const divElement = document.getElementById("div_common_menu");
-addMenuPart(divElement, menu1);
+addMenuPart(divElement, menuEditor);
 divElement.appendChild(document.createElement("br"));
-addMenuPart(divElement, menu2);
+addText(divElement, "Solveurs :");
 divElement.appendChild(document.createElement("br"));
-addMenuPart(divElement, menu3);
-divElement.appendChild(document.createElement("br"));
-addMenuPart(divElement, menu4);
-divElement.appendChild(document.createElement("br"));
-addMenuPart(divElement, menu5);
-divElement.appendChild(document.createElement("br"));
-addMenuPart(divElement, menu6);
-divElement.appendChild(document.createElement("br"));
+menuSolvers.forEach(menu => {
+	addMenuPart(divElement, menu);
+	divElement.appendChild(document.createElement("br"));
+})

@@ -29,6 +29,7 @@ const ACTION_LINK_SPACES = {id:10,htmlCaption:"Lier cases"};
 const ACTION_CLOSE_LINKS = {id:11,htmlCaption:"Fermer liaison cases"};
 const ACTION_OPEN_FENCE = {id:12,htmlCaption:"Déclarer cloison ouverte"};
 const ACTION_CLOSE_FENCE = {id:13,htmlCaption:"Déclarer cloison fermée"};
+const ACTION_ENTER_NUMBER = {id:14,htmlCaption:"Entrer un nombre"};
 
 /**
 Getter of setter for a specific mode
