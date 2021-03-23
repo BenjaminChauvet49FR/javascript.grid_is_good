@@ -207,6 +207,79 @@ function stringToLimitedSymbolsWalllessPuzzle(p_string, p_symbolsList) {
 }
 
 //----
+// Numbers and symbols (potentially X - here, the array contains CHARACTERS !)
+function puzzleNumbersSymbolsToString(p_numbersSymbolsArray, p_symbolsList) {
+	const streamDim = new StreamEncodingString64();
+	streamDim.encode(p_numbersSymbolsArray[0].length);
+	streamDim.encode(p_numbersSymbolsArray.length);
+	
+	const streamValues = new StreamEncodingSparseAny();
+	for(var iy = 0 ; iy < p_numbersSymbolsArray.length ; iy++) {
+		for(var ix = 0 ; ix < p_numbersSymbolsArray[0].length; ix++) {
+			const c = p_numbersSymbolsArray[iy][ix];
+			if ((c == null) || (isNaN(c))) {
+				streamValues.encode(null);
+			} else {
+				streamValues.encode(parseInt(c, 10));
+			}
+		}
+	}
+	
+	var streamSymbols;
+	separator = "";
+	tokens = "";
+	var symbol;
+	for (var is = 0; is < p_symbolsList.length ; is++) {
+		symbol = p_symbolsList[is];
+		streamSymbols = new StreamEncodingSparseBinary();
+		for(var iy = 0 ; iy < p_numbersSymbolsArray.length ; iy++) {
+			for(var ix = 0 ; ix < p_numbersSymbolsArray[0].length; ix++) {
+				streamSymbols.encode(p_numbersSymbolsArray[iy][ix] == symbol);
+			}
+		}
+		tokens += separator + streamSymbols.getString();
+		separator = "#";
+	}
+	return streamDim.getString() + " " + streamValues.getString() + " " + tokens;
+}
+
+function stringToPuzzleNumbersSymbols(p_string, p_symbolsList) {
+	const tokens = p_string.split(" ");
+	const streamDim = new StreamDecodingString64(tokens[0]);
+	const xLength = streamDim.decode();
+	const yLength = streamDim.decode();
+	const streamNumbers = new StreamDecodingSparseAny(tokens[1]);
+	const answer = [];
+	var val;
+	for(var iy = 0 ; iy < yLength ; iy++) {
+		answer.push([]);
+		for(var ix = 0 ; ix < xLength ; ix++) {
+			val = streamNumbers.decode();
+			if ((val != null) && (!isNaN(val)) && (val != END_OF_DECODING_STREAM)) { // Well, isNan(null) = true
+				answer[iy].push("" + val);
+			} else {
+				answer[iy].push(null);
+			}
+		}
+	}
+	var symbol;
+	var streamSymbol;
+	const tokensSymbols = tokens[2].split("#");
+	for (var i = 0 ; i < p_symbolsList.length ; i++) {
+		symbol = p_symbolsList[i];
+		streamSymbol = new StreamDecodingSparseBinary(tokensSymbols[i]);
+		for(var iy = 0 ; iy < yLength ; iy++) {
+			for(var ix = 0 ; ix < xLength ; ix++) {
+				if (streamSymbol.decode() == true) {
+					answer[iy][ix] = symbol;
+				}
+			}
+		}
+	}
+	return {numbersSymbolsArray : answer};
+}
+
+//----
 // Walls and numbers in spaces
 function puzzleWallsNumbersToString(p_wallArray, p_numbersArray) {
 	const streamDim = new StreamEncodingString64();

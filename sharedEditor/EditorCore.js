@@ -6,6 +6,7 @@ const SELECTED = {
 const GRID_ID = {
     NUMBER_REGION: 'NR',
     NUMBER_SPACE: 'NS',
+    DIGIT_X_SPACE: 'DXS',
     PEARL: 'P',
 	YAJILIN_LIKE: 'YAJILIN' 
 }
@@ -247,11 +248,6 @@ EditorCore.prototype.transformGrid = function (p_transformation, p_xDatum, p_yDa
 //EditorCore.prototype.insertChain = function(p_promptText, p_gridId, p_defaultValue, p_validityMethod, p_parameters, p_x, p_y) {
 EditorCore.prototype.insertChain = function(p_gridId, p_clueChain, p_validityMethod, p_parameters, p_x, p_y) {
 	// Blank character and monocharacter
-	/*var defaultVal = this.getPromptValue();
-	if ((!defaultVal && (defaultVal == 0)) || (defaultVal == null) || (defaultVal == "")) {
-		defaultVal = p_defaultValue;
-	}
-	var clueChain = prompt(p_promptText + " ou " + p_parameters.emptySpaceChar + " pour case vide :", p_defaultValue);*/
 	if (p_clueChain != null) {
 		var tokens;
 		var tokensNumber;

@@ -49,12 +49,28 @@ menuSolvers.push({
 });
 
 menuSolvers.push({
+	displayName : "Remplissages de régions avec des nombres",
+	documentPage : "Solver",
+	typeList : [
+		{name : "hakyuu", displayName : "Hakyuu"}
+	]
+});
+
+menuSolvers.push({
 	displayName : "Binaires avec adjacence",
 	documentPage : "Solver",
 	typeList : [
 		{name : "heyawake", displayName : "Heyawake"},
 		{name : "LITS", displayName : "LITS"},
 		{name : "curvingRoad", displayName : "Curving road"}
+	]
+});
+
+menuSolvers.push({
+	displayName : "Multiples avec adjacence",
+	documentPage : "Solver",
+	typeList : [
+		{name : "shugaku", displayName : "Shugaku"}
 	]
 });
 
@@ -78,13 +94,7 @@ menuSolvers.push({
 	]
 });
 
-menuSolvers.push({
-	displayName : "Remplissages de régions avec des nombres",
-	documentPage : "Solver",
-	typeList : [
-		{name : "hakyuu", displayName : "Hakyuu"}
-	]
-});
+
 
 menuSolvers.push({
 	displayName : "Théorique",

@@ -47,6 +47,7 @@ clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
 		case (MODE_ERASE.id) :
 		    p_editorCore.clearWallsAround(p_x, p_y);
 			p_editorCore.clear(GRID_ID.NUMBER_REGION, p_x, p_y);
+			p_editorCore.clear(GRID_ID.DIGIT_X_SPACE, p_x, p_y);
 			p_editorCore.clear(GRID_ID.NUMBER_SPACE, p_x, p_y);
 			p_editorCore.clear(GRID_ID.NUMBER_PEARL, p_x, p_y);
 			p_editorCore.clear(GRID_ID.YAJILIN_LIKE, p_x, p_y);
@@ -55,15 +56,6 @@ clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
 		    p_editorCore.selectRectangleMechanism(p_x, p_y);
 		break;
 		case (MODE_SYMBOLS_PROMPT.id) :
-			/*if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_SPACE)) {
-				p_editorCore.insertChain("Entrer valeur numérique >= 0", GRID_ID.NUMBER_SPACE, "1", validityTokenNumber, {emptySpaceChar : "<", isMonoChar : false, isNumeric : true}, p_x, p_y); 
-			} else if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_REGION)) {
-				p_editorCore.insertChain("Entrer valeur numérique >= 0", GRID_ID.NUMBER_REGION, "1", validityTokenNumber, {emptySpaceChar : "<", isMonoChar : false, isNumeric : true}, p_x, p_y);
-			} else if (p_editorCore.isVisibleGrid(GRID_ID.PEARL)) {
-				p_editorCore.insertChain("Entrer suite de perles (B|W)", GRID_ID.PEARL, "W", validityTokenPearl, {emptySpaceChar : " ", isMonoChar : true}, p_x, p_y);
-			} else if (p_editorCore.isVisibleGrid(GRID_ID.YAJILIN_LIKE)) {
-				p_editorCore.insertChain("Entrer suite d'indices Yajilin (L|U|R|D)(nombre) ou X", GRID_ID.YAJILIN_LIKE, "L1", validityTokenYajilin, {emptySpaceChar : "<", isMonoChar : false}, p_x, p_y);
-			}*/
 			var defaultToken = "";
 			var descriptionPrompt = "";
 			var gridId = "";
@@ -76,6 +68,12 @@ clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
 				gridId = GRID_ID.NUMBER_SPACE;
 				validityTokenMethod = validityTokenNumber;
 				parameters = {emptySpaceChar : "<", isMonoChar : false, isNumeric : true};
+			} else if (p_editorCore.isVisibleGrid(GRID_ID.DIGIT_X_SPACE)) {
+				descriptionPrompt = "Entrer un chiffre entre 0 et 4 ou X";
+				defaultToken = "1";
+				gridId = GRID_ID.DIGIT_X_SPACE;
+				validityTokenMethod = validityNumberRangeOrSymbolClosure(0, 4, ["X"]);
+				parameters = {emptySpaceChar : " ", isMonoChar : true, isNumeric : false};
 			} else if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_REGION)) {
 				descriptionPrompt = "Entrer valeur numérique >= 0";
 				defaultToken = "1";
@@ -126,6 +124,22 @@ validityTokenNumber = function(p_clue) {
 	return (!isNaN(p_clue));
 }
 
+validityNumberRangeOrSymbolClosure = function(p_min, p_max, p_symbol) {
+	return function(p_clue) {
+		if (!isNaN(p_clue)) {
+			const number = parseInt(p_clue, 10);//p_clue == "X" || 
+			return (p_min <= number) && (p_max >= number);
+		} else {
+			for (var i = 0; i < p_symbol.length ; i++) {
+				if (p_clue == p_symbol[i]) {
+					return true;
+				}
+			}
+			return false;
+		}
+	}
+}
+
 validityTokenPearl = function(p_clue) {
 	return (p_clue == "B") || (p_clue == "W");
 }
@@ -158,6 +172,7 @@ restartAction = function (p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength
 		Object.keys(GRID_ID).forEach(id => {
 			editorCore.addCleanGrid(id, p_xLength, p_yLength); //  See GRID_ID in EditorCore
 		});
+		p_editorCore.addCleanGrid(GRID_ID.DIGIT_X_SPACE, p_xLength, p_yLength);
 		p_editorCore.addCleanGrid(GRID_ID.NUMBER_REGION, p_xLength, p_yLength);
 		p_editorCore.addCleanGrid(GRID_ID.NUMBER_SPACE, p_xLength, p_yLength);
 		p_editorCore.addCleanGrid(GRID_ID.PEARL, p_xLength, p_yLength);
@@ -287,6 +302,7 @@ const PUZZLES_KIND = {
 	CURVING_ROAD : {id:4},
 	MASYU : {id:5},
 	REGIONS_NUMBERS : {id:6},
+	NUMBERS_X_ONLY : {id:7},
 	STAR_BATTLE : {id:1001, squareGrid : true},
 	GRAND_TOUR : {id:99102},
 	YAJILIN_LIKE : {id:995},
@@ -316,7 +332,9 @@ saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions
         } else if (p_kindId == PUZZLES_KIND.CURVING_ROAD.id) {
             puzzleToSaveString = limitedSymbolsWalllessPuzzleToString(p_editorCore.getArray(GRID_ID.PEARL), [SYMBOL_ID.WHITE]);
 		} else if (p_kindId == PUZZLES_KIND.NUMBERS_ONLY.id) {
-            puzzleToSaveString = arrayToStringSpaces(p_editorCore.getArray(GRID_ID.NUMBER_SPACE), true);
+            puzzleToSaveString = puzzleNumbersOnlyToString(p_editorCore.getArray(GRID_ID.NUMBER_SPACE));
+        } else if (p_kindId == PUZZLES_KIND.NUMBERS_X_ONLY.id) {
+            puzzleToSaveString = puzzleNumbersSymbolsToString(p_editorCore.getArray(GRID_ID.DIGIT_X_SPACE), ["X"]);
         } else if (p_kindId == PUZZLES_KIND.YAJILIN_LIKE.id) {
             puzzleToSaveString = puzzleLexicalSpacesToString(p_editorCore.getArray(GRID_ID.YAJILIN_LIKE));
         } else if (p_kindId == PUZZLES_KIND.REGIONS_NUMBERS.id) {
@@ -346,40 +364,54 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p
             if (p_kindId == PUZZLES_KIND.STAR_BATTLE.id){
 				loadedItem = stringToStarBattlePuzzle(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);			
-			} else if (p_kindId == PUZZLES_KIND.MASYU.id){
+			} 
+			else if (p_kindId == PUZZLES_KIND.MASYU.id){
 				loadedItem = stringToLimitedSymbolsWalllessPuzzle(localStorage.getItem(localStorageName), [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK]);
 				const gridPearl = loadedItem.symbolArray;
 				loadedItem.wallArray = generateWallArray(gridPearl[0].length, gridPearl.length); // ".wallGrid" property added to suit the updateFieldsAfterLoad method .
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);
 				p_editorCore.addGrid(GRID_ID.PEARL, gridPearl); 
-			} else if (p_kindId == PUZZLES_KIND.CURVING_ROAD.id){
+			} 
+			else if (p_kindId == PUZZLES_KIND.CURVING_ROAD.id){
 				loadedItem = stringToLimitedSymbolsWalllessPuzzle(localStorage.getItem(localStorageName), [SYMBOL_ID.WHITE]);
 				const gridPearl = loadedItem.symbolArray;
 				loadedItem.wallArray = generateWallArray(gridPearl[0].length, gridPearl.length); // ".wallGrid" property added to suit the updateFieldsAfterLoad method .
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);
 				p_editorCore.addGrid(GRID_ID.PEARL, gridPearl); 
-			} else if (p_kindId == PUZZLES_KIND.NUMBERS_ONLY.id){
+			} 
+			else if (p_kindId == PUZZLES_KIND.NUMBERS_ONLY.id){
 				loadedItem = stringToPuzzleNumbersOnly(localStorage.getItem(localStorageName));
 				const gridNumber = loadedItem.numberArray;
 				loadedItem.wallArray = generateWallArray(gridNumber[0].length, gridNumber.length); 
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);
 				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE, gridNumber); 
-			} else if (p_kindId == PUZZLES_KIND.YAJILIN_LIKE.id){
+			} 
+			else if (p_kindId == PUZZLES_KIND.NUMBERS_X_ONLY.id){
+				loadedItem = stringToPuzzleNumbersSymbols(localStorage.getItem(localStorageName), ["X"]);
+				const gridNumber = loadedItem.numbersSymbolsArray;
+				loadedItem.wallArray = generateWallArray(gridNumber[0].length, gridNumber.length); 
+				p_editorCore.setupFromWallArray(loadedItem.wallArray);
+				p_editorCore.addGrid(GRID_ID.DIGIT_X_SPACE, gridNumber); 
+			} 
+			else if (p_kindId == PUZZLES_KIND.YAJILIN_LIKE.id) {
 				loadedItem = stringToLexicalSpacesPuzzle(localStorage.getItem(localStorageName));
 				const values = loadedItem.valuesArray;
 				loadedItem.wallArray = generateWallArray(values[0].length, values.length); 
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);			
 				p_editorCore.addGrid(GRID_ID.YAJILIN_LIKE, values);
-			} else if (p_kindId == PUZZLES_KIND.REGIONS_NUMBERS.id) {
+			} 
+			else if (p_kindId == PUZZLES_KIND.REGIONS_NUMBERS.id) {
 				loadedItem = stringToPuzzleWallsNumbers(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);			
 				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE,loadedItem.numberArray); 
-			} else if (p_kindId == PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS.id) {
+			} 
+			else if (p_kindId == PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS.id) {
 				loadedItem = stringToPuzzleRegionsNumericIndications(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);
 				regionIndicArray = getRegionIndicArray(loadedItem);			; 
 				p_editorCore.addGrid(GRID_ID.NUMBER_REGION, regionIndicArray);
-			} else {
+			}
+			else {
 				loadedItem = stringToPuzzleWallsOnly(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);
 			}
@@ -437,6 +469,11 @@ function comboChange(p_thelist, p_editorCore) {
 		case 'SternenSchlacht':
 			saveLoadModeId = PUZZLES_KIND.STAR_BATTLE.id;
 			p_editorCore.maskAllGrids();
+			break;
+		case 'Shugaku':
+			p_editorCore.setWallsOff();
+			saveLoadModeId = PUZZLES_KIND.NUMBERS_X_ONLY.id;
+			p_editorCore.setVisibleGrids([GRID_ID.DIGIT_X_SPACE]);
 			break;
 		case 'Yajilin': // Can also include Yajisan-Kazusan
 			p_editorCore.setWallsOff();
