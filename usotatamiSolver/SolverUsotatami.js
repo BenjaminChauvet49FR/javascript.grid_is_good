@@ -5,17 +5,21 @@ const NO_VALUE = null;
 
 // ------------------------
 // Setup
-SolverUsotatami.prototype = Object.create(SolverFences.prototype);
+SolverUsotatami.prototype = Object.create(GeneralSolver.prototype);
+SolverUsotatami.prototype.constructor = SolverUsotatami;
 
 function SolverUsotatami(p_numberGrid) {
-	SolverFences.call(p_numberGrid[0].length, p_numberGrid.length);
+	GeneralSolver.call(this);
 	this.construct(p_numberGrid);
 }
 
-SolverUsotatami.prototype.constructor = SolverUsotatami;
 
 SolverUsotatami.prototype.construct = function(p_numberGrid) {
-	this.constructLightFences(p_numberGrid[0].length, p_numberGrid.length); // If any construct method is forgotten we can have surprises when trying to apply a tiny event
+	this.generalConstruct();
+	this.xLength = p_numberGrid[0].length;
+	this.yLength = p_numberGrid.length;
+	this.fenceGrid = new FencesGrid(this.xLength, this.yLength);
+	//this.constructLightFences(p_numberGrid[0].length, p_numberGrid.length); // If any construct method is forgotten we can have surprises when trying to apply a tiny event
 	// this.xLength, this.yLength, this.fenceArray defined above
 	// spaces of this.fenceArray initialized as {right : FENCE_STATE.UNDECIDED, down : FENCE_STATE.UNDECIDED}
 	
@@ -156,6 +160,19 @@ SolverUsotatami.prototype.setRange = function(p_x, p_y, p_dir, p_value) {
 	this.indicArray[p_y][p_x].range[p_dir] = p_value;
 }
 
+// ------------------------
+// Misc. inner methods
+
+SolverUsotatami.prototype.neighborExists = function(p_x, p_y, p_dir) {
+	switch(p_dir) {
+		case DIRECTION.RIGHT : return p_x <= this.xLength-2; break;
+		case DIRECTION.DOWN : return p_y <= this.yLength-2; break;
+		case DIRECTION.LEFT : return p_x > 0; break;
+		case DIRECTION.UP : return p_y > 0; break;
+		default : autoLogFail("neighborExists returned an undefined result ! ");
+	}
+}
+
 /* Many getters about getting and setting fences defined in the parent solver. */
 
 // ------------------------
@@ -243,13 +260,13 @@ undoEventClosure = function(p_solver) {
 }
 
 SolverUsotatami.prototype.applyFenceEvent = function(p_x, p_y, p_dir, p_state) {
-	const state = this.getFence(p_x, p_y, p_dir, p_state); // Could've been slightly optimized by some "getFenceRight/getFenceDown" and "setFenceRight/setFenceDown" but is it that much of a deal ?
+	const state = this.fenceGrid.getFence(p_x, p_y, p_dir); // Could've been slightly optimized by some "getFenceRight/getFenceDown" and "setFenceRight/setFenceDown" but is it that much of a deal ?
 	if (p_state == state) {
 		return EVENT_RESULT.HARMLESS;
 	} else if (state != FENCE_STATE.UNDECIDED) {
 		return EVENT_RESULT.FAILURE;
 	}
-	this.setFence(p_x, p_y, p_dir, p_state);
+	this.fenceGrid.setFence(p_x, p_y, p_dir, p_state);
 	return EVENT_RESULT.SUCCESS;
 }
 
@@ -289,7 +306,7 @@ SolverUsotatami.prototype.applyRangeEvent = function(p_x, p_y, p_dir, p_range) {
 }
 
 SolverUsotatami.prototype.undoFenceEvent = function(p_x, p_y, p_dir) {
-	this.setFence(p_x, p_y, p_dir, FENCE_STATE.UNDECIDED);
+	this.fenceGrid.setFence(p_x, p_y, p_dir, FENCE_STATE.UNDECIDED);
 }
 
 SolverUsotatami.prototype.undoViewEvent = function(p_x, p_y, p_dir) {
@@ -315,7 +332,7 @@ deductionsClosure = function(p_solver) {
 			const n1 = p_solver.getNumber(x, y);
 			const n2 = p_solver.getNumber(dx, dy);
 			if (p_eventBeingApplied.state == FENCE_STATE.OPEN) {
-				p_eventList = p_solver.stripBuild(p_eventList, x, y, dx, dy, dir);
+				p_eventList = p_solver.fenceGrid.stripBuild(p_eventList, x, y, dx, dy, dir);
 
 				// Hypothesis : thanks to setup/quickstart, it is impossible for both spaces to have numbers if a fence is open here
 				if (n1 != null) {
@@ -328,7 +345,7 @@ deductionsClosure = function(p_solver) {
 					p_eventList.push(new ViewEvent(dx, dy, odir, USOTATAMI_VIEW.NUMBER));
 				}
 			} else {
-				p_eventList = p_solver.avoidCrossBuild(p_eventList, x, y, dx, dy, dir);
+				p_eventList = p_solver.fenceGrid.avoidCrossBuild(p_eventList, x, y, dx, dy, dir);
 				if (n1 != null) {
 					p_eventList.push(new RangeEvent(x, y, dir, 0));
 				} else {
@@ -350,7 +367,7 @@ deductionsClosure = function(p_solver) {
 			const odir = OppositeDirection[dir];
 			if (p_eventBeingApplied.view == USOTATAMI_VIEW.WALL) {
 				// Propagate wall view behind if not blocked by a wall, a number or the edge of the grid 
-				if (p_solver.neighborExists(x, y, odir) && p_solver.getFence(x, y, odir) != FENCE_STATE.CLOSED) {
+				if (p_solver.neighborExists(x, y, odir) && p_solver.fenceGrid.getFence(x, y, odir) != FENCE_STATE.CLOSED) {
 					const bx = x - DeltaX[dir];
 					const by = y - DeltaY[dir];
 					if (p_solver.getNumber(bx, by) == null) {
@@ -384,7 +401,7 @@ deductionsClosure = function(p_solver) {
 					const by = y - DeltaY[dir];
 					if (p_solver.getNumber(bx, by) != null) { // Space behind is a number : immediately close the space
 						p_eventList.push(new FenceEvent(x, y, odir, FENCE_STATE.CLOSED));
-					} else if (p_solver.getFence(bx, by, dir) == FENCE_STATE.OPEN) { // Open space behind : propagate vision.
+					} else if (p_solver.fenceGrid.getFence(bx, by, dir) == FENCE_STATE.OPEN) { // Open space behind : propagate vision.
 						p_eventList.push(new ViewEvent(bx, by, dir, USOTATAMI_VIEW.NUMBER));
 					} else {
 						if (p_solver.getView(bx, by, odir) == FENCE_STATE.OPEN) {
@@ -422,7 +439,7 @@ SolverUsotatami.prototype.testDeadEndSeeingNumber = function(p_eventList, p_x, p
 	var dir;
 	for (var i = 0; i < KnownDirections.length ; i++) {
 		dir = KnownDirections[i];
-		if (!this.neighborExists(p_x, p_y, dir) || this.getFence(p_x, p_y, dir) == USOTATAMI_VIEW.WALL) {
+		if (!this.neighborExists(p_x, p_y, dir) || this.fenceGrid.getFence(p_x, p_y, dir) == USOTATAMI_VIEW.WALL) {
 			numberWalls++;
 		} else if (this.getView(p_x, p_y, dir) == USOTATAMI_VIEW.NUMBER) {
 			directionSight = dir;

@@ -2,7 +2,7 @@
 function drawing(p_context, p_drawer, p_colorSet, p_solver) {
 	// VERY ADVISED TO put methods that draw the grid in first, as they generally begin with a canvas clean.
 	// I didn't bother in other solvers since the drawing of the grid was held by the "main" file.
-	p_drawer.drawFenceArray(p_context, p_solver.xLength, p_solver.yLength, getFenceRightClosure(p_solver), getFenceDownClosure(p_solver)); 
+	p_drawer.drawFenceArray(p_context, p_solver.xLength, p_solver.yLength, getFenceRightClosure(p_solver.fenceGrid), getFenceDownClosure(p_solver.fenceGrid)); 
 	// p_solver.getFenceRight / getFenceDown have no power here. Closures required. 
 	
 	var supposedNumber;

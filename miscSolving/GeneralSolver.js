@@ -109,7 +109,7 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
 			}
 			if (result == EVENT_RESULT.SUCCESS) {
 				listEventsToApply = p_methodPack.deductionsMethod(listEventsToApply, eventBeingApplied);
-				if (p_methodPack.adjacencyMethod) {
+				if (p_methodPack.adjacencyMethod) { // https://stackoverflow.com/questions/3007460/how-to-check-if-anonymous-object-has-a-method/3007494
 					if (eventBeingApplied.opening() == SPACE.CLOSED) {
 					newClosedSpaces.push({
 						x: eventBeingApplied.x(),

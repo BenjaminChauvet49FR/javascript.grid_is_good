@@ -533,7 +533,7 @@ StreamDecodingSparseBinary.prototype.decode = function(p_string) {
 				if (decode2ndChar != END_OF_DECODING_STREAM) {
 					if (decode2ndChar.prefix == "_") {
 						this.future1s = decode2ndChar.value + 1; // See below
-						this.oneFi = false;
+						this.finalOne = false;
 					} else {
 						this.future0s = decode2ndChar.value;
 						this.finalOne = true;
@@ -542,6 +542,7 @@ StreamDecodingSparseBinary.prototype.decode = function(p_string) {
 				return true;
 			} else {
 				this.future0s = decode1stChar.value-1; // We consume one 0-bit right here
+				this.finalOne = true; // Since there is at least one character (no end of decoding), there is at least one '1' bit.
 				return false;
 			}
 		}

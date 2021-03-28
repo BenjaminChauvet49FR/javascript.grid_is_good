@@ -8,6 +8,8 @@ function AdjacencyLimit(p_strings) {
     }
 }
 
+const FOUR_DIRECTIONS_STRING = "lurd"; // WARNING ! Must be synchronized with directions. Also, see occurences of "d l u r" alone below (such as in TBD_DIRECTIONS).
+
 function AdjacencyLimitNew() {
     return new AdjacencyLimit([FOUR_DIRECTIONS_STRING]);
 }

@@ -25,7 +25,7 @@ function Drawer() {
 		edge_walls: '#000000',
 		bannedSpace: '#666666'
 	}
-	this.fenceColorSet = {
+	this.fenceColourSet = {
 		closed_fence: '#222222',
 		undecided_fence: '#cccccc',
 		open_fence: '#eeeeff'
@@ -38,6 +38,12 @@ function Drawer() {
 Drawer.prototype.setWallColors = function(p_wallColorSet) {
 	for (const [key, value] of Object.entries(p_wallColorSet)) {
 		this.wallColorSet[key] = value;
+	}
+}
+
+Drawer.prototype.setFenceColors = function(p_fenceColours) {
+	for (const [key, value] of Object.entries(p_fenceColours)) {
+		this.fenceColourSet[key] = value;
 	}
 }
 
@@ -310,6 +316,8 @@ Drawer.prototype.drawSpaceContents = function (p_context, p_drawableItems, p_fun
 					}
 				} else if (item.kind == KIND_DRAWABLE_ITEM.X) {
 					this.drawCrossX(p_context, ix, iy, item);
+				} else if (item.kind == KIND_DRAWABLE_ITEM.SQUARE) {
+					this.drawSquare(p_context, ix, iy, item);
 				}
             }
             pixDrawX += this.pix.sideSpace;
@@ -420,7 +428,7 @@ Drawer.prototype.drawPolyomino4x5TiledMap = function (p_context, p_map, p_pixMap
 Drawer.prototype.drawCrossX = function(p_context, p_xSpace, p_ySpace, p_item) {
 	p_context.beginPath();
 	p_context.strokeStyle = p_item.color; 
-	p_context.lineWidth = Math.min(Math.floor(this.getPixInnerSide()/10,1));
+	p_context.lineWidth = Math.max(Math.floor(this.getPixInnerSide()/10, 1));
 	const pixAway = Math.floor(this.getPixInnerSide()/10);
 	const pixLeft = this.getPixInnerXLeft(p_xSpace) + pixAway;
 	const pixRight = this.getPixInnerXRight(p_xSpace) - pixAway;
@@ -431,6 +439,27 @@ Drawer.prototype.drawCrossX = function(p_context, p_xSpace, p_ySpace, p_item) {
 	p_context.moveTo(pixLeft, pixDown);
 	p_context.lineTo(pixRight, pixUp);
 	p_context.stroke(); // Credits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/lineTo
+}
+
+Drawer.prototype.drawSquare = function(p_context, p_xSpace, p_ySpace, p_item) {
+	p_context.beginPath();
+	p_context.strokeStyle = p_item.colorBorder; 
+	p_context.fillStyle = p_item.colorInner; 
+	p_context.lineWidth = Math.max(Math.floor(this.getPixInnerSide()/10, 2));
+	
+	const pixAway = Math.floor(this.getPixInnerSide()/5);
+	const pixLeft = this.getPixInnerXLeft(p_xSpace) + pixAway;
+	const pixRight = this.getPixInnerXRight(p_xSpace) - pixAway;
+	const pixUp = this.getPixInnerYUp(p_ySpace) + pixAway;
+	const pixDown = this.getPixInnerYDown(p_ySpace) - pixAway;
+	p_context.moveTo(pixLeft, pixUp);
+	p_context.lineTo(pixRight, pixUp);
+	p_context.lineTo(pixRight, pixDown);
+	p_context.lineTo(pixLeft, pixDown);
+	p_context.lineTo(pixLeft, pixUp);
+	p_context.lineTo(pixRight, pixUp);
+	p_context.stroke();
+	p_context.fill();
 }
 
 // Combined arrow = Yajilin-like. This method is a better deal than reusing drawSpaceContents since it doesn't draw spaces.
@@ -761,8 +790,8 @@ Drawer.prototype.wallToColor = function (p_wallType) {
 // With fences
 Drawer.prototype.fenceToColor = function (p_fenceState) {
     switch (p_fenceState) {
-		case (FENCE_STATE.OPEN): return (this.fenceColorSet.open_fence); break;
-		case (FENCE_STATE.CLOSED): return (this.fenceColorSet.closed_fence); break;
-		default : return this.fenceColorSet.undecided_fence;
+		case (FENCE_STATE.OPEN): return (this.fenceColourSet.open_fence); break;
+		case (FENCE_STATE.CLOSED): return (this.fenceColourSet.closed_fence); break;
+		default : return this.fenceColourSet.undecided_fence;
     }
 }

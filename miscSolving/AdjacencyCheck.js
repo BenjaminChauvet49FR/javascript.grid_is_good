@@ -3,15 +3,8 @@ const ADJACENCY = {
     NO: 0,
     UNDEFINED: -1
 };
-const DIRECTION = {
-    LEFT: 'L',
-    UP: 'U',
-    RIGHT: 'R',
-    DOWN: 'D',
-    HERE: 'H',
-    UNDEFINED: '-'
-};
-const FOUR_DIRECTIONS_STRING = "LURD";
+
+DIRECTION.HERE = 'H';
 
 const TASK = {
     TBD: 0,
@@ -20,10 +13,10 @@ const TASK = {
 const UNDEFINED_INDEX = -1;
 
 const TBD_DIRECTIONS = {
-    D: TASK.TBD,
-    L: TASK.TBD,
-    U: TASK.TBD,
-    R: TASK.TBD
+    d: TASK.TBD, 
+    l: TASK.TBD,
+    u: TASK.TBD,
+    r: TASK.TBD
 };
 
 var turningLeftGrid = null;
@@ -55,10 +48,10 @@ function restartGridTBD(p_array, p_xLength, p_yLength) {
             p_array.push([]);
             for (x = 0; x < p_xLength; x++) {
                 p_array[y].push({
-                    L: TASK.TBD,
-                    U: TASK.TBD,
-                    R: TASK.TBD,
-                    D: TASK.TBD
+                    l: TASK.TBD,
+                    u: TASK.TBD,
+                    r: TASK.TBD,
+                    d: TASK.TBD
                 }); // A copy of the item is required here
             }
         }
@@ -76,10 +69,10 @@ function cleanGridList(p_array, p_list, p_value) {
 function cleanGridListTBD(p_array, p_list) {
     p_list.forEach(space => {
         p_array[space.y][space.x] = {
-            L: TASK.TBD,
-            U: TASK.TBD,
-            R: TASK.TBD,
-            D: TASK.TBD
+            l: TASK.TBD,
+            u: TASK.TBD,
+            r: TASK.TBD,
+            d: TASK.TBD
         }
         // Même remarque que dans la version "non naturelle" de restartGrid (aka restartGridTBD sauf si changement de nom)
     });
@@ -495,7 +488,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
     var listSpacesConfirmedAdjacency = [];
     var listSpacesLimitsAndTheirLimits = [];
     if (riskySpacesToCheck.length > 0) {
-        directionsGrid = restartGrid(directionsGrid, p_xLength, p_yLength, DIRECTION.UNDEFINED);
+        directionsGrid = restartGrid(directionsGrid, p_xLength, p_yLength, DIRECTION.UNDECIDED);
     }
 
     riskySpacesToCheck.forEach(space => {
@@ -505,28 +498,28 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
         if (p_function(xRisk, yRisk) != ADJACENCY.NO) {
             const exploList = {
                 //WARNING : the code below is dependent from the labels ! Unfortunately, this seems to be the cost of defining an object with properties...
-                L: {
+                l: {
                     spacesExploToDo: [],
                     containADJACENCY: false,
-                    linked: DIRECTION.UNDEFINED,
+                    linked: DIRECTION.UNDECIDED,
                     id: DIRECTION.LEFT
                 },
-                U: {
+                u: {
                     spacesExploToDo: [],
                     containADJACENCY: false,
-                    linked: DIRECTION.UNDEFINED,
+                    linked: DIRECTION.UNDECIDED,
                     id: DIRECTION.UP
                 },
-                R: {
+                r: {
                     spacesExploToDo: [],
                     containADJACENCY: false,
-                    linked: DIRECTION.UNDEFINED,
+                    linked: DIRECTION.UNDECIDED,
                     id: DIRECTION.RIGHT
                 },
-                D: {
+                d: {
                     spacesExploToDo: [],
                     containADJACENCY: false,
-                    linked: DIRECTION.UNDEFINED,
+                    linked: DIRECTION.UNDECIDED,
                     id: DIRECTION.DOWN
                 }
             };
@@ -568,7 +561,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
 
             function getActualIndex(p_index) {
                 var index = p_index;
-                while (exploList[index].linked != DIRECTION.UNDEFINED) {
+                while (exploList[index].linked != DIRECTION.UNDECIDED) {
                     index = exploList[index].linked;
                 }
                 return index;
@@ -605,7 +598,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
                         y = spaceExplo.y;
                         origin = spaceExplo.origin;
                         index = directionsGrid[y][x];
-                        if (index == DIRECTION.UNDEFINED) { //Exploring
+                        if (index == DIRECTION.UNDECIDED) { //Exploring
                             directionsGrid[y][x] = myActualIndex;
                             spacesMadeDirty.push({
                                 x: x,
@@ -667,7 +660,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
                 numberNotFullyDiggedDirections = 0;
                 numberNotFullyDiggedDirectionsWithAdjacency = 0;
                 for (i = 0; i < 4; i++) {
-                    if (exploList[directionsArray[i]].linked == DIRECTION.UNDEFINED) {
+                    if (exploList[directionsArray[i]].linked == DIRECTION.UNDECIDED) {
                         if (exploList[directionsArray[i]].spacesExploToDo.length != 0) {
                             numberNotFullyDiggedDirections++;
                             if (exploList[directionsArray[i]].containADJACENCY) {
@@ -683,14 +676,14 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
                 limitsLog("Directions grid : ");
                 directionsGrid.forEach(row => limitsLog(row));
             }
-            directionsGrid = cleanGridList(directionsGrid, spacesMadeDirty, DIRECTION.UNDEFINED);
+            directionsGrid = cleanGridList(directionsGrid, spacesMadeDirty, DIRECTION.UNDECIDED);
 
             // For this space : 1) create a new limit (TODO : On considère que c'est une nouvelle limite !) 2) put an adjacency if at least 2 branches contain one.
 
             var adjacencyLimit = new AdjacencyLimit([]);
             var sideNumberWithAdjacency = 0;
             for (i = 0; i < 4; i++) {
-                if (exploList[directionsArray[i]].linked == DIRECTION.UNDEFINED) {
+                if (exploList[directionsArray[i]].linked == DIRECTION.UNDECIDED) {
                     adjacencyLimit.createSideIfNeeded(directionsArray[i]);
                     if (exploList[directionsArray[i]].containADJACENCY) {
                         sideNumberWithAdjacency++;

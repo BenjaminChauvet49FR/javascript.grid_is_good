@@ -1,9 +1,6 @@
-var colors={
-	open_fence : "#ffffff",
-	closed_fence : "#000088"
-}
+var colors = {}; // TODO manage this some day
 
-var drawer = new Drawer(colors);
+var drawer = new Drawer();
 var solver = new SolverUsotatami([[null]]);
 var canevas = document.getElementById("canevas");
 var	context = canevas.getContext("2d");
