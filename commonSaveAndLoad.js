@@ -15,23 +15,115 @@ function getLocalStorageName(p_name) {
 }
 
 // ------------------------------------------
-
 // All "new" (as to beginning March 2021) puzzle save and load methods
 
-//----
-function puzzleWallsOnlyToString(p_wallArray) {
+// First, some functions used several times
+function dimensionsToString(p_array) {
 	const streamDim = new StreamEncodingString64();
-	streamDim.encode(p_wallArray[0].length);
-	streamDim.encode(p_wallArray.length);
-	return streamDim.getString() + " " + wallArrayToString64(p_wallArray);
+	streamDim.encode(p_array[0].length);
+	streamDim.encode(p_array.length);
+	return streamDim.getString();
 }
 
-function stringToPuzzleWallsOnly(p_string) {
-	const tokens = p_string.split(" ");
-	const streamDim = new StreamDecodingString64(tokens[0]);
+function stringToDimensions(p_string) {
+	const streamDim = new StreamDecodingString64(p_string);
 	const xLength = streamDim.decode();
 	const yLength = streamDim.decode();
-	return {wallArray : string64toWallArray(tokens[1], xLength, yLength)}; // "wallArray" is necessary for updating fields in the editor, we cannot just return an array.
+	return {xLength : xLength, yLength : yLength}
+}
+
+function symbolsArrayToString(p_symbolsArray, p_symbolsList) {
+	var separator = "";
+	var answer = "";
+	const streamValues = new StreamEncodingSparseBinary();
+	p_symbolsList.forEach(symbol => {
+		for(var iy = 0 ; iy < p_symbolsArray.length ; iy++) {
+			for(var ix = 0 ; ix < p_symbolsArray[0].length ; ix++) {
+				streamValues.encode(p_symbolsArray[iy][ix] == symbol);
+			}
+		}
+		answer += separator + streamValues.getString();
+		separator = "#";
+	});
+	return answer;
+}
+
+function stringToSymbolsArray(p_string, p_xLength, p_yLength, p_symbolsList) {
+	const tokensSymbols = p_string.split("#");
+	const answer = [];
+	for(var iy = 0 ; iy < p_yLength ; iy++) {
+		answer.push([]);
+		for(var ix = 0 ; ix < p_xLength ; ix++) {
+			answer[iy].push(null);
+		}
+	}
+	return fillArrayWithSymbols(answer, p_string, p_xLength, p_yLength, p_symbolsList);
+}
+
+function fillArrayWithSymbols(p_array, p_string, p_xLength, p_yLength, p_symbolsList) {
+	var symbol;
+	var streamSymbol;
+	const tokensSymbols = p_string.split("#");
+	for (var i = 0 ; i < p_symbolsList.length ; i++) {
+		symbol = p_symbolsList[i];
+		streamSymbol = new StreamDecodingSparseBinary(tokensSymbols[i]);
+		for(var iy = 0 ; iy < p_yLength ; iy++) {
+			for(var ix = 0 ; ix < p_xLength ; ix++) {
+				if (streamSymbol.decode() == true) {
+					p_array[iy][ix] = symbol;
+				}
+			}
+		}
+	}
+	return p_array;
+}
+
+/**
+If the array contains non-number non-null values, treat them as null
+*/
+function numbersArrayToString(p_numbersArray) {
+	const streamValues = new StreamEncodingSparseAny();
+	for(var iy = 0 ; iy < p_numbersArray.length ; iy++) {
+		for(var ix = 0 ; ix < p_numbersArray[0].length; ix++) {
+			if (!isNaN(p_numbersArray[iy][ix])) {
+				streamValues.encode(p_numbersArray[iy][ix]); // Note : maybe this habit of nullifying NaN characters will perdure, who knows ?
+			} else {
+				streamValues.encode(null); 
+			}
+		}
+	}
+	return streamValues.getString();
+}
+
+// Builds a number array from a string
+function stringToNumberArray(p_string, p_xLength, p_yLength) {
+	const streamValues = new StreamDecodingSparseAny(p_string);
+	var answer = [];
+	for(var iy = 0 ; iy < p_yLength ; iy++) {
+		answer.push([]);
+		for(var ix = 0 ; ix < p_xLength ; ix++) {
+			decode = streamValues.decode();
+			if ((decode != null) && (!isNaN(decode)) && decode != END_OF_DECODING_STREAM) { // Well, isNan(null) = true
+				answer[iy].push(decode);
+			}  else {
+				answer[iy].push(null);
+			}
+		}
+	}
+	return answer;
+}
+
+//----
+
+// Now to the savers/loaders themselves
+function wallsOnlyPuzzleToString(p_wallArray) {
+	return dimensionsToString(p_wallArray) + " " + wallArrayToString64(p_wallArray);
+}
+
+function stringToWallsOnlyPuzzle(p_string) {
+	const tokens = p_string.split(" ");
+	const dims = stringToDimensions(tokens[0]);
+	return {wallArray : string64toWallArray(tokens[1], dims.xLength, dims.yLength)}; // "wallArray" is necessary for updating fields in the editor, we cannot just return an array.
 }
 
 //----
@@ -53,10 +145,7 @@ function stringToStarBattlePuzzle(p_string) {
 
 //----
 //Puzzle with regions indications. 1) dimensions, 2) grid, 3) indications for each region
-function puzzleRegionsNumericIndicationsToString(p_wallArray, p_numbersArray) {
-	const streamDim = new StreamEncodingString64();
-	streamDim.encode(p_wallArray[0].length);
-	streamDim.encode(p_wallArray.length);	
+function regionsNumericIndicationsPuzzleToString(p_wallArray, p_numbersArray) {
 	const regionArray = WallGrid_data(p_wallArray).toRegionGrid(); // This assumes toRegionGrid() returns a double-entry array of region numbers ordered by "first spaces in lexical order" in lexical order.
 	var regionsIndications = [];
 	for(var iy = 0 ; iy < regionArray.length ; iy++) {
@@ -70,14 +159,12 @@ function puzzleRegionsNumericIndicationsToString(p_wallArray, p_numbersArray) {
 	for(var i = 0 ; i < regionsIndications.length ; i++) {
 		streamRegion.encode(regionsIndications[i]);
 	}
-	return streamDim.getString() + " " + wallArrayToString64(p_wallArray) + " " + streamRegion.getString();
-} //use example : puzzleRegionsNumericIndicationsToString(editorCore.wallGrid.array, editorCore.getGrid("NR").array)
+	return dimensionsToString(p_wallArray) + " " + wallArrayToString64(p_wallArray) + " " + streamRegion.getString();
+} //use example : regionsNumericIndicationsPuzzleToString(editorCore.wallGrid.array, editorCore.getGrid("NR").array)
 
-function stringToPuzzleRegionsNumericIndications(p_string) {
+function stringToRegionsNumericIndicationsPuzzle(p_string) {
 	const tokens = p_string.split(" ");
-	const streamDim = new StreamDecodingString64(tokens[0]);
-	const xLength = streamDim.decode();
-	const yLength = streamDim.decode();
+	const dims = stringToDimensions(tokens[0]);
 	var indexRegions = [];
 	const streamRegIndic = new StreamDecodingSparseAny(tokens[2]);
 	var decodedValue = streamRegIndic.decode();
@@ -89,361 +176,120 @@ function stringToPuzzleRegionsNumericIndications(p_string) {
 		regionIndex++;
 		decodedValue = streamRegIndic.decode();
 	} 
-	return {wallArray : string64toWallArray(tokens[1], xLength, yLength), indications : indexRegions}; // "wallArray" is necessary for updating fields in the editor, we cannot just return an array.
+	return {wallArray : string64toWallArray(tokens[1], dims.xLength, dims.yLength), indications : indexRegions}; // "wallArray" is necessary for updating fields in the editor, we cannot just return an array.
 
-} // Use example : stringToPuzzleRegionsNumericIndications("FF KqmqPUziHNhkBbwkl1ne463aQokwQkn10q6ckiQrjCQwIlgklnc5gQZcKdXHlzn7kmBL394 23-332--325_08_24-4_332--4_18--13")
-
-// Utilitary method with the retured item right above (wallArray, indications)
-function getRegionIndicArray(p_loadedItem) {
-	const regionArray = WallGrid_data(p_loadedItem.wallArray).toRegionGrid(); // This supposes toRegionGrid() returns a double-entry array of region numbers ordered by "first spaces in lexical order" in lexical order.
-	var regionIndicArray = [];
-	var nextIndex = (p_loadedItem.indications.length > 0 ? p_loadedItem.indications[0].index : -1);
-	var indicIndex = 0;
-	for(var iy = 0 ; iy < regionArray.length ; iy++) {
-		regionIndicArray.push([]);
-		for(var ix = 0 ; ix < regionArray[0].length; ix++) {
-			if ((nextIndex == regionArray[iy][ix]) && nextIndex != -1) {
-				regionIndicArray[iy].push(parseInt(p_loadedItem.indications[indicIndex].value, 10));
-				indicIndex++;
-				if (indicIndex != p_loadedItem.indications.length) {
-					nextIndex = p_loadedItem.indications[indicIndex].index;
-				} else {
-					nextIndex = -1;
-				}
-			} else {
-				regionIndicArray[iy].push(null);
-			}
-		}
-	}
-	return regionIndicArray;
-}
+} // Use example : stringToRegionsNumericIndicationsPuzzle("FF KqmqPUziHNhkBbwkl1ne463aQokwQkn10q6ckiQrjCQwIlgklnc5gQZcKdXHlzn7kmBL394 23-332--325_08_24-4_332--4_18--13")
 
 //----
 // No walls, only numbers
-function puzzleNumbersOnlyToString(p_numbersArray) {
-	const streamDim = new StreamEncodingString64();
-	streamDim.encode(p_numbersArray[0].length);
-	streamDim.encode(p_numbersArray.length);
-	const streamValues = new StreamEncodingSparseAny();
-	for(var iy = 0 ; iy < p_numbersArray.length ; iy++) {
-		for(var ix = 0 ; ix < p_numbersArray[0].length; ix++) {
-			streamValues.encode(p_numbersArray[iy][ix]);
-		}
-	}
-	return streamDim.getString() + " " + streamValues.getString();
+function numbersOnlyPuzzleToString(p_numbersArray) {
+	return dimensionsToString(p_numbersArray) + " " + numbersArrayToString(p_numbersArray);
 }
 
-function stringToPuzzleNumbersOnly(p_string) {
+// Building an array with only null and numbers 
+function stringToNumbersOnlyPuzzle(p_string) {
 	const tokens = p_string.split(" ");
-	const streamDim = new StreamDecodingString64(tokens[0]);
-	const xLength = streamDim.decode();
-	const yLength = streamDim.decode();
-	const streamValues = new StreamDecodingSparseAny(tokens[1]);
-	var answer = [];
-	for(var iy = 0 ; iy < xLength ; iy++) {
-		answer.push([]);
-		for(var ix = 0 ; ix < xLength; ix++) {
-			decode = streamValues.decode();
-			if (decode != END_OF_DECODING_STREAM) {
-				answer[iy].push(decode);
-			}  else {
-				answer[iy].push(null);
-			}
-		}
-	}
+	const dims = stringToDimensions(tokens[0]);
 	return {
-	    numberArray : answer
+	    numberArray : stringToNumberArray(tokens[1], dims.xLength, dims.yLength)
 	}
 }
 
 //----
 // Wall-less and limited different symbols
 function limitedSymbolsWalllessPuzzleToString(p_symbolsArray, p_symbolsList) {
-	const streamDim = new StreamEncodingString64();
-	streamDim.encode(p_symbolsArray[0].length);
-	streamDim.encode(p_symbolsArray.length);
-	const streamValues = new StreamEncodingSparseBinary();
-	var separator = "";
-	var tokens = "";
-	p_symbolsList.forEach(symbol => {
-		for(var iy = 0 ; iy < p_symbolsArray.length ; iy++) {
-			for(var ix = 0 ; ix < p_symbolsArray[0].length ; ix++) {
-				streamValues.encode(p_symbolsArray[iy][ix] == symbol);
-			}
-		}
-		tokens += separator + streamValues.getString();
-		separator = "#";
-	});
-	return streamDim.getString() + " " + tokens;
+	return dimensionsToString(p_symbolsArray) + " " + symbolsArrayToString(p_symbolsArray, p_symbolsList);
 }
 
 function stringToLimitedSymbolsWalllessPuzzle(p_string, p_symbolsList) {
 	const tokens = p_string.split(" ");
-	const streamDim = new StreamDecodingString64(tokens[0]);
-	const xLength = streamDim.decode();
-	const yLength = streamDim.decode();
-	const tokensSymbols = tokens[1].split("#");
-	const answer = [];
-	for(var iy = 0 ; iy < yLength ; iy++) {
-		answer.push([]);
-		for(var ix = 0 ; ix < xLength ; ix++) {
-			answer[iy].push(null);
-		}
-	}
-	var symbol;
-	var streamPearl;
-	for (var i = 0 ; i < p_symbolsList.length ; i++) {
-		symbol = p_symbolsList[i];
-		streamPearl = new StreamDecodingSparseBinary(tokensSymbols[i]);
-		for(var iy = 0 ; iy < yLength ; iy++) {
-			for(var ix = 0 ; ix < xLength ; ix++) {
-				if (streamPearl.decode() == true) {
-					answer[iy][ix] = symbol;
-				}
-			}
-		}
-	}
-	return {symbolArray : answer};
+	const dims = stringToDimensions(tokens[0]);
+	return {symbolArray : stringToSymbolsArray(tokens[1], dims.xLength, dims.yLength, p_symbolsList)};
 }
 
 //----
 // Numbers and symbols (potentially X - here, the array contains CHARACTERS !)
 function puzzleNumbersSymbolsToString(p_numbersSymbolsArray, p_symbolsList) {
-	const streamDim = new StreamEncodingString64();
-	streamDim.encode(p_numbersSymbolsArray[0].length);
-	streamDim.encode(p_numbersSymbolsArray.length);
-	
-	const streamValues = new StreamEncodingSparseAny();
-	for(var iy = 0 ; iy < p_numbersSymbolsArray.length ; iy++) {
-		for(var ix = 0 ; ix < p_numbersSymbolsArray[0].length; ix++) {
-			const c = p_numbersSymbolsArray[iy][ix];
-			if ((c == null) || (isNaN(c))) {
-				streamValues.encode(null);
-			} else {
-				streamValues.encode(parseInt(c, 10));
-			}
-		}
-	}
-	
-	var streamSymbols;
-	separator = "";
-	tokens = "";
-	var symbol;
-	for (var is = 0; is < p_symbolsList.length ; is++) {
-		symbol = p_symbolsList[is];
-		streamSymbols = new StreamEncodingSparseBinary();
-		for(var iy = 0 ; iy < p_numbersSymbolsArray.length ; iy++) {
-			for(var ix = 0 ; ix < p_numbersSymbolsArray[0].length; ix++) {
-				streamSymbols.encode(p_numbersSymbolsArray[iy][ix] == symbol);
-			}
-		}
-		tokens += separator + streamSymbols.getString();
-		separator = "#";
-	}
-	return streamDim.getString() + " " + streamValues.getString() + " " + tokens;
+	return dimensionsToString(p_numbersSymbolsArray) + " " + numbersArrayToString(p_numbersSymbolsArray) + " " + symbolsArrayToString(p_numbersSymbolsArray, p_symbolsList);
 }
 
-function stringToPuzzleNumbersSymbols(p_string, p_symbolsList) {
+function stringToNumbersSymbolsPuzzle(p_string, p_symbolsList) {
 	const tokens = p_string.split(" ");
-	const streamDim = new StreamDecodingString64(tokens[0]);
-	const xLength = streamDim.decode();
-	const yLength = streamDim.decode();
-	const streamNumbers = new StreamDecodingSparseAny(tokens[1]);
-	const answer = [];
-	var val;
-	for(var iy = 0 ; iy < yLength ; iy++) {
-		answer.push([]);
-		for(var ix = 0 ; ix < xLength ; ix++) {
-			val = streamNumbers.decode();
-			if ((val != null) && (!isNaN(val)) && (val != END_OF_DECODING_STREAM)) { // Well, isNan(null) = true
-				answer[iy].push("" + val);
-			} else {
-				answer[iy].push(null);
-			}
-		}
-	}
-	var symbol;
-	var streamSymbol;
-	const tokensSymbols = tokens[2].split("#");
-	for (var i = 0 ; i < p_symbolsList.length ; i++) {
-		symbol = p_symbolsList[i];
-		streamSymbol = new StreamDecodingSparseBinary(tokensSymbols[i]);
-		for(var iy = 0 ; iy < yLength ; iy++) {
-			for(var ix = 0 ; ix < xLength ; ix++) {
-				if (streamSymbol.decode() == true) {
-					answer[iy][ix] = symbol;
-				}
-			}
-		}
-	}
-	return {numbersSymbolsArray : answer};
+	const dims = stringToDimensions(tokens[0]);
+	numbersSymbolsArray = stringToNumberArray(tokens[1], dims.xLength, dims.yLength);
+	return {numbersSymbolsArray : fillArrayWithSymbols(numbersSymbolsArray, tokens[2], dims.xLength, dims.yLength, p_symbolsList)};
 }
 
 //----
 // Walls and numbers in spaces
-function puzzleWallsNumbersToString(p_wallArray, p_numbersArray) {
-	const streamDim = new StreamEncodingString64();
-	streamDim.encode(p_numbersArray[0].length);
-	streamDim.encode(p_numbersArray.length);
-	const streamValues = new StreamEncodingSparseAny();
-	for(var iy = 0 ; iy < p_numbersArray.length ; iy++) {
-		for(var ix = 0 ; ix < p_numbersArray[0].length; ix++) {
-			streamValues.encode(p_numbersArray[iy][ix]);
-		}
-	}
-	return streamDim.getString() + " " + wallArrayToString64(p_wallArray) + " " + streamValues.getString();
+function wallsNumbersPuzzleToString(p_wallArray, p_numbersArray) {
+	return dimensionsToString(p_wallArray) + " " + wallArrayToString64(p_wallArray) + " " + numbersArrayToString(p_numbersArray);
 }
 
-function stringToPuzzleWallsNumbers(p_string) {
+function stringToWallsNumbersPuzzle(p_string) {
 	const tokens = p_string.split(" ");
-	const streamDim = new StreamDecodingString64(tokens[0]);
-	const xLength = streamDim.decode();
-	const yLength = streamDim.decode();
-	const streamValues = new StreamDecodingSparseAny(tokens[2]);
-	var answer = [];
-	for(var iy = 0 ; iy < yLength ; iy++) {
-		answer.push([]);
-		for(var ix = 0 ; ix < xLength; ix++) {
-			decode = streamValues.decode();
-			if (decode != END_OF_DECODING_STREAM) {
-				answer[iy].push(decode);
-			}  else {
-				answer[iy].push(null);
-			}
-		}
-	}
+	const dims = stringToDimensions(tokens[0]);
 	return {
-		wallArray : string64toWallArray(tokens[1], xLength, yLength),
-	    numberArray : answer
-	}
-}
-
-
-// ------------------------------------------
-
-
-
-// Savers and loaders
-// Note : for commodity, a saver has been associated with its loader rather than having all savers together and all loaders together
-
-function stringToWallAndNumbersPuzzle(p_string) {
-	var stringArray = p_string.split(' ');
-	// Wrapper for compatibility with previous formats
-	const wallGridAnswer = tokensToWallArray(stringArray.slice(0,3));
-	var xLength = stringArray[0];
-	var yLength = stringArray[1];
-	var numberGrid = generateSymbolArray(xLength,yLength);
-	var indexToken = 3;	
-	while(indexToken < stringArray.length && stringArray[indexToken].length == 0) {
-		indexToken++;
-	}
-	if (stringArray.length > indexToken) {
-		//Wrapping for compatibility with previous formats
-		if (stringArray[indexToken].startsWith("Numbers")) {
-			indexToken++;
-		}
-		numberGrid = fillArrayWithTokensSpaces(stringArray.slice(indexToken),numberGrid);
-	}
-	return {
-	    wallArray : wallGridAnswer,
-	    numberArray : numberGrid
+		wallArray : string64toWallArray(tokens[1], dims.xLength, dims.yLength),
+		numberArray : stringToNumberArray(tokens[2], dims.xLength, dims.yLength)
 	};
 }
 
+//----
+// Yajilin and so grids
+// Grid must consist of Xs and "Ld|Ud|Rd|Dd" where d is a number
 
-/**
-Inspirated by puzzleRegionIndicationsToString - saves a spare puzzle with diverse values
-*/
-function puzzleLexicalSpacesToString(p_valuesArray) {
-	const dimensionsString = p_valuesArray[0].length + " " + p_valuesArray.length;
-	return dimensionsString + lexicalSpacesValuesToString(p_valuesArray);
-}
-
-function stringToLexicalSpacesPuzzle(p_string) { // This code will likely be moved somewhere else on the day its usage will be generalised
-	const stringArray = p_string.split(' ');
-	const xLength = stringArray[0];
-	const yLength = stringArray[1];
-	var indexToken = 2;	
-	var token;
-	var x = -1; // (x,y) = coordinates of "the spaces we were before putting a new non-null value". (see evolutions of x and y values below)
-	var y = 0;
+function arrowNumberCombinationsPuzzleToString(p_symbolsArray) {
 	var value;
-	var spacesToSkip = 0;
+	var streamSpaces = new StreamEncodingSparseAny();
+	for (var y = 0 ; y < p_symbolsArray.length ; y++) {
+		for (var x = 0 ; x < p_symbolsArray[0].length ; x++) {
+			mod = -1;
+			if (null == p_symbolsArray[y][x]) {
+				value = null;
+			} else switch(p_symbolsArray[y][x].charAt(0)) {
+				case "X" : value = 0; break;
+				case "L" : mod = 1; break;
+				case "U" : mod = 2; break;
+				case "R" : mod = 3; break;
+				case "D" : mod = 4; break;
+				default : value = null; break;
+			}
+			if (mod > 0) {
+				value = mod + 4 * (parseInt(p_symbolsArray[y][x].substring(1), 10));
+			}
+			streamSpaces.encode(value);
+		}
+	}
+	
+	return dimensionsToString(p_symbolsArray) + " " + streamSpaces.getString();
+}
+
+function stringToArrowNumberCombinationsPuzzle(p_string) {
+	const tokens = p_string.split(" ");
+	const dims = new stringToDimensions(tokens[0]);
+	const stream = new StreamDecodingSparseAny(tokens[1]);
+	var character;
+	var decode;
 	var array = [];
-	for (var i = 0; i < yLength; i++) {
+	for (var y = 0; y < dims.yLength ; y++) {
 		array.push([]);
-		for (var j = 0; j < xLength; j++) {
-			array[i].push(null);
-		}
-	}
-	while(indexToken < stringArray.length && stringArray[indexToken].length == 0) {
-		indexToken++;
-	}
-	while (stringArray.length > indexToken) {
-		token = stringArray[indexToken];
-		if (token.charAt(0) == 'X') {
-			if (token == "X") {
-				spacesToSkip++;
-			} else if (token == "XX") {
-				spacesToSkip += 2;
+		for (var x = 0 ; x < dims.xLength ; x++) {
+			decode = stream.decode();
+			if (decode == null || decode == END_OF_DECODING_STREAM) {
+				array[y].push(null);
+			} else if (decode == 0) {
+				array[y].push("X");
 			} else {
-				spacesToSkip += parseInt(token.substring(1), 10);
+				switch (decode % 4) {
+					case 1 : character = "L"; break;
+					case 2 : character = "U"; break;
+					case 3 : character = "R"; break;
+					default : character = "D"; break;
+				}
+				array[y].push(character + Math.floor((decode - 1)/4));
 			}
-		} else {
-			if (token.startsWith("xX")) {
-				value = token.substring(1);
-			} else {
-				value = token;
-			}
-			x++;
-			x += spacesToSkip;
-			y += Math.floor(x / xLength);
-			x %= xLength;
-			array[y][x] = value;		
-			spacesToSkip = 0;
-		}
-		indexToken++;
-	}
-	return {
-	    valuesArray : array
-	}
-}
-
-/*
-p_symbolsArray : grid to save
-p_symbolsToSave : list of symbols that should be saved (if any, otherwise the grid is saved directly)
-*/
-function commonPuzzleEmptyWallsToString(p_xLength, p_yLength, p_symbolsArray, p_symbolsToSave) {
-    var dimensionsString = p_xLength + " " + p_yLength + " "; //Spaces right
-	var symbolsString = ""; //No spaces left/right
-    var rowsString = ""; //Spaces left
-    if (p_symbolsToSave) {
-        p_symbolsToSave.forEach(symbol => {
-			symbolsString += symbol;
-            rowsString += " " + arrayToStringRows(p_symbolsArray, symbol);
-        });
-    }
-    return dimensionsString + symbolsString + rowsString;
-}
-
-function stringToEmptyWallsPuzzle(p_string) {
-	var stringArray = p_string.split(' ');
-	var xLength = parseInt(stringArray[0],10);
-	var yLength = parseInt(stringArray[1],10);
-	var symbolsString = stringArray[2];
-	var array = generateSymbolArray(xLength,yLength);
-	var indexToken = 3;	
-	while(indexToken < stringArray.length && stringArray[indexToken].length == 0) {
-		indexToken++;
-	}
-	if (stringArray.length > indexToken) {
-		for (var i = 0; i < symbolsString.length ; i++) {	
-			filledArray = fillArrayWithTokensRows(stringArray.slice(), array, indexToken, symbolsString.charAt(i));
-			array = filledArray.newArray;
-			indexToken = filledArray.newIndexToken;
 		}
 	}
-	return {
-	    symbolArray : array
-	};
+	return {combinationsArray : array};
 }

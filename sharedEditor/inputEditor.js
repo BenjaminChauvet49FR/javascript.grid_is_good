@@ -303,9 +303,9 @@ const PUZZLES_KIND = {
 	MASYU : {id:5},
 	REGIONS_NUMBERS : {id:6},
 	NUMBERS_X_ONLY : {id:7},
+	YAJILIN_LIKE : {id:8},
 	STAR_BATTLE : {id:1001, squareGrid : true},
 	GRAND_TOUR : {id:99102},
-	YAJILIN_LIKE : {id:995},
 }
 
 /** 
@@ -332,19 +332,18 @@ saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions
         } else if (p_kindId == PUZZLES_KIND.CURVING_ROAD.id) {
             puzzleToSaveString = limitedSymbolsWalllessPuzzleToString(p_editorCore.getArray(GRID_ID.PEARL), [SYMBOL_ID.WHITE]);
 		} else if (p_kindId == PUZZLES_KIND.NUMBERS_ONLY.id) {
-            puzzleToSaveString = puzzleNumbersOnlyToString(p_editorCore.getArray(GRID_ID.NUMBER_SPACE));
+            puzzleToSaveString = numbersOnlyPuzzleToString(p_editorCore.getArray(GRID_ID.NUMBER_SPACE));
         } else if (p_kindId == PUZZLES_KIND.NUMBERS_X_ONLY.id) {
             puzzleToSaveString = puzzleNumbersSymbolsToString(p_editorCore.getArray(GRID_ID.DIGIT_X_SPACE), ["X"]);
         } else if (p_kindId == PUZZLES_KIND.YAJILIN_LIKE.id) {
-            puzzleToSaveString = puzzleLexicalSpacesToString(p_editorCore.getArray(GRID_ID.YAJILIN_LIKE));
+            puzzleToSaveString = arrowNumberCombinationsPuzzleToString(p_editorCore.getArray(GRID_ID.YAJILIN_LIKE));
         } else if (p_kindId == PUZZLES_KIND.REGIONS_NUMBERS.id) {
-			// = commonPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_SPACE), null);
-			puzzleToSaveString = puzzleWallsNumbersToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_SPACE));
+			puzzleToSaveString = wallsNumbersPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_SPACE));
 		} else if (p_kindId == PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS.id) {
 			p_editorCore.alignToRegions(GRID_ID.NUMBER_REGION);
-			puzzleToSaveString = puzzleRegionsNumericIndicationsToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION));
+			puzzleToSaveString = regionsNumericIndicationsPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION));
         } else {
-			puzzleToSaveString = puzzleWallsOnlyToString(p_editorCore.getWallArray());
+			puzzleToSaveString = wallsOnlyPuzzleToString(p_editorCore.getWallArray());
 		}
         localStorage.setItem(localStorageName, puzzleToSaveString);
     }
@@ -380,39 +379,39 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p
 				p_editorCore.addGrid(GRID_ID.PEARL, gridPearl); 
 			} 
 			else if (p_kindId == PUZZLES_KIND.NUMBERS_ONLY.id){
-				loadedItem = stringToPuzzleNumbersOnly(localStorage.getItem(localStorageName));
+				loadedItem = stringToNumbersOnlyPuzzle(localStorage.getItem(localStorageName));
 				const gridNumber = loadedItem.numberArray;
 				loadedItem.wallArray = generateWallArray(gridNumber[0].length, gridNumber.length); 
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);
 				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE, gridNumber); 
 			} 
 			else if (p_kindId == PUZZLES_KIND.NUMBERS_X_ONLY.id){
-				loadedItem = stringToPuzzleNumbersSymbols(localStorage.getItem(localStorageName), ["X"]);
+				loadedItem = stringToNumbersSymbolsPuzzle(localStorage.getItem(localStorageName), ["X"]);
 				const gridNumber = loadedItem.numbersSymbolsArray;
 				loadedItem.wallArray = generateWallArray(gridNumber[0].length, gridNumber.length); 
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);
 				p_editorCore.addGrid(GRID_ID.DIGIT_X_SPACE, gridNumber); 
 			} 
 			else if (p_kindId == PUZZLES_KIND.YAJILIN_LIKE.id) {
-				loadedItem = stringToLexicalSpacesPuzzle(localStorage.getItem(localStorageName));
-				const values = loadedItem.valuesArray;
+				loadedItem = stringToArrowNumberCombinationsPuzzle(localStorage.getItem(localStorageName));
+				const values = loadedItem.combinationsArray;
 				loadedItem.wallArray = generateWallArray(values[0].length, values.length); 
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);			
 				p_editorCore.addGrid(GRID_ID.YAJILIN_LIKE, values);
 			} 
 			else if (p_kindId == PUZZLES_KIND.REGIONS_NUMBERS.id) {
-				loadedItem = stringToPuzzleWallsNumbers(localStorage.getItem(localStorageName));
+				loadedItem = stringToWallsNumbersPuzzle(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);			
 				p_editorCore.addGrid(GRID_ID.NUMBER_SPACE,loadedItem.numberArray); 
 			} 
 			else if (p_kindId == PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS.id) {
-				loadedItem = stringToPuzzleRegionsNumericIndications(localStorage.getItem(localStorageName));
+				loadedItem = stringToRegionsNumericIndicationsPuzzle(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);
 				regionIndicArray = getRegionIndicArray(loadedItem);			; 
 				p_editorCore.addGrid(GRID_ID.NUMBER_REGION, regionIndicArray);
 			}
 			else {
-				loadedItem = stringToPuzzleWallsOnly(localStorage.getItem(localStorageName));
+				loadedItem = stringToWallsOnlyPuzzle(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);
 			}
             adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore); 
@@ -496,6 +495,33 @@ function comboChange(p_thelist, p_editorCore) {
 	fieldY.disabled = squarePuzzle;
 	fieldXY.disabled = !squarePuzzle;
 }
+
+// Utilitary method to get from an item with wallarray and regionIndications (list of {index, value} items) a number array
+function getRegionIndicArray(p_loadedItem) {
+	const regionArray = WallGrid_data(p_loadedItem.wallArray).toRegionGrid(); // This supposes toRegionGrid() returns a double-entry array of region numbers ordered by "first spaces in lexical order" in lexical order.
+	var regionIndicArray = [];
+	var nextIndex = (p_loadedItem.indications.length > 0 ? p_loadedItem.indications[0].index : -1);
+	var indicIndex = 0;
+	for(var iy = 0 ; iy < regionArray.length ; iy++) {
+		regionIndicArray.push([]);
+		for(var ix = 0 ; ix < regionArray[0].length; ix++) {
+			if ((nextIndex == regionArray[iy][ix]) && nextIndex != -1) {
+				regionIndicArray[iy].push(parseInt(p_loadedItem.indications[indicIndex].value, 10));
+				indicIndex++;
+				if (indicIndex != p_loadedItem.indications.length) {
+					nextIndex = p_loadedItem.indications[indicIndex].index;
+				} else {
+					nextIndex = -1;
+				}
+			} else {
+				regionIndicArray[iy].push(null);
+			}
+		}
+	}
+	return regionIndicArray;
+}
+
+// --------------------
 
 /**
 Adapts canvas to global grid

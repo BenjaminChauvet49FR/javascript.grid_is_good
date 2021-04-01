@@ -1,12 +1,12 @@
 function SolverTheoryCluster() {
 	GeneralSolver.call(this);
-	this.construct(generateWallArray(1,1),generateSymbolArray(1,1));
+	this.construct(generateWallArray(1, 1));
 }
 
 SolverTheoryCluster.prototype = Object.create(GeneralSolver.prototype);
 SolverTheoryCluster.prototype.constructor = SolverTheoryCluster;
 
-SolverTheoryCluster.prototype.construct = function (p_wallArray, p_numberGrid) {
+SolverTheoryCluster.prototype.construct = function (p_wallArray) {
 	this.generalConstruct();
     this.xLength = p_wallArray[0].length;
     this.yLength = p_wallArray.length;
