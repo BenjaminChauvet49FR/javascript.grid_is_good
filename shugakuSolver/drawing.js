@@ -15,11 +15,9 @@ function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver) {
 	
 	// C/P on koburin's drawing.
 	var fixedSpace;
-	const fontSize = p_drawer.getPixInnerSide();
-	p_context.font = fontSize + "px Arial";
-	p_context.textAlign = 'center'; 
-	p_context.textBaseline = 'middle';
 	p_context.fillStyle = p_colourSet.numberWrite;
+	setupFont(p_context, p_drawer.getPixInnerSide(), "Arial");
+	alignFontCenter(p_context);
 	for(var iy=0; iy < p_solver.yLength ; iy++) {
 		for(var ix=0; ix < p_solver.xLength ; ix++) {
 			fixedSpace = p_solver.getFixedSpace(ix, iy);

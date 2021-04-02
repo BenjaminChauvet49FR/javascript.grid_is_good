@@ -4,16 +4,16 @@ Draws what's inside spaces
 function drawInsideSpaces(p_context, p_drawer, p_colours, p_solver){
 	var items = [DrawableX(p_colours.cross)];
 	function selection(x,y){
-		if(p_solver.getAnswer(x,y) == FILLING.YES){
+		if(p_solver.getAnswer(x,y) == FILLING.YES) {
 			return 1;
 		}
-		if(p_solver.getAnswer(x,y) == FILLING.NO){
+		if(p_solver.getAnswer(x,y) == FILLING.NO) {
 			return 0;
 		}
 		return -1;
 	}
 	p_drawer.drawSpaceContents(p_context,items,selection,p_solver.xLength,p_solver.yLength);
-	p_drawer.drawPolyomino4x5TiledMap(p_context,document.getElementById("img_map_polyomino"),16,selection,1,p_solver.xLength,p_solver.yLength);
+	p_drawer.drawPolyomino4x5TiledMap(p_context,document.getElementById("img_map_polyomino"), 16, selection, 1, p_solver.xLength, p_solver.yLength);
 	//TODO fournir la longueur, une bonne idée ? Si on peut s'affranchir d'un paramètre je suis pour.
 	
 	selectionRegion = function(p_index) {

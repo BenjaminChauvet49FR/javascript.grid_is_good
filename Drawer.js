@@ -425,43 +425,6 @@ Drawer.prototype.drawPolyomino4x5TiledMap = function (p_context, p_map, p_pixMap
 
 }
 
-Drawer.prototype.drawCrossX = function(p_context, p_xSpace, p_ySpace, p_item) {
-	p_context.beginPath();
-	p_context.strokeStyle = p_item.color; 
-	p_context.lineWidth = Math.max(Math.floor(this.getPixInnerSide()/10, 1));
-	const pixAway = Math.floor(this.getPixInnerSide()/10);
-	const pixLeft = this.getPixInnerXLeft(p_xSpace) + pixAway;
-	const pixRight = this.getPixInnerXRight(p_xSpace) - pixAway;
-	const pixUp = this.getPixInnerYUp(p_ySpace) + pixAway;
-	const pixDown = this.getPixInnerYDown(p_ySpace) - pixAway;
-	p_context.moveTo(pixLeft, pixUp);
-	p_context.lineTo(pixRight, pixDown);
-	p_context.moveTo(pixLeft, pixDown);
-	p_context.lineTo(pixRight, pixUp);
-	p_context.stroke(); // Credits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/lineTo
-}
-
-Drawer.prototype.drawSquare = function(p_context, p_xSpace, p_ySpace, p_item) {
-	p_context.beginPath();
-	p_context.strokeStyle = p_item.colorBorder; 
-	p_context.fillStyle = p_item.colorInner; 
-	p_context.lineWidth = Math.max(Math.floor(this.getPixInnerSide()/10, 2));
-	
-	const pixAway = Math.floor(this.getPixInnerSide()/5);
-	const pixLeft = this.getPixInnerXLeft(p_xSpace) + pixAway;
-	const pixRight = this.getPixInnerXRight(p_xSpace) - pixAway;
-	const pixUp = this.getPixInnerYUp(p_ySpace) + pixAway;
-	const pixDown = this.getPixInnerYDown(p_ySpace) - pixAway;
-	p_context.moveTo(pixLeft, pixUp);
-	p_context.lineTo(pixRight, pixUp);
-	p_context.lineTo(pixRight, pixDown);
-	p_context.lineTo(pixLeft, pixDown);
-	p_context.lineTo(pixLeft, pixUp);
-	p_context.lineTo(pixRight, pixUp);
-	p_context.stroke();
-	p_context.fill();
-}
-
 // Combined arrow = Yajilin-like. This method is a better deal than reusing drawSpaceContents since it doesn't draw spaces.
 Drawer.prototype.drawCombinedArrowGridIndications = function (p_context, p_combinedArrowGrid) {
 	const yLength = p_combinedArrowGrid.getYLength();
@@ -539,14 +502,33 @@ Drawer.prototype.drawCombinedArrowGridIndications = function (p_context, p_combi
 	}
 }
 
+function DrawSpaceValue(p_value, p_colour) {
+	this.value = p_value;
+	this.writeColour = p_colour;
+}
+
+Drawer.prototype.drawNumbersInsideStandard = function(p_context, p_function, p_xLength, p_yLength) {
+	setupFont(p_context, this.getPixInnerSide(), "Arial");
+	alignFontCenter(p_context);
+	for(var iy = 0 ; iy < p_yLength ; iy++) {
+		for(var ix = 0 ; ix < p_xLength ; ix++) {
+			supposedValue = p_function(ix, iy);
+			if (supposedValue != null) {
+				p_context.fillStyle = supposedValue.writeColour;
+				p_context.fillText(supposedValue.value, this.getPixCenterX(ix), this.getPixCenterY(iy));
+			} 
+		}
+	}
+}
+
 // -----------------
 // Drawing "one value per region" in the upper-left corner of the space
 
-function DrawRegionArgument(p_x, p_y, p_value, p_color) {
+function DrawRegionArgument(p_x, p_y, p_value, p_colour) {
 	this.x = p_x;
 	this.y = p_y;
 	this.value = p_value;
-	this.writeColor = p_color;
+	this.writeColour = p_colour;
 }
 
 /**
@@ -556,25 +538,59 @@ p_numberRegions : number of regions
 p_police : police in which values are drawn.
 */ 
 Drawer.prototype.drawRegionValues = function(p_context, p_functionRegion, p_numberRegions, p_police) {
-	const fontSize = this.getPixInnerSide()/2;
-	const policeName = p_police; 
 	var pixLeft, pixDown;
 	var valueToDraw;
-	p_context.font = fontSize+"px "+policeName;
-	if (!p_context.font) {
-		p_context.font = fontSize+"px Arial";
-	}
-	p_context.textAlign = 'left'; 
-	p_context.textBaseline = 'top';
+	setupFont(this.getPixInnerSide() / 2, "Arial");
+	alignFontLeft(p_context);
 	for(var i=0 ; i < p_numberRegions ; i++) {
 		valueToDraw = p_functionRegion(i);
 		if (valueToDraw && valueToDraw != null) {
 			pixLeft = this.getPixInnerXLeft(valueToDraw.x) + this.getPixInnerSide()*1/5; // TODO, soon it may have to be pushed more on the edges for loop puzzles (wait, only Country road is concerned)
 			pixUp = this.getPixInnerYUp(valueToDraw.y) + this.getPixInnerSide()*1/5;
-			p_context.fillStyle = valueToDraw.writeColor;
+			p_context.fillStyle = valueToDraw.writeColour;
 			p_context.fillText(valueToDraw.value, pixLeft, pixUp);
 		}
 	}
+}
+
+// -----------------
+// Drawing one item per space
+
+Drawer.prototype.drawCrossX = function(p_context, p_xSpace, p_ySpace, p_item) {
+	p_context.beginPath();
+	p_context.strokeStyle = p_item.color; 
+	p_context.lineWidth = Math.max(Math.floor(this.getPixInnerSide()/10, 1));
+	const pixAway = Math.floor(this.getPixInnerSide()/10);
+	const pixLeft = this.getPixInnerXLeft(p_xSpace) + pixAway;
+	const pixRight = this.getPixInnerXRight(p_xSpace) - pixAway;
+	const pixUp = this.getPixInnerYUp(p_ySpace) + pixAway;
+	const pixDown = this.getPixInnerYDown(p_ySpace) - pixAway;
+	p_context.moveTo(pixLeft, pixUp);
+	p_context.lineTo(pixRight, pixDown);
+	p_context.moveTo(pixLeft, pixDown);
+	p_context.lineTo(pixRight, pixUp);
+	p_context.stroke(); // Credits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/lineTo
+}
+
+Drawer.prototype.drawSquare = function(p_context, p_xSpace, p_ySpace, p_item) {
+	p_context.beginPath();
+	p_context.strokeStyle = p_item.colorBorder; 
+	p_context.fillStyle = p_item.colorInner; 
+	p_context.lineWidth = Math.max(Math.floor(this.getPixInnerSide()/10, 2));
+	
+	const pixAway = Math.floor(this.getPixInnerSide()/5);
+	const pixLeft = this.getPixInnerXLeft(p_xSpace) + pixAway;
+	const pixRight = this.getPixInnerXRight(p_xSpace) - pixAway;
+	const pixUp = this.getPixInnerYUp(p_ySpace) + pixAway;
+	const pixDown = this.getPixInnerYDown(p_ySpace) - pixAway;
+	p_context.moveTo(pixLeft, pixUp);
+	p_context.lineTo(pixRight, pixUp);
+	p_context.lineTo(pixRight, pixDown);
+	p_context.lineTo(pixLeft, pixDown);
+	p_context.lineTo(pixLeft, pixUp);
+	p_context.lineTo(pixRight, pixUp);
+	p_context.stroke();
+	p_context.fill();
 }
 
 //---------------------
@@ -713,6 +729,25 @@ Drawer.prototype.getClickAroundWallD = function (event, p_canvas, p_xLength, p_y
 	}
     return null;
 }
+
+//--------------------
+// Fonts
+
+setupFont = function(p_context, p_pixSize, p_name, p_colour) {
+	p_context.font = p_pixSize + "px " + p_name;
+	p_context.fillStyle = p_colour;
+}
+
+alignFontCenter = function(p_context) { // Credits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/textAlign
+	p_context.textAlign = 'center'; 
+	p_context.textBaseline = 'middle';
+}
+
+alignFontLeft = function(p_context) {
+	p_context.textAlign = 'left'; 
+	p_context.textBaseline = 'top';
+}
+
 
 //--------------------
 // Setting up functions

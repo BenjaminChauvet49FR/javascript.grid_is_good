@@ -1,17 +1,14 @@
-function drawInsideSpaces(p_context, p_drawer, p_colorSet, p_solver) {
-	p_drawer.drawSolverLinkInsideSpaces(p_context, p_colorSet, p_solver); 
-	var supposedNumber;
-	const fontSize = p_drawer.getPixInnerSide();
-	p_context.font = fontSize+"px Arial";
-	p_context.textAlign = 'center'; 
-	p_context.textBaseline = 'middle';
-	p_context.fillStyle = p_colorSet.numberWrite;
-	for(var iy=0; iy<p_solver.yLength; iy++) {
-		for(var ix=0; ix<p_solver.xLength; ix++) {
-			supposedNumber = p_solver.getNumber(ix, iy);
-			if (supposedNumber != null) {
-				p_context.fillText(supposedNumber, p_drawer.getPixCenterX(ix), p_drawer.getPixCenterY(iy));
-			}
+function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver) {
+	p_drawer.drawSolverLinkInsideSpaces(p_context, p_colourSet, p_solver); 
+	p_drawer.drawNumbersInsideStandard(p_context, drawNumberClosure(p_solver, p_colourSet), p_solver.xLength, p_solver.yLength);
+}
+
+drawNumberClosure = function(p_solver, p_colourSet) {
+	return function(p_x, p_y) {
+		supposedNumber = p_solver.getNumber(p_x, p_y);
+		if (supposedNumber != null) {
+			return new DrawSpaceValue(supposedNumber, p_colourSet.numberWrite);
 		}
+		return null;
 	}
 }
