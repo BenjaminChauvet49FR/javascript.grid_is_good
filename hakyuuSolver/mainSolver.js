@@ -34,5 +34,5 @@ setMode(textAction, actionsManager, ENTRY.SPACE, ACTION_ENTER_NUMBER);
 addEventListenerAndCaption("submit_enter_number", ACTION_ENTER_NUMBER);
 addEventListenerAndCaption("submit_pass_region", ACTION_PASS_REGION);
 function addEventListenerAndCaption(p_identifier,p_action){ //Shortcut action
-	addEventListenerAndCaptionForSolver(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
+	addEventListenerAndCaptionActionSubmit(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
 }

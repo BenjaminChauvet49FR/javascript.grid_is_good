@@ -39,25 +39,23 @@ Getter of setter for a specific mode
 function setNumberMode(p_numericMode,p_number){p_numericMode.numberToInput = p_number};
 function getNumberMode(p_numericMode){return p_numericMode.numberToInput};
 
+function getSubmitElementSetValue(p_idSubmitElement, p_value) {
+	const submitElement = document.getElementById(p_idSubmitElement);
+	submitElement.value = (p_value.submitCaption) ? p_value.submitCaption : p_value.htmlCaption;
+	return submitElement;	
+}
+
 /**
 Adds the event listener of an action submit by linking it to an action for the canvas
 */
-function addEventListenerAndCaptionForSolver(p_entriesManager, p_textElement, p_idSubmitElement, p_entry, p_value) {
-    addEventListenerAndCaptionActionSubmit(null, p_entriesManager, p_textElement, p_idSubmitElement, p_entry, p_value);
-}
-
-function addEventListenerAndCaptionActionSubmit(p_editorCore, p_entriesManager, p_textElement, p_idSubmitElement, p_entry, p_value) {
-    const submitElement = document.getElementById(p_idSubmitElement);
-	submitElement.value = (p_value.submitCaption) ? p_value.submitCaption : p_value.htmlCaption; 
-	
-	// For editor only
+function addEventListenerAndCaptionActionSubmit(p_entriesManager, p_textElement, p_idSubmitElement, p_entry, p_value) {
+	const submitElement = getSubmitElementSetValue(p_idSubmitElement, p_value);
 	submitElement.addEventListener('click', function(event) {
-		if (p_entry == ENTRY.SPACE && p_editorCore != null) {
-			applyChangesForSpaceMode(p_editorCore);	
-		}
-		setMode(p_textElement, p_entriesManager, p_entry, p_value);
+ 		setMode(p_textElement, p_entriesManager, p_entry, p_value);
 	});
 }
+
+
 
 /**
 Changes the mode, both visually (innerHTML) and in model

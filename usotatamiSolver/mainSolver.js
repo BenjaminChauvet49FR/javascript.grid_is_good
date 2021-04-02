@@ -32,5 +32,5 @@ addEventListenerAndCaption("submit_open_fence", ENTRY.WALLS, ACTION_OPEN_FENCE, 
 addEventListenerAndCaption("submit_close_fence", ENTRY.WALLS, ACTION_CLOSE_FENCE, textAction);
 
 function addEventListenerAndCaption(p_identifier, p_entry, p_action, p_textAction) { //Shortcut action
-	addEventListenerAndCaptionForSolver(actionsManager, p_textAction, p_identifier, p_entry, p_action);
+	addEventListenerAndCaptionActionSubmit(actionsManager, p_textAction, p_identifier, p_entry, p_action);
 }

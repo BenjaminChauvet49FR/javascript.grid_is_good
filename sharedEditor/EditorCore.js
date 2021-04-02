@@ -64,7 +64,6 @@ EditorCore.prototype.initializeGridData = function() {
 EditorCore.prototype.reinitializeGridData = function() {
 	this.regionArray = null;
     this.isRegionGridValid = true;
-    this.isSelectionMode = false;
     this.selectedCornerSpace = null;
     this.selectedArray = null;
 	this.resetSelection();
@@ -140,6 +139,10 @@ EditorCore.prototype.isVisibleGrid = function(p_index){
 
 EditorCore.prototype.getSelection = function (p_x, p_y) {
     return this.selectedArray[p_y][p_x];
+}
+
+EditorCore.prototype.getSelectedSpaceForRectangle = function () {
+    return this.selectedCornerSpace;
 }
 
 EditorCore.prototype.getInputNumber = function () {
@@ -318,11 +321,15 @@ EditorCore.prototype.selectRectangleMechanism = function (p_x, p_y) {
         const yMin = Math.min(this.selectedCornerSpace.y, p_y);
         const xMax = Math.max(this.selectedCornerSpace.x, p_x);
         const yMax = Math.max(this.selectedCornerSpace.y, p_y);
-        for (var ix = xMin; ix <= xMax; ix++) {
-            for (var iy = yMin; iy <= yMax; iy++) {
-                this.selectedArray[iy][ix] = SELECTED.YES;
-            }
-        }
+		if ((xMin == xMax) && (yMin == yMax)) {
+			this.switchSelectedSpace(xMin, yMin);
+		} else {
+			for (var ix = xMin; ix <= xMax; ix++) {
+				for (var iy = yMin; iy <= yMax; iy++) {
+					this.selectedArray[iy][ix] = SELECTED.YES;
+				}
+			}
+		}
         this.selectedCornerSpace = null;
     }
 }
@@ -337,7 +344,6 @@ EditorCore.prototype.unselectAll = function () {
 }
 
 EditorCore.prototype.resetSelection = function () {
-    this.isSelectionMode = false;
     this.selectedArray = [];
     for (var iy = 0; iy < this.getYLength(); iy++) {
         this.selectedArray.push([]);

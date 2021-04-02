@@ -125,7 +125,7 @@ function correspondsToSquarePuzzle(p_id) {
 var textMode = document.getElementById("span_mode");
 setMode(textMode, modesManager, ENTRY.SPACE, MODE_NORMAL);
 function setupEventListenerCaption(elementId, modeValue) {
-    addEventListenerAndCaptionActionSubmit(editorCore, modesManager, textMode, elementId, ENTRY.SPACE, modeValue);
+    addEventListenerAndCaptionActionSubmitForEditor(editorCore, modesManager, textMode, elementId, ENTRY.SPACE, modeValue);
 }
 setupEventListenerCaption("submit_normal_mode", MODE_NORMAL);
 setupEventListenerCaption("submit_select_mode", MODE_SELECTION);

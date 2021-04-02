@@ -219,10 +219,12 @@ function resizeAction(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength) {
 }
 
 //------------------------
-// Things to be done when the "space mode" is changed (put a number / some symbol, change state...)
+// When the "space mode" is changed (put a number / some symbol, change state...)
 
-function applyChangesForSpaceMode(p_editorCore) {
-	actionUnselectAll(p_editorCore);
+function applyChangesForSpaceMode(p_editorCore, p_mode) {
+	if ((p_mode.id != MODE_SELECTION.id) && (p_mode.id != MODE_SELECTION_RECTANGLE.id)) {
+		actionUnselectAll(p_editorCore);
+	}
 }
 
 //------------------------

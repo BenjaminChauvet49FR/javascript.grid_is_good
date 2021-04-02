@@ -41,5 +41,5 @@ addEventListenerAndCaption("submit_close_space",ACTION_CLOSE_SPACE);
 addEventListenerAndCaption("submit_open_space_fake",ACTION_OPEN_SPACE_FAKE);
 addEventListenerAndCaption("submit_close_space_fake",ACTION_CLOSE_SPACE_FAKE);
 function addEventListenerAndCaption(p_identifier,p_action){ //Shortcut action
-	addEventListenerAndCaptionForSolver(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
+	addEventListenerAndCaptionActionSubmit(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
 }

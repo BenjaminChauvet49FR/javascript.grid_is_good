@@ -48,5 +48,5 @@ addEventListenerAndCaption("submit_pass_row",ACTION_PASS_ROW);
 addEventListenerAndCaption("submit_pass_column",ACTION_PASS_COLUMN);
 
 function addEventListenerAndCaption(p_identifier,p_action){ //Shortcut action
-	addEventListenerAndCaptionForSolver(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
+	addEventListenerAndCaptionActionSubmit(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
 }

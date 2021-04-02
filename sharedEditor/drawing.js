@@ -19,6 +19,11 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
                 }
             }
         }
+		const sc = p_editorCore.getSelectedSpaceForRectangle();
+		if (sc != null) {
+			p_context.fillStyle = this.editorColorSet.selectedCornerSpace;
+            p_context.fillRect(this.getPixInnerXLeft(sc.x), this.getPixInnerYUp(sc.y), this.getPixInnerSide(), this.getPixInnerSide());
+		}
     }
 	
 	// Which IDs are to be drawn ?

@@ -47,5 +47,5 @@ addEventListenerAndCaption("submit_close_space",ACTION_CLOSE_SPACE);
 addEventListenerAndCaption("submit_pass_region",ACTION_PASS_REGION);
 addEventListenerAndCaption("submit_pass_region_and_adjacency", ACTION_PASS_REGION_AND_ADJACENCY_SPACES);
 function addEventListenerAndCaption(p_identifier,p_action){ //Shortcut action
-	addEventListenerAndCaptionForSolver(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
+	addEventListenerAndCaptionActionSubmit(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
 }

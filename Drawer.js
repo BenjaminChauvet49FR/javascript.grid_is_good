@@ -5,7 +5,7 @@ function Drawer() {
     this.pix = {
         sideSpace: 30,
         borderSpace: 2, //Inner border
-        borderClickDetection: 5, //How many pixels from the side of a space can you click to trigger the border ?
+        borderClickDetection: 0, //How many pixels from the side of a space can you click to trigger the border ?
         canvasWidth: 800,
         canvasHeight: 512,
         marginGrid: {
@@ -31,7 +31,8 @@ function Drawer() {
 		open_fence: '#eeeeff'
 	}
 	this.editorColorSet = { // No "setter function" for this
-		selectedSpace: '#bbffcc'
+		selectedSpace: '#bbffcc',
+		selectedCornerSpace : '#bbccff'
 	}
 }
 
@@ -790,6 +791,7 @@ Drawer.prototype.adaptCanvasDimensions = function (p_canvas, p_parameters) {
     this.pix.borderSpace = Math.max(1, Math.floor(this.pix.sideSpace / 10));
     this.canvasWidth = xLength * this.pix.sideSpace + pixHorizontalMargins;
     this.canvasHeight = yLength * this.pix.sideSpace + pixVerticalMargins;
+	this.pix.borderClickDetection = this.pix.borderSpace * 2;
     p_canvas.width = this.canvasWidth;
     p_canvas.height = this.canvasHeight;
 }

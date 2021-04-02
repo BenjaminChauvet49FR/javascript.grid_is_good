@@ -39,5 +39,5 @@ addEventListenerAndCaption("submit_fill_space",ACTION_FILL_SPACE);
 addEventListenerAndCaption("submit_put_X",ACTION_PUT_NO_FILL);
 addEventListenerAndCaption("submit_pass_region",ACTION_PASS_REGION);
 function addEventListenerAndCaption(p_identifier,p_action){ //Shortcut action
-	addEventListenerAndCaptionForSolver(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
+	addEventListenerAndCaptionActionSubmit(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
 }
