@@ -11,7 +11,8 @@ SolverTheoryCluster.prototype.construct = function (p_wallArray) {
     this.xLength = p_wallArray[0].length;
     this.yLength = p_wallArray.length;
     this.gridWall = WallGrid_data(p_wallArray);
-    this.answerGrid = [];
+    this.answerArray = [];
+    this.bannedArray = [];
     this.makeItGeographical(this.xLength, this.yLength);
 	
 	// Artifical deductions
@@ -24,10 +25,19 @@ SolverTheoryCluster.prototype.construct = function (p_wallArray) {
         }
     }
 	
+	// Add answer grid, and purify it by the way
     for (iy = 0; iy < this.yLength; iy++) {
-        this.answerGrid.push([]);
+        this.answerArray.push([]);
+        this.bannedArray.push([]);
         for (ix = 0; ix < this.xLength; ix++) {
-            this.answerGrid[iy].push(SPACE.UNDECIDED);
+			if (p_wallArray[iy][ix].state == WALLGRID.CLOSED) {
+				this.answerArray[iy].push(SPACE.CLOSED);
+				this.bannedArray[iy].push(true);
+				this.addBannedSpace(ix, iy);
+			} else {
+				this.answerArray[iy].push(SPACE.UNDECIDED);
+				this.bannedArray[iy].push(false);
+			}
         }
     }
 }
@@ -40,7 +50,11 @@ SolverTheoryCluster.prototype.getSpaceCoordinates = function (p_indexRegion, p_i
 }
 
 SolverTheoryCluster.prototype.getAnswer = function (p_x, p_y) {
-    return this.answerGrid[p_y][p_x];
+    return this.answerArray[p_y][p_x];
+}
+
+SolverTheoryCluster.prototype.isBanned = function (p_x, p_y) {
+	return this.bannedArray[p_y][p_x];
 }
 
 SolverTheoryCluster.prototype.getArtificialDeduction = function (p_x, p_y) {
@@ -78,13 +92,13 @@ SolverTheoryCluster.prototype.undo = function(){
 // Doing and undoing
 
 SolverTheoryCluster.prototype.putNew = function (p_x, p_y, p_symbol) {
-    if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerGrid[p_y][p_x] == p_symbol)) {
+    if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerArray[p_y][p_x] == p_symbol)) {
         return EVENT_RESULT.HARMLESS;
     }
-    if (this.answerGrid[p_y][p_x] != SPACE.UNDECIDED) {
+    if (this.answerArray[p_y][p_x] != SPACE.UNDECIDED) {
         return EVENT_RESULT.ERROR;
     }
-    this.answerGrid[p_y][p_x] = p_symbol;
+    this.answerArray[p_y][p_x] = p_symbol;
     return EVENT_RESULT.SUCCESS;
 }
 
@@ -102,7 +116,7 @@ Closure for when we have to undo an event (symetrical to applyEvent)
 */
 undoEventClosure = function(p_solver) {
 	return function(eventToApply) {
-		p_solver.answerGrid[eventToApply.myY][eventToApply.myX] = SPACE.UNDECIDED;
+		p_solver.answerArray[eventToApply.myY][eventToApply.myX] = SPACE.UNDECIDED;
 	}
 }
 
@@ -115,7 +129,7 @@ Closure that checks about whether a space should belong to the global adjacency 
 */
 adjacencyClosure = function (p_solver) {
     return function (p_x, p_y) {
-        switch (p_solver.answerGrid[p_y][p_x]) {
+        switch (p_solver.answerArray[p_y][p_x]) {
         case SPACE.OPEN:
             return ADJACENCY.YES;
             break;

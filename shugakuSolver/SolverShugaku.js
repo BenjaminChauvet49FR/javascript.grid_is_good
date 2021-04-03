@@ -65,6 +65,7 @@ SolverShugaku.prototype.construct = function(p_numberSymbolsArray) {
 	for (var y = 0; y < this.yLength ; y++) {
 		for (var x = 0 ; x < this.xLength ; x++) {
 			if (this.isBanned(x, y)) { 
+				this.addBannedSpace(x, y);
 				KnownDirections.forEach(dir => {
 					if (this.neighborExists(x, y, dir)) {
 						this.fencesGrid.setFence(x, y, dir, FENCE_STATE.CLOSED);
@@ -254,8 +255,15 @@ applyEventClosure = function(p_solver) {
 	}
 }
 
-// Offensive programming : x and y are within bounds (and that's it, harmless for block spaces.)
+// Offensive programming : x and y are within bounds (and that's it, block spaces are checked first. Because beware of intrusions... looking at you, 2x2 square checker.)
 SolverShugaku.prototype.putNewInSpace = function(p_x, p_y, p_symbol, p_choice) {
+	if (this.isBanned(p_x, p_y)) {
+		if (p_symbol == SPACE_SHUGAKU.OPEN && p_choice == false) { // This check is mandatory only because banned spaces have a format different from non-banned ones.
+			return EVENT_RESULT.HARMLESS;
+		} else {
+			return EVENT_RESULT.FAILURE;
+		}
+	}
 	const currentSymbol = this.answerArray[p_y][p_x].getValue(); 
 	if (p_choice && (currentSymbol != null) && (p_symbol != currentSymbol)) {
 		return EVENT_RESULT.FAILURE;
@@ -374,7 +382,7 @@ deductionsClosure = function (p_solver) {
 							p_listEventsToApply.push(new FenceShugakuEvent(x, y, dd, FENCE_STATE.CLOSED));
 						}
 					});
-					// No 2x2 open space (TODO - copy paste from LITS maybe ?)
+					p_listEventsToApply = p_solver.alert2x2Areas(p_listEventsToApply, p_solver.methodSet, x, y); 
 				} else { // Space is closed
 					p_listEventsToApply = p_solver.chooseOneEventLeft(p_listEventsToApply, x, y, SPACE_SHUGAKU.SQUARE, SPACE_SHUGAKU.ROUND);
 					if (p_solver.answerArray[y][x].getState(SPACE_SHUGAKU.OPEN) == SPACE_CHOICE.NO) {

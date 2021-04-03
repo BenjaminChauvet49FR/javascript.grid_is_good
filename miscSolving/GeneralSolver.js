@@ -47,14 +47,6 @@ GeneralSolver.prototype.generalConstruct = function() {
 	this.happenedEventsSeries = []; // List of (non-empty list of events). All events beyond the first must be logical deductions (logic of any kind, including geographic) of the first one.	
 }
 
-GeneralSolver.prototype.makeItGeographical = function(p_xLength, p_yLength) {
-	this.xLength = p_xLength;
-	this.yLength = p_yLength;
-	this.atLeastOneOpen = false;
-    this.adjacencyLimitGrid = createAdjacencyLimitGrid(this.xLength, this.yLength);
-    this.adjacencyLimitSpacesList = [];
-}
-
 // ----------------
 // Deductions, geographical verification, undoing
 
@@ -151,7 +143,13 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
 		// listEventsToApply is empty at this point. Perform geographical deductions.
         if (ok && p_methodPack.adjacencyMethod) {
             if (firstOpenThisTime) {
-                // The first open space has been added this time (ie this succession of events before a check verification) : add all previously closed to the list.
+				// The first open space has been added this time (ie this succession of events before a check verification) : add all spaces that were listed as banned + all spaces that were previously closed to the list.
+				this.bannedSpacesList.forEach(space => {
+					newClosedSpaces.push({
+						x: space.x,
+						y: space.y
+					});
+				});
                 this.happenedEventsSeries.forEach(eventSerie => {
                     eventSerie.list.forEach(solveEvent => {
 						if (solveEvent.opening() == SPACE.CLOSED) {

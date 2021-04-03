@@ -79,12 +79,13 @@ SolverLITS.prototype.construct = function(p_wallArray) {
 	
 	this.checkClusterInRegion = new CheckCollectionDoubleEntry(this.xLength, this.yLength); // Only used in applyDeclarations1or2Open
 	// Now that region data are created : 
-	// Initialize spaces by region +  purify grid
+	// Initialize spaces by region +  purify grid (the purification didn't occur earlier because 1) I decided to work on purification much after I built this space first, 2) because of this I already put everything for other arrays (shapeArray, proximitiesGrid...)
 	var region;
 	for(iy = 0;iy < this.yLength;iy++){
 		for(ix = 0;ix < this.xLength;ix++){
 			ir = this.regionArray[iy][ix];
 			if (this.regionArray[iy][ix] == WALLGRID.OUT_OF_REGIONS) { 
+				this.addBannedSpace(ix, iy);
 				this.answerArray[iy][ix] = SPACE.CLOSED;
 			} else {
 				region = this.regions[ir];
@@ -427,7 +428,8 @@ deductionsClosure = function (p_solver) {
 				}
 			} else { // Space is open
 				// Alert on 2x2 areas
-				p_listEventsToApply = p_solver.alert2x2Areas(p_listEventsToApply, x, y);
+				// p_listEventsToApply = p_solver.alert2x2Areas(p_listEventsToApply, x, y); //TODO Buuut... what if I don't want to bring the pack with me ?
+				p_listEventsToApply = p_solver.alert2x2Areas(p_listEventsToApply, p_solver.methodSet, x, y); 
 				// If there are 3 or 4 spaces open, mark the region as "to be checked in the filter". 
 				if (region.openSpaces.length >= 3) {
 					p_solver.checker3or4Open.add(ir);
@@ -474,59 +476,8 @@ deductionsClosure = function (p_solver) {
 	}
 }
 
-// States whether the p_x, p_y space is occupied or not.
-SolverLITS.prototype.isOccupied = function (p_x,p_y) {
-	return (this.answerArray[p_y][p_x] == SPACE.OPEN);
-}
-
 SolverLITS.prototype.isNotClosed = function (p_x,p_y) {
 	return (this.answerArray[p_y][p_x] != SPACE.CLOSED);
-}
-
-// If (x1, x2) is occupied, add event (x3, x4). Then, if (x3, x4) is occupied, add event (x1, x2)
-SolverLITS.prototype.duelOccupation = function (p_listEvents, p_x1, p_y1, p_x2, p_y2) {
-	if (this.answerArray[p_y1][p_x1] == SPACE.OPEN) {
-		p_listEvents.push(new SpaceEvent(p_x2, p_y2, SPACE.CLOSED));
-	}
-	if (this.answerArray[p_y2][p_x2] == SPACE.OPEN) {
-		p_listEvents.push(new SpaceEvent(p_x1, p_y1, SPACE.CLOSED));
-	}
-	return p_listEvents;
-}
-
-// We added an open space. Is it the 3rd out of 4 of any of the up to 4 2x2 areas it belongs to ?
-SolverLITS.prototype.alert2x2Areas = function(p_listEvents, p_x, p_y) {
-	if (p_x > 0) {
-		if (this.isOccupied(p_x-1, p_y)) { // Left space occupied ? Check spaces above / below
-			if (p_y > 0) {
-				p_listEvents = this.duelOccupation(p_listEvents, p_x-1, p_y-1, p_x, p_y-1);
-			}
-			if (p_y <= this.yLength-2) {
-				p_listEvents = this.duelOccupation(p_listEvents, p_x-1, p_y+1, p_x, p_y+1);
-			}
-		} else { // Left space unoccupied : check if spaces above/below are occupied.
-			if (((p_y > 0) && (this.isOccupied(p_x-1, p_y-1)) && this.isOccupied(p_x, p_y-1)) ||
-				((p_y <= this.yLength-2) && (this.isOccupied(p_x-1, p_y+1)) && this.isOccupied(p_x, p_y+1))) {
-				p_listEvents.push(new SpaceEvent(p_x-1, p_y, SPACE.CLOSED));
-			} 
-		}
-	}
-	if (p_x <= this.xLength-2) {
-		if (this.isOccupied(p_x+1, p_y)) { // Right space occupied ? Check spaces above / below
-			if (p_y > 0) {
-				p_listEvents = this.duelOccupation(p_listEvents, p_x+1, p_y-1, p_x, p_y-1);
-			}
-			if (p_y <= this.yLength-2) {
-				p_listEvents = this.duelOccupation(p_listEvents, p_x+1, p_y+1, p_x, p_y+1);
-			}
-		} else { // Right space unoccupied : check if spaces above/below are occupied.
-			if (((p_y > 0) && (this.isOccupied(p_x+1, p_y-1)) && this.isOccupied(p_x, p_y-1)) ||
-				((p_y <= this.yLength-2) && (this.isOccupied(p_x+1, p_y+1)) && this.isOccupied(p_x, p_y+1))) {
-				p_listEvents.push(new SpaceEvent(p_x+1, p_y, SPACE.CLOSED));
-			} 
-		}
-	}
-	return p_listEvents;
 }
 
 // The classical "when the remaining spaces of a region must be closed/open to reach the numbers"
