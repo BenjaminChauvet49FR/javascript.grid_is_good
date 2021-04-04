@@ -19,9 +19,9 @@ const TBD_DIRECTIONS = {
     r: TASK.TBD
 };
 
-var turningLeftGrid = null;
+var turningLeftArray = null;
 var indexClustersGrid = null;
-var amountGrid = null;
+var amountStepsArray = null;
 var newBarriersGrid = null;
 var directionsGrid = null;
 var newAdjacencyLimit = null;
@@ -87,15 +87,27 @@ p_function returns true or false depending on whether it is open or not.
 // TODO optimisation possible : vérifier en temps réel pour chaque cluster s'il est en développement ou non plutôt qu'à la fin d'une boucle.
  */
 function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, p_function, p_xLength, p_yLength) {
-    amountGrid = restartGrid(amountGrid, p_xLength, p_yLength, 0);
+	
+	// Not optimal unfortunately but if anyone has better...
+	function neighborExists(p_x, p_y, p_dir) {
+		switch (p_dir) {
+			case DIRECTION.LEFT : return p_x > 0;
+			case DIRECTION.UP : return p_y > 0;
+			case DIRECTION.RIGHT : return p_x <= p_xLength - 2;
+			case DIRECTION.DOWN : return p_y <= p_yLength - 2;
+		}
+	}
+	
+	// Anyway let's go !
+	amountStepsArray = restartGrid(amountStepsArray, p_xLength, p_yLength, 0);
     indexClustersGrid = restartGrid(indexClustersGrid, p_xLength, p_yLength, UNDEFINED_INDEX);
-    turningLeftGrid = restartGridTBD(turningLeftGrid, p_xLength, p_yLength);
+    turningLeftArray = restartGridTBD(turningLeftArray, p_xLength, p_yLength);
 
     //Create "clusters"
     var clusterList = [];
     var clusterIndex = 0;
     var spacesToCheck = [];
-
+	
     /**
 		Creates clusters for each spaces that are "adjacent to a newly entered 'adjacency_no' space"
     */
@@ -123,18 +135,11 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
     p_listNewBARRIER.forEach(space => {
         const x = space.x;
         const y = space.y;
-        if (x > 0) {
-            testAdjacentToADJACENCY_NO(x - 1, y);
-        }
-        if (y > 0) {
-            testAdjacentToADJACENCY_NO(x, y - 1);
-        }
-        if (x < p_xLength - 1) {
-            testAdjacentToADJACENCY_NO(x + 1, y);
-        }
-        if (y < p_yLength - 1) {
-            testAdjacentToADJACENCY_NO(x, y + 1);
-        }
+		KnownDirections.forEach(dir => {
+			if (neighborExists(x, y, dir)) {
+				testAdjacentToADJACENCY_NO(x + DeltaX[dir], y + DeltaY[dir]);
+			}
+		});
     });
 	/**
 	Now, clusterList should be initialized as a list of clusters of size 1 ('spaces' field), of unique indexes and they are not linked to another cluster (see below)
@@ -212,18 +217,11 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
             x = space.x;
             y = space.y;
             clusterIndex = actualClusterIndex(indexClustersGrid[y][x]);
-            if (x > 0) {
-                futureSpacesToCheck = checkSpace(futureSpacesToCheck, x - 1, y, clusterIndex);
-            }
-            if (y > 0) {
-                futureSpacesToCheck = checkSpace(futureSpacesToCheck, x, y - 1, clusterIndex);
-            }
-            if (x < p_xLength - 1) {
-                futureSpacesToCheck = checkSpace(futureSpacesToCheck, x + 1, y, clusterIndex);
-            }
-            if (y < p_yLength - 1) {
-                futureSpacesToCheck = checkSpace(futureSpacesToCheck, x, y + 1, clusterIndex);
-            }
+			KnownDirections.forEach(dir => {
+				if (neighborExists(x, y, dir)) {
+					futureSpacesToCheck = checkSpace(futureSpacesToCheck, x + DeltaX[dir], y + DeltaY[dir], clusterIndex);
+				}
+			});
         }
 		// Right now, futureSpacesToCheck contains spaces that were adjacent to the previous "spacesToCheck", not closed, and didn't belong to a cluster before the for loop.
         spacesToCheck = futureSpacesToCheck;
@@ -287,17 +285,19 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
     // Next step : turn left policy
     //List the new limit spaces, e.g. the ones that are crossed more than once when
     //we walk around the barrier spaces (starting with the new barriers) and turn left when possible (like a bug (or paramecium ?) in Chip's Challenge).
+	if (clusterList.length != 0) {
+        newBarriersGrid = restartGrid(newBarriersGrid, p_xLength, p_yLength, false);
+    }
+	
     var listSpacesClustersBarriered = [];
     var numberOfClustersWithAdjacency = 0;
 
+	// Method : tests if an EXISTING space is "potentially adjacent", ie it's not a new-to-be closed space and it is either undecided and open.
     function isPotentiallyAdjacent(p_x, p_y) {
         return ((!newBarriersGrid[p_y][p_x]) && (p_function(p_x, p_y) != ADJACENCY.NO));
     }
-
-    if (clusterList.length != 0) {
-        newBarriersGrid = restartGrid(newBarriersGrid, p_xLength, p_yLength, false);
-    }
-
+	
+	// 
     clusterList.forEach(cluster => {
         if (cluster.linked == -1) {
             if (cluster.fullyDigged && !cluster.containADJACENCY) {
@@ -310,46 +310,28 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
     });
 
     // Setting our "left turners" start points
+    // Entering by pushing on the inner wall (so we'll be able to turn 90° left and the inner direction will be counted as done)
     newTurningLeftStartPointsList = [];
     p_listNewBARRIER.forEach(space => {
         const x = space.x;
         const y = space.y;
-
-        //Entering by pushing on the inner wall (so we'll be able to turn 90° left and the inner direction will be counted as done)
-        if (x > 0 && isPotentiallyAdjacent(x - 1, y)) {
-            turningLeftGrid[y][x - 1][DIRECTION.RIGHT] = TASK.TBD;
-            newTurningLeftStartPointsList.push({
-                x: x - 1,
-                y: y,
-                dir: DIRECTION.RIGHT
-            });
-        }
-        if (y > 0 && isPotentiallyAdjacent(x, y - 1)) {
-            turningLeftGrid[y - 1][x][DIRECTION.DOWN] = TASK.TBD;
-            newTurningLeftStartPointsList.push({
-                x: x,
-                y: y - 1,
-                dir: DIRECTION.DOWN
-            });
-        }
-        if (x < p_xLength - 1 && isPotentiallyAdjacent(x + 1, y)) {
-            turningLeftGrid[y][x + 1][DIRECTION.LEFT] = TASK.TBD;
-            newTurningLeftStartPointsList.push({
-                x: x + 1,
-                y: y,
-                dir: DIRECTION.LEFT
-            });
-        }
-        if (y < p_yLength - 1 && isPotentiallyAdjacent(x, y + 1)) {
-            turningLeftGrid[y + 1][x][DIRECTION.UP] = TASK.TBD;
-            newTurningLeftStartPointsList.push({
-                x: x,
-                y: y + 1,
-                dir: DIRECTION.UP
-            });
-        }
+		KnownDirections.forEach(dir => {
+			if (neighborExists(x, y, dir)) {
+				const xx = x + DeltaX[dir];
+				const yy = y + DeltaY[dir];
+				if (isPotentiallyAdjacent(xx, yy)) {
+					turningLeftArray[yy][xx][OppositeDirection[dir]] = TASK.TBD;
+					newTurningLeftStartPointsList.push({
+						x : xx,
+						y : yy,
+						dir: TurningLeftDirection[dir]
+					});
+				}
+			}
+		});
     });
 
+	// Returns the next "free space and direction when we are turning left"
     function nextFreeSpaceDirTurningLeft(p_x, p_y, p_pointingDirection) {
         var newSpaceDir = null;
         var i = 0;
@@ -358,90 +340,39 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
         while (i < 4 && (newSpaceDir == null)) {
             i++;
             purgeLog("Looking for turning left (" + p_x + " " + p_y + ") : " + pointingDirection);
-            newPointingDirection = null;
-            if (pointingDirection == DIRECTION.LEFT) {
-                newSpaceDir = tryToGoLeft(p_x, p_y);
-                newPointingDirection = DIRECTION.UP;
-            } else if (pointingDirection == DIRECTION.UP) {
-                newSpaceDir = tryToGoUp(p_x, p_y);
-                newPointingDirection = DIRECTION.RIGHT;
-            } else if (pointingDirection == DIRECTION.RIGHT) {
-                newSpaceDir = tryToGoRight(p_x, p_y);
-                newPointingDirection = DIRECTION.DOWN;
-            } else {
-                newSpaceDir = tryToGoDown(p_x, p_y);
-                newPointingDirection = DIRECTION.LEFT;
-            }
-            pointingDirection = newPointingDirection;
-        }
-        return newSpaceDir
-    }
-
-    function tryToGoLeft(p_x, p_y) {
-        if ((p_x > 0) && isPotentiallyAdjacent(p_x - 1, p_y)) {
-            return {
-                x: p_x - 1,
-                y: p_y,
-                dir: DIRECTION.DOWN
-            }
+			if (neighborExists(p_x, p_y, pointingDirection) && isPotentiallyAdjacent(p_x + DeltaX[pointingDirection], p_y + DeltaY[pointingDirection])) {
+				return {
+					x : p_x + DeltaX[pointingDirection],
+					y : p_y + DeltaY[pointingDirection],
+					dir : TurningLeftDirection[pointingDirection]
+				}
+			}
+			pointingDirection = TurningRightDirection[pointingDirection];		
         }
         return null;
     }
 
-    function tryToGoUp(p_x, p_y) {
-        if ((p_y > 0) && isPotentiallyAdjacent(p_x, p_y - 1)) {
-            return {
-                x: p_x,
-                y: p_y - 1,
-                dir: DIRECTION.LEFT
-            }
-        }
-        return null;
-    }
-
-    function tryToGoRight(p_x, p_y) {
-        if ((p_x < p_xLength - 1) && isPotentiallyAdjacent(p_x + 1, p_y)) {
-            return {
-                x: p_x + 1,
-                y: p_y,
-                dir: DIRECTION.UP
-            }
-        }
-        return null;
-    }
-
-    function tryToGoDown(p_x, p_y) {
-        if ((p_y < p_yLength - 1) && isPotentiallyAdjacent(p_x, p_y + 1)) {
-            return {
-                x: p_x,
-                y: p_y + 1,
-                dir: DIRECTION.RIGHT
-            }
-        }
-        return null;
-    }
-
-    // Now let's turn left !
-    var spacesLargerThan0 = [];
-    var spacesLargerThan1 = [];
+    // Now let's turn left for each "starting point". Spaces that are run twice ought to contain limits.
+    var spacesWalkedGlobal = [];
+	var spacesWithLimits = [];
 
     newTurningLeftStartPointsList.forEach(spaceDir => {
         var x = spaceDir.x;
         var y = spaceDir.y;
         var direction = spaceDir.dir;
-        var spacesLargerThan0Local = [];
-        var spacesLargerThan1Local = [];
-        while (turningLeftGrid[y][x][direction] == TASK.TBD) {
-            amountGrid[y][x]++;
-            turningLog("Now we are doing " + x + " " + y + " (amount : " + amountGrid[y][x] + ")");
-            turningLeftGrid[y][x][direction] = TASK.DONE;
-            if (amountGrid[y][x] == 2) {
-                spacesLargerThan1Local.push({
+        var spacesWalkedLocal = [];
+        var spacesMultiWalkedLocal = []; 
+        while (turningLeftArray[y][x][direction] == TASK.TBD) {
+            amountStepsArray[y][x]++;
+            turningLog("Now we are doing " + x + " " + y + " (amount of steps : " + amountStepsArray[y][x] + ")");
+            turningLeftArray[y][x][direction] = TASK.DONE;
+            if (amountStepsArray[y][x] == 2) {
+                spacesMultiWalkedLocal.push({
                     x: x,
                     y: y
-                });
-            } else {
-                spacesLargerThan0Local.push({
+                }); //TODO on pourrait fabriquer des limites ici, non ? (cf. ci-dessous avec les directions unies.)
+            } else if (amountStepsArray[y][x] == 1) {
+                spacesWalkedLocal.push({
                     x: x,
                     y: y
                 });
@@ -451,267 +382,181 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
             y = nextSpaceDir.y;
             direction = nextSpaceDir.dir;
         }
-        if (spacesLargerThan0Local.length > 0) {
+        if (spacesWalkedLocal.length > 0) {
             turningLog("Amount grid : ");
-            amountGrid.forEach(row => turningLog(row));
+            amountStepsArray.forEach(row => turningLog(row));
         }
-        amountGrid = cleanGridList(amountGrid, spacesLargerThan0Local, 0);
-        amountGrid = cleanGridList(amountGrid, spacesLargerThan1Local, 0);
-        Array.prototype.push.apply(spacesLargerThan0, spacesLargerThan0Local);
-        Array.prototype.push.apply(spacesLargerThan1, spacesLargerThan1Local);
+        amountStepsArray = cleanGridList(amountStepsArray, spacesWalkedLocal, 0);
+        Array.prototype.push.apply(spacesWalkedGlobal, spacesWalkedLocal);
+        Array.prototype.push.apply(spacesWithLimits, spacesMultiWalkedLocal);
+		turningLeftArray = cleanGridListTBD(turningLeftArray, spacesMultiWalkedLocal); // TODO ligne redondante avec le nouveau rôle de spacesWalkedGlobal ?
     });
 
-    turningLeftGrid = cleanGridListTBD(turningLeftGrid, spacesLargerThan0);
-    turningLeftGrid = cleanGridListTBD(turningLeftGrid, spacesLargerThan1);
-    newBarriersGrid = cleanGridList(newBarriersGrid, listSpacesClustersBarriered, false);
+    turningLeftArray = cleanGridListTBD(turningLeftArray, spacesWalkedGlobal);
+    newBarriersGrid = cleanGridList(newBarriersGrid, listSpacesClustersBarriered, false); // TODO pourquoi cette ligne ?
 
     // Next step : calculate new list spaces + update ancient ones + make emerge some adjacency spaces.
 
-    function isWorthDiggingLeft(p_x, p_y, p_origin) {
-        return (p_x > 0) && isPotentiallyAdjacent(p_x - 1, p_y); //&& p_limitArray[p_y][p_x - 1].isAccessible(DIRECTION.LEFT, p_origin);
-    }
-
-    function isWorthDiggingUp(p_x, p_y, p_origin) {
-        return (p_y > 0) && isPotentiallyAdjacent(p_x, p_y - 1); //&& p_limitArray[p_y - 1][p_x].isAccessible(DIRECTION.UP, p_origin);
-    }
-
-    function isWorthDiggingRight(p_x, p_y, p_origin) {
-        return (p_x < p_xLength - 1) && isPotentiallyAdjacent(p_x + 1, p_y); //&& p_limitArray[p_y][p_x + 1].isAccessible(DIRECTION.RIGHT, p_origin);
-    }
-
-    function isWorthDiggingDown(p_x, p_y, p_origin) {
-        return (p_y < p_yLength - 1) && isPotentiallyAdjacent(p_x, p_y + 1); //&& p_limitArray[p_y + 1][p_x].isAccessible(DIRECTION.DOWN, p_origin);
-    }
-
-    var riskySpacesToCheck = spacesLargerThan1;
-    Array.prototype.push.apply(riskySpacesToCheck, p_formerLimitSpaceList);
+	p_formerLimitSpaceList.forEach(space => {
+		if (p_function(space.x, space.y) != ADJACENCY.NO) {
+			spacesWithLimits.push(space);
+		}
+	});
+	
     var listSpacesConfirmedAdjacency = [];
     var listSpacesLimitsAndTheirLimits = [];
-    if (riskySpacesToCheck.length > 0) {
+    if (spacesWithLimits.length > 0) {
         directionsGrid = restartGrid(directionsGrid, p_xLength, p_yLength, DIRECTION.UNDECIDED);
     }
+	
+	function isWorthDigging(p_x, p_y, p_origin, p_direction) {
+		return (neighborExists(p_x, p_y, p_direction) && isPotentiallyAdjacent(p_x + DeltaX[p_direction], p_y + DeltaY[p_direction])); // && p_limitArray[p_y + DeltaY[p_direction]][p_x + DeltaX[p_direction]].isAccessible(p_direction, p_origin);
+	}
 
-    riskySpacesToCheck.forEach(space => {
+	// spacesWithLimits = open or undecided spaces that the "turning left" walks have crossed twice or more OR that were former limits. 
+    spacesWithLimits.forEach(space => {
         var xRisk = space.x;
         var yRisk = space.y;
         limitsLog("Starting 'risky' space " + xRisk + "," + yRisk + " (adjacency : " + p_function(xRisk, yRisk) + ")");
-        if (p_function(xRisk, yRisk) != ADJACENCY.NO) {
-            const exploList = {
-                //WARNING : the code below is dependent from the labels ! Unfortunately, this seems to be the cost of defining an object with properties...
-                l: {
-                    spacesExploToDo: [],
-                    containADJACENCY: false,
-                    linked: DIRECTION.UNDECIDED,
-                    id: DIRECTION.LEFT
-                },
-                u: {
-                    spacesExploToDo: [],
-                    containADJACENCY: false,
-                    linked: DIRECTION.UNDECIDED,
-                    id: DIRECTION.UP
-                },
-                r: {
-                    spacesExploToDo: [],
-                    containADJACENCY: false,
-                    linked: DIRECTION.UNDECIDED,
-                    id: DIRECTION.RIGHT
-                },
-                d: {
-                    spacesExploToDo: [],
-                    containADJACENCY: false,
-                    linked: DIRECTION.UNDECIDED,
-                    id: DIRECTION.DOWN
-                }
-            };
+		const exploList = [];
+		KnownDirections.forEach(dir => {
+			exploList[dir] = {
+				spacesExploToDo: [],
+				containADJACENCY: false,
+				linked: DIRECTION.UNDECIDED,
+			}	
+			if (neighborExists(xRisk, yRisk, dir) && isPotentiallyAdjacent(xRisk + DeltaX[dir], yRisk + DeltaY[dir])) {
+				exploList[dir].spacesExploToDo.push({
+					x : xRisk + DeltaX[dir],
+					y : yRisk + DeltaY[dir],
+					index : dir,
+					origin : OppositeDirection[dir]
+				});
+			}
+		});
+		
+		directionsGrid[yRisk][xRisk] = DIRECTION.HERE;
 
-            //Setting starting points
-            if (xRisk > 0 && isPotentiallyAdjacent(xRisk - 1, yRisk)) {
-                exploList[DIRECTION.LEFT].spacesExploToDo.push({
-                    x: xRisk - 1,
-                    y: yRisk,
-                    index: DIRECTION.LEFT,
-                    origin: DIRECTION.RIGHT
-                });
-            }
-            if (yRisk > 0 && isPotentiallyAdjacent(xRisk, yRisk - 1)) {
-                exploList[DIRECTION.UP].spacesExploToDo.push({
-                    x: xRisk,
-                    y: yRisk - 1,
-                    index: DIRECTION.UP,
-                    origin: DIRECTION.DOWN
-                });
-            }
-            if ((xRisk < p_xLength - 1) && isPotentiallyAdjacent(xRisk + 1, yRisk)) {
-                exploList[DIRECTION.RIGHT].spacesExploToDo.push({
-                    x: xRisk + 1,
-                    y: yRisk,
-                    index: DIRECTION.RIGHT,
-                    origin: DIRECTION.LEFT
-                });
-            }
-            if ((yRisk < p_yLength - 1) && isPotentiallyAdjacent(xRisk, yRisk + 1)) {
-                exploList[DIRECTION.DOWN].spacesExploToDo.push({
-                    x: xRisk,
-                    y: yRisk + 1,
-                    index: DIRECTION.DOWN,
-                    origin: DIRECTION.UP
-                });
-            }
-            directionsGrid[yRisk][xRisk] = DIRECTION.HERE;
+		function getActualIndex(p_index) {
+			var index = p_index;
+			while (exploList[index].linked != DIRECTION.UNDECIDED) {
+				index = exploList[index].linked;
+			}
+			return index;
+		}
 
-            function getActualIndex(p_index) {
-                var index = p_index;
-                while (exploList[index].linked != DIRECTION.UNDECIDED) {
-                    index = exploList[index].linked;
-                }
-                return index;
-            }
+		var spaceExplo;
+		var directionsWithNOAdjacency = 0;
+		var directionsWithAdjacency = 0;
+		var index, myActualIndex, newActualIndex;
+		var x, y, origin;
+		var stopThere = false;
+		var numberNotFullyDiggedDirections, numberNotFullyDiggedDirectionsWithAdjacency;
+		var spacesMadeDirty = [{
+				x: xRisk,
+				y: yRisk
+			}
+		];
+		while (!stopThere) {
+			KnownDirections.forEach(dir0 => {
+				myActualIndex = getActualIndex(dir0);
+				if (exploList[myActualIndex].spacesExploToDo.length > 0) {
+					spaceExplo = exploList[myActualIndex].spacesExploToDo.pop();
+					x = spaceExplo.x;
+					y = spaceExplo.y;
+					origin = spaceExplo.origin;
+					index = directionsGrid[y][x];
+					if (index == DIRECTION.UNDECIDED) { //Exploring
+						directionsGrid[y][x] = myActualIndex;
+						spacesMadeDirty.push({
+							x: x,
+							y: y
+						});
+						if (p_function(x, y) == ADJACENCY.YES) {
+							exploList[myActualIndex].containADJACENCY = true;
+						}
+						KnownDirections.forEach(dir => {							
+							if (isWorthDigging(x, y, origin, dir)) {
+								exploList[myActualIndex].spacesExploToDo.push({
+									x : x + DeltaX[dir],
+									y : y + DeltaY[dir],
+									index : myActualIndex,
+									origin : OppositeDirection[dir]
+								});
+							}	
+						});
+						// A space can explore a neighbor than will then explore the first space, but it will lead to nothing. So no endless loops.
+					} else if (index != DIRECTION.HERE) {
+						newActualIndex = getActualIndex(index);
+						if (newActualIndex != myActualIndex) {
+							//Merging
+							limitsLog("Merging " + newActualIndex + " and " + myActualIndex + " in " + x + "," + y);
+							const indexReceiver = (exploList[newActualIndex].spacesExploToDo.length > exploList[myActualIndex].spacesExploToDo.length) ? newActualIndex : myActualIndex;
+							const indexGiver = (indexReceiver == newActualIndex) ? myActualIndex : newActualIndex;
+							Array.prototype.push.apply(exploList[indexReceiver].spacesExploToDo, exploList[indexGiver].spacesExploToDo);
+							exploList[indexReceiver].containADJACENCY = exploList[indexReceiver].containADJACENCY || exploList[indexGiver].containADJACENCY;
+							exploList[indexGiver].linked = indexReceiver;
+						}
+					}
+				}
+			});
+			// Since the accurate size of each cluster don't matter, we should just make sure in order to stop explorations that (only actual clusters matter)
+			// 1) either all clusters are closed
+			// 2) or all clusters but one are closed and the unclosed one contains an adjacency
+			numberNotFullyDiggedDirections = 0;
+			numberNotFullyDiggedDirectionsWithAdjacency = 0;
+			KnownDirections.forEach(dir => {
+				if (exploList[dir].linked == DIRECTION.UNDECIDED) {
+					if (exploList[dir].spacesExploToDo.length != 0) {
+						numberNotFullyDiggedDirections++;
+						if (exploList[dir].containADJACENCY) {
+							numberNotFullyDiggedDirectionsWithAdjacency++;
+						}
+					}
+				}
+			});
+			stopThere = (numberNotFullyDiggedDirections == 0) || (numberNotFullyDiggedDirections == 1 && numberNotFullyDiggedDirectionsWithAdjacency == 1);
+		} // Leaving while loop.
 
-            var spaceExplo;
-            var directionsWithNOAdjacency = 0;
-            var directionsWithAdjacency = 0;
-            const directionsArray = [DIRECTION.LEFT, DIRECTION.UP, DIRECTION.RIGHT, DIRECTION.DOWN];
-            var i;
-            var index,
-            myActualIndex,
-            newActualIndex;
-            var x,
-            y,
-            origin;
-            var stopThere = false;
-            var numberNotFullyDiggedDirections,
-            numberNotFullyDiggedDirectionsWithAdjacency;
-            var spacesMadeDirty = [{
-                    x: xRisk,
-                    y: yRisk
-                }
-            ];
-            while (!stopThere) {
-                for (i = 0; i < 4; i++) {
-                    myActualIndex = getActualIndex(directionsArray[i]);
-                    /*if (exploList[myActualIndex].containADJACENCY){
-                    limitsLog("Already detected adjacency for "+myActualIndex);
-                    }*/
-                    if (exploList[myActualIndex].spacesExploToDo.length > 0) {
-                        spaceExplo = exploList[myActualIndex].spacesExploToDo.pop();
-                        x = spaceExplo.x;
-                        y = spaceExplo.y;
-                        origin = spaceExplo.origin;
-                        index = directionsGrid[y][x];
-                        if (index == DIRECTION.UNDECIDED) { //Exploring
-                            directionsGrid[y][x] = myActualIndex;
-                            spacesMadeDirty.push({
-                                x: x,
-                                y: y
-                            });
-                            if (p_function(x, y) == ADJACENCY.YES) {
-                                exploList[myActualIndex].containADJACENCY = true;
-                            }
-                            if (isWorthDiggingLeft(x, y, origin)) {
-                                exploList[myActualIndex].spacesExploToDo.push({
-                                    x: x - 1,
-                                    y: y,
-                                    index: myActualIndex,
-                                    origin: DIRECTION.RIGHT
-                                });
-                            }
-                            if (isWorthDiggingUp(x, y, origin)) {
-                                exploList[myActualIndex].spacesExploToDo.push({
-                                    x: x,
-                                    y: y - 1,
-                                    index: myActualIndex,
-                                    origin: DIRECTION.DOWN
-                                });
-                            }
-                            if (isWorthDiggingRight(x, y, origin)) {
-                                exploList[myActualIndex].spacesExploToDo.push({
-                                    x: x + 1,
-                                    y: y,
-                                    index: myActualIndex,
-                                    origin: DIRECTION.LEFT
-                                });
-                            }
-                            if (isWorthDiggingDown(x, y, origin)) {
-                                exploList[myActualIndex].spacesExploToDo.push({
-                                    x: x,
-                                    y: y + 1,
-                                    index: myActualIndex,
-                                    origin: DIRECTION.UP
-                                });
-                            }
-                            // A space can explore a neighbor than will then explore the first space, but it will lead to nothing. So no endless loops.
-                        } else if (index != DIRECTION.HERE) {
-                            newActualIndex = getActualIndex(index);
-                            if (newActualIndex != myActualIndex) {
-                                //Merging
-                                limitsLog("Merging " + newActualIndex + " and " + myActualIndex + " in " + x + "," + y);
-                                const indexReceiver = (exploList[newActualIndex].spacesExploToDo.length > exploList[myActualIndex].spacesExploToDo.length) ? newActualIndex : myActualIndex;
-                                const indexGiver = (indexReceiver == newActualIndex) ? myActualIndex : newActualIndex;
-                                Array.prototype.push.apply(exploList[indexReceiver].spacesExploToDo, exploList[indexGiver].spacesExploToDo);
-                                exploList[indexReceiver].containADJACENCY = exploList[indexReceiver].containADJACENCY || exploList[indexGiver].containADJACENCY;
-                                exploList[indexGiver].linked = indexReceiver;
-                            }
-                        }
-                    }
-                }
-                // Since the accurate size of each cluster don't matter, we should just make sure that (only actual clusters matter)
-                // 1) either all clusters are closed
-                // 2) or all clusters but one are closed and the unclosed one contains an adjacency
-                numberNotFullyDiggedDirections = 0;
-                numberNotFullyDiggedDirectionsWithAdjacency = 0;
-                for (i = 0; i < 4; i++) {
-                    if (exploList[directionsArray[i]].linked == DIRECTION.UNDECIDED) {
-                        if (exploList[directionsArray[i]].spacesExploToDo.length != 0) {
-                            numberNotFullyDiggedDirections++;
-                            if (exploList[directionsArray[i]].containADJACENCY) {
-                                numberNotFullyDiggedDirectionsWithAdjacency++;
-                            }
-                        }
-                    }
-                }
-                stopThere = (numberNotFullyDiggedDirections == 0) || (numberNotFullyDiggedDirections == 1 && numberNotFullyDiggedDirectionsWithAdjacency == 1);
-            } // Leaving while loop.
+		if (spacesMadeDirty.length > 0) {
+			limitsLog("Directions grid : ");
+			directionsGrid.forEach(row => limitsLog(row));
+		}
+		directionsGrid = cleanGridList(directionsGrid, spacesMadeDirty, DIRECTION.UNDECIDED);
 
-            if (spacesMadeDirty.length > 0) {
-                limitsLog("Directions grid : ");
-                directionsGrid.forEach(row => limitsLog(row));
-            }
-            directionsGrid = cleanGridList(directionsGrid, spacesMadeDirty, DIRECTION.UNDECIDED);
+		// For this space : 1) create a new limit (TODO : On considère que c'est une nouvelle limite !) 2) put an adjacency if at least 2 branches contain one.
 
-            // For this space : 1) create a new limit (TODO : On considère que c'est une nouvelle limite !) 2) put an adjacency if at least 2 branches contain one.
+		var adjacencyLimit = new AdjacencyLimit([]);
+		var sideNumberWithAdjacency = 0;
+		KnownDirections.forEach(dir => {
+			if (exploList[dir].linked == DIRECTION.UNDECIDED) {
+				adjacencyLimit.createSideIfNeeded(dir);
+				if (exploList[dir].containADJACENCY) {
+					sideNumberWithAdjacency++;
+				}
+			} else {
+				adjacencyLimit.bindDirections(dir, getActualIndex(dir));
+			}
+		});
 
-            var adjacencyLimit = new AdjacencyLimit([]);
-            var sideNumberWithAdjacency = 0;
-            for (i = 0; i < 4; i++) {
-                if (exploList[directionsArray[i]].linked == DIRECTION.UNDECIDED) {
-                    adjacencyLimit.createSideIfNeeded(directionsArray[i]);
-                    if (exploList[directionsArray[i]].containADJACENCY) {
-                        sideNumberWithAdjacency++;
-                    }
-                } else {
-                    adjacencyLimit.bindDirections(directionsArray[i], getActualIndex(directionsArray[i]));
-                }
-            }
+		// If this is a limit for the former list, the newly computed limit may be equal to the former one, hence it's not worth adding it. Let's give a check.
+		if (!adjacencyLimit.equals(p_limitArray[space.y][space.x])) { //TODO warning, ça force la convention de nommage "formerValue"
+			listSpacesLimitsAndTheirLimits.push({
+				x: space.x,
+				y: space.y,
+				limit: adjacencyLimit
+			});
+			// p_limitArray[space.y][space.x] = adjacencyLimit; TODO et merd.... ça modifie le tableau passé en paramètre ! La prochaine fois je me contenterai d'une grille annexe semblable à amountStepsArray,turningLeftArray et compagnie...
+		}
 
-            // If this is a limit for the former list, the newly computed limit may be equal to the former one, hence it's not worth adding it. Let's give a check.
-            if (!adjacencyLimit.equals(p_limitArray[space.y][space.x])) { //TODO warning, ça force la convention de nommage "formerValue"
-                listSpacesLimitsAndTheirLimits.push({
-                    x: space.x,
-                    y: space.y,
-                    limit: adjacencyLimit
-                });
-                // p_limitArray[space.y][space.x] = adjacencyLimit; TODO et merd.... ça modifie le tableau passé en paramètre ! La prochaine fois je me contenterai d'une grille annexe semblable à amountGrid,turningLeftGrid et compagnie...
-            }
-
-            //Make sure we add only NEW adjacency spaces, because this will be passed as a list of new events (and the lists should be empty if there is nothing to report)
-            if (sideNumberWithAdjacency >= 2 && (p_function(space.x, space.y) != ADJACENCY.YES)) {
-                listSpacesConfirmedAdjacency.push({
-                    x: space.x,
-                    y: space.y
-                });
-            }
-            limitsLog(space.x + "," + space.y + " : created limit " + adjacencyLimit.toString() + " ; sides with Adjacency : " + sideNumberWithAdjacency);
-        }
+		//Make sure we add only NEW adjacency spaces, because this will be passed as a list of new events (and the lists should be empty if there is nothing to report)
+		if (sideNumberWithAdjacency >= 2 && (p_function(space.x, space.y) != ADJACENCY.YES)) {
+			listSpacesConfirmedAdjacency.push({
+				x: space.x,
+				y: space.y
+			});
+		}
+		limitsLog(space.x + "," + space.y + " : created limit " + adjacencyLimit.toString() + " ; sides with Adjacency : " + sideNumberWithAdjacency);
     });
 
     return {
