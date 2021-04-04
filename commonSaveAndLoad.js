@@ -81,12 +81,20 @@ function fillArrayWithSymbols(p_array, p_string, p_xLength, p_yLength, p_symbols
 /**
 If the array contains non-number non-null values, treat them as null
 */
-function numbersArrayToString(p_numbersArray) {
+function numbersArrayToString(p_numbersArray, p_numbersAreStrings) {
 	const streamValues = new StreamEncodingSparseAny();
 	for(var iy = 0 ; iy < p_numbersArray.length ; iy++) {
 		for(var ix = 0 ; ix < p_numbersArray[0].length; ix++) {
 			if (!isNaN(p_numbersArray[iy][ix])) {
-				streamValues.encode(p_numbersArray[iy][ix]); // Note : maybe this habit of nullifying NaN characters will perdure, who knows ?
+				if (p_numbersAreStrings) {
+					if ((p_numbersArray[iy][ix] == null) || (p_numbersArray[iy][ix] == "") || (p_numbersArray[iy][ix].charAt(0) == " ")) { // yeah, isNaN(null), isNaN("") and isNaN(" ") are false
+						streamValues.encode(null); 
+					} else {
+						streamValues.encode(parseInt(p_numbersArray[iy][ix], 10));
+					}
+				} else {
+					streamValues.encode(p_numbersArray[iy][ix]); // Note : maybe this habit of nullifying NaN characters will perdure, who knows ?
+				}
 			} else {
 				streamValues.encode(null); 
 			}
@@ -96,7 +104,7 @@ function numbersArrayToString(p_numbersArray) {
 }
 
 // Builds a number array from a string
-function stringToNumberArray(p_string, p_xLength, p_yLength) {
+function stringToNumberArray(p_string, p_xLength, p_yLength, p_numbersAreStrings) {
 	const streamValues = new StreamDecodingSparseAny(p_string);
 	var answer = [];
 	for(var iy = 0 ; iy < p_yLength ; iy++) {
@@ -104,7 +112,11 @@ function stringToNumberArray(p_string, p_xLength, p_yLength) {
 		for(var ix = 0 ; ix < p_xLength ; ix++) {
 			decode = streamValues.decode();
 			if ((decode != null) && (!isNaN(decode)) && decode != END_OF_DECODING_STREAM) { // Well, isNan(null) = true
-				answer[iy].push(decode);
+				if (p_numbersAreStrings) {
+					answer[iy].push(""+decode);
+				} else {
+					answer[iy].push(decode);
+				}
 			}  else {
 				answer[iy].push(null);
 			}
@@ -208,15 +220,15 @@ function stringToLimitedSymbolsWalllessPuzzle(p_string, p_symbolsList) {
 }
 
 //----
-// Numbers and symbols (potentially X - here, the array contains CHARACTERS !)
+// Numbers and symbols (potentially X). IMPORTANT : All non-null spaces are strings, including numbers !
 function puzzleNumbersSymbolsToString(p_numbersSymbolsArray, p_symbolsList) {
-	return dimensionsToString(p_numbersSymbolsArray) + " " + numbersArrayToString(p_numbersSymbolsArray) + " " + symbolsArrayToString(p_numbersSymbolsArray, p_symbolsList);
+	return dimensionsToString(p_numbersSymbolsArray) + " " + numbersArrayToString(p_numbersSymbolsArray, true) + " " + symbolsArrayToString(p_numbersSymbolsArray, p_symbolsList);
 }
 
 function stringToNumbersSymbolsPuzzle(p_string, p_symbolsList) {
 	const tokens = p_string.split(" ");
 	const dims = stringToDimensions(tokens[0]);
-	numbersSymbolsArray = stringToNumberArray(tokens[1], dims.xLength, dims.yLength);
+	numbersSymbolsArray = stringToNumberArray(tokens[1], dims.xLength, dims.yLength, true);
 	return {numbersSymbolsArray : fillArrayWithSymbols(numbersSymbolsArray, tokens[2], dims.xLength, dims.yLength, p_symbolsList)};
 }
 
