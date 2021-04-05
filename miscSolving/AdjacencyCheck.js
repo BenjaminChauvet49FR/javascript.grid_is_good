@@ -320,6 +320,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
 				const xx = x + DeltaX[dir];
 				const yy = y + DeltaY[dir];
 				if (isPotentiallyAdjacent(xx, yy)) {
+				//if (p_function(p_x, p_y) == ADJACENCY.UNDECIDED && (!newBarriersGrid[p_y][p_x])) { // Only spaces "that ain't decided yet
 					turningLeftArray[yy][xx][OppositeDirection[dir]] = TASK.TBD;
 					newTurningLeftStartPointsList.push({
 						x : xx,
@@ -332,7 +333,8 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
     });
 
 	// Returns the next "free space and direction when we are turning left"
-    function nextFreeSpaceDirTurningLeft(p_x, p_y, p_pointingDirection) {
+	// For tests only : solver.adjacencyLimitGrid[0][3].isAccessible(DIRECTION.LEFT, DIRECTION.DOWN)
+    function nextFreeSpaceDirTurningLeft(p_x, p_y, p_pointingDirection, p_originDirection) {
         var newSpaceDir = null;
         var i = 0;
         var pointingDirection = p_pointingDirection;
@@ -340,13 +342,15 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
         while (i < 4 && (newSpaceDir == null)) {
             i++;
             purgeLog("Looking for turning left (" + p_x + " " + p_y + ") : " + pointingDirection);
-			if (neighborExists(p_x, p_y, pointingDirection) && isPotentiallyAdjacent(p_x + DeltaX[pointingDirection], p_y + DeltaY[pointingDirection])) {
-				return {
-					x : p_x + DeltaX[pointingDirection],
-					y : p_y + DeltaY[pointingDirection],
-					dir : TurningLeftDirection[pointingDirection]
-				}
-			}
+			if (p_limitArray[p_y][p_x].isAccessible(pointingDirection, p_originDirection)) { // This row is (partially) the reason of existing of limits. But are they that useful after all ?
+				if (neighborExists(p_x, p_y, pointingDirection) && isPotentiallyAdjacent(p_x + DeltaX[pointingDirection], p_y + DeltaY[pointingDirection])) {
+					return {
+						x : p_x + DeltaX[pointingDirection],
+						y : p_y + DeltaY[pointingDirection],
+						dir : TurningLeftDirection[pointingDirection]
+					}
+				}	
+			}	
 			pointingDirection = TurningRightDirection[pointingDirection];		
         }
         return null;
@@ -362,8 +366,11 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
         var direction = spaceDir.dir;
         var spacesWalkedLocal = [];
         var spacesMultiWalkedLocal = []; 
+		var origin = DIRECTION.HERE;
+		numberSteps = 0;
         while (turningLeftArray[y][x][direction] == TASK.TBD) {
             amountStepsArray[y][x]++;
+			numberSteps++;
             turningLog("Now we are doing " + x + " " + y + " (amount of steps : " + amountStepsArray[y][x] + ")");
             turningLeftArray[y][x][direction] = TASK.DONE;
             if (amountStepsArray[y][x] == 2) {
@@ -377,15 +384,18 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
                     y: y
                 });
             }
-            nextSpaceDir = nextFreeSpaceDirTurningLeft(x, y, direction);
+            //nextSpaceDir = nextFreeSpaceDirTurningLeft(x, y, direction);
+            nextSpaceDir = nextFreeSpaceDirTurningLeft(x, y, direction, origin);
             x = nextSpaceDir.x;
             y = nextSpaceDir.y;
             direction = nextSpaceDir.dir;
+			origin = ((x == spaceDir.x) && (y == spaceDir.y)) ? DIRECTION.HERE : TurningLeftDirection[direction]; // If not on start (where no direction should be excluded for limit check), take the direction we fled from
         }
         if (spacesWalkedLocal.length > 0) {
             turningLog("Amount grid : ");
             amountStepsArray.forEach(row => turningLog(row));
         }
+		//amountStepsLog("Number of steps : " + numberSteps);			
         amountStepsArray = cleanGridList(amountStepsArray, spacesWalkedLocal, 0);
         Array.prototype.push.apply(spacesWalkedGlobal, spacesWalkedLocal);
         Array.prototype.push.apply(spacesWithLimits, spacesMultiWalkedLocal);
@@ -580,4 +590,8 @@ function turningLog(p_message) {
 
 function limitsLog(p_message) {
     //console.log("Limits - "+p_message);
+}
+
+function amountStepsLog(p_message) {
+	console.log(p_message);
 }
