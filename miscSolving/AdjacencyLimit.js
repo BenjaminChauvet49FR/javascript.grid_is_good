@@ -45,6 +45,17 @@ AdjacencyLimit.prototype.createSideIfNeeded = function (p_dir) {
     this.limits.push([p_dir]);
 }
 
+// Check if a direction is alone among limits. Not bound to L|R|U|D as long as values are unique ! If limit = AB|C|DE|F, then function returns true for C and F and false otherwise.
+AdjacencyLimit.prototype.isDirectionAlone = function (p_dir) {
+    var j;
+    for (var i = 0; i < this.limits.length; i++) {
+		if (this.limits[i][0] == p_dir) {
+			return (this.limits[i].length == 1);
+		}
+    }
+    return false;
+}
+
 /**
 Puts both directions in the same side of the limit.
 Precondition : one of them MUST bind the other one and not be already bound.

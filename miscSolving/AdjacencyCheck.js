@@ -377,7 +377,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
                 spacesMultiWalkedLocal.push({
                     x: x,
                     y: y
-                }); //TODO on pourrait fabriquer des limites ici, non ? (cf. ci-dessous avec les directions unies.)
+                }); //TODO potential improvement (though not great) : if we enter a space the same way we left it, mark it as "alone" for limit check. 
             } else if (amountStepsArray[y][x] == 1) {
                 spacesWalkedLocal.push({
                     x: x,
@@ -431,9 +431,10 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
 		const exploList = [];
 		KnownDirections.forEach(dir => {
 			exploList[dir] = {
-				spacesExploToDo: [],
-				containADJACENCY: false,
-				linked: DIRECTION.UNDECIDED,
+				spacesExploToDo : [],
+				containADJACENCY : false,
+				linked : DIRECTION.UNDECIDED,
+				alone : (p_limitArray[yRisk][xRisk] == null) ? false : p_limitArray[yRisk][xRisk].isDirectionAlone(dir)
 			}	
 			if (neighborExists(xRisk, yRisk, dir) && isPotentiallyAdjacent(xRisk + DeltaX[dir], yRisk + DeltaY[dir])) {
 				exploList[dir].spacesExploToDo.push({
@@ -458,7 +459,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
 		var spaceExplo;
 		var directionsWithNOAdjacency = 0;
 		var directionsWithAdjacency = 0;
-		var index, myActualIndex, newActualIndex;
+		var index, actualDirection, newActualIndex;
 		var x, y, origin;
 		var stopThere = false;
 		var numberNotFullyDiggedDirections, numberNotFullyDiggedDirectionsWithAdjacency;
@@ -469,45 +470,49 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
 		];
 		while (!stopThere) {
 			KnownDirections.forEach(dir0 => {
-				myActualIndex = getActualIndex(dir0);
-				if (exploList[myActualIndex].spacesExploToDo.length > 0) {
-					spaceExplo = exploList[myActualIndex].spacesExploToDo.pop();
-					x = spaceExplo.x;
-					y = spaceExplo.y;
-					origin = spaceExplo.origin;
-					index = directionsGrid[y][x];
-					if (index == DIRECTION.UNDECIDED) { //Exploring
-						directionsGrid[y][x] = myActualIndex;
-						spacesMadeDirty.push({
-							x: x,
-							y: y
-						});
-						if (p_function(x, y) == ADJACENCY.YES) {
-							exploList[myActualIndex].containADJACENCY = true;
-						}
-						KnownDirections.forEach(dir => {							
-							if (isWorthDigging(x, y, origin, dir)) {
-								exploList[myActualIndex].spacesExploToDo.push({
-									x : x + DeltaX[dir],
-									y : y + DeltaY[dir],
-									index : myActualIndex,
-									origin : OppositeDirection[dir]
-								});
-							}	
-						});
-						// A space can explore a neighbor than will then explore the first space, but it will lead to nothing. So no endless loops.
-					} else if (index != DIRECTION.HERE) {
-						newActualIndex = getActualIndex(index);
-						if (newActualIndex != myActualIndex) {
-							//Merging
-							limitsLog("Merging " + newActualIndex + " and " + myActualIndex + " in " + x + "," + y);
-							const indexReceiver = (exploList[newActualIndex].spacesExploToDo.length > exploList[myActualIndex].spacesExploToDo.length) ? newActualIndex : myActualIndex;
-							const indexGiver = (indexReceiver == newActualIndex) ? myActualIndex : newActualIndex;
-							Array.prototype.push.apply(exploList[indexReceiver].spacesExploToDo, exploList[indexGiver].spacesExploToDo);
-							exploList[indexReceiver].containADJACENCY = exploList[indexReceiver].containADJACENCY || exploList[indexGiver].containADJACENCY;
-							exploList[indexGiver].linked = indexReceiver;
+				if (!(exploList[dir0].alone && exploList[dir0].containADJACENCY)) {
+					actualDirection = getActualIndex(dir0);
+					if (exploList[actualDirection].spacesExploToDo.length > 0) {
+						spaceExplo = exploList[actualDirection].spacesExploToDo.pop();
+						x = spaceExplo.x;
+						y = spaceExplo.y;
+						origin = spaceExplo.origin;
+						index = directionsGrid[y][x];
+						if (index == DIRECTION.UNDECIDED) { //Exploring
+							directionsGrid[y][x] = actualDirection;
+							spacesMadeDirty.push({
+								x: x,
+								y: y
+							});
+							if (p_function(x, y) == ADJACENCY.YES) {
+								exploList[actualDirection].containADJACENCY = true;
+							}
+							KnownDirections.forEach(dir => {							
+								if (isWorthDigging(x, y, origin, dir)) {
+									exploList[actualDirection].spacesExploToDo.push({
+										x : x + DeltaX[dir],
+										y : y + DeltaY[dir],
+										index : actualDirection,
+										origin : OppositeDirection[dir]
+									});
+								}	
+							});
+							// A space can explore a neighbor than will then explore the first space, but it will lead to nothing. So no endless loops.
+						} else if (index != DIRECTION.HERE) {
+							newActualIndex = getActualIndex(index);
+							if (newActualIndex != actualDirection) {
+								//Merging
+								limitsLog("Merging " + newActualIndex + " and " + actualDirection + " in " + x + "," + y);
+								const indexReceiver = (exploList[newActualIndex].spacesExploToDo.length > exploList[actualDirection].spacesExploToDo.length) ? newActualIndex : actualDirection;
+								const indexGiver = (indexReceiver == newActualIndex) ? actualDirection : newActualIndex;
+								Array.prototype.push.apply(exploList[indexReceiver].spacesExploToDo, exploList[indexGiver].spacesExploToDo);
+								exploList[indexReceiver].containADJACENCY = exploList[indexReceiver].containADJACENCY || exploList[indexGiver].containADJACENCY;
+								exploList[indexGiver].linked = indexReceiver;
+							}
 						}
 					}
+				} else {
+					exploList[dir0].spacesExploToDo = [];
 				}
 			});
 			// Since the accurate size of each cluster don't matter, we should just make sure in order to stop explorations that (only actual clusters matter)
