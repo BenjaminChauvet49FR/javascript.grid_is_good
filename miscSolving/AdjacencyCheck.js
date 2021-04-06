@@ -22,6 +22,7 @@ const TBD_DIRECTIONS = {
 var turningLeftArray = null;
 var indexClustersGrid = null;
 var amountStepsArray = null;
+//var lastWalkDirectionArray = null; // For the "limit detection in left walk"
 var newBarriersGrid = null;
 var directionsGrid = null;
 var newAdjacencyLimit = null;
@@ -100,6 +101,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
 	
 	// Anyway let's go !
 	amountStepsArray = restartGrid(amountStepsArray, p_xLength, p_yLength, 0);
+	//lastWalkDirectionArray = restartGrid(lastWalkDirectionArray, p_xLength, p_yLength, null); limit detection in left walk
     indexClustersGrid = restartGrid(indexClustersGrid, p_xLength, p_yLength, UNDEFINED_INDEX);
     turningLeftArray = restartGridTBD(turningLeftArray, p_xLength, p_yLength);
 
@@ -332,7 +334,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
 		});
     });
 
-	// Returns the next "free space and direction when we are turning left"
+	// Returns the next "free space when we are turning left an direction we are gonna point towards" (we will point left immediately)
 	// For tests only : solver.adjacencyLimitGrid[0][3].isAccessible(DIRECTION.LEFT, DIRECTION.DOWN)
     function nextFreeSpaceDirTurningLeft(p_x, p_y, p_pointingDirection, p_originDirection) {
         var newSpaceDir = null;
@@ -366,7 +368,9 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
         var direction = spaceDir.dir;
         var spacesWalkedLocal = [];
         var spacesMultiWalkedLocal = []; 
+		//var spacesMultiWalkedAloneDir = []; "limit detection in left walk"
 		var origin = DIRECTION.HERE;
+		var lwd;
 		numberSteps = 0;
         while (turningLeftArray[y][x][direction] == TASK.TBD) {
             amountStepsArray[y][x]++;
@@ -377,26 +381,35 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
                 spacesMultiWalkedLocal.push({
                     x: x,
                     y: y
-                }); //TODO potential improvement (though not great) : if we enter a space the same way we left it, mark it as "alone" for limit check. 
+                }); //TODO potential improvement (though not great) : if we enter a space the same way we left it, mark it as "alone" for limit check. "limit detection in left walk"
+				/*lwd = lastWalkDirectionArray[y][x];
+				if ((lwd != null) && (lwd == TurningLeftDirection[direction])) { // If the "direction when we last walked from this space" is different from the "direction we just walked this space into"
+					spacesMultiWalkedAloneDir.push({
+						x : x + DeltaX[direction],
+						y : y + DeltaY[direction],
+						direction : lwd
+					})
+				}*/ 
             } else if (amountStepsArray[y][x] == 1) {
                 spacesWalkedLocal.push({
                     x: x,
                     y: y
                 });
             }
-            //nextSpaceDir = nextFreeSpaceDirTurningLeft(x, y, direction);
             nextSpaceDir = nextFreeSpaceDirTurningLeft(x, y, direction, origin);
+			//lastWalkDirectionArray[y][x] = TurningRightDirection[nextSpaceDir.dir];
             x = nextSpaceDir.x;
             y = nextSpaceDir.y;
             direction = nextSpaceDir.dir;
 			origin = ((x == spaceDir.x) && (y == spaceDir.y)) ? DIRECTION.HERE : TurningLeftDirection[direction]; // If not on start (where no direction should be excluded for limit check), take the direction we fled from
-        }
+		}
         if (spacesWalkedLocal.length > 0) {
             turningLog("Amount grid : ");
             amountStepsArray.forEach(row => turningLog(row));
         }
 		//amountStepsLog("Number of steps : " + numberSteps);			
         amountStepsArray = cleanGridList(amountStepsArray, spacesWalkedLocal, 0);
+        //lastWalkDirectionArray = cleanGridList(lastWalkDirectionArray, spacesWalkedLocal, null);
         Array.prototype.push.apply(spacesWalkedGlobal, spacesWalkedLocal);
         Array.prototype.push.apply(spacesWithLimits, spacesMultiWalkedLocal);
 		turningLeftArray = cleanGridListTBD(turningLeftArray, spacesMultiWalkedLocal); // TODO ligne redondante avec le nouveau rôle de spacesWalkedGlobal ?
