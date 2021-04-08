@@ -33,24 +33,17 @@
 		
         Afficher données grille : <input type="checkbox" id="checkbox_drawIndications" value="false"></input></br>
 		
-		<script src="../Drawer.js"></script>
-		<script src="../WallGrid.js"></script>
-		<script src="../commonInput.js"></script>
-		<script src="../commonActionManager.js"></script>
-		<script src="../commonSaveAndLoad.js"></script>
-		<script src="../commonEncodingDecoding.js"></script>
-		<script src="../CommonHTMLMenu.js"></script>
-		<script src="../DrawableItem.js"></script>
-		
-		<script src="../miscSolving/GeneralSolver.js"></script>
-		<script src="../miscSolving/SolvingMethodPacks.js"></script>
-		<script src="../Logs.js"></script>
-		
-		<script src="constants.js"></script>
-		<script src="SpaceEvent.js"></script>
-		<script src="SolverStarBattle.js"></script>
-		<script src="drawing.js"></script>
-		<script src="inputSolver.js"></script>
-		<script src="mainSolver.js"></script>
+		<script src="../Importation.js"></script>
+		<script>
+		"use strict";
+		window.onload = function() {
+			loadScriptsSolving();
+			loadScriptsGeneric();
+			loadScriptsLocal();
+			loadScriptConstants();
+			loadMyScript("SpaceEvent.js");
+			loadMyScript("SolverStarBattle.js");
+		} 
+		</script>
 	</body>
 </html>

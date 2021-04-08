@@ -11,5 +11,5 @@ function drawInsideSpaces(p_context, p_drawer, p_colors, p_solver) {
 	p_drawer.drawSpaceContents(p_context, 
 	[DrawableCircle(p_colors.circleOut, "#ffffff"), 
 	DrawableCircle(p_colors.circleOut, p_colors.circleIn)], 
-	getPearl, solver.xLength, solver.yLength); 
+	getPearl, p_solver.xLength, p_solver.yLength); 
 }

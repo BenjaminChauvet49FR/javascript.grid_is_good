@@ -27,7 +27,7 @@ function drawInsideIndications(p_context,p_drawer,p_colorDigits,p_solver){
 /**
 Draws what's inside spaces 
 */
-function drawInsideSpaces(p_context,p_drawer,p_color,p_solver){
+function drawInsideSpaces(p_context, p_drawer, p_color, p_solver){
 	var items = [DrawableColor(p_color.filledSquare),DrawableX(p_color.emptySquare)];
 	function selectionItem(x,y){
 		if  (p_solver.getRegion(x,y) != WALLGRID.OUT_OF_REGIONS){ // Should this condition be missed... (see star battle)
@@ -40,7 +40,7 @@ function drawInsideSpaces(p_context,p_drawer,p_color,p_solver){
 		}
 		return -1;
 	}
-	drawer.drawSpaceContents(p_context,items,selectionItem,p_solver.xLength,p_solver.yLength);
+	p_drawer.drawSpaceContents(p_context, items, selectionItem, p_solver.xLength, p_solver.yLength);
 	
 }
 

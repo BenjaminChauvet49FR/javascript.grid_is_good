@@ -1,8 +1,8 @@
 /**
  When you click on the canvas
 */
-function clickCanvas(event,p_canvas,p_drawer,p_solver,p_actionsManager) { //TODO rename this as an action ? But what about loadAction ? //TODO modifier la fonction qui a ce nom dans les autres solveurs.
-	var spaceClicked = drawer.getClickSpace(event,p_canvas,p_solver.xyLength,p_solver.xyLength);
+function clickCanvas(event, p_canvas, p_drawer, p_solver, p_actionsManager) { //TODO rename this as an action ? But what about loadAction ? //TODO modifier la fonction qui a ce nom dans les autres solveurs.
+	var spaceClicked = p_drawer.getClickSpace(event, p_canvas, p_solver.xyLength, p_solver.xyLength);
     if (spaceClicked != null){
 		clickSpaceAction(p_solver, spaceClicked.x, spaceClicked.y, p_actionsManager.clickSpace);
 	}

@@ -1,3 +1,18 @@
+// Constants
+
+/**
+These constants may be used both for drawing and solving. Beware of consistency.
+*/
+
+const PEARL = {
+	WHITE : 'W',
+	BLACK : 'B',
+	EMPTY : '-'
+}
+
+// -----------------
+// Setup
+
 function SolverMasyu(p_symbolGrid) {
 	LoopSolver.call(this);
 	this.construct(p_symbolGrid);

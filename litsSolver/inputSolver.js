@@ -2,7 +2,7 @@
  When you click on the canvas
 */
 function clickCanvas(event,p_canvas, p_drawer, p_solver, p_actionsManager) { //TODO rename this as an action ? But what about loadAction ? //TODO modifier la fonction qui a ce nom dans les autres solveurs.
-	var spaceClicked = drawer.getClickSpace(event, p_canvas, p_solver.xLength, p_solver.yLength);
+	var spaceClicked = p_drawer.getClickSpace(event, p_canvas, p_solver.xLength, p_solver.yLength);
     if (spaceClicked != null){
 		clickSpaceAction(p_solver, spaceClicked.x, spaceClicked.y, p_actionsManager.clickSpace);
 	}
@@ -11,13 +11,13 @@ function clickCanvas(event,p_canvas, p_drawer, p_solver, p_actionsManager) { //T
 /**
 You successfully clicked on a region space (coordinates in parameter). Then what ? 
 */
-function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
+function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 	switch(p_action.id){
 		case ACTION_OPEN_SPACE.id:
-			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,SPACE.OPEN); 
+			p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, SPACE.OPEN); 
 		break;
 		case ACTION_CLOSE_SPACE.id:
-			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,SPACE.CLOSED); 
+			p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, SPACE.CLOSED); 
 		break;
 		case ACTION_PASS_REGION.id:
 			if (!p_solver.isBanned(p_spaceIndexX, p_spaceIndexY)) { //Slightly redundant since it digs for the region index
@@ -25,7 +25,7 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 			}
 		break;
 		case ACTION_PASS_REGION_AND_ADJACENCY.id:
-			p_solver.passRegionAndAdjacentSpaces(p_solver.getRegionIndex(p_spaceIndexX,p_spaceIndexY));
+			p_solver.passRegionAndAdjacentSpaces(p_solver.getRegionIndex(p_spaceIndexX, p_spaceIndexY));
 		break;
 	}
 }
