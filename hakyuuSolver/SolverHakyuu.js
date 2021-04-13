@@ -1,6 +1,4 @@
 // Initialization
-const EVENTLIST_KIND = {HYPOTHESIS : "H", PASS : "P"};
-
 function SolverHakyuu(p_wallArray, p_numberArray) {
 	GeneralSolver.call(this);
 	this.construct(p_wallArray, p_numberArray);

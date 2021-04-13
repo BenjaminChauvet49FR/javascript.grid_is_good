@@ -23,7 +23,7 @@ function drawCanvas(){
 	drawInsideSpaces(context,drawer,colors,solver);
 }
 
-canevas.addEventListener('click', function(event){clickCanvasAction(event,canevas,drawer,solver,actionsManager)},false);
+canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)},false);
 setInterval(drawCanvas,30);
 var fieldName = document.getElementById("input_grid_name");
 
@@ -36,10 +36,10 @@ putActionElementClick("submit_undo",function(event){undoAction(solver,null)});
 //------
 
 var textAction = document.getElementById("text_canvas_action");
-setMode(textAction,actionsManager,ENTRY.SPACE,ACTION_CLOSE_SPACE);
-addEventListenerAndCaption("submit_open_space",ACTION_OPEN_SPACE);
-addEventListenerAndCaption("submit_close_space",ACTION_CLOSE_SPACE);
-addEventListenerAndCaption("submit_pass_space",ACTION_PASS_SPACE);
-function addEventListenerAndCaption(p_identifier,p_action){ //Shortcut action
-	addEventListenerAndCaptionActionSubmit(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
+setMode(textAction, actionsManager, ENTRY.SPACE, ACTION_CLOSE_SPACE);
+addEventListenerAndCaption("submit_open_space", ACTION_OPEN_SPACE);
+addEventListenerAndCaption("submit_close_space", ACTION_CLOSE_SPACE);
+addEventListenerAndCaption("submit_pass_space", ACTION_PASS_SPACE);
+function addEventListenerAndCaption(p_identifier,p_action) { //Shortcut action
+	addEventListenerAndCaptionActionSubmit(actionsManager, textAction, p_identifier, ENTRY.SPACE, p_action);
 }

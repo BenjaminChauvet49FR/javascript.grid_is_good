@@ -7,7 +7,7 @@ const SYMBOL ={
 	UNDECIDED : '-'	
 }
 
-const FAMILY ={
+const STAR_BATTLE_CATEGORY = {
 	REGION:1,
 	ROW:2,
 	COLUMN:3
@@ -156,17 +156,17 @@ SolverStarBattle.prototype.undo = function(){
 
 SolverStarBattle.prototype.emitPassRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : FAMILY.REGION, index : p_indexRegion}); 
+	this.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : STAR_BATTLE_CATEGORY.REGION, index : p_indexRegion}); 
 }
 
 SolverStarBattle.prototype.emitPassRow = function(p_y) {
 	const generatedEvents = this.generateEventsForRowPass(p_y);
-	this.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : FAMILY.ROW, index : p_y}); 
+	this.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : STAR_BATTLE_CATEGORY.ROW, index : p_y}); 
 }
 
 SolverStarBattle.prototype.emitPassColumn = function(p_x) {
 	const generatedEvents = this.generateEventsForColumnPass(p_x);
-	this.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : FAMILY.COLUMN, index : p_x}); 
+	this.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : STAR_BATTLE_CATEGORY.COLUMN, index : p_x}); 
 }
 
 SolverStarBattle.prototype.makeMultiPass = function() {	
@@ -177,9 +177,9 @@ namingCategoryClosure = function(p_solver) {
 	return function(p_indexAndFamily) {
 		const index = p_indexAndFamily.index;
 		switch (p_indexAndFamily.family) {
-			case FAMILY.REGION : return "Region "+ index + " (" + p_solver.getFirstSpaceRegion(index).x +" "+ p_solver.getFirstSpaceRegion(index).y + ")"; break;
-			case FAMILY.ROW : return "Row " + index; break;
-			case FAMILY.COLUMN : return "Column " + index; break;
+			case STAR_BATTLE_CATEGORY.REGION : return "Region "+ index + " (" + p_solver.getFirstSpaceRegion(index).x +" "+ p_solver.getFirstSpaceRegion(index).y + ")"; break;
+			case STAR_BATTLE_CATEGORY.ROW : return "Row " + index; break;
+			case STAR_BATTLE_CATEGORY.COLUMN : return "Column " + index; break;
 			default : return "";
 		}
 	}
@@ -380,9 +380,9 @@ generateEventsForRegionColumnClosure = function(p_solver) {
 generateEventsForRLCPassClosure = function(p_solver) {
 	return function(p_indexAndFamily) {
 		switch (p_indexAndFamily.family) {
-			case FAMILY.ROW : return p_solver.generateEventsForRowPass(p_indexAndFamily.index); break;
-			case FAMILY.COLUMN : return p_solver.generateEventsForColumnPass(p_indexAndFamily.index); break;
-			case FAMILY.REGION : return p_solver.generateEventsForRegionPass(p_indexAndFamily.index); break;
+			case STAR_BATTLE_CATEGORY.ROW : return p_solver.generateEventsForRowPass(p_indexAndFamily.index); break;
+			case STAR_BATTLE_CATEGORY.COLUMN : return p_solver.generateEventsForColumnPass(p_indexAndFamily.index); break;
+			case STAR_BATTLE_CATEGORY.REGION : return p_solver.generateEventsForRegionPass(p_indexAndFamily.index); break;
 		}
 		return [];
 	}
@@ -442,11 +442,11 @@ orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
 		var iafList = [];
 		for (var i = 0; i < p_solver.spacesByRegion.length ; i++) {
-			iafList.push({index : i, family : FAMILY.REGION}); // , value : p_solver.notPlacedYet.regions[i]
+			iafList.push({index : i, family : STAR_BATTLE_CATEGORY.REGION}); // , value : p_solver.notPlacedYet.regions[i]
 		} 
 		for (var i = 0; i < p_solver.xyLength ; i++) {
-			iafList.push({index : i, family : FAMILY.ROW}); //, value : p_solver.notPlacedYet.rows[i]
-			iafList.push({index : i, family : FAMILY.COLUMN}); //, value : p_solver.notPlacedYet.columns[i]
+			iafList.push({index : i, family : STAR_BATTLE_CATEGORY.ROW}); //, value : p_solver.notPlacedYet.rows[i]
+			iafList.push({index : i, family : STAR_BATTLE_CATEGORY.COLUMN}); //, value : p_solver.notPlacedYet.columns[i]
 		}
 		iafList.sort(function(p_iaf1, p_iaf2) {
 			return p_solver.uncertainity(p_iaf1)-p_solver.uncertainity(p_iaf2); // TODO too lazy to improve it like it is on the other solvers. 
@@ -457,9 +457,9 @@ orderedListPassArgumentsClosure = function(p_solver) {
 
 SolverStarBattle.prototype.getNotPlacedYetSet = function(p_indexAndFamily) {
 	switch (p_indexAndFamily.family) {
-		case FAMILY.ROW : return this.notPlacedYet.rows[p_indexAndFamily.index];
-		case FAMILY.COLUMN : return this.notPlacedYet.columns[p_indexAndFamily.index];
-		case FAMILY.REGION : return this.notPlacedYet.regions[p_indexAndFamily.index];
+		case STAR_BATTLE_CATEGORY.ROW : return this.notPlacedYet.rows[p_indexAndFamily.index];
+		case STAR_BATTLE_CATEGORY.COLUMN : return this.notPlacedYet.columns[p_indexAndFamily.index];
+		case STAR_BATTLE_CATEGORY.REGION : return this.notPlacedYet.regions[p_indexAndFamily.index];
 	}
 }
 
