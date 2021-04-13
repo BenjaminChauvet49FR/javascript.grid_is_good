@@ -32,6 +32,7 @@ const ACTION_CLOSE_FENCE = {id:13,htmlCaption:"Déclarer cloison fermée"};
 const ACTION_ENTER_NUMBER = {id:14,htmlCaption:"Entrer un nombre"};
 const ACTION_PUT_ROUND = {id:15, htmlCaption:"Placer un rond"};
 const ACTION_PUT_SQUARE = {id:16, htmlCaption:"Placer un carré"};
+const ACTION_PASS_STRIP = {id:17, htmlCaption:"Passer bande(s)"};
 
 /**
 Getter of setter for a specific mode

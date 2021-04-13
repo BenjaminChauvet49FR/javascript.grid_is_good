@@ -1,15 +1,3 @@
-const YAJ_DIRECTION = {
-	LEFT : 'l',
-	UP : 'u',
-	RIGHT : 'r',
-	DOWN : 'd'
-}
-
-const STRIPE_ORIENTATION = {
-	HORIZONTAL : 'h',
-	VERTICAL : 'v'
-}
-
 function SolverYajilin(p_valueGrid) {
 	LoopSolver.call(this);
 	this.construct(p_valueGrid);
@@ -63,10 +51,10 @@ SolverYajilin.prototype.construct = function(p_valueGrid) {
 	this.setupClues.forEach(clue => {
 		numberSpaces = 0;
 		switch (clue.direction) {
-			case YAJ_DIRECTION.LEFT : 
+			case DIRECTION.LEFT : 
 				x = clue.x - 1;
 				y = clue.y;
-				while (x >= 0 && (this.clueGrid.get(x, y) == null || getDirection(this.clueGrid.get(x, y)) != YAJ_DIRECTION.LEFT)) {
+				while (x >= 0 && (this.clueGrid.get(x, y) == null || getDirection(this.clueGrid.get(x, y)) != DIRECTION.LEFT)) {
 					if (!this.isBanned(x, y)) {
 						numberSpaces++;
 						lastX = x;
@@ -80,14 +68,14 @@ SolverYajilin.prototype.construct = function(p_valueGrid) {
 					newNumber = 0;
 				}
 				if (numberSpaces > 0) {
-					this.stripes.push({direction : STRIPE_ORIENTATION.HORIZONTAL, xMin : lastX, xMax : clue.x-1, y : y, 
+					this.stripes.push({direction : ORIENTATION.HORIZONTAL, xMin : lastX, xMax : clue.x-1, y : y, 
 					notClosedYet : clue.number - newNumber, notLinkedYet : numberSpaces - (clue.number - newNumber)});
 				}
 				break; // TODO possibility of deltaX and deltaY for the directions... ? Well, I'll see it later
-			case YAJ_DIRECTION.UP : 
+			case DIRECTION.UP : 
 				x = clue.x;
 				y = clue.y - 1;
-				while (y >= 0 && (this.clueGrid.get(x, y) == null || getDirection(this.clueGrid.get(x, y)) != YAJ_DIRECTION.UP)) {
+				while (y >= 0 && (this.clueGrid.get(x, y) == null || getDirection(this.clueGrid.get(x, y)) != DIRECTION.UP)) {
 					if (!this.isBanned(x, y)) {
 						numberSpaces++;
 						lastY = y;
@@ -101,14 +89,14 @@ SolverYajilin.prototype.construct = function(p_valueGrid) {
 					newNumber = 0;
 				}
 				if (numberSpaces > 0) {
-					this.stripes.push({direction : STRIPE_ORIENTATION.VERTICAL, yMin : lastY, yMax : clue.y-1, x : x,
+					this.stripes.push({direction : ORIENTATION.VERTICAL, yMin : lastY, yMax : clue.y-1, x : x,
 					notClosedYet : clue.number - newNumber, notLinkedYet : numberSpaces - (clue.number - newNumber)});					
 				}
 				break; 
-			case YAJ_DIRECTION.RIGHT : 
+			case DIRECTION.RIGHT : 
 				x = clue.x + 1;
 				y = clue.y;
-				while (x < this.xLength && (this.clueGrid.get(x, y) == null || getDirection(this.clueGrid.get(x, y)) != YAJ_DIRECTION.RIGHT)) {
+				while (x < this.xLength && (this.clueGrid.get(x, y) == null || getDirection(this.clueGrid.get(x, y)) != DIRECTION.RIGHT)) {
 					if (!this.isBanned(x, y)) {
 						numberSpaces++;
 						lastX = x;
@@ -122,14 +110,14 @@ SolverYajilin.prototype.construct = function(p_valueGrid) {
 					newNumber = 0;
 				}
 				if (numberSpaces > 0) {
-					this.stripes.push({direction : STRIPE_ORIENTATION.HORIZONTAL, xMin : clue.x+1, xMax : lastX, y : y,
+					this.stripes.push({direction : ORIENTATION.HORIZONTAL, xMin : clue.x+1, xMax : lastX, y : y,
 					notClosedYet : clue.number - newNumber, notLinkedYet : numberSpaces - (clue.number - newNumber)});
 				}
 				break; 
-			case YAJ_DIRECTION.DOWN : 
+			case DIRECTION.DOWN : 
 				x = clue.x;
 				y = clue.y + 1;
-				while (y < this.yLength && (this.clueGrid.get(x, y) == null || getDirection(this.clueGrid.get(x, y)) != YAJ_DIRECTION.DOWN)) {
+				while (y < this.yLength && (this.clueGrid.get(x, y) == null || getDirection(this.clueGrid.get(x, y)) != DIRECTION.DOWN)) {
 					if (!this.isBanned(x, y)) {
 						numberSpaces++;
 						lastY = y;
@@ -143,7 +131,7 @@ SolverYajilin.prototype.construct = function(p_valueGrid) {
 					newNumber = 0;
 				}
 				if (numberSpaces > 0) {
-					this.stripes.push({direction : STRIPE_ORIENTATION.VERTICAL, yMin : clue.y+1, yMax : lastY, x : x,
+					this.stripes.push({direction : ORIENTATION.VERTICAL, yMin : clue.y+1, yMax : lastY, x : x,
 					notClosedYet : clue.number - newNumber, notLinkedYet : numberSpaces - (clue.number - newNumber)});					
 				}
 				break;
@@ -160,10 +148,10 @@ SolverYajilin.prototype.construct = function(p_valueGrid) {
 // Warning : values in hard.
 function getDirection(p_valueString) {
 	switch (p_valueString.charAt(0)) {
-		case 'L' : return YAJ_DIRECTION.LEFT; break;
-		case 'U' : return YAJ_DIRECTION.UP; break;
-		case 'R' : return YAJ_DIRECTION.RIGHT; break;
-		case 'D' : return YAJ_DIRECTION.DOWN; break;
+		case 'L' : return DIRECTION.LEFT; break;
+		case 'U' : return DIRECTION.UP; break;
+		case 'R' : return DIRECTION.RIGHT; break;
+		case 'D' : return DIRECTION.DOWN; break;
 		default : return null;
 	}
 }
@@ -336,7 +324,7 @@ function filterStripsClosure(p_solver) {
 }
 
 SolverYajilin.prototype.testStrip = function(p_listEvents, p_strip) {
-	if (p_strip.direction == STRIPE_ORIENTATION.VERTICAL) {
+	if (p_strip.direction == ORIENTATION.VERTICAL) {
 		if (p_strip.notClosedYet == 0) {
 			this.fillVerticalStripWithEvents(p_listEvents, p_strip, LOOP_STATE.LINKED);
 		} else if (p_strip.notLinkedYet == 0) {
@@ -370,7 +358,7 @@ SolverYajilin.prototype.testStrip = function(p_listEvents, p_strip) {
 			} 
 		}
 	} 
-	if (p_strip.direction == STRIPE_ORIENTATION.HORIZONTAL) { //Copied onto vertical !
+	if (p_strip.direction == ORIENTATION.HORIZONTAL) { //Copied onto vertical !
 		if (p_strip.notClosedYet == 0) {
 			this.fillHorizontalStripWithEvents(p_listEvents, p_strip, LOOP_STATE.LINKED);
 		} else if (p_strip.notLinkedYet == 0) {

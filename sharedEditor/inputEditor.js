@@ -476,7 +476,7 @@ function comboChange(p_thelist, p_editorCore) {
 			saveLoadModeId = PUZZLES_KIND.NUMBERS_X_ONLY.id;
 			p_editorCore.setVisibleGrids([GRID_ID.DIGIT_X_SPACE]);
 			break;
-		case 'Yajilin': // Can also include Yajisan-Kazusan
+		case 'Yajilin': case 'Yajikabe': // Can also include Yajisan-Kazusan
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.YAJILIN_LIKE.id;
 			p_editorCore.setVisibleGrids([GRID_ID.YAJILIN_LIKE]);

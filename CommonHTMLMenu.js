@@ -62,7 +62,8 @@ menuSolvers.push({
 	typeList : [
 		{name : "heyawake", displayName : "Heyawake"},
 		{name : "LITS", displayName : "LITS"},
-		{name : "curvingRoad", displayName : "Curving road"}
+		{name : "curvingRoad", displayName : "Curving road"},
+		{name : "yajikabe", displayName : "Yajikabe"}
 	]
 });
 

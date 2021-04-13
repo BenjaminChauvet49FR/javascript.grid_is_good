@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+    <head>
+		<link rel="icon" type="image/png" href="icon.png">
+        <title>Yajikabe solver !!!</title>
+		<link rel="stylesheet" type="text/css" href="../style.css">
+    </head>
+    <body>
+		<div id="div_common_menu"></div>
+		<img id="img_map" src="mapField.png" style="display:none">
+		<canvas id="canevas" width="800" height="500">
+            Message pour les navigateurs ne supportant pas encore canvas.
+        </canvas></br>
+		
+		Grille à charger : <input type="text" id="input_grid_name" value="Yajikabe"></input> 
+		<input type="submit" id="submit_view_puzzle_list" value="Voir les puzzles Yajikabe"></input></br>
+		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
+		
+		Démarrage rapide :
+		<input type="submit" id="submit_quickStart" value="Démarrage rapide"></input></br>
+		
+		Action : <span id="text_canvas_action"></span>
+		<input type="submit" id="submit_open_space" value="XXX"></input>
+		<input type="submit" id="submit_close_space" value="XXX"></input></br>
+		<input type="submit" id="submit_pass_strip" value="XXX"></input></br>
+		
+		<input type="submit" id="submit_multipass" value="Multi passe"></input></br>	
+		<input type="submit" id="submit_undo" value="Annuler"></input></br>	
+		
+		<script src="../Importation.js"></script>
+		<script>
+		"use strict";
+		window.onload = function() {
+			loadScriptsSolving();
+			loadScriptsGeneric();
+			loadScriptsLocal();
+			loadScriptsAdjacency();
+			loadMyScript("SolveEvent.js");
+			loadMyScript("SolverYajikabe.js");
+		} 
+		</script>
+	</body>
+</html>
