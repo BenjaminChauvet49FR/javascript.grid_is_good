@@ -8,8 +8,9 @@ const MODE_NORMAL = {id:1,html:"Etat case",submitCaption:"Changer case grille"};
 const MODE_SELECTION = {id:2,html:"Sélection",submitCaption:"Sélectionner cases"};
 const MODE_SELECTION_RECTANGLE = {id:3,html:"Sélection rectangulaire",submitCaption:"Sélectionner cases en rectangle"};
 const MODE_ERASE = {id:4,html:"Effaçage",submitCaption:"Effacer murs autour case"};
-const MODE_SYMBOLS_PROMPT = {id:101,html:"Symboles en chaîne",submitCaption:"Ajouter symboles en chaîne"};
-const MODE_NORMAL_WALL = {id:102,html:"Murs",submitCaption:"Changer murs"};
+const MODE_SYMBOLS_PROMPT = {id : 101, html : "Symboles en chaîne", submitCaption : "Ajouter symboles en chaîne"};
+const MODE_MASS_SYMBOL_PROMPT = {id : 102, html : "Symbole à ajouter : ", submitCaption : "Ajouter symbole en masse "};
+const MODE_NORMAL_WALL = {id:103, html:"Murs", submitCaption : "Changer murs"};
 
 const ACTION_PASS_REGION = {id:101,htmlCaption:"Passer région"};
 const ACTION_PASS_SPACE = {id:105,htmlCaption:"Passer case"};

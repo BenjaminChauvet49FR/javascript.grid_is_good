@@ -28,6 +28,7 @@ function EditorCore(p_xLength, p_yLength, p_parameters) {
     this.visibleGrids = {};
 	this.buildGrids(p_xLength, p_yLength);
     this.isWithWalls = (!p_parameters || !p_parameters.hasWalls || (p_parameters.hasWalls != false));
+	this.inputSybol = null;
 }
 
 /**
@@ -248,7 +249,6 @@ EditorCore.prototype.transformGrid = function (p_transformation, p_xDatum, p_yDa
 //-------------------------------------------
 // Chain insertion
 
-//EditorCore.prototype.insertChain = function(p_promptText, p_gridId, p_defaultValue, p_validityMethod, p_parameters, p_x, p_y) {
 EditorCore.prototype.insertChain = function(p_gridId, p_clueChain, p_validityMethod, p_parameters, p_x, p_y) {
 	// Blank character and monocharacter
 	if (p_clueChain != null) {

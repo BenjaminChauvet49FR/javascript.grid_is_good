@@ -130,16 +130,8 @@ setupEventListenerCaption("submit_select_mode", MODE_SELECTION);
 setupEventListenerCaption("submit_select_rectangles_mode", MODE_SELECTION_RECTANGLE);
 setupEventListenerCaption("submit_erase_mode", MODE_ERASE);
 setupEventListenerCaption("submit_add_symbols_prompt", MODE_SYMBOLS_PROMPT);
-
-// Changes on spinboxes (relic of when buttons and spinboxes were used for regions and spaces)
-/*document.getElementById("input_number_value_region").addEventListener('change', function () {
-    editorCore.setInputNumber(this.value);
-	setMode(textMode, modesManager, ENTRY.SPACE, MODE_NUMBER_REGION);
-	applyChangesForSpaceMode(editorCore);
+const addMassSymbolPromptSubmitElement = getSubmitElementSetValue("submit_add_mass_symbol_prompt", MODE_MASS_SYMBOL_PROMPT);
+addMassSymbolPromptSubmitElement.addEventListener('click', function(event) {
+	setSymbolAndTextAction(editorCore, textMode, modesManager);
 });
-
-document.getElementById("input_number_value_space").addEventListener('change', function () {
-    editorCore.setInputNumber(this.value);
-	setMode(textMode, modesManager, ENTRY.SPACE, MODE_NUMBER_SPACE);
-	applyChangesForSpaceMode(editorCore);
-});*/
+//setupEventListenerCaption("submit_add_mass_symbol_prompt", MODE_MASS_SYMBOL_PROMPT);

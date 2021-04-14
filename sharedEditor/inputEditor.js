@@ -38,6 +38,58 @@ function clickCanvas(event, p_canvas, p_drawer, p_editorCore, p_modes) {
     }
 }
 
+
+// According to the "visible grid", returns elements for prompt 
+getPromptElementsFromVisibleGrid = function(p_editorCore) {
+	if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_SPACE)) {
+		return {
+			descriptionPrompt : "Entrer valeurs numériques >= 0",
+			descriptionPromptMono : "Entrer valeur numérique >= 0",
+			defaultToken : "1",
+			gridId : GRID_ID.NUMBER_SPACE,
+			validityTokenMethod : validityTokenNumber,
+			parameters : {emptySpaceChar : "<", isMonoChar : false, isNumeric : true}
+		}
+	} else if (p_editorCore.isVisibleGrid(GRID_ID.DIGIT_X_SPACE)) {
+		return {
+			descriptionPrompt : "Entrer des chiffres entre 0 et 4 ou X",
+			descriptionPromptMono : "Entrer un chiffre entre 0 et 4 ou X",
+			defaultToken : "1",
+			gridId : GRID_ID.DIGIT_X_SPACE,
+			validityTokenMethod : validityNumberRangeOrSymbolClosure(0, 4, ["X"]),
+			parameters : {emptySpaceChar : " ", isMonoChar : true, isNumeric : false}
+		}
+	} else if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_REGION)) {
+		return {			
+			descriptionPrompt : "Entrer valeurs numériques >= 0",
+			descriptionPromptMono : "Entrer valeur numérique >= 0",
+			defaultToken : "1",
+			gridId : GRID_ID.NUMBER_REGION,
+			validityTokenMethod : validityTokenNumber,
+			parameters : {emptySpaceChar : "<", isMonoChar : false, isNumeric : true}
+		}
+	} else if (p_editorCore.isVisibleGrid(GRID_ID.PEARL)) {
+		return {
+			descriptionPrompt : "Entrer suite de perles (B|W)",
+			descriptionPromptMono : "Entrer lettre de perle (B|W)",
+			defaultToken : "W",
+			gridId : GRID_ID.PEARL,
+			validityTokenMethod : validityTokenPearl,
+			parameters : {emptySpaceChar : " ", isMonoChar : true}
+		}
+	} else if (p_editorCore.isVisibleGrid(GRID_ID.YAJILIN_LIKE)) {
+		return {
+			descriptionPrompt : "Entrer suite d'indices à la Yajilin (L|U|R|D)(nombre) ou X",
+			descriptionPromptMono : "Entrer indice à la Yajilin",
+			defaultToken : "L1",
+			gridId : GRID_ID.YAJILIN_LIKE,
+			validityTokenMethod : validityTokenYajilin,
+			parameters : {emptySpaceChar : "<", isMonoChar : false}
+		}		
+	}
+}
+
+
 clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
     mode = p_modes.clickSpace;
 	switch (mode.id) {
@@ -56,54 +108,39 @@ clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
 		    p_editorCore.selectRectangleMechanism(p_x, p_y);
 		break;
 		case (MODE_SYMBOLS_PROMPT.id) :
-			var defaultToken = "";
-			var descriptionPrompt = "";
-			var gridId = "";
-			var chainInPrompt = "";
-			var validityTokenMethod = null;
-			var parameters = {};
-			if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_SPACE)) {
-				descriptionPrompt = "Entrer valeur numérique >= 0";
-				defaultToken = "1";
-				gridId = GRID_ID.NUMBER_SPACE;
-				validityTokenMethod = validityTokenNumber;
-				parameters = {emptySpaceChar : "<", isMonoChar : false, isNumeric : true};
-			} else if (p_editorCore.isVisibleGrid(GRID_ID.DIGIT_X_SPACE)) {
-				descriptionPrompt = "Entrer un chiffre entre 0 et 4 ou X";
-				defaultToken = "1";
-				gridId = GRID_ID.DIGIT_X_SPACE;
-				validityTokenMethod = validityNumberRangeOrSymbolClosure(0, 4, ["X"]);
-				parameters = {emptySpaceChar : " ", isMonoChar : true, isNumeric : false};
-			} else if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_REGION)) {
-				descriptionPrompt = "Entrer valeur numérique >= 0";
-				defaultToken = "1";
-				gridId = GRID_ID.NUMBER_REGION;
-				validityTokenMethod = validityTokenNumber;
-				parameters = {emptySpaceChar : "<", isMonoChar : false, isNumeric : true};
-				p_editorCore.insertChain("Entrer valeur numérique >= 0", GRID_ID.NUMBER_REGION, "1", validityTokenNumber, {emptySpaceChar : "<", isMonoChar : false, isNumeric : true}, p_x, p_y);
-			} else if (p_editorCore.isVisibleGrid(GRID_ID.PEARL)) {
-				descriptionPrompt = "Entrer suite de perles (B|W)";
-				defaultToken = "W";
-				gridId = GRID_ID.PEARL;
-				validityTokenMethod = validityTokenPearl;
-				parameters = {emptySpaceChar : " ", isMonoChar : true};
-			} else if (p_editorCore.isVisibleGrid(GRID_ID.YAJILIN_LIKE)) {
-				descriptionPrompt = "Entrer suite d'indices à la Yajilin (L|U|R|D)(nombre) ou X";
-				defaultToken = "L1";
-				gridId = GRID_ID.YAJILIN_LIKE;
-				validityTokenMethod = validityTokenYajilin;
-				parameters = {emptySpaceChar : "<", isMonoChar : false};
-			}
+			const promptElements = getPromptElementsFromVisibleGrid(p_editorCore);
 			var defaultVal = p_editorCore.getPromptValue();
 			if ((!defaultVal && (defaultVal != "0")) || (defaultVal == null) || (defaultVal == "")) {
-				defaultVal = defaultToken;
+				defaultVal = promptElements.defaultToken;
 			}
-			optionalChain = (!parameters.isMonoChar) ? "(Penser à séparer les indices des caractères "+parameters.emptySpaceChar+" par des espaces) " : "";
-			var clueChain = prompt(descriptionPrompt + " ou " + parameters.emptySpaceChar + " pour case vide "+optionalChain+":", defaultVal);
-			p_editorCore.insertChain(gridId, clueChain, validityTokenMethod, parameters, p_x, p_y);
+			optionalChain = (!promptElements.parameters.isMonoChar) ? "(Penser à séparer les indices des caractères " + promptElements.parameters.emptySpaceChar + " par des espaces) " : "";
+			var clueChain = prompt(promptElements.descriptionPrompt + " ou " + promptElements.parameters.emptySpaceChar + " pour case vide " + optionalChain + ":", defaultVal);
+			p_editorCore.insertChain(promptElements.gridId, clueChain, promptElements.validityTokenMethod, promptElements.parameters, p_x, p_y);
+		break;
+		case (MODE_MASS_SYMBOL_PROMPT.id) :
+			const visibleGridId = getPromptElementsFromVisibleGrid(p_editorCore).gridId;
+			if (p_editorCore.getInputSymbol() == p_editorCore.get(visibleGridId, p_x, p_y)) {
+				p_editorCore.set(visibleGridId, p_x, p_y, null);
+			} else {
+				p_editorCore.set(visibleGridId, p_x, p_y, p_editorCore.getInputSymbol());
+			}
 		break;
 		default :
-			p_editorCore.switchState(p_x,p_y);
+			p_editorCore.switchState(p_x, p_y);
+	}
+}
+
+function setSymbolAndTextAction(p_editorCore, p_textElement, p_modesManager) {
+	promptElements = getPromptElementsFromVisibleGrid(p_editorCore);
+	if (promptElements) {
+		var val = prompt(promptElements.descriptionPromptMono);
+		if (promptElements.validityTokenMethod(val)) {
+			val = (promptElements.parameters.isNumeric && val != null) ? parseInt(val, 10) : val;
+			applyChangesForSpaceMode(p_editorCore, MODE_MASS_SYMBOL_PROMPT);	
+			setMode(p_textElement, p_modesManager, ENTRY.SPACE, MODE_MASS_SYMBOL_PROMPT);
+			p_textElement.innerHTML += val;
+			p_editorCore.setInputSymbol(val);
+		}
 	}
 }
 
@@ -239,17 +276,17 @@ function actionBuildWallsAroundSelection(p_editorCore) {
 }
 
 function actionMoveSelection(p_editorCore, p_xValue, p_yValue) {
-	actionMoveCopySelection(p_editorCore, p_xValue, p_yValue, true, "Déplacer", " ainsi ?");
+	actionMoveCopySelection(p_editorCore, p_xValue, p_yValue, true, "Déplacer", " ainsi");
 }
 
 function actionCopySelection(p_editorCore, p_xValue, p_yValue) {
-	actionMoveCopySelection(p_editorCore, p_xValue, p_yValue, false, "Copier", "vers la destination ?");
+	actionMoveCopySelection(p_editorCore, p_xValue, p_yValue, false, "Copier", "vers la destination");
 }
 
 function actionMoveCopySelection(p_editorCore, p_xValue, p_yValue, p_mode, p_verb, p_part2) {
 	const number = p_editorCore.countSpacesSelection();
 	if (number > 0 && (p_xValue != 0 || p_yValue != 0)) {
-		const confirmString1 = p_verb + number + " case"+ (number > 1 ? "s" : "") + p_part2 + " ainsi ?";
+		const confirmString1 = p_verb + " " + number + " case"+ (number > 1 ? "s" : "") + p_part2 + " ?";
 		const confirmString2 = (p_xValue != 0) ? ("\n -> " + Math.abs(p_xValue)+" vers la " + (p_xValue > 0 ? "droite" : "gauche")) : "";
 		const confirmString3 = (p_yValue != 0) ? ("\n -> " + Math.abs(p_yValue)+" vers le " + (p_yValue > 0 ? "bas" : "haut")) : "";
 		if (confirm(confirmString1 + confirmString2 + confirmString3)) {
