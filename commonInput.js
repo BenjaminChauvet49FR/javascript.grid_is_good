@@ -70,11 +70,11 @@ function viewPuzzleList(p_puzzleName) {
 /** 
 Loads a walled grid from local storage and its region grid (cf. super-function), updates intelligence, updates canvas
 */
-loadAction = function(p_canvas, p_drawer, p_solver, p_name) {
-	const localStorageName = getLocalStorageName(p_name);
+loadAction = function(p_canvas, p_drawer, p_solver, p_puzzleName, p_name) {
+	const localStorageName = getLocalStorageName(p_puzzleName, p_name);
 	const loadedString = localStorage.getItem(localStorageName);
 	if (loadedString) {
-		loadPuzzle(p_canvas, p_drawer, p_solver, loadedString);
+		loadPuzzle(p_canvas, p_drawer, p_solver, loadedString); // Constraint !!! Each puzzle must have a method with such a name !
 	} else {
         alert("Le stockage local n'a pas de propriété nommée '" + localStorageName + "'.");
     }

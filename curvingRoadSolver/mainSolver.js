@@ -27,9 +27,10 @@ canevas.addEventListener('click', function(event){clickCanvasAction(event, canev
 setInterval(drawCanvas,30);
 var fieldName = document.getElementById("input_grid_name");
 
+const puzzleTypeName = "CurvingRoad";
 putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("CurvingRoad")});
-putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,solver,fieldName.value)});
-putActionElementClick("submit_quickStart",function(event){quickStartAction(solver,null)});
+putActionElementClick("submit_load_grid",function(event){loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value)});
+putActionElementClick("submit_quickStart",function(event){quickStartAction(solver, null)});
 putActionElementClick("submit_multipass",function(event){multiPassAction(solver)});
 putActionElementClick("submit_undo",function(event){undoAction(solver,null)});
 

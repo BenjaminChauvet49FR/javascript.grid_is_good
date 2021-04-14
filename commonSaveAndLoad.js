@@ -10,8 +10,8 @@ const SYMBOL_ID = {
 /**
 Returns a name to store into / load from local storage
 */
-function getLocalStorageName(p_name) {
-	return "grid_is_good_"+p_name;
+function getLocalStorageName(p_puzzleName, p_name) {
+	return "grid_is_good_" + p_puzzleName + p_name;
 }
 
 // ------------------------------------------

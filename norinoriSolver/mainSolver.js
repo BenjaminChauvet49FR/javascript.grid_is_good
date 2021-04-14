@@ -32,8 +32,9 @@ function main() {
 	var fieldName = document.getElementById("input_grid_name");
 	var textArea = document.getElementById("textarea_happened");
 
-	putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("Norinori")});
-	putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,solver,fieldName.value,textArea)});
+	const puzzleTypeName = "Norinori";
+	putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList(puzzleTypeName)});
+	putActionElementClick("submit_load_grid",function(event){loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value, textArea)});
 	putActionElementClick("submit_undo",function(event){undoAction(solver,textArea)});
 	putActionElementClick("submit_quickStart",function(event){quickStartAction(solver,textArea)});
 	putActionElementClick("submit_multiPass",function(event){multiPassAction(solver,textArea)});

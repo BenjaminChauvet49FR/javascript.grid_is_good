@@ -32,8 +32,9 @@ canevas.addEventListener('click', function(event){clickCanvas(event, canevas, dr
 setInterval(drawCanvas,30);
 var fieldName = document.getElementById("input_grid_name");
 
-putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("TheoryLoop")});
-putActionElementClick("submit_load_grid",function(event){loadAction(canevas,drawer,solver,fieldName.value)});
+const puzzleTypeName = "TheoryLoop";
+putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList(puzzleTypeName)});
+putActionElementClick("submit_load_grid",function(event){loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value)});
 //putActionElementClick("submit_quickStart",function(event){quickStartAction(solver)}); // Not relevant
 putActionElementClick("submit_undo",function(event){undoAction(solver)});
 putActionElementClick("submit_color_chains",function(event){solver.seeColorChainsAction()}); 

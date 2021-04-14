@@ -43,32 +43,30 @@ var actualFieldY = fieldY;
 
 adaptCanvasAndGrid(canevas, drawer, editorCore);
 
+function puzzleName() {
+	return puzzleTypeComboBox.options[puzzleTypeComboBox.selectedIndex].innerHTML;
+}
+
 putActionElementClick("submit_view_puzzle_list", function (event) {
-    viewPuzzleList(puzzleTypeComboBox.options[puzzleTypeComboBox.selectedIndex].innerHTML)
+    viewPuzzleList(puzzleName())
 });
-
 putActionElementClick("submit_remove_puzzle", function (event) {
-    removeAction(fieldName.value)
+    removeAction(puzzleName(), fieldName.value)
 });
-
 putActionElementClick("submit_rename_puzzle", function (event) {
-    renameAction(fieldName)
+    renameAction(puzzleName(), fieldName)
 });
-
 putActionElementClick("submit_save_grid", function (event) {
-    saveAction(editorCore, fieldName.value, saveLoadModeId, {numberStars : parseInt(fieldStars.value, 10)}) 
+    saveAction(editorCore, puzzleName(), fieldName.value, saveLoadModeId, {numberStars : parseInt(fieldStars.value, 10)}) 
 });
-
 putActionElementClick("submit_load_grid", function (event) {
-    editorLoadAction(canevas, drawer, editorCore, fieldName.value, saveLoadModeId, {
+    editorLoadAction(canevas, drawer, editorCore, puzzleName(), fieldName.value, saveLoadModeId, {
         xLengthField: actualFieldX,
         yLengthField: actualFieldY,
 		numberStarsField : fieldStars
     })
 });
-putActionElementClick("submit_auto_name", function (event) {
-    fieldName.value = puzzleTypeComboBox.options[puzzleTypeComboBox.selectedIndex].innerHTML
-});
+
 putActionElementClick("submit_new_grid", function (event) {
     restartAction(canevas, drawer, editorCore, actualFieldX.value, actualFieldY.value)
 });

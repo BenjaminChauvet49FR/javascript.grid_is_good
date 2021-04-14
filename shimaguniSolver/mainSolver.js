@@ -27,10 +27,11 @@ canevas.addEventListener('click', function(event){clickCanvasAction(event, canev
 setInterval(drawCanvas,30);
 var fieldName = document.getElementById("input_grid_name");
 
-putActionElementClick("submit_load_grid",function(event){loadAction(canevas, drawer, solver, fieldName.value)});
+const puzzleTypeName = "Shimaguni";
+putActionElementClick("submit_load_grid",function(event){loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value)});
 putActionElementClick("submit_undo",function(event){undoAction(solver)});
 putActionElementClick("submit_quickStart",function(event){quickStartAction(solver)});
-putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("Shimaguni")});
+putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList(puzzleTypeName)});
 putActionElementClick("submit_multiPass",function(event){multiPassAction(solver)});
 
 var textAction = document.getElementById("text_canvas_action");

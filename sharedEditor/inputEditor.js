@@ -263,8 +263,8 @@ function actionMoveCopySelection(p_editorCore, p_xValue, p_yValue, p_mode, p_ver
 //------------------------
 // Name management actions
 
-removeAction = function (p_detachedName) {
-	var localStorageName = getLocalStorageName(p_detachedName);
+removeAction = function (p_puzzleName, p_detachedName) {
+	var localStorageName = getLocalStorageName(p_puzzleName, p_detachedName);
     if (localStorage.hasOwnProperty(localStorageName)) {
         if (confirm("Supprimer la propriété '" + localStorageName + "' du stockage local ?")) {
             localStorage.removeItem(localStorageName);
@@ -274,13 +274,12 @@ removeAction = function (p_detachedName) {
 	}
 }
 
-// TODO : potentially create a constant for "grid_is_good".
-renameAction = function (p_fieldValue) { 
-	var localStorageName = getLocalStorageName(p_fieldValue.value);
+renameAction = function (p_puzzleName, p_fieldValue) { 
+	var localStorageName = getLocalStorageName(p_puzzleName, p_fieldValue.value);
     if (localStorage.hasOwnProperty(localStorageName)) {
-        const newDetachedName = prompt("Renommer la propriété "+ localStorageName+" (nom préfixé par 'grid_is_good_') : ", p_fieldValue.value);
+        const newDetachedName = prompt("Renommer la propriété " + localStorageName+" (nom préfixé par 'grid_is_good_" + p_puzzleName + "') : ", p_fieldValue.value);
 		if (newDetachedName != null) {
-			const localStorageName2 = getLocalStorageName(newDetachedName);
+			const localStorageName2 = getLocalStorageName(p_puzzleName, newDetachedName);
 			if (localStorageName2 == "" || localStorage.hasOwnProperty(localStorageName2)) {
 				alert("Nom "+localStorageName2+" invalide ou déjà pris.");
 			} else {
@@ -315,8 +314,8 @@ Saves a walled grid into local storage
 p_editorCore : the Global item
 p_detachedName : the detached name (without the prefix) to store into local storage
  */
-saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions) {
-    var localStorageName = getLocalStorageName(p_detachedName);
+saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_kindId, p_externalOptions) {
+    var localStorageName = getLocalStorageName(p_puzzleName, p_detachedName);
     var letsSave = true;
     if (localStorage.hasOwnProperty(localStorageName)) {
         if (!confirm("Le stockage local a déjà une propriété nommée '" + localStorageName + "'. L'écraser ?")) {
@@ -353,10 +352,10 @@ saveAction = function (p_editorCore, p_detachedName, p_kindId, p_externalOptions
 
 /**
 Loads the desired grid from the local storage
-p_detachedName is the detached name
+p_detachedName is the name in the field
 */
-editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_detachedName, p_kindId, p_fieldsToUpdate) {
-    var localStorageName = getLocalStorageName(p_detachedName);
+editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_puzzleName, p_detachedName, p_kindId, p_fieldsToUpdate) {
+    var localStorageName = getLocalStorageName(p_puzzleName, p_detachedName);
     if (localStorage.hasOwnProperty(localStorageName)) {
         if (confirm("Charger le puzzle " + localStorageName + " ?")) {
 			var loadedItem = null;
