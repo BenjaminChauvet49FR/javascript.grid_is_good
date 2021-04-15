@@ -47,6 +47,10 @@ function puzzleName() {
 	return puzzleTypeComboBox.options[puzzleTypeComboBox.selectedIndex].innerHTML;
 }
 
+putActionElementClick("submit_display_menu", function (event) {
+    switchVisibilityDivAction(document.getElementById("div_puzzle_management_menu"));
+});
+
 putActionElementClick("submit_view_puzzle_list", function (event) {
     viewPuzzleList(puzzleName())
 });

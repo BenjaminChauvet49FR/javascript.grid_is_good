@@ -1,3 +1,13 @@
-input[type=number]{
+input[type=number] {
 	width:3em;
+}
+
+#div_common_menu { 
+	font: 0.7em "Arial"; /* https://developer.mozilla.org/fr/docs/Web/CSS/font */
+	border: 1px solid;
+	/*display: table-cell;  https://stackoverflow.com/questions/16399232/restrict-border-width-to-text-width-in-a-block-element don't take all width */
+	width: 50%;
+	border-radius: 4px;
+	padding: 4px; 10px; /*https://developer.mozilla.org/fr/docs/Web/CSS/padding*/
+	margin-bottom: 20px; /* https://developer.mozilla.org/fr/docs/Web/CSS/margin */
 }

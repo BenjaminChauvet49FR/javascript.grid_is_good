@@ -472,6 +472,33 @@ function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem) {
 	}
 }
 
+// Utilitary method to get from an item with wallarray and regionIndications (list of {index, value} items) a number array
+function getRegionIndicArray(p_loadedItem) {
+	const regionArray = WallGrid_data(p_loadedItem.wallArray).toRegionGrid(); // This supposes toRegionGrid() returns a double-entry array of region numbers ordered by "first spaces in lexical order" in lexical order.
+	var regionIndicArray = [];
+	var nextIndex = (p_loadedItem.indications.length > 0 ? p_loadedItem.indications[0].index : -1);
+	var indicIndex = 0;
+	for(var iy = 0 ; iy < regionArray.length ; iy++) {
+		regionIndicArray.push([]);
+		for(var ix = 0 ; ix < regionArray[0].length; ix++) {
+			if ((nextIndex == regionArray[iy][ix]) && nextIndex != -1) {
+				regionIndicArray[iy].push(parseInt(p_loadedItem.indications[indicIndex].value, 10));
+				indicIndex++;
+				if (indicIndex != p_loadedItem.indications.length) {
+					nextIndex = p_loadedItem.indications[indicIndex].index;
+				} else {
+					nextIndex = -1;
+				}
+			} else {
+				regionIndicArray[iy].push(null);
+			}
+		}
+	}
+	return regionIndicArray;
+}
+
+// --------------------
+
 //How to use the change of a combobox. Credits : https://www.scriptol.fr/html5/combobox.php
 function comboChange(p_thelist, p_editorCore) {
     var idx = p_thelist.selectedIndex;
@@ -534,29 +561,14 @@ function comboChange(p_thelist, p_editorCore) {
 	fieldXY.disabled = !squarePuzzle;
 }
 
-// Utilitary method to get from an item with wallarray and regionIndications (list of {index, value} items) a number array
-function getRegionIndicArray(p_loadedItem) {
-	const regionArray = WallGrid_data(p_loadedItem.wallArray).toRegionGrid(); // This supposes toRegionGrid() returns a double-entry array of region numbers ordered by "first spaces in lexical order" in lexical order.
-	var regionIndicArray = [];
-	var nextIndex = (p_loadedItem.indications.length > 0 ? p_loadedItem.indications[0].index : -1);
-	var indicIndex = 0;
-	for(var iy = 0 ; iy < regionArray.length ; iy++) {
-		regionIndicArray.push([]);
-		for(var ix = 0 ; ix < regionArray[0].length; ix++) {
-			if ((nextIndex == regionArray[iy][ix]) && nextIndex != -1) {
-				regionIndicArray[iy].push(parseInt(p_loadedItem.indications[indicIndex].value, 10));
-				indicIndex++;
-				if (indicIndex != p_loadedItem.indications.length) {
-					nextIndex = p_loadedItem.indications[indicIndex].index;
-				} else {
-					nextIndex = -1;
-				}
-			} else {
-				regionIndicArray[iy].push(null);
-			}
-		}
+function switchVisibilityDivAction(p_div) {
+	if (p_div.style.display == "block") {
+		p_div.style.display = "none";
+		return;
 	}
-	return regionIndicArray;
+	p_div.style.display = "block";
+	/* Mauvaises solutions : https://stackoverflow.com/questions/16132383/changing-div-visibility-with-javascript* https://developer.mozilla.org/fr/docs/Web/CSS/visibility*/
+	/* Bonne solution : https://stackoverflow.com/questions/16132383/changing-div-visibility-with-javascript */
 }
 
 // --------------------

@@ -12,46 +12,44 @@
             Message pour les navigateurs ne supportant pas encore canvas.
         </canvas></br>
 		
-		<input type="submit" id="submit_show_region_grid" value="Donner les régions de la grille"></input></br>
+		<input type="submit" id="submit_display_menu" value="Afficher/masquer menu des puzzles"></input></br>
 		
+		<div id="div_puzzle_management_menu">
 		Type de puzzle : 
-		<select id="select_puzzle_type" onChange="combo(this)">
-			<option>Chocona</option>
-			<option>CountryRoad</option>
-			<option>CurvingRoad</option>
-			<option>EntryExit</option>
-			<option>GrandTour</option>
-			<option>Hakyuu</option>
-			<option>Heyawake</option>
-			<option>Koburin</option>
-			<option>LITS</option>
-			<option>Masyu</option>
-			<option>Norinori</option>
-			<option>SternenSchlacht</option>
-			<option>Shimaguni</option>
-			<option>Shugaku</option>
-			<option>TheoryCluster</option>
-			<option>TheoryLoop</option>
-			<option>TheoryLoopRegion</option>
-			<option>Usotatami</option>
-			<option>Yajikabe</option>
-			<option>Yajilin</option>
-		</select></br>
-		Nom du puzzle : <input type="text" id="input_grid_name" value="default"></input>
-		<input type="submit" id="submit_save_grid" value="Sauver ce puzzle"></input>
-		<input type="submit" id="submit_load_grid" value="Charger ce puzzle"></input>
-		Gestion puzzles : <input type="submit" id="submit_remove_puzzle" value="Supprimer puzzle"></input>
-		<input type="submit" id="submit_rename_puzzle" value="Renommer puzzle"></input>
-		<input type="submit" id="submit_view_puzzle_list" value="Voir numéros puzzle du type"></input></br>		
-		</br>
-		
-		Largeur : <input type="number" id="input_number_xLength" value="10"></input>
-		Hauteur : <input type="number" id="input_number_yLength" value="10"></input>
-		Côté : <input type="number" id="input_number_xyLength" value="10"></input>
-		<input type="submit" id="submit_new_grid" value="Nouvelle grille"></input>
-		<input type="submit" id="submit_resize_grid" value="Redimensionner la grille"></input>
-		</br></br>
-
+			<select id="select_puzzle_type" onChange="combo(this)">
+				<option>Chocona</option>
+				<option>CountryRoad</option>
+				<option>CurvingRoad</option>
+				<option>EntryExit</option>
+				<option>GrandTour</option>
+				<option>Hakyuu</option>
+				<option>Heyawake</option>
+				<option>Koburin</option>
+				<option>LITS</option>
+				<option>Masyu</option>
+				<option>Norinori</option>
+				<option>SternenSchlacht</option>
+				<option>Shimaguni</option>
+				<option>Shugaku</option>
+				<option>TheoryCluster</option>
+				<option>TheoryLoop</option>
+				<option>TheoryLoopRegion</option>
+				<option>Usotatami</option>
+				<option>Yajikabe</option>
+				<option>Yajilin</option>
+			</select></br>
+			Nom du puzzle : <input type="text" id="input_grid_name" value="default"></input>
+			<input type="submit" id="submit_save_grid" value="Sauver ce puzzle"></input>
+			<input type="submit" id="submit_load_grid" value="Charger ce puzzle"></input></br>
+			Gestion puzzles : <input type="submit" id="submit_remove_puzzle" value="Supprimer puzzle"></input>
+			<input type="submit" id="submit_rename_puzzle" value="Renommer puzzle"></input>
+			<input type="submit" id="submit_view_puzzle_list" value="Voir numéros puzzle du type"></input></br>		
+			Largeur : <input type="number" id="input_number_xLength" value="10"></input>
+			Hauteur : <input type="number" id="input_number_yLength" value="10"></input>
+			Côté : <input type="number" id="input_number_xyLength" value="10"></input>
+			<input type="submit" id="submit_new_grid" value="Nouvelle grille"></input>
+			<input type="submit" id="submit_resize_grid" value="Redimensionner la grille"></input></br>
+		</div>
 		Mode : <span id="span_mode"></span></br>
 		<input type="submit" id="submit_normal_mode" value="XXX"></input>
 		<input type="submit" id="submit_add_symbols_prompt" value="Ajouter XXX"></input>
@@ -71,10 +69,10 @@
 		Etoiles par RLC : <input type="number" id="input_number_stars" value="10"></input> </br>
 		</br>
 
-		<input type="submit" id="submit_rotate_clockwise" value="Rotation sens horaire"></input></br>
-		<input type="submit" id="submit_rotate_uturn" value="Rotation 180°"></input></br>
-		<input type="submit" id="submit_rotate_counter_clockwise" value="Rotation sens anti-horaire"></input></br>
-		<input type="submit" id="submit_mirror_horizontal" value="Réflexion horizontale"></input></br>
+		<input type="submit" id="submit_rotate_clockwise" value="Rotation sens horaire"></input>
+		<input type="submit" id="submit_rotate_uturn" value="Rotation 180°"></input>
+		<input type="submit" id="submit_rotate_counter_clockwise" value="Rotation sens anti-horaire"></input>
+		<input type="submit" id="submit_mirror_horizontal" value="Réflexion horizontale"></input>
 		<input type="submit" id="submit_mirror_vertical" value="Réflexion verticale"></input></br>
 
 		<script src="../WallGrid.js"></script>
