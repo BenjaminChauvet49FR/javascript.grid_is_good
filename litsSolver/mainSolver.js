@@ -1,38 +1,37 @@
+var solver;
 function main() {
 	var drawer = new Drawer();
-	var solver = DummySolver();
+	solver = DummySolver();
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
 	var actionsManager = {}; 
 	var drawIndications;
 
-	var colors={
-		openSquare:'#00ffcc',
-		closedSquare:'#cc0022',
-		LSquare:'#ffcccc',
-		ISquare:'#ffcc88',
-		TSquare:'#ccffcc',
-		SSquare:'#ccccff',
-		LSquareLight:'#ffe5e5',
-		ISquareLight:'#ffe5c0',
-		TSquareLight:'#e5ffe5',
-		SSquareLight:'#e5e5ff',
-		rainbowSpaces:[],
-		insideIndicationsOnWhite:'#008800',
-		insideIndicationsOnFilled:'#00ff00',
-		standardWrite:'#000000',
-		reflectWrite:"#ffff88",
+	var colors = {
+		openSquare : '#00ffcc',
+		closedSquare : '#cc0022',
+		LSquare : '#ffcccc',
+		ISquare : '#ffcc88',
+		TSquare : '#ccffcc',
+		SSquare : '#ccccff',
+		LSquareLight : '#ffe5e5',
+		ISquareLight : '#ffe5c0',
+		TSquareLight : '#e5ffe5',
+		SSquareLight : '#e5e5ff',
+		insideIndicationsOnWhite : '#008800',
+		insideIndicationsOnFilled : '#00ff00',
+		standardWrite : '#000000',
+		reflectWrite : "#ffff88",
 	}
 
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas(){
-		drawer.drawWallGrid(context,solver.gridWall,solver.xLength,solver.yLength); 
-		drawInsideSpaces(context,drawer,colors,solver);
+		drawer.drawWallGrid(context, solver.gridWall, solver.xLength, solver.yLength); 
+		drawInsideSpaces(context, drawer, colors, solver);
 	}
 
-	var textArea = document.getElementById("textarea_happened");
-	canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,solver,actionsManager)},false);
+	canevas.addEventListener('click', function(event){clickCanvas(event, canevas, drawer, solver, actionsManager)},false);
 	setInterval(drawCanvas,30);
 	var fieldName = document.getElementById("input_grid_name");
 

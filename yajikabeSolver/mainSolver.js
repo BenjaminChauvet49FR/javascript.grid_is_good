@@ -4,20 +4,18 @@ function main() {
 	solver = DummySolver();
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
-
 	var actionsManager = {}; 
 
 	var colors = {
-		openSquare:'#00ffcc',
-		closedSquare:'#cc0022',
-		rainbowSpaces:[],
-		standardWrite:'#000000',
-		reflectWrite:"#ffff88"
+		openSquare : '#00ffcc',
+		closedSquare : '#cc0022',
+		standardWrite : '#000000',
+		reflectWrite : "#ffff88"
 	}
 
 	//--------------------
 	//The main draw function (at start)
-	function drawCanvas(){
+	function drawCanvas() {
 		drawer.drawWalllessGrid(context, null, solver.xLength, solver.yLength);
 		drawer.drawCombinedArrowGridIndications(context, solver.clueGrid);
 		drawInsideSpaces(context, drawer, colors, solver);

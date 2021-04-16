@@ -6,6 +6,10 @@ function SolverNorinori(p_wallArray) {
 SolverNorinori.prototype = Object.create(GeneralSolver.prototype);
 SolverNorinori.prototype.constructor = SolverNorinori;
 
+function DummySolver() {
+	return new SolverNorinori(generateWallArray(1, 1), 1);
+}
+
 SolverNorinori.prototype.construct = function(p_wallArray) {
 	this.generalConstruct();
 	this.xLength = p_wallArray[0].length;

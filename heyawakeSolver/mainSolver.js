@@ -6,12 +6,11 @@ function main() {
 
 	var actionsManager = {}; 
 
-	var colors= {
-		openSquare:'#00ffcc',
-		closedSquare:'#cc0022',
-		rainbowSpaces:[],
-		standardWrite:'#000000',
-		reflectWrite:"#ffff88"
+	var colors = {
+		openSquare : '#00ffcc',
+		closedSquare : '#cc0022',
+		standardWrite : '#000000',
+		reflectWrite : '#ffff88'
 	}
 
 	//--------------------

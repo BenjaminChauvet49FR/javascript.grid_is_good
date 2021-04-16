@@ -28,10 +28,9 @@ function main() {
 		drawer.drawWalllessGrid(context, null, solver.xLength, solver.yLength); 
 		drawInsideSpaces(context, drawer, colors, solver);
 	}
-
-	var textArea = document.getElementById("textarea_happened");
-	canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,solver,actionsManager)},false);
-	setInterval(drawCanvas,30);
+	setInterval(drawCanvas, 30);
+	
+	canevas.addEventListener('click', function(event){clickCanvas(event, canevas, drawer, solver, actionsManager)}, false);
 	var fieldName = document.getElementById("input_grid_name");
 
 	const puzzleTypeName = "Shugaku";

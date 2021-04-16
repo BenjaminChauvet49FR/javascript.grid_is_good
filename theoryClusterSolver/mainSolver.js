@@ -8,23 +8,22 @@ function main() {
 	var drawIndications;
 
 	var colors= {
-		openSquare:'#00ffcc',
-		closedSquare:'#cc0022',
-		rainbowSpaces:[],
-		insideIndicationsOnWhite:'#008800',
-		insideIndicationsOnFilled:'#00ff00',
-		standardWrite:'#000000',
-		reflectWrite:"#ffff88",
+		openSquare : '#00ffcc',
+		closedSquare : '#cc0022',
+		insideIndicationsOnWhite : '#008800',
+		insideIndicationsOnFilled : '#00ff00',
+		standardWrite : '#000000',
+		reflectWrite : "#ffff88",
 	}
 
 	//--------------------
 	//The main draw function (at start)
-	function drawCanvas(){
-		drawer.drawWallGrid(context,solver.gridWall,solver.xLength,solver.yLength); 
-		drawInsideSpaces(context,drawer,colors,solver);
+	function drawCanvas() {
+		drawer.drawWallGrid(context, solver.gridWall, solver.xLength, solver.yLength); 
+		drawInsideSpaces(context, drawer, colors, solver);
 	}
 
-	canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,solver,actionsManager)},false);
+	canevas.addEventListener('click', function(event){clickCanvas(event, canevas, drawer, solver, actionsManager)},false);
 	setInterval(drawCanvas,30);
 	var fieldName = document.getElementById("input_grid_name");
 

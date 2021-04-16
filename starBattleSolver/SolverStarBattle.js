@@ -27,6 +27,10 @@ function SolverStarBattle(p_wallArray,p_starNumber) {
 SolverStarBattle.prototype = Object.create(GeneralSolver.prototype);
 SolverStarBattle.prototype.constructor = SolverStarBattle;
 
+function DummySolver() {
+	new SolverStarBattle(generateWallArray(1, 1), 1);
+}
+
 SolverStarBattle.prototype.construct = function(p_wallArray, p_starNumber) { 
 	this.generalConstruct();
 	this.answerGrid = [];

@@ -7,23 +7,21 @@ function main() {
 	var actionsManager = {}; 
 	var drawIndications;
 
-	var colors={
-		openSquare:'#00ffcc',
-		chocolateSquare:'#ffcccc',
-		lackingSquare:'#bbbbbb',
-		rainbowSpaces:[],
-		insideIndicationsOnWhite:'#008800',
-		insideIndicationsOnFilled:'#0000ff',
+	var colors = {
+		openSquare : '#00ffcc',
+		chocolateSquare : '#ffcccc',
+		lackingSquare : '#bbbbbb',
+		insideIndicationsOnWhite : '#008800',
+		insideIndicationsOnFilled : '#0000ff',
 	}
 
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
-		drawer.drawWallGrid(context,solver.gridWall,solver.xLength,solver.yLength); 
-		drawInsideSpaces(context,drawer,colors,solver);
+		drawer.drawWallGrid(context, solver.gridWall, solver.xLength, solver.yLength); 
+		drawInsideSpaces(context, drawer, colors, solver);
 	}
 
-	var textArea = document.getElementById("textarea_happened");
 	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)},false);
 	setInterval(drawCanvas,30);
 	var fieldName = document.getElementById("input_grid_name");
