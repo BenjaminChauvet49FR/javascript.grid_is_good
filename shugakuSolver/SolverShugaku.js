@@ -16,6 +16,10 @@ function SolverShugaku(p_numberSymbolArray) {
 SolverShugaku.prototype = Object.create(GeneralSolver.prototype);
 SolverShugaku.prototype.constructor = SolverShugaku;
 
+function DummySolver() {
+	return new SolverShugaku([[null]]);
+}
+
 SolverShugaku.prototype.construct = function(p_numberSymbolsArray) {
 	this.generalConstruct();
 	this.xLength = p_numberSymbolsArray[0].length;

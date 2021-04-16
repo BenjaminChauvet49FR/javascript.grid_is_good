@@ -34,29 +34,16 @@
 		<input type="submit" id="submit_see_opposite_ends" value="Afficher les bouts opposés">
 		<input type="submit" id="submit_mask_information_chains" value="Masquer informations">
 		
-		<script src="../commonActionManager.js"></script>
-		<script src="../Drawer.js"></script>
-		<script src="../WallGrid.js"></script>
-		<script src="../Grid.js"></script>
-		<script src="../commonInput.js"></script>
-		<script src="../commonSaveAndLoad.js"></script>
-		<script src="../CommonHTMLMenu.js"></script>
-		<script src="../DrawableItem.js"></script>
-		
-		<script src="../miscSolving/GeneralSolver.js"></script>
-		<script src="../miscSolving/SolvingMethodPacks.js"></script>
-		<script src="../miscSolving/Directions.js"></script>
-		<script src="../Logs.js"></script>
-		
-		<script src="../LoopSolver/LoopEvent.js"></script>
-		<script src="../LoopSolver/CompoundLinkEvent.js"></script>
-		<script src="../LoopSolver/LoopSolver.js"></script>
-		<script src="../LoopSolver/Constants.js"></script>
-		<script src="../LoopSolver/drawing.js"></script>
-		<script src="SolverYajilin.js"></script>
-		<script src="constants.js"></script>
-		<script src="drawing.js"></script>
-		<script src="inputSolver.js"></script>
-		<script src="mainSolver.js"></script>
+		<script src="../Importation.js"></script>
+		<script>
+		"use strict";
+		window.onload = function() {
+			loadScriptsSolving();
+			loadScriptsGeneric();
+			loadScriptsLocal();
+			loadScriptsLoop();
+			loadMyScript("SolverYajilin.js");
+		} 
+		</script>
 	</body>
 </html>

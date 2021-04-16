@@ -4,8 +4,15 @@ function SolverHakyuu(p_wallArray, p_numberArray) {
 	this.construct(p_wallArray, p_numberArray);
 }
 
+DummySolver = function() {
+	return new SolverHakyuu(generateWallArray(1, 1), [[null]]);
+}
 SolverHakyuu.prototype = Object.create(GeneralSolver.prototype);
 SolverHakyuu.prototype.constructor = SolverHakyuu;
+
+function DummySolver() {
+	
+}
 
 SolverHakyuu.prototype.construct = function(p_wallArray, p_numberArray) {
 	this.generalConstruct();

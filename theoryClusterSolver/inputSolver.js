@@ -2,9 +2,9 @@
  When you click on the canvas
 */
 function clickCanvas(event, p_canvas, p_drawer, p_solver, p_actionsManager) { 
-	var spaceClicked = drawer.getClickSpace(event,p_canvas,p_solver.xLength,p_solver.yLength);
+	var spaceClicked = p_drawer.getClickSpace(event, p_canvas, p_solver.xLength, p_solver.yLength);
     if (spaceClicked != null){
-		clickSpaceAction(p_solver,spaceClicked.x,spaceClicked.y,p_actionsManager.clickSpace);
+		clickSpaceAction(p_solver, spaceClicked.x, spaceClicked.y, p_actionsManager.clickSpace);
 	}
 }
 

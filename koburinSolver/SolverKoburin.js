@@ -6,6 +6,10 @@ function SolverKoburin(p_symbolGrid) {
 SolverKoburin.prototype = Object.create(LoopSolver.prototype);
 SolverKoburin.prototype.constructor = SolverKoburin;
 
+function DummySolver() {
+	return new SolverKoburin(generateSymbolArray(1,1));
+}
+
 SolverKoburin.prototype.construct = function(p_numberGrid) {
     this.xLength = p_numberGrid[0].length;
 	this.yLength = p_numberGrid.length;

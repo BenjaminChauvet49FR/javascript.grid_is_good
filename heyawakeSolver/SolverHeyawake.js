@@ -14,6 +14,10 @@ function SolverHeyawake(p_wallArray, p_indications) {
 SolverHeyawake.prototype = Object.create(GeneralSolver.prototype);
 SolverHeyawake.prototype.constructor = SolverHeyawake;
 
+function DummySolver() {
+	return new SolverHeyawake(generateWallArray(1,1), []);
+}
+
 SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 	this.generalConstruct();
 	this.xLength = p_wallArray[0].length;

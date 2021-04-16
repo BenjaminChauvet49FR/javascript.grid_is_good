@@ -1,12 +1,11 @@
 var solver;
 function main() {
 	var drawer = new Drawer();
-	solver = new SolverYajikabe(generateSymbolArray(1, 1));
-	//TODO (dummy grid problem)
+	solver = DummySolver();
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
 
-	var actionsManager = {clickSpace : null}; 
+	var actionsManager = {}; 
 
 	var colors = {
 		openSquare:'#00ffcc',

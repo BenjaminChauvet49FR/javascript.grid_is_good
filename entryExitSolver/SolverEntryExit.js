@@ -6,6 +6,10 @@ function SolverEntryExit(p_wallArray) {
 SolverEntryExit.prototype = Object.create(RegionLoopSolver.prototype);
 SolverEntryExit.prototype.constructor = SolverEntryExit;
 
+function DummySolver() {
+	return new SolverEntryExit(generateWallArray(1,1));
+}
+
 SolverEntryExit.prototype.construct = function(p_wallArray) {
 	this.regionLoopSolverConstruct(p_wallArray, {		
 		PSQuickStart : quickStartClosure(this)

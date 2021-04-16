@@ -1,10 +1,9 @@
 function main() {
 	var drawer = new Drawer();
-	var solver = new SolverLITS(generateWallArray(1,1));
-	//TODO (dummy grid problem)
+	var solver = DummySolver();
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
-	var actionsManager = {clickSpace : null}; 
+	var actionsManager = {}; 
 	var drawIndications;
 
 	var colors={

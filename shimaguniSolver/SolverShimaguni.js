@@ -7,6 +7,10 @@ function SolverShimaguni(p_wallArray, p_indicationsRegions) {
 }
 
 SolverShimaguni.prototype = Object.create(GeneralSolver.prototype);
+DummySolver = function() {
+	return new SolverShimaguni(generateWallArray(1,1),[]);
+}
+
 SolverShimaguni.prototype.constructor = SolverShimaguni;
 
 SolverShimaguni.prototype.construct = function(p_wallArray, p_indicationsRegions) {

@@ -7,6 +7,10 @@ function SolverTheoryLoopRegion(p_wallArray) {
 
 SolverTheoryLoopRegion.prototype.constructor = SolverTheoryLoopRegion;
 
+function DummySolver() {
+	return new SolverTheoryLoopRegion(generateWallArray(1,1));
+}
+
 SolverTheoryLoopRegion.prototype.construct = function(p_wallArray) {
 	this.regionLoopSolverConstruct(p_wallArray, {});
 }

@@ -1,3 +1,4 @@
+var solver;
 function main() {
 	var colours={
 		closed_wall : '#222222',
@@ -15,10 +16,10 @@ function main() {
 	}
 
 	var drawer = new Drawer(colours);
-	var solver = new SolverCountryRoad(generateWallArray(1,1), []);
+	solver = new SolverCountryRoad(generateWallArray(1,1), []);
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
-	var actionsManager = {clickSpace : null}; 
+	var actionsManager = {}; 
 	var drawIndications;
 
 

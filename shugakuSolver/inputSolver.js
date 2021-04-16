@@ -2,15 +2,15 @@
  When you click on the canvas
 */
 function clickCanvas(event,p_canvas, p_drawer, p_solver, p_actionsManager) {
-	var clicked = drawer.getClickWallR(event,p_canvas,p_solver.xLength,p_solver.yLength);
+	var clicked = p_drawer.getClickWallR(event,p_canvas,p_solver.xLength,p_solver.yLength);
 	if (clicked != null) {
 		clickWallRAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickWallR);
 	} else {
-		clicked = drawer.getClickWallD(event,p_canvas,p_solver.xLength,p_solver.yLength);
+		clicked = p_drawer.getClickWallD(event,p_canvas,p_solver.xLength,p_solver.yLength);
 		if (clicked != null) {
 			clickWallDAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickWallD);
 		} else {
-			clicked = drawer.getClickSpace(event,p_canvas,p_solver.xLength,p_solver.yLength);
+			clicked = p_drawer.getClickSpace(event,p_canvas,p_solver.xLength,p_solver.yLength);
 			if (clicked != null) {
 				clickSpaceAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickSpace);
 			}

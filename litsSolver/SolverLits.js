@@ -14,6 +14,10 @@ function SolverLITS(p_wallArray) {
 SolverLITS.prototype = Object.create(GeneralSolver.prototype);
 SolverLITS.prototype.constructor = SolverLITS;
 
+function DummySolver() {
+	return new SolverLITS(generateWallArray(1, 1));
+}
+
 SolverLITS.prototype.construct = function(p_wallArray) {
 	this.generalConstruct();
 	this.xLength = p_wallArray[0].length;

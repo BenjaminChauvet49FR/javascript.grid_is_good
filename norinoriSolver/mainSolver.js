@@ -4,7 +4,7 @@ function main() {
 
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
-	var actionsManager = {clickSpace : null}; 
+	var actionsManager = {}; 
 	var drawIndications;
 
 	var colors={
@@ -18,8 +18,8 @@ function main() {
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas(){
-		drawer.drawWallGrid(context,solver.gridWall,solver.xLength,solver.yLength);
-		drawInsideSpaces(context,drawer,colors,solver);
+		drawer.drawWallGrid(context, solver.gridWall, solver.xLength, solver.yLength);
+		drawInsideSpaces(context, drawer, colors, solver);
 		if (document.getElementById("checkbox_drawIndications").checked){
 			drawInsideIndications(context,drawer,colors,solver);	
 		}

@@ -9,6 +9,10 @@ function SolverYajikabe(p_combinationArray) {
 SolverYajikabe.prototype = Object.create(GeneralSolver.prototype);
 SolverYajikabe.prototype.constructor = SolverYajikabe;
 
+function DummySolver() {
+	return new SolverYajikabe(generateSymbolArray(1, 1));
+}
+
 SolverYajikabe.prototype.construct = function(p_combinationArray) {
 	this.generalConstruct();
 	this.xLength = p_combinationArray[0].length;

@@ -39,10 +39,10 @@ loadScriptsGeneric = loadScriptsClosure(["../WallGrid.js", "../Grid.js",
 loadScriptsLocal = loadScriptsClosure(["drawing.js", "mainSolver.js", "inputSolver.js"]);
 loadScriptsLoop = loadScriptsClosure(["../LoopSolver/drawing.js", "../LoopSolver/LoopEvent.js", "../LoopSolver/CompoundLinkEvent.js", "../LoopSolver/LoopSolver.js", "../LoopSolver/Constants.js"]);
 loadScriptsAdjacency = loadScriptsClosure(["../miscSolving/AdjacencyCheck.js", "../miscSolving/AdjacencyLimit.js", "../miscSolving/GeographicalSolver.js"]);
-function loadScriptCheckCollection() {
-	loadMyScript("../miscSolving/CheckCollection.js");
-}
-function loadScriptConstants() {
-	loadMyScript("../miscSolving/Constants.js");
-}
+
+function loadScriptCheckCollection() { loadMyScript("../miscSolving/CheckCollection.js"); } // For filters 
+function loadScriptConstants() { loadMyScript("../miscSolving/Constants.js"); }
+function loadScriptFences() { loadMyScript("../miscSolving/Fences.js"); }
+function loadScriptSpacesSelection() { loadMyScript("../miscSolving/SpaceNumeric.js"); }
+
 loadScriptsLoopRegion = loadScriptsClosure(["../LoopSolver/RegionLoopSolver.js", "../LoopSolver/RegionJunctionEvent.js"]);

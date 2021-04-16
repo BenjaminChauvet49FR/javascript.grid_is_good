@@ -1,16 +1,19 @@
 const NOT_FORCED = -1;
 
 // Setup
-
-function SolverFILLING(p_wallArray, p_indications) {
+function SolverChocona(p_wallArray, p_indications) {
 	GeneralSolver.call(this);
 	this.construct(p_wallArray, p_indications);
 }
 
-SolverFILLING.prototype = Object.create(GeneralSolver.prototype);
-SolverFILLING.prototype.constructor = SolverFILLING;
+function DummySolver() {	
+	return new SolverChocona(generateWallArray(1, 1), []);
+}
 
-SolverFILLING.prototype.construct = function(p_wallArray, p_indications) {
+SolverChocona.prototype = Object.create(GeneralSolver.prototype);
+SolverChocona.prototype.constructor = SolverChocona;
+
+SolverChocona.prototype.construct = function(p_wallArray, p_indications) {
 	this.generalConstruct();
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
@@ -95,47 +98,47 @@ SolverFILLING.prototype.construct = function(p_wallArray, p_indications) {
 //--------------------------------
 
 // Misc methods (may be used for drawing and intelligence)
-SolverFILLING.prototype.getAnswer = function(p_x,p_y) {
+SolverChocona.prototype.getAnswer = function(p_x,p_y) {
 	return this.answerGrid[p_y][p_x];
 }
 
-SolverFILLING.prototype.getForcedValue = function(p_ir) {
+SolverChocona.prototype.getForcedValue = function(p_ir) {
 	return this.regions[p_ir].forcedValue;
 }
 
-SolverFILLING.prototype.getFirstSpaceRegion = function(p_ir) {
+SolverChocona.prototype.getFirstSpaceRegion = function(p_ir) {
 	return this.regions[p_ir].spaces[0];
 }
 
-SolverFILLING.prototype.getRegionIndex = function(p_x, p_y) {
+SolverChocona.prototype.getRegionIndex = function(p_x, p_y) {
 	return this.regionArray[p_y][p_x];
 }
 
-SolverFILLING.prototype.getRegion = function(p_x, p_y) {
+SolverChocona.prototype.getRegion = function(p_x, p_y) {
 	return this.regions[this.getRegionIndex(p_x, p_y)];
 }
 
 //--------------------------------
 
 // Input methods
-SolverFILLING.prototype.emitHypothesis = function(p_x,p_y,p_symbol) {
+SolverChocona.prototype.emitHypothesis = function(p_x,p_y,p_symbol) {
 	this.tryToPutNew(p_x,p_y,p_symbol);
 }
 
-SolverFILLING.prototype.undo = function(){
+SolverChocona.prototype.undo = function(){
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverFILLING.prototype.passRegion = function(p_indexRegion) {
+SolverChocona.prototype.passRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
 	this.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion); 
 }
 
-SolverFILLING.prototype.makeMultiPass = function() {	
+SolverChocona.prototype.makeMultiPass = function() {	
 	this.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
 }
 
-SolverFILLING.prototype.quickStart = function() {
+SolverChocona.prototype.quickStart = function() {
 	this.initiateQuickStart();
 	var quickStartList = [];
 	for (ir = 0; ir < this.regions.length ; ir ++) {
@@ -151,7 +154,7 @@ SolverFILLING.prototype.quickStart = function() {
 //--------------------------------
 
 // Central method
-SolverFILLING.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
+SolverChocona.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
 	methodPack = new ApplyEventMethodPack(
@@ -165,7 +168,7 @@ SolverFILLING.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 //--------------------------------
 
 // Doing and undoing
-SolverFILLING.prototype.putNew = function(p_x,p_y,p_symbol){
+SolverChocona.prototype.putNew = function(p_x,p_y,p_symbol){
 	if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerGrid[p_y][p_x] == p_symbol)){
 		return EVENT_RESULT.HARMLESS;
 	}
@@ -241,7 +244,7 @@ deductionsClosure = function (p_solver) {
 }
 
 // The alert on region "when the remaining spaces of a region must be closed/open to reach the numbers"
-SolverFILLING.prototype.alertRegionIfFullYESs = function(p_listEvents, p_indexRegion) {
+SolverChocona.prototype.alertRegionIfFullYESs = function(p_listEvents, p_indexRegion) {
 	const region = this.regions[p_indexRegion];
 	if (region.notPlacedYet) {
 		return this.alertRegion(p_listEvents, region ,FILLING.NO, region.notPlacedYet.YESs, region.notPlacedYet.NOs);
@@ -250,7 +253,7 @@ SolverFILLING.prototype.alertRegionIfFullYESs = function(p_listEvents, p_indexRe
 	}
 }
 
-SolverFILLING.prototype.alertRegionIfFullNOs = function(p_listEvents, p_indexRegion) {
+SolverChocona.prototype.alertRegionIfFullNOs = function(p_listEvents, p_indexRegion) {
 	const region = this.regions[p_indexRegion];
 	if (region.notPlacedYet) {
 		return this.alertRegion(p_listEvents, region ,FILLING.YES, region.notPlacedYet.NOs, region.notPlacedYet.YESs);
@@ -259,7 +262,7 @@ SolverFILLING.prototype.alertRegionIfFullNOs = function(p_listEvents, p_indexReg
 	}
 }
 
-SolverFILLING.prototype.alertRegion = function(p_listEvents, p_region, p_missingSymbol, p_testZeroNumber, p_missingNumber) {
+SolverChocona.prototype.alertRegion = function(p_listEvents, p_region, p_missingSymbol, p_testZeroNumber, p_missingNumber) {
 	if (p_testZeroNumber == 0) {
 		var xa,ya,alertSpace;
 		var remaining = p_missingNumber
@@ -280,7 +283,7 @@ SolverFILLING.prototype.alertRegion = function(p_listEvents, p_region, p_missing
 }
 
 // for a space, test all 8 spaces around it if a 2x2 square is entirely defined
-SolverFILLING.prototype.closeSquares = function(p_listEvents, p_x, p_y) {
+SolverChocona.prototype.closeSquares = function(p_listEvents, p_x, p_y) {
 	const DeltaXCircle = [-1,0,1,1,1,0,-1,-1];
 	const DeltaYCircle = [-1,-1,-1,0,1,1,1,0];
 	for(var i = 0; i <= 7 ; i++) {
@@ -289,7 +292,7 @@ SolverFILLING.prototype.closeSquares = function(p_listEvents, p_x, p_y) {
 	return p_listEvents; 
 }
 
-SolverFILLING.prototype.testLastUndecided2x2 = function(p_listEvents, p_x, p_y) {
+SolverChocona.prototype.testLastUndecided2x2 = function(p_listEvents, p_x, p_y) {
 	if (this.spaceExists(p_x, p_y) && this.getAnswer(p_x, p_y) == FILLING.UNDECIDED) {
 		const notExtremeLeft = (this.leftExists(p_x));
 		const notExtremeRight = (this.rightExists(p_x));
@@ -335,7 +338,7 @@ SolverFILLING.prototype.testLastUndecided2x2 = function(p_listEvents, p_x, p_y) 
 }
 
 // Tests how should be filled the last square (x2, y2) in a 2x2 square from the remaining 3 ones (x1y1, x1y2, x2y1) (all 4 squares exist in the grid - the x2, y2 is in an unknown state)
-SolverFILLING.prototype.conclusionLastUndecided2x2 = function(p_x1, p_y1, p_x2, p_y2) {
+SolverChocona.prototype.conclusionLastUndecided2x2 = function(p_x1, p_y1, p_x2, p_y2) {
 	var count = 0;
 	var atLeastOneUndecided = false; 
 	var space1 = this.answerGrid[p_y1][p_x1];
@@ -362,19 +365,19 @@ SolverFILLING.prototype.conclusionLastUndecided2x2 = function(p_x1, p_y1, p_x2, 
 
 
 // Methods for safety check
-SolverFILLING.prototype.leftExists = function(p_x) {
+SolverChocona.prototype.leftExists = function(p_x) {
 	return p_x > 0;
 }
-SolverFILLING.prototype.upExists = function(p_y) {
+SolverChocona.prototype.upExists = function(p_y) {
 	return p_y > 0;
 }
-SolverFILLING.prototype.rightExists = function(p_x) {
+SolverChocona.prototype.rightExists = function(p_x) {
 	return p_x <= this.xLength-2;
 }
-SolverFILLING.prototype.downExists = function(p_y) {
+SolverChocona.prototype.downExists = function(p_y) {
 	return p_y <= this.yLength-2;
 }
-SolverFILLING.prototype.spaceExists = function(p_x, p_y) {
+SolverChocona.prototype.spaceExists = function(p_x, p_y) {
 	return (p_x >= 0 && p_y >= 0 && p_x < this.xLength && p_y < this.yLength);
 }
 
@@ -382,7 +385,7 @@ SolverFILLING.prototype.spaceExists = function(p_x, p_y) {
 // Passing
 
 // Generate covering events for "region pass".
-SolverFILLING.prototype.generateEventsForRegionPass = function(p_indexRegion) {
+SolverChocona.prototype.generateEventsForRegionPass = function(p_indexRegion) {
 	var eventList = [];
 	this.regions[p_indexRegion].spaces.forEach(space => {
 		if (this.answerGrid[space.y][space.x] == FILLING.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
@@ -456,7 +459,7 @@ orderedListPassArgumentsClosure = function(p_solver) { // I don't dare to factor
 	}
 }
 
-SolverFILLING.prototype.uncertainity = function(p_ir) {
+SolverChocona.prototype.uncertainity = function(p_ir) {
 	// "yes among total" is a definitive choice here ! By the way, only numbered regions are concerned.
 	const nos = this.regions[p_ir].notPlacedYet.NOs;
 	const yess = this.regions[p_ir].notPlacedYet.YESs;

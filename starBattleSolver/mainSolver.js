@@ -1,11 +1,11 @@
 function main() {
 	var drawer = new Drawer();
 	var solver = new SolverStarBattle(generateWallArray(1,1),1);
-	//TODO (of course the grid (1,1) is a dummy grid, but at least it has as much rows as columns as regions
+	//TODO (of course the grid (1,1) is a dummy grid, but at least it has as many rows as columns as regions
 	var canevasInteraction = document.getElementById("canevas");
 	var	context = canevasInteraction.getContext("2d");
 	//var canevasListActions = document.getElementById("canevas_list_actions"); TODO
-	var actionsManager  = {clickSpace : null};
+	var actionsManager  = {};
 	var drawIndications;
 
 	var colors={

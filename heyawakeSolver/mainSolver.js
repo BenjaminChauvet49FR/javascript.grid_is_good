@@ -1,11 +1,10 @@
 function main() {
 	var drawer = new Drawer();
-	var solver = new SolverHeyawake(generateWallArray(1,1), []);
-	//TODO (dummy grid problem)
+	var solver = DummySolver();
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
 
-	var actionsManager = {clickSpace : null}; 
+	var actionsManager = {}; 
 
 	var colors= {
 		openSquare:'#00ffcc',

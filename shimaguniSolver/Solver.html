@@ -32,26 +32,18 @@
 		
         Afficher données : <input type="checkbox" id="checkbox_drawIndications" value="false"></span></br>		
 		
-		<script src="../commonActionManager.js"></script>
-		<script src="../Drawer.js"></script>
-		<script src="../WallGrid.js"></script>
-		<script src="../Grid.js"></script>
-		<script src="../commonInput.js"></script>
-		<script src="../CommonHTMLMenu.js"></script>
-		<script src="../commonSaveAndLoad.js"></script>
-		<script src="../commonEncodingDecoding.js"></script>		
-		<script src="../DrawableItem.js"></script>
-		
-		<script src="../miscSolving/GeneralSolver.js"></script>
-		<script src="../miscSolving/SolvingMethodPacks.js"></script>
-		<script src="../miscSolving/Directions.js"></script>
-		<script src="../miscSolving/Constants.js"></script>
-		<script src="../Logs.js"></script>
-		
-		<script src="SolveEvent.js"></script>
-		<script src="SolverShimaguni.js"></script>
-		<script src="drawing.js"></script>
-		<script src="inputSolver.js"></script>
-		<script src="mainSolver.js"></script>
+				<script src="../Importation.js"></script>
+		<script>
+		"use strict";
+		window.onload = function() {
+			loadScriptsSolving();
+			loadScriptsGeneric();
+			loadScriptsLocal();
+			loadScriptConstants();
+			loadScriptCheckCollection();
+			loadMyScript("SolveEvent.js");
+			loadMyScript("SolverShimaguni.js");
+		} 
+		</script>
 	</body>
 </html>

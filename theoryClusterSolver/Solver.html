@@ -31,28 +31,17 @@
 		<input type="submit" id="submit_discard_hypotheses" value="Effacer déductions artificielles"></input></br>	
 		<input type="submit" id="submit_undo" value="Annuler"></input></br>	
 		
-		<script src="../commonActionManager.js"></script>
-		<script src="../Drawer.js"></script>
-		<script src="../WallGrid.js"></script>
-		<script src="../Grid.js"></script>
-		<script src="../commonInput.js"></script>
-		<script src="../commonEncodingDecoding.js"></script>
-		<script src="../commonSaveAndLoad.js"></script>
-		<script src="../CommonHTMLMenu.js"></script>
-		<script src="../DrawableItem.js"></script>
-		
-		<script src="../miscSolving/Directions.js"></script>
-		<script src="../miscSolving/AdjacencyCheck.js"></script>
-		<script src="../miscSolving/AdjacencyLimit.js"></script>
-		<script src="../miscSolving/GeneralSolver.js"></script>
-		<script src="../miscSolving/GeographicalSolver.js"></script>
-		<script src="../miscSolving/SolvingMethodPacks.js"></script>
-		<script src="../Logs.js"></script>
-		
-		<script src="SolverTheoryCluster.js"></script>
-		<script src="SolveEvent.js"></script>
-		<script src="drawing.js"></script>
-		<script src="inputSolver.js"></script>
-		<script src="mainSolver.js"></script>
+		<script src="../Importation.js"></script>
+		<script>
+		"use strict";
+		window.onload = function() {
+			loadScriptsSolving();
+			loadScriptsGeneric();
+			loadScriptsLocal();
+			loadScriptsAdjacency();
+			loadMyScript("SolveEvent.js");
+			loadMyScript("SolverTheoryCluster.js");
+		} 
+		</script>
 	</body>
 </html>

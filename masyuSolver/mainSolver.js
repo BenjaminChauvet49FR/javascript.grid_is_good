@@ -17,7 +17,7 @@ function main() {
 	var solver = new SolverMasyu(generateSymbolArray(1,1));
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
-	var actionsManager = {clickSpace : null}; 
+	var actionsManager = {}; 
 	var drawIndications;
 
 	//--------------------

@@ -7,6 +7,10 @@ function SolverTheoryLoop(p_symbolGrid) {
 
 SolverTheoryLoop.prototype.constructor = SolverTheoryLoop;
 
+function DummySolver() {
+	return new SolverTheoryLoop(generateWallArray(1, 1));
+}
+
 SolverTheoryLoop.prototype.construct = function(p_symbolGrid) {
 	this.loopSolverConstruct(generateWallArray(p_symbolGrid.length, p_symbolGrid[0].length), {});
 }

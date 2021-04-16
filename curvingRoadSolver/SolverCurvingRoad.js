@@ -15,6 +15,10 @@ function SolverCurvingRoad(p_wallArray, p_symbolArray) {
 SolverCurvingRoad.prototype = Object.create(GeneralSolver.prototype);
 SolverCurvingRoad.prototype.constructor = SolverCurvingRoad;
 
+function DummySolver() {
+	new SolverCurvingRoad(generateWallArray(1, 1),generateSymbolArray(1, 1));
+}
+
 SolverCurvingRoad.prototype.construct = function (p_wallArray, p_symbolArray) {
 	this.generalConstruct();
     this.xLength = p_symbolArray[0].length;
