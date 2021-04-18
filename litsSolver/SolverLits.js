@@ -1,7 +1,5 @@
 // Setup
 
-const NOT_FORCED = -1; 
-const NOT_RELEVANT = -1;
 // const SPACE is used in the dad solver
 
 function SolverLITS(p_wallArray) {
@@ -111,18 +109,15 @@ SolverLITS.prototype.construct = function(p_wallArray) {
 		region.spaces.forEach(space => {
 			x = space.x;
 			y = space.y;
-			if (this.leftExists(x) && addedSpacesNeighborToRegion.add(x-1, y) && !this.isBanned(x-1, y) && (this.getRegionIndex(x-1, y) != ir)) { //TODO a "direction factorization" sure is necessary.
-				region.neighborSpaces.push({x : x-1, y : y});
-			}
-			if (this.upExists(y) && addedSpacesNeighborToRegion.add(x, y-1) && !this.isBanned(x, y-1) && (this.getRegionIndex(x, y-1) != ir)) {
-				region.neighborSpaces.push({x : x, y : y-1});
-			}
-			if (this.rightExists(x) && addedSpacesNeighborToRegion.add(x+1, y) && !this.isBanned(x+1, y) && (this.getRegionIndex(x+1, y) != ir)) {
-				region.neighborSpaces.push({x : x+1, y : y});
-			}
-			if (this.downExists(y) && addedSpacesNeighborToRegion.add(x, y+1) && !this.isBanned(x, y+1) && (this.getRegionIndex(x, y+1) != ir)) {
-				region.neighborSpaces.push({x : x, y : y+1});
-			}
+			KnownDirections.forEach(dir => {
+				if (this.neighborExists(x, y, dir)) {
+					dx = x + DeltaX[dir];
+					dy = y + DeltaY[dir];
+					if ((addedSpacesNeighborToRegion.add(dx, dy)) && (!this.isBanned(dx, dy)) && ((this.getRegionIndex(dx, dy) != ir))) {
+						region.neighborSpaces.push({x : dx, y : dy});
+					}
+				}
+			});
 		});
 		addedSpacesNeighborToRegion.clean();
 	}
@@ -131,11 +126,11 @@ SolverLITS.prototype.construct = function(p_wallArray) {
 //--------------------------------
 
 // Misc methods (may be used for drawing and intelligence)
-SolverLITS.prototype.getAnswer = function(p_x,p_y){
+SolverLITS.prototype.getAnswer = function(p_x, p_y) {
 	return this.answerArray[p_y][p_x];
 }
 
-SolverLITS.prototype.getShape = function(p_x,p_y){
+SolverLITS.prototype.getShape = function(p_x, p_y) {
 	return this.shapeArray[p_y][p_x];
 }
 
@@ -177,7 +172,7 @@ SolverLITS.prototype.undo = function() {
 SolverLITS.prototype.quickStart = function() { 
 	this.initiateQuickStart();
 	this.regions.forEach(region => {
-		if (region.size == 4){
+		if (region.size == 4) {
 			for (var i = 0; i <= 3 ; i++) {
 				this.tryToPutNew(region.spaces[i].x, region.spaces[i].y, SPACE.OPEN);
 			}
@@ -195,55 +190,6 @@ SolverLITS.prototype.passRegionAndAdjacentSpaces = function(p_indexRegion) {
 	});
 	this.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion); 
 }
-
-/*SolverLITS.prototype.passRegionAndAdjacents = function(p_indexRegion) {
-	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	var alreadyAddedRegions = [];
-	var addedRegions = [];
-	var x,y,otherIR;
-	for (var i = 0; i < this.regions.size; i++) {
-		alreadyAddedRegions.push(false);
-	}
-	this.regions[p_indexRegion].spaces.forEach(space => {
-		x = space.x;
-		y = space.y;
-		if (x > 0) {
-			otherIR = this.regionArray[y][x-1];
-			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
-				alreadyAddedRegions[otherIR] = true;
-				addedRegions.push(otherIR);
-			}
-		}
-		if (x <= this.xLength-2) {
-			otherIR = this.regionArray[y][x+1];
-			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
-				alreadyAddedRegions[otherIR] = true;
-				addedRegions.push(otherIR);
-			}
-		}
-		if (y > 0) {
-			otherIR = this.regionArray[y-1][x];
-			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
-				alreadyAddedRegions[otherIR] = true;
-				addedRegions.push(otherIR);
-			}
-		}
-		if (y <= this.yLength-2) {
-			otherIR = this.regionArray[y+1][x];
-			if (otherIR != p_indexRegion && !alreadyAddedRegions[otherIR]) {
-				alreadyAddedRegions[otherIR] = true;
-				addedRegions.push(otherIR);
-			}
-		}
-	});
-	 
-	addedRegions.forEach(ir => {
-		var newList = this.generateEventsForRegionPass(ir);
-		Array.prototype.push.apply(generatedEvents, newList);
-	});
-	
-	this.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion); 
-} */
 
 SolverLITS.prototype.passRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
@@ -291,7 +237,7 @@ applyEventClosure = function(p_solver) {
 }
 
 SolverLITS.prototype.putNew = function(p_x,p_y,p_symbol){
-	if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerArray[p_y][p_x] == p_symbol)){
+	if (this.answerArray[p_y][p_x] == p_symbol) {
 		return EVENT_RESULT.HARMLESS;
 	}
 	if (this.answerArray[p_y][p_x] != SPACE.UNDECIDED) {
@@ -309,7 +255,7 @@ SolverLITS.prototype.putNew = function(p_x,p_y,p_symbol){
 }
 
 SolverLITS.prototype.putShape = function(p_x, p_y, p_shape) {
-	if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) ||  (this.answerArray[p_y][p_x] == SPACE.CLOSED) || (this.shapeArray[p_y][p_x] == p_shape)) { // this.answerArray added after.
+	if ((this.answerArray[p_y][p_x] == SPACE.CLOSED) || (this.shapeArray[p_y][p_x] == p_shape)) { // this.answerArray added after.
 		return EVENT_RESULT.HARMLESS;
 	}
 	if (this.shapeArray[p_y][p_x] != LITS.UNDECIDED) { // It's VERY important to recall the meaning of this grid. This is the grid of "if the space is open, then it should contain this shape" shapes, not the grid of "this space must absolutely contain this shape" ! Like this, it could lead to the region 8 in puzzle LITS54 having a L-related space (in pink as I write this) in its bottom-left corner (deductible by a specific pass) despite that space being impossible to open (deductible by another specific pass)
@@ -381,17 +327,7 @@ transformClosure = function (p_solver) {
 
 adjacencyClosure = function (p_solver) {
     return function (p_x, p_y) {
-        switch (p_solver.answerArray[p_y][p_x]) {
-        case SPACE.OPEN:
-            return ADJACENCY.YES;
-            break;
-        case SPACE.CLOSED:
-            return ADJACENCY.NO;
-            break;
-        default:
-            return ADJACENCY.UNDEFINED;
-            break;
-        }
+        return standardSpaceOpeningToAdjacencyConversion(p_solver.answerArray[p_y][p_x]);
     }
 }
 
@@ -465,15 +401,14 @@ deductionsClosure = function (p_solver) {
 			if (p_solver.answerArray[y][x] == SPACE.OPEN) {
 				p_listEventsToApply = p_solver.closeUpTo4NeighborsOrNotSameShapeWhileOpen(p_listEventsToApply, x, y, ir, shape);
 				p_listEventsToApply.push(new ShapeRegionEvent(ir, shape));
-			} else if ((p_solver.leftExists(x) && (p_solver.answerArray[y][x-1] == SPACE.OPEN) && p_solver.sameShapesNeighbors(x-1, y, ir, shape) ) ||
-				(p_solver.upExists(y) && (p_solver.answerArray[y-1][x] == SPACE.OPEN) && p_solver.sameShapesNeighbors(x, y-1, ir, shape)) ||
-				(p_solver.rightExists(x) && (p_solver.answerArray[y][x+1] == SPACE.OPEN) && p_solver.sameShapesNeighbors(x+1, y, ir, shape)) ||
-				(p_solver.downExists(y) && (p_solver.answerArray[y+1][x] == SPACE.OPEN) && p_solver.sameShapesNeighbors(x, y+1, ir, shape)) || 
-				p_solver.shapeArray[y][x] != shape) {
-					 // Close this space in either of these cases : 
-					 //-there was already a different shape in this space (famous event that never happened) (if the space was open it would already have been spotted in the application part and failed)
-					 //-there is already an adjacent space that is accross a border, that is open, and with the same shape 
-				p_listEventsToApply.push(new SpaceEvent(x, y, SPACE.CLOSED));
+			} else {
+				var ok = true;
+				KnownDirections.forEach(dir => {
+					ok &= (p_solver.neighborExists(x, y, dir)) && (p_solver.answerArray[y + DeltaY[dir]][x + DeltaX[dir]] == SPACE.OPEN) && p_solver.sameShapesNeighbors(x + DeltaX[dir], y + DeltaY[dir]);
+				});
+				if (ok) {
+					p_listEventsToApply.push(new SpaceEvent(x, y, SPACE.CLOSED));
+				}
 			}
 		}
 		return p_listEventsToApply;
@@ -507,42 +442,23 @@ SolverLITS.prototype.alertRegion = function(p_listEvents,p_regionIndex,p_missing
 // Fill "open gaps", eg if 2 spaces in the same region are open and in the same row/column with 1 space in-between, that space must be filled.
 // Note : this assumes the fact that the space in-between automatically belongs to the region. If the discrimination of unreachables has been correctly performed, a situation where the space in-between doesn't belong to the region shouldn't exist.
 SolverLITS.prototype.fillOpenGaps = function(p_listEventsToApply, p_x, p_y, p_ir) {
-	if (p_x >= 2) {
-		p_listEventsToApply = this.fillOpenGapOrNot(p_listEventsToApply, p_x, p_y, -1, 0, p_ir);
-	}
-	if (p_y >= 2) {
-		p_listEventsToApply = this.fillOpenGapOrNot(p_listEventsToApply, p_x, p_y, 0, -1, p_ir);
-	}
-	if (p_x <= this.xLength-3) {
-		p_listEventsToApply = this.fillOpenGapOrNot(p_listEventsToApply, p_x, p_y, 1, 0, p_ir);
-	}
-	if (p_y <= this.yLength-3) {
-		p_listEventsToApply = this.fillOpenGapOrNot(p_listEventsToApply, p_x, p_y, 0, 1, p_ir);
-	}
-	return p_listEventsToApply;
-}
-
-SolverLITS.prototype.fillOpenGapOrNot = function(p_listEventsToApply, p_x, p_y, p_DeltaX, p_DeltaY, p_indexRegion) {
-	if ((this.regionArray[p_y + p_DeltaY * 2][p_x + p_DeltaX * 2] == p_indexRegion) && (this.answerArray[p_y + p_DeltaY * 2][p_x + p_DeltaX * 2] == SPACE.OPEN)) {
-		p_listEventsToApply.push(new SpaceEvent(p_x + p_DeltaX ,p_y + p_DeltaY ,SPACE.OPEN));
-	}
+	KnownDirections.forEach (dir => {
+		if (this.distantNeighborExists(p_listEventsToApply, p_x, p_y, 2, dir) && 
+		(this.regionArray[p_y + DeltaY[dir] * 2][p_x + DeltaX[dir] * 2] == p_indexRegion) && 
+		(this.answerArray[p_y + DeltaY[dir] * 2][p_x + DeltaX[dir] * 2] == SPACE.OPEN)) {
+			p_listEventsToApply.push(new SpaceEvent(p_x + DeltaX[dir] ,p_y + DeltaY[dir] ,SPACE.OPEN));
+		}
+	});
 	return p_listEventsToApply;
 }
 
 // Potentially close all 4 spaces (but not the space itself) as the space p_x, p_y is open
 SolverLITS.prototype.closeUpTo4NeighborsOrNotSameShapeWhileOpen = function (p_listEventsToApply, p_x, p_y, p_ir, p_shape) {
-	if (p_x > 0) {
-		p_listEventsToApply = this.closeNeighborSpaceOrNotSameShape(p_listEventsToApply, p_x-1, p_y, p_ir, p_shape);
-	}
-	if (p_y > 0) {
-		p_listEventsToApply = this.closeNeighborSpaceOrNotSameShape(p_listEventsToApply, p_x, p_y-1, p_ir, p_shape);
-	}
-	if (p_x <= this.xLength - 2) {
-		p_listEventsToApply = this.closeNeighborSpaceOrNotSameShape(p_listEventsToApply, p_x+1, p_y, p_ir, p_shape);
-	}
-	if (p_y <= this.yLength - 2) {
-		p_listEventsToApply = this.closeNeighborSpaceOrNotSameShape(p_listEventsToApply, p_x, p_y+1, p_ir, p_shape);
-	}
+	KnownDirections.forEach(dir => {
+		if (this.neighborExists(p_x, p_y, dir)) {
+			p_listEventsToApply = this.closeNeighborSpaceOrNotSameShape(p_listEventsToApply, p_x + DeltaX[dir], p_y + DeltaY[dir], p_ir, p_shape);
+		}
+	});
 	return p_listEventsToApply;
 }
 
@@ -576,7 +492,6 @@ SolverLITS.prototype.cleanDeclarations1or2Open = function() {
 // Since it is a filter it must return FAILURE or a list of deducted events
 SolverLITS.prototype.applyDeclarations3or4open = function() {
 	var eventsList = [];
-		//this.checker3or4Open.list.forEach( indexRegion => { // Well, this was a ".forEach( indexRegion => {...} ) " but this contained a "return ..." 
 
 	for (var i = 0 ; i < this.checker3or4Open.list.length ; i++) {
 		indexRegion = this.checker3or4Open.list[i];
@@ -604,66 +519,58 @@ SolverLITS.prototype.eventsTetrominoIdentification = function(p_eventsList, p_in
 	if (this.isOpenInRegionAtRight(x1+1, y1, p_indexRegion)) { //10
 		if (this.isOpenInRegionAtRight(x1+2, y1, p_indexRegion)) { //10 20
 			if (this.isOpenInRegionAtRight(x1+3, y1, p_indexRegion)) {
-				shape = LITS.I;//eventsList.push(new ShapeRegionEvent(p_indexRegion, LITS.L));//eventsList = shape4(x1, y1, 1, 0, 2, 0, 3, 0, LITS.I);
+				shape = LITS.I; //eventsList = shape4(x1, y1, 1, 0, 2, 0, 3, 0, LITS.I);
 			} else if (y1 <= this.yLength-2) {
 				if (this.isOpenInRegion(x1+2, y1+1, p_indexRegion)) {
-					shape = LITS.L;//eventsList = shape4(x1, y1, 1, 0, 2, 0, 2, 1, LITS.L);
+					shape = LITS.L; //eventsList = shape4(x1, y1, 1, 0, 2, 0, 2, 1, LITS.L);
 				} else if (this.isOpenInRegion(x1+1, y1+1, p_indexRegion)) {
-					shape = LITS.T;//eventsList = shape4(x1, y1, 1, 0, 2, 0, 1, 1, LITS.T);
+					shape = LITS.T; //eventsList = shape4(x1, y1, 1, 0, 2, 0, 1, 1, LITS.T);
 				} else if (this.isOpenInRegion(x1, y1+1, p_indexRegion)) {
-					shape = LITS.L;//eventsList = shape4(x1, y1, 1, 0, 2, 0, 0, 1, LITS.L);
+					shape = LITS.L; //eventsList = shape4(x1, y1, 1, 0, 2, 0, 0, 1, LITS.L);
 				} 
 			}
 		} else if (this.isOpenInRegionAtDown(x1+1, y1+1, p_indexRegion)) { //10 11
 			if (this.isOpenInRegionAtRight(x1+2, y1+1, p_indexRegion)) {
-				shape = LITS.S;//eventsList = shape4(x1, y1, 1, 0, 1, 1, 2, 1, LITS.S);
+				shape = LITS.S; //eventsList = shape4(x1, y1, 1, 0, 1, 1, 2, 1, LITS.S);
 			} else if (this.isOpenInRegionAtDown(x1+1, y1+2, p_indexRegion)) {
-				shape = LITS.L;//eventsList = shape4(x1, y1, 1, 0, 1, 1, 1, 2, LITS.L);
+				shape = LITS.L; //eventsList = shape4(x1, y1, 1, 0, 1, 1, 1, 2, LITS.L);
 			} 
 		} else if (this.isOpenInRegionAtDown(x1, y1+1, p_indexRegion)) {// 10 01
 			if (this.isOpenInRegionAtDown(x1, y1+2, p_indexRegion)) {
-				shape = LITS.L;//eventsList = shape4(x1, y1, 1, 0, 0, 1, 0, 2, LITS.L);
+				shape = LITS.L; //eventsList = shape4(x1, y1, 1, 0, 0, 1, 0, 2, LITS.L);
 			} else if (this.isOpenInRegionAtLeft(x1-1, y1+1, p_indexRegion)) {
-				shape = LITS.S;//eventsList = shape4(x1, y1, 1, 0, 0, 1, -1, 1, LITS.S);
+				shape = LITS.S; //eventsList = shape4(x1, y1, 1, 0, 0, 1, -1, 1, LITS.S);
 			}
 		}
 	} else if (this.isOpenInRegionAtDown(x1, y1+1, p_indexRegion)) { // 01
 		if (this.isOpenInRegionAtRight(x1+1, y1+1, p_indexRegion)) { // 01 11
 			if (this.isOpenInRegionAtRight(x1+2, y1+1, p_indexRegion)) {
-				shape = LITS.L;//eventsList = shape4(x1, y1, 0, 1, 1, 1, 2, 1, LITS.L);
+				shape = LITS.L; //eventsList = shape4(x1, y1, 0, 1, 1, 1, 2, 1, LITS.L);
 			} else if (this.isOpenInRegionAtDown(x1+1, y1+2, p_indexRegion)) { //TODO factoriser avec ci-dessous
-				shape = LITS.S;//eventsList = shape4(x1, y1, 0, 1, 1, 1, 1, 2, LITS.S);
+				shape = LITS.S; //eventsList = shape4(x1, y1, 0, 1, 1, 1, 1, 2, LITS.S);
 			} else if (this.isOpenInRegionAtDown(x1, y1+2, p_indexRegion)) {
-				shape = LITS.T;//eventsList = shape4(x1, y1, 0, 1, 1, 1, 0, 2, LITS.T);
+				shape = LITS.T; //eventsList = shape4(x1, y1, 0, 1, 1, 1, 0, 2, LITS.T);
 			} else if (this.isOpenInRegionAtLeft(x1-1, y1+1, p_indexRegion)) {
-				shape = LITS.T;//eventsList = shape4(x1, y1, 0, 1, 1, 1, -1, 1, LITS.T);
+				shape = LITS.T; //eventsList = shape4(x1, y1, 0, 1, 1, 1, -1, 1, LITS.T);
 			}
 		} else if (this.isOpenInRegionAtDown(x1, y1+2, p_indexRegion)) { // 01 02
 			if (this.isOpenInRegionAtRight(x1+1, y1+2, p_indexRegion)) {
-				shape = LITS.L;//eventsList = shape4(x1, y1, 0, 1, 0, 2, 1, 2, LITS.L);
+				shape = LITS.L; //eventsList = shape4(x1, y1, 0, 1, 0, 2, 1, 2, LITS.L);
 			} else if (this.isOpenInRegionAtDown(x1, y1+3, p_indexRegion)) {
-				shape = LITS.I;//eventsList = shape4(x1, y1, 0, 1, 0, 2, 0, 3, LITS.I);
+				shape = LITS.I; //eventsList = shape4(x1, y1, 0, 1, 0, 2, 0, 3, LITS.I);
 			} else if (this.isOpenInRegionAtLeft(x1-1, y1+2, p_indexRegion)) { // TODO factoriser avec ci-dessous
-				shape = LITS.L;//eventsList = shape4(x1, y1, 0, 1, 0, 2, -1, 2, LITS.L);
+				shape = LITS.L; //eventsList = shape4(x1, y1, 0, 1, 0, 2, -1, 2, LITS.L);
 			}  else if (this.isOpenInRegionAtLeft(x1-1, y1+1, p_indexRegion)) {
-				shape = LITS.T;//eventsList = shape4(x1, y1, 0, 1, 0, 2, -1, 1, LITS.T);
+				shape = LITS.T; //eventsList = shape4(x1, y1, 0, 1, 0, 2, -1, 1, LITS.T);
 			}
 		} else if (this.isOpenInRegionAtLeft(x1-1, y1+1, p_indexRegion)) { // 01 -11 
 			if (this.isOpenInRegionAtDown(x1-1, y1+2, p_indexRegion)) {
-				shape = LITS.S;//eventsList = shape4(x1, y1, 0, 1, -1, 1, -1, 2, LITS.S);
+				shape = LITS.S; //eventsList = shape4(x1, y1, 0, 1, -1, 1, -1, 2, LITS.S);
 			} else if (this.isOpenInRegionAtLeft(x1-2, y1+1, p_indexRegion)) {
-				shape = LITS.L;//eventsList = shape4(x1, y1, 0, 1, -1, 1, -2, 1, LITS.L);
+				shape = LITS.L; //eventsList = shape4(x1, y1, 0, 1, -1, 1, -2, 1, LITS.L);
 			}
 		}
 	}
-	
-	/*if (eventsList.length == 0) {
-		return EVENT_RESULT.FAILURE;
-	}
-	else {
-		Array.prototype.push.apply(p_eventsList, eventsList);
-		return p_eventsList;
-	}*/
 	
 	if (shape == LITS.UNDECIDED) {
 		return EVENT_RESULT.FAILURE;
@@ -673,8 +580,9 @@ SolverLITS.prototype.eventsTetrominoIdentification = function(p_eventsList, p_in
 	}
 }
 
+// For memory !
 /*// Fills a region with the 4 spaces below
-//SolverLITS.prototype.shape4 = function(p_indexRegion, p_shape) {
+SolverLITS.prototype.shape4 = function(p_indexRegion, p_shape) {
 	 eventList = [];
 	eventList.push(new ShapeEvent(p_x1, p_y1, p_form));
 	eventList.push(new ShapeEvent(p_x1 + p_DeltaX1, p_y1 + p_DeltaY1, p_form));
@@ -683,7 +591,7 @@ SolverLITS.prototype.eventsTetrominoIdentification = function(p_eventsList, p_in
 	return eventList; 
 	//return [new ShapeRegionEvent(p_indexRegion, p_shape)];
 	
-//}*/
+}*/
 
 // When a region contains 3 open spaces
 SolverLITS.prototype.eventsTripletPlacement = function(p_eventsList, p_indexRegion) {
@@ -873,7 +781,7 @@ SolverLITS.prototype.pushShapeEventsDelta = function (p_eventsList, p_x, p_y, p_
 	return p_eventsList;
 }
 
-
+// Tests if the space coordinates are valid and contain a space open in region (even "atLeft, atRight..." test for (p_x, p_y) and not (p_x-1, p_y) nor (p_x+1, p_y) )
 SolverLITS.prototype.isOpenInRegion = function(p_x, p_y, p_ir) {
 	return (this.answerArray[p_y][p_x] == SPACE.OPEN) && (this.regionArray[p_y][p_x] == p_ir);
 }	
@@ -889,13 +797,11 @@ SolverLITS.prototype.isOpenInRegionAtDown = function(p_x, p_y, p_ir) {
 }
 
 SolverLITS.prototype.isOpenInRegionAtDownRight = function(p_x, p_y, p_ir) {
-	//return (p_y <= this.yLength-2) && (this.isOpenInRegionAtRight(p_x+1, p_y+1, p_ir));
 	return (p_y <= this.yLength-1) && (this.isOpenInRegionAtRight(p_x, p_y, p_ir));
 }
 
 SolverLITS.prototype.isOpenInRegionAtDownLeft = function(p_x, p_y, p_ir) {
-	//return (p_y <= this.yLength-2) && (this.isOpenInRegionAtLeft(p_x-1, p_y+1, p_ir));
-	return (p_y <= this.yLength-1) && (this.isOpenInRegionAtRight(p_x, p_y, p_ir));
+	return (p_y <= this.yLength-1) && (this.isOpenInRegionAtLeft(p_x, p_y, p_ir));
 }
 
 
@@ -931,18 +837,11 @@ SolverLITS.prototype.applyDeclarationsNewlyClosed = function() {
 		x = space.x;
 		y = space.y;
 		ir = this.regionArray[y][x];
-		if (this.leftExists(x)) {
-			listEvents = this.getNotClosedClusterInRegionAndCloseIfTooSmall(listEvents, x-1, y, ir);
-		}
-		if (this.upExists(y)) {
-			listEvents = this.getNotClosedClusterInRegionAndCloseIfTooSmall(listEvents, x, y-1, ir);
-		}
-		if (this.rightExists(x)) {
-			listEvents = this.getNotClosedClusterInRegionAndCloseIfTooSmall(listEvents, x+1, y, ir);
-		}
-		if (this.downExists(y)) {
-			listEvents = this.getNotClosedClusterInRegionAndCloseIfTooSmall(listEvents, x, y+1, ir);
-		}
+		KnownDirections.forEach(dir => {
+			if (this.neighborExists(x, y, dir)) {
+				listEvents = this.getNotClosedClusterInRegionAndCloseIfTooSmall(listEvents, x + DeltaX[dir], y + DeltaY[dir], ir);
+			}
+		});
 	});
 	this.checkClusterInRegion.clean();
 	this.cleanDeclarationsNewlyClosed();
@@ -962,19 +861,11 @@ SolverLITS.prototype.getNotClosedClusterInRegionAndCloseIfTooSmall = function(p_
 				x = spaceChecked.x;
 				y = spaceChecked.y;
 				spacesInCluster.push({x : x, y : y});
-				
-				if (this.leftExists(x)) {
-					spacesToCheck = this.checkNotAddedNotClosedInRegion(spacesToCheck, x-1, y, p_ir);
-				}
-				if (this.upExists(y)) {
-					spacesToCheck = this.checkNotAddedNotClosedInRegion(spacesToCheck, x, y-1, p_ir);
-				}
-				if (this.rightExists(x)) {
-					spacesToCheck = this.checkNotAddedNotClosedInRegion(spacesToCheck, x+1, y, p_ir);
-				}
-				if (this.downExists(y)) {
-					spacesToCheck = this.checkNotAddedNotClosedInRegion(spacesToCheck, x, y+1, p_ir);
-				}
+				KnownDirections.forEach(dir => {
+					if (this.neighborExists(x, y, dir)) {
+						spacesToCheck = this.checkNotAddedNotClosedInRegion(spacesToCheck, x + DeltaX[dir], y + DeltaY[dir], p_ir);
+					}
+				});
 			}
 		}
 	}
@@ -1029,18 +920,11 @@ SolverLITS.prototype.discriminateUnreachable = function(p_listEvents, p_x, p_y, 
 		x = spaceToPropagate.x;
 		y = spaceToPropagate.y;
 		proximity = this.proximitiesGrid[y][x];
-		if (x > 0) {
-			list_spacesToPropagate = this.updateSpacesToPropagate(list_spacesToPropagate, x-1, y, p_indexRegion, proximity);
-		}
-		if (x <= this.xLength-2) {
-			list_spacesToPropagate = this.updateSpacesToPropagate(list_spacesToPropagate, x+1, y, p_indexRegion, proximity);
-		}
-		if (y > 0) {
-			list_spacesToPropagate = this.updateSpacesToPropagate(list_spacesToPropagate, x, y-1, p_indexRegion, proximity);
-		}
-		if (y <= this.yLength-2) {
-			list_spacesToPropagate = this.updateSpacesToPropagate(list_spacesToPropagate, x, y+1, p_indexRegion, proximity);
-		}
+		KnownDirections.forEach(dir => {
+			if (this.neighborExists(x, y, dir)) {
+				list_spacesToPropagate = this.updateSpacesToPropagate(list_spacesToPropagate, x + DeltaX[dir], y + DeltaY[dir], p_indexRegion, proximity);
+			}
+		});
 	}
 	
 	// List events for non-visited spaces + clean visited spaces
@@ -1093,23 +977,6 @@ filterClosure1or2Open = function(p_solver) {
 		return p_solver.applyDeclarations1or2Open();
 	}
 }
-
-// -------------------------------------------------
-// Methods for safety check
-SolverLITS.prototype.leftExists = function(p_x) {
-	return p_x > 0;
-}
-SolverLITS.prototype.upExists = function(p_y) {
-	return p_y > 0;
-}
-SolverLITS.prototype.rightExists = function(p_x) {
-	return p_x <= this.xLength-2;
-}
-SolverLITS.prototype.downExists = function(p_y) {
-	return p_y <= this.yLength-2;
-}
-
-
 
 // --------------------
 // Passing

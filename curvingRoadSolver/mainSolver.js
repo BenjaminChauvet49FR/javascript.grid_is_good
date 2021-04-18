@@ -17,14 +17,10 @@ function main() {
 		reflectWrite:"#ffff88",
 	}
 
-	function DummySolver() {
-		
-	}
-
 	//--------------------
 	//The main draw function (at start)
-	function drawCanvas(){
-		drawer.drawWalllessGrid(context, solver.gridWall, solver.xLength, solver.yLength); 
+	function drawCanvas() {
+		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength); 
 		drawInsideSpaces(context, drawer, colors, solver);
 	}
 

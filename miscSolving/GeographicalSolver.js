@@ -15,6 +15,22 @@ GeneralSolver.prototype.addBannedSpace = function(p_x, p_y) {
 }
 
 // -----------------------
+
+function standardSpaceOpeningToAdjacencyConversion(p_spaceStatus) {
+	switch (p_spaceStatus) {
+        case SPACE.OPEN:
+            return ADJACENCY.YES;
+            break;
+        case SPACE.CLOSED:
+            return ADJACENCY.NO;
+            break;
+        default:
+            return ADJACENCY.UNDEFINED;
+            break;
+        }	
+}
+
+// -----------------------
 // Some deduction methods
 
 GeneralSolver.prototype.alert2x2Areas = function(p_listEvents, p_methodSet, p_x, p_y) {

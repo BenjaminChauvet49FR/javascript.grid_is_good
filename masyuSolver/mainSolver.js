@@ -23,10 +23,8 @@ function main() {
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
-		drawer.drawWalllessGrid(context, null, solver.xLength, solver.yLength);
+		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength);
 		drawInsideSpaces(context, drawer, colors, solver);
-			// No drawing of banned spaces. 
-		//drawInsideSpaces(context,drawer,colors,solver);
 	}
 
 	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)},false);

@@ -16,7 +16,7 @@ function main() {
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
-		drawer.drawWalllessGrid(context, null, solver.xLength, solver.yLength);
+		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength);
 		drawer.drawCombinedArrowGridIndications(context, solver.clueGrid);
 		drawInsideSpaces(context, drawer, colors, solver);
 	}

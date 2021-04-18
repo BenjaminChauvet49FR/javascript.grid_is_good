@@ -29,7 +29,8 @@ function loadMyScript(p_script) {
 	loadMyScriptPrivate(p_script);
 }
 
-loadScriptsSolving = loadScriptsClosure(["../miscSolving/GeneralSolver.js", "../miscSolving/SolvingMethodPacks.js", "../miscSolving/Directions.js"]); // Must be charged first since basically that calls constructors everything depends upon GeneralSolver
+loadScriptsSolving = loadScriptsClosure(["../miscSolving/GeneralSolver.js", "../miscSolving/SolvingMethodPacks.js"]); // Must be charged first since basically that calls constructors everything depends upon GeneralSolver
+loadScriptsDirections = loadScriptsClosure(["../miscSolving/Directions.js", "../miscSolving/DirectionFunctions.js"]);
 loadScriptsGeneric = loadScriptsClosure(["../WallGrid.js", "../Grid.js",
 "../commonSaveAndLoad.js", "../commonEncodingDecoding.js",
 "../DrawableItem.js", "../Drawer.js",

@@ -349,17 +349,7 @@ transformClosure = function (p_solver) {
 
 adjacencyClosure = function (p_solver) {
     return function (p_x, p_y) {
-        switch (p_solver.answerArray[p_y][p_x]) {
-        case SPACE.OPEN:
-            return ADJACENCY.YES;
-            break;
-        case SPACE.CLOSED:
-            return ADJACENCY.NO;
-            break;
-        default:
-            return ADJACENCY.UNDEFINED;
-            break;
-        }
+        return standardSpaceOpeningToAdjacencyConversion(p_solver.answerArray[p_y][p_x]);
     }
 }
 

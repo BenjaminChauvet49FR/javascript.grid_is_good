@@ -1,34 +1,30 @@
-const NOT_FORCED = -1;
-const NOT_RELEVANT = -1;
-
 const CURVING_WAY = {
-    LEFT_VERTICAL: 'L',
-    RIGHT_VERTICAL: 'R',
-    HORIZONTAL: 'H',
-    VERTICAL: 'V'
+    LEFT_VERTICAL : 'L',
+    RIGHT_VERTICAL : 'R',
+    HORIZONTAL : 'H',
+    VERTICAL : 'V'
 }
 
-function SolverCurvingRoad(p_wallArray, p_symbolArray) {
-    this.construct(p_wallArray, p_symbolArray);
+function SolverCurvingRoad(p_symbolArray) {
+    this.construct(p_symbolArray);
 }
 
 SolverCurvingRoad.prototype = Object.create(GeneralSolver.prototype);
 SolverCurvingRoad.prototype.constructor = SolverCurvingRoad;
 
 function DummySolver() {
-	new SolverCurvingRoad(generateWallArray(1, 1),generateSymbolArray(1, 1));
+	return new SolverCurvingRoad(generateSymbolArray(1, 1));
 }
 
-SolverCurvingRoad.prototype.construct = function (p_wallArray, p_symbolArray) {
+SolverCurvingRoad.prototype.construct = function (p_symbolArray) {
 	this.generalConstruct();
     this.xLength = p_symbolArray[0].length;
     this.yLength = p_symbolArray.length;
 	this.makeItGeographical(this.xLength, this.yLength);
-    this.gridWall = WallGrid_data(p_wallArray);
-    this.answerGrid = [];
+    this.answerArray = [];
     this.curvingLinkArray = [];
     this.curvingLinkList = [];
-    this.pearlGrid = [];
+    this.pearlArray = [];
 
     var ix,
     iy;
@@ -48,17 +44,17 @@ SolverCurvingRoad.prototype.construct = function (p_wallArray, p_symbolArray) {
 	
     // TODO need purification
     for (iy = 0; iy < this.yLength; iy++) {
-        this.answerGrid.push([]);
+        this.answerArray.push([]);
         this.curvingLinkArray.push([]);
-        this.pearlGrid.push([]);
+        this.pearlArray.push([]);
         for (ix = 0; ix < this.xLength; ix++) {
             this.curvingLinkArray[iy].push([]);
             if (p_symbolArray[iy][ix] == SYMBOL_ID.WHITE) {
-                this.answerGrid[iy].push(SPACE.OPEN);
-                this.pearlGrid[iy].push(true);
+                this.answerArray[iy].push(SPACE.OPEN);
+                this.pearlArray[iy].push(true);
             } else {
-                this.answerGrid[iy].push(SPACE.UNDECIDED);
-                this.pearlGrid[iy].push(false);
+                this.answerArray[iy].push(SPACE.UNDECIDED);
+                this.pearlArray[iy].push(false);
             }
         }
     }
@@ -94,12 +90,12 @@ SolverCurvingRoad.prototype.traceRoadsFrom = function (p_x, p_y) {
     var shouldMoveOn;
     var shouldTrace;
     //TODO je m'en fiche, il y a beaucoup de redondances, mais on ne vérifie pas si un lien est contenu dans un autre !
-    //answerGrid should have been updated by now ; anyway, open in answerGrid refers to "white" spaces.
+    //answerArray should have been updated by now ; anyway, open in answerArray refers to "white" spaces.
     if (!rightColumn) {
         lastX = p_x; //Right only
         do {
             shouldTrace = (lastX < this.xLength - 1);
-            shouldMoveOn = shouldTrace && (this.answerGrid[p_y][lastX + 1] != SPACE.OPEN);
+            shouldMoveOn = shouldTrace && (this.answerArray[p_y][lastX + 1] != SPACE.OPEN);
             if (shouldMoveOn) {
                 lastX++;
             }
@@ -113,7 +109,7 @@ SolverCurvingRoad.prototype.traceRoadsFrom = function (p_x, p_y) {
                 lastY = p_y;
                 do {
                     shouldTrace = (lastY < this.yLength - 1);
-                    shouldMoveOn = (shouldTrace && this.answerGrid[lastY + 1][x] != SPACE.OPEN);
+                    shouldMoveOn = (shouldTrace && this.answerArray[lastY + 1][x] != SPACE.OPEN);
                     if (shouldMoveOn) {
                         lastY++;
                     }
@@ -130,7 +126,7 @@ SolverCurvingRoad.prototype.traceRoadsFrom = function (p_x, p_y) {
         lastY = p_y;
         do {
             shouldTrace = (lastY < this.yLength - 1);
-            shouldMoveOn = shouldTrace && (this.answerGrid[lastY + 1][p_x] != SPACE.OPEN);
+            shouldMoveOn = shouldTrace && (this.answerArray[lastY + 1][p_x] != SPACE.OPEN);
             if (shouldMoveOn) {
                 lastY++;
             }
@@ -144,7 +140,7 @@ SolverCurvingRoad.prototype.traceRoadsFrom = function (p_x, p_y) {
             lastX = p_x;
             do {
                 shouldTrace = (lastX < this.xLength - 1);
-                shouldMoveOn = (shouldTrace && this.answerGrid[y][lastX + 1] != SPACE.OPEN);
+                shouldMoveOn = (shouldTrace && this.answerArray[y][lastX + 1] != SPACE.OPEN);
                 if (shouldMoveOn) {
                     lastX++;
                 }
@@ -155,7 +151,7 @@ SolverCurvingRoad.prototype.traceRoadsFrom = function (p_x, p_y) {
             lastX = p_x;
             do {
                 shouldTrace = (lastX > 0);
-                shouldMoveOn = (shouldTrace && this.answerGrid[y][lastX - 1] != SPACE.OPEN);
+                shouldMoveOn = (shouldTrace && this.answerArray[y][lastX - 1] != SPACE.OPEN);
                 if (shouldMoveOn) {
                     lastX--;
                 }
@@ -172,7 +168,7 @@ SolverCurvingRoad.prototype.traceRoadsFrom = function (p_x, p_y) {
         lastX = p_x;
         do {
             shouldTrace = (lastX > 0);
-            shouldMoveOn = (shouldTrace && this.answerGrid[p_y][lastX - 1] != SPACE.OPEN);
+            shouldMoveOn = (shouldTrace && this.answerArray[p_y][lastX - 1] != SPACE.OPEN);
             if (shouldMoveOn) {
                 lastX--;
             }
@@ -181,7 +177,7 @@ SolverCurvingRoad.prototype.traceRoadsFrom = function (p_x, p_y) {
             lastY = p_y;
             do {
                 shouldTrace = (lastY < this.yLength - 1);
-                shouldMoveOn = (shouldTrace && this.answerGrid[lastY + 1][x] != SPACE.OPEN);
+                shouldMoveOn = (shouldTrace && this.answerArray[lastY + 1][x] != SPACE.OPEN);
                 if (shouldMoveOn) {
                     lastY++;
                 }
@@ -336,11 +332,11 @@ SolverCurvingRoad.prototype.purgeRoadsFrom = function (p_x, p_y) {
 }
 
 SolverCurvingRoad.prototype.getAnswer = function (p_x, p_y) {
-    return this.answerGrid[p_y][p_x];
+    return this.answerArray[p_y][p_x];
 }
 
 SolverCurvingRoad.prototype.getPearl = function (p_x, p_y) {
-    return this.pearlGrid[p_y][p_x];
+    return this.pearlArray[p_y][p_x];
 }
 
 //--------------------------------
@@ -385,13 +381,13 @@ SolverCurvingRoad.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 
 // Doing, undoing and transforming
 SolverCurvingRoad.prototype.putNew = function (p_x, p_y, p_symbol) {
-    if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerGrid[p_y][p_x] == p_symbol)) {
+    if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerArray[p_y][p_x] == p_symbol)) {
         return EVENT_RESULT.HARMLESS;
     }
-    if (this.answerGrid[p_y][p_x] != SPACE.UNDECIDED) {
+    if (this.answerArray[p_y][p_x] != SPACE.UNDECIDED) {
         return EVENT_RESULT.FAILURE;
     }
-    this.answerGrid[p_y][p_x] = p_symbol;
+    this.answerArray[p_y][p_x] = p_symbol;
     this.curvingLinkArray[p_y][p_x].forEach(
         index => {
         this.curvingLinkList[index].undecided--;
@@ -413,7 +409,7 @@ undoEventClosure = function(p_solver) {
 		const x = p_eventToApply.x(); // Si on oublie de changer le  en x() par erreurs on peut avoir un message très funky dans la console. Et avec un "cannot read ... of undefined."
 		const y = p_eventToApply.y();
 		const symbol = p_eventToApply.symbol;
-		p_solver.answerGrid[y][x] = SPACE.UNDECIDED;
+		p_solver.answerArray[y][x] = SPACE.UNDECIDED;
 		p_solver.curvingLinkArray[y][x].forEach(
 			index => {
 			p_solver.curvingLinkList[index].undecided++;
@@ -429,17 +425,7 @@ undoEventClosure = function(p_solver) {
 
 adjacencyClosure = function(p_solver) {
     return function (p_x, p_y) {
-        switch (p_solver.answerGrid[p_y][p_x]) {
-        case SPACE.OPEN:
-            return ADJACENCY.YES;
-            break;
-        case SPACE.CLOSED:
-            return ADJACENCY.NO;
-            break;
-        default:
-            return ADJACENCY.UNDEFINED;
-            break;
-        }
+        return standardSpaceOpeningToAdjacencyConversion(p_solver.answerArray[p_y][p_x]);
     }
 };
 
@@ -482,7 +468,7 @@ SolverCurvingRoad.prototype.testAlertCurvingList = function (p_listEvents, p_ind
         if (axis != null) {
             var y = axis.y;
             for (var x = axis.xMin; x <= axis.xMax; x++) {
-                if (this.answerGrid[y][x] == SPACE.UNDECIDED) {
+                if (this.answerArray[y][x] == SPACE.UNDECIDED) {
                     xSpot = x;
                     ySpot = y;
                     break;
@@ -493,7 +479,7 @@ SolverCurvingRoad.prototype.testAlertCurvingList = function (p_listEvents, p_ind
             axis = curvingLink.verticalAxis;
             var x = axis.x;
             for (var y = axis.yMin; y <= axis.yMax; y++) {
-                if (this.answerGrid[y][x] == SPACE.UNDECIDED) {
+                if (this.answerArray[y][x] == SPACE.UNDECIDED) {
                     xSpot = x;
                     ySpot = y;
                     break;
@@ -549,7 +535,7 @@ orderedListPassArgumentsClosure = function(p_solver) {
 		answer = [];
 		for(var iy = 0; iy < p_solver.yLength ; iy++) { // WARNING : putting "this" instead of "p_solver" leads to the expression in the "if" being false, but not crashing, which can lead to a quite fun debugging time !
 			for(var ix = 0; ix < p_solver.xLength ; ix++) {
-				if (p_solver.answerGrid[iy][ix] == SPACE.UNDECIDED) {
+				if (p_solver.answerArray[iy][ix] == SPACE.UNDECIDED) {
 					answer.push({x : ix, y : iy});
 				}
 			}

@@ -25,7 +25,7 @@ function main() {
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
-		drawer.drawWalllessGrid(context, null, solver.xLength, solver.yLength); 
+		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength); 
 		drawInsideSpaces(context, drawer, colors, solver);
 	}
 	setInterval(drawCanvas, 30);
@@ -45,7 +45,7 @@ function main() {
 	var textActionSpace = document.getElementById("text_canvas_action_space");
 	var textActionWall = document.getElementById("text_canvas_action_fence");
 	setMode(textActionSpace, actionsManager,ENTRY.SPACE, ACTION_OPEN_SPACE);
-	setMode(textActionWall, actionsManager,ENTRY.WALLS, ACTION_CLOSE_FENCE);
+	setMode(textActionWall, actionsManager,ENTRY.WALLS, ACTION_OPEN_FENCE);
 	addEventListenerAndCaptionActionSubmit(actionsManager, textActionSpace, "submit_open_space", ENTRY.SPACE, ACTION_OPEN_SPACE);
 	addEventListenerAndCaptionActionSubmit(actionsManager, textActionSpace, "submit_close_space", ENTRY.SPACE, ACTION_CLOSE_SPACE);
 	addEventListenerAndCaptionActionSubmit(actionsManager, textActionSpace, "submit_put_round", ENTRY.SPACE, ACTION_PUT_ROUND);

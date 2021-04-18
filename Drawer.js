@@ -197,6 +197,10 @@ Drawer.prototype.drawGridPuzzle = function (p_context, p_xLength, p_yLength, p_c
         pixTotalWidth, this.pix.borderSpace);
 }
 
+Drawer.prototype.drawEmptyGrid = function (p_context, p_xLength, p_yLength) {
+	this.drawWalllessGrid(p_context, null, p_xLength, p_yLength);
+}
+
 Drawer.prototype.drawWalllessGrid = function (p_context, p_wallGrid, p_xLength, p_yLength) {
     var i;
 	p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight);
