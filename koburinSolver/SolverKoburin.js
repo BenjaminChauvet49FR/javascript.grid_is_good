@@ -23,75 +23,71 @@ SolverKoburin.prototype.construct = function(p_numberGrid) {
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
 		PSQuickStart : quickStartClosure(this)
 	});
-	this.activateClosedSpaces();
+	this.declareClosedSpacesActing();
 	// comparisonLoopEvents and copyLoopEventMethod defined in LoopSolver
 	this.methodSetPass = {comparisonMethod : comparisonLoopEventsMethod, copyMethod : copyLoopEventMethod,  argumentToLabelMethod : namingCategoryClosure(this)};
 	this.setMultipass = {numberPSCategories : 1, PSCategoryMethod : multiPassKoburinCategoryClosure(this), tolerateClosedSpaces : true, generatePassEventsMethod : generateEventsForSpaceClosure(this)}
-	this.numericGrid = [];
-	this.neighborsNumbersGrid = []; // All coordinates contained in this grid are coordinates of numeric spaces.
+	this.numericArray = [];
+	this.neighborsNumbersArray = []; // All coordinates contained in this grid are coordinates of numeric spaces.
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
-		this.neighborsNumbersGrid.push([]);
+		this.neighborsNumbersArray.push([]);
 		for (var ix = 0 ; ix < this.xLength ; ix++) {
-			this.neighborsNumbersGrid[iy].push([]);
+			this.neighborsNumbersArray[iy].push([]);
 		}
 	}
 	
+	
 	this.numericCoordinatesList = []; // List of coordinates of numeric spaces
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
-		this.numericGrid.push([]);
+		this.numericArray.push([]);
 		for (var ix = 0 ; ix < this.xLength ; ix++) {
 			if (p_numberGrid[iy][ix] != null) {
 				this.numericCoordinatesList.push({x : ix, y : iy});
-				this.numericGrid[iy].push({number : p_numberGrid[iy][ix], notClosedYet : p_numberGrid[iy][ix], notLinkedYet : 4-p_numberGrid[iy][ix]});
-				if (ix > 0) {
-					this.neighborsNumbersGrid[iy][ix-1].push({x : ix, y : iy});
-				}
-				if (iy > 0) {
-					this.neighborsNumbersGrid[iy-1][ix].push({x : ix, y : iy});
-				}
-				if (ix <= this.xLength-2) {
-					this.neighborsNumbersGrid[iy][ix+1].push({x : ix, y : iy});
-				} 
-				if (iy <= this.yLength-2) {
-					this.neighborsNumbersGrid[iy+1][ix].push({x : ix, y : iy});
-				}
+				// Number of "notLinkedYet" restarted to avoid interferences with "this.banSpace"
+				this.numericArray[iy].push({number : p_numberGrid[iy][ix], notClosedYet : p_numberGrid[iy][ix], notLinkedYet : -1});
+				KnownDirections.forEach(dir => {
+					if (this.neighborExists(ix, iy, dir)) {
+						this.neighborsNumbersArray[iy + DeltaY[dir]][ix + DeltaX[dir]].push({x : ix, y : iy});
+					}
+				});
             } else {
-				this.numericGrid[iy].push({number : null});
+				this.numericArray[iy].push({number : null});
 			}
 		}
 	}
-	// In this puzzle, banning has an impact on numbers spaces
+	
+	// In this puzzle, banning requires to use neighborsNumbersArray and numericArray. Since only atomic events are performed (no check, no need for consistency) it's fine. 
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
 		for (var ix = 0 ; ix < this.xLength ; ix++) {
 			if (this.getNumber(ix, iy) != null) {
-				this.banSpace(ix, iy); 
+				this.banSpace(ix, iy);
 			}
 		}
 	}
-	// Clearing the space edges on the grid edges
+
+	// Correctly giving the values to notClosedYet and notLinkedYet (as they were potentially screwed 
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
-		if (this.getNumber(0, iy) != null) {
-			this.numericGrid[iy][0].notLinkedYet--;
-		}
-		if (this.getNumber(this.xLength-1, iy) != null) {
-			this.numericGrid[iy][this.xLength-1].notLinkedYet--;
-		}
-	}
-	for (var ix = 0 ; ix < this.xLength ; ix++) {
-		if (this.getNumber(ix, 0) != null) {
-			this.numericGrid[0][ix].notLinkedYet--;
-		}
-		if (this.getNumber(ix, this.yLength-1) != null) {
-			this.numericGrid[this.yLength-1][ix].notLinkedYet--;
+		for (var ix = 0 ; ix < this.xLength ; ix++) {
+			if (this.getNumber(ix, iy) != null) {
+				this.numericArray[iy][ix].notClosedYet = this.getNumber(ix, iy);
+				this.numericArray[iy][ix].notLinkedYet = 4 - this.getNumber(ix, iy);
+				KnownDirections.forEach(dir => {
+					if (!this.neighborExists(ix, iy, dir) || (this.getNumber(ix + DeltaX[dir], iy + DeltaY[dir]) != null)) {
+						this.numericArray[iy][ix].notLinkedYet--;
+					}
+				});
+			}
 		}
 	}
+	
+	// Note : Xs not managed... at all ! (e.g. not drawn either)
 }
 
 // -------------------
 // Getters and setters
 
 SolverKoburin.prototype.getNumber = function(p_x, p_y) {
-	return this.numericGrid[p_y][p_x].number;
+	return this.numericArray[p_y][p_x].number;
 }
 
 // -------------------
@@ -127,32 +123,32 @@ SolverKoburin.prototype.makeMultipass = function() {
 
 function setSpaceLinkedPSAtomicDosClosure(p_solver) {
 	return function(p_space) {
-		p_solver.neighborsNumbersGrid[p_space.y][p_space.x].forEach(neighborSpace => {
-			p_solver.numericGrid[neighborSpace.y][neighborSpace.x].notLinkedYet--;
+		p_solver.neighborsNumbersArray[p_space.y][p_space.x].forEach(neighborSpace => {
+			p_solver.numericArray[neighborSpace.y][neighborSpace.x].notLinkedYet--;
 		});
 	}
 }
 
 function setSpaceClosedPSAtomicDosClosure(p_solver) {
 	return function(p_space) {
-		p_solver.neighborsNumbersGrid[p_space.y][p_space.x].forEach(neighborSpace => {
-			p_solver.numericGrid[neighborSpace.y][neighborSpace.x].notClosedYet--;
+		p_solver.neighborsNumbersArray[p_space.y][p_space.x].forEach(neighborSpace => {
+			p_solver.numericArray[neighborSpace.y][neighborSpace.x].notClosedYet--;
 		});
 	}
 }
 
 function setSpaceLinkedPSAtomicUndosClosure(p_solver) {
 	return function(p_space) {
-		p_solver.neighborsNumbersGrid[p_space.y][p_space.x].forEach(neighborSpace => {
-			p_solver.numericGrid[neighborSpace.y][neighborSpace.x].notLinkedYet++;
+		p_solver.neighborsNumbersArray[p_space.y][p_space.x].forEach(neighborSpace => {
+			p_solver.numericArray[neighborSpace.y][neighborSpace.x].notLinkedYet++;
 		});
 	}
 }
 
 function setSpaceClosedPSAtomicUndosClosure(p_solver) {
 	return function(p_space) {
-		p_solver.neighborsNumbersGrid[p_space.y][p_space.x].forEach(neighborSpace => {
-			p_solver.numericGrid[neighborSpace.y][neighborSpace.x].notClosedYet++;
+		p_solver.neighborsNumbersArray[p_space.y][p_space.x].forEach(neighborSpace => {
+			p_solver.numericArray[neighborSpace.y][neighborSpace.x].notClosedYet++;
 		});
 	}
 }
@@ -169,7 +165,7 @@ function setSpaceClosedPSDeductionsClosure(p_solver) {
 				p_listEvents.push(new SpaceEvent(x+DeltaX[dir], y+DeltaY[dir], LOOP_STATE.LINKED));
 			}
 		});
-		p_solver.neighborsNumbersGrid[y][x].forEach(space => {
+		p_solver.neighborsNumbersArray[y][x].forEach(space => {
 			p_listEvents = p_solver.testNumericSpace(p_listEvents, space.x, space.y);
 		});
 		return p_listEvents;
@@ -180,7 +176,7 @@ function setSpaceLinkedPSDeductionsClosure(p_solver) {
 	return function(p_listEvents, p_eventToApply) {
 		const x = p_eventToApply.x;
 		const y = p_eventToApply.y;
-		p_solver.neighborsNumbersGrid[y][x].forEach(space => {
+		p_solver.neighborsNumbersArray[y][x].forEach(space => {
 			p_listEvents = p_solver.testNumericSpace(p_listEvents, space.x, space.y);
 		});
 		return p_listEvents;
@@ -203,13 +199,13 @@ function setEdgeClosedDeductionsClosure(p_solver) {
 
 // Precondition : p_x, p_y is a numeric space
 SolverKoburin.prototype.testNumericSpace = function(p_listEvents, p_x, p_y) {
-	if (this.numericGrid[p_y][p_x].notClosedYet == 0) {
+	if (this.numericArray[p_y][p_x].notClosedYet == 0) {
 		KnownDirections.forEach(dir => {
 			if (this.neighborExists(p_x, p_y, dir) && this.getLinkSpace(p_x+DeltaX[dir], p_y+DeltaY[dir], dir) != LOOP_STATE.CLOSED) {
 				p_listEvents.push(new SpaceEvent(p_x+DeltaX[dir], p_y+DeltaY[dir], LOOP_STATE.LINKED));
 			}
 		});
-	} else if (this.numericGrid[p_y][p_x].notLinkedYet == 0) {
+	} else if (this.numericArray[p_y][p_x].notLinkedYet == 0) {
 		KnownDirections.forEach(dir => {
 			if (this.neighborExists(p_x, p_y, dir) && this.getLinkSpace(p_x+DeltaX[dir], p_y+DeltaY[dir], dir) != LOOP_STATE.LINKED) {
 				p_listEvents.push(new SpaceEvent(p_x+DeltaX[dir], p_y+DeltaY[dir], LOOP_STATE.CLOSED));
@@ -263,18 +259,12 @@ generateEventsForSpaceClosure = function(p_solver) {
 	return function(p_space) {
 		if (p_solver.getNumber(p_space.x, p_space.y) != null) {
 			var answer = [];
-			if (p_space.x > 0) {
-				answer.push([new SpaceEvent(p_space.x-1, p_space.y, LOOP_STATE.CLOSED),new SpaceEvent(p_space.x-1, p_space.y, LOOP_STATE.LINKED)]);
-			}
-			if (p_space.y > 0) {				
-				answer.push([new SpaceEvent(p_space.x, p_space.y-1, LOOP_STATE.CLOSED),new SpaceEvent(p_space.x, p_space.y-1, LOOP_STATE.LINKED)]);
-			}
-			if (p_space.x <= p_solver.xLength-2) {
-				answer.push([new SpaceEvent(p_space.x+1, p_space.y, LOOP_STATE.CLOSED),new SpaceEvent(p_space.x+1, p_space.y, LOOP_STATE.LINKED)]);
-			}
-			if (p_space.y <= p_solver.yLength-2) {	
-				answer.push([new SpaceEvent(p_space.x, p_space.y+1, LOOP_STATE.CLOSED),new SpaceEvent(p_space.x, p_space.y+1, LOOP_STATE.LINKED)]);
-			}
+			KnownDirections.forEach(dir => {
+				if (p_solver.neighborExists(p_space.x, p_space.y, dir)) {
+					answer.push([new SpaceEvent(p_space.x + DeltaX[dir], p_space.y + DeltaY[dir], LOOP_STATE.CLOSED),
+						new SpaceEvent(p_space.x + DeltaX[dir], p_space.y + DeltaY[dir], LOOP_STATE.LINKED)]);	
+				}
+			});
 			return answer; // If the first events of the lists are applied in a glutton-algorithm style (here, closed in up and closed in left around a numeric space with value 2) are applied, the brackets are forgotten this is not a (list of list of events).
 		} else {
 			return p_solver.standardSpacePassEvents(p_space.x, p_space.y);
@@ -300,7 +290,7 @@ function namingCategoryClosure(p_solver) { // TODO factorize with other solvers 
 
 multiPassKoburinCategoryClosure = function(p_solver) {
 	return function (p_x, p_y) {
-		if ((p_solver.getNumber(p_x, p_y) != null) && (p_solver.numericGrid[p_y][p_x].notClosedYet > 0)) {
+		if ((p_solver.getNumber(p_x, p_y) != null) && (p_solver.numericArray[p_y][p_x].notClosedYet > 0)) {
 			return 0;
 		} else {
 			return -1;
@@ -311,7 +301,7 @@ multiPassKoburinCategoryClosure = function(p_solver) {
 // -------------------
 // Log of the numerical grid (copied on LoopSolver's other logOppositeEnd)
 
-LoopSolver.prototype.logNumericGrid = function(p_xStart = 0, p_yStart = 0, p_xEnd, p_yEnd) {
+LoopSolver.prototype.lognumericArray = function(p_xStart = 0, p_yStart = 0, p_xEnd, p_yEnd) {
 	var answer = "\n";
 	var numeric;
 	var stringSpace;
@@ -323,7 +313,7 @@ LoopSolver.prototype.logNumericGrid = function(p_xStart = 0, p_yStart = 0, p_xEn
 	}
 	for (var iy = p_yStart; iy < p_yEnd ; iy++) {
 		for (var ix = p_xStart; ix < p_xEnd ; ix++) {
-			numeric = this.numericGrid[iy][ix];
+			numeric = this.numericArray[iy][ix];
 			if (numeric.notLinkedYet || numeric.notLinkedYet == 0) {
 				stringSpace = numeric.notClosedYet+" "+numeric.notLinkedYet;
 			} else {

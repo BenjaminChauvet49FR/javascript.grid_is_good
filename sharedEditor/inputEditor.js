@@ -562,7 +562,7 @@ function comboChange(p_thelist, p_editorCore) {
 }
 
 function switchVisibilityDivAction(p_div) {
-	if (p_div.style.display == "block") {
+	if (p_div.style.display != "none") { // If I said ' == "block"' the first click wouldn't set to 'none' since style.display seems not to be set yet.
 		p_div.style.display = "none";
 		return;
 	}

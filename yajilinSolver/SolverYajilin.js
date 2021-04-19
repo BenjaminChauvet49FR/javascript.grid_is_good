@@ -21,7 +21,7 @@ SolverYajilin.prototype.construct = function(p_valueGrid) {
 		PSFilters : [filterStripsClosure(this)],
 		PSAbortMethods : [abortYajilinClosure(this)]
 	});
-	this.activateClosedSpaces();
+	this.declareClosedSpacesActing();
 	
 	
 	// comparisonLoopEvents and copyLoopEventMethod defined in LoopSolver

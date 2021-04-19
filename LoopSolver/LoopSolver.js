@@ -251,10 +251,12 @@ LoopSolver.prototype.getColorChains = function (p_x, p_y) {
 // -------------------
 // "Protected" methods
 
-LoopSolver.prototype.activateClosedSpaces = function() {
+// If used, consider that closed spaces play an acting role in the puzzle (for instance : "two closed spaces cannot be orthogonally adjacent")
+LoopSolver.prototype.declareClosedSpacesActing = function() {
 	this.ergonomicOptions.closedSpacesAreActive = true;
 }
 
+// If used, all non-banned spaces must be open for this puzzle (ex. : EntryExit) (TODO : does it manage banned spaces yet ?)
 LoopSolver.prototype.signalAllOpenSpaces = function() {
 	this.ergonomicOptions.allOpenSpaces = true;
 }

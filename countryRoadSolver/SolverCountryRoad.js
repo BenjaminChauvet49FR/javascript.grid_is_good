@@ -8,6 +8,7 @@ function SolverCountryRoad(p_wallArray, p_indications) {
 SolverCountryRoad.prototype.constructor = SolverCountryRoad;
 
 SolverCountryRoad.prototype.construct = function(p_wallArray, p_indications) {
+		
 	this.regionLoopSolverConstruct(p_wallArray, {
 		setSpaceLinkedPSDeductions : setSpaceLinkedDeductionsClosure(this),
 		setSpaceClosedPSDeductions : setSpaceClosedDeductionsClosure(this),
@@ -17,6 +18,8 @@ SolverCountryRoad.prototype.construct = function(p_wallArray, p_indications) {
 		setSpaceLinkedPSAtomicUndos : setEdgeLinkedUndosClosure(this),
 		PSQuickStart : quickStartClosure(this)
 	});
+	
+	this.declareClosedSpacesActing(); 
 	
 	// Affecting regions
 	this.regions.forEach(region => {
