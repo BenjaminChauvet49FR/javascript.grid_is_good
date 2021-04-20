@@ -35,14 +35,15 @@
 		<script>
 		"use strict";
 		window.onload = function() {
-			loadScriptsSolving();
-			loadScriptsDirections();
-			loadScriptsGeneric();
-			loadScriptsLocal();
-			loadScriptConstants();
-			loadMyScript("SpaceEvent.js");
-			loadMyScript("SolverStarBattle.js");
-		} 
+			addScriptsSolving();
+			addScriptsDirections();
+			addScriptsGeneric();
+			addScriptsLocal();
+			addScriptConstants();
+			addScript("SpaceEvent.js");
+			addScript("SolverStarBattle.js");
+			startScriptLoading();
+		}		 
 		</script>
 	</body>
 </html>

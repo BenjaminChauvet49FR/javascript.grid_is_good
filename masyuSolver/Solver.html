@@ -38,15 +38,16 @@
 		<script>
 		"use strict";
 		window.onload = function() {
-			loadScriptsSolving();
-			loadScriptsDirections();
-			loadScriptsGeneric();
-			loadScriptsLocal();
-			loadScriptsLoop();
-			loadMyScript("SolverMasyu.js");
-		} 
+			addScriptsSolving();
+			addScriptsDirections();
+			addScriptsGeneric();
+			addScriptsLocal();
+			addScriptsLoop();
+			addScript("SolverMasyu.js");
+			startScriptLoading();
+		}		 
 		// AND IT WORKS ! Order of method calls seem relevant however : if a script b when run (not when its main method is run !) calls a script a, then Sb should be called after Sa. Here, Sb = SolverMasyu and Sa = scripts relevant to LoopSolvers.
-		// Even more true with GeneralSolver that must be called first as it contains the prototypes called in loadScriptsLoop scripts.
+		// Even more true with GeneralSolver that must be called first as it contains the prototypes called in addScriptsLoop scripts.
 		</script>
 	</body>
 </html>

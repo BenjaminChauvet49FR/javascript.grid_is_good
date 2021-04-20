@@ -32,16 +32,16 @@
 		<script>
 		"use strict";
 		window.onload = function() {
-			loadScriptsSolving();
-			loadScriptsDirections();
-			loadScriptsGeneric();
-			loadScriptsLocal();
-			loadScriptsAdjacency();
-			loadScriptConstants();
-			loadMyScript("SolveEvent.js");
-			loadMyScript("SolverCurvingRoad.js");
-		} 
+			addScriptsSolving();
+			addScriptsDirections();
+			addScriptsGeneric();
+			addScriptsLocal();
+			addScriptsAdjacency();
+			addScriptConstants();
+			addScript("SolveEvent.js");
+			addScript("SolverCurvingRoad.js");
+			startScriptLoading();
+		}		 
 		</script>
-
 	</body>
 </html>

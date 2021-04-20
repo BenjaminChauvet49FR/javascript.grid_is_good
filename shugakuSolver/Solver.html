@@ -37,17 +37,18 @@
 		<script>
 		"use strict";
 		window.onload = function() {
-			loadScriptsSolving();
-			loadScriptsDirections();
-			loadScriptFences();
-			loadScriptsGeneric();
-			loadScriptsLocal();
-			loadScriptConstants();
-			loadScriptsAdjacency();
-			loadScriptSpacesSelection();
-			loadMyScript("SolveEvent.js");
-			loadMyScript("SolverShugaku.js");
-		} 
+			addScriptsSolving();
+			addScriptsDirections();
+			addScriptFences();
+			addScriptsGeneric();
+			addScriptsLocal();
+			addScriptConstants();
+			addScriptsAdjacency();
+			addScriptSpacesSelection();
+			addScript("SolveEvent.js");
+			addScript("SolverShugaku.js");
+			startScriptLoading();
+		}		 
 		</script>
 	</body>
 </html>

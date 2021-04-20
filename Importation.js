@@ -1,49 +1,54 @@
 var nbScriptsLoaded = 0;
-var totalNbScriptsToLoad = 0;
+var scriptsToLoad = [];
 
 function increment() {
   nbScriptsLoaded ++;
-  if (nbScriptsLoaded == totalNbScriptsToLoad) {
+  if (nbScriptsLoaded == scriptsToLoad.length) {
+	autoLogImport("Load done :) ");
 	main(); 	  
+  } else {
+	  addAScriptPrivate(scriptsToLoad[nbScriptsLoaded]);
   }
 }
 
-function loadScriptsClosure(p_array) {
+function addScriptsClosure(p_array) {
 	return function() {
-		totalNbScriptsToLoad += p_array.length;
 		p_array.forEach(script => {
-			loadMyScriptPrivate(script);
+			addScript(script);
 		});
 	}
 }
 
-function loadMyScriptPrivate(p_script) {
+function addAScriptPrivate(p_script) {
 	  const scrip = document.createElement('script');
 	  document.body.appendChild(scrip);
 	  scrip.src = p_script;
 	  scrip.addEventListener('load', increment);
 }
 
-function loadMyScript(p_script) {
-	totalNbScriptsToLoad ++;
-	loadMyScriptPrivate(p_script);
+function addScript(p_script) {
+	scriptsToLoad.push(p_script);
 }
 
-loadScriptsSolving = loadScriptsClosure(["../miscSolving/GeneralSolver.js", "../miscSolving/SolvingMethodPacks.js"]); // Must be charged first since basically that calls constructors everything depends upon GeneralSolver
-loadScriptsDirections = loadScriptsClosure(["../miscSolving/Directions.js", "../miscSolving/DirectionFunctions.js"]);
-loadScriptsGeneric = loadScriptsClosure(["../WallGrid.js", "../Grid.js",
+function startScriptLoading() {
+	addAScriptPrivate(scriptsToLoad[0]);	
+}
+
+addScriptsSolving = addScriptsClosure(["../miscSolving/GeneralSolver.js", "../miscSolving/SolvingMethodPacks.js"]); // Must be charged first since basically that calls constructors everything depends upon GeneralSolver
+addScriptsDirections = addScriptsClosure(["../miscSolving/Directions.js", "../miscSolving/DirectionFunctions.js"]);
+addScriptsGeneric = addScriptsClosure(["../WallGrid.js", "../Grid.js",
 "../commonSaveAndLoad.js", "../commonEncodingDecoding.js",
 "../DrawableItem.js", "../Drawer.js",
 "../commonInput.js", "../commonActionManager.js", 
 "../CommonHTMLMenu.js",
 "../Logs.js"]);
-loadScriptsLocal = loadScriptsClosure(["drawing.js", "mainSolver.js", "inputSolver.js"]);
-loadScriptsLoop = loadScriptsClosure(["../LoopSolver/drawing.js", "../LoopSolver/LoopEvent.js", "../LoopSolver/CompoundLinkEvent.js", "../LoopSolver/LoopSolver.js", "../LoopSolver/Constants.js"]);
-loadScriptsAdjacency = loadScriptsClosure(["../miscSolving/AdjacencyCheck.js", "../miscSolving/AdjacencyLimit.js", "../miscSolving/GeographicalSolver.js"]);
+addScriptsLocal = addScriptsClosure(["drawing.js", "mainSolver.js", "inputSolver.js"]);
+addScriptsLoop = addScriptsClosure(["../LoopSolver/drawing.js", "../LoopSolver/LoopEvent.js", "../LoopSolver/CompoundLinkEvent.js", "../LoopSolver/LoopSolver.js", "../LoopSolver/Constants.js"]);
+addScriptsAdjacency = addScriptsClosure(["../miscSolving/AdjacencyCheck.js", "../miscSolving/AdjacencyLimit.js", "../miscSolving/GeographicalSolver.js"]);
 
-function loadScriptCheckCollection() { loadMyScript("../miscSolving/CheckCollection.js"); } // For filters 
-function loadScriptConstants() { loadMyScript("../miscSolving/Constants.js"); }
-function loadScriptFences() { loadMyScript("../miscSolving/Fences.js"); }
-function loadScriptSpacesSelection() { loadMyScript("../miscSolving/SpaceNumeric.js"); }
+function addScriptCheckCollection() { addScript("../miscSolving/CheckCollection.js"); } // For filters 
+function addScriptConstants() { addScript("../miscSolving/Constants.js"); }
+function addScriptFences() { addScript("../miscSolving/Fences.js"); }
+function addScriptSpacesSelection() { addScript("../miscSolving/SpaceNumeric.js"); }
 
-loadScriptsLoopRegion = loadScriptsClosure(["../LoopSolver/RegionLoopSolver.js", "../LoopSolver/RegionJunctionEvent.js"]);
+addScriptsLoopRegion = addScriptsClosure(["../LoopSolver/RegionLoopSolver.js", "../LoopSolver/RegionJunctionEvent.js"]);

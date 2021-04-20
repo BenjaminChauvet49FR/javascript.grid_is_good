@@ -35,14 +35,15 @@
 		<script>
 		"use strict";
 		window.onload = function() {
-			loadScriptsSolving();
-			loadScriptsDirections();
-			loadScriptsGeneric();
-			loadScriptsLocal();
-			loadScriptsAdjacency();
-			loadMyScript("SolveEvent.js");
-			loadMyScript("SolverTheoryCluster.js");
-		} 
+			addScriptsSolving();
+			addScriptsDirections();
+			addScriptsGeneric();
+			addScriptsLocal();
+			addScriptsAdjacency();
+			addScript("SolveEvent.js");
+			addScript("SolverTheoryCluster.js");
+			startScriptLoading();
+		}		 
 		</script>
 	</body>
 </html>

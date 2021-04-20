@@ -34,15 +34,16 @@
 		<script>
 		"use strict";
 		window.onload = function() {
-			loadScriptsSolving();
-			loadScriptsDirections();
-			loadScriptsGeneric();
-			loadScriptsLocal();
-			loadScriptConstants();
-			loadScriptCheckCollection();
-			loadMyScript("SolveEvent.js");
-			loadMyScript("SolverShimaguni.js");
-		} 
+			addScriptsSolving();
+			addScriptsDirections();
+			addScriptsGeneric();
+			addScriptsLocal();
+			addScriptConstants();
+			addScriptCheckCollection();
+			addScript("SolveEvent.js");
+			addScript("SolverShimaguni.js");
+			startScriptLoading();
+		}		 
 		</script>
 	</body>
 </html>

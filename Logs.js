@@ -7,6 +7,9 @@ function autoLogMultipass(p_string) {
 function autoLogDebug(p_string) {
 	//console.log(p_string);
 }
+function autoLogImport(p_string) {
+	console.log(p_string);
+}
 function autoLogGeographical(p_string) {
 	//console.log(p_string);
 }

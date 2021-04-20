@@ -31,15 +31,16 @@
 		<script>
 		"use strict";
 		window.onload = function() {
-			loadScriptsSolving();
-			loadScriptsDirections();
-			loadScriptFences();
-			loadScriptsGeneric();
-			loadScriptsLocal();
-			loadScriptConstants();
-			loadMyScript("Events.js");
-			loadMyScript("SolverUsotatami.js");
-		} 
+			addScriptsSolving();
+			addScriptsDirections();
+			addScriptFences();
+			addScriptsGeneric();
+			addScriptsLocal();
+			addScriptConstants();
+			addScript("Events.js");
+			addScript("SolverUsotatami.js");
+			startScriptLoading();
+		}		 
 		</script>
 	</body>
 </html>

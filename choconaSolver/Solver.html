@@ -31,14 +31,15 @@
 		<script>
 		"use strict";
 		window.onload = function() {
-			loadScriptsSolving();
-			loadScriptsDirections();
-			loadScriptsGeneric();
-			loadScriptsLocal();
-			loadScriptConstants();
-			loadMyScript("SolveEvent.js");
-			loadMyScript("SolverChocona.js");
-		} 
+			addScriptsSolving();
+			addScriptsDirections();
+			addScriptsGeneric();
+			addScriptsLocal();
+			addScriptConstants();
+			addScript("SolveEvent.js");
+			addScript("SolverChocona.js");
+			startScriptLoading();
+		}		 
 		</script>
 
 	</body>
