@@ -41,10 +41,11 @@ menuSolvers.push({
 	displayName : "Binaires quelconques",
 	documentPage : "Solver",
 	typeList : [
-		{name : "starBattle", displayName : "Star battle"},
+		{name : "akari", displayName : "Akari"},
+		{name : "chocona", displayName : "Chocona"},
 		{name : "norinori", displayName : "Norinori"},
 		{name : "shimaguni", displayName : "Shimaguni"},
-		{name : "chocona", displayName : "Chocona"},
+		{name : "starBattle", displayName : "Star battle"},
 	]
 });
 
@@ -60,9 +61,9 @@ menuSolvers.push({
 	displayName : "Binaires avec adjacence",
 	documentPage : "Solver",
 	typeList : [
+		{name : "curvingRoad", displayName : "Curving road"},
 		{name : "heyawake", displayName : "Heyawake"},
 		{name : "LITS", displayName : "LITS"},
-		{name : "curvingRoad", displayName : "Curving road"},
 		{name : "yajikabe", displayName : "Yajikabe"}
 	]
 });

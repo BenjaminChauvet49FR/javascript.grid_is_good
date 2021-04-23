@@ -534,7 +534,7 @@ function comboChange(p_thelist, p_editorCore) {
 			saveLoadModeId = PUZZLES_KIND.STAR_BATTLE.id;
 			p_editorCore.maskAllGrids();
 			break;
-		case 'Shugaku':
+		case 'Akari': case 'Shugaku':
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.NUMBERS_X_ONLY.id;
 			p_editorCore.setVisibleGrids([GRID_ID.DIGIT_X_SPACE]);
@@ -567,8 +567,8 @@ function switchVisibilityDivAction(p_div) {
 		return;
 	}
 	p_div.style.display = "block";
-	/* Mauvaises solutions : https://stackoverflow.com/questions/16132383/changing-div-visibility-with-javascript* https://developer.mozilla.org/fr/docs/Web/CSS/visibility*/
-	/* Bonne solution : https://stackoverflow.com/questions/16132383/changing-div-visibility-with-javascript */
+	/* Bad solution : https://stackoverflow.com/questions/16132383/changing-div-visibility-with-javascript* https://developer.mozilla.org/fr/docs/Web/CSS/visibility*/
+	/* Good solution : https://stackoverflow.com/questions/16132383/changing-div-visibility-with-javascript */
 }
 
 // --------------------

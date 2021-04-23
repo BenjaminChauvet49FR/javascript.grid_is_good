@@ -32,3 +32,20 @@ GeneralSolver.prototype.distantNeighborExists = function(p_x, p_y, p_dist, p_dir
 		case DIRECTION.DOWN : return p_y + p_dist < this.yLength; break;
 	}
 }
+
+GeneralSolver.prototype.existingNeighborCoors = function(p_x, p_y) {
+	var answer = [];
+	if (leftNeighborExists(p_x)) {
+		answer = [{x : p_x-1, y : p_y}];
+	}
+	if (upNeighborExists(p_y)) {
+		answer.push({x : p_x, y : p_y-1});
+	}
+	if (rightNeighborExists(p_x, this.xLength)) {
+		answer.push({x : p_x+1, y : p_y});
+	}
+	if (downNeighborExists(p_y, this.yLength)) {
+		answer.push({x : p_x, y : p_y+1});
+	}
+	return answer;
+}

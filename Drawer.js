@@ -305,7 +305,7 @@ Drawer.prototype.drawSpaceContents = function (p_context, p_drawableItems, p_fun
                     p_context.drawImage(item.picture, item.x1, item.y1, item.x2, item.y2, pixDrawX, pixDrawY, pixInnerSide, pixInnerSide);
                 } else if (item.kind == KIND_DRAWABLE_ITEM.COLOR) {
                     p_context.fillStyle = item.getColour();
-                    p_context.fillRect(pixDrawX, pixDrawY, pixInnerSide, pixInnerSide); 
+                    p_context.fillRect(pixDrawX, pixDrawY, pixInnerSide, pixInnerSide);
                 } else if (item.kind == KIND_DRAWABLE_ITEM.CIRCLE) {
 					p_context.beginPath();
 					p_context.lineWidth = (item.thickness || item.thickness == 0) ? item.thickness : Math.max(1, this.getPixInnerSide()*1/16);
@@ -321,6 +321,8 @@ Drawer.prototype.drawSpaceContents = function (p_context, p_drawableItems, p_fun
 					}
 				} else if (item.kind == KIND_DRAWABLE_ITEM.X) {
 					this.drawCrossX(p_context, ix, iy, item);
+				} else if (item.kind == KIND_DRAWABLE_ITEM.LITTLE_X) {
+					this.drawCrossLittleX(p_context, ix, iy, item);
 				} else if (item.kind == KIND_DRAWABLE_ITEM.SQUARE) {
 					this.drawSquare(p_context, ix, iy, item);
 				}
@@ -561,15 +563,27 @@ Drawer.prototype.drawRegionValues = function(p_context, p_functionRegion, p_numb
 // -----------------
 // Drawing one item per space
 
+Drawer.prototype.fillSpace = function(p_context, p_xSpace, p_ySpace, p_item) {
+	p_context.fillStyle = item.getColour();
+	p_context.fillRect(pixDrawX, pixDrawY, pixInnerSide, pixInnerSide);
+}
+
 Drawer.prototype.drawCrossX = function(p_context, p_xSpace, p_ySpace, p_item) {
+	this.drawCrossXInner(p_context, p_xSpace, p_ySpace, p_item, Math.floor(this.getPixInnerSide()/10));
+}
+
+Drawer.prototype.drawCrossLittleX = function(p_context, p_xSpace, p_ySpace, p_item) {
+	this.drawCrossXInner(p_context, p_xSpace, p_ySpace, p_item,  Math.floor(this.getPixInnerSide()/2));
+}
+
+Drawer.prototype.drawCrossXInner = function(p_context, p_xSpace, p_ySpace, p_item, p_pixDistanceFromEdge) {
 	p_context.beginPath();
 	p_context.strokeStyle = p_item.color; 
 	p_context.lineWidth = Math.max(Math.floor(this.getPixInnerSide()/10, 1));
-	const pixAway = Math.floor(this.getPixInnerSide()/10);
-	const pixLeft = this.getPixInnerXLeft(p_xSpace) + pixAway;
-	const pixRight = this.getPixInnerXRight(p_xSpace) - pixAway;
-	const pixUp = this.getPixInnerYUp(p_ySpace) + pixAway;
-	const pixDown = this.getPixInnerYDown(p_ySpace) - pixAway;
+	const pixLeft = this.getPixInnerXLeft(p_xSpace) + p_pixDistanceFromEdge;
+	const pixRight = this.getPixInnerXRight(p_xSpace) - p_pixDistanceFromEdge;
+	const pixUp = this.getPixInnerYUp(p_ySpace) + p_pixDistanceFromEdge;
+	const pixDown = this.getPixInnerYDown(p_ySpace) - p_pixDistanceFromEdge;
 	p_context.moveTo(pixLeft, pixUp);
 	p_context.lineTo(pixRight, pixDown);
 	p_context.moveTo(pixLeft, pixDown);

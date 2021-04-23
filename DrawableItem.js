@@ -1,11 +1,12 @@
 function DrawableItem(){}
 
 const KIND_DRAWABLE_ITEM = {
-	IMAGE:1,
-	COLOR:2,
-	CIRCLE:3,
-	X:4,
-	SQUARE:5
+	IMAGE : 1,
+	COLOR : 2,
+	CIRCLE : 3,
+	LITTLE_X : 4,
+	X : 4,
+	SQUARE : 5
 }
 
 /*
@@ -44,6 +45,13 @@ function DrawableSquare(p_colorBorder, p_colorInner, p_thickness) {
 function DrawableX(p_color) { 
 	var item = new DrawableItem();
 	item.kind = KIND_DRAWABLE_ITEM.X;
+	item.color = p_color;
+	return item;
+}
+
+function DrawableLittleX(p_color) { 
+	var item = new DrawableItem();
+	item.kind = KIND_DRAWABLE_ITEM.LITTLE_X;
 	item.color = p_color;
 	return item;
 }

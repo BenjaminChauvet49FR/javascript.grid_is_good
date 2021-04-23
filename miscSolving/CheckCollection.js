@@ -76,3 +76,33 @@ CheckCollectionDoubleEntry.prototype.constructor = CheckCollectionDoubleEntry;
 CheckCollectionDoubleEntry.prototype.add = function(p_x, p_y) {
 	return this.addGeneric(p_x, p_y, true);
 }
+
+// ------------------------
+// Same as "double entry" but it deals with new spaces. (may be useless ...)
+/*
+function CheckCollectionPropagationDoubleEntry(p_xLength, p_yLength) {
+	CheckCollectionDoubleEntry.call(p_xLength, p_yLength);
+	this.newList = [];
+}
+
+CheckCollectionPropagationDoubleEntry.prototype = Object.create(GeneralSolver.prototype);
+CheckCollectionPropagationDoubleEntry.prototype.constructor = CheckCollectionDoubleEntry;
+
+CheckCollectionPropagationDoubleEntry.prototype.addToPropagation = function(p_x, p_y) {
+	ok = this.add(p_x, p_y);
+	if (ok) {
+		this.newList.push({x : ix, y : iy});
+	}
+	return ok;
+}
+
+CheckCollectionPropagationDoubleEntry.prototype.hasStillNews = function() {
+	return (this.newList.length > 0);
+}
+
+CheckCollectionPropagationDoubleEntry.prototype.pushOneLeft = function() {
+	if (this.newList.length > 0) {
+		return this.newList.pop();
+	}
+	return null;
+}*/
