@@ -7,6 +7,7 @@ function switchedState(p_state) {
 }
 
 // ---------------------------------------------
+// Creator and generations
 
 function WallGrid(p_wallArray, p_xLength, p_yLength) {
     this.array = p_wallArray;
@@ -57,36 +58,35 @@ WallGrid.prototype.cleanRedundantWalls = function() {
 	for (var iy = 0; iy < this.yLength ; iy++) {
 		for (var ix = 0; ix < this.xLength ; ix++) {
 			if (this.array[iy][ix].state == WALLGRID.CLOSED) {
-				if (iy > 0 && this.array[iy-1][ix].wallD == WALLGRID.CLOSED) {
-					this.array[iy-1][ix].wallD = WALLGRID.OPEN;
-				}
-				if (ix > 0 && this.array[iy][ix-1].wallR == WALLGRID.CLOSED) {
-					this.array[iy][ix-1].wallR = WALLGRID.OPEN;
-				}
-				if (ix <= this.xLength-2 && this.array[iy][ix].wallD == WALLGRID.CLOSED) {
-					this.array[iy][ix].wallD = WALLGRID.OPEN;
-				}
-				if (iy <= this.yLength-2 && this.array[iy][ix].wallR == WALLGRID.CLOSED) {
-					this.array[iy][ix].wallR = WALLGRID.OPEN;
-				}
-			} 
+				existingNeighborsCoorsDirections(ix, iy).forEach(coorsDir => {
+					x = coorsDir.x;
+					y = coorsDir.y;
+					dir = coorsDir.direction;
+					if (this.getWall(x, y, dir) == WALLGRID.CLOSED) {
+						this.setWall(x, y, dir, WALLGRID.OPEN);
+					}
+				});
+			}
 		}
 	}
 }
 
+// --------------
+// Regionalize !
+
 /**
 Converts a grid with walls (right and down) to a "region" grid (regions 1,2,3,...)
  */
-WallGrid.prototype.toRegionGrid = function () {
-    var regionGridAnswer = [];
+WallGrid.prototype.toRegionArray = function () {
+    var regionArray = [];
     //Create the grid with banned and uncharted spaces
     for (var iy = 0; iy < this.yLength; iy++) {
-        regionGridAnswer.push([]);
+        regionArray.push([]);
         for (var ix = 0; ix < this.xLength; ix++) {
             if (this.array[iy][ix].state == WALLGRID.CLOSED) {
-                regionGridAnswer[iy].push(WALLGRID.OUT_OF_REGIONS);
+                regionArray[iy].push(WALLGRID.OUT_OF_REGIONS);
             } else {
-                regionGridAnswer[iy].push(UNCHARTED);
+                regionArray[iy].push(UNCHARTED);
             }
         }
     }
@@ -96,12 +96,12 @@ WallGrid.prototype.toRegionGrid = function () {
     var regionIndex = 0;
     var spacesThatBelong = [];
     var spaceToPut;
-    var x,
-    y;
+    var x, y;
+	var firstSpaces = [];
     //Then, go for all non-banned spaces
     while (firstY < this.yLength) {
         firstX = 0;
-        while ((firstX < this.xLength) && (regionGridAnswer[firstY][firstX] != UNCHARTED)) { //le dernier true sera à changer quand je ferai des cases destinées à rester à -1
+        while ((firstX < this.xLength) && (regionArray[firstY][firstX] != UNCHARTED)) { //le dernier true sera à changer quand je ferai des cases destinées à rester à -1
             firstX++;
         }
         if (firstX < this.xLength) {
@@ -113,31 +113,15 @@ WallGrid.prototype.toRegionGrid = function () {
                 spaceToPut = spacesThatBelong.pop();
                 x = spaceToPut.sx;
                 y = spaceToPut.sy;
-                regionGridAnswer[y][x] = regionIndex;
-                if ((y > 0) && (regionGridAnswer[y - 1][x] == UNCHARTED) && (this.array[y - 1][x].wallD == WALLGRID.OPEN)) {
-                    spacesThatBelong.push({
-                        sx: x,
-                        sy: y - 1
-                    });
-                }
-                if ((x > 0) && (regionGridAnswer[y][x - 1] == UNCHARTED) && (this.array[y][x - 1].wallR == WALLGRID.OPEN)) {
-                    spacesThatBelong.push({
-                        sx: x - 1,
-                        sy: y
-                    });
-                }
-                if ((y <= this.yLength - 2) && (regionGridAnswer[y + 1][x] == UNCHARTED) && (this.array[y][x].wallD == WALLGRID.OPEN)) {
-                    spacesThatBelong.push({
-                        sx: x,
-                        sy: y + 1
-                    });
-                }
-                if ((x <= this.xLength - 2) && (regionGridAnswer[y][x + 1] == UNCHARTED) && (this.array[y][x].wallR == WALLGRID.OPEN)) {
-                    spacesThatBelong.push({
-                        sx: x + 1,
-                        sy: y
-                    });
-                }
+                regionArray[y][x] = regionIndex;
+				existingNeighborsCoorsDirections(x, y, this.xLength, this.yLength).forEach(coorsDir => {
+					dx = coorsDir.x;
+					dy = coorsDir.y;
+					dir = coorsDir.direction;
+					if (regionArray[dy][dx] == UNCHARTED && this.getWall(x, y, dir) == WALLGRID.OPEN) {
+						spacesThatBelong.push({sx : dx, sy : dy});
+					}
+				});
             }
             regionIndex++;
             firstX++;
@@ -147,8 +131,40 @@ WallGrid.prototype.toRegionGrid = function () {
             firstY++;
         }
     }
-    return regionGridAnswer;
+	return regionArray;
 }
+
+// Computes all spaces by region from the array of coordinates.
+listSpacesByRegion = function(p_regionArray) {
+	var numberRegions = numberOfRegions(p_regionArray);
+	var spacesByRegion = [];
+	for(var i=0 ; i <= numberRegions ; i++) {
+		spacesByRegion.push([]);
+	}
+	for(iy = 0 ; iy < p_regionArray.length ; iy++) {
+		for(ix = 0 ; ix < p_regionArray[iy].length ; ix++) {
+			if(p_regionArray[iy][ix] >= 0) {
+				spacesByRegion[p_regionArray[iy][ix]].push({x:ix,y:iy});
+			}
+		}
+	}
+	return spacesByRegion;
+}
+
+numberOfRegions = function(p_regionArray) {
+	var firstCoors = [];
+	var ix,iy;
+	var lastRegionNumber = 0;
+	for(iy = 0; iy < p_regionArray.length ; iy++){
+		for(ix = 0; ix < p_regionArray[iy].length ; ix++){
+			lastRegionNumber = Math.max(p_regionArray[iy][ix], lastRegionNumber);
+		}
+	}
+	return lastRegionNumber;
+}
+
+// --------------
+// Generic getters and setters
 
 WallGrid.prototype.getWallR = function (p_x, p_y) {
     return this.array[p_y][p_x].wallR;
@@ -157,10 +173,10 @@ WallGrid.prototype.getWallD = function (p_x, p_y) {
     return this.array[p_y][p_x].wallD;
 }
 WallGrid.prototype.getWallU = function (p_x, p_y) {
-    return this.array[p_y - 1][p_x].wallR;
+    return this.array[p_y - 1][p_x].wallD;
 }
 WallGrid.prototype.getWallL = function (p_x, p_y) {
-    return this.array[p_y][p_x - 1].wallD;
+    return this.array[p_y][p_x - 1].wallR;
 }
 WallGrid.prototype.getState = function (p_x, p_y) {
     return this.array[p_y][p_x].state;
@@ -174,11 +190,11 @@ WallGrid.prototype.setWallD = function (p_x, p_y, p_state) {
     this.isRegionGridValid = false;
 }
 WallGrid.prototype.setWallU = function (p_x, p_y, p_state) {
-    this.array[p_y - 1][p_x].wallR = p_state;
+    this.array[p_y - 1][p_x].wallD = p_state;
     this.isRegionGridValid = false;
 }
 WallGrid.prototype.setWallL = function (p_x, p_y, p_state) {
-    this.array[p_y][p_x - 1].wallD = p_state;
+    this.array[p_y][p_x - 1].wallR = p_state;
     this.isRegionGridValid = false;
 }
 WallGrid.prototype.setState = function (p_x, p_y, p_state) {
@@ -195,17 +211,38 @@ WallGrid.prototype.switchWallU = function (p_x, p_y) {
     this.setWallU(p_x, p_y, switchedState(this.getWallU(p_x, p_y)));
 }
 WallGrid.prototype.switchWallL = function (p_x, p_y) {
-    this.setWallU(p_x, p_y, switchedState(this.getWallL(p_x, p_y)));
+    this.setWallL(p_x, p_y, switchedState(this.getWallL(p_x, p_y)));
 }
 WallGrid.prototype.switchState = function (p_x, p_y) {
     this.setState(p_x, p_y, switchedState(this.getState(p_x, p_y)));
 }
+WallGrid.prototype.getWall = function(p_x, p_y, p_dir) {
+	switch(p_dir) {
+		case DIRECTION.LEFT : return this.getWallL(p_x, p_y); break;
+		case DIRECTION.UP : return this.getWallU(p_x, p_y); break;
+		case DIRECTION.RIGHT : return this.getWallR(p_x, p_y); break;
+		default : return this.getWallD(p_x, p_y); break;
+	}
+}		
+WallGrid.prototype.setWall = function(p_x, p_y, p_dir, p_state) {
+	switch(p_dir) {
+		case DIRECTION.LEFT : return this.setWallL(p_x, p_y, p_state); break;
+		case DIRECTION.UP : return this.setWallU(p_x, p_y, p_state); break;
+		case DIRECTION.RIGHT : return this.setWallR(p_x, p_y, p_state); break;
+		default : return this.setWallD(p_x, p_y, p_state); break;
+	}
+}	
+
+
 WallGrid.prototype.getXLength = function() {
 	return this.xLength;
 }
 WallGrid.prototype.getYLength = function() {
 	return this.yLength;
 }
+
+// --------------
+// Transformations
 
 WallGrid.prototype.rotateCWGrid = function () {
     var newWallGrid = [];

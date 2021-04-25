@@ -5,9 +5,9 @@ function drawInsideSpaces(p_context, p_drawer, p_colours, p_solver) {
 	var items = [DrawableColor(p_colours.openSquare), DrawableX(p_colours.closedSquare)];
 	function selection(x, y) {
 		if (!p_solver.isBanned(x, y)) {
-			if(p_solver.getAnswer(x, y) == SPACE.OPEN) {
+			if(p_solver.getAnswer(x, y) == ADJACENCY.YES) {
 				return 0;
-			} else if(p_solver.getAnswer(x, y) == SPACE.CLOSED) {
+			} else if(p_solver.getAnswer(x, y) == ADJACENCY.NO) {
 				return 1;
 			}
 		}

@@ -28,7 +28,7 @@ SolverUsotatami.prototype.construct = function(p_numberGrid) {
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	//this.methodSetDeductions.addOneAbortAndFilters(abortClosure(this), [filterNumbersSpacesClosure(this)]);
+	//this.methodSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterNumbersSpacesClosure(this)]);
 	
 	this.indicArray = []; // Spaces without number : ; with a number : {expansions left / up / right / down}
 	this.numberSpacesArray = []; // For filters on numbers
@@ -192,11 +192,11 @@ SolverUsotatami.prototype.undo = function(){
 
 SolverUsotatami.prototype.passRegion = function(p_indexRegion) {
 	/*const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion); */
+	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, p_indexRegion); */
 }
 
 SolverUsotatami.prototype.makeMultiPass = function() {	
-	//this.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
+	//this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
 }
 
 // In this puzzle, quickstart is vital for the separation of numbers

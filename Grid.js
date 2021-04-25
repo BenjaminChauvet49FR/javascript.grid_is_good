@@ -20,11 +20,27 @@ Generates a clean grid that is supposed to contain things into spaces.
 Even though the method is named "SymbolArray" it is generic and can contain anything that is contained directly into spaces. For instance, numbers.
 */
 function generateSymbolArray(p_widthGrid, p_heightGrid) {
-    var answer = [];
+	return generateValueArray(p_widthGrid, p_heightGrid, null);
+}
+
+function generateValueArray(p_widthGrid, p_heightGrid, p_value) {
+	var answer = [];
     for (var iy = 0; iy < p_heightGrid; iy++) {
         answer.push([]);
         for (var ix = 0; ix < p_widthGrid; ix++) {
-            answer[iy].push(null);
+            answer[iy].push(p_value);
+        }
+    }
+    return answer;
+}
+
+
+function generateFunctionValueArray(p_widthGrid, p_heightGrid, p_function) {
+	var answer = [];
+    for (var iy = 0 ; iy < p_heightGrid; iy++) {
+        answer.push([]);
+        for (var ix = 0 ; ix < p_widthGrid ; ix++) {
+            answer[iy].push(p_function(ix, iy));
         }
     }
     return answer;

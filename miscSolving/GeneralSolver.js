@@ -1,12 +1,4 @@
 // Constants and items
-
-const SPACE = {
-    OPEN: 'O',
-    CLOSED: 'C',
-    UNDECIDED: '-',
-    NOT_APPLICABLE: 'n',
-};
-
 const EVENT_RESULT = { 
     SUCCESS : 1,
     FAILURE : 2,
@@ -42,7 +34,6 @@ function GeneralSolver() { }
 
 // This method should be called by the inheriting "construct".
 GeneralSolver.prototype.generalConstruct = function() {
-	this.myLog = 0;
 	this.separatelyStackDeductions = true; // When true, stacks a new list for a deduction ; when false, adds the events to the last array of happenedEventsSeries. 
 	this.happenedEventsSeries = []; // List of (non-empty list of events). All events beyond the first must be logical deductions (logic of any kind, including geographic) of the first one.	
 }
@@ -75,7 +66,7 @@ GeneralSolver.prototype.generalConstruct = function() {
 GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_methodPack) {
 	var listEventsToApply = [p_startingEvent]; //List of the "events" type used by the solver. 
 	// Events can be of any kind but, if the puzzle is geographical, must have the following methods :
-	// A "x" method (int), a "y" method (int), a "opening" method (SPACE.OPEN | SPACE.CLOSED | SPACE.UNDEFINED), in which case no geographical check is performed)
+	// A "x" method (int), a "y" method (int), a "opening" method (ADJACENCY.YES | ADJACENCY.NO | SPACE.UNDEFINED), in which case no geographical check is performed)
     var eventBeingApplied;
     var listEventsApplied = [];
     var ok = true;
@@ -102,12 +93,12 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
 			if (result == EVENT_RESULT.SUCCESS) {
 				listEventsToApply = p_methodPack.deductionsMethod(listEventsToApply, eventBeingApplied);
 				if (p_methodPack.adjacencyMethod) { // https://stackoverflow.com/questions/3007460/how-to-check-if-anonymous-object-has-a-method/3007494
-					if (eventBeingApplied.opening() == SPACE.CLOSED) {
+					if (eventBeingApplied.opening() == ADJACENCY.NO) {
 					newClosedSpaces.push({
 						x: eventBeingApplied.x(),
 						y: eventBeingApplied.y()
 					});
-					} else if (eventBeingApplied.opening() == SPACE.OPEN) {
+					} else if (eventBeingApplied.opening() == ADJACENCY.YES) {
 						//If we are putting the first open space, add a corresponding event into the list of applied events (it isn't "to apply" anymore)
 						if (!this.atLeastOneOpen) {
 							listEventsApplied.push({firstOpen : true});
@@ -152,7 +143,7 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
 				});
                 this.happenedEventsSeries.forEach(eventSerie => {
                     eventSerie.list.forEach(solveEvent => {
-						if (solveEvent.opening() == SPACE.CLOSED) {
+						if (solveEvent.opening() == ADJACENCY.YES) {
 							newClosedSpaces.push({
 								x: solveEvent.x(),
 								y: solveEvent.y()
@@ -163,10 +154,6 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
             }
             if (this.atLeastOneOpen) {
                 //Geographical verification.
-				autoLogDebug("My log : "+(this.myLog++));
-				if (this.myLog == 227 || this.myLog == 662) {
-					autoLogDebug("Fatal !");
-				}
                 geoV = this.geographicalVerification(newClosedSpaces, p_methodPack.adjacencyMethod);
 				ok = (geoV.result == EVENT_RESULT.SUCCESS);
 				if (ok) {
@@ -217,10 +204,10 @@ GeneralSolver.prototype.geographicalVerification = function (p_listNewXs, p_adja
         var newListEvents = [];
         var newListEventsApplied = [];
         checking.newADJACENCY.forEach(space => {
-            newListEvents.push(new GeographicalDeduction(space.x, space.y, SPACE.OPEN));
+            newListEvents.push(new GeographicalDeduction(space.x, space.y, ADJACENCY.YES));
         });
         checking.newBARRIER.forEach(space => {
-            newListEvents.push(new GeographicalDeduction(space.x, space.y, SPACE.CLOSED));
+            newListEvents.push(new GeographicalDeduction(space.x, space.y, ADJACENCY.NO));
         });
         checking.newLimits.forEach(spaceLimit => {
             //Store the ancient limit into the solved event (in case of undoing), then overwrites the limit at once and pushes it into
@@ -389,6 +376,40 @@ function filterExternalMethods(p_list) {
 	return answer;
 }
 
+/** Public function that can be used to compare events for the pass. (see above)
+Use : 
+p_differentKinds : array that states the different possible event kind.
+p_array : array of arrays. Containes array should be implicitely paired : array in position 0 p_array is matched with position 1, arrays in position 2 and 3 matched, 4 and 5 matched...
+Length of p_array must be equal to 2 * (length of p_differentKinds ). Each array in a pair must reflect the property.
+Typical example in StarBattleSolve and Shimaguni solver. 
+p_kind1 : kind of first event (to be ignored if only 1 event)
+p_kind2 : kind of 2nd event
+*/
+// Performance tests have been done on Star Battle n° 148 to test which version is the best in a multipass.
+function commonComparisonMultiKinds(p_differentKinds, p_array, p_kind1, p_kind2) {
+	if (p_kind1 > p_kind2) {return 1;}
+	if (p_kind1 < p_kind2) {return -1;}
+	var found = (p_differentKinds.length == 0); // while loop has to be skipped if array is empty ;)
+	var kindIndex = found ? 0 : -1;
+	while(!found) { // Please no non-existent kind ;)
+		kindIndex++;
+		found = (p_kind1 == p_differentKinds[kindIndex]);
+	}
+	const k1 = 2 * kindIndex;
+	const k2 = k1 + 1;
+	var indexComp = 0;
+	while (indexComp < p_array[k1].length) {
+		if (p_array[k1][indexComp] > p_array[k2][indexComp]) {return 1;}
+		if (p_array[k1][indexComp] < p_array[k2][indexComp]) {return -1;}
+		indexComp++;
+	}
+	return 0;
+}
+
+function commonComparison(p_twoArrays) {
+	return commonComparisonMultiKinds([], p_twoArrays);
+}
+
 /**
 Performs a multipass
 p_passTools must contain the following methods :
@@ -397,7 +418,7 @@ p_passTools must contain the following methods :
 - skipPassMethod (optional) : method that takes a pass argument and that determinates whether the set of possibilites designated by the pass argument is too big to be passed or not. The set of possibilities will have to be tested anyways if no other set has been tested so far in this cycle of multipasses.)
 p_methodSet, p_eventsTools : same arguments as in the pass method.
 */
-GeneralSolver.prototype.multiPass = function(p_methodSet ,p_eventsTools, p_passTools) {  
+GeneralSolver.prototype.multiPass = function(p_methodSet, p_eventsTools, p_passTools) {  
 	var oneMoreLoop;
 	var orderedListPassArguments;
 	var ok = true;
@@ -502,5 +523,5 @@ GeneralSolver.prototype.happenedEventsLog = function(p_options) {
 		}
 		answer += "\n";
 	});
-	return answer;
+	console.log(answer); // If 'answer' is simply returned, hitting solver.happenedEventsLog() or its quick variation will keep the literal \n.
 }

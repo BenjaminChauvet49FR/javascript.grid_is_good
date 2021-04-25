@@ -7,19 +7,19 @@ function SpaceEvent(p_x, p_y, p_symbol, p_choice) {
 	this.choice = p_choice;
 }
 
-SpaceEvent.prototype.toString = function(){	
+SpaceEvent.prototype.toString = function() {	
 	return "["+this.symbol+" "+this.coorX+","+this.coorY+"]";
 }
 
-SpaceEvent.prototype.copy = function(){
+SpaceEvent.prototype.copy = function() {
 	return new SpaceEvent(this.coorX, this.coorY, this.symbol);
 }
 
 SpaceEvent.prototype.opening = function() {
 	if (this.symbol == SPACE_SHUGAKU.OPEN) {
-		return (this.choice ? SPACE.OPEN : SPACE.CLOSED);
+		return (this.choice ? ADJACENCY.YES : ADJACENCY.NO);
 	} else {
-		return (this.choice ? SPACE.CLOSED : SPACE.UNDECIDED);
+		return (this.choice ? ADJACENCY.NO : ADJACENCY.UNDECIDED);
 	}
 }
 
@@ -43,5 +43,5 @@ FenceShugakuEvent.prototype = Object.create(FenceEvent.prototype);
 FenceShugakuEvent.prototype.constructor = FenceShugakuEvent;
 
 FenceShugakuEvent.prototype.opening = function() {
-	return SPACE.NOT_APPLICABLE;
+	return ADJACENCY.UNDECIDED
 }

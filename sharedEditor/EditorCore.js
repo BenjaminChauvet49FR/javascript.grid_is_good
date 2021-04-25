@@ -551,7 +551,7 @@ EditorCore.prototype.moveCopySpace = function(p_x, p_y, p_deltaX, p_deltaY, p_mo
 // Misc.
 
 EditorCore.prototype.alignToRegions = function (p_idGrid) {
-    this.grids[p_idGrid].arrangeSymbols(this.wallGrid.toRegionGrid());
+    this.grids[p_idGrid].arrangeSymbols(this.wallGrid.toRegionArray());
 }
 
 EditorCore.prototype.cleanRedundantWalls = function () { // Note : name transfer...

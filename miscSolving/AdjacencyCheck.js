@@ -1,23 +1,17 @@
 const ADJACENCY = {
-    YES: 1,
-    NO: 0,
-    UNDEFINED: -1
+    YES : 2,
+    NO : 1,
+    UNDECIDED : 0
 };
 
-DIRECTION.HERE = 'H';
+DIRECTION.HERE = 5;
 
 const TASK = {
-    TBD: 0,
-    DONE: 1
+    TBD : 0,
+    DONE : 1
 };
-const UNDEFINED_INDEX = -1;
 
-const TBD_DIRECTIONS = {
-    d: TASK.TBD, 
-    l: TASK.TBD,
-    u: TASK.TBD,
-    r: TASK.TBD
-};
+const UNDEFINED_INDEX = -1;
 
 var turningLeftArray = null;
 var indexClustersGrid = null;
@@ -27,35 +21,16 @@ var newBarriersGrid = null;
 var directionsGrid = null;
 var newAdjacencyLimit = null;
 
-function restartGrid(p_array, p_xLength, p_yLength, p_value) {
+function restartArray(p_array, p_xLength, p_yLength, p_value) {
     if ((p_array == null) || (p_yLength != p_array.length) || (p_xLength != p_array[0].length)) {
-        p_array = [];
-        var x;
-        for (var y = 0; y < p_yLength; y++) {
-            p_array.push([]);
-            for (x = 0; x < p_xLength; x++) {
-                p_array[y].push(p_value);
-            }
-        }
+        p_array = generateValueArray(p_xLength, p_yLength, p_value);
     }
     return p_array;
 }
 
-function restartGridTBD(p_array, p_xLength, p_yLength) {
+function restartArrayTBD(p_array, p_xLength, p_yLength) {
     if ((p_array == null) || (p_yLength != p_array.length) || (p_xLength != p_array[0].length)) {
-        p_array = [];
-        var x;
-        for (var y = 0; y < p_yLength; y++) {
-            p_array.push([]);
-            for (x = 0; x < p_xLength; x++) {
-                p_array[y].push({
-                    l: TASK.TBD,
-                    u: TASK.TBD,
-                    r: TASK.TBD,
-                    d: TASK.TBD
-                }); // A copy of the item is required here
-            }
-        }
+		p_array = generateFunctionValueArray(p_xLength, p_yLength, function(){return [TASK.TBD, TASK.TBD, TASK.TBD, TASK.TBD]});
     }
     return p_array;
 }
@@ -69,13 +44,7 @@ function cleanGridList(p_array, p_list, p_value) {
 
 function cleanGridListTBD(p_array, p_list) {
     p_list.forEach(space => {
-        p_array[space.y][space.x] = {
-            l: TASK.TBD,
-            u: TASK.TBD,
-            r: TASK.TBD,
-            d: TASK.TBD
-        }
-        // Même remarque que dans la version "non naturelle" de restartGrid (aka restartGridTBD sauf si changement de nom)
+        p_array[space.y][space.x] = [TASK.TBD, TASK.TBD, TASK.TBD, TASK.TBD];
     });
     return p_array;
 }
@@ -100,10 +69,10 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
 	}
 	
 	// Anyway let's go !
-	amountStepsArray = restartGrid(amountStepsArray, p_xLength, p_yLength, 0);
-	//lastWalkDirectionArray = restartGrid(lastWalkDirectionArray, p_xLength, p_yLength, null); limit detection in left walk
-    indexClustersGrid = restartGrid(indexClustersGrid, p_xLength, p_yLength, UNDEFINED_INDEX);
-    turningLeftArray = restartGridTBD(turningLeftArray, p_xLength, p_yLength);
+	amountStepsArray = restartArray(amountStepsArray, p_xLength, p_yLength, 0);
+	//lastWalkDirectionArray = restartArray(lastWalkDirectionArray, p_xLength, p_yLength, null); limit detection in left walk
+    indexClustersGrid = restartArray(indexClustersGrid, p_xLength, p_yLength, UNDEFINED_INDEX);
+    turningLeftArray = restartArrayTBD(turningLeftArray, p_xLength, p_yLength);
 
     //Create "clusters"
     var clusterList = [];
@@ -288,7 +257,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
     //List the new limit spaces, e.g. the ones that are crossed more than once when
     //we walk around the barrier spaces (starting with the new barriers) and turn left when possible (like a bug (or paramecium ?) in Chip's Challenge).
 	if (clusterList.length != 0) {
-        newBarriersGrid = restartGrid(newBarriersGrid, p_xLength, p_yLength, false);
+        newBarriersGrid = restartArray(newBarriersGrid, p_xLength, p_yLength, false);
     }
 	
     var listSpacesClustersBarriered = [];
@@ -429,7 +398,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
     var listSpacesConfirmedAdjacency = [];
     var listSpacesLimitsAndTheirLimits = [];
     if (spacesWithLimits.length > 0) {
-        directionsGrid = restartGrid(directionsGrid, p_xLength, p_yLength, DIRECTION.UNDECIDED);
+        directionsGrid = restartArray(directionsGrid, p_xLength, p_yLength, DIRECTION.UNDECIDED);
     }
 	
 	function isWorthDigging(p_x, p_y, p_origin, p_direction) {

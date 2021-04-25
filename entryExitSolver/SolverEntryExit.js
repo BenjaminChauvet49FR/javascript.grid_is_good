@@ -7,7 +7,7 @@ SolverEntryExit.prototype = Object.create(RegionLoopSolver.prototype);
 SolverEntryExit.prototype.constructor = SolverEntryExit;
 
 function DummySolver() {
-	return new SolverEntryExit(generateWallArray(1,1));
+	return new SolverEntryExit(generateWallArray(1, 1));
 }
 
 SolverEntryExit.prototype.construct = function(p_wallArray) {
@@ -77,7 +77,7 @@ SolverEntryExit.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 
 SolverEntryExit.prototype.passSpace = function(p_x, p_y) {
 	/*const generatedEvents = generateEventsForSpaceClosure(this)({x : p_x, y : p_y}); // Yeah, that method (returned by the closure) should have one single argument as it will be passed to multipass...
-	this.passEvents(generatedEvents, this.methodSet, this.methodTools, {x : p_x, y : p_y});*/
+	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y});*/
 	alert("To be done");
 }
 
@@ -117,7 +117,7 @@ SolverEntryExit.prototype.buildPatrioticBorderNoEnds = function(p_eventsToApply,
 		x = space.x;
 		y = space.y;
 		if ( ((x != xEnd1) || (y != yEnd1)) && ((x != xEnd2) || (y != yEnd2)) ) {
-			this.adjacentRegionsGrid[y][x].forEach(indication => {
+			this.adjacentRegionsArray[y][x].forEach(indication => {
 				p_eventsToApply.push(new LinkEvent(x, y, indication.direction, LOOP_STATE.CLOSED));
 			});
 		}
@@ -137,8 +137,8 @@ SolverEntryExit.prototype.buildPatrioticBorderParity = function(p_eventsToApply,
 	p_region.spaces.forEach(space => {
 		x = space.x;
 		y = space.y;
-		if (((x + xEndMod2 + y + yEndMod2) %2 == parityNumberSpaces) && ((x != xEnd) || (y != yEnd))) {
-			this.adjacentRegionsGrid[y][x].forEach(indication => {
+		if (((x + xEndMod2 + y + yEndMod2) % 2 == parityNumberSpaces) && ((x != xEnd) || (y != yEnd))) {
+			this.adjacentRegionsArray[y][x].forEach(indication => {
 				p_eventsToApply.push(new LinkEvent(x, y, indication.direction, LOOP_STATE.CLOSED));
 			});
 		}
@@ -146,15 +146,6 @@ SolverEntryExit.prototype.buildPatrioticBorderParity = function(p_eventsToApply,
 	p_eventsToApply.push(new LinkEvent(xEnd, yEnd, p_region.endSpaces[0].directionMyRegion, LOOP_STATE.LINKED));
 	return p_eventsToApply;
 }
-
-// -------------------
-// Closures
-
-/*function setEdgeLinkedEntryExitDeductionsClosure(p_solver) {
-	return function(p_eventList, p_eventBeingApplied) {
-		
-	}
-}*/
 
 // -------------------
 // Passing
@@ -167,6 +158,3 @@ function namingCategoryClosure(p_solver) {
 		return answer;
 	}
 }
-
-
-

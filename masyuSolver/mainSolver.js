@@ -1,3 +1,5 @@
+var solver;
+
 function main() {
 	var colors={
 		closed_wall:'#222222',
@@ -14,7 +16,7 @@ function main() {
 	}
 
 	var drawer = new Drawer(colors);
-	var solver = new SolverMasyu(generateSymbolArray(1,1));
+	solver = DummySolver();
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
 	var actionsManager = {}; 

@@ -1,17 +1,15 @@
-function AdjacencyLimit(p_strings) {
+function AdjacencyLimit(p_arrays) {
     this.limits = [];
-    for (var i = 0; i < p_strings.length; i++) {
+    for (var i = 0; i < p_arrays.length; i++) {
         this.limits.push([]);
-        for (var j = 0; j < p_strings[i].length; j++) {
-            this.limits[i].push(p_strings[i].charAt(j));
+        for (var j = 0; j < p_arrays[i].length; j++) {
+            this.limits[i].push(p_arrays[i][j]);
         }
     }
 }
 
-const FOUR_DIRECTIONS_STRING = "lurd"; // WARNING ! Must be synchronized with directions. Also, see occurences of "d l u r" alone below (such as in TBD_DIRECTIONS).
-
 function AdjacencyLimitNew() {
-    return new AdjacencyLimit([FOUR_DIRECTIONS_STRING]);
+    return new AdjacencyLimit([[0, 1, 2, 3]]);
 }
 
 AdjacencyLimit.prototype.isAccessible = function (p_dir1, p_dir2) {

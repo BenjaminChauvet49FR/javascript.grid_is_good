@@ -26,7 +26,7 @@ SolverShugaku.prototype.construct = function(p_numberSymbolsArray) {
 	this.yLength = p_numberSymbolsArray.length;
 	this.fencesGrid = new FencesGrid(this.xLength, this.yLength);
 	this.makeItGeographical(this.xLength, this.yLength);
-	this.methodSet = new ApplyEventMethodGeographicalPack( 
+	this.methodsSetDeductions = new ApplyEventMethodGeographicalPack( 
 		applyEventClosure(this),
 		deductionsClosure(this),
 		adjacencyClosure(this),
@@ -89,8 +89,8 @@ SolverShugaku.prototype.construct = function(p_numberSymbolsArray) {
 					}
 				});
 			} else {
-				this.existingNeighborSpaces(x, y).forEach(space => {
-					if (!this.isBanned(space.x, space.y)) {
+				this.existingNeighborsCoorsDirections(x, y).forEach(coors => {
+					if (!this.isBanned(coors.x, coors.y)) {
 						this.edgesArray[y][x].closedEdges--;
 					}
 				});
@@ -126,33 +126,6 @@ SolverShugaku.prototype.isClosedDraw = function(p_x, p_y) {
 	return ((!this.answerArray[p_y][p_x].block) && (this.answerArray[p_y][p_x].getState(SPACE_SHUGAKU.OPEN) == SPACE_CHOICE.NO));
 }
 
-SolverShugaku.prototype.neighborExists = function(p_x, p_y, p_dir) {
-	switch (p_dir) {
-		case DIRECTION.LEFT : return (p_x > 0); break;
-		case DIRECTION.UP : return (p_y > 0); break;
-		case DIRECTION.RIGHT : return (p_x <= this.xLength-2); break;
-		case DIRECTION.DOWN : return (p_y <= this.yLength-2); break;
-	}
-}
-
-SolverShugaku.prototype.existingNeighborSpaces = function(p_x, p_y) {
-	var answer = [];
-	if (p_x > 0) { answer.push({x : p_x-1, y : p_y}); }
-	if (p_y > 0) { answer.push({x : p_x, y : p_y-1}); }
-	if (p_x <= this.xLength-2) { answer.push({x : p_x+1, y : p_y}); }
-	if (p_y <= this.yLength-2) { answer.push({x : p_x, y : p_y+1}); }
-	return answer;
-}
-
-SolverShugaku.prototype.existingNeighborDirections = function(p_x, p_y) {
-	var answer = [];
-	if (p_x > 0) { answer.push(DIRECTION.LEFT); }
-	if (p_y > 0) { answer.push(DIRECTION.UP); }
-	if (p_x <= this.xLength-2) { answer.push(DIRECTION.RIGHT); }
-	if (p_y <= this.yLength-2) { answer.push(DIRECTION.DOWN); }
-	return answer;
-}
-
 // Only for drawing
 getFenceRightDominoDrawingClosure = function(p_solver) {
 	return function(p_x, p_y) {
@@ -180,9 +153,7 @@ SolverShugaku.prototype.getFenceDominoDrawingMethod = function(p_traditionalFenc
 }
 
 //--------------------------------
-
 // Input methods
-
 
 SolverShugaku.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
@@ -195,13 +166,13 @@ SolverShugaku.prototype.quickStart = function() {
 		x = coorSpace.x;
 		y = coorSpace.y;
 		if (this.squareCountingArray[y][x].notNoSquaresYet == 0) {
-			this.existingNeighborSpaces(x, y).forEach(neighborCoors => {
+			this.existingNeighborsCoorsDirections(x, y).forEach(neighborCoors => {
 				if (!this.isBanned(neighborCoors.x, neighborCoors.y)) {
 					listEvents.push(new SpaceEvent(neighborCoors.x, neighborCoors.y, SPACE_SHUGAKU.SQUARE, true));
 				}
 			});
 		} else if (this.squareCountingArray[y][x].notSquaresYet == 0) {
-			this.existingNeighborSpaces(x, y).forEach(neighborCoors => {
+			this.existingNeighborsCoorsDirections(x, y).forEach(neighborCoors => {
 				if (!this.isBanned(neighborCoors.x, neighborCoors.y)) {
 					listEvents.push(new SpaceEvent(neighborCoors.x, neighborCoors.y, SPACE_SHUGAKU.SQUARE, false));
 				}
@@ -334,7 +305,7 @@ undoEventClosure = function(p_solver) {
 
 // Central method
 SolverShugaku.prototype.tryToPutNew = function (p_event) {
-	this.tryToApplyHypothesis(p_event, this.methodSet);
+	this.tryToApplyHypothesis(p_event, this.methodsSetDeductions);
 }
 
 //--------------------------------
@@ -346,7 +317,7 @@ Transforms a geographical deduction (see dedicated class GeographicalDeduction) 
 */
 transformClosure = function (p_solver) {
     return function (p_geographicalDeduction) {
-		return new SpaceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, SPACE_SHUGAKU.OPEN, p_geographicalDeduction.opening == SPACE.OPEN);
+		return new SpaceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, SPACE_SHUGAKU.OPEN, p_geographicalDeduction.opening == ADJACENCY.YES);
     } 
 };
 
@@ -358,7 +329,7 @@ adjacencyClosure = function (p_solver) {
         switch (p_solver.answerArray[p_y][p_x].getState(SPACE_SHUGAKU.OPEN)) {
 			case SPACE_CHOICE.YES : return ADJACENCY.YES; break;
 			case SPACE_CHOICE.NO : return ADJACENCY.NO; break;
-			default : return ADJACENCY.UNDEFINED; break;
+			default : return ADJACENCY.UNDECIDED; break;
         }
     }
 }
@@ -386,7 +357,7 @@ deductionsClosure = function (p_solver) {
 							p_listEventsToApply.push(new FenceShugakuEvent(x, y, dd, FENCE_STATE.CLOSED));
 						}
 					});
-					p_listEventsToApply = p_solver.alert2x2Areas(p_listEventsToApply, p_solver.methodSet, x, y); 
+					p_listEventsToApply = p_solver.alert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
 				} else { // Space is closed
 					p_listEventsToApply = p_solver.chooseOneEventLeft(p_listEventsToApply, x, y, SPACE_SHUGAKU.SQUARE, SPACE_SHUGAKU.ROUND);
 					if (p_solver.answerArray[y][x].getState(SPACE_SHUGAKU.OPEN) == SPACE_CHOICE.NO) {
@@ -555,9 +526,9 @@ SolverShugaku.prototype.tryAndFillWithNOSquares = function(p_listEventsToApply, 
 }
 
 SolverShugaku.prototype.tryAndFillSoooSquares = function(p_listEventsToApply, p_x, p_y, p_shouldBeSquare) {
-	this.existingNeighborSpaces(p_x, p_y).forEach(space => {
-		if (!this.isBanned(space.x, space.y) && this.answerArray[space.y][space.x].getState(SPACE_SHUGAKU.SQUARE) == SPACE_CHOICE.UNDECIDED) {
-			p_listEventsToApply.push(new SpaceEvent(space.x, space.y, SPACE_SHUGAKU.SQUARE, p_shouldBeSquare)); 
+	this.existingNeighborsCoorsDirections(p_x, p_y).forEach(coors => {
+		if (!this.isBanned(coors.x, coors.y) && this.answerArray[coors.y][coors.x].getState(SPACE_SHUGAKU.SQUARE) == SPACE_CHOICE.UNDECIDED) {
+			p_listEventsToApply.push(new SpaceEvent(coors.x, coors.y, SPACE_SHUGAKU.SQUARE, p_shouldBeSquare)); 
 		}
 	});
 	return p_listEventsToApply;
@@ -566,29 +537,13 @@ SolverShugaku.prototype.tryAndFillSoooSquares = function(p_listEventsToApply, p_
 // Search for the last ... 
 SolverShugaku.prototype.openLastUndecidedFence = function(p_listEventsToApply, p_x, p_y) {
 	if (this.edgesArray[p_y][p_x].closedEdges == 3) {
-		this.existingNeighborDirections(p_x, p_y).forEach(dir => {
+		this.existingNeighborsDirections(p_x, p_y).forEach(dir => {
 			if (this.fencesGrid.getFence(p_x, p_y, dir) != FENCE_STATE.CLOSED) {
 				p_listEventsToApply.push(new FenceShugakuEvent(p_x, p_y, dir, FENCE_STATE.OPEN));
 			}
 		});
 	}
 	return p_listEventsToApply;
-}
-
-// -------------------------------------------------
-// Extra closures
-abortClosure = function(p_solver) {
-	return function() {
-		//p_solver.cleanDeclarations3or4Open();
-		//p_solver.cleanDeclarationsNewlyClosed();
-		//p_solver.cleanDeclarations1or2Open();
-	}
-}
-
-filterClosure = function(p_solver) {
-	return function() {
-		return [];
-	}
 }
 
 // --------------------

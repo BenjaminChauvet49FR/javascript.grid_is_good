@@ -1,16 +1,16 @@
 // No "kind" this time.
 
-function SpaceEvent(p_x,p_y,p_symbol) {
+function SpaceEvent(p_x, p_y, p_symbol) {
 	this.symbol = p_symbol;
 	this.coorX = p_x;
 	this.coorY = p_y;
 }
 
-SpaceEvent.prototype.toString = function(){	
+SpaceEvent.prototype.toString = function() {	
 	return "["+this.symbol+" "+this.coorX+","+this.coorY+"]";
 }
 
-SpaceEvent.prototype.copy = function(){
+SpaceEvent.prototype.copy = function() {
 	return new SpaceEvent(this.coorX, this.coorY, this.symbol);
 }
 
@@ -37,12 +37,12 @@ ShapeEvent.prototype.copy = function() {
 	return new ShapeEvent(this.coorX, this.coorY, this.shape);
 }
 
-ShapeEvent.prototype.toString = function(){	
+ShapeEvent.prototype.toString = function() {	
 	return "[S"+this.shape+" "+this.coorX+","+this.coorY+"]";
 }
 
 ShapeEvent.prototype.opening = function() {
-	return SPACE.NOT_APPLICABLE; // TODO Un petit Typescript ?
+	return ADJACENCY.UNDECIDED; 
 }
 
 ShapeEvent.prototype.x = function() {
@@ -68,5 +68,5 @@ ShapeRegionEvent.prototype.copy = function() {
 }
 
 ShapeRegionEvent.prototype.opening = function() {
-	return SPACE.NOT_APPLICABLE;
+	return ADJACENCY.UNDECIDED;
 }

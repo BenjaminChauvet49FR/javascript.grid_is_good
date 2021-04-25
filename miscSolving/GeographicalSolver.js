@@ -15,22 +15,6 @@ GeneralSolver.prototype.addBannedSpace = function(p_x, p_y) {
 }
 
 // -----------------------
-
-function standardSpaceOpeningToAdjacencyConversion(p_spaceStatus) {
-	switch (p_spaceStatus) {
-        case SPACE.OPEN:
-            return ADJACENCY.YES;
-            break;
-        case SPACE.CLOSED:
-            return ADJACENCY.NO;
-            break;
-        default:
-            return ADJACENCY.UNDEFINED;
-            break;
-        }	
-}
-
-// -----------------------
 // Some deduction methods
 
 GeneralSolver.prototype.alert2x2Areas = function(p_listEvents, p_methodSet, p_x, p_y) {
@@ -47,7 +31,7 @@ GeneralSolver.prototype.alert2x2Areas = function(p_listEvents, p_methodSet, p_x,
 		} else { // Left space unoccupied : check if spaces above/below are occupied.
 			if (((p_y > 0) && (isOccupiedMethod(p_x-1, p_y-1)) && isOccupiedMethod(p_x, p_y-1)) ||
 				((p_y <= this.yLength-2) && (isOccupiedMethod(p_x-1, p_y+1)) && isOccupiedMethod(p_x, p_y+1))) {
-				p_listEvents.push(retrieveGDMethod({x : p_x-1, y : p_y, opening : SPACE.CLOSED}));
+				p_listEvents.push(retrieveGDMethod({x : p_x-1, y : p_y, opening : ADJACENCY.NO}));
 			} 
 		}
 	}
@@ -62,7 +46,7 @@ GeneralSolver.prototype.alert2x2Areas = function(p_listEvents, p_methodSet, p_x,
 		} else { // Right space unoccupied : check if spaces above/below are occupied.
 			if (((p_y > 0) && (isOccupiedMethod(p_x+1, p_y-1)) && isOccupiedMethod(p_x, p_y-1)) ||
 				((p_y <= this.yLength-2) && (isOccupiedMethod(p_x+1, p_y+1)) && isOccupiedMethod(p_x, p_y+1))) {
-				p_listEvents.push(retrieveGDMethod({x : p_x+1, y : p_y, opening : SPACE.CLOSED}));
+				p_listEvents.push(retrieveGDMethod({x : p_x+1, y : p_y, opening : ADJACENCY.NO}));
 			} 
 		}
 	}
@@ -71,10 +55,10 @@ GeneralSolver.prototype.alert2x2Areas = function(p_listEvents, p_methodSet, p_x,
 
 duelOccupation = function(p_listEvents, p_isOccupiedMethod, p_retrieveGDMethod, p_x1, p_y1, p_x2, p_y2) {
 	if (p_isOccupiedMethod(p_x1, p_y1)) {
-		p_listEvents.push(p_retrieveGDMethod({x : p_x2, y : p_y2, opening : SPACE.CLOSED}));
+		p_listEvents.push(p_retrieveGDMethod({x : p_x2, y : p_y2, opening : ADJACENCY.NO}));
 	} 
 	if (p_isOccupiedMethod(p_x2, p_y2)) {
-		p_listEvents.push(p_retrieveGDMethod({x : p_x1, y : p_y1, opening : SPACE.CLOSED}));
+		p_listEvents.push(p_retrieveGDMethod({x : p_x1, y : p_y1, opening : ADJACENCY.NO}));
 	} 
 	return p_listEvents;
 }

@@ -7,6 +7,10 @@ function SolverCountryRoad(p_wallArray, p_indications) {
 
 SolverCountryRoad.prototype.constructor = SolverCountryRoad;
 
+function DummySolver() {	
+	return new SolverCountryRoad(generateWallArray(1,1), []);
+}
+
 SolverCountryRoad.prototype.construct = function(p_wallArray, p_indications) {
 		
 	this.regionLoopSolverConstruct(p_wallArray, {
@@ -30,7 +34,7 @@ SolverCountryRoad.prototype.construct = function(p_wallArray, p_indications) {
 	});
 	
 	this.gridWall = WallGrid_data(p_wallArray); 
-	this.regionArray = this.gridWall.toRegionGrid();
+	this.regionArray = this.gridWall.toRegionArray();
 	for(iy = 0;iy < this.yLength;iy++) {
 		for(ix = 0;ix < this.xLength;ix++) {
 			ir = this.regionArray[iy][ix];
@@ -115,7 +119,7 @@ setSpaceClosedDeductionsClosure = function(p_solver) {
 		const x = p_eventBeingApplied.x;
 		const y = p_eventBeingApplied.y;
 		var dir;
-		p_solver.adjacentRegionsGrid[y][x].forEach(indication => {
+		p_solver.adjacentRegionsArray[y][x].forEach(indication => {
 			dir = indication.direction;
 			p_listEvents.push(new SpaceEvent(x + DeltaX[dir], y + DeltaY[dir], LOOP_STATE.LINKED));
 		});

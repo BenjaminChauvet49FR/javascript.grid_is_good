@@ -1,5 +1,4 @@
 // Initialization
-// const SPACE is used in the main solver
 
 function SolverYajikabe(p_combinationArray) {
 	GeneralSolver.call(this);
@@ -18,18 +17,18 @@ SolverYajikabe.prototype.construct = function(p_combinationArray) {
 	this.xLength = p_combinationArray[0].length;
 	this.yLength = p_combinationArray.length;
 	this.makeItGeographical(this.xLength, this.yLength);
-	this.methodSet = new ApplyEventMethodGeographicalPack(
+	this.methodsSetDeductions = new ApplyEventMethodGeographicalPack(
 			applyEventClosure(this), 
 			deductionsClosure(this), 
 			adjacencyClosure(this), 
 			transformClosure(this), 
 			undoEventClosure(this));
-	this.methodTools = {
+	this.methodsSetPass = {
 		comparisonMethod : comparison,
 		copyMethod : copying
 		//argumentToLabelMethod : namingCategoryClosure(this)
 		};
-	this.methodsMultiPass = {
+	this.methodsSetMultiPass = {
 		generatePassEventsMethod : generateEventsForStripesAndUnionsClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 		//skipPassMethod : skipPassClosure(this)
@@ -49,9 +48,9 @@ SolverYajikabe.prototype.construct = function(p_combinationArray) {
 		for(ix = 0;ix < this.xLength ; ix++) {
 			if (this.clueGrid.get(ix, iy) != null) {
 				this.addBannedSpace(ix, iy);
-				this.answerArray[iy].push(SPACE.CLOSED);
+				this.answerArray[iy].push(ADJACENCY.NO);
 			} else {
-				this.answerArray[iy].push(SPACE.UNDECIDED);
+				this.answerArray[iy].push(ADJACENCY.UNDECIDED);
 			}
 		}
 	}
@@ -241,10 +240,10 @@ SolverYajikabe.prototype.quickStart = function() {
 	var eventList = [];
 	this.cluesSpacesList.forEach(clue => {
 		if (clue.notPlacedClosedsYet == 0) {
-			eventList = this.fillWithBlanks(eventList, clue, SPACE.OPEN);
+			eventList = this.fillWithBlanks(eventList, clue, ADJACENCY.YES);
 		}
 		if (clue.notPlacedOpensYet == 0) {
-			eventList = this.fillWithBlanks(eventList, clue, SPACE.CLOSED);
+			eventList = this.fillWithBlanks(eventList, clue, ADJACENCY.NO);
 		}
 	});
 	eventList.forEach(event_ => {
@@ -263,12 +262,12 @@ SolverYajikabe.prototype.passStripFromSpace = function(p_x, p_y) {
 		} else {
 			generatedEvents = this.generateEventsForSingleStripPass(index);
 		}
-		this.passEvents(generatedEvents, this.methodSet, this.methodTools, p_x + "," + p_y + "," + this.cluesSpacesList[index].direction); 
+		this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, p_x + "," + p_y + "," + this.cluesSpacesList[index].direction); 
 	}
 }
 
 SolverYajikabe.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
+	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
 }
 
 //--------------------------------
@@ -279,8 +278,8 @@ SolverYajikabe.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
 	this.tryToApplyHypothesis(
-		SpaceEvent(p_x, p_y, p_symbol),
-		this.methodSet
+		new SpaceEvent(p_x, p_y, p_symbol),
+		this.methodsSetDeductions
 	);
 }
 
@@ -293,11 +292,11 @@ SolverYajikabe.prototype.putNew = function(p_x,p_y,p_symbol) {
 	if (this.answerArray[p_y][p_x] == p_symbol) {
 		return EVENT_RESULT.HARMLESS;
 	}
-	if (this.answerArray[p_y][p_x] != SPACE.UNDECIDED) {
+	if (this.answerArray[p_y][p_x] != ADJACENCY.UNDECIDED) {
 		return EVENT_RESULT.FAILURE;
 	}
 	this.answerArray[p_y][p_x] = p_symbol;	
-	if (p_symbol == SPACE.OPEN) {
+	if (p_symbol == ADJACENCY.YES) {
 		this.stripesArray[p_y][p_x].forEach(index => {
 			this.cluesSpacesList[index].notPlacedOpensYet--;
 		})
@@ -321,7 +320,7 @@ undoEventClosure = function(p_solver) {
 		const x = eventToApply.x(); //Décidément il y en a eu à faire, des changements de x en x() depuis qu'on a mis en commun les solvers de puzzles d'adjacences
 		const y = eventToApply.y();
 		const symbol = eventToApply.symbol;
-		if (symbol == SPACE.OPEN) {
+		if (symbol == ADJACENCY.YES) {
 			p_solver.stripesArray[y][x].forEach(index => {
 				p_solver.cluesSpacesList[index].notPlacedOpensYet++;
 			})
@@ -330,7 +329,7 @@ undoEventClosure = function(p_solver) {
 				p_solver.cluesSpacesList[index].notPlacedClosedsYet++;
 			})
 		}
-		p_solver.answerArray[y][x] = SPACE.UNDECIDED;
+		p_solver.answerArray[y][x] = ADJACENCY.UNDECIDED;
 	}
 }
 
@@ -339,17 +338,17 @@ undoEventClosure = function(p_solver) {
 // Exchanges solver and geographical
 
 /**
-Transforms a geographical deduction (see dedicated class GeographicalDeduction) into an appropriate event (SolveEvent in our case)
+Transforms a geographical deduction (see dedicated class GeographicalDeduction) into an appropriate event (SpaceEvent in our case)
 */
 transformClosure = function (p_solver) {
     return function (p_geographicalDeduction) {
-		return SpaceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, p_geographicalDeduction.opening);
+		return new SpaceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, p_geographicalDeduction.opening);
     }
 };
 
 adjacencyClosure = function (p_solver) {
     return function (p_x, p_y) {
-        return standardSpaceOpeningToAdjacencyConversion(p_solver.answerArray[p_y][p_x]);
+        return p_solver.answerArray[p_y][p_x];
     }
 }
 
@@ -360,19 +359,19 @@ deductionsClosure = function (p_solver) {
 		const x = p_eventBeingApplied.x();
 		const y = p_eventBeingApplied.y();
 		const symbol = p_eventBeingApplied.symbol;
-		if (symbol == SPACE.OPEN) {
-			p_listEventsToApply = p_solver.alert2x2Areas(p_listEventsToApply, p_solver.methodSet, x, y); 
+		if (symbol == ADJACENCY.YES) {
+			p_listEventsToApply = p_solver.alert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
 			p_solver.stripesArray[y][x].forEach(index => { //Alert on strip
 				const clue = p_solver.cluesSpacesList[index];
 				if (clue.notPlacedOpensYet == 0) {
-					p_listEventsToApply = p_solver.fillWithBlanks(p_listEventsToApply, clue, SPACE.CLOSED);
+					p_listEventsToApply = p_solver.fillWithBlanks(p_listEventsToApply, clue, ADJACENCY.NO);
 				}
 			});
 		} else {
 			p_solver.stripesArray[y][x].forEach(index => { //Alert on strip
 				const clue = p_solver.cluesSpacesList[index];
 				if (clue.notPlacedClosedsYet == 0) {
-					p_listEventsToApply = p_solver.fillWithBlanks(p_listEventsToApply, clue, SPACE.OPEN);
+					p_listEventsToApply = p_solver.fillWithBlanks(p_listEventsToApply, clue, ADJACENCY.YES);
 				}
 			});
 		}
@@ -384,14 +383,14 @@ SolverYajikabe.prototype.fillWithBlanks = function(p_listEventsToApply, p_clue, 
 	if ((p_clue.direction == DIRECTION.LEFT) || (p_clue.direction == DIRECTION.RIGHT)) {
 		const y = p_clue.y;
 		for (var x = p_clue.xMin ; x <= p_clue.xMax ; x++) {
-			if (!this.isBanned(x, y) && (this.answerArray[y][x] == SPACE.UNDECIDED)) {
+			if (!this.isBanned(x, y) && (this.answerArray[y][x] == ADJACENCY.UNDECIDED)) {
 				p_listEventsToApply.push(new SpaceEvent(x, y, p_spaceToFill));
 			}
 		}
 	} else {
 		const x = p_clue.x;
 		for (var y = p_clue.yMin ; y <= p_clue.yMax ; y++) {
-			if (!this.isBanned(x, y) && (this.answerArray[y][x] == SPACE.UNDECIDED)) {
+			if (!this.isBanned(x, y) && (this.answerArray[y][x] == ADJACENCY.UNDECIDED)) {
 				p_listEventsToApply.push(new SpaceEvent(x, y, p_spaceToFill));
 			}
 		}
@@ -416,15 +415,15 @@ SolverYajikabe.prototype.generateEventsForSingleStripPass = function(p_indexStri
 	if ((clue.direction == DIRECTION.LEFT) || (clue.direction == DIRECTION.RIGHT)) {
 		const y = clue.y;
 		for (var x = clue.xMin ; x <= clue.xMax ; x++) {
-			if (this.answerArray[y][x] == SPACE.UNDECIDED) {
-				eventList.push([SpaceEvent(x, y, SPACE.OPEN), SpaceEvent(x, y, SPACE.CLOSED)]);		
+			if (this.answerArray[y][x] == ADJACENCY.UNDECIDED) {
+				eventList.push([new SpaceEvent(x, y, ADJACENCY.YES), new SpaceEvent(x, y, ADJACENCY.NO)]);		
 			}
 		}
 	} else {
 		const x = clue.x;
 		for (var y = clue.yMin ; y <= clue.yMax ; y++) {
-			if (this.answerArray[y][x] == SPACE.UNDECIDED) {
-				eventList.push([SpaceEvent(x, y, SPACE.OPEN), SpaceEvent(x, y, SPACE.CLOSED)]);		
+			if (this.answerArray[y][x] == ADJACENCY.UNDECIDED) {
+				eventList.push([new SpaceEvent(x, y, ADJACENCY.YES), new SpaceEvent(x, y, ADJACENCY.NO)]);		
 			}
 		}
 	}
@@ -437,15 +436,15 @@ SolverYajikabe.prototype.generateEventsForUnionStripPass = function(p_indexUnion
 	if ((clue.orientation == ORIENTATION.HORIZONTAL)) {
 		const y = clue.y;
 		for (var x = clue.xMin ; x <= clue.xMax ; x++) {
-			if (this.answerArray[y][x] == SPACE.UNDECIDED) {
-				eventList.push([SpaceEvent(x, y, SPACE.OPEN), SpaceEvent(x, y, SPACE.CLOSED)]);		
+			if (this.answerArray[y][x] == ADJACENCY.UNDECIDED) {
+				eventList.push([new SpaceEvent(x, y, ADJACENCY.YES), new SpaceEvent(x, y, ADJACENCY.NO)]);		
 			}
 		}
 	} else {
 		const x = clue.x;
 		for (var y = clue.yMin ; y <= clue.yMax ; y++) {
-			if (this.answerArray[y][x] == SPACE.UNDECIDED) {
-				eventList.push([SpaceEvent(x, y, SPACE.OPEN), SpaceEvent(x, y, SPACE.CLOSED)]);		
+			if (this.answerArray[y][x] == ADJACENCY.UNDECIDED) {
+				eventList.push([new SpaceEvent(x, y, ADJACENCY.YES), new SpaceEvent(x, y, ADJACENCY.NO)]);		
 			}
 		}
 	}
@@ -467,8 +466,8 @@ comparison = function(p_event1, p_event2) {
 	} else if (p_event2.coorX < p_event1.coorX) {
 		return 1;
 	} else {
-		var c1 = (p_event1.symbol == SPACE.OPEN ? 1 : 0);
-		var c2 = (p_event2.symbol == SPACE.OPEN ? 1 : 0); // Unstable : works because only "O" and "C" values are admitted
+		var c1 = (p_event1.symbol == ADJACENCY.YES ? 1 : 0);
+		var c2 = (p_event2.symbol == ADJACENCY.YES ? 1 : 0); // Unstable : works because only "O" and "C" values are admitted
 		return c1-c2;
 	}
 }

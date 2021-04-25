@@ -4,9 +4,9 @@ Draws what's inside spaces
 function drawInsideSpaces(p_context, p_drawer, p_color, p_solver) {
     var items = [DrawableColor(p_color.openSquare), DrawableColor(p_color.closedSquare)];
     function selection(x, y) {
-        if (p_solver.getAnswer(x, y) == SPACE.OPEN) {
+        if (p_solver.getAnswer(x, y) == ADJACENCY.YES) {
             return 0;
-        } else if (p_solver.getAnswer(x, y) == SPACE.CLOSED) {
+        } else if (p_solver.getAnswer(x, y) == ADJACENCY.NO) {
             return 1;
         }
         return -1;

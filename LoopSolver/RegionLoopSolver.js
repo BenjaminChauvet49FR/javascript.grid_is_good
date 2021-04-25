@@ -40,48 +40,23 @@ RegionLoopSolver.prototype.regionLoopSolverConstruct = function(p_wallArray, p_p
 	}); 
 	this.gridWall = WallGrid_data(p_wallArray);
 	this.borders = []; // Triangular array of borders
-	//this.bordersEdgesIndexesGrid = []; // Array that gives spaces that share edges with regions border, 
-	//giving the index of these edges in this border [y][x][dir]
-	this.regionArray = this.gridWall.toRegionGrid();
+	this.regionArray = this.gridWall.toRegionArray();
+	this.adjacentRegionsArray = generateFunctionValueArray(this.xLength, this.yLength, function(){{return []}} );
+	const spacesByRegion = listSpacesByRegion(this.regionArray);
 	this.regions = [];
-	this.adjacentRegionsGrid = []; // contains list of {direction : dir, index : ir}. Indicates spaces that belong to a foreign region and their neighbors.
-
-	var ix,iy;
-	var lastRegionNumber = 0;
-	
-	// Number of regions + adjacentRegionsGrid // + this.bordersEdgesIndexesGrid
-	for(iy = 0; iy < this.yLength; iy++) {
-		this.adjacentRegionsGrid.push([]);
-		//this.bordersEdgesIndexesGrid.push([]);
-		for(ix = 0; ix < this.xLength; ix++) {
-			lastRegionNumber = Math.max(this.regionArray[iy][ix], lastRegionNumber);
-			this.adjacentRegionsGrid[iy].push([]);
-			//this.bordersEdgesIndexesGrid[ix].push({});
-		}
-	}
-	
-	this.nbRemainingLinksBetweenRegions = lastRegionNumber;
+	this.nbRemainingLinksBetweenRegions = spacesByRegion.length - 1;
 	
 	// Region defintion
-	for(var i=0 ; i<=lastRegionNumber ; i++) {
+	for(var i=0 ; i < spacesByRegion.length ; i++) {
 		this.regions.push( {
-			spaces : [],
-			size : 0,
+			spaces : spacesByRegion[i],
+			size : spacesByRegion[i].length,
 			neighboringRegions : [],
 			linkedRegions : [], // Allows to deduce "notYetOpenBorders"
 			notYetClosedBorders : 0,
 			oppositeLinkedRegion : LOOP_REGION_UNDEFINED,
 			index : i
 		});
-	}
-	
-	// Spaces in each region
-	for(iy = 0;iy < this.yLength;iy++) {
-		for(ix = 0;ix < this.xLength;ix++) {
-			if(this.regionArray[iy][ix] >= 0) {
-				this.regions[this.regionArray[iy][ix]].spaces.push({x:ix, y:iy});
-			}
-		}
 	}
 	
 	// Part specific for RegionLoopSolver
@@ -149,10 +124,8 @@ RegionLoopSolver.prototype.buildBorders = function() {
 							y : dy, 
 							direction : OppositeDirection[dir]
 						}); 
-						this.adjacentRegionsGrid[y][x].push({direction : dir, index : dr});
-						this.adjacentRegionsGrid[dy][dx].push({direction : OppositeDirection[dir], index : ir});
-						//this.bordersEdgesIndexesGrid[y][x][dir] = l;
-						//this.bordersEdgesIndexesGrid[dy][dx][OppositeDirection[dir]] = l;
+						this.adjacentRegionsArray[y][x].push({direction : dir, index : dr});
+						this.adjacentRegionsArray[dy][dx].push({direction : OppositeDirection[dir], index : ir});
 					}
 				}
 			});

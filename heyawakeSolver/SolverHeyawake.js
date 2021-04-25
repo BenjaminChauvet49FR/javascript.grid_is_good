@@ -2,7 +2,6 @@
 
 const NOT_FORCED = -1; 
 const NOT_RELEVANT = -1;
-// const SPACE is used in the main solver
 
 const EVENTLIST_KIND = {HYPOTHESIS:"H",PASS:"P"};
 
@@ -23,75 +22,63 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
 	this.makeItGeographical(this.xLength, this.yLength);
-	this.methodSet = new ApplyEventMethodGeographicalPack(
+	this.methodsSetDeductions = new ApplyEventMethodGeographicalPack(
 			applyEventClosure(this), 
 			deductionsClosure(this), 
 			adjacencyClosure(this), 
 			transformClosure(this), 
 			undoEventClosure(this));
-	this.methodTools = {
+	this.methodsSetPass = {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
 		argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsMultiPass = {
+	this.methodsSetMultiPass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
 	};
 
 	this.gridWall = WallGrid_data(p_wallArray); 
-	this.regionArray = this.gridWall.toRegionGrid();
+	this.regionArray = this.gridWall.toRegionArray();
 	this.answerArray = [];
 	this.stripesArray = [];
 	this.horizontalStripes = [];
 	this.verticalStripes = [];
 	var ix,iy;
 	var lastRegionNumber = 0;
-
-	// Initialize the required arrays (notably answerArray) and the number of regions
-	for(iy = 0;iy < this.yLength;iy++){
-		this.answerArray.push([]);
-		this.stripesArray.push([]);
-		for(ix = 0;ix < this.xLength;ix++){
-			lastRegionNumber = Math.max(this.regionArray[iy][ix], lastRegionNumber);
-			this.answerArray[iy].push(SPACE.UNDECIDED);
-			this.stripesArray[iy].push({leftMost:NOT_RELEVANT,horizIn:NOT_RELEVANT,rightMost:NOT_RELEVANT,topMost:NOT_RELEVANT,vertIn:NOT_RELEVANT,bottomMost:NOT_RELEVANT});
-		}
-	}
-	this.regionsNumber = lastRegionNumber+1;
 	
+	this.answerArray = generateValueArray(this.xLength, this.yLength, ADJACENCY.UNDECIDED);
+	this.stripesArray = generateFunctionValueArray(this.xLength, this.yLength, function() {
+		return {leftMost:NOT_RELEVANT, horizIn:NOT_RELEVANT, rightMost:NOT_RELEVANT, topMost:NOT_RELEVANT, vertIn:NOT_RELEVANT, bottomMost:NOT_RELEVANT}
+	});
+	
+	const spacesByRegion = listSpacesByRegion(this.regionArray);
+	this.regionsNumber = spacesByRegion.length;
+
 	// Blantly initialize data of regions
 	var ir;
 	this.regions = [];
-	for(ir=0;ir<this.regionsNumber;ir++){
+	for(ir=0 ; ir < this.regionsNumber ; ir++) {
 		this.regions.push({
-			spaces : [],
+			spaces : spacesByRegion[ir],
 			expectedNumberOfClosedsInRegion : NOT_FORCED,
 			notPlacedYet : null,
-			size : 0,
+			size : spacesByRegion[ir].length,
 			horizontalInnerStripesIndexes : [],
 			verticalInnerStripesIndexes : [] 
 		});
 	}
 	
-	var ir, region;
-	for(iy = 0;iy < this.yLength;iy++){
-		for(ix = 0;ix < this.xLength;ix++){
-			ir = this.regionArray[iy][ix];
-			this.regions[ir].spaces.push({x:ix,y:iy});
-		}
-	}
+	var region;
 	p_indications.forEach(indic => {
 		region = this.regions[indic.index];
 		region.expectedNumberOfClosedsInRegion = indic.value;
 		region.notPlacedYet = {CLOSEDs : indic.value};
 	});
 	
-	// Initialize numbers of Xs to place (now that all region spaces are known)
-	// Also initialize regions sizes for shortcut
-	for(ir = 0;ir<this.regionsNumber;ir++){
+	// Initialize numbers of Xs to place 
+	for(ir = 0 ; ir < this.regionsNumber ; ir++) {
 		region = this.regions[ir];
-		region.size = region.spaces.length;
 		if (region.notPlacedYet != null) {
 			region.notPlacedYet.OPENs = region.size-region.notPlacedYet.CLOSEDs;
 		} else {
@@ -102,12 +89,12 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 	//And now, the stripes for Heyawake ! (ie the smallest series of contiguous aligned spaces that cross 2 borders)
 	var endStrip;
 	var indexStrip;
-	for(iy = 0;iy < this.yLength;iy++){
-		for(ix = 0;ix < this.xLength;ix++){
+	for(iy = 0;iy < this.yLength ; iy++) {
+		for(ix = 0;ix < this.xLength ; ix++) {
 			//If it has a right boundary, draw an horizontal band to the right boundary if it exists.
-			if (this.gridWall.getWallR(ix,iy) == WALLGRID.CLOSED){
+			if (this.gridWall.getWallR(ix, iy) == WALLGRID.CLOSED) {
 				endStrip = ix+1;
-				while (endStrip < this.xLength-1 && this.gridWall.getState(endStrip+1,iy) != WALLGRID.CLOSED && this.gridWall.getWallR(endStrip,iy) != WALLGRID.CLOSED){
+				while (endStrip < this.xLength-1 && this.gridWall.getState(endStrip+1, iy) != WALLGRID.CLOSED && this.gridWall.getWallR(endStrip,iy) != WALLGRID.CLOSED){
 					endStrip++;
 				}
 				endStrip++; 
@@ -126,9 +113,9 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 				}
 			}
 			//Same down.
-			if (this.gridWall.getWallD(ix,iy) == WALLGRID.CLOSED){
+			if (this.gridWall.getWallD(ix, iy) == WALLGRID.CLOSED) {
 				endStrip = iy+1;
-				while (endStrip < this.yLength-1 && this.gridWall.getState(ix,endStrip+1) != WALLGRID.CLOSED && this.gridWall.getWallD(ix,endStrip) != WALLGRID.CLOSED){
+				while (endStrip < this.yLength-1 && this.gridWall.getState(ix,endStrip+1) != WALLGRID.CLOSED && this.gridWall.getWallD(ix,endStrip) != WALLGRID.CLOSED) {
 					endStrip++;
 				}
 				endStrip++; 
@@ -154,19 +141,19 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 //--------------------------------
 
 // Misc. methods
-SolverHeyawake.prototype.expectedNumberInRegion = function(ir){
-	return this.regions[ir].expectedNumberOfClosedsInRegion;
+SolverHeyawake.prototype.expectedNumberInRegion = function(p_ir) {
+	return this.regions[p_ir].expectedNumberOfClosedsInRegion;
 }
 
-SolverHeyawake.prototype.getSpaceCoordinates = function(p_indexRegion,p_indexSpace){
+SolverHeyawake.prototype.getSpaceCoordinates = function(p_indexRegion, p_indexSpace) {
 	return this.regions[p_indexRegion].spaces[p_indexSpace];
 }
 
-SolverHeyawake.prototype.getAnswer = function(p_x,p_y){
+SolverHeyawake.prototype.getAnswer = function(p_x, p_y) {
 	return this.answerArray[p_y][p_x];
 }
 
-SolverHeyawake.prototype.getRegionIndex = function(p_x,p_y){
+SolverHeyawake.prototype.getRegionIndex = function(p_x, p_y) {
 	return this.regionArray[p_y][p_x];
 }
 
@@ -178,35 +165,35 @@ SolverHeyawake.prototype.getFirstSpaceRegion = function(p_ir) {
 
 // Misc. inner methods 
 
-SolverHeyawake.prototype.lowerHorizontalStrip = function(p_index,p_symbol){
-	this.modifyHorizontalStrip(p_index,p_symbol,-1);
+SolverHeyawake.prototype.lowerHorizontalStrip = function(p_index, p_symbol) {
+	this.modifyHorizontalStrip(p_index, p_symbol, -1);
 }
 
-SolverHeyawake.prototype.lowerVerticalStrip = function(p_index,p_symbol){
-	this.modifyVerticalStrip(p_index,p_symbol,-1);
+SolverHeyawake.prototype.lowerVerticalStrip = function(p_index, p_symbol) {
+	this.modifyVerticalStrip(p_index, p_symbol, -1);
 }
 
-SolverHeyawake.prototype.raiseHorizontalStrip = function(p_index,p_symbol){
-	this.modifyHorizontalStrip(p_index,p_symbol,1);
+SolverHeyawake.prototype.raiseHorizontalStrip = function(p_index, p_symbol) {
+	this.modifyHorizontalStrip(p_index, p_symbol, 1);
 }
 
-SolverHeyawake.prototype.raiseVerticalStrip = function(p_index,p_symbol){
-	this.modifyVerticalStrip(p_index,p_symbol,1);
+SolverHeyawake.prototype.raiseVerticalStrip = function(p_index, p_symbol) {
+	this.modifyVerticalStrip(p_index, p_symbol, 1);
 }
 
-SolverHeyawake.prototype.modifyHorizontalStrip = function(p_index,p_symbol,p_modify){
-	if (p_index != NOT_RELEVANT){
+SolverHeyawake.prototype.modifyHorizontalStrip = function(p_index, p_symbol, p_modify) {
+	if (p_index != NOT_RELEVANT) {
 		this.horizontalStripes[p_index].UNDEFs += p_modify;
-		if (p_symbol == SPACE.CLOSED){
+		if (p_symbol == ADJACENCY.NO) {
 			this.horizontalStripes[p_index].CLOSEDs += p_modify;
 		}
 	}
 }
 
-SolverHeyawake.prototype.modifyVerticalStrip = function(p_index,p_symbol,p_modify){
-	if (p_index != NOT_RELEVANT){
+SolverHeyawake.prototype.modifyVerticalStrip = function(p_index, p_symbol, p_modify) {
+	if (p_index != NOT_RELEVANT) {
 		this.verticalStripes[p_index].UNDEFs  += p_modify;
-		if (p_symbol == SPACE.CLOSED){
+		if (p_symbol == ADJACENCY.NO) {
 			this.verticalStripes[p_index].CLOSEDs += p_modify;
 		}
 	}
@@ -215,8 +202,8 @@ SolverHeyawake.prototype.modifyVerticalStrip = function(p_index,p_symbol,p_modif
 //--------------------------------
 
 // Input methods
-SolverHeyawake.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
-	this.tryToPutNew(p_x,p_y,p_symbol);
+SolverHeyawake.prototype.emitHypothesis = function(p_x,p_y,p_symbol) {
+	this.tryToPutNew(p_x, p_y, p_symbol);
 }
 
 SolverHeyawake.prototype.undo = function() {
@@ -227,11 +214,11 @@ SolverHeyawake.prototype.quickStart = function() {
 	this.initiateQuickStart();
 	this.regions.forEach(region => {
 		if (region.size == 1 && region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 1){
-			this.tryToPutNew(region.spaces[0].x,region.spaces[0].y,SPACE.CLOSED);
+			this.tryToPutNew(region.spaces[0].x,region.spaces[0].y,ADJACENCY.NO);
 		};
 		if (region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 0){
 			region.spaces.forEach(space => {
-				this.tryToPutNew(space.x,space.y,SPACE.OPEN);
+				this.tryToPutNew(space.x,space.y,ADJACENCY.YES);
 			});
 		}
 	});
@@ -240,11 +227,11 @@ SolverHeyawake.prototype.quickStart = function() {
 
 SolverHeyawake.prototype.passRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion, "Region "+p_indexRegion); 
+	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, p_indexRegion, "Region "+p_indexRegion); 
 }
 
 SolverHeyawake.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
+	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
 }
 
 //--------------------------------
@@ -256,27 +243,27 @@ SolverHeyawake.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
 	this.tryToApplyHypothesis(
 		SpaceEvent(p_x, p_y, p_symbol),
-		this.methodSet
+		this.methodsSetDeductions
 	);
 }
 
 //--------------------------------
 
 // Doing, undoing and transforming
-SolverHeyawake.prototype.putNew = function(p_x,p_y,p_symbol){
-	if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerArray[p_y][p_x] == p_symbol)){
+SolverHeyawake.prototype.putNew = function(p_x, p_y, p_symbol) {
+	if (this.answerArray[p_y][p_x] == p_symbol) {
 		return EVENT_RESULT.HARMLESS;
 	}
-	if (this.answerArray[p_y][p_x] != SPACE.UNDECIDED){
+	if (this.answerArray[p_y][p_x] != ADJACENCY.UNDECIDED) {
 		return EVENT_RESULT.FAILURE;
 	}
 	this.answerArray[p_y][p_x] = p_symbol;
 	var ir = this.regionArray[p_y][p_x];
 	var region = this.regions[ir];
 	if (region.notPlacedYet != null){
-		if (p_symbol == SPACE.OPEN){
+		if (p_symbol == ADJACENCY.YES){
 			region.notPlacedYet.OPENs--;
-		} else if (p_symbol == SPACE.CLOSED){
+		} else if (p_symbol == ADJACENCY.NO){
 			region.notPlacedYet.CLOSEDs--;
 		}
 	} else {
@@ -304,13 +291,13 @@ undoEventClosure = function(p_solver) {
 		const x = eventToApply.x(); //Décidément il y en a eu à faire, des changements de x en x() depuis qu'on a mis en commun les solvers de puzzles d'adjacences
 		const y = eventToApply.y();
 		const symbol = eventToApply.symbol;
-		p_solver.answerArray[y][x] = SPACE.UNDECIDED;
+		p_solver.answerArray[y][x] = ADJACENCY.UNDECIDED;
 		var ir = p_solver.regionArray[y][x];
 		var region = p_solver.regions[ir];
 		if (region.notPlacedYet != null){
-			if (symbol == SPACE.OPEN){
+			if (symbol == ADJACENCY.YES){
 				region.notPlacedYet.OPENs++;
-			} else if (symbol == SPACE.CLOSED){
+			} else if (symbol == ADJACENCY.NO){
 				region.notPlacedYet.CLOSEDs++;
 			}
 		} else {
@@ -341,7 +328,7 @@ transformClosure = function (p_solver) {
 
 adjacencyClosure = function (p_solver) {
     return function (p_x, p_y) {
-        return standardSpaceOpeningToAdjacencyConversion(p_solver.answerArray[p_y][p_x]);
+        return p_solver.answerArray[p_y][p_x];
     }
 }
 
@@ -354,14 +341,13 @@ deductionsClosure = function (p_solver) {
 		var ir = p_solver.regionArray[y][x];
 		var region = p_solver.regions[ir];
 		symbol = p_eventBeingApplied.symbol;
-		if (symbol == SPACE.CLOSED) {
-			p_listEventsToApply.push(SpaceEvent(x,y-1,SPACE.OPEN));
-			p_listEventsToApply.push(SpaceEvent(x,y+1,SPACE.OPEN));
-			p_listEventsToApply.push(SpaceEvent(x-1,y,SPACE.OPEN));
-			p_listEventsToApply.push(SpaceEvent(x+1,y,SPACE.OPEN));	
+		if (symbol == ADJACENCY.NO) {
+			p_solver.existingNeighborsCoorsDirections(x, y).forEach(coors => {
+				p_listEventsToApply.push(SpaceEvent(coors.x, coors.y, ADJACENCY.YES));
+			});
 			//Alert on region
 			if (region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 0){
-				p_listEventsToApply = p_solver.alertRegion(p_listEventsToApply,ir,SPACE.OPEN,region.notPlacedYet.OPENs);			
+				p_listEventsToApply = p_solver.alertRegion(p_listEventsToApply,ir,ADJACENCY.YES,region.notPlacedYet.OPENs);			
 			}			
 		} else {
 			stripSpace = p_solver.stripesArray[y][x];
@@ -373,7 +359,7 @@ deductionsClosure = function (p_solver) {
 			p_listEventsToApply = p_solver.testAlertVerticalStrip(p_listEventsToApply,stripSpace.bottomMost);
 			//Alert on region
 			if (region.notPlacedYet != null && region.notPlacedYet.OPENs == 0){
-				p_listEventsToApply = p_solver.alertRegion(p_listEventsToApply,ir,SPACE.CLOSED,region.notPlacedYet.CLOSEDs);			
+				p_listEventsToApply = p_solver.alertRegion(p_listEventsToApply,ir,ADJACENCY.NO,region.notPlacedYet.CLOSEDs);			
 			}
 		}
 		return p_listEventsToApply;
@@ -385,10 +371,10 @@ SolverHeyawake.prototype.testAlertHorizontalStrip = function(p_eventsList,p_inde
 	if (p_index != NOT_RELEVANT && this.horizontalStripes[p_index].CLOSEDs == 0 && this.horizontalStripes[p_index].UNDEFs == 1){
 		const y = this.horizontalStripes[p_index].row;
 		var ix = this.horizontalStripes[p_index].xStart;
-		while(this.answerArray[y][ix] == SPACE.OPEN){
+		while(this.answerArray[y][ix] == ADJACENCY.YES){
 			ix++;
 		}
-		p_eventsList.push(SpaceEvent(ix,y,SPACE.CLOSED));
+		p_eventsList.push(SpaceEvent(ix,y,ADJACENCY.NO));
 	}
 	return p_eventsList;
 }
@@ -397,10 +383,10 @@ SolverHeyawake.prototype.testAlertVerticalStrip = function(p_eventsList,p_index)
 	if (p_index != NOT_RELEVANT && this.verticalStripes[p_index].CLOSEDs == 0 && this.verticalStripes[p_index].UNDEFs == 1){
 		const x = this.verticalStripes[p_index].column;
 		var iy = this.verticalStripes[p_index].yStart;
-		while(this.answerArray[iy][x] == SPACE.OPEN){
+		while(this.answerArray[iy][x] == ADJACENCY.YES){
 			iy++;
 		}
-		p_eventsList.push(SpaceEvent(x,iy,SPACE.CLOSED));
+		p_eventsList.push(SpaceEvent(x,iy,ADJACENCY.NO));
 	}
 	return p_eventsList;
 }
@@ -413,7 +399,7 @@ SolverHeyawake.prototype.alertRegion = function(p_listEvents,p_regionIndex,p_mis
 		alertSpace = region.spaces[i];
 		xa = alertSpace.x;
 		ya = alertSpace.y;
-		if (this.answerArray[ya][xa] == SPACE.UNDECIDED){
+		if (this.answerArray[ya][xa] == ADJACENCY.UNDECIDED){
 			p_listEvents.push(SpaceEvent(xa,ya,p_missingSymbol));
 			remaining--;
 			if (remaining == 0){
@@ -437,8 +423,8 @@ generateEventsForRegionPassClosure = function(p_solver) {
 SolverHeyawake.prototype.generateEventsForRegionPass = function(p_indexRegion) {
 	var eventList = [];
 	this.regions[p_indexRegion].spaces.forEach(space => {
-		if (this.answerArray[space.y][space.x] == SPACE.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
-			eventList.push([SpaceEvent(space.x, space.y, SPACE.OPEN), SpaceEvent(space.x, space.y, SPACE.CLOSED)]);
+		if (this.answerArray[space.y][space.x] == ADJACENCY.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
+			eventList.push([SpaceEvent(space.x, space.y, ADJACENCY.YES), SpaceEvent(space.x, space.y, ADJACENCY.NO)]);
 		}			 
 	});
 	return eventList;
@@ -450,19 +436,7 @@ copying = function(p_event) {
 }
 
 comparison = function(p_event1, p_event2) {
-	if (p_event2.coorY > p_event1.coorY) {
-		return -1;
-	} else if (p_event2.coorY < p_event1.coorY) {
-		return 1;
-	} else if (p_event2.coorX > p_event1.coorX) {
-		return -1;
-	} else if (p_event2.coorX < p_event1.coorX) {
-		return 1;
-	} else {
-		var c1 = (p_event1.symbol == SPACE.OPEN ? 1 : 0);
-		var c2 = (p_event2.symbol == SPACE.OPEN ? 1 : 0); // Unstable : works because only "O" and "C" values are admitted
-		return c1-c2;
-	}
+	return commonComparison([[p_event1.coorY, p_event1.coorX, p_event1.symbol], [p_event2.coorY, p_event2.coorX, p_event2.symbol]]);
 }
 
 orderedListPassArgumentsClosure = function(p_solver) {

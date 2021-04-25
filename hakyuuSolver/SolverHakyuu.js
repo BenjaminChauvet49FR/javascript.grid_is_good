@@ -10,71 +10,48 @@ DummySolver = function() {
 SolverHakyuu.prototype = Object.create(GeneralSolver.prototype);
 SolverHakyuu.prototype.constructor = SolverHakyuu;
 
-function DummySolver() {
-	
-}
-
 SolverHakyuu.prototype.construct = function(p_wallArray, p_numberArray) {
 	this.generalConstruct();
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
-	this.methodSet = new ApplyEventMethodPack(
+	this.methodsSetDeductions = new ApplyEventMethodPack(
 			applyEventClosure(this), 
 			deductionsClosure(this),  
 			undoEventClosure(this));
-	/*this.methodTools = {
+	/*this.methodsSetPass = {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
 		argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsMultiPass = {
+	this.methodsSetMultiPass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
 	};*/
 
 	this.gridWall = WallGrid_data(p_wallArray); 
-	this.regionArray = this.gridWall.toRegionGrid();
+	this.regionArray = this.gridWall.toRegionArray();
 	this.regions = [];
-	this.numbersArray = [];
-	var ix,iy;
-	var lastRegionNumber = 0;
-
-	// Number of regions 
-	for(iy = 0;iy < this.yLength;iy++){
-		for(ix = 0;ix < this.xLength;ix++){
-			lastRegionNumber = Math.max(this.regionArray[iy][ix], lastRegionNumber);
-		}
-	}
-	this.regionsNumber = lastRegionNumber+1;
+	this.numbersArray = generateValueArray(this.xLength, this.yLength, null);
+	const spacesByRegion = listSpacesByRegion(this.regionArray);
+	this.regionsNumber = spacesByRegion.length;
 	
 	// Empty region data
 	var ir;
 	this.regions = [];
-	for(ir=0;ir<this.regionsNumber;ir++){
+	for(ir=0 ; ir < this.regionsNumber ; ir++) {
 		this.regions.push({
-			spaces : [],
-			size : 0,
-			numbers : null
+			spaces : spacesByRegion[ir],
+			size : spacesByRegion[ir].length,
+			numbers : new SpaceSetNumeric(1, spacesByRegion[ir].length)
 		});
-	}
-	
-	// Regions spaces + specific grids
-	for(iy = 0;iy < this.yLength;iy++) {
-		this.numbersArray.push([]);
-		for(ix = 0;ix < this.xLength;ix++){
-			lastRegionNumber = Math.max(this.regionArray[iy][ix], lastRegionNumber);
-			this.numbersArray[iy].push(null);
-			ir = this.regionArray[iy][ix];
-			this.regions[ir].spaces.push({x:ix,y:iy});
-		}
 	}
 	
 	// Data now that region spaces are known
 	for(ir = 0 ; ir < this.regionsNumber ; ir++) {
 		region = this.regions[ir];
-		region.size = region.spaces.length;
+		//region.size = region.spaces.length;
 		for (is = 0 ; is < region.spaces.length ; is++) {
-			region.numbers = new SpaceSetNumeric(1, region.size);
+			//region.numbers = new SpaceSetNumeric(1, region.size);
 			x = region.spaces[is].x;
 			y = region.spaces[is].y;
 			if (p_numberArray[y][x] == null) {
@@ -202,11 +179,11 @@ SolverHakyuu.prototype.quickStart = function() {
 
 SolverHakyuu.prototype.passRegion = function(p_indexRegion) {
 	//const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	//this.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion, "Region "+p_indexRegion); 
+	//this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, p_indexRegion, "Region "+p_indexRegion); 
 }
 
 SolverHakyuu.prototype.makeMultiPass = function() {
-	//this.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
+	//this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
 }
 
 //--------------------------------
@@ -217,7 +194,7 @@ SolverHakyuu.prototype.tryToPutNew = function (p_x, p_y, p_number) {
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
 	this.tryToApplyHypothesis(
 		new SpaceAllowEvent(p_x, p_y, p_number, true),
-		this.methodSet
+		this.methodsSetDeductions
 	);
 }
 

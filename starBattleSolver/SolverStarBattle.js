@@ -8,18 +8,15 @@ const SYMBOL ={
 }
 
 const STAR_BATTLE_CATEGORY = {
-	REGION:1,
-	ROW:2,
-	COLUMN:3
+	REGION : 1,
+	ROW : 2,
+	COLUMN : 3
 };
-
-ROUND_X_COORDINATES = [-1,-1,-1,0,1,1,1,0];
-ROUND_Y_COORDINATES = [-1,0,1,1,1,0,-1,-1];
 
 // ---------------------
 // Setup
 
-function SolverStarBattle(p_wallArray,p_starNumber) {
+function SolverStarBattle(p_wallArray, p_starNumber) {
 	GeneralSolver.call(this);
 	this.construct(p_wallArray,p_starNumber);
 }
@@ -28,104 +25,77 @@ SolverStarBattle.prototype = Object.create(GeneralSolver.prototype);
 SolverStarBattle.prototype.constructor = SolverStarBattle;
 
 function DummySolver() {
-	new SolverStarBattle(generateWallArray(1, 1), 1);
+	return new SolverStarBattle(generateWallArray(1, 1), 1);
 }
 
 SolverStarBattle.prototype.construct = function(p_wallArray, p_starNumber) { 
 	this.generalConstruct();
-	this.answerGrid = [];
-	this.spacesByRegion =  [];
-	this.notPlacedYet = {regions:[],rows:[],columns:[]};
+	this.answerArray = [];
+	this.notPlacedYet = {regions:[], rows:[], columns:[]};
 	this.happenedEventsSeries = [];	
 	this.gridWall = WallGrid_data(p_wallArray);
-	this.regionArray = this.gridWall.toRegionGrid();
-	this.xyLength = this.getWallGrid().length; //IMPORTANT : when copy-pasting this line to a non-square grid, make sure to replace ALL occurences by xLength and yLength
+	this.regionArray = this.gridWall.toRegionArray();
+	this.spacesByRegion = listSpacesByRegion(this.regionArray);
+	this.xyLength = p_wallArray.length; 
+	this.xLength = this.xyLength; // Mandatory for some puzzles
+	this.yLength = this.xyLength;
 	
-	this.methodSet = new ApplyEventMethodPack(
+	this.methodsSetDeductions = new ApplyEventMethodPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodTools = {comparisonMethod : comparing, copyMethod : copying,  argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsMultiPass = {
+	this.methodsSetPass = {comparisonMethod : comparing, copyMethod : copying,  argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsSetMultiPass = {
 		generatePassEventsMethod : generateEventsForRLCPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
 	};
 	
-	this.listSpacesByRegion(); //spacesByRegion
 	this.buildPossibilities(p_starNumber); //notPlacedYet
-	this.buildAnswerGrid(); //answerGrid
-	this.purifyAnswerGrid(); 
-}
-
-
-/**
-Sets the list of spaces for each row and column (might be exportated)
-Hyphothesis : all non-banned regions are numbered from 0 to n-1 ; banned spaces have lower-than-0 numbers
-Exit : all spaces within a region are in reading order (top to bottom, then left to right)
-*/
-SolverStarBattle.prototype.listSpacesByRegion = function(){
-	var ix,iy;
-	var lastRegionNumber = 0;
-	for(iy = 0;iy < this.xyLength;iy++){
-		for(ix = 0;ix < this.xyLength;ix++){
-			lastRegionNumber = Math.max(this.regionArray[iy][ix],lastRegionNumber);
-		}
-	}
-	
-	this.spacesByRegion = [];
-	for(var i=0;i<=lastRegionNumber;i++){
-		this.spacesByRegion.push([]);
-	}
-	for(iy = 0;iy < this.xyLength;iy++){
-		for(ix = 0;ix < this.xyLength;ix++){
-			if(this.regionArray[iy][ix] >= 0){
-				this.spacesByRegion[this.regionArray[iy][ix]].push({x:ix,y:iy});
-			}
-		}
-	}
+	this.buildAnswerArray(); //answerArray
+	this.purifyAnswerArray(); 
 }
 
 /**
 Puts the number of remaining Stars (Os) and non-stars (Xs) in each region, row and column, assuming we start from scratch.
 Precondition : this.spacesByRegion must be refreshed, since it will be needed for region.
 */
-SolverStarBattle.prototype.buildPossibilities = function(p_numberStarsPer){
+SolverStarBattle.prototype.buildPossibilities = function(p_numberStarsPer) {
 	this.notPlacedYet = {regions:[],rows:[],columns:[]};
 	const complement = this.xyLength - p_numberStarsPer;
-	for(var i=0;i<this.xyLength;i++){
-		this.notPlacedYet.rows.push({Os:p_numberStarsPer,Xs:complement});
-		this.notPlacedYet.columns.push({Os:p_numberStarsPer,Xs:complement});
+	for(var i=0 ; i<this.xyLength ; i++) {
+		this.notPlacedYet.rows.push({Os : p_numberStarsPer, Xs : complement});
+		this.notPlacedYet.columns.push({Os : p_numberStarsPer, Xs : complement});
 	}
-	for(var i=0;i<this.spacesByRegion.length;i++){
-		this.notPlacedYet.regions.push({Os:p_numberStarsPer,Xs:this.spacesByRegion[i].length-p_numberStarsPer});
+	for(var i=0; i < this.spacesByRegion.length;i++) {
+		this.notPlacedYet.regions.push({Os:p_numberStarsPer, Xs:this.spacesByRegion[i].length-p_numberStarsPer});
 	}
 }
 
 /**
-Starts the answerGrid
+Starts the answerArray
 */
-SolverStarBattle.prototype.buildAnswerGrid = function(){
-	this.answerGrid = [];
+SolverStarBattle.prototype.buildAnswerArray = function() {
+	this.answerArray = [];
 	for(iy = 0; iy < this.xyLength ; iy++){
-		this.answerGrid.push([]);
+		this.answerArray.push([]);
 		for(ix = 0; ix < this.xyLength ; ix++){
-			this.answerGrid[iy].push(SYMBOL.UNDECIDED);
+			this.answerArray[iy].push(SYMBOL.UNDECIDED);
 		}
 	}
 }
 
 /**
-Puts Xs into the answerGrid corresponding to banned spaces 
-Precondition : both spacesByRegion and notPlacedYet have been refreshed and answerGrid is ok.
+Puts Xs into the answerArray corresponding to banned spaces 
+Precondition : both spacesByRegion and notPlacedYet have been refreshed and answerArray is ok.
 */
-SolverStarBattle.prototype.purifyAnswerGrid = function(){
+SolverStarBattle.prototype.purifyAnswerArray = function() {
 	//Removing banned spaces (hence the necessity to have things already updated)
-	for(iy = 0; iy < this.xyLength ; iy++){
-		for(ix = 0; ix < this.xyLength ; ix++){
-			if (this.regionArray[iy][ix] == WALLGRID.OUT_OF_REGIONS){
-				this.putNew(ix,iy,SYMBOL.NO_STAR);
+	for(iy = 0; iy < this.xyLength ; iy++) {
+		for(ix = 0; ix < this.xyLength ; ix++) {
+			if (this.regionArray[iy][ix] == WALLGRID.OUT_OF_REGIONS) {
+				this.putNew(ix, iy, SYMBOL.NO_STAR);
 			}
 		}
 	}
@@ -134,47 +104,38 @@ SolverStarBattle.prototype.purifyAnswerGrid = function(){
 //----------------------
 // Misc methods (may be used for drawing and intelligence)
 
-SolverStarBattle.prototype.getWallGrid = function(){return this.gridWall.array;} //TODO may be improved...
-
-SolverStarBattle.prototype.getAnswer = function(p_x,p_y){return this.answerGrid[p_y][p_x];}
-SolverStarBattle.prototype.getRegion = function(p_x,p_y){return this.regionArray[p_y][p_x];}
-
-/*SolverStarBattle.prototype.getOsRemainRow = function(p_i){return this.notPlacedYet.rows[p_i].Os;}
-SolverStarBattle.prototype.getOsRemainColumn = function(p_i){return this.notPlacedYet.columns[p_i].Os;}
-SolverStarBattle.prototype.getOsRemainRegion = function(p_i){return this.notPlacedYet.regions[p_i].Os;}
-SolverStarBattle.prototype.getXsRemainRow = function(p_i){return this.notPlacedYet.rows[p_i].Xs;}
-SolverStarBattle.prototype.getXsRemainColumn = function(p_i){return this.notPlacedYet.columns[p_i].Xs;}
-SolverStarBattle.prototype.getXsRemainRegion = function(p_i){return this.notPlacedYet.regions[p_i].Xs;}*/
+SolverStarBattle.prototype.getAnswer = function(p_x, p_y){return this.answerArray[p_y][p_x];}
+SolverStarBattle.prototype.getRegion = function(p_x, p_y){return this.regionArray[p_y][p_x];}
 SolverStarBattle.prototype.getFirstSpaceRegion = function(p_i){return this.spacesByRegion[p_i][0];}
 
 //------------------
 // Input methods 
 
-SolverStarBattle.prototype.emitHypothesis = function(p_x,p_y,p_symbol) {
-	this.tryToPutNew(p_x,p_y,p_symbol);
+SolverStarBattle.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
+	this.tryToPutNew(p_x, p_y, p_symbol);
 }
 
-SolverStarBattle.prototype.undo = function(){
+SolverStarBattle.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
 SolverStarBattle.prototype.emitPassRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : STAR_BATTLE_CATEGORY.REGION, index : p_indexRegion}); 
+	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {family : STAR_BATTLE_CATEGORY.REGION, index : p_indexRegion}); 
 }
 
 SolverStarBattle.prototype.emitPassRow = function(p_y) {
 	const generatedEvents = this.generateEventsForRowPass(p_y);
-	this.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : STAR_BATTLE_CATEGORY.ROW, index : p_y}); 
+	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {family : STAR_BATTLE_CATEGORY.ROW, index : p_y}); 
 }
 
 SolverStarBattle.prototype.emitPassColumn = function(p_x) {
 	const generatedEvents = this.generateEventsForColumnPass(p_x);
-	this.passEvents(generatedEvents, this.methodSet, this.methodTools, {family : STAR_BATTLE_CATEGORY.COLUMN, index : p_x}); 
+	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {family : STAR_BATTLE_CATEGORY.COLUMN, index : p_x}); 
 }
 
 SolverStarBattle.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
+	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
 }
 
 namingCategoryClosure = function(p_solver) {
@@ -204,13 +165,12 @@ EVENT_RESULT.HARMLESS : said symbol was either already put into that space OUT o
 EVENT_RESULT.ERROR : there is a different symbol in that space. We have done a wrong hypothesis somewhere ! (or the grid was wrong at the basis !)
 This is also used at grid start in order to put Xs in banned spaces, hence the check in the SYMBOL.NO_STAR part.
 */
-SolverStarBattle.prototype.putNew = function(p_x,p_y,p_symbol){
-	if ((p_x < 0) || (p_x >= this.xyLength) || (p_y < 0) || (p_y >= this.xyLength) || 
-	(this.answerGrid[p_y][p_x] == p_symbol)){
+SolverStarBattle.prototype.putNew = function(p_x, p_y, p_symbol) {
+	if (this.answerArray[p_y][p_x] == p_symbol) {
 		return EVENT_RESULT.HARMLESS;
 	}
-	if (this.answerGrid[p_y][p_x] == SYMBOL.UNDECIDED){
-		this.answerGrid[p_y][p_x] = p_symbol;
+	if (this.answerArray[p_y][p_x] == SYMBOL.UNDECIDED){
+		this.answerArray[p_y][p_x] = p_symbol;
 		var indexRegion = this.getRegion(p_x,p_y);
 		if (p_symbol == SYMBOL.STAR){
 			this.notPlacedYet.regions[indexRegion].Os--;
@@ -226,7 +186,7 @@ SolverStarBattle.prototype.putNew = function(p_x,p_y,p_symbol){
 		}
 		return EVENT_RESULT.SUCCESS;
 	}
-	if (this.answerGrid[p_y][p_x] != p_symbol){
+	if (this.answerArray[p_y][p_x] != p_symbol){
 		autoLogDeduction("NOOOO !");
 		return EVENT_RESULT.FAILURE;
 	}
@@ -240,8 +200,8 @@ undoEventClosure = function(p_solver) {
 		y = eventToUndo.y;
 		x = eventToUndo.x;
 		var indexRegion = p_solver.regionArray[y][x];
-		var symbol = p_solver.answerGrid[y][x];
-		p_solver.answerGrid[y][x] = SYMBOL.UNDECIDED;
+		var symbol = p_solver.answerArray[y][x];
+		p_solver.answerArray[y][x] = SYMBOL.UNDECIDED;
 		autoLogDeduction("Removing the following : "+x+" "+y+" "+symbol);
 		if (symbol == SYMBOL.STAR){
 			p_solver.notPlacedYet.regions[indexRegion].Os++;
@@ -260,7 +220,7 @@ undoEventClosure = function(p_solver) {
 
 // Central method
 SolverStarBattle.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_symbol, p_x, p_y), this.methodSet);
+	this.tryToApplyHypothesis(new SpaceEvent(p_symbol, p_x, p_y), this.methodsSetDeductions);
 }
 
 //--------------------------------
@@ -282,26 +242,32 @@ deductionsClosure = function (p_solver) {
 		r = p_solver.getRegion(x,y); 
 		if (symbol == SYMBOL.STAR) {
 			//Add to all 7 neighbors (no one should be star if solved correctly)
-			for(roundi=0;roundi<=7;roundi++) {
-				spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR,x+ROUND_X_COORDINATES[roundi],y+ROUND_Y_COORDINATES[roundi]);
+			/*for(roundi = 0 ; roundi <= 7 ; roundi++) {
+				spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR, x+ROUND_X_COORDINATES[roundi], y+ROUND_Y_COORDINATES[roundi]);
 				p_listEventsToApply.push(spaceEventToAdd);
 				autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
-			}
+				
+			}*/
+			p_solver.existingNeighborsCoorsWithDiagonals(x, y).forEach(coors => {
+				spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR, coors.x, coors.y);
+				p_listEventsToApply.push(spaceEventToAdd);
+				autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
+			});
 			//Final alert on column : fill the missing spaces in the column 
-			if (p_solver.notPlacedYet.columns[x].Os == 0){
-				for(yi=0;yi<p_solver.xyLength;yi++){
+			if (p_solver.notPlacedYet.columns[x].Os == 0) {
+				for(yi = 0 ; yi < p_solver.xyLength ; yi++) {
 					//there may be stars already, hence the (if SYMBOL.UNDECIDED) guard
-					if (p_solver.answerGrid[yi][x] == SYMBOL.UNDECIDED){
-						spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR,x,yi);
+					if (p_solver.answerArray[yi][x] == SYMBOL.UNDECIDED) {
+						spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR, x, yi);
 						p_listEventsToApply.push(spaceEventToAdd);
 						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString()); 
 					}
 				}
 			}
 			//Final alert on row
-			if (p_solver.notPlacedYet.rows[y].Os == 0){
-				for(xi=0;xi<p_solver.xyLength;xi++){
-					if (p_solver.answerGrid[y][xi] == SYMBOL.UNDECIDED){
+			if (p_solver.notPlacedYet.rows[y].Os == 0) {
+				for(xi=0 ; xi < p_solver.xyLength ; xi++) {
+					if (p_solver.answerArray[y][xi] == SYMBOL.UNDECIDED){
 						spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR,xi,y);
 						p_listEventsToApply.push(spaceEventToAdd);
 						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
@@ -313,7 +279,7 @@ deductionsClosure = function (p_solver) {
 				var spaceInRegion;
 				for(var si=0;si< p_solver.spacesByRegion[r].length;si++){
 					spaceInRegion = p_solver.spacesByRegion[r][si];
-					if (p_solver.answerGrid[spaceInRegion.y][spaceInRegion.x] == SYMBOL.UNDECIDED){
+					if (p_solver.answerArray[spaceInRegion.y][spaceInRegion.x] == SYMBOL.UNDECIDED){
 						spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR,spaceInRegion.x,spaceInRegion.y);
 						p_listEventsToApply.push(spaceEventToAdd);
 						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
@@ -326,7 +292,7 @@ deductionsClosure = function (p_solver) {
 			if (p_solver.notPlacedYet.columns[x].Xs == 0){
 				for(yi=0;yi<p_solver.xyLength;yi++){
 					//there may be stars already, hence the (if SYMBOL.UNDECIDED) guard
-					if (p_solver.answerGrid[yi][x] == SYMBOL.UNDECIDED){
+					if (p_solver.answerArray[yi][x] == SYMBOL.UNDECIDED){
 						spaceEventToAdd = new SpaceEvent(SYMBOL.STAR,x,yi);
 						p_listEventsToApply.push(spaceEventToAdd);
 						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
@@ -336,7 +302,7 @@ deductionsClosure = function (p_solver) {
 			//Final alert on row
 			if (p_solver.notPlacedYet.rows[y].Xs == 0){
 				for(xi=0;xi<p_solver.xyLength;xi++){
-					if (p_solver.answerGrid[y][xi] == SYMBOL.UNDECIDED){
+					if (p_solver.answerArray[y][xi] == SYMBOL.UNDECIDED){
 						spaceEventToAdd = new SpaceEvent(SYMBOL.STAR,xi,y);
 						p_listEventsToApply.push(spaceEventToAdd);
 						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
@@ -348,7 +314,7 @@ deductionsClosure = function (p_solver) {
 				var spaceInRegion;
 				for(var si=0;si< p_solver.spacesByRegion[r].length;si++){
 					spaceInRegion = p_solver.spacesByRegion[r][si];
-					if (p_solver.answerGrid[spaceInRegion.y][spaceInRegion.x] == SYMBOL.UNDECIDED){
+					if (p_solver.answerArray[spaceInRegion.y][spaceInRegion.x] == SYMBOL.UNDECIDED){
 						spaceEventToAdd = new SpaceEvent(SYMBOL.STAR,spaceInRegion.x,spaceInRegion.y);
 						p_listEventsToApply.push(spaceEventToAdd);
 						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
@@ -395,7 +361,7 @@ generateEventsForRLCPassClosure = function(p_solver) {
 SolverStarBattle.prototype.generateEventsForRegionPass = function(p_indexRegion) {
 	var eventList = [];
 	this.spacesByRegion[p_indexRegion].forEach(space => {
-		if (this.answerGrid[space.y][space.x] == SYMBOL.UNDECIDED) { 
+		if (this.answerArray[space.y][space.x] == SYMBOL.UNDECIDED) { 
 			eventList.push([new SpaceEvent(SYMBOL.STAR, space.x, space.y), new SpaceEvent(SYMBOL.NO_STAR, space.x, space.y)]);
 		}			 
 	});
@@ -405,7 +371,7 @@ SolverStarBattle.prototype.generateEventsForRegionPass = function(p_indexRegion)
 SolverStarBattle.prototype.generateEventsForRowPass = function(p_y) {
 	var eventList = [];
 	for (var x = 0; x < this.xyLength ; x++) {
-		if (this.answerGrid[p_y][x] == SYMBOL.UNDECIDED) { 
+		if (this.answerArray[p_y][x] == SYMBOL.UNDECIDED) { 
 			eventList.push([new SpaceEvent(SYMBOL.STAR, x, p_y), new SpaceEvent(SYMBOL.NO_STAR, x, p_y)]);
 		}
 	}
@@ -415,7 +381,7 @@ SolverStarBattle.prototype.generateEventsForRowPass = function(p_y) {
 SolverStarBattle.prototype.generateEventsForColumnPass = function(p_x) {
 	var eventList = [];
 	for (var y = 0; y < this.xyLength ; y++) {
-		if (this.answerGrid[y][p_x] == SYMBOL.UNDECIDED) { 
+		if (this.answerArray[y][p_x] == SYMBOL.UNDECIDED) { 
 			eventList.push([new SpaceEvent(SYMBOL.STAR, p_x, y), new SpaceEvent(SYMBOL.NO_STAR, p_x, y)]);
 		}
 	}
@@ -427,19 +393,8 @@ copying = function(p_event) {
 }
 
 comparing = function(p_event1, p_event2) {
-	if (p_event2.y > p_event1.y) {
-		return -1;
-	} else if (p_event2.y < p_event1.y) {
-		return 1;
-	} else if (p_event2.x > p_event1.x) {
-		return -1;
-	} else if (p_event2.x < p_event1.x) {
-		return 1;
-	} else {
-		const c1 = (p_event1.symbol == SYMBOL.STAR ? 1 : 0);
-		const c2 = (p_event2.symbol == SYMBOL.STAR ? 1 : 0); // Works because only two values are admitted
-		return c1-c2;
-	}
+	return commonComparison([[p_event1.y, p_event1.x, p_event1.symbol],
+	[p_event2.y, p_event2.x, p_event2.symbol]]);
 }
 
 orderedListPassArgumentsClosure = function(p_solver) {
@@ -480,7 +435,7 @@ skipPassClosure = function(p_solver) {
 //--------------
 // It's "to string" time !
 
-function answerGridToString(p_grid){
+function answerArrayToString(p_grid){
 	for(yi=0;yi<p_grid.length;yi++){
 		row = "";
 		for(xi=0;xi<p_grid.length;xi++){

@@ -508,7 +508,7 @@ function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem) {
 
 // Utilitary method to get from an item with wallarray and regionIndications (list of {index, value} items) a number array
 function getRegionIndicArray(p_loadedItem) {
-	const regionArray = WallGrid_data(p_loadedItem.wallArray).toRegionGrid(); // This supposes toRegionGrid() returns a double-entry array of region numbers ordered by "first spaces in lexical order" in lexical order.
+	const regionArray = WallGrid_data(p_loadedItem.wallArray).toRegionArray(); // This supposes toRegionArray() returns a double-entry array of region numbers ordered by "first spaces in lexical order" in lexical order.
 	var regionIndicArray = [];
 	var nextIndex = (p_loadedItem.indications.length > 0 ? p_loadedItem.indications[0].index : -1);
 	var indicIndex = 0;

@@ -3,7 +3,7 @@
 */
 function clickCanvasAction(event, p_canvas, p_drawer, p_solver, p_actionsManager) { 
 	var spaceClicked = p_drawer.getClickSpace(event, p_canvas, p_solver.xLength, p_solver.yLength);
-    if (spaceClicked != null){
+    if (spaceClicked != null) {
 		clickSpaceAction(p_solver, spaceClicked.x, spaceClicked.y, p_actionsManager.clickSpace);
 	}
 }
@@ -11,7 +11,7 @@ function clickCanvasAction(event, p_canvas, p_drawer, p_solver, p_actionsManager
 /**
 You successfully clicked on a region space (coordinates in parameter). Then what ? 
 */
-function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action){
+function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 	switch(p_action.id){
 		case ACTION_ENTER_NUMBER.id:
 			var value = prompt("Entrer valeur", 1);
@@ -29,15 +29,15 @@ function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action){
 //--------------------------
 // Game action buttons
 
-quickStartAction = function(p_solver){
+quickStartAction = function(p_solver) {
 	p_solver.quickStart();
 }
 
-undoAction = function(p_solver){
+undoAction = function(p_solver) {
 	p_solver.undo();
 }
 
-multiPassAction = function (p_solver){
+multiPassAction = function (p_solver) {
 	p_solver.makeMultiPass();
 }
 

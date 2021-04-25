@@ -24,21 +24,21 @@ SolverStitches.prototype.construct = function(p_wallArray, p_marginLeftArray, p_
 	this.generalConstruct();
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
-	this.methodSet = new ApplyEventMethodPack( 
+	this.methodsSetDeductions = new ApplyEventMethodPack( 
 		applyEventClosure(this),
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodsMultiPass = {
+	this.methodsSetMultiPass = {
 		generatePassEventsMethod : generateEventsForPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 		//skipPassMethod : skipPassClosure(this)
 	};
-	this.methodTools = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)}; // Warning : the argumentToLabelMethod is defined right before the pass in this solver
+	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)}; // Warning : the argumentToLabelMethod is defined right before the pass in this solver
 
 	this.gridWall = WallGrid_data(p_wallArray);
 	this.borderLists = [];
-	this.regionArray = this.gridWall.toRegionGrid();
+	this.regionArray = this.gridWall.toRegionArray();
 	this.rowsInfos = [];
 	this.columnsInfos = [];
 	this.numbersMarginsLeft = [];
@@ -187,15 +187,15 @@ SolverStitches.prototype.isExistingDifferentRegion = function(p_x, p_y, p_dir) {
 
 // Input methods
 SolverStitches.prototype.emitHypothesisSpace = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol), this.methodSet); // General solver call
+	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol), this.methodsSetDeductions); // General solver call
 }
 
 SolverStitches.prototype.emitHypothesisDown = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, DIRECTION.DOWN, p_symbol), this.methodSet); // General solver call
+	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, DIRECTION.DOWN, p_symbol), this.methodsSetDeductions); // General solver call
 }
 
 SolverStitches.prototype.emitHypothesisRight = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, DIRECTION.RIGHT, p_symbol), this.methodSet); // General solver call
+	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, DIRECTION.RIGHT, p_symbol), this.methodsSetDeductions); // General solver call
 }
 
 SolverStitches.prototype.undo = function() {
@@ -245,7 +245,7 @@ SolverStitches.prototype.quickStart = function() {
 	}
 	
 	eventList.forEach(event_ => {
-		this.tryToApplyHypothesis(event_, this.methodSet);
+		this.tryToApplyHypothesis(event_, this.methodsSetDeductions);
 	});
 	this.terminateQuickStart();
 }
@@ -254,7 +254,7 @@ SolverStitches.prototype.emitPassBorderRight = function(p_x, p_y) {
 	if (this.isExistingDifferentRegion(p_x, p_y, DIRECTION.RIGHT)) {
 		const index1 = this.regionArray[p_y][p_x];
 		const index2 = this.regionArray[p_y + 1][p_x];
-		this.passEvents(this.generateEventsForBorderPass(index1, index2), this.methodSet, this.methodTools, {family : STITCHES_PASS_KIND.BORDER, index1 : index1, index2 : index2});
+		this.passEvents(this.generateEventsForBorderPass(index1, index2), this.methodsSetDeductions, this.methodsSetPass, {family : STITCHES_PASS_KIND.BORDER, index1 : index1, index2 : index2});
 	}
 }
 
@@ -263,21 +263,21 @@ SolverStitches.prototype.emitPassBorderDown = function(p_x, p_y) {
 	if (this.isExistingDifferentRegion(p_x, p_y, DIRECTION.DOWN)) {
 		const index1 = this.regionArray[p_y][p_x];
 		const index2 = this.regionArray[p_y + 1][p_x];
-		this.passEvents(this.generateEventsForBorderPass(index1, index2), this.methodSet, this.methodTools, {family : STITCHES_PASS_KIND.BORDER, index1 : index1, index2 : index2});
+		this.passEvents(this.generateEventsForBorderPass(index1, index2), this.methodsSetDeductions, this.methodsSetPass, {family : STITCHES_PASS_KIND.BORDER, index1 : index1, index2 : index2});
 	}
 }
 
 SolverStitches.prototype.emitPassRow = function(p_y) {
-	this.passEvents(this.generateEventsForRowPass(p_y), this.methodSet, this.methodTools, {family : STITCHES_PASS_KIND.ROW, y : p_y});
+	this.passEvents(this.generateEventsForRowPass(p_y), this.methodsSetDeductions, this.methodsSetPass, {family : STITCHES_PASS_KIND.ROW, y : p_y});
 }
 
 SolverStitches.prototype.emitPassColumn = function(p_x) {
-	this.passEvents(this.generateEventsForColumnPass(p_x), this.methodSet, this.methodTools, {family : STITCHES_PASS_KIND.COLUMN, x : p_x});
+	this.passEvents(this.generateEventsForColumnPass(p_x), this.methodsSetDeductions, this.methodsSetPass, {family : STITCHES_PASS_KIND.COLUMN, x : p_x});
 }
 
 SolverStitches.prototype.makeMultiPass = function() {
-	//this.methodTools.argumentToLabelMethod = namingCategoryClosure(this);
-	this.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
+	//this.methodsSetPass.argumentToLabelMethod = namingCategoryClosure(this);
+	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
 }
 
 //--------------------------------

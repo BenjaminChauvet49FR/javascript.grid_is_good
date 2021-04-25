@@ -14,8 +14,8 @@ function drawInsideSpaces(p_context, p_drawer, p_color, p_solver) {
 				DrawableColor(p_color.SSquareLight)];
 				
 	function selectionShape(x,y){
-		if(p_solver.getAnswer(x,y) != SPACE.CLOSED) {
-			const opening = (p_solver.getAnswer(x,y) == SPACE.OPEN);
+		if(p_solver.getAnswer(x,y) != ADJACENCY.NO) {
+			const opening = (p_solver.getAnswer(x,y) == ADJACENCY.YES);
 			switch (p_solver.getShape(x, y)) {
 				case LITS.L : return opening ? 2 : 6;
 				case LITS.I : return opening ? 3 : 7;
@@ -29,9 +29,9 @@ function drawInsideSpaces(p_context, p_drawer, p_color, p_solver) {
 		}
 	}
 	function selectionOpening(x,y) {
-		if (p_solver.getAnswer(x,y) == SPACE.OPEN) {
+		if (p_solver.getAnswer(x,y) == ADJACENCY.YES) {
 			return 0;
-		} else if (p_solver.getAnswer(x, y) == SPACE.CLOSED) {
+		} else if (p_solver.getAnswer(x, y) == ADJACENCY.NO) {
 			return 1;
 		}
 		return -1;

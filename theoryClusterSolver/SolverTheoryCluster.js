@@ -21,7 +21,7 @@ SolverTheoryCluster.prototype.construct = function (p_wallArray) {
 	for (iy = 0; iy < this.yLength; iy++) {
         this.floatingGrid.push([]);
         for (ix = 0; ix < this.xLength; ix++) {
-            this.floatingGrid[iy].push(SPACE.UNDECIDED);
+            this.floatingGrid[iy].push(ADJACENCY.UNDECIDED);
         }
     }
 	
@@ -31,11 +31,11 @@ SolverTheoryCluster.prototype.construct = function (p_wallArray) {
         this.bannedArray.push([]);
         for (ix = 0; ix < this.xLength; ix++) {
 			if (p_wallArray[iy][ix].state == WALLGRID.CLOSED) {
-				this.answerArray[iy].push(SPACE.CLOSED);
+				this.answerArray[iy].push(ADJACENCY.NO);
 				this.bannedArray[iy].push(true);
 				this.addBannedSpace(ix, iy);
 			} else {
-				this.answerArray[iy].push(SPACE.UNDECIDED);
+				this.answerArray[iy].push(ADJACENCY.UNDECIDED);
 				this.bannedArray[iy].push(false);
 			}
         }
@@ -65,13 +65,13 @@ SolverTheoryCluster.prototype.getArtificialDeduction = function (p_x, p_y) {
 // Input methods
 
 SolverTheoryCluster.prototype.emitHypothesis = function (p_x, p_y, p_symbol) {
-    if (this.floatingGrid[p_y][p_x] == SPACE.UNDECIDED) {
+    if (this.floatingGrid[p_y][p_x] == ADJACENCY.UNDECIDED) {
 		this.tryToPutNew(p_x, p_y, p_symbol);
 	};
 }
 
 SolverTheoryCluster.prototype.emitArtificialDeduction = function (p_x, p_y, p_symbol) {
-	if (this.floatingGrid[p_y][p_x] == SPACE.UNDECIDED) {
+	if (this.floatingGrid[p_y][p_x] == ADJACENCY.UNDECIDED) {
 		this.artificialDeductionSpacesList.push({x : p_x, y : p_y});
 	}
 	this.floatingGrid[p_y][p_x] = p_symbol;	
@@ -79,7 +79,7 @@ SolverTheoryCluster.prototype.emitArtificialDeduction = function (p_x, p_y, p_sy
 
 SolverTheoryCluster.prototype.discardDeductions = function () {
     this.artificialDeductionSpacesList.forEach(space => {
-		this.floatingGrid[space.y][space.x] = SPACE.UNDECIDED;
+		this.floatingGrid[space.y][space.x] = ADJACENCY.UNDECIDED;
 	});
 	this.artificialDeductionSpacesList = [];
 }
@@ -95,7 +95,7 @@ SolverTheoryCluster.prototype.putNew = function (p_x, p_y, p_symbol) {
     if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerArray[p_y][p_x] == p_symbol)) {
         return EVENT_RESULT.HARMLESS;
     }
-    if (this.answerArray[p_y][p_x] != SPACE.UNDECIDED) {
+    if (this.answerArray[p_y][p_x] != ADJACENCY.UNDECIDED) {
         return EVENT_RESULT.ERROR;
     }
     this.answerArray[p_y][p_x] = p_symbol;
@@ -116,7 +116,7 @@ Closure for when we have to undo an event (symetrical to applyEvent)
 */
 undoEventClosure = function(p_solver) {
 	return function(eventToApply) {
-		p_solver.answerArray[eventToApply.myY][eventToApply.myX] = SPACE.UNDECIDED;
+		p_solver.answerArray[eventToApply.myY][eventToApply.myX] = ADJACENCY.UNDECIDED;
 	}
 }
 
@@ -130,14 +130,14 @@ Closure that checks about whether a space should belong to the global adjacency 
 adjacencyClosure = function (p_solver) {
     return function (p_x, p_y) {
         switch (p_solver.answerArray[p_y][p_x]) {
-        case SPACE.OPEN:
+        case ADJACENCY.YES:
             return ADJACENCY.YES;
             break;
-        case SPACE.CLOSED:
+        case ADJACENCY.NO:
             return ADJACENCY.NO;
             break;
         default:
-            return ADJACENCY.UNDEFINED;
+            return ADJACENCY.UNDECIDED;
             break;
         }
     }
@@ -175,9 +175,9 @@ Adds events that should be added to the p_listEventsToApply (they will be applie
 */
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
-		if (p_eventBeingApplied.p_symbol == SPACE.OPEN) {
+		if (p_eventBeingApplied.p_symbol == ADJACENCY.YES) {
 			console.log("Perform artificial deductions for 'open' space at " + p_eventBeingApplied.myX + " " + p_eventBeingApplied.myY);
-		} else if (p_eventBeingApplied.p_symbol == SPACE.CLOSED) {
+		} else if (p_eventBeingApplied.p_symbol == ADJACENCY.NO) {
 			console.log("Perform artificial deductions for 'closed' space at " + p_eventBeingApplied.myX + " " + p_eventBeingApplied.myY);
 		}
 		p_listEventsToApply = p_solver.artificialDeductionsList(p_listEventsToApply);

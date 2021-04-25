@@ -236,7 +236,7 @@ function stringToStarBattlePuzzle(p_string) {
 //----
 //Puzzle with regions indications. 1) dimensions, 2) grid, 3) indications for each region
 function regionsNumericIndicationsPuzzleToString(p_wallArray, p_numbersArray) {
-	const regionArray = WallGrid_data(p_wallArray).toRegionGrid(); // This assumes toRegionGrid() returns a double-entry array of region numbers ordered by "first spaces in lexical order" in lexical order.
+	const regionArray = WallGrid_data(p_wallArray).toRegionArray(); // This assumes toRegionArray() returns a double-entry array of region numbers ordered by "first spaces in lexical order" in lexical order.
 	var regionsIndications = [];
 	for(var iy = 0 ; iy < regionArray.length ; iy++) {
 		for(var ix = 0 ; ix < regionArray[0].length; ix++) {

@@ -304,7 +304,8 @@ StreamDecodingFullBase.prototype.getConsumedCharacters = function() {
 
 
 // ----
-// Encode values as they come (in base 64), including potentially null ones.
+// Encode values as they come (in base 64), including potentially null ones. 
+// Despite what the name suggests, this doesn't have to be used with sparse values. 
 // If one value is skipped (null), add a "-"
 // Two values : "--" 
 // Three values or more : "_?" where ? is the number of skipped values minus 3 (0 if exactly 3 values were skipped)

@@ -26,18 +26,17 @@ SolverCurvingRoad.prototype.construct = function (p_symbolArray) {
     this.curvingLinkList = [];
     this.pearlArray = [];
 
-    var ix,
-    iy;
+    var ix, iy;
 
-	this.methodSet = new ApplyEventMethodGeographicalPack(
+	this.methodsSetDeductions = new ApplyEventMethodGeographicalPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		adjacencyClosure(this),
 		transformClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodTools = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsMultiPass = {
+	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsSetMultiPass = {
 		generatePassEventsMethod : generateEventsForSpacePassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 	};
@@ -50,10 +49,10 @@ SolverCurvingRoad.prototype.construct = function (p_symbolArray) {
         for (ix = 0; ix < this.xLength; ix++) {
             this.curvingLinkArray[iy].push([]);
             if (p_symbolArray[iy][ix] == SYMBOL_ID.WHITE) {
-                this.answerArray[iy].push(SPACE.OPEN);
+                this.answerArray[iy].push(ADJACENCY.YES);
                 this.pearlArray[iy].push(true);
             } else {
-                this.answerArray[iy].push(SPACE.UNDECIDED);
+                this.answerArray[iy].push(ADJACENCY.UNDECIDED);
                 this.pearlArray[iy].push(false);
             }
         }
@@ -95,7 +94,7 @@ SolverCurvingRoad.prototype.traceRoadsFrom = function (p_x, p_y) {
         lastX = p_x; //Right only
         do {
             shouldTrace = (lastX < this.xLength - 1);
-            shouldMoveOn = shouldTrace && (this.answerArray[p_y][lastX + 1] != SPACE.OPEN);
+            shouldMoveOn = shouldTrace && (this.answerArray[p_y][lastX + 1] != ADJACENCY.YES);
             if (shouldMoveOn) {
                 lastX++;
             }
@@ -109,7 +108,7 @@ SolverCurvingRoad.prototype.traceRoadsFrom = function (p_x, p_y) {
                 lastY = p_y;
                 do {
                     shouldTrace = (lastY < this.yLength - 1);
-                    shouldMoveOn = (shouldTrace && this.answerArray[lastY + 1][x] != SPACE.OPEN);
+                    shouldMoveOn = (shouldTrace && this.answerArray[lastY + 1][x] != ADJACENCY.YES);
                     if (shouldMoveOn) {
                         lastY++;
                     }
@@ -126,7 +125,7 @@ SolverCurvingRoad.prototype.traceRoadsFrom = function (p_x, p_y) {
         lastY = p_y;
         do {
             shouldTrace = (lastY < this.yLength - 1);
-            shouldMoveOn = shouldTrace && (this.answerArray[lastY + 1][p_x] != SPACE.OPEN);
+            shouldMoveOn = shouldTrace && (this.answerArray[lastY + 1][p_x] != ADJACENCY.YES);
             if (shouldMoveOn) {
                 lastY++;
             }
@@ -140,7 +139,7 @@ SolverCurvingRoad.prototype.traceRoadsFrom = function (p_x, p_y) {
             lastX = p_x;
             do {
                 shouldTrace = (lastX < this.xLength - 1);
-                shouldMoveOn = (shouldTrace && this.answerArray[y][lastX + 1] != SPACE.OPEN);
+                shouldMoveOn = (shouldTrace && this.answerArray[y][lastX + 1] != ADJACENCY.YES);
                 if (shouldMoveOn) {
                     lastX++;
                 }
@@ -151,7 +150,7 @@ SolverCurvingRoad.prototype.traceRoadsFrom = function (p_x, p_y) {
             lastX = p_x;
             do {
                 shouldTrace = (lastX > 0);
-                shouldMoveOn = (shouldTrace && this.answerArray[y][lastX - 1] != SPACE.OPEN);
+                shouldMoveOn = (shouldTrace && this.answerArray[y][lastX - 1] != ADJACENCY.YES);
                 if (shouldMoveOn) {
                     lastX--;
                 }
@@ -168,7 +167,7 @@ SolverCurvingRoad.prototype.traceRoadsFrom = function (p_x, p_y) {
         lastX = p_x;
         do {
             shouldTrace = (lastX > 0);
-            shouldMoveOn = (shouldTrace && this.answerArray[p_y][lastX - 1] != SPACE.OPEN);
+            shouldMoveOn = (shouldTrace && this.answerArray[p_y][lastX - 1] != ADJACENCY.YES);
             if (shouldMoveOn) {
                 lastX--;
             }
@@ -177,7 +176,7 @@ SolverCurvingRoad.prototype.traceRoadsFrom = function (p_x, p_y) {
             lastY = p_y;
             do {
                 shouldTrace = (lastY < this.yLength - 1);
-                shouldMoveOn = (shouldTrace && this.answerArray[lastY + 1][x] != SPACE.OPEN);
+                shouldMoveOn = (shouldTrace && this.answerArray[lastY + 1][x] != ADJACENCY.YES);
                 if (shouldMoveOn) {
                     lastY++;
                 }
@@ -349,7 +348,7 @@ SolverCurvingRoad.prototype.quickStart = function () {
 	this.initiateQuickStart();
     this.curvingLinkList.forEach(curvingLink => {
         if (curvingLink.valid && (curvingLink.point != null)) {
-            this.emitHypothesis(curvingLink.point.x, curvingLink.point.y, SPACE.CLOSED);
+            this.emitHypothesis(curvingLink.point.x, curvingLink.point.y, ADJACENCY.NO);
         }
     });
 	this.terminateQuickStart();
@@ -357,11 +356,11 @@ SolverCurvingRoad.prototype.quickStart = function () {
 
 SolverCurvingRoad.prototype.passSpace = function(p_x, p_y) {
 	const generatedEvents = this.generateEventsForSpacePass({x : p_x, y : p_y});
-	this.passEvents(generatedEvents, this.methodSet, this.methodTools, {x : p_x, y : p_y}); 
+	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y}); 
 }
 
 SolverCurvingRoad.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
+	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
 }
 
 SolverCurvingRoad.prototype.undo = function() {
@@ -374,7 +373,7 @@ SolverCurvingRoad.prototype.undo = function() {
 SolverCurvingRoad.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.tryToApplyHypothesis(SpaceEvent(p_x, p_y, p_symbol), this.methodSet);
+	this.tryToApplyHypothesis(SpaceEvent(p_x, p_y, p_symbol), this.methodsSetDeductions);
 }
 
 //--------------------------------
@@ -384,14 +383,14 @@ SolverCurvingRoad.prototype.putNew = function (p_x, p_y, p_symbol) {
     if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerArray[p_y][p_x] == p_symbol)) {
         return EVENT_RESULT.HARMLESS;
     }
-    if (this.answerArray[p_y][p_x] != SPACE.UNDECIDED) {
+    if (this.answerArray[p_y][p_x] != ADJACENCY.UNDECIDED) {
         return EVENT_RESULT.FAILURE;
     }
     this.answerArray[p_y][p_x] = p_symbol;
     this.curvingLinkArray[p_y][p_x].forEach(
         index => {
         this.curvingLinkList[index].undecided--;
-        if (p_symbol == SPACE.CLOSED) {
+        if (p_symbol == ADJACENCY.NO) {
             this.curvingLinkList[index].closeds++;
         }
     });
@@ -409,11 +408,11 @@ undoEventClosure = function(p_solver) {
 		const x = p_eventToApply.x(); // Si on oublie de changer le  en x() par erreurs on peut avoir un message très funky dans la console. Et avec un "cannot read ... of undefined."
 		const y = p_eventToApply.y();
 		const symbol = p_eventToApply.symbol;
-		p_solver.answerArray[y][x] = SPACE.UNDECIDED;
+		p_solver.answerArray[y][x] = ADJACENCY.UNDECIDED;
 		p_solver.curvingLinkArray[y][x].forEach(
 			index => {
 			p_solver.curvingLinkList[index].undecided++;
-			if (symbol == SPACE.CLOSED) {
+			if (symbol == ADJACENCY.NO) {
 				p_solver.curvingLinkList[index].closeds--;
 			}
 		});
@@ -425,7 +424,7 @@ undoEventClosure = function(p_solver) {
 
 adjacencyClosure = function(p_solver) {
     return function (p_x, p_y) {
-        return standardSpaceOpeningToAdjacencyConversion(p_solver.answerArray[p_y][p_x]);
+        return p_solver.answerArray[p_y][p_x];
     }
 };
 
@@ -444,11 +443,11 @@ deductionsClosure = function (p_solver) {
 		symbol = p_eventBeingApplied.symbol;
 		//result = this.putNew(x, y, symbol);
 		// Deduction time !
-		if (symbol == SPACE.CLOSED) {
-			p_listEventsToApply.push(SpaceEvent(x, y - 1, SPACE.OPEN));
-			p_listEventsToApply.push(SpaceEvent(x, y + 1, SPACE.OPEN));
-			p_listEventsToApply.push(SpaceEvent(x - 1, y, SPACE.OPEN));
-			p_listEventsToApply.push(SpaceEvent(x + 1, y, SPACE.OPEN));
+		if (symbol == ADJACENCY.NO) {
+			p_listEventsToApply.push(SpaceEvent(x, y - 1, ADJACENCY.YES));
+			p_listEventsToApply.push(SpaceEvent(x, y + 1, ADJACENCY.YES));
+			p_listEventsToApply.push(SpaceEvent(x - 1, y, ADJACENCY.YES));
+			p_listEventsToApply.push(SpaceEvent(x + 1, y, ADJACENCY.YES));
 		} else {
 			p_solver.curvingLinkArray[y][x].forEach(index => {
 				p_listEventsToApply = p_solver.testAlertCurvingList(p_listEventsToApply, index); 
@@ -468,7 +467,7 @@ SolverCurvingRoad.prototype.testAlertCurvingList = function (p_listEvents, p_ind
         if (axis != null) {
             var y = axis.y;
             for (var x = axis.xMin; x <= axis.xMax; x++) {
-                if (this.answerArray[y][x] == SPACE.UNDECIDED) {
+                if (this.answerArray[y][x] == ADJACENCY.UNDECIDED) {
                     xSpot = x;
                     ySpot = y;
                     break;
@@ -479,14 +478,14 @@ SolverCurvingRoad.prototype.testAlertCurvingList = function (p_listEvents, p_ind
             axis = curvingLink.verticalAxis;
             var x = axis.x;
             for (var y = axis.yMin; y <= axis.yMax; y++) {
-                if (this.answerArray[y][x] == SPACE.UNDECIDED) {
+                if (this.answerArray[y][x] == ADJACENCY.UNDECIDED) {
                     xSpot = x;
                     ySpot = y;
                     break;
                 }
             }
         }
-        p_listEvents.push(SpaceEvent(xSpot, ySpot, SPACE.CLOSED));
+        p_listEvents.push(SpaceEvent(xSpot, ySpot, ADJACENCY.NO));
     }
     return p_listEvents;
 }
@@ -508,8 +507,8 @@ comparison = function(p_event1, p_event2) {
 	} else if (p_event2.coorX < p_event1.coorX) {
 		return 1;
 	} else {
-		var c1 = (p_event1.symbol == SPACE.CLOSED ? 1 : 0);
-		var c2 = (p_event2.symbol == SPACE.CLOSED ? 1 : 0); // Unstable : works because only "O" and "C" values are admitted
+		var c1 = (p_event1.symbol == ADJACENCY.NO ? 1 : 0);
+		var c2 = (p_event2.symbol == ADJACENCY.NO ? 1 : 0); // Unstable : works because only "O" and "C" values are admitted
 		return c1-c2;
 	}
 }
@@ -527,7 +526,7 @@ generateEventsForSpacePassClosure = function(p_solver) {
 }
 
 SolverCurvingRoad.prototype.generateEventsForSpacePass = function(p_space) {
-	return [[SpaceEvent(p_space.x, p_space.y, SPACE.CLOSED),SpaceEvent(p_space.x, p_space.y, SPACE.OPEN)]];
+	return [[SpaceEvent(p_space.x, p_space.y, ADJACENCY.NO),SpaceEvent(p_space.x, p_space.y, ADJACENCY.YES)]];
 }
 
 orderedListPassArgumentsClosure = function(p_solver) {
@@ -535,7 +534,7 @@ orderedListPassArgumentsClosure = function(p_solver) {
 		answer = [];
 		for(var iy = 0; iy < p_solver.yLength ; iy++) { // WARNING : putting "this" instead of "p_solver" leads to the expression in the "if" being false, but not crashing, which can lead to a quite fun debugging time !
 			for(var ix = 0; ix < p_solver.xLength ; ix++) {
-				if (p_solver.answerArray[iy][ix] == SPACE.UNDECIDED) {
+				if (p_solver.answerArray[iy][ix] == ADJACENCY.UNDECIDED) {
 					answer.push({x : ix, y : iy});
 				}
 			}

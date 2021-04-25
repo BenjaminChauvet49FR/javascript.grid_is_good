@@ -102,7 +102,7 @@ LoopSolver.prototype.loopSolverConstruct = function(p_array, p_puzzleSpecificMet
 		undoEventClosure(this)
 	);
 	this.setPuzzleSpecificMethods(p_puzzleSpecificMethodPack);
-	this.methodSetDeductions.addOneAbortAndFilters(abortClosure(this), [testLoopsClosure(this), separateEndsClosure(this)]);
+	this.methodSetDeductions.setOneAbortAndFilters(abortClosure(this), [testLoopsClosure(this), separateEndsClosure(this)]);
 	this.methodSetDeductions.addMoreFilters(this.PSFilters);
 	this.methodSetDeductions.addMoreAborts(this.PSAbortMethods);
     this.grid = [];
@@ -164,18 +164,9 @@ LoopSolver.prototype.loopSolverConstruct = function(p_array, p_puzzleSpecificMet
 
 LoopSolver.prototype.banSpace = function(p_x, p_y) {
 	this.bannedSpacesGrid[p_y][p_x] = true;
-	if (this.neighborExists(p_x, p_y, DIRECTION.RIGHT)) {
-		this.setLinkRight(p_x, p_y, LOOP_STATE.CLOSED);
-	}
-	if (this.neighborExists(p_x, p_y, DIRECTION.UP)) {
-		this.setLinkUp(p_x, p_y, LOOP_STATE.CLOSED);
-	}
-	if (this.neighborExists(p_x, p_y, DIRECTION.LEFT)) {
-		this.setLinkLeft(p_x, p_y, LOOP_STATE.CLOSED);
-	}
-	if (this.neighborExists(p_x, p_y, DIRECTION.DOWN)) {
-		this.setLinkDown(p_x, p_y, LOOP_STATE.CLOSED);
-	}
+	this.existingNeighborsCoorsDirections(p_x, p_y).forEach(coorsDir => {
+		this.setLink(coorsDir.x, coorsDir.y, coorsDir.direction, LOOP_STATE.CLOSED);
+	});
 	this.setLinkSpace(p_x, p_y, LOOP_STATE.CLOSED);
 }
 
@@ -301,18 +292,6 @@ LoopSolver.prototype.colorChain = function (p_x, p_y, p_number) {
 		}
 	}
 	this.colorChainsGrid[y][x] = p_number;
-}
-
-//--------------------------------
-// Utilitary functions
-
-LoopSolver.prototype.neighborExists = function(p_x, p_y, p_dir) {
-	switch (p_dir) {
-		case DIRECTION.LEFT : return (p_x > 0); break;
-		case DIRECTION.UP : return (p_y > 0); break;
-		case DIRECTION.RIGHT : return (p_x <= this.xLength-2); break;
-		case DIRECTION.DOWN : return (p_y <= this.yLength-2); break;
-	}
 }
 
 // -------------------
@@ -591,23 +570,14 @@ deductionsClosure = function(p_solver) {
 			const x = p_eventBeingApplied.x;
 			const y = p_eventBeingApplied.y;
 			if (state == LOOP_STATE.CLOSED) {
-				if (x > 0) {
-					p_eventList.push(new LinkEvent(x, y, DIRECTION.LEFT, LOOP_STATE.CLOSED));
-				}
-				if (y > 0) {
-					p_eventList.push(new LinkEvent(x, y, DIRECTION.UP, LOOP_STATE.CLOSED));
-				} 
-				if (x <= p_solver.xLength-2) {
-					p_eventList.push(new LinkEvent(x, y, DIRECTION.RIGHT, LOOP_STATE.CLOSED));
-				} 
-				if (y <= p_solver.yLength-2) {
-					p_eventList.push(new LinkEvent(x, y, DIRECTION.DOWN, LOOP_STATE.CLOSED));
-				}
+				p_solver.existingNeighborsDirections(x, y).forEach(dir => {
+					p_eventList.push(new LinkEvent(x, y, dir, LOOP_STATE.CLOSED));
+				});
 				p_eventList = p_solver.setSpaceClosedPSDeductions(p_eventList, p_eventBeingApplied);
 			} else {
 				p_eventList = p_solver.setSpaceLinkedPSDeductions(p_eventList, p_eventBeingApplied);
 			}
-			p_eventList = p_solver.testSpaceAndSurrounding2v2Open(p_eventList, x, y);
+			p_eventList = p_solver.deductionsSpaceAndSurrounding2v2Open(p_eventList, x, y);
 		} else if (p_eventBeingApplied.kind == LOOP_EVENT.LINK) {
 			const state = p_eventBeingApplied.state;
 			const x = p_eventBeingApplied.linkX;
@@ -633,7 +603,7 @@ deductionsClosure = function(p_solver) {
 				p_eventList = p_solver.test3closed(p_eventList, nx, ny);
 				p_eventList = p_solver.setEdgeClosedPSDeductions(p_eventList, p_eventBeingApplied);			
 			}
-			p_eventList = p_solver.testSpaceAndSurrounding2v2Open(p_eventList, x, y);			
+			p_eventList = p_solver.deductionsSpaceAndSurrounding2v2Open(p_eventList, x, y);			
 		} else if (p_eventBeingApplied.kind == LOOP_EVENT.COMPOUND_LINK) {
 			p_eventList.push(new LinkEvent(p_eventBeingApplied.linkX, p_eventBeingApplied.linkY, p_eventBeingApplied.direction1, p_eventBeingApplied.state));
 			p_eventList.push(new LinkEvent(p_eventBeingApplied.linkX, p_eventBeingApplied.linkY, p_eventBeingApplied.direction2, p_eventBeingApplied.state));
@@ -664,55 +634,32 @@ LoopSolver.prototype.test3closed = function(p_eventList, p_x, p_y) {
 	return p_eventList;
 }
 
-LoopSolver.prototype.testSpaceAndSurrounding2v2Open = function(p_eventList, p_x, p_y) {
-	p_eventList = this.test2v2OpenSpace(p_eventList, p_x, p_y);
-	if (p_x > 0) {
-		p_eventList = this.test2v2OpenSpace(p_eventList, p_x-1, p_y);
-	}
-	if (p_y > 0) {
-		p_eventList = this.test2v2OpenSpace(p_eventList, p_x, p_y-1);
-	}
-	if (p_x <= this.xLength-2) {
-		p_eventList = this.test2v2OpenSpace(p_eventList, p_x+1, p_y);
-	}
-	if (p_y <= this.yLength-2) {
-		p_eventList = this.test2v2OpenSpace(p_eventList, p_x, p_y+1);
-	}
+LoopSolver.prototype.deductionsSpaceAndSurrounding2v2Open = function(p_eventList, p_x, p_y) {
+	p_eventList = this.deductions2v2OpenSpace(p_eventList, p_x, p_y);
+	this.existingNeighborsCoorsDirections(p_x, p_y).forEach(coors => {
+		p_eventList = this.deductions2v2OpenSpace(p_eventList, coors.x, coors.y);
+	});
 	return p_eventList;
 }
 
 /**
 Tests if the space in x, y is linked and has 2 closed spaces. If yes, link the remainder. Also, if it is linked and has 2 linked edges, close the remainder.
 */
-LoopSolver.prototype.test2v2OpenSpace = function(p_eventList, p_x, p_y) {
+LoopSolver.prototype.deductions2v2OpenSpace = function(p_eventList, p_x, p_y) {
 	if (this.getLinkSpace(p_x,p_y) == LOOP_STATE.LINKED) {
-		if (this.getClosedEdges(p_x, p_y) == 2 && this.getLinkedEdges(p_x,p_y) < 2) {
-			if (p_x > 0 && this.getLinkLeft(p_x, p_y) == LOOP_STATE.UNDECIDED) {
-				p_eventList.push(new LinkEvent(p_x, p_y, DIRECTION.LEFT, LOOP_STATE.LINKED));
-			}
-			if (p_y > 0 && this.getLinkUp(p_x, p_y) == LOOP_STATE.UNDECIDED) {
-				p_eventList.push(new LinkEvent(p_x, p_y, DIRECTION.UP, LOOP_STATE.LINKED));
-			}
-			if (p_x <= this.xLength-2 && this.getLinkRight(p_x, p_y) == LOOP_STATE.UNDECIDED) {
-				p_eventList.push(new LinkEvent(p_x, p_y, DIRECTION.RIGHT, LOOP_STATE.LINKED));
-			}
-			if (p_y <= this.yLength-2 && this.getLinkDown(p_x, p_y) == LOOP_STATE.UNDECIDED) {
-				p_eventList.push(new LinkEvent(p_x, p_y, DIRECTION.DOWN, LOOP_STATE.LINKED));
-			}
+		if (this.getClosedEdges(p_x, p_y) == 2 && this.getLinkedEdges(p_x, p_y) < 2) {
+			this.existingNeighborsDirections(p_x, p_y).forEach(dir => {
+				if (this.getLink(p_x, p_y, dir) == LOOP_STATE.UNDECIDED) {					
+					p_eventList.push(new LinkEvent(p_x, p_y, dir, LOOP_STATE.LINKED));
+				}
+			});
 		}
 		if (this.getLinkedEdges(p_x,p_y) == 2 && this.getClosedEdges(p_x, p_y) < 2) {
-			if (p_x > 0 && this.getLinkLeft(p_x, p_y) == LOOP_STATE.UNDECIDED) {
-				p_eventList.push(new LinkEvent(p_x, p_y, DIRECTION.LEFT, LOOP_STATE.CLOSED));
-			}
-			if (p_y > 0 && this.getLinkUp(p_x, p_y) == LOOP_STATE.UNDECIDED) {
-				p_eventList.push(new LinkEvent(p_x, p_y, DIRECTION.UP, LOOP_STATE.CLOSED));
-			}
-			if (p_x <= this.xLength-2 && this.getLinkRight(p_x, p_y) == LOOP_STATE.UNDECIDED) {
-				p_eventList.push(new LinkEvent(p_x, p_y, DIRECTION.RIGHT, LOOP_STATE.CLOSED));
-			}
-			if (p_y <= this.yLength-2 && this.getLinkDown(p_x, p_y) == LOOP_STATE.UNDECIDED) {
-				p_eventList.push(new LinkEvent(p_x, p_y, DIRECTION.DOWN, LOOP_STATE.CLOSED));
-			}
+			this.existingNeighborsDirections(p_x, p_y).forEach(dir => {
+				if (this.getLink(p_x, p_y, dir) == LOOP_STATE.UNDECIDED) {					
+					p_eventList.push(new LinkEvent(p_x, p_y, dir, LOOP_STATE.CLOSED));
+				}
+			});
 		}
 	}
 	return p_eventList;
@@ -904,48 +851,10 @@ LoopSolver.prototype.standardSpacePassEvents = function(p_x, p_y) { // TODO Warn
 comparisonLoopEventsMethod = function(p_event1, p_event2) {
 	const cEvent1 = convertLoopEvent(p_event1);
 	const cEvent2 = convertLoopEvent(p_event2); // TODO yeah, the events must be converted for sure, but they could be converted before the function is called. Anyway, this comparison method is potentially optimizable...
-	const k1 = (cEvent1.kind == LOOP_EVENT.LINK ? 0 : 1);
-	const k2 = (cEvent2.kind == LOOP_EVENT.LINK ? 0 : 1);
-	if (k1 != k2) {
-		return (k1 - k2);		
-	} else {
-		if (k1 == 0) { // J'avais oublié de distinguer "links" et "spaces".
-		 // 25 janvier 2021, en milieu-fin de développement du solveur de Masyu et aux débuts du LoopSolver : Je sais grâce au pass sur Chocona fait la veille (ou aujourd'hui ?) que si une seule des 2 "possibilités" lors d'une passe sont exploitées, c'est parce que ça bloque au niveau de la méthode de comparaison.
-			if (cEvent2.linkY > cEvent1.linkY) {
-				return -1;
-			} else if (cEvent2.linkY < cEvent1.linkY) {
-				return 1;
-			} else if (cEvent2.linkX > cEvent1.linkX) {
-				return -1;
-			} else if (cEvent2.linkX < cEvent1.linkX) {
-				return 1;
-			} else {
-				const d1 = (cEvent1.direction == DIRECTION.RIGHT ? 0 : 1);
-				const d2 = (cEvent2.direction == DIRECTION.RIGHT ? 0 : 1); // Et non "LOOP_EV.NT.RIGHT" (E remplacé par un point pour ne pas perturber les recherches)"
-				if (d1 != d2) {
-					return d1-d2;
-				} else {
-					const c1 = (cEvent1.state == LOOP_STATE.LINKED ? 0 : 1); 
-					const c2 = (cEvent2.state == LOOP_STATE.LINKED ? 0 : 1); 
-					return c1-c2;
-				}
-			}
-		} else {
-			if (cEvent2.y > cEvent1.y) {
-				return -1;
-			} else if (cEvent2.y < cEvent1.y) {
-				return 1;
-			} else if (cEvent2.x > cEvent1.x) {
-				return -1;
-			} else if (cEvent2.x < cEvent1.x) {
-				return 1;
-			} else {
-				const c1 = (cEvent1.state == LOOP_STATE.LINKED ? 0 : 1);
-				const c2 = (cEvent2.state == LOOP_STATE.LINKED ? 0 : 1); 
-				return c1-c2;
-			}
-		}
-	}
+	return commonComparison([LOOP_EVENT.LINK, LOOP_EVENT.STATE], 
+	[[cEvent1.linkY, cEvent1.linkX, cEvent1.direction, cEvent1.state], [cEvent2.linkY, cEvent2.linkX, cEvent2.direction, cEvent2.state], 
+	[cEvent1.y, cEvent1.x, cEvent1.state], [cEvent2.y, cEvent2.x, cEvent2.state]], 
+	cEvent1.kind, cEvent2.kind);
 }
 
 // Convert a loop event to make it compatible with the comparison method above 

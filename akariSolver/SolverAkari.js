@@ -23,9 +23,9 @@ SolverAkari.prototype.construct = function(p_numberSymbolArray) {
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodSetDeductions.addOneAbortAndFilters(abortClosure(this), [filterClustersClosure(this)]);
+	this.methodSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterClustersClosure(this)]);
 	this.methodSetPass = {comparisonMethod : compareSolveEvents, copyMethod : copying, argumentToLabelMethod : namingSetClosure(this)};
-	this.methodsMultiPass = {
+	this.methodsSetMultiPass = {
 		generatePassEventsMethod : generateEventsForSetsAroundNumericSpacesClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
@@ -91,7 +91,7 @@ SolverAkari.prototype.construct = function(p_numberSymbolArray) {
 		for (ix = 0; ix < this.xLength ; ix++) {
 			if (this.getFixedSpace(ix, iy) == null) {
 				this.numericArray[iy][ix].stillPossibleLighters = this.numericArray[iy][ix].xMax - this.numericArray[iy][ix].xMin + this.numericArray[iy][ix].yMax - this.numericArray[iy][ix].yMin + 1;
-				this.existingNeighborCoors(ix, iy).forEach(coors => {
+				this.existingNeighborsCoorsDirections(ix, iy).forEach(coors => {
 					if (this.getNumericValue(coors.x, coors.y) != null) {
 						this.numericArray[iy][ix].numericNeighbors.push({x : coors.x, y : coors.y});
 					}
@@ -183,10 +183,8 @@ Gets from "sets of numeric spaces" "sets of empty spaces around numeric spaces"
 */
 SolverAkari.prototype.generateSetsAroundNumeric = function(p_listNumericSpacesCoors) {
 	var answer = [];
-	var existingNC;
 	p_listNumericSpacesCoors.forEach(coorsNum => {
-		existingNC = this.existingNeighborCoors(coorsNum.x, coorsNum.y);
-		existingNC.forEach(aroundCoorsNum => {
+		this.existingNeighborsCoorsDirections(coorsNum.x, coorsNum.y).forEach(aroundCoorsNum => {
 			x = aroundCoorsNum.x;
 			y = aroundCoorsNum.y;
 			if (!this.numericArray[y][x].isBlocked) {				
@@ -237,8 +235,8 @@ SolverAkari.prototype.isLighted = function(p_x, p_y) {
 //--------------
 // Input
 
-SolverAkari.prototype.emitHypothesis = function(p_x,p_y,p_symbol){
-	return this.tryToApplyHypothesis(new SpaceEvent(p_symbol, p_x, p_y), this.methodSetDeductions); // TODO mixed argument orders
+SolverAkari.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
+	return this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol), this.methodSetDeductions);
 }
 
 SolverAkari.prototype.undo = function() {
@@ -279,7 +277,7 @@ SolverAkari.prototype.passSetNumericSpaces = function(p_x, p_y) {
 }
 
 SolverAkari.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodSetDeductions, this.methodSetPass, this.methodsMultiPass);
+	this.multiPass(this.methodSetDeductions, this.methodSetPass, this.methodsSetMultiPass);
 }
 
 //--------------
@@ -414,16 +412,16 @@ deductionsClosure = function (p_solver) {
 		if (symbol == FILLING.YES) {
 			p_listEventsToApply = p_solver.controlAroundNumericNewLightbulb(p_listEventsToApply, x, y);
 			for (var xx = spaceInfos.xMin ; xx < x ; xx++) {
-				p_listEventsToApply.push(new SpaceEvent(FILLING.NO, xx, y)); 
+				p_listEventsToApply.push(new SpaceEvent(xx, y, FILLING.NO)); 
 			}
 			for (var xx = x+1 ; xx <= spaceInfos.xMax ; xx++) {
-				p_listEventsToApply.push(new SpaceEvent(FILLING.NO, xx, y)); 
+				p_listEventsToApply.push(new SpaceEvent(xx, y, FILLING.NO)); 
 			}
 			for (var yy = spaceInfos.yMin ; yy < y ; yy++) {
-				p_listEventsToApply.push(new SpaceEvent(FILLING.NO, x, yy)); 
+				p_listEventsToApply.push(new SpaceEvent(x, yy, FILLING.NO)); 
 			}
 			for (var yy = y+1 ; yy <= spaceInfos.yMax ; yy++) {
-				p_listEventsToApply.push(new SpaceEvent(FILLING.NO, x, yy)); 
+				p_listEventsToApply.push(new SpaceEvent(x, yy, FILLING.NO)); 
 			}
 		} else {
 			p_listEventsToApply = p_solver.controlAroundNumericNewEmpty(p_listEventsToApply, x, y);
@@ -458,9 +456,9 @@ SolverAkari.prototype.controlAroundNumericNewEmpty = function(p_listEventsToAppl
 
 // When a numeric space (coors p_x, p_y) is ready to be surrounded
 SolverAkari.prototype.surroundNumericSpace = function(p_listEventsToApply, p_x, p_y, p_symbolToPut) {
-	this.existingNeighborCoors(p_x, p_y).forEach(coors => {
+	this.existingNeighborsCoorsDirections(p_x, p_y).forEach(coors => {
 		if (this.answerArray[coors.y][coors.x] == FILLING.UNDECIDED) {
-			p_listEventsToApply.push(new SpaceEvent(p_symbolToPut, coors.x, coors.y));	
+			p_listEventsToApply.push(new SpaceEvent(coors.x, coors.y, p_symbolToPut));	
 		}
 	});
 	return p_listEventsToApply;
@@ -482,13 +480,13 @@ filterClustersClosure = function(p_solver) {
 				} else {
 					foundBulb = false;
 					if (p_solver.answerArray[y][x] == FILLING.UNDECIDED) {
-						eventsToApply.push(new SpaceEvent(FILLING.YES, x, y)); 
+						eventsToApply.push(new SpaceEvent(x, y, FILLING.YES)); 
 						foundBulb = true;
 					}
 					if (!foundBulb) {
 						for (var xx = spaceInfos.xMin ; xx < x ; xx++) {
 							if (p_solver.answerArray[y][xx] == FILLING.UNDECIDED) {
-								eventsToApply.push(new SpaceEvent(FILLING.YES, xx, y)); 
+								eventsToApply.push(new SpaceEvent(xx, y, FILLING.YES)); 
 								foundBulb = true;
 								break;
 							}
@@ -497,7 +495,7 @@ filterClustersClosure = function(p_solver) {
 					if (!foundBulb) {
 						for (var xx = x+1 ; xx <= spaceInfos.xMax ; xx++) {
 							if (p_solver.answerArray[y][xx] == FILLING.UNDECIDED) {
-								eventsToApply.push(new SpaceEvent(FILLING.YES, xx, y)); 
+								eventsToApply.push(new SpaceEvent(xx, y, FILLING.YES)); 
 								foundBulb = true;
 								break;
 							}
@@ -506,7 +504,7 @@ filterClustersClosure = function(p_solver) {
 					if (!foundBulb) {
 						for (var yy = spaceInfos.yMin ; yy < y ; yy++) {
 							if (p_solver.answerArray[yy][x] == FILLING.UNDECIDED) {
-								eventsToApply.push(new SpaceEvent(FILLING.YES, x, yy)); 
+								eventsToApply.push(new SpaceEvent(x, yy, FILLING.YES)); 
 								foundBulb = true;
 								break;
 							}
@@ -515,7 +513,7 @@ filterClustersClosure = function(p_solver) {
 					if (!foundBulb) {
 						for (var yy = y+1 ; yy <= spaceInfos.yMax ; yy++) {
 							if (p_solver.answerArray[yy][x] == FILLING.UNDECIDED) {
-								eventsToApply.push(new SpaceEvent(FILLING.YES, x, yy)); 
+								eventsToApply.push(new SpaceEvent(x, yy, FILLING.YES)); 
 								foundBulb = true;
 								break;
 							}
@@ -543,35 +541,6 @@ SolverAkari.prototype.cleanOneLighterLeftSpaces = function() {
 	this.checkerOneLighterLeft.clean();
 }
 
-
-/**
-Returns a list of planned events : plans to fill the remaining undecided spaces in the region. 
-*/
-/*SolverShimaguni.prototype.fillRegionWith = function(p_eventsToApply, p_indexRegion, p_symbol){
-	var region = this.regions[p_indexRegion];
-	region.spaces.forEach(space => {
-		if (this.answerArray[space.y][space.x] == FILLING.UNDECIDED){
-			p_eventsToApply.push(SolveEventPosition(space.x,space.y,p_symbol));
-		}
-	});
-	return p_eventsToApply;
-}
-
-SolverShimaguni.prototype.banAllAdjacentsFromRegion = function(p_eventsToApply, p_indexRegion, p_valueToBan){
-	this.regions[p_indexRegion].contact.forEach(irc => {
-		p_eventsToApply.push(SolveEventValue(irc,p_valueToBan));
-	});
-	return p_eventsToApply;
-}
-
-const CLUSTER_WITH_FILL= {
-	NOT_FOUND:-1,
-	MULTI:-2
-}
-const NOT_CLUSTERED = -1;*/
-
-// Some ArrayList methods
-
 // ---------------------
 // Pass methods
 
@@ -584,7 +553,7 @@ generateEventsForSetsAroundNumericSpacesClosure = function(p_solver) {
 SolverAkari.prototype.generateEventsForSetsAroundNumericSpaces = function(p_indexSpaces) {
 	var eventList = [];
 	this.setsAroundNumericSpaces[p_indexSpaces].forEach(coors => {
-		eventList.push([new SpaceEvent(FILLING.YES, coors.x, coors.y), new SpaceEvent(FILLING.NO, coors.x, coors.y)]);
+		eventList.push([new SpaceEvent(coors.x, coors.y, FILLING.YES), new SpaceEvent(coors.x, coors.y, FILLING.NO)]);
 	});
 	return eventList;
 }
@@ -593,20 +562,8 @@ copying = function(p_event) {
 	return p_event.copy();
 }
 
-/**
-Compares two space events for sorting (left is "superior" : 1 ; right is "superior" : -1)
-*/
-// Partially copied on Shimaguni... yawn !
-function compareSolveEvents(p_spaceEvent1, p_spaceEvent2) {
-	if (p_spaceEvent1.y < p_spaceEvent2.y)
-		return -1;
-	if ((p_spaceEvent1.y > p_spaceEvent2.y) || (p_spaceEvent1.x > p_spaceEvent2.x))
-		return 1;
-	if (p_spaceEvent1.x < p_spaceEvent2.x)
-		return -1;
-	const c1 = (p_spaceEvent1.symbol == FILLING.YES ? 1 : 0);
-	const c2 = (p_spaceEvent2.symbol == FILLING.YES ? 1 : 0); // Works because only two values are admitted
-	return c1-c2; 
+function compareSolveEvents(p_event1, p_event2) {
+	return commonComparison([[p_event1.y, p_event1.x, p_event1.symbol], [p_event2.y, p_event2.x, p_event2.symbol]]);
 }
 
 namingSetClosure = function(p_solver) {
@@ -635,6 +592,6 @@ orderedListPassArgumentsClosure = function(p_solver) {
 // Skip...
 skipPassClosure = function(p_solver) {
 	return function(p_argument) {
-		return false; // TODO Only skip spaces ? (not provided now)
+		return false; // TODO Only skip spaces ? (spaces not provided now)
 	}
 }

@@ -16,7 +16,7 @@ function main() {
 	}
 
 	var drawer = new Drawer(colours);
-	solver = new SolverCountryRoad(generateWallArray(1,1), []);
+	solver = DummySolver();
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
 	var actionsManager = {}; 

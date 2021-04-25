@@ -35,7 +35,7 @@ function startScriptLoading() {
 }
 
 addScriptsSolving = addScriptsClosure(["../miscSolving/GeneralSolver.js", "../miscSolving/SolvingMethodPacks.js"]); // Must be charged first since basically that calls constructors everything depends upon GeneralSolver
-addScriptsDirections = addScriptsClosure(["../miscSolving/Directions.js", "../miscSolving/DirectionFunctions.js"]);
+addScriptsDirections = addScriptsClosure(["../Directions.js", "../DirectionFunctions.js", "../MiscSolving/DirectionFunctions.js"]);
 addScriptsGeneric = addScriptsClosure(["../WallGrid.js", "../Grid.js",
 "../commonSaveAndLoad.js", "../commonEncodingDecoding.js",
 "../DrawableItem.js", "../Drawer.js",

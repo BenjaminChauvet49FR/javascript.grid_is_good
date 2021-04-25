@@ -54,7 +54,7 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, LOOP_STATE.CLOSED); 
 		break;
 		case ACTION_PASS_SPACE.id:
-			p_solver.passSpace(p_spaceIndexX, p_spaceIndexY);
+			p_solver.emitPassSpace(p_spaceIndexX, p_spaceIndexY);
 		break;
 	}
 }
@@ -64,15 +64,15 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 //--------------------------
 // Game action buttons
 
-quickStartAction = function(p_solver){
+quickStartAction = function(p_solver) {
 	p_solver.quickStart();
 }
 
-multiPassAction = function(p_solver){
+multiPassAction = function(p_solver) {
 	p_solver.makeMultipass();
 }
 
-undoAction = function(p_solver,p_textArea){
+undoAction = function(p_solver,p_textArea) {
 	p_solver.undo();
 }
 

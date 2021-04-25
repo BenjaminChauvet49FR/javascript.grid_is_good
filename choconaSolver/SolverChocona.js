@@ -15,45 +15,37 @@ SolverChocona.prototype.constructor = SolverChocona;
 
 SolverChocona.prototype.construct = function(p_wallArray, p_indications) {
 	this.generalConstruct();
-	this.xLength = p_wallArray[0].length;
-	this.yLength = p_wallArray.length;
 
-	this.gridWall = WallGrid_data(p_wallArray); 
-	this.regionArray = this.gridWall.toRegionGrid();
-	this.answerGrid = [];
-
-	var ix,iy;
-	var lastRegionNumber = 0;
-	
-	this.methodSet = new ApplyEventMethodPack(
+	this.methodsSetDeductions = new ApplyEventMethodPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodTools = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsMultiPass = {
+	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsSetMultiPass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
 	};
-	
-	// Initialize the required grids (notably answerGrid) and the number of regions
-	for(iy = 0;iy < this.yLength;iy++){
-		this.answerGrid.push([]);
-		for(ix = 0;ix < this.xLength;ix++){
-			lastRegionNumber = Math.max(this.regionArray[iy][ix],lastRegionNumber);
-			this.answerGrid[iy].push(FILLING.UNDECIDED);
-		}
-	}
-	this.regionsNumber = lastRegionNumber+1;
-	
+	this.xLength = p_wallArray[0].length;
+	this.yLength = p_wallArray.length;
+
+	this.gridWall = WallGrid_data(p_wallArray); 
+	this.regionArray = this.gridWall.toRegionArray();
+	this.answerArray = generateValueArray(this.xLength, this.yLength, FILLING.UNDECIDED);
+
+	var ix,iy;
+	var lastRegionNumber = 0;
+	const spacesByRegion = listSpacesByRegion(this.regionArray);
+	this.regionsNumber = spacesByRegion.length;
+		
 	// Initialize data of regions
 	var ir;
 	this.regions = [];
-	for(ir=0;ir<this.regionsNumber;ir++){
+	for(ir = 0 ; ir < this.regionsNumber ; ir++){
 		this.regions.push({
-			spaces : [],
-			size : 0,
+			spaces : spacesByRegion[ir],
+			size : spacesByRegion[ir].length,
 			forcedValue : NOT_FORCED,
 			notPlacedYet : {}
 		});
@@ -73,20 +65,11 @@ SolverChocona.prototype.construct = function(p_wallArray, p_indications) {
 		this.regions[indic.index].forcedValue = indic.value;
 	});
 	
-	// Now that region data are created : 
-	// Initialize spaces by region
-	for(iy = 0 ; iy < this.yLength ; iy++) {
-		for(ix = 0 ; ix < this.xLength ; ix++) {
-			this.regions[this.regionArray[iy][ix]].spaces.push({x:ix, y:iy});
-		}
-	}
-	
 	var region;
 	// Initialize datas dependant to region size (now that all region spaces are known) such as X to place
 	// Also initialize regions sizes for shortcut
-	for(ir = 0 ; ir<this.regionsNumber ; ir++) {
+	for(ir = 0 ; ir < this.regionsNumber ; ir++) {
 		region = this.regions[ir];
-		region.size = region.spaces.length;
 		if (region.forcedValue != NOT_FORCED) {
 			region.notPlacedYet = {YESs : region.forcedValue, NOs : region.size - region.forcedValue}
 		}
@@ -99,7 +82,7 @@ SolverChocona.prototype.construct = function(p_wallArray, p_indications) {
 
 // Misc methods (may be used for drawing and intelligence)
 SolverChocona.prototype.getAnswer = function(p_x,p_y) {
-	return this.answerGrid[p_y][p_x];
+	return this.answerArray[p_y][p_x];
 }
 
 SolverChocona.prototype.getForcedValue = function(p_ir) {
@@ -121,32 +104,32 @@ SolverChocona.prototype.getRegion = function(p_x, p_y) {
 //--------------------------------
 
 // Input methods
-SolverChocona.prototype.emitHypothesis = function(p_x,p_y,p_symbol) {
-	this.tryToPutNew(p_x,p_y,p_symbol);
+SolverChocona.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
+	this.tryToPutNew(p_x, p_y, p_symbol);
 }
 
-SolverChocona.prototype.undo = function(){
+SolverChocona.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
 SolverChocona.prototype.passRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEvents(generatedEvents, this.methodSet, this.methodTools, p_indexRegion); 
+	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, p_indexRegion); 
 }
 
 SolverChocona.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodSet, this.methodTools, this.methodsMultiPass);
+	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
 }
 
 SolverChocona.prototype.quickStart = function() {
 	this.initiateQuickStart();
 	var quickStartList = [];
 	for (ir = 0; ir < this.regions.length ; ir ++) {
-		quickStartList = this.alertRegionIfFullNOs(quickStartList, ir);
-		quickStartList = this.alertRegionIfFullYESs(quickStartList, ir);
+		this.deductionsRegionIfFullNOs(quickStartList, ir);
+		this.deductionsRegionIfFullYESs(quickStartList, ir);
 	};
 	quickStartList.forEach(eventToApply => {
-		this.tryToPutNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
+		this.tryToPutNew(eventToApply.x, eventToApply.y, eventToApply.symbol);
 	});
 	this.terminateQuickStart();
 }
@@ -169,13 +152,13 @@ SolverChocona.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 
 // Doing and undoing
 SolverChocona.prototype.putNew = function(p_x,p_y,p_symbol){
-	if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerGrid[p_y][p_x] == p_symbol)){
+	if (this.answerArray[p_y][p_x] == p_symbol) {
 		return EVENT_RESULT.HARMLESS;
 	}
-	if (this.answerGrid[p_y][p_x] != FILLING.UNDECIDED) {
+	if (this.answerArray[p_y][p_x] != FILLING.UNDECIDED) {
 		return EVENT_RESULT.FAILURE;
 	}
-	this.answerGrid[p_y][p_x] = p_symbol;
+	this.answerArray[p_y][p_x] = p_symbol;
 	var ir = this.regionArray[p_y][p_x];
 	var region = this.regions[ir];
 	if (region.notPlacedYet) {
@@ -194,18 +177,18 @@ applyEventClosure = function(p_solver) {
 		if (eventToApply.failure) {
 			return EVENT_RESULT.FAILURE;
 		}
-		return p_solver.putNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
+		return p_solver.putNew(eventToApply.x, eventToApply.y, eventToApply.symbol);
 	}
 }
 
 undoEventClosure = function(p_solver) {
 	return function(eventToUndo) {
 		if (!eventToUndo.failure) {
-			const x = eventToUndo.x();
-			const y = eventToUndo.y();
+			const x = eventToUndo.x;
+			const y = eventToUndo.y;
 			const symbol = eventToUndo.symbol;
-			var discardedSymbol = p_solver.answerGrid[y][x]; 
-			p_solver.answerGrid[y][x] = FILLING.UNDECIDED;
+			var discardedSymbol = p_solver.answerArray[y][x]; 
+			p_solver.answerArray[y][x] = FILLING.UNDECIDED;
 			var ir = p_solver.regionArray[y][x];
 			var region = p_solver.regions[ir];
 			if (region.notPlacedYet) {
@@ -228,41 +211,39 @@ function isSpaceEvent(p_event) {
 
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
-		var x = p_eventBeingApplied.x();
-		var y = p_eventBeingApplied.y();
+		var x = p_eventBeingApplied.x;
+		var y = p_eventBeingApplied.y;
 		var ir = p_solver.regionArray[y][x];
 		var region = p_solver.regions[ir];
 		symbol = p_eventBeingApplied.symbol;
-		p_solver.closeSquares(p_listEventsToApply, x, y);
+		p_solver.existingNeighborsCoorsWithDiagonals(x, y).forEach(coors => {		
+			p_solver.deductionsLastUndecided2x2(p_listEventsToApply, coors.x, coors.y);
+		});
 		if (symbol == FILLING.NO) {	
-			p_solver.alertRegionIfFullNOs(p_listEventsToApply, ir);
+			p_solver.deductionsRegionIfFullNOs(p_listEventsToApply, ir);
 		} else {
-			p_solver.alertRegionIfFullYESs(p_listEventsToApply, ir);
+			p_solver.deductionsRegionIfFullYESs(p_listEventsToApply, ir);
 		}
 		return p_listEventsToApply;
 	}
 }
 
 // The alert on region "when the remaining spaces of a region must be closed/open to reach the numbers"
-SolverChocona.prototype.alertRegionIfFullYESs = function(p_listEvents, p_indexRegion) {
+SolverChocona.prototype.deductionsRegionIfFullYESs = function(p_listEvents, p_indexRegion) {
 	const region = this.regions[p_indexRegion];
 	if (region.notPlacedYet) {
-		return this.alertRegion(p_listEvents, region ,FILLING.NO, region.notPlacedYet.YESs, region.notPlacedYet.NOs);
-	} else {
-		return p_listEvents;
+		return this.deductionsFillingRegion(p_listEvents, region ,FILLING.NO, region.notPlacedYet.YESs, region.notPlacedYet.NOs);
 	}
 }
 
-SolverChocona.prototype.alertRegionIfFullNOs = function(p_listEvents, p_indexRegion) {
+SolverChocona.prototype.deductionsRegionIfFullNOs = function(p_listEvents, p_indexRegion) {
 	const region = this.regions[p_indexRegion];
 	if (region.notPlacedYet) {
-		return this.alertRegion(p_listEvents, region ,FILLING.YES, region.notPlacedYet.NOs, region.notPlacedYet.YESs);
-	} else {
-		return p_listEvents;
-	}
+		this.deductionsFillingRegion(p_listEvents, region ,FILLING.YES, region.notPlacedYet.NOs, region.notPlacedYet.YESs);
+	} 
 }
 
-SolverChocona.prototype.alertRegion = function(p_listEvents, p_region, p_missingSymbol, p_testZeroNumber, p_missingNumber) {
+SolverChocona.prototype.deductionsFillingRegion = function(p_listEvents, p_region, p_missingSymbol, p_testZeroNumber, p_missingNumber) {
 	if (p_testZeroNumber == 0) {
 		var xa,ya,alertSpace;
 		var remaining = p_missingNumber
@@ -270,48 +251,33 @@ SolverChocona.prototype.alertRegion = function(p_listEvents, p_region, p_missing
 			alertSpace = p_region.spaces[i];
 			xa = alertSpace.x;
 			ya = alertSpace.y;
-			if (this.answerGrid[ya][xa] == FILLING.UNDECIDED) {
+			if (this.answerArray[ya][xa] == FILLING.UNDECIDED) {
 				p_listEvents.push(SpaceEvent(xa, ya, p_missingSymbol));
 				remaining--;
-				if (remaining == 0){
+				if (remaining == 0) {
 					break;
 				}
 			}
 		}
 	}
-	return p_listEvents;
 }
 
-// for a space, test all 8 spaces around it if a 2x2 square is entirely defined
-SolverChocona.prototype.closeSquares = function(p_listEvents, p_x, p_y) {
-	const DeltaXCircle = [-1,0,1,1,1,0,-1,-1];
-	const DeltaYCircle = [-1,-1,-1,0,1,1,1,0];
-	for(var i = 0; i <= 7 ; i++) {
-		this.testLastUndecided2x2(p_listEvents, p_x + DeltaXCircle[i], p_y + DeltaYCircle[i]);
-	}
-	return p_listEvents; 
-}
-
-SolverChocona.prototype.testLastUndecided2x2 = function(p_listEvents, p_x, p_y) {
-	if (this.spaceExists(p_x, p_y) && this.getAnswer(p_x, p_y) == FILLING.UNDECIDED) {
-		const notExtremeLeft = (this.leftExists(p_x));
-		const notExtremeRight = (this.rightExists(p_x));
-		const notExtremeUp = (this.upExists(p_y));
-		const notExtremeDown = (this.downExists(p_y));
+SolverChocona.prototype.deductionsLastUndecided2x2 = function(p_listEvents, p_x, p_y) {
+	if (this.getAnswer(p_x, p_y) == FILLING.UNDECIDED) {
 		conclusions = [FILLING.UNDECIDED, FILLING.UNDECIDED, FILLING.UNDECIDED, FILLING.UNDECIDED];
-		if (notExtremeLeft) {
-			if (notExtremeUp) {
+		if (leftNeighborExists(p_x)) {
+			if (upNeighborExists(p_y)) {
 				conclusions[0] = this.conclusionLastUndecided2x2(p_x-1, p_y-1, p_x, p_y);
 			}
-			if (notExtremeDown) {
+			if (downNeighborExists(p_y, this.yLength)) {
 				conclusions[1] = this.conclusionLastUndecided2x2(p_x-1, p_y+1, p_x, p_y);
 			}
 		}
-		if (notExtremeRight) {
-			if (notExtremeUp) {
+		if (rightNeighborExists(p_x, this.xLength)) {
+			if (upNeighborExists(p_y)) {
 				conclusions[2] = this.conclusionLastUndecided2x2(p_x+1, p_y-1, p_x, p_y);
 			}
-			if (notExtremeDown) {
+			if (downNeighborExists(p_y, this.yLength)) {
 				conclusions[3] = this.conclusionLastUndecided2x2(p_x+1, p_y+1, p_x, p_y);
 			}
 		}
@@ -334,16 +300,15 @@ SolverChocona.prototype.testLastUndecided2x2 = function(p_listEvents, p_x, p_y) 
 			p_listEvents.push({failure : true});
 		}
 	}
-	return p_listEvents;
 }
 
 // Tests how should be filled the last square (x2, y2) in a 2x2 square from the remaining 3 ones (x1y1, x1y2, x2y1) (all 4 squares exist in the grid - the x2, y2 is in an unknown state)
 SolverChocona.prototype.conclusionLastUndecided2x2 = function(p_x1, p_y1, p_x2, p_y2) {
 	var count = 0;
 	var atLeastOneUndecided = false; 
-	var space1 = this.answerGrid[p_y1][p_x1];
-	var space2 = this.answerGrid[p_y1][p_x2];
-	var space3 = this.answerGrid[p_y2][p_x1];
+	var space1 = this.answerArray[p_y1][p_x1];
+	var space2 = this.answerArray[p_y1][p_x2];
+	var space3 = this.answerArray[p_y2][p_x1];
 	[space1, space2, space3].forEach(state => {// Possible optimization that involves removing "atLeastOneUndecided"
 		if (state == FILLING.UNDECIDED) {
 			//return FILLING.UNDECIDED; // A "=> expression" is NOT a good place to write a return that should be the return of the function.
@@ -363,24 +328,6 @@ SolverChocona.prototype.conclusionLastUndecided2x2 = function(p_x1, p_y1, p_x2, 
 	return FILLING.UNDECIDED;
 }
 
-
-// Methods for safety check
-SolverChocona.prototype.leftExists = function(p_x) {
-	return p_x > 0;
-}
-SolverChocona.prototype.upExists = function(p_y) {
-	return p_y > 0;
-}
-SolverChocona.prototype.rightExists = function(p_x) {
-	return p_x <= this.xLength-2;
-}
-SolverChocona.prototype.downExists = function(p_y) {
-	return p_y <= this.yLength-2;
-}
-SolverChocona.prototype.spaceExists = function(p_x, p_y) {
-	return (p_x >= 0 && p_y >= 0 && p_x < this.xLength && p_y < this.yLength);
-}
-
 //--------------------
 // Passing
 
@@ -388,7 +335,7 @@ SolverChocona.prototype.spaceExists = function(p_x, p_y) {
 SolverChocona.prototype.generateEventsForRegionPass = function(p_indexRegion) {
 	var eventList = [];
 	this.regions[p_indexRegion].spaces.forEach(space => {
-		if (this.answerGrid[space.y][space.x] == FILLING.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
+		if (this.answerArray[space.y][space.x] == FILLING.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
 			eventList.push([SpaceEvent(space.x, space.y, FILLING.YES), SpaceEvent(space.x, space.y, FILLING.NO)]);
 		}			 
 	});
@@ -406,19 +353,8 @@ copying = function(p_event) {
 }
 
 comparison = function(p_event1, p_event2) {
-	if (p_event2.coorY > p_event1.coorY) {
-		return -1;
-	} else if (p_event2.coorY < p_event1.coorY) {
-		return 1;
-	} else if (p_event2.coorX > p_event1.coorX) {
-		return -1;
-	} else if (p_event2.coorX < p_event1.coorX) {
-		return 1;
-	} else {
-		var c1 = (p_event1.symbol == FILLING.YES ? 1 : 0);
-		var c2 = (p_event2.symbol == FILLING.YES ? 1 : 0); // Unstable : works because only "O" and "C" values are admitted
-		return c1-c2;
-	}
+	return commonComparison([[p_event1.y, p_event1.x, p_event1.symbol],
+	[p_event2.y, p_event2.x, p_event2.symbol]]);
 }
 
 namingCategoryClosure = function(p_solver) {

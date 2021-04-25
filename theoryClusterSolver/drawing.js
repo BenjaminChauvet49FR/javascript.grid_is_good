@@ -4,19 +4,19 @@ Draws what's inside spaces
 function drawInsideSpaces(p_context,p_drawer,p_color,p_solver) {
 	var items = [DrawableColor(p_color.openSquare),DrawableX(p_color.closedSquare), DrawableColor("#ffee88"), DrawableColor("#8800ff")];
 	function selection(x, y) {
-		if(p_solver.getAnswer(x, y) == SPACE.OPEN) {
+		if(p_solver.getAnswer(x, y) == ADJACENCY.YES) {
 			return 0;
-		} else if (p_solver.getAnswer(x, y) == SPACE.CLOSED && !p_solver.isBanned(x, y)) {
+		} else if (p_solver.getAnswer(x, y) == ADJACENCY.NO && !p_solver.isBanned(x, y)) {
 			return 1;
-		} else if (p_solver.getArtificialDeduction(x, y) == SPACE.OPEN) {
+		} else if (p_solver.getArtificialDeduction(x, y) == ADJACENCY.YES) {
 			return 2;
-		} else if (p_solver.getArtificialDeduction(x, y) == SPACE.CLOSED) {
+		} else if (p_solver.getArtificialDeduction(x, y) == ADJACENCY.NO) {
 			return 3;
 		}  
 		return -1;
 	}
 	function selection2(x,y) {
-		if(p_solver.getAnswer(x,y) == SPACE.OPEN) {
+		if(p_solver.getAnswer(x,y) == ADJACENCY.YES) {
 			return 0;
 		}
 		return -1;

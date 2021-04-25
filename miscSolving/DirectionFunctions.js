@@ -1,18 +1,5 @@
-function leftNeighborExists(p_x) {
-	return p_x > 0;
-}
-
-function upNeighborExists(p_y) {
-	return p_y > 0;
-}
-
-function rightNeighborExists(p_x, p_limit) {
-	return p_x <= p_limit - 2;
-}
-
-function downNeighborExists(p_y, p_limit) {
-	return p_y <= p_limit - 2;
-}
+// Used with solver only !
+// If this was in the same file as parent "DirectionFunctions.js", the file wouldn't be loaded by editor since GeneralSolver wouldn't be known.
 
 // Warning : forces the solver to have functions named xLength, yLength (already forced if the solver is geographic
 GeneralSolver.prototype.neighborExists = function(p_x, p_y, p_dir) {
@@ -33,19 +20,30 @@ GeneralSolver.prototype.distantNeighborExists = function(p_x, p_y, p_dist, p_dir
 	}
 }
 
-GeneralSolver.prototype.existingNeighborCoors = function(p_x, p_y) {
+// Around the space, returns coordinates and/or directions
+GeneralSolver.prototype.existingNeighborsCoorsDirections = function(p_x, p_y) {
+	return existingNeighborsCoorsDirections(p_x, p_y, this.xLength, this.yLength);
+}
+
+GeneralSolver.prototype.existingNeighborsCoorsWithDiagonals = function(p_x, p_y) {
 	var answer = [];
-	if (leftNeighborExists(p_x)) {
-		answer = [{x : p_x-1, y : p_y}];
-	}
-	if (upNeighborExists(p_y)) {
-		answer.push({x : p_x, y : p_y-1});
-	}
-	if (rightNeighborExists(p_x, this.xLength)) {
-		answer.push({x : p_x+1, y : p_y});
-	}
-	if (downNeighborExists(p_y, this.yLength)) {
-		answer.push({x : p_x, y : p_y+1});
-	}
+	KnownDirections.forEach(dir => {
+		if (this.neighborExists(p_x, p_y, dir)) {
+			answer.push({x : p_x + DeltaX[dir], y : p_y + DeltaY[dir]});
+			if (this.neighborExists(p_x, p_y, TurningRightDirection[dir])) { // Supposes a rectangular grid !
+				answer.push({x : p_x + DeltaX[dir] + DeltaX[TurningRightDirection[dir]], y : p_y + DeltaY[dir] + DeltaY[TurningRightDirection[dir]]});
+			}
+		}
+	});
+	return answer;
+}
+
+GeneralSolver.prototype.existingNeighborsDirections = function(p_x, p_y) {
+	var answer = [];
+	KnownDirections.forEach(dir => {
+		if (this.neighborExists(p_x, p_y, dir)) {
+			answer.push(dir);
+		}
+	});
 	return answer;
 }

@@ -3,8 +3,8 @@
 function SolveEvent(){}
 
 const KIND = {
-	SYMBOL:1,
-	VALUE:2
+	SYMBOL : 1,
+	VALUE : 2
 }
 
 function SolveEventPosition(p_x,p_y,p_symbol){
