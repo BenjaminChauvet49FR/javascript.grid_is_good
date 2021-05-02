@@ -36,8 +36,11 @@ function clickCanvas(event, p_canvas, p_drawer, p_editorCore, p_modes) {
     if (indexSpaces != null) {
         clickSpaceAction(p_editorCore, indexSpaces.x, indexSpaces.y, p_modes);
     }
+	var indexMargin = p_drawer.getClickMargin(event, p_canvas, p_xLength, p_yLength, p_editorCore.getMarginLeftLength(), p_editorCore.getMarginUpLength(), p_editorCore.getMarginRightLength(), p_editorCore.getMarginRightLength());
+	if (indexMargin != null) {
+		clickMarginAction(p_editorCore, indexMargin.edge, indexMargin.index);
+	}
 }
-
 
 // According to the "visible grid", returns elements for prompt 
 getPromptElementsFromVisibleGrid = function(p_editorCore) {
@@ -115,7 +118,7 @@ clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
 			}
 			optionalChain = (!promptElements.parameters.isMonoChar) ? "(Penser à séparer les indices des caractères " + promptElements.parameters.emptySpaceChar + " par des espaces) " : "";
 			var clueChain = prompt(promptElements.descriptionPrompt + " ou " + promptElements.parameters.emptySpaceChar + " pour case vide " + optionalChain + ":", defaultVal);
-			p_editorCore.insertChain(promptElements.gridId, clueChain, promptElements.validityTokenMethod, promptElements.parameters, p_x, p_y);
+			p_editorCore.insertChainGrid(promptElements.gridId, clueChain, promptElements.validityTokenMethod, promptElements.parameters, p_x, p_y);
 		break;
 		case (MODE_MASS_SYMBOL_PROMPT.id) :
 			const visibleGridId = getPromptElementsFromVisibleGrid(p_editorCore).gridId;
@@ -127,6 +130,22 @@ clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
 		break;
 		default :
 			p_editorCore.switchState(p_x, p_y);
+	}
+}
+
+// Note : obviously copied on above. Will be evolved when margin is evolved.
+clickMarginAction = function(p_editorCore, p_edge, p_index) {
+	if (p_editorCore.getMarginInfoId() == MARGIN_KIND.NUMBERS_LEFT_UP.id) {
+		const promptElements = {
+			descriptionPrompt : "Entrer valeurs numériques >= 0",
+			descriptionPromptMono : "Entrer valeur numérique >= 0",
+			defaultToken : "1",
+			validityTokenMethod : validityTokenNumber,
+			parameters : {emptySpaceChar : "<", isMonoChar : false, isNumeric : true}
+		}
+		const optionalChain = (!promptElements.parameters.isMonoChar) ? "(Penser à séparer les indices des caractères " + promptElements.parameters.emptySpaceChar + " par des espaces) " : "";
+		var valuesChain = prompt(promptElements.descriptionPrompt + " ou " + promptElements.parameters.emptySpaceChar + " pour case vide " + optionalChain + ":", promptElements.defaultToken);
+		p_editorCore.insertChainMargin(p_edge, valuesChain, promptElements.validityTokenMethod, promptElements.parameters, p_index);
 	}
 }
 
@@ -203,16 +222,18 @@ p_editorCore : the Global item
 p_xLength : horizontal dimension
 p_yLength : vertical dimension
  */
-restartAction = function (p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength) {
+restartAction = function (p_canvas, p_drawer, p_editorCore, p_xLengthString, p_yLengthString) {
+	const xLength = parseInt(p_xLengthString, 10);
+	const yLength = parseInt(p_yLengthString, 10);
     if (confirm("Redémarrer la grille ?")) {
-        p_editorCore.restartGrid(p_xLength, p_yLength);
+        p_editorCore.restartGrid(xLength, yLength);
 		Object.keys(GRID_ID).forEach(id => {
-			editorCore.addCleanGrid(id, p_xLength, p_yLength); //  See GRID_ID in EditorCore
+			editorCore.addCleanGrid(id, xLength, yLength); //  See GRID_ID in EditorCore
 		});
-		p_editorCore.addCleanGrid(GRID_ID.DIGIT_X_SPACE, p_xLength, p_yLength);
-		p_editorCore.addCleanGrid(GRID_ID.NUMBER_REGION, p_xLength, p_yLength);
-		p_editorCore.addCleanGrid(GRID_ID.NUMBER_SPACE, p_xLength, p_yLength);
-		p_editorCore.addCleanGrid(GRID_ID.PEARL, p_xLength, p_yLength);
+		p_editorCore.addCleanGrid(GRID_ID.DIGIT_X_SPACE, xLength, yLength);
+		p_editorCore.addCleanGrid(GRID_ID.NUMBER_REGION, xLength, yLength);
+		p_editorCore.addCleanGrid(GRID_ID.NUMBER_SPACE, xLength, yLength);
+		p_editorCore.addCleanGrid(GRID_ID.PEARL, xLength, yLength);
         adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
     }
 }
@@ -245,12 +266,12 @@ function transformGrid(p_canvas,p_drawer,p_editorCore, p_transformation) {
     adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
 }
 
-function resizeAction(p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength) {
-	if (!p_yLength) {
-		p_yLength = p_xLength;
-	}
+function resizeAction(p_canvas, p_drawer, p_editorCore, p_xLengthString, p_yLengthString) {
+	if (!p_yLengthString) {
+		p_yLengthString = p_xLengthString;
+	} 
 	if (confirm("Redimensionner la grille ?")) {
-		p_editorCore.transformGrid(GRID_TRANSFORMATION.RESIZE, p_xLength, p_yLength);
+		p_editorCore.transformGrid(GRID_TRANSFORMATION.RESIZE, parseInt(p_xLength, 10),  parseInt(p_yLengthString, 10));
 		adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);	
 	}
 }
@@ -342,8 +363,14 @@ const PUZZLES_KIND = {
 	REGIONS_NUMBERS : {id:6},
 	NUMBERS_X_ONLY : {id:7},
 	YAJILIN_LIKE : {id:8},
+	WALLS_ONLY_ONE_NUMBER_LEFT_UP : {id:9},
 	STAR_BATTLE : {id:1001, squareGrid : true},
 	GRAND_TOUR : {id:99102},
+}
+
+const MARGIN_KIND = {
+	NONE : {id : 0},
+	NUMBERS_LEFT_UP : {id : 1, leftLength : 1, upLength : 1}
 }
 
 /** 
@@ -380,7 +407,9 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_kindId, p_e
 		} else if (p_kindId == PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS.id) {
 			p_editorCore.alignToRegions(GRID_ID.NUMBER_REGION);
 			puzzleToSaveString = regionsNumericIndicationsPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION));
-        } else {
+        } else if (p_kindId == PUZZLES_KIND.WALLS_ONLY_ONE_NUMBER_LEFT_UP.id) {
+			puzzleToSaveString = regionsMarginOneLeftUpNumbersPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getMarginArray(EDGES.LEFT), p_editorCore.getMarginArray(EDGES.UP));
+		} else {
 			puzzleToSaveString = wallsOnlyPuzzleToString(p_editorCore.getWallArray());
 		}
         localStorage.setItem(localStorageName, puzzleToSaveString);
@@ -445,8 +474,13 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_puzzleName, p_d
 			else if (p_kindId == PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS.id) {
 				loadedItem = stringToRegionsNumericIndicationsPuzzle(localStorage.getItem(localStorageName));
 				p_editorCore.setupFromWallArray(loadedItem.wallArray);
-				regionIndicArray = getRegionIndicArray(loadedItem);			; 
+				regionIndicArray = getRegionIndicArray(loadedItem);
 				p_editorCore.addGrid(GRID_ID.NUMBER_REGION, regionIndicArray);
+			} else if (p_kindId == PUZZLES_KIND.WALLS_ONLY_ONE_NUMBER_LEFT_UP.id) {
+				loadedItem = stringToRegionsMarginOneLeftUpNumbersPuzzle(localStorage.getItem(localStorageName));
+				p_editorCore.setupFromWallArray(loadedItem.wallArray);
+				p_editorCore.setMarginArray(EDGES.LEFT, loadedItem.marginLeft);
+				p_editorCore.setMarginArray(EDGES.UP, loadedItem.marginUp);
 			}
 			else {
 				loadedItem = stringToWallsOnlyPuzzle(localStorage.getItem(localStorageName));
@@ -500,11 +534,13 @@ function getRegionIndicArray(p_loadedItem) {
 // --------------------
 
 //How to use the change of a combobox. Credits : https://www.scriptol.fr/html5/combobox.php
-function comboChange(p_thelist, p_editorCore) {
+function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore) { // TODO OK, saveLoadModeId is a value used outside of inputEditor. Beware !
     var idx = p_thelist.selectedIndex;
     var content = p_thelist.options[idx].innerHTML;
 	// Default options
 	p_editorCore.setWallsOn();
+	p_editorCore.setMarginInfo(MARGIN_KIND.NONE);
+	p_editorCore.resetMargins();
 	// Specific options
     switch (content) {
 		case 'CurvingRoad' : 
@@ -544,10 +580,17 @@ function comboChange(p_thelist, p_editorCore) {
 			saveLoadModeId = PUZZLES_KIND.YAJILIN_LIKE.id;
 			p_editorCore.setVisibleGrids([GRID_ID.YAJILIN_LIKE]);
 			break;
+		case 'Stitches':
+			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY_ONE_NUMBER_LEFT_UP.id;
+			p_editorCore.setMarginInfo(MARGIN_KIND.NUMBERS_LEFT_UP);
+			p_editorCore.maskAllGrids();
+			break; // If break is forgotten, default is read... and saveLoadModeId is overset !
 		default: // norinori, lits, entryExit... no numbers, only regions
 			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY.id;
 			p_editorCore.maskAllGrids();	
     } // Credits for multiple statements in cases : https://stackoverflow.com/questions/13207927/switch-statement-multiple-cases-in-javascript
+	
+	this.adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
 	const squarePuzzle = correspondsToSquarePuzzle(saveLoadModeId); 
 	if (squarePuzzle) {
 		actualFieldX = fieldXY;
@@ -581,7 +624,8 @@ p_editorCore : the Global item the canvas should be adapted to
  */
 function adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore) {
     p_drawer.adaptCanvasDimensions(p_canvas, {
-        xLength: p_editorCore.getXLength(),
-        yLength: p_editorCore.getYLength()
+        xLength : p_editorCore.getXLength(),
+        yLength : p_editorCore.getYLength(),
+		margin : new MarginInfo(p_editorCore.getMarginLeftLength(), p_editorCore.getMarginUpLength(), p_editorCore.getMarginRightLength(), p_editorCore.getMarginDownLength())
     });
 }

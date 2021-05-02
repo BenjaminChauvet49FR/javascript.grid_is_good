@@ -1,5 +1,17 @@
-// Setup
+// Constants
+const DRAW_PATH = {
+	OPEN : 1,
+	CLOSED : 0,
+	NONE : -1
+}
 
+// Classes
+function alternateClosedPathDraw(p_wallGrid, p_colour) {
+	this.wallGrid = p_wallGrid;
+	this.colourRegionBorders = p_colour;
+}
+
+// Setup
 function Drawer() {
 
     this.pix = {
@@ -7,6 +19,7 @@ function Drawer() {
         borderSpace: 2, //Inner border
         borderClickDetection: 0, //How many pixels from the side of a space can you click to trigger the border ?
         canvasWidth: 800,
+        canvasHeight: 512,
         canvasHeight: 512,
         marginGrid: {
             left: 0,
@@ -17,7 +30,8 @@ function Drawer() {
     }
 
 	this.colors = {
-		combinedArrowRingIndications: '#440000',
+		combinedArrowRingIndications : '#440000',
+		marginText : '#440000'
 	}
 	this.wallColorSet = {
 		closed_wall: '#222222',
@@ -243,39 +257,52 @@ Drawer.prototype.drawWalllessGrid = function (p_context, p_wallGrid, p_xLength, 
     }
 }
 
-/**
-Draws a path out of a grid.
- */
-/*Drawer.prototype.drawWallGridAsPath = function (p_context, p_wallGrid, p_xLength, p_yLength) {
-    p_context.textAlign = 'left';
-    p_context.textBaseline = 'top';
-    p_context.fillStyle = this.colors.path;
-    const shorter = this.pix.pathThickness;
+// Draws paths  (or junctions) between spaces out of functions
+// Note : warning, redundancy with "X" spaces that are closed by their four sides ! Take that into account when refactoring with loop drawing !
+Drawer.prototype.drawClosablePaths = function (p_context, p_drawHorizPathsMethod, p_drawVertPathsMethod, p_xLength, p_yLength, p_colourOpen, p_colourClosed, p_wallArrayAlternateSet) { 
+    const shorter = this.pix.sideSpace/4; //this.pix.pathThickness;
     const longer = shorter + this.pix.sideSpace;
     const pixLeftStart = this.getPixCenterX(0) - shorter / 2;
     var pixLeft = pixLeftStart;
     var pixUp = this.getPixCenterY(0) - shorter / 2;
     for (var iy = 0; iy < p_yLength; iy++) {
         for (var ix = 0; ix < p_xLength; ix++) {
-            if (iy < (p_yLength-1) && p_wallGrid.getWallD(ix, iy) == WALLGRID.OPEN) {
-                p_context.fillRect(pixLeft, pixUp, shorter, longer);
+            if (iy < (p_yLength-1)) {
+				// Vertical wall down the spaces
+				linkV = p_drawVertPathsMethod(ix, iy);
+				if (linkV == DRAW_PATH.OPEN) {
+					p_context.fillStyle = p_colourOpen;
+					p_context.fillRect(pixLeft, pixUp, shorter, longer);
+				} else if (linkV == DRAW_PATH.CLOSED) {
+					if (p_wallArrayAlternateSet && p_wallArrayAlternateSet.wallGrid.getWallD(ix, iy) == WALLGRID.CLOSED) {
+						p_context.fillStyle = p_wallArrayAlternateSet.colourRegionBorders;
+					} else {
+						p_context.fillStyle = p_colourClosed;
+					}
+					p_context.fillRect(this.getPixInnerXLeft(ix), this.getPixYDown(iy), this.getPixInnerSide(), 2);
+				}
             }
-            if (ix < (p_xLength-1) && p_wallGrid.getWallR(ix, iy) == WALLGRID.OPEN) {
-                p_context.fillRect(pixLeft, pixUp, longer, shorter);
+            if (ix < (p_xLength-1)) {
+				// Horizontal wall right the spaces
+				linkH = p_drawHorizPathsMethod(ix, iy);
+				if (linkH == DRAW_PATH.OPEN) {
+					p_context.fillStyle = p_colourOpen;
+					p_context.fillRect(pixLeft, pixUp, longer, shorter);
+				} else if (linkH == DRAW_PATH.CLOSED) {
+					if (p_wallArrayAlternateSet && p_wallArrayAlternateSet.wallGrid.getWallR(ix, iy) == WALLGRID.CLOSED) {
+						p_context.fillStyle = p_wallArrayAlternateSet.colourRegionBorders;
+					} else {
+						p_context.fillStyle = p_colourClosed;
+					}
+					p_context.fillRect(this.getPixXRight(ix), this.getPixInnerYUp(iy), 2, this.getPixInnerSide());
+				}
             }
             pixLeft += this.pix.sideSpace;
-            //Draws banned spaces : there should be few of them / none in a path grid.
-            if (p_wallGrid.getState(ix, iy) == WALLGRID.CLOSED) {
-                p_context.fillStyle = this.colors.bannedSpace;
-                p_context.fillRect(this.getPixInnerXLeft(ix), this.getPixInnerYUp(iy), this.getPixInnerSide(), this.getPixInnerSide());
-                p_context.fillStyle = this.colors.path;
-            }
         }
         pixLeft = pixLeftStart;
         pixUp += this.pix.sideSpace;
-
     }
-}*/ // TODO To be scrapped, soon ?
+}
 
 // -----------------
 // Drawing values inside the grid
@@ -547,7 +574,7 @@ p_police : police in which values are drawn.
 Drawer.prototype.drawRegionValues = function(p_context, p_functionRegion, p_numberRegions, p_police) {
 	var pixLeft, pixDown;
 	var valueToDraw;
-	setupFont(this.getPixInnerSide() / 2, "Arial");
+	setupFont(p_context, this.getPixInnerSide() / 2, "Arial");
 	alignFontLeft(p_context);
 	for(var i=0 ; i < p_numberRegions ; i++) {
 		valueToDraw = p_functionRegion(i);
@@ -610,6 +637,31 @@ Drawer.prototype.drawSquare = function(p_context, p_xSpace, p_ySpace, p_item) {
 	p_context.lineTo(pixRight, pixUp);
 	p_context.stroke();
 	p_context.fill();
+}
+
+// ------------------
+// Drawing margins
+
+// Draw margins with one info left and one up.
+Drawer.prototype.drawMarginLeftUpOne = function(p_context, p_arrayMarginLeft, p_arrayMarginUp) {
+	setupFont(p_context, this.getPixInnerSide(), "Arial", this.colors.marginText);	
+	alignFontCenter(p_context);
+	var x = this.pix.marginGrid.left + this.pix.sideSpace/2;
+	const pixYStartUp = this.pix.marginGrid.up - this.pix.sideSpace/2;
+	p_arrayMarginUp.forEach(val => {
+		if (val != null) {
+			p_context.fillText(val, x, pixYStartUp);
+		}
+		x += this.pix.sideSpace;
+	});
+	const pixXStartLeft = this.pix.marginGrid.left - this.pix.sideSpace/2;
+	var y = this.pix.marginGrid.up + this.pix.sideSpace/2;
+	p_arrayMarginLeft.forEach(val => {
+		if (val != null) {			
+			p_context.fillText(val, pixXStartLeft, y);
+		}
+		y += this.pix.sideSpace;
+	});
 }
 
 //---------------------
@@ -749,12 +801,56 @@ Drawer.prototype.getClickAroundWallD = function (event, p_canvas, p_xLength, p_y
     return null;
 }
 
+Drawer.prototype.getClickMargin = function (event, p_canvas, p_xLength, p_yLength, p_marginLeftLength, p_marginUpLength, p_marginRightLength, p_marginDownLength) {
+	const pixX = this.getPixXWithinCanvas(event, p_canvas);
+	const pixY = this.getPixYWithinCanvas(event, p_canvas);
+	if (pixY <= this.pix.marginGrid.up) {
+		const index = Math.floor(this.getPixXWithinGrid(event, p_canvas) / this.pix.sideSpace);
+		if (index != null) {
+			return { 
+				edge : EDGES.UP,
+				index : index
+			}			
+		}
+	}		
+	if (pixY >= p_canvas.height - this.pix.marginGrid.down) {
+		const index = Math.floor(this.getPixXWithinGrid(event, p_canvas) / this.pix.sideSpace);
+		if (index != null) {
+			return { 
+				edge : EDGES.DOWN,
+				index : index
+			}			
+		}
+	}
+	if (pixX <= this.pix.marginGrid.left) {
+		const index = Math.floor(this.getPixYWithinGrid(event, p_canvas) / this.pix.sideSpace);
+		if (index != null) {
+			return { 
+				edge : EDGES.LEFT,
+				index : index
+			}			
+		}
+	}		
+	if (pixX >= p_canvas.width - this.pix.marginGrid.right) {
+		const index = Math.floor(this.getPixYWithinGrid(event, p_canvas) / this.pix.sideSpace);
+		if (index != null) {
+			return { 
+				edge : EDGES.RIGHT,
+				index : index
+			}			
+		}
+	}
+	return null;
+}
+
 //--------------------
 // Fonts
 
 setupFont = function(p_context, p_pixSize, p_name, p_colour) {
 	p_context.font = p_pixSize + "px " + p_name;
-	p_context.fillStyle = p_colour;
+	if (p_colour) {		
+		p_context.fillStyle = p_colour;
+	}
 }
 
 alignFontCenter = function(p_context) { // Credits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/textAlign
@@ -773,49 +869,44 @@ alignFontLeft = function(p_context) {
 
 /**
 Changes the width and height of a canvas according to some parameters ; mandatory ones are the X and Y length of spaces (or xyLength if square puzzle).
+Offensive programming : if "margin" is defined, all four directions (left/up/right/down) must be >= 0 values, even set at 0
  */
 Drawer.prototype.adaptCanvasDimensions = function (p_canvas, p_parameters) {
-    if (p_parameters.margin) {
-        if (p_parameters.margin.common) {
-            this.pix.marginGrid.left = p_parameters.margin.common;
-            this.pix.marginGrid.up = p_parameters.margin.common;
-            this.pix.marginGrid.right = p_parameters.margin.common;
-            this.pix.marginGrid.down = p_parameters.margin.common;
-        }
-        if (p_parameters.margin.left) {
-            this.pix.marginGrid.left = p_parameters.margin.left;
-        }
-        if (p_parameters.margin.up) {
-            this.pix.marginGrid.left = p_parameters.margin.up;
-        }
-        if (p_parameters.margin.right) {
-            this.pix.marginGrid.left = p_parameters.margin.right;
-        }
-        if (p_parameters.margin.down) {
-            this.pix.marginGrid.left = p_parameters.margin.down;
-        }
-    }
 
     const pixMaxSpace = 32; //TODO peut changer
     const pixXCanvasSize = 800; //TODO peut changer
     const pixYCanvasSize = 512; //TODO peut changer
-    const xLength = p_parameters.xLength ? p_parameters.xLength : p_parameters.xyLength;
-    const yLength = p_parameters.yLength ? p_parameters.yLength : p_parameters.xyLength;
-    const pixHorizontalMargins = this.pix.marginGrid.left + this.pix.marginGrid.right;
-    const pixVerticalMargins = this.pix.marginGrid.up + this.pix.marginGrid.down;
-    const pixXArraySize = pixXCanvasSize - pixHorizontalMargins;
-    const pixYArraySize = pixYCanvasSize - pixVerticalMargins;
-    this.pix.sideSpace = Math.min(pixMaxSpace, Math.min(Math.floor(pixXArraySize / xLength), Math.floor(pixYArraySize / yLength)));
+    var totalXLength = p_parameters.xLength ? p_parameters.xLength : p_parameters.xyLength;
+    var totalYLength = p_parameters.yLength ? p_parameters.yLength : p_parameters.xyLength;
+    if (p_parameters.margin) {
+        if (p_parameters.margin.leftLength) { totalXLength += p_parameters.margin.leftLength; }
+        if (p_parameters.margin.upLength) { totalYLength += p_parameters.margin.upLength; }
+        if (p_parameters.margin.rightLength) { totalXLength += p_parameters.margin.rightLength; }
+        if (p_parameters.margin.downLength) { totalYLength += p_parameters.margin.downLength; }
+    }
+    this.pix.sideSpace = Math.min(pixMaxSpace, Math.min(Math.floor(pixXCanvasSize / totalXLength), Math.floor(pixYCanvasSize / totalYLength)));
     this.pix.borderSpace = Math.max(1, Math.floor(this.pix.sideSpace / 10));
-    this.canvasWidth = xLength * this.pix.sideSpace + pixHorizontalMargins;
-    this.canvasHeight = yLength * this.pix.sideSpace + pixVerticalMargins;
 	this.pix.borderClickDetection = this.pix.borderSpace * 2;
-    p_canvas.width = this.canvasWidth;
-    p_canvas.height = this.canvasHeight;
+	if (p_parameters.margin) {
+		this.pix.marginGrid.left = this.pix.sideSpace * p_parameters.margin.leftLength; // Possibility to add "extra pixels", who knows... (in that case they must be subtracted from pixXCanvasSize / Y)
+		this.pix.marginGrid.up = this.pix.sideSpace * p_parameters.margin.upLength;
+		this.pix.marginGrid.right = this.pix.sideSpace * p_parameters.margin.rightLength;
+		this.pix.marginGrid.down = this.pix.sideSpace * p_parameters.margin.downLength;
+    }	
+    p_canvas.width = totalXLength * this.pix.sideSpace;
+    p_canvas.height = totalYLength * this.pix.sideSpace;
 }
 
 //--------------------
 // Private functions
+
+Drawer.prototype.getPixXWithinCanvas = function (event, p_canvas) {
+    return (event.clientX - p_canvas.getBoundingClientRect().left);
+}
+
+Drawer.prototype.getPixYWithinCanvas = function (event, p_canvas) {
+    return (event.clientY - p_canvas.getBoundingClientRect().top);
+}
 
 Drawer.prototype.getPixXWithinGrid = function (event, p_canvas) {
     return (event.clientX - p_canvas.getBoundingClientRect().left - this.pix.marginGrid.left);

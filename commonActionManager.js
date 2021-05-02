@@ -36,6 +36,10 @@ const ACTION_PUT_SQUARE = {id:16, htmlCaption:"Placer un carré"};
 const ACTION_PASS_STRIP = {id:17, htmlCaption:"Passer bande(s)"};
 const ACTION_PUT_BULB = {id:17, htmlCaption:"Placer ampoule"};
 const ACTION_PASS_NUMERIC_SPACES = {id:18, htmlCaption:"Passer ensemble de cases numériques"};
+const ACTION_PUT_STITCH = {id:19, htmlCaption:"Placer point de couture"};
+const ACTION_BIND_STITCHES = {id:20, htmlCaption:"Déclarer liaison entre points"};
+const ACTION_NOT_BIND_STITCHES = {id:21, htmlCaption:"Non-liaison entre points"};
+const ACTION_PASS_BORDER = {id:22, htmlCaption:"Passer frontière"};
 
 /**
 Getter of setter for a specific mode

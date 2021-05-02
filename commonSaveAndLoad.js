@@ -125,6 +125,84 @@ function stringToNumberArray(p_string, p_xLength, p_yLength, p_numbersAreStrings
 	return answer;
 }
 
+// Returns a string where the first and 4th arrays are reversed, while the 2nd and 3rd arrays are straight, 
+// Contextually, margins of a grid are run in clockwise order starting at down-left.
+// Null arrays are skipped, otherwise they are encoded according to their length (no obscure conventions with xLength or yLength)
+function numericBeltToString (p_arrayLeft, p_arrayUp, p_arrayRight, p_arrayDown) {
+	const streamBelt = new StreamEncodingSparseAny();
+	if (p_arrayLeft != null) {
+		for (var i = p_arrayLeft.length-1; i >= 0 ; i--) {
+			streamBelt.encode(p_arrayLeft[i]);
+		}
+	}
+	if (p_arrayUp != null) {
+		for (var i = 0 ; i < p_arrayUp.length ; i++) {
+			streamBelt.encode(p_arrayUp[i]);
+		}
+	}
+	if (p_arrayRight != null) {
+		for (var i = 0 ; i < p_arrayRight.length ; i++) {
+			streamBelt.encode(p_arrayRight[i]);
+		}
+	}
+	if (p_arrayDown != null) {
+		for (var i = p_arrayDown.length-1; i >= 0 ; i--) {
+			streamBelt.encode(p_arrayDown[i]);
+		}
+	}
+	return streamBelt.getString();
+}
+
+// All arrays are top to bottom or left to right
+function stringToNumericBelt (p_string, p_xLength, p_yLength, p_leftAvailable, p_upAvailable, p_rightAvailable, p_downAvailable) {
+	const streamBelt = new StreamDecodingSparseAny(p_string);
+	var answerLeft, answerUp, answerRight, answerDown;
+	var val;
+	if (p_leftAvailable) {
+		answerLeft = [];
+		for (var i = 0 ; i < p_yLength ; i++) {		
+			val = streamBelt.decode();
+			if (val == END_OF_DECODING_STREAM) { val = null; }
+			answerLeft.push(val);
+		}
+		answerLeft.reverse(); // Credits for reversing an array : https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Array/reverse
+	} else {
+		answerLeft = null;
+	}
+	if (p_upAvailable) {
+		answerUp = [];
+		for (var i = 0 ; i < p_xLength ; i++) {		
+			val = streamBelt.decode();
+			if (val == END_OF_DECODING_STREAM) { val = null; }
+			answerUp.push(val); // TODO too bad (answerLeft.push(streamBelt.decode())) has a risk of END_OF_DECODING_STREAM... change that !
+		}
+	} else {
+		answerUp = null;
+	}
+	if (p_rightAvailable) {
+		answerRight = [];
+		for (var i = 0 ; i < p_yLength ; i++) {		
+			val = streamBelt.decode();
+			if (val == END_OF_DECODING_STREAM) { val = null; }
+			answerRight.push(val);
+		}
+	} else {
+		answerRight = null;
+	}
+	if (p_downAvailable) {
+		answerDown = [];
+		for (var i = 0 ; i < p_xLength ; i++) {		
+			val = streamBelt.decode();
+			if (val == END_OF_DECODING_STREAM) { val = null; }
+			answerDown.push(val); 
+		}
+		answerDown.reverse();
+	} else {
+		answerDown = null;
+	}
+	return {left : answerLeft, up : answerUp, right : answerRight, down : answerDown}
+}
+
 //----
 
 // Now to the savers/loaders themselves
@@ -304,4 +382,21 @@ function stringToArrowNumberCombinationsPuzzle(p_string) {
 		}
 	}
 	return {combinationsArray : array};
+}
+
+// ---------------
+
+// Region puzzle (classic) with one marginal puzzle a top and one marginal puzzle at left
+
+function regionsMarginOneLeftUpNumbersPuzzleToString(p_wallArray, p_edgeLeft, p_edgeUp) {
+	return wallsOnlyPuzzleToString(p_wallArray) + " " + numericBeltToString(p_edgeLeft, p_edgeUp);
+}
+
+function stringToRegionsMarginOneLeftUpNumbersPuzzle(p_string) {
+	const tokens = p_string.split(" ");
+	const dims = stringToDimensions(tokens[0]);
+	const belt = stringToNumericBelt(tokens[2], dims.xLength, dims.yLength, true, true, false, false);
+	return {wallArray : string64toWallArray(tokens[1], dims.xLength, dims.yLength) , 
+			marginLeft : belt.left,
+			marginUp : belt.up};
 }

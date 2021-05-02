@@ -22,12 +22,15 @@ const GRID_TRANSFORMATION = {
 
 function EditorCore(p_xLength, p_yLength, p_parameters) {
     this.xLength = p_xLength;
-	this.yLength = p_yLength; //TODO potentielle redondance dans la gestion des xLength et des yLength... mais au moins ça permet de savoir ce qu'on fait.
+	this.yLength = p_yLength;
 	this.initializeGridData();
 	this.grids = {};
     this.visibleGrids = {};
+	this.margins = {} // left, up, right, down ; values numbers ; shows the expansion from the grid for each edge
 	this.buildGrids(p_xLength, p_yLength);
+	this.marginInfo = MARGIN_KIND.NONE;
     this.isWithWalls = (!p_parameters || !p_parameters.hasWalls || (p_parameters.hasWalls != false));
+	this.resetMargins(); 
 	this.inputSybol = null;
 }
 
@@ -51,6 +54,30 @@ EditorCore.prototype.buildGrids = function (p_xLength, p_yLength) {
 			this.grids[GRID_ID[id]] = Grid_dim(p_xLength, p_yLength);
 		}
 	});
+	this.resetMargins();
+}
+
+/**
+note : xLength and yLength must be already set.
+*/
+EditorCore.prototype.resetMargins = function () {
+	this.margins = [];
+	this.margins[EDGES.LEFT] = [];
+	this.margins[EDGES.UP] = [];
+	this.margins[EDGES.RIGHT] = [];
+	this.margins[EDGES.DOWN] = [];
+	for(var i = 0 ; i < this.xLength ; i++) {
+		this.margins[EDGES.LEFT].push(null);
+		this.margins[EDGES.RIGHT].push(null);
+	}
+	for(var i = 0 ; i < this.yLength ; i++) {
+		this.margins[EDGES.UP].push(null);
+		this.margins[EDGES.DOWN].push(null);
+	}
+}
+
+EditorCore.prototype.setMarginInfo = function (p_marginKind) { // Not reset when a puzzle is reset
+	this.marginInfo = p_marginKind;
 }
 
 // Only launched on building. ALL data are loaded here.
@@ -108,7 +135,7 @@ EditorCore.prototype.setVisibleGrids = function(p_list) {
 }
 
 // ----------
-// Testers
+// Getters
 
 EditorCore.prototype.hasWallGrid = function () {
     return this.possessWallGrid;
@@ -145,6 +172,26 @@ EditorCore.prototype.getSelection = function (p_x, p_y) {
 EditorCore.prototype.getSelectedSpaceForRectangle = function () {
     return this.selectedCornerSpace;
 }
+
+EditorCore.prototype.getMarginLeftLength = function () {
+	return this.marginInfo.leftLength ? this.marginInfo.leftLength : 0;
+}
+EditorCore.prototype.getMarginUpLength = function () {
+	return this.marginInfo.upLength ? this.marginInfo.upLength : 0;
+}
+EditorCore.prototype.getMarginRightLength = function () {
+	return this.marginInfo.rightLength ? this.marginInfo.rightLength : 0;
+}
+EditorCore.prototype.getMarginDownLength = function () {
+	return this.marginInfo.downLength ? this.marginInfo.downLength : 0;
+}
+EditorCore.prototype.getMarginInfoId = function () {
+	return this.marginInfo.id;
+}
+
+
+
+// Getters and setters
 
 EditorCore.prototype.getInputNumber = function () {
     return this.inputNumber;
@@ -231,6 +278,19 @@ EditorCore.prototype.hasWalls = function () {
     return this.isWithWalls == true;
 }
 
+EditorCore.prototype.getMarginEntry = function(p_edge, p_index) {
+	return this.margins[p_edge][p_index];
+}
+EditorCore.prototype.setMarginEntry = function(p_edge, p_index, p_value) {
+	this.margins[p_edge][p_index] = p_value;
+}
+EditorCore.prototype.getMarginArray = function(p_edge) {
+	return this.margins[p_edge];
+}
+EditorCore.prototype.setMarginArray = function(p_edge, p_array) {
+	this.margins[p_edge]= p_array;
+}
+
 // --------------------
 // Grid transformations
 
@@ -249,53 +309,81 @@ EditorCore.prototype.transformGrid = function (p_transformation, p_xDatum, p_yDa
 //-------------------------------------------
 // Chain insertion
 
-EditorCore.prototype.insertChain = function(p_gridId, p_clueChain, p_validityMethod, p_parameters, p_x, p_y) {
+const INPUT_PLACE_KIND = {
+	GRID : 0,
+	MARGIN : 1
+}
+
+EditorCore.prototype.insertChainGrid = function(p_gridId, p_valuesChain, p_validityMethod, p_parameters, p_x, p_y) {
+	this.insertChainPrivate(INPUT_PLACE_KIND.GRID, p_gridId, p_valuesChain, p_validityMethod, p_parameters, p_x, p_y, this.getXLength(), -1);
+}
+
+EditorCore.prototype.insertChainMargin = function(p_edge, p_valuesChain, p_validityMethod, p_parameters, p_index) {
+	const appropriateLength = ((p_edge == EDGES.LEFT || p_edge == EDGES.RIGHT) ? this.getYLength() : this.getXLength());
+	this.insertChainPrivate(INPUT_PLACE_KIND.MARGIN, p_edge, p_valuesChain, p_validityMethod, p_parameters, p_index, -1, appropriateLength, -1);
+}
+
+// See below for p_destinationKind" and p_destinationNomination
+// Also, p_x, p_y are coordinates if we use grid, but not otherwise ! p_length1, p_length2 are supposed to be the size of the desired array so... grid or margin
+EditorCore.prototype.insertChainPrivate = function(p_destinationKind, p_destinationNomination, p_valuesChain, p_validityMethod, p_parameters, p_x, p_y, p_length1, p_length2) {
 	// Blank character and monocharacter
-	if (p_clueChain != null) {
+	if (p_valuesChain != null) {
 		var tokens;
 		var tokensNumber;
 		if (p_parameters.isMonoChar) {
-			tokensNumber = p_clueChain.length;
+			tokensNumber = p_valuesChain.length;
 		} else {
-			tokens = p_clueChain.split(" ");
+			tokens = p_valuesChain.split(" ");
 			tokensNumber = tokens.length;
 		}
 		var x = p_x;
 		var indexToken = 0;
-		while (x < this.getXLength() && indexToken < tokensNumber) {
-			clue = (p_parameters.isMonoChar ? p_clueChain.charAt(indexToken) : tokens[indexToken]);
+		while (x < p_length1 && indexToken < tokensNumber) {
+			value = (p_parameters.isMonoChar ? p_valuesChain.charAt(indexToken) : tokens[indexToken]);
 			var ok = false;
-			if (p_validityMethod(clue)) {
-				var realClue = (clue != "" ? clue : null);
-				realClue = (p_parameters.isNumeric && realClue != null) ? parseInt(realClue, 10) : realClue;
-				this.set(p_gridId, x, p_y, realClue);
+			if (p_validityMethod(value)) {
+				var realValue = (value != "" ? value : null);
+				realValue = (p_parameters.isNumeric && realValue != null) ? parseInt(realValue, 10) : realValue;
+				this.setAppropriatePlace(p_destinationKind, p_destinationNomination, x, p_y, realValue);
 				ok = true;
 			}
-			if (!p_parameters.isMonoChar && (clue.charAt(0) == p_parameters.emptySpaceChar)) {
-				this.set(p_gridId, x, p_y, null);
+			if (!p_parameters.isMonoChar && (value.charAt(0) == p_parameters.emptySpaceChar)) {
+				this.setAppropriatePlace(p_destinationKind, p_destinationNomination, x, p_y, null);
 				var indexClue = 1;
-				while((indexClue < clue.length) && (clue.charAt(indexClue) == p_parameters.emptySpaceChar) && (x <= this.getXLength()-2)) {
+				while((indexClue < value.length) && (value.charAt(indexClue) == p_parameters.emptySpaceChar) && (x <= p_length1-2)) {
 					x++;
-					this.set(p_gridId, x, p_y, null);
+					this.setAppropriatePlace(p_destinationKind, p_destinationNomination, x, p_y, null);
 					indexClue++;
 				}
-				ok = (indexClue == clue.length);
+				ok = (indexClue == value.length);
 			}
-			if (p_parameters.isMonoChar && (clue == p_parameters.emptySpaceChar)) {
-				this.set(p_gridId, x, p_y, null);
+			if (p_parameters.isMonoChar && (value == p_parameters.emptySpaceChar)) {
+				this.setAppropriatePlace(p_destinationKind, p_destinationNomination, x, p_y, null);
 				ok = true;
 			}
 			if (!ok) {
 				break;
 			}
-			if (clue != "") {
+			if (value != "") {
 				x++;
 			}
 			indexToken++;
 		}
 		if ((tokensNumber == 1) && ok) { // If only one symbol, save it
-			this.setPromptValue(clue);
+			this.setPromptValue(value);
 		}
+	}
+}
+
+// Put value into place (space, margin, or whatever...). Role of "destination nomination" is given here.
+EditorCore.prototype.setAppropriatePlace = function (p_destinationKind, p_destinationNomination, p_x, p_y, p_val) {
+	switch(p_destinationKind) {
+		case INPUT_PLACE_KIND.GRID :  // p_destinationNomination = id of the grid
+			this.set(p_destinationNomination, p_x, p_y, p_val);
+		break;
+		case INPUT_PLACE_KIND.MARGIN :  // p_destinationNomination = EDGES.LEFT, UP, RIGHT, DOWN. Only the first coordinate matters. 
+			this.setMarginEntry(p_destinationNomination, p_x, p_val);
+		break;
 	}
 }
 

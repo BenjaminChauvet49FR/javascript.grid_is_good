@@ -96,6 +96,13 @@ menuSolvers.push({
 	]
 });
 
+menuSolvers.push({
+	displayName : "Inclassables",
+	documentPage : "Solver",
+	typeList : [
+		{name : "stitches", displayName : "Stitches"}
+	]
+});
 
 
 menuSolvers.push({

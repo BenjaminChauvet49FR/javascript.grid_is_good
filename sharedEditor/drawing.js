@@ -26,7 +26,7 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 		}
     }
 	
-	// Which IDs are to be drawn ?
+	// Which grids and margins are to be drawn ?
 	if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_REGION)) {
 	    this.drawNumbersLittleInCorner(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_REGION));
 	}
@@ -41,6 +41,9 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.YAJILIN_LIKE)) {
 	    this.drawCombinedArrowGridIndications(p_context, p_editorCore.getGrid(GRID_ID.YAJILIN_LIKE));
+	}
+	if (p_editorCore.getMarginInfoId() == MARGIN_KIND.NUMBERS_LEFT_UP.id) {
+		this.drawMarginLeftUpOne(p_context, p_editorCore.margins[EDGES.LEFT], p_editorCore.margins[EDGES.UP]);
 	}
 }
 

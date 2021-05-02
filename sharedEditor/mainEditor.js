@@ -108,7 +108,7 @@ putActionElementClick("submit_copy_selection", function (event) {
 });
 
 function combo(p_docElt) {
-	comboChange(p_docElt, editorCore);
+	comboChange(p_docElt, canevas, drawer, editorCore);
 }
 
 combo(document.getElementById('select_puzzle_type')); //TODO c'est comme ça que ça se passe au démarrage, j'espère que c'est chargé. On peut le mettre directement sur la combobox ? Mais ce serait peut-être un peu lourd pour le mélange fond/forme, non ?
