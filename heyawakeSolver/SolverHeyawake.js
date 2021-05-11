@@ -430,6 +430,18 @@ SolverHeyawake.prototype.generateEventsForRegionPass = function(p_indexRegion) {
 	return eventList;
 }
 
+// Generate covering event for "region pass", propaging to adjacent regions where it is tight (number of sizes to fill left <= undecided spaces left / 2)
+/*SolverHeyawake.prototype.generateEventsForRegionPassTight = function(p_indexRegion) {
+	var eventList = [];
+	this.propagationFoundRegions = [];
+	this.regions[p_indexRegion].spaces.forEach(space => {
+		if (this.answerArray[space.y][space.x] == ADJACENCY.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
+			eventList.push([SpaceEvent(space.x, space.y, ADJACENCY.YES), SpaceEvent(space.x, space.y, ADJACENCY.NO)]);
+		}			 
+	});
+	return eventList;
+}*/
+
 
 copying = function(p_event) {
 	return p_event.copy();

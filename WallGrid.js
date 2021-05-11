@@ -58,12 +58,9 @@ WallGrid.prototype.cleanRedundantWalls = function() {
 	for (var iy = 0; iy < this.yLength ; iy++) {
 		for (var ix = 0; ix < this.xLength ; ix++) {
 			if (this.array[iy][ix].state == WALLGRID.CLOSED) {
-				existingNeighborsCoorsDirections(ix, iy).forEach(coorsDir => {
-					x = coorsDir.x;
-					y = coorsDir.y;
-					dir = coorsDir.direction;
-					if (this.getWall(x, y, dir) == WALLGRID.CLOSED) {
-						this.setWall(x, y, dir, WALLGRID.OPEN);
+				existingNeighborsDirections(ix, iy, this.xLength, this.yLength).forEach(dir => {
+					if (this.getWall(ix, iy, dir) == WALLGRID.CLOSED) {
+						this.setWall(ix, iy, dir, WALLGRID.OPEN);
 					}
 				});
 			}
@@ -135,16 +132,18 @@ WallGrid.prototype.toRegionArray = function () {
 }
 
 // Computes all spaces by region from the array of coordinates.
+// It supposes that the array is standard
 listSpacesByRegion = function(p_regionArray) {
-	var numberRegions = numberOfRegions(p_regionArray);
 	var spacesByRegion = [];
-	for(var i=0 ; i <= numberRegions ; i++) {
-		spacesByRegion.push([]);
-	}
+	var ir;
 	for(iy = 0 ; iy < p_regionArray.length ; iy++) {
 		for(ix = 0 ; ix < p_regionArray[iy].length ; ix++) {
-			if(p_regionArray[iy][ix] >= 0) {
-				spacesByRegion[p_regionArray[iy][ix]].push({x:ix,y:iy});
+			ir = p_regionArray[iy][ix];
+			if(ir != WALLGRID.OUT_OF_REGIONS) {
+				while (ir >= spacesByRegion.length) {
+					spacesByRegion.push([]);
+				}
+				spacesByRegion[ir].push({x:ix,y:iy});
 			}
 		}
 	}
@@ -160,8 +159,71 @@ numberOfRegions = function(p_regionArray) {
 			lastRegionNumber = Math.max(p_regionArray[iy][ix], lastRegionNumber);
 		}
 	}
-	return lastRegionNumber;
+	return lastRegionNumber + 1;
 }
+
+// Borders between regions. Returns an array of (p_numberRegions) arrays of lengths (0, 1, ..., p_numberRegions-1). 
+// The first one is empty but hey, that's what it takes to force coordinates of y > x. 
+// Each array contains coordinates and direction, necessarily right or down, of a border element.
+getBordersTriangle = function(p_regionArray, p_numberRegions) {
+	var triangleArray = [];
+	
+	var ir1, ir2
+	for (ir1 = 0 ; ir1 < p_numberRegions ; ir1 ++) {
+		triangleArray.push([]);
+		for (ir2 = 0 ; ir2 < ir1 ; ir2 ++) {
+			triangleArray[ir1].push([]);
+		}
+	}
+	var ix, iy, dx, dy;
+	for (iy = 0 ; iy < p_regionArray.length ; iy++) {
+		for (ix = 0 ; ix < p_regionArray[iy].length ; ix++) {
+			ir1 = p_regionArray[iy][ix];
+			if (ir1 != WALLGRID.OUT_OF_REGIONS) {
+				existingRDNeighborsCoorsDirections(ix, iy, p_regionArray[iy].length, p_regionArray.length).forEach(coorsDir => {
+					ir2 = p_regionArray[coorsDir.y][coorsDir.x];
+					if (ir2 != WALLGRID.OUT_OF_REGIONS) {
+						ir3 = null;
+						if (ir1 < ir2) {
+							ir3 = ir2;
+							ir2 = ir1;
+						} else {
+							ir3 = ir1;
+						} // So ir3 != ir2
+						if (ir3 != ir2) {
+							triangleArray[ir3][ir2].push({x : ix, y : iy, direction : coorsDir.direction});
+						}
+					}
+				});
+			}
+		}
+	}
+	return triangleArray;
+}
+
+//Returns the array of directions of adjacent spaces that are in different regions
+getOtherRegionDirectionsArray = function(p_regionArray) {
+	const xLength = p_regionArray[0].length;
+	const yLength = p_regionArray.length;
+	var answerArray = generateFunctionValueArray(xLength, yLength, function() {return []});
+	var r1, r2;
+	for (var iy = 0; iy < yLength ; iy++) {
+		for (var ix = 0 ; ix < xLength ; ix++) {
+			r1 = p_regionArray[iy][ix];
+			if (r1 != WALLGRID.OUT_OF_REGIONS) {
+				existingRDNeighborsCoorsDirections(ix, iy, xLength, yLength).forEach(coorsDir => {
+					r2 = p_regionArray[coorsDir.y][coorsDir.x];
+					if (r2 != WALLGRID.OUT_OF_REGIONS && r2 != r1) {
+						answerArray[iy][ix].push(coorsDir.direction);
+						answerArray[coorsDir.y][coorsDir.x].push(OppositeDirection[coorsDir.direction]);
+					}
+				});	
+			}			
+		}
+	}
+	return answerArray;
+}
+
 
 // --------------
 // Generic getters and setters

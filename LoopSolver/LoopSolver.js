@@ -164,8 +164,8 @@ LoopSolver.prototype.loopSolverConstruct = function(p_array, p_puzzleSpecificMet
 
 LoopSolver.prototype.banSpace = function(p_x, p_y) {
 	this.bannedSpacesGrid[p_y][p_x] = true;
-	this.existingNeighborsCoorsDirections(p_x, p_y).forEach(coorsDir => {
-		this.setLink(coorsDir.x, coorsDir.y, coorsDir.direction, LOOP_STATE.CLOSED);
+	this.existingNeighborsDirections(p_x, p_y).forEach(direction => {
+		this.setLink(p_x, p_y, direction, LOOP_STATE.CLOSED);
 	});
 	this.setLinkSpace(p_x, p_y, LOOP_STATE.CLOSED);
 }
@@ -332,6 +332,15 @@ LoopSolver.prototype.setLinkDown = function(p_x, p_y, p_state) {
 
 LoopSolver.prototype.setLinkUp = function(p_x, p_y, p_state) {
 	return this.setLinkDown(p_x, p_y-1, p_state);
+}
+
+LoopSolver.prototype.setLink = function(p_x, p_y, p_direction, p_state) {
+	switch(p_direction) {
+		case DIRECTION.LEFT : return this.setLinkLeft(p_x, p_y, p_state); break;
+		case DIRECTION.UP : return this.setLinkUp(p_x, p_y, p_state); break;
+		case DIRECTION.RIGHT : return this.setLinkRight(p_x, p_y, p_state); break;
+		default : return this.setLinkDown(p_x, p_y, p_state); break;
+	}
 }
 
 LoopSolver.prototype.setLinkSpace = function(p_x, p_y, p_state) {

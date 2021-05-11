@@ -33,6 +33,8 @@ SolverShugaku.prototype.construct = function(p_numberSymbolsArray) {
 		transformClosure(this),
 		undoEventClosure(this)
 	);
+	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterDominosClosure(this)]);
+
 	this.answerArray = [];	
 	
 	this.squareCountingArray = []; // Empty spaces : contain coordinates of adjacent numeric spaces (if 3,3 is empty and 3,2 and 4,3 are numeric, the list is [{3,2},{4,3}]
@@ -97,6 +99,8 @@ SolverShugaku.prototype.construct = function(p_numberSymbolsArray) {
 			}
 		}
 	}
+	
+	this.newClosedSpacesAndAround = new CheckCollectionDoubleEntry(this.xLength, this.yLength);
 }
 
 //--------------------------------
@@ -350,7 +354,7 @@ deductionsClosure = function (p_solver) {
 			const symbol = p_eventBeingApplied.symbol;
 			if (symbol == SPACE_SHUGAKU.OPEN) {
 				if (choice) { // Space is open
-					p_listEventsToApply = discardChoices(p_listEventsToApply, x, y, SPACE_SHUGAKU.SQUARE, SPACE_SHUGAKU.ROUND);
+					p_listEventsToApply = deductionsDiscardChoices(p_listEventsToApply, x, y, SPACE_SHUGAKU.SQUARE, SPACE_SHUGAKU.ROUND);
 					// 4 fences to close
 					KnownDirections.forEach(dd => {
 						if (p_solver.neighborExists(x, y, dd)) {
@@ -359,52 +363,51 @@ deductionsClosure = function (p_solver) {
 					});
 					p_listEventsToApply = p_solver.alert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
 				} else { // Space is closed
-					p_listEventsToApply = p_solver.chooseOneEventLeft(p_listEventsToApply, x, y, SPACE_SHUGAKU.SQUARE, SPACE_SHUGAKU.ROUND);
+					p_listEventsToApply = p_solver.deductionsChooseOneEventLeft(p_listEventsToApply, x, y, SPACE_SHUGAKU.SQUARE, SPACE_SHUGAKU.ROUND);
 					if (p_solver.answerArray[y][x].getState(SPACE_SHUGAKU.OPEN) == SPACE_CHOICE.NO) {
-						p_listEventsToApply = p_solver.openLastUndecidedFence(p_listEventsToApply, x, y);
+						p_listEventsToApply = p_solver.deductionsOpenLastUndecidedFence(p_listEventsToApply, x, y);
 					}
+					// Add itself to "spaces to check" and adjacent closed spaces. So when filter occurs we will be able to see when a domino is about to be fully surrounded.
 				}
 			}
 			if (symbol == SPACE_SHUGAKU.SQUARE) {
 				if (choice) {
-					p_listEventsToApply = discardChoices(p_listEventsToApply, x, y, SPACE_SHUGAKU.ROUND, SPACE_SHUGAKU.OPEN);
+					p_listEventsToApply = deductionsDiscardChoices(p_listEventsToApply, x, y, SPACE_SHUGAKU.ROUND, SPACE_SHUGAKU.OPEN);
 					// Position of square in a vertical domino
 					if (y <= p_solver.yLength-2) {
 						p_listEventsToApply.push(new FenceShugakuEvent(x, y, DIRECTION.DOWN, FENCE_STATE.CLOSED));
 					}
-					// Horizontal domino
-					[DIRECTION.LEFT, DIRECTION.RIGHT].forEach(dir => {
-						if (p_solver.neighborExists(x, y, dir) && p_solver.fencesGrid.getFence(x, y, dir) == FENCE_STATE.OPEN) { // TODO optimize with an horizontal neighborExists
-							p_listEventsToApply.push(new SpaceEvent(x + DeltaX[dir], y, SPACE_SHUGAKU.ROUND, true));
-						} 
-					});
+					
 					// Neighboring numeric spaces
 					p_solver.squareCountingArray[y][x].numericNeighbors.forEach(coors => {
-						p_listEventsToApply = p_solver.tryAndFillWithNOSquares(p_listEventsToApply, coors.x, coors.y);
+						p_listEventsToApply = p_solver.deductionsFillAroundWithNOSquares(p_listEventsToApply, coors.x, coors.y);
+					});
+					
+					p_listEventsToApply = p_solver.deductionDominoFormations(p_listEventsToApply, x, y, SPACE_SHUGAKU.SQUARE, SPACE_SHUGAKU.ROUND);
+					p_solver.existingNeighborsCoorsDirections(x, y).forEach(coors => {
+						p_solver.newClosedSpacesAndAround.add(coors.x, coors.y);
 					});
 				} else {
-					p_listEventsToApply = p_solver.chooseOneEventLeft(p_listEventsToApply, x, y, SPACE_SHUGAKU.ROUND, SPACE_SHUGAKU.OPEN);
+					p_listEventsToApply = p_solver.deductionsChooseOneEventLeft(p_listEventsToApply, x, y, SPACE_SHUGAKU.ROUND, SPACE_SHUGAKU.OPEN);
 					// Neighboring numeric spaces
 					p_solver.squareCountingArray[y][x].numericNeighbors.forEach(coors => {
-						p_listEventsToApply = p_solver.tryAndFillWithSquares(p_listEventsToApply, coors.x, coors.y);
+						p_listEventsToApply = p_solver.deductionsFillAroundWithSquares(p_listEventsToApply, coors.x, coors.y);
 					});
 				}
 			}
 			if (symbol == SPACE_SHUGAKU.ROUND) {
 				if (choice) {
-					p_listEventsToApply = discardChoices(p_listEventsToApply, x, y, SPACE_SHUGAKU.OPEN, SPACE_SHUGAKU.SQUARE);
+					p_listEventsToApply = deductionsDiscardChoices(p_listEventsToApply, x, y, SPACE_SHUGAKU.OPEN, SPACE_SHUGAKU.SQUARE);
 					// Position of round in a vertical domino
 					if (y > 0) {
 						p_listEventsToApply.push(new FenceShugakuEvent(x, y, DIRECTION.UP, FENCE_STATE.CLOSED));
 					}
-					// Horizontal domino
-					[DIRECTION.LEFT, DIRECTION.RIGHT].forEach(dir => {
-						if (p_solver.neighborExists(x, y, dir) && p_solver.fencesGrid.getFence(x, y, dir) == FENCE_STATE.OPEN) { // TODO optimize with an horizontal neighborExists
-							p_listEventsToApply.push(new SpaceEvent(x + DeltaX[dir], y, SPACE_SHUGAKU.SQUARE, true));
-						} 
+					p_listEventsToApply = p_solver.deductionDominoFormations(p_listEventsToApply, x, y, SPACE_SHUGAKU.ROUND, SPACE_SHUGAKU.SQUARE);
+					p_solver.existingNeighborsCoorsDirections(x, y).forEach(coors => {
+						p_solver.newClosedSpacesAndAround.add(coors.x, coors.y);
 					});
 				} else {
-					p_listEventsToApply = p_solver.chooseOneEventLeft(p_listEventsToApply, x, y, SPACE_SHUGAKU.OPEN, SPACE_SHUGAKU.SQUARE);
+					p_listEventsToApply = p_solver.deductionsChooseOneEventLeft(p_listEventsToApply, x, y, SPACE_SHUGAKU.OPEN, SPACE_SHUGAKU.SQUARE);
 				}
 			}
 		} else {
@@ -416,8 +419,8 @@ deductionsClosure = function (p_solver) {
 			if (p_eventBeingApplied.state == FENCE_STATE.OPEN) {
 				// Make spaces closed
 				var xx, yy;
-				p_listEventsToApply = closeSpace(p_listEventsToApply, x, y);
-				p_listEventsToApply = closeSpace(p_listEventsToApply, dx, dy);
+				p_listEventsToApply = deductionsCloseSpace(p_listEventsToApply, x, y);
+				p_listEventsToApply = deductionsCloseSpace(p_listEventsToApply, dx, dy);
 				
 				//Add fences
 				if (p_solver.neighborExists(dx, dy, dir)) {
@@ -446,18 +449,21 @@ deductionsClosure = function (p_solver) {
 				}
 				// Horizontal one ? 
 				if (dir == DIRECTION.LEFT) {
-					p_listEventsToApply = p_solver.completeHorizontalDomino(p_listEventsToApply, dx, y);
+					p_listEventsToApply = p_solver.deductionsCompleteHorizontalDomino(p_listEventsToApply, dx, y);
 				} else if (dir == DIRECTION.RIGHT) {
-					p_listEventsToApply = p_solver.completeHorizontalDomino(p_listEventsToApply, x, y);
+					p_listEventsToApply = p_solver.deductionsCompleteHorizontalDomino(p_listEventsToApply, x, y);
 				}
+				
+				p_solver.newClosedSpacesAndAround.add(x, y);
+				p_solver.newClosedSpacesAndAround.add(dx, dy);
 			} else {
 				// Note : Both parts of the fences need to be checked, not only the "x,y" one !
 				// All but one fences are open in a closed space ? Open the 4th fence ! 
 				if (p_solver.answerArray[y][x].getState(SPACE_SHUGAKU.OPEN) == SPACE_CHOICE.NO) {
-					p_listEventsToApply = p_solver.openLastUndecidedFence(p_listEventsToApply, x, y);
+					p_listEventsToApply = p_solver.deductionsOpenLastUndecidedFence(p_listEventsToApply, x, y);
 				}
 				if (p_solver.answerArray[dy][dx].getState(SPACE_SHUGAKU.OPEN) == SPACE_CHOICE.NO) {
-					p_listEventsToApply = p_solver.openLastUndecidedFence(p_listEventsToApply, dx, dy);
+					p_listEventsToApply = p_solver.deductionsOpenLastUndecidedFence(p_listEventsToApply, dx, dy);
 				}
 				// All 4 fences are closed ? Open the space !
 				if (p_solver.edgesArray[y][x].closedEdges == 4) {
@@ -473,14 +479,26 @@ deductionsClosure = function (p_solver) {
 	}
 }
 
+SolverShugaku.prototype.deductionDominoFormations = function(p_listEventsToApply, p_x, p_y, p_thisSymbol, p_otherSymbol) {
+	this.existingNeighborsCoorsDirections(p_x, p_y).forEach(coorsDir => {
+		if (this.fencesGrid.getFence(p_x, p_y, coorsDir.direction) == FENCE_STATE.OPEN) { // Open fence, create two symbols for a domino
+			p_listEventsToApply.push(new SpaceEvent(coorsDir.x, coorsDir.y, p_otherSymbol, true));
+		}
+		if (!this.isBanned(coorsDir.x, coorsDir.y) && this.answerArray[coorsDir.y][coorsDir.x].getValue() == p_thisSymbol) { // Separate identical symbols
+			p_listEventsToApply.push(new FenceShugakuEvent(p_x, p_y, coorsDir.direction, FENCE_STATE.CLOSED));
+		}
+	});
+	return p_listEventsToApply;
+}
+
 // TODO trouver de meilleurs noms
-discardChoices = function(p_listEventsToApply, p_x, p_y, p_choice1, p_choice2) {
+deductionsDiscardChoices = function(p_listEventsToApply, p_x, p_y, p_choice1, p_choice2) {
 	p_listEventsToApply.push(new SpaceEvent(p_x, p_y, p_choice1, false));
 	p_listEventsToApply.push(new SpaceEvent(p_x, p_y, p_choice2, false));
 	return p_listEventsToApply;
 }
 
-SolverShugaku.prototype.chooseOneEventLeft = function(p_listEventsToApply, p_x, p_y, p_choice1, p_choice2) {
+SolverShugaku.prototype.deductionsChooseOneEventLeft = function(p_listEventsToApply, p_x, p_y, p_choice1, p_choice2) {
 	if (this.answerArray[p_y][p_x].getState(p_choice1) == SPACE_CHOICE.NO) {
 		p_listEventsToApply.push(new SpaceEvent(p_x, p_y, p_choice2, true));
 	}
@@ -490,13 +508,13 @@ SolverShugaku.prototype.chooseOneEventLeft = function(p_listEventsToApply, p_x, 
 	return p_listEventsToApply;
 }
 
-function closeSpace(p_listEventsToApply, p_x, p_y) {
+function deductionsCloseSpace(p_listEventsToApply, p_x, p_y) {
 	p_listEventsToApply.push(new SpaceEvent(p_x, p_y, SPACE_SHUGAKU.OPEN,false));
 	return p_listEventsToApply;
 }
 
 // p_x, p_y = space on the left
-SolverShugaku.prototype.completeHorizontalDomino = function(p_listEventsToApply, p_x, p_y) {
+SolverShugaku.prototype.deductionsCompleteHorizontalDomino = function(p_listEventsToApply, p_x, p_y) {
 	if (this.answerArray[p_y][p_x].getState(SPACE_SHUGAKU.ROUND) == SPACE_CHOICE.YES) {
 		p_listEventsToApply.push(new SpaceEvent(p_x + 1, p_y, SPACE_SHUGAKU.SQUARE, true));
 	} else if (this.answerArray[p_y][p_x].getState(SPACE_SHUGAKU.SQUARE) == SPACE_CHOICE.YES) {
@@ -511,21 +529,21 @@ SolverShugaku.prototype.completeHorizontalDomino = function(p_listEventsToApply,
 }
 
 // p_x, p_y must be a numeric space. 
-SolverShugaku.prototype.tryAndFillWithSquares = function(p_listEventsToApply, p_x, p_y) {
+SolverShugaku.prototype.deductionsFillAroundWithSquares = function(p_listEventsToApply, p_x, p_y) {
 	if (this.squareCountingArray[p_y][p_x].notNoSquaresYet == 0) {
-		p_listEventsToApply = this.tryAndFillSoooSquares(p_listEventsToApply, p_x, p_y, true);
+		p_listEventsToApply = this.deductionsTryAndFillSquaresOrNot(p_listEventsToApply, p_x, p_y, true);
 	}
 	return p_listEventsToApply;
 }
 
-SolverShugaku.prototype.tryAndFillWithNOSquares = function(p_listEventsToApply, p_x, p_y) {
+SolverShugaku.prototype.deductionsFillAroundWithNOSquares = function(p_listEventsToApply, p_x, p_y) {
 	if (this.squareCountingArray[p_y][p_x].notSquaresYet == 0) {
-		p_listEventsToApply = this.tryAndFillSoooSquares(p_listEventsToApply, p_x, p_y, false);
+		p_listEventsToApply = this.deductionsTryAndFillSquaresOrNot(p_listEventsToApply, p_x, p_y, false);
 	}
 	return p_listEventsToApply;
 }
 
-SolverShugaku.prototype.tryAndFillSoooSquares = function(p_listEventsToApply, p_x, p_y, p_shouldBeSquare) {
+SolverShugaku.prototype.deductionsTryAndFillSquaresOrNot = function(p_listEventsToApply, p_x, p_y, p_shouldBeSquare) {
 	this.existingNeighborsCoorsDirections(p_x, p_y).forEach(coors => {
 		if (!this.isBanned(coors.x, coors.y) && this.answerArray[coors.y][coors.x].getState(SPACE_SHUGAKU.SQUARE) == SPACE_CHOICE.UNDECIDED) {
 			p_listEventsToApply.push(new SpaceEvent(coors.x, coors.y, SPACE_SHUGAKU.SQUARE, p_shouldBeSquare)); 
@@ -535,7 +553,7 @@ SolverShugaku.prototype.tryAndFillSoooSquares = function(p_listEventsToApply, p_
 }
 
 // Search for the last ... 
-SolverShugaku.prototype.openLastUndecidedFence = function(p_listEventsToApply, p_x, p_y) {
+SolverShugaku.prototype.deductionsOpenLastUndecidedFence = function(p_listEventsToApply, p_x, p_y) {
 	if (this.edgesArray[p_y][p_x].closedEdges == 3) {
 		this.existingNeighborsDirections(p_x, p_y).forEach(dir => {
 			if (this.fencesGrid.getFence(p_x, p_y, dir) != FENCE_STATE.CLOSED) {
@@ -547,6 +565,92 @@ SolverShugaku.prototype.openLastUndecidedFence = function(p_listEventsToApply, p
 }
 
 // --------------------
-// Passing
+// Filters
 
-// ...
+function abortClosure(p_solver) {
+	return function() {
+		p_solver.newClosedSpacesAndAround.clean();
+	}
+}
+
+function filterDominosClosure(p_solver) { // Look for dominos that have been formed AND at spaces that have a newly closed space around them : no domino shall remain fully surrounded !
+	return function() {
+		var x, y, xx, yy;
+		var listEvents = [];
+		p_solver.newClosedSpacesAndAround.list.forEach(coors => {
+			x = coors.x;
+			y = coors.y;
+			if (listEvents == EVENT_RESULT.FAILURE) {
+				return;
+			}
+			xx = null; // Check if a space has not already been treated, if it is closed and then if it belongs to a domino, then identify the domino with x, y, xx, yy
+			if ((!p_solver.isBanned(x, y)) && (p_solver.newClosedSpacesAndAround.array[y][x]) && p_solver.answerArray[y][x].getState(SPACE_SHUGAKU.OPEN) == SPACE_CHOICE.NO) {				
+				p_solver.existingNeighborsCoorsDirections(x, y).forEach(coorsDir => { // Direction selection is optimizable, but does it matter ?
+					if (p_solver.fencesGrid.getFence(x, y, coorsDir.direction) == FENCE_STATE.OPEN) {
+						xx = coorsDir.x;
+						yy = coorsDir.y;
+						directionDomino = coorsDir.direction;
+						p_solver.newClosedSpacesAndAround.cleanOne(xx, yy); // Make sure the other domino space won't be checked again
+					}
+				});
+				if (xx != null) {
+					// Look around domino (sahd = summary around half domino)
+					autoLogFilter("We will watch domino on " + x + "," + y + ";" + xx + "," + yy);
+					const SAHD1 = p_solver.threeSpacesAroundHalfDomino(x, y, directionDomino);
+					const SAHD2 = p_solver.threeSpacesAroundHalfDomino(xx, yy, OppositeDirection[directionDomino]);
+					if (!SAHD1.openFound && !SAHD2.openFound) {
+						xToOpen = null;
+						if (SAHD1.xUndecided == null && !SAHD1.foundAtLeastOne && SAHD2.xUndecided != null) { 
+							xToOpen = SAHD2.xUndecided;
+							yToOpen = SAHD2.yUndecided;
+						}
+						if (SAHD2.xUndecided == null && !SAHD2.foundAtLeastOne && SAHD1.xUndecided != null) {
+							xToOpen = SAHD1.xUndecided;
+							yToOpen = SAHD1.yUndecided;
+						}
+						if (xToOpen != null) {
+							autoLogFilter("Waaay ok");
+							listEvents.push(new SpaceEvent(xToOpen, yToOpen, SPACE_SHUGAKU.OPEN, true));
+						}
+						if (!SAHD1.foundAtLeastOne && !SAHD2.foundAtLeastOne) {
+							listEvents = EVENT_RESULT.FAILURE;
+						}
+					}					
+				} 
+			}
+		});
+		p_solver.newClosedSpacesAndAround.clean();
+		return listEvents;
+	}
+}
+
+SolverShugaku.prototype.threeSpacesAroundHalfDomino = function(p_xDomino, p_yDomino, p_directionOtherHalf) {
+	var openFound = false;
+	var xUndecided = null;
+	var yUndecided;
+	var foundAtLeastOne = false;
+	autoLogFilter("Half domino " + p_xDomino + "," + p_yDomino + ", direction " + stringDirection(p_directionOtherHalf));
+	this.existingNeighborsCoorsDirections(p_xDomino, p_yDomino).forEach(coorsDirAD => { // AD = around domino
+		if (coorsDirAD.direction != p_directionOtherHalf) {
+			xxx = coorsDirAD.x;
+			yyy = coorsDirAD.y;
+			if (!this.isBanned(xxx, yyy)) {
+				state = this.answerArray[yyy][xxx].getState(SPACE_SHUGAKU.OPEN);
+				if (state == SPACE_CHOICE.YES) {
+					openFound = true;
+				} else if (state == SPACE_CHOICE.UNDECIDED) {
+					if (foundAtLeastOne) {						
+						xUndecided = null;
+						autoLogFilter("Found several");
+					} else {
+						foundAtLeastOne = true;
+						xUndecided = xxx;
+						yUndecided = yyy;
+						autoLogFilter(xxx + " " + yyy);
+					}
+				}
+			}
+		}
+	}); // A null value for xUndecided can mean that either 2 or 0 undecided spaces have been found.
+	return {openFound : openFound, foundAtLeastOne : foundAtLeastOne, xUndecided : xUndecided, yUndecided : yUndecided}
+}

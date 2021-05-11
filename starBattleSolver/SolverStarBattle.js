@@ -1,10 +1,15 @@
 // ---------------------
 // A few constants
 
-const SYMBOL ={
-	STAR : 'O',
-	NO_STAR : 'X',
-	UNDECIDED : '-'	
+const STAR = {
+	YES : 2,
+	NO : 1,
+	UNDECIDED : 0	
+}
+
+const stringStarArray = ['-', 'N', 'Y'];
+function stringStar(p_star) {
+	return stringStarArray[p_star];
 }
 
 const STAR_BATTLE_CATEGORY = {
@@ -81,7 +86,7 @@ SolverStarBattle.prototype.buildAnswerArray = function() {
 	for(iy = 0; iy < this.xyLength ; iy++){
 		this.answerArray.push([]);
 		for(ix = 0; ix < this.xyLength ; ix++){
-			this.answerArray[iy].push(SYMBOL.UNDECIDED);
+			this.answerArray[iy].push(STAR.UNDECIDED);
 		}
 	}
 }
@@ -95,7 +100,7 @@ SolverStarBattle.prototype.purifyAnswerArray = function() {
 	for(iy = 0; iy < this.xyLength ; iy++) {
 		for(ix = 0; ix < this.xyLength ; ix++) {
 			if (this.regionArray[iy][ix] == WALLGRID.OUT_OF_REGIONS) {
-				this.putNew(ix, iy, SYMBOL.NO_STAR);
+				this.putNew(ix, iy, STAR.NO);
 			}
 		}
 	}
@@ -138,6 +143,17 @@ SolverStarBattle.prototype.makeMultiPass = function() {
 	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
 }
 
+// The quickstart is truly quick since it consists of filling 1-size regions with stars. 
+SolverStarBattle.prototype.quickStart = function() { 
+	this.initiateQuickStart();
+	this.spacesByRegion.forEach(sbr => {
+		if (sbr.length == 1) {			
+			this.tryToPutNew(sbr[0].x, sbr[0].y, STAR.YES);
+		}
+	});
+	this.terminateQuickStart();
+}
+
 namingCategoryClosure = function(p_solver) {
 	return function(p_indexAndFamily) {
 		const index = p_indexAndFamily.index;
@@ -163,21 +179,21 @@ applyEventClosure = function(p_solver) {
 EVENT_RESULT.SUCCESS : it was indeed put into the grid ; the number of Os and Xs for this region, row and column are also updated.
 EVENT_RESULT.HARMLESS : said symbol was either already put into that space OUT out of bounds beacuse of automatic operation. Don't change anything to the grid and remaining symbols
 EVENT_RESULT.ERROR : there is a different symbol in that space. We have done a wrong hypothesis somewhere ! (or the grid was wrong at the basis !)
-This is also used at grid start in order to put Xs in banned spaces, hence the check in the SYMBOL.NO_STAR part.
+This is also used at grid start in order to put Xs in banned spaces, hence the check in the STAR.NO part.
 */
 SolverStarBattle.prototype.putNew = function(p_x, p_y, p_symbol) {
 	if (this.answerArray[p_y][p_x] == p_symbol) {
 		return EVENT_RESULT.HARMLESS;
 	}
-	if (this.answerArray[p_y][p_x] == SYMBOL.UNDECIDED){
+	if (this.answerArray[p_y][p_x] == STAR.UNDECIDED){
 		this.answerArray[p_y][p_x] = p_symbol;
 		var indexRegion = this.getRegion(p_x,p_y);
-		if (p_symbol == SYMBOL.STAR){
+		if (p_symbol == STAR.YES){
 			this.notPlacedYet.regions[indexRegion].Os--;
 			this.notPlacedYet.rows[p_y].Os--;
 			this.notPlacedYet.columns[p_x].Os--;
 		}
-		if (p_symbol == SYMBOL.NO_STAR){
+		if (p_symbol == STAR.NO){
 			if (indexRegion >= 0){
 				this.notPlacedYet.regions[indexRegion].Xs--;				
 			}
@@ -201,14 +217,14 @@ undoEventClosure = function(p_solver) {
 		x = eventToUndo.x;
 		var indexRegion = p_solver.regionArray[y][x];
 		var symbol = p_solver.answerArray[y][x];
-		p_solver.answerArray[y][x] = SYMBOL.UNDECIDED;
+		p_solver.answerArray[y][x] = STAR.UNDECIDED;
 		autoLogDeduction("Removing the following : "+x+" "+y+" "+symbol);
-		if (symbol == SYMBOL.STAR){
+		if (symbol == STAR.YES){
 			p_solver.notPlacedYet.regions[indexRegion].Os++;
 			p_solver.notPlacedYet.rows[y].Os++;
 			p_solver.notPlacedYet.columns[x].Os++;
 		}
-		if (symbol == SYMBOL.NO_STAR){
+		if (symbol == STAR.NO){
 			p_solver.notPlacedYet.regions[indexRegion].Xs++;
 			p_solver.notPlacedYet.rows[y].Xs++;
 			p_solver.notPlacedYet.columns[x].Xs++;	
@@ -220,7 +236,7 @@ undoEventClosure = function(p_solver) {
 
 // Central method
 SolverStarBattle.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_symbol, p_x, p_y), this.methodsSetDeductions);
+	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol), this.methodsSetDeductions);
 }
 
 //--------------------------------
@@ -240,25 +256,19 @@ deductionsClosure = function (p_solver) {
 		y = p_eventBeingApplied.y;
 		symbol = p_eventBeingApplied.symbol;
 		r = p_solver.getRegion(x,y); 
-		if (symbol == SYMBOL.STAR) {
+		if (symbol == STAR.YES) {
 			//Add to all 7 neighbors (no one should be star if solved correctly)
-			/*for(roundi = 0 ; roundi <= 7 ; roundi++) {
-				spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR, x+ROUND_X_COORDINATES[roundi], y+ROUND_Y_COORDINATES[roundi]);
-				p_listEventsToApply.push(spaceEventToAdd);
-				autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
-				
-			}*/
 			p_solver.existingNeighborsCoorsWithDiagonals(x, y).forEach(coors => {
-				spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR, coors.x, coors.y);
+				spaceEventToAdd = new SpaceEvent(coors.x, coors.y, STAR.NO);
 				p_listEventsToApply.push(spaceEventToAdd);
 				autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
 			});
 			//Final alert on column : fill the missing spaces in the column 
 			if (p_solver.notPlacedYet.columns[x].Os == 0) {
 				for(yi = 0 ; yi < p_solver.xyLength ; yi++) {
-					//there may be stars already, hence the (if SYMBOL.UNDECIDED) guard
-					if (p_solver.answerArray[yi][x] == SYMBOL.UNDECIDED) {
-						spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR, x, yi);
+					//there may be stars already, hence the (if STAR.UNDECIDED) guard
+					if (p_solver.answerArray[yi][x] == STAR.UNDECIDED) {
+						spaceEventToAdd = new SpaceEvent(x, yi, STAR.NO);
 						p_listEventsToApply.push(spaceEventToAdd);
 						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString()); 
 					}
@@ -267,8 +277,8 @@ deductionsClosure = function (p_solver) {
 			//Final alert on row
 			if (p_solver.notPlacedYet.rows[y].Os == 0) {
 				for(xi=0 ; xi < p_solver.xyLength ; xi++) {
-					if (p_solver.answerArray[y][xi] == SYMBOL.UNDECIDED){
-						spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR,xi,y);
+					if (p_solver.answerArray[y][xi] == STAR.UNDECIDED) {
+						spaceEventToAdd = new SpaceEvent(xi, y, STAR.NO);
 						p_listEventsToApply.push(spaceEventToAdd);
 						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
 					}
@@ -279,21 +289,21 @@ deductionsClosure = function (p_solver) {
 				var spaceInRegion;
 				for(var si=0;si< p_solver.spacesByRegion[r].length;si++){
 					spaceInRegion = p_solver.spacesByRegion[r][si];
-					if (p_solver.answerArray[spaceInRegion.y][spaceInRegion.x] == SYMBOL.UNDECIDED){
-						spaceEventToAdd = new SpaceEvent(SYMBOL.NO_STAR,spaceInRegion.x,spaceInRegion.y);
+					if (p_solver.answerArray[spaceInRegion.y][spaceInRegion.x] == STAR.UNDECIDED){
+						spaceEventToAdd = new SpaceEvent(spaceInRegion.x, spaceInRegion.y, STAR.NO);
 						p_listEventsToApply.push(spaceEventToAdd);
 						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
 					}
 				}
 			}
 		}
-		if (symbol == SYMBOL.NO_STAR){
+		if (symbol == STAR.NO){
 			//Final alert on column : fill the missing spaces in the column 
 			if (p_solver.notPlacedYet.columns[x].Xs == 0){
 				for(yi=0;yi<p_solver.xyLength;yi++){
-					//there may be stars already, hence the (if SYMBOL.UNDECIDED) guard
-					if (p_solver.answerArray[yi][x] == SYMBOL.UNDECIDED){
-						spaceEventToAdd = new SpaceEvent(SYMBOL.STAR,x,yi);
+					//there may be stars already, hence the (if STAR.UNDECIDED) guard
+					if (p_solver.answerArray[yi][x] == STAR.UNDECIDED) {
+						spaceEventToAdd = new SpaceEvent(x, yi, STAR.YES);
 						p_listEventsToApply.push(spaceEventToAdd);
 						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
 					}
@@ -302,8 +312,8 @@ deductionsClosure = function (p_solver) {
 			//Final alert on row
 			if (p_solver.notPlacedYet.rows[y].Xs == 0){
 				for(xi=0;xi<p_solver.xyLength;xi++){
-					if (p_solver.answerArray[y][xi] == SYMBOL.UNDECIDED){
-						spaceEventToAdd = new SpaceEvent(SYMBOL.STAR,xi,y);
+					if (p_solver.answerArray[y][xi] == STAR.UNDECIDED){
+						spaceEventToAdd = new SpaceEvent(xi, y, STAR.YES);
 						p_listEventsToApply.push(spaceEventToAdd);
 						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
 					}
@@ -314,8 +324,8 @@ deductionsClosure = function (p_solver) {
 				var spaceInRegion;
 				for(var si=0;si< p_solver.spacesByRegion[r].length;si++){
 					spaceInRegion = p_solver.spacesByRegion[r][si];
-					if (p_solver.answerArray[spaceInRegion.y][spaceInRegion.x] == SYMBOL.UNDECIDED){
-						spaceEventToAdd = new SpaceEvent(SYMBOL.STAR,spaceInRegion.x,spaceInRegion.y);
+					if (p_solver.answerArray[spaceInRegion.y][spaceInRegion.x] == STAR.UNDECIDED) {
+						spaceEventToAdd = new SpaceEvent(spaceInRegion.x, spaceInRegion.y, STAR.YES);
 						p_listEventsToApply.push(spaceEventToAdd);
 						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
 					}
@@ -361,8 +371,8 @@ generateEventsForRLCPassClosure = function(p_solver) {
 SolverStarBattle.prototype.generateEventsForRegionPass = function(p_indexRegion) {
 	var eventList = [];
 	this.spacesByRegion[p_indexRegion].forEach(space => {
-		if (this.answerArray[space.y][space.x] == SYMBOL.UNDECIDED) { 
-			eventList.push([new SpaceEvent(SYMBOL.STAR, space.x, space.y), new SpaceEvent(SYMBOL.NO_STAR, space.x, space.y)]);
+		if (this.answerArray[space.y][space.x] == STAR.UNDECIDED) { 
+			eventList.push([new SpaceEvent(space.x, space.y, STAR.YES), new SpaceEvent(space.x, space.y, STAR.NO)]);
 		}			 
 	});
 	return eventList;
@@ -371,8 +381,8 @@ SolverStarBattle.prototype.generateEventsForRegionPass = function(p_indexRegion)
 SolverStarBattle.prototype.generateEventsForRowPass = function(p_y) {
 	var eventList = [];
 	for (var x = 0; x < this.xyLength ; x++) {
-		if (this.answerArray[p_y][x] == SYMBOL.UNDECIDED) { 
-			eventList.push([new SpaceEvent(SYMBOL.STAR, x, p_y), new SpaceEvent(SYMBOL.NO_STAR, x, p_y)]);
+		if (this.answerArray[p_y][x] == STAR.UNDECIDED) { 
+			eventList.push([new SpaceEvent(x, p_y, STAR.YES), new SpaceEvent(x, p_y, STAR.NO)]);
 		}
 	}
 	return eventList;
@@ -381,8 +391,8 @@ SolverStarBattle.prototype.generateEventsForRowPass = function(p_y) {
 SolverStarBattle.prototype.generateEventsForColumnPass = function(p_x) {
 	var eventList = [];
 	for (var y = 0; y < this.xyLength ; y++) {
-		if (this.answerArray[y][p_x] == SYMBOL.UNDECIDED) { 
-			eventList.push([new SpaceEvent(SYMBOL.STAR, p_x, y), new SpaceEvent(SYMBOL.NO_STAR, p_x, y)]);
+		if (this.answerArray[y][p_x] == STAR.UNDECIDED) { 
+			eventList.push([new SpaceEvent(p_x, y, STAR.YES), new SpaceEvent(p_x, y, STAR.NO)]);
 		}
 	}
 	return eventList;

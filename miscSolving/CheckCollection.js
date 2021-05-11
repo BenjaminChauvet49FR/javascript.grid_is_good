@@ -38,6 +38,7 @@ CheckCollection.prototype.add = function(p_arg) {
 
 // ------------------------
 // Same but with 2 dimensions. Uses {x, y} items.
+// Who knows, maybe "use generic" with other values instead of pure true/false will find some uses later ?
 
 function CheckCollectionDoubleEntryGeneric(p_xLength, p_yLength, p_defaultValue) {
 	this.list = [];
@@ -75,6 +76,11 @@ CheckCollectionDoubleEntry.prototype.constructor = CheckCollectionDoubleEntry;
 
 CheckCollectionDoubleEntry.prototype.add = function(p_x, p_y) {
 	return this.addGeneric(p_x, p_y, true);
+}
+
+// Considers that one space that has been added should be removed before general clean.
+CheckCollectionDoubleEntryGeneric.prototype.cleanOne = function(p_x, p_y) {
+	this.array[p_y][p_x] = this.defaultValue;
 }
 
 // ------------------------

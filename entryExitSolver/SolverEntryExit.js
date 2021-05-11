@@ -117,8 +117,8 @@ SolverEntryExit.prototype.buildPatrioticBorderNoEnds = function(p_eventsToApply,
 		x = space.x;
 		y = space.y;
 		if ( ((x != xEnd1) || (y != yEnd1)) && ((x != xEnd2) || (y != yEnd2)) ) {
-			this.adjacentRegionsArray[y][x].forEach(indication => {
-				p_eventsToApply.push(new LinkEvent(x, y, indication.direction, LOOP_STATE.CLOSED));
+			this.otherRegionsDirectionsArray[y][x].forEach(dir => {
+				p_eventsToApply.push(new LinkEvent(x, y, dir, LOOP_STATE.CLOSED));
 			});
 		}
 	});
@@ -138,8 +138,8 @@ SolverEntryExit.prototype.buildPatrioticBorderParity = function(p_eventsToApply,
 		x = space.x;
 		y = space.y;
 		if (((x + xEndMod2 + y + yEndMod2) % 2 == parityNumberSpaces) && ((x != xEnd) || (y != yEnd))) {
-			this.adjacentRegionsArray[y][x].forEach(indication => {
-				p_eventsToApply.push(new LinkEvent(x, y, indication.direction, LOOP_STATE.CLOSED));
+			this.otherRegionsDirectionsArray[y][x].forEach(dir => {
+				p_eventsToApply.push(new LinkEvent(x, y, dir, LOOP_STATE.CLOSED));
 			});
 		}
 	});

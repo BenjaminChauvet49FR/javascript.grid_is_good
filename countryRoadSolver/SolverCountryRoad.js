@@ -38,11 +38,13 @@ SolverCountryRoad.prototype.construct = function(p_wallArray, p_indications) {
 	for(iy = 0;iy < this.yLength;iy++) {
 		for(ix = 0;ix < this.xLength;ix++) {
 			ir = this.regionArray[iy][ix];
-			region = this.regions[ir];
-			if (region.forcedValue != null) {
-				region.spacesNotLinkedYet = region.forcedValue;
-				region.spacesNotClosedYet = region.size - region.forcedValue;
-			} 
+			if (ir != WALLGRID.OUT_OF_REGIONS) {				
+				region = this.regions[ir];
+				if (region.forcedValue != null) {
+					region.spacesNotLinkedYet = region.forcedValue;
+					region.spacesNotClosedYet = region.size - region.forcedValue;
+				} 
+			}
 		}
 	}
 }
@@ -79,7 +81,10 @@ SolverCountryRoad.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 setEdgeClosedDosClosure = function(p_solver) {
 	return function(p_space) {
 		const ir = p_solver.getRegionIndex(p_space.x, p_space.y);
-		p_solver.regions[ir].spacesNotClosedYet--;
+		if (ir != WALLGRID.OUT_OF_REGIONS) {			
+			p_solver.regions[ir].spacesNotClosedYet--;
+		}
+		console.log("OK appel");
 	}
 }
 
@@ -119,8 +124,7 @@ setSpaceClosedDeductionsClosure = function(p_solver) {
 		const x = p_eventBeingApplied.x;
 		const y = p_eventBeingApplied.y;
 		var dir;
-		p_solver.adjacentRegionsArray[y][x].forEach(indication => {
-			dir = indication.direction;
+		p_solver.otherRegionsDirectionsArray[y][x].forEach(dir => {
 			p_listEvents.push(new SpaceEvent(x + DeltaX[dir], y + DeltaY[dir], LOOP_STATE.LINKED));
 		});
 		p_listEvents = p_solver.alertClosedSpacesRegion(p_listEvents, p_solver.getRegionIndex(x, y));

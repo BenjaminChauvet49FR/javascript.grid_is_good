@@ -43,7 +43,8 @@ SolverStitches.prototype.construct = function(p_wallArray, p_marginLeftArray, p_
 	this.columnsInfos = [];
 	this.numbersMarginsLeft = [];
 	this.numbersMarginsUp = [];
-	this.answerArray = [];
+	this.answerArray = generateFunctionValueArray(this.xLength, this.yLength, 
+		function(){return {state : SPACE_STATE.UNDECIDED, right : LINK_STATE.CLOSED, down : LINK_STATE.CLOSED}});
 	this.bordersDirectionsArray = [];
 	this.triangleBorders = []; // Note : this array is rectangular but the non-null spaces are lower-diagonal triangles
 	
@@ -62,63 +63,12 @@ SolverStitches.prototype.construct = function(p_wallArray, p_marginLeftArray, p_
 		});
 	} 	// TODO : purify with banned spaces
 
+	this.regionsNumber = numberOfRegions(this.regionArray);
+	this.triangleBorders = getBordersTriangle(this.regionArray, this.regionsNumber);
+	this.bordersDirectionsArray = getOtherRegionDirectionsArray(this.regionArray);
 	
-	// Initialize grid and borders
-	for (var iy = 0 ; iy < this.yLength ; iy++) {
-		this.answerArray.push([]);
-		this.bordersDirectionsArray.push([]);
-		for (var ix = 0 ; ix < this.xLength ; ix++) {
-			this.answerArray[iy].push({state : SPACE_STATE.UNDECIDED, right : LINK_STATE.CLOSED, down : LINK_STATE.CLOSED}); // Defaults to closed !
-			this.bordersDirectionsArray[iy].push([]);
-		}
-	}
-	
-	
-	// Number of regions...
-	var lastRegionNumber = 0;
-	for(iy = 0; iy < this.yLength; iy++) {
-		for(ix = 0; ix < this.xLength; ix++) {
-			lastRegionNumber = Math.max(this.regionArray[iy][ix], lastRegionNumber);
-		}
-	}
-	this.regionsNumber = lastRegionNumber+1;
-	
-	// Initialize borders
-	for (var r1 = 0 ; r1 <= lastRegionNumber; r1++) {
-		this.triangleBorders.push([]);
-		for (var r2 = 0 ; r2 < r1 ; r2++) {
-			this.triangleBorders[r1].push([]);
-		}
-	}
-	
-	var x, y, r1, r2, tmp;
-	for (var iy = 0 ; iy < this.yLength ; iy++) {
-		for (var ix = 0 ; ix < this.xLength ; ix++) {
-			[DIRECTION.RIGHT, DIRECTION.DOWN].forEach(dir => {
-				if (this.neighborExists(ix, iy, dir)) {
-					r1 = this.regionArray[iy + DeltaY[dir]][ix + DeltaX[dir]];
-					r2 = this.regionArray[iy][ix]; // Warning : case of banned spaces !
-					if (r1 < r2) {
-						tmp = r2;
-						r2 = r1;
-						r1 = tmp;
-					}
-					if (r1 != r2) { // Inside, r1 > r2
-						this.triangleBorders[r1][r2].push({direction : dir, x : ix, y : iy});
-						this.bordersDirectionsArray[iy][ix].push(dir);
-						this.bordersDirectionsArray[iy + DeltaY[dir]][ix + DeltaX[dir]].push(OppositeDirection[dir]);
-						if (dir == DIRECTION.RIGHT) {
-							this.answerArray[iy][ix].right = LINK_STATE.UNDECIDED;
-						} else {
-							this.answerArray[iy][ix].down = LINK_STATE.UNDECIDED;
-						}
-					}
-				}
-			});
-		}
-	}
-	
-	// Transform triangleBorders from a list array into a logical array
+	// Transform triangleBorders from a list array into a logical array +
+	// Make borders across regions undecided (because so far they are closed)
 	for (var r1 = 0 ; r1 < this.regionsNumber; r1++) {
 		for (var r2 = 0 ; r2 < r1 ; r2++) {
 			if (this.triangleBorders[r1][r2].length == 0) {
@@ -129,9 +79,17 @@ SolverStitches.prototype.construct = function(p_wallArray, p_marginLeftArray, p_
 				this.triangleBorders[r1][r2].notClosedYet = tmp.length-1;
 				this.triangleBorders[r1][r2].notLinkedYet = 1;
 				this.triangleBorders[r1][r2].listLinks = tmp;
+				tmp.forEach(coorsDir => {
+					if (coorsDir.direction == DIRECTION.RIGHT) {
+						this.answerArray[coorsDir.y][coorsDir.x].right = LINK_STATE.UNDECIDED;
+					} else {
+						this.answerArray[coorsDir.y][coorsDir.x].down = LINK_STATE.UNDECIDED;
+					}
+				});
 			}
 		}
 	}
+	
 }
 
 //--------------------------------
@@ -439,18 +397,6 @@ deductionsClosure = function (p_solver) {
 				});
 			} else {
 				p_listEventsToApply = p_solver.eventsMayFindBreachInBorder(p_listEventsToApply, r1, r2);
-				// A space is fully blocked ? Close it !
-				// A space with a button has only one border reachable now ? Open that link !
-				/*p_solver.bordersDirectionsArray[y][x].forEach(dir2 => {
-					theLink = p_solver.getLink(x, y, dir2);
-					if (theLink != LINK_STATE.CLOSED) {
-						if (oneDirection != null ) {
-							moreThanOne = true;
-						} else {
-							oneDirection = dir;
-						}
-					}
-				});*/
 				p_listEventsToApply = p_solver.eventsOneOrNoBorderReachable(p_listEventsToApply, x, y);
 				p_listEventsToApply = p_solver.eventsOneOrNoBorderReachable(p_listEventsToApply, dx, dy);
 			}
@@ -592,47 +538,11 @@ namingCategoryClosure = function(p_solver) {
 comparison = function(p_event1, p_event2) {
 	const cEvent1 = convertLinkEvent(p_event1);
 	const cEvent2 = convertLinkEvent(p_event2); 
+	
 	const k1 = (isLinkEvent(cEvent1) ? 0 : 1);
 	const k2 = (isLinkEvent(cEvent2) ? 0 : 1);
-	if (k1 != k2) {
-		return (k1 - k2);		
-	} else {
-		if (k1 == 0) { 
-			if (cEvent2.linkY > cEvent1.linkY) {
-				return -1;
-			} else if (cEvent2.linkY < cEvent1.linkY) {
-				return 1;
-			} else if (cEvent2.linkX > cEvent1.linkX) {
-				return -1;
-			} else if (cEvent2.linkX < cEvent1.linkX) {
-				return 1;
-			} else {
-				const d1 = (cEvent1.direction == DIRECTION.RIGHT ? 0 : 1);
-				const d2 = (cEvent2.direction == DIRECTION.RIGHT ? 0 : 1); 
-				if (d1 != d2) {
-					return d1-d2;
-				} else {
-					const c1 = (cEvent1.state == LINK_STATE.LINKED ? 0 : 1); 
-					const c2 = (cEvent2.state == LINK_STATE.LINKED ? 0 : 1); 
-					return c1-c2;
-				}
-			}
-		} else {
-			if (cEvent2.y > cEvent1.y) {
-				return -1;
-			} else if (cEvent2.y < cEvent1.y) {
-				return 1;
-			} else if (cEvent2.x > cEvent1.x) {
-				return -1;
-			} else if (cEvent2.x < cEvent1.x) {
-				return 1;
-			} else {
-				const c1 = (cEvent1.symbol == SPACE_STATE.BUTTON ? 0 : 1);
-				const c2 = (cEvent2.symbol == SPACE_STATE.BUTTON ? 0 : 1); 
-				return c1-c2;
-			}
-		}
-	}
+	return commonComparisonMultiKinds([k1, k2], 
+		[[cEvent1.y, cEvent1.x, cEvent1.state], [cEvent2.y, cEvent2.x, cEvent2.state], [cEvent1.linkX, cEvent1.linkY, cEvent1.direction], [cEvent2.linkX, cEvent2.linkY, cEvent2.direction]], k1, k2);
 }
 
 // Not so ordered... but puzzles are still simple so far !

@@ -21,7 +21,7 @@ RegionLoopSolver.prototype.constructor = RegionLoopSolver;
 
 RegionLoopSolver.prototype.regionLoopSolverConstruct = function(p_wallArray, p_packMethods) {
 	this.loopSolverConstruct(p_wallArray, {
-		setSpaceClosedPSAtomicDos : p_packMethods.setSpaceClosedPSAtomicDos,
+		setSpaceClosedPSAtomicDos : setSpaceClosedPSAtomicDoRLSClosure(this, p_packMethods.setSpaceClosedPSAtomicDos),
 		setSpaceLinkedPSAtomicDos : p_packMethods.setSpaceLinkedPSAtomicDos,
 		setEdgeClosedPSAtomicDos : setEdgeClosedAtomicDoRLSClosure(this),
 		setEdgeLinkedPSAtomicDos : setEdgeLinkedAtomicDoRLSClosure(this),
@@ -41,7 +41,7 @@ RegionLoopSolver.prototype.regionLoopSolverConstruct = function(p_wallArray, p_p
 	this.gridWall = WallGrid_data(p_wallArray);
 	this.borders = []; // Triangular array of borders
 	this.regionArray = this.gridWall.toRegionArray();
-	this.adjacentRegionsArray = generateFunctionValueArray(this.xLength, this.yLength, function(){{return []}} );
+	//this.adjacentRegionsArray = generateFunctionValueArray(this.xLength, this.yLength, function(){{return []}} );
 	const spacesByRegion = listSpacesByRegion(this.regionArray);
 	this.regions = [];
 	this.nbRemainingLinksBetweenRegions = spacesByRegion.length - 1;
@@ -60,8 +60,31 @@ RegionLoopSolver.prototype.regionLoopSolverConstruct = function(p_wallArray, p_p
 	}
 	
 	// Part specific for RegionLoopSolver
-	this.defineBorders(); // initialize this.borders 
-	this.buildBorders(); // fills this.borders with interesting data
+	this.otherRegionsDirectionsArray = getOtherRegionDirectionsArray(this.regionArray);
+	this.borders = getBordersTriangle(this.regionArray, this.regions.length);
+	
+	var tmp;
+	for(ir = 1; ir < this.regions.length ; ir++) {
+		for(dr = 0; dr < ir; dr++) {
+			if (this.areRegionsAdjacent(ir, dr)) {
+				tmp = this.borders[ir][dr];
+				this.borders[ir][dr] = {
+					edges : tmp,
+					length : tmp.length, 
+					edgesClosed : 0,
+					edgesLinked : 0,
+					state : BORDER_STATE.UNDECIDED
+				}
+				this.regions[ir].neighboringRegions.push(dr);
+				this.regions[dr].neighboringRegions.push(ir);
+			} 
+		}
+	} 
+	
+	// Set "not yet..." informations on regions
+	for (ir = 0 ; ir < this.regions.length ; ir++) {
+		this.regions[ir].notYetClosedBorders = this.regions[ir].neighboringRegions.length - 2;
+	}
 	
 	// Purification
 	for (y = 0 ; y < this.yLength ; y++) {
@@ -83,78 +106,6 @@ RegionLoopSolver.buildContacts = function(p_i1, p_i2) {
 		for (var j = 0; j < i ; j++) {
 			this.contactsRegion[i].push(false);
 		}
-	}
-}
-
-
-// If properties "state" "edgesClosed" "edgesLinked" are undefined, this "borders" entry remain untouched as the border between regions i and j doesn't exist.
-// borders[i1][i2].length can be called as a shortcut of borders[i1][i2].edges.length too.
-// TODO warning : possible confusion between edgesLinked / edgesClosed
-RegionLoopSolver.prototype.defineBorders = function() {
-	for (var i = 0; i < this.regions.length ; i++) {
-		this.borders.push([]);
-		for (var j = 0; j < i ; j++) {
-			this.borders[i].push({
-				edges : []
-			});
-		}
-	}
-}
-
-RegionLoopSolver.prototype.buildBorders = function() {
-	var x, y, dx, dy, ir, dr, region;
-	for(var ir = 0;ir < this.regions.length ; ir++) {
-		region = this.regions[ir];
-		region.size = region.spaces.length;
-		region.index = ir;
-		for(is = 0; is < region.size; is++) {
-			space = region.spaces[is];
-			x = space.x;
-			y = space.y;
-			KnownDirections.forEach(dir => {
-				if (this.neighborExists(x, y, dir)) {
-					dx = x + DeltaX[dir];
-					dy = y + DeltaY[dir];
-					dr = this.getRegionIndex(dx, dy);
-					if ((ir > dr) && (dr != WALLGRID.OUT_OF_REGIONS)) { // ir > dr test so a region doesn't get added twice.
-						//Warning : name 'borders' of the array written here to optimize efficiency.
-						l = this.borders[ir][dr].edges.length;
-						this.borders[ir][dr].edges.push({
-							x : dx, 
-							y : dy, 
-							direction : OppositeDirection[dir]
-						}); 
-						this.adjacentRegionsArray[y][x].push({direction : dir, index : dr});
-						this.adjacentRegionsArray[dy][dx].push({direction : OppositeDirection[dir], index : ir});
-					}
-				}
-			});
-		}
-	}
-	
-	// Set borders length. Required for (areRegionsAdjacent) method.
-	for(ir = 1; ir < this.regions.length ; ir++) {
-		for(dr = 0; dr < ir; dr++) {
-			this.borders[ir][dr].length = this.borders[ir][dr].edges.length; // The word length is allowed even for non-array items.
-		}
-	}
-	
-	// Set borders informations
-	for(ir = 1; ir < this.regions.length ; ir++) {
-		for(dr = 0; dr < ir; dr++) {
-			if (this.areRegionsAdjacent(ir, dr)) {
-				this.borders[ir][dr].state = BORDER_STATE.UNDECIDED;
-				this.borders[ir][dr].edgesClosed = 0;
-				this.borders[ir][dr].edgesLinked = 0;
-				this.regions[ir].neighboringRegions.push(dr);
-				this.regions[dr].neighboringRegions.push(ir);
-			}
-		}
-	} 
-	
-	// Set "not yet..." informations on regions
-	for (ir = 0 ; ir < this.regions.length ; ir++) {
-		this.regions[ir].notYetClosedBorders = this.regions[ir].neighboringRegions.length - 2;
 	}
 }
 
@@ -213,6 +164,10 @@ RegionLoopSolver.prototype.areRegionsAdjacentSafe = function(p_i1, p_i2) {
 	}
 }
 
+function borderingIndexes(p_index1, p_index2) {
+	return p_index1 != WALLGRID.OUT_OF_REGIONS && p_index2 != WALLGRID.OUT_OF_REGIONS && p_index1 != p_index2;
+}
+
 // ---------------------------
 // Classic getters
 
@@ -223,11 +178,21 @@ RegionLoopSolver.prototype.getSpaceCoordinates = function(p_indexRegion, p_index
 // ---------------------------
 // Applying
 
+setSpaceClosedPSAtomicDoRLSClosure = function(p_solver, p_methodSetSpaceClosedPSAtomicDos) {
+	return function(p_args) {
+		const ir = p_solver.getRegionIndex(p_args.x, p_args.y);
+		if (ir != WALLGRID.OUT_OF_REGIONS) {			
+			p_solver.regions[ir].spacesNotClosedYet--;
+		}
+		p_methodSetSpaceClosedPSAtomicDos(p_args);
+	}
+}
+
 setEdgeClosedAtomicDoRLSClosure = function(p_solver) {
 	return function (p_args) {
 		const ri1 = p_solver.getRegionIndex(p_args.x, p_args.y);
 		const ri2 = p_solver.getRegionIndex(p_args.otherX, p_args.otherY);
-		if (ri1 != ri2 && ri1 != WALLGRID.OUT_OF_REGIONS && ri2 != WALLGRID.OUT_OF_REGIONS) {
+		if (borderingIndexes(ri1, ri2)) {
 			// These OUT_OF_REGIONS checks are due to the banning time.
 			// TODO I wish I could pass ri1 and ri2 as args to the event to make undo easier.
 			p_solver.getBorder(ri1, ri2).edgesClosed++;
@@ -239,7 +204,7 @@ setEdgeLinkedAtomicDoRLSClosure = function(p_solver) {
 	return function (p_args) {
 		const ri1 = p_solver.getRegionIndex(p_args.x, p_args.y);
 		const ri2 = p_solver.getRegionIndex(p_args.otherX, p_args.otherY);
-		if (ri1 != ri2) {
+		if (borderingIndexes(ri1, ri2)) {
 			p_solver.getBorder(ri1, ri2).edgesLinked++;
 		}
 	}
@@ -372,12 +337,16 @@ setEdgeClosedDeductionsRLSClosure = function(p_solver) {
 		const x = p_eventBeingApplied.linkX;
 		const y = p_eventBeingApplied.linkY;
 		const ir = p_solver.getRegionIndex(x, y);
-		const dx = x + DeltaX[p_eventBeingApplied.direction];
-		const dy = y + DeltaY[p_eventBeingApplied.direction]; 
-		const dr = p_solver.getRegionIndex(dx, dy);
-		const border = p_solver.getBorder(ir, dr);
-		if ((ir != dr) && (border.edgesClosed == border.length)) { 
-			p_eventList.push(new RegionJunctionEvent(ir, dr, BORDER_STATE.CLOSED));
+		if (ir != WALLGRID.OUT_OF_REGIONS) {			
+			const dx = x + DeltaX[p_eventBeingApplied.direction];
+			const dy = y + DeltaY[p_eventBeingApplied.direction]; 
+			const dr = p_solver.getRegionIndex(dx, dy);
+			if (dr != WALLGRID.OUT_OF_REGIONS) {
+				const border = p_solver.getBorder(ir, dr);				
+				if ((ir != dr) && (border.edgesClosed == border.length)) { 
+					p_eventList.push(new RegionJunctionEvent(ir, dr, BORDER_STATE.CLOSED));
+				}
+			}
 		}
 		return p_eventList;
 	}
@@ -392,10 +361,10 @@ setEdgeLinkedDeductionsRLSClosure = function(p_solver) {
 		const dy = y + DeltaY[p_eventBeingApplied.direction]; 
 		const dr = p_solver.getRegionIndex(dx, dy);
 		const border = p_solver.getBorder(ir, dr);
-		if (ir != dr) { 
+		if (borderingIndexes(ir, dr)) { 
 			// Linked link crosses a region border. What happens ?
 			p_eventList.push(new RegionJunctionEvent(ir, dr, BORDER_STATE.LINKED));
-			p_eventList = p_solver.closeNotLinkedEdgesBorder(p_eventList, border);
+			p_eventList = p_solver.deductionsCloseNotLinkedEdgesBorder(p_eventList, border);
 		}
 		return p_eventList;
 	}
@@ -404,66 +373,68 @@ setEdgeLinkedDeductionsRLSClosure = function(p_solver) {
 otherDeductionsRLSClosure = function(p_solver) {
 	return function (p_eventList, p_eventBeingApplied) {
 		if (p_eventBeingApplied.kind == LOOP_EVENT.REGION_JUNCTION) {
-			const border = p_solver.getBorder(p_eventBeingApplied.index1, p_eventBeingApplied.index2);
-			const region1 = p_solver.getRegion(p_eventBeingApplied.index1);
-			const region2 = p_solver.getRegion(p_eventBeingApplied.index2);
-			if (p_eventBeingApplied.state == BORDER_STATE.CLOSED) {
-				border.edges.forEach(edge => {
-					p_eventList.push(new LinkEvent(edge.x, edge.y, edge.direction, LOOP_STATE.CLOSED));
-				});
-				// If all borders surrounding a region but 2 are closed, these regions must be open. (Also, should be added to quickstart.)
-				p_eventList = p_solver.alertClosedBorders(p_eventList, region1);
-				p_eventList = p_solver.alertClosedBorders(p_eventList, region2);
-			} else { // p_eventBeingApplied.state == BORDER_STATE.LINKED
-				// When a border  has a linked edge, close the other edges.
-				if (border.edgesLinked == 1) { // Warning : different behaviour in 2-region grid !
-					p_eventList = p_solver.closeNotLinkedEdgesBorder(p_eventList, border);
-				}
-
-				// If a region is fully crossed
-				if (region1.linkedRegions.length == 2) {
-					region1.neighboringRegions.forEach(ri => {
-						if (ri != region1.linkedRegions[0] && ri != region1.linkedRegions[1]) {
-							p_eventList.push(new RegionJunctionEvent(p_eventBeingApplied.index1, ri, BORDER_STATE.CLOSED));
-						}
-					});
-				} 
-				if (region2.linkedRegions.length == 2) {
-					region2.neighboringRegions.forEach(ri => {
-						if (ri != region2.linkedRegions[0] && ri != region2.linkedRegions[1]) {
-							p_eventList.push(new RegionJunctionEvent(p_eventBeingApplied.index2, ri, BORDER_STATE.CLOSED));
-						}
-					});
-				}
-				
-				// If a chain of opposite regions are adjacent but not immediately linked, close their border immediately ! Unless the loop is ended.
-				const oppo1 = region1.oppositeLinkedRegion;
-				const oppo2 = p_solver.regions[oppo1].oppositeLinkedRegion;
-				if (p_solver.nbRemainingLinksBetweenRegions > 0) {
-					if (oppo1 == oppo2) {
-						p_eventList.push(new FailureEvent());
-						return p_eventList;
-					}
-					if (p_solver.getBorder(oppo1, oppo2).length > 0 && p_solver.getBorder(oppo1, oppo2).state == BORDER_STATE.UNDECIDED) {
-						p_eventList.push(new RegionJunctionEvent(oppo1, oppo2, BORDER_STATE.CLOSED));
-					} 
-				}
-				
-				// If a border is linked and has only one non-closed edge yet :
-				if ((border.edgesClosed == border.length - 1) && (border.edgesLinked == 0)) {
-					var ok = false;
+			if (borderingIndexes(p_eventBeingApplied.index1, p_eventBeingApplied.index2)) {
+				const border = p_solver.getBorder(p_eventBeingApplied.index1, p_eventBeingApplied.index2);
+				const region1 = p_solver.getRegion(p_eventBeingApplied.index1);
+				const region2 = p_solver.getRegion(p_eventBeingApplied.index2);
+				if (p_eventBeingApplied.state == BORDER_STATE.CLOSED) {
 					border.edges.forEach(edge => {
-						if (p_solver.getLink(edge.x, edge.y, edge.direction) != LOOP_STATE.CLOSED) {
-							p_eventList.push(new LinkEvent(edge.x, edge.y, edge.direction, LOOP_STATE.LINKED));
-							ok = true;
-							//return;
-						}
+						p_eventList.push(new LinkEvent(edge.x, edge.y, edge.direction, LOOP_STATE.CLOSED));
 					});
-					if (!ok) {
-						p_eventList.push(new FailureEvent());
+					// If all borders surrounding a region but 2 are closed, these regions must be open. (Also, should be added to quickstart.)
+					p_eventList = p_solver.alertClosedBorders(p_eventList, region1);
+					p_eventList = p_solver.alertClosedBorders(p_eventList, region2);
+				} else { // p_eventBeingApplied.state == BORDER_STATE.LINKED
+					// When a border  has a linked edge, close the other edges.
+					if (border.edgesLinked == 1) { // Warning : different behaviour in 2-region grid !
+						p_eventList = p_solver.deductionsCloseNotLinkedEdgesBorder(p_eventList, border);
+					}
+
+					// If a region is fully crossed
+					if (region1.linkedRegions.length == 2) {
+						region1.neighboringRegions.forEach(ri => {
+							if (ri != region1.linkedRegions[0] && ri != region1.linkedRegions[1]) {
+								p_eventList.push(new RegionJunctionEvent(p_eventBeingApplied.index1, ri, BORDER_STATE.CLOSED));
+							}
+						});
+					} 
+					if (region2.linkedRegions.length == 2) {
+						region2.neighboringRegions.forEach(ri => {
+							if (ri != region2.linkedRegions[0] && ri != region2.linkedRegions[1]) {
+								p_eventList.push(new RegionJunctionEvent(p_eventBeingApplied.index2, ri, BORDER_STATE.CLOSED));
+							}
+						});
+					}
+					
+					// If a chain of opposite regions are adjacent but not immediately linked, close their border immediately ! Unless the loop is ended.
+					const oppo1 = region1.oppositeLinkedRegion;
+					const oppo2 = p_solver.regions[oppo1].oppositeLinkedRegion;
+					if (p_solver.nbRemainingLinksBetweenRegions > 0) {
+						if (oppo1 == oppo2) {
+							p_eventList.push(new FailureEvent());
+							return p_eventList;
+						}
+						if (p_solver.getBorder(oppo1, oppo2).length > 0 && p_solver.getBorder(oppo1, oppo2).state == BORDER_STATE.UNDECIDED) {
+							p_eventList.push(new RegionJunctionEvent(oppo1, oppo2, BORDER_STATE.CLOSED));
+						} 
+					}
+					
+					// If a border is linked and has only one non-closed edge yet :
+					if ((border.edgesClosed == border.length - 1) && (border.edgesLinked == 0)) {
+						var ok = false;
+						border.edges.forEach(edge => {
+							if (p_solver.getLink(edge.x, edge.y, edge.direction) != LOOP_STATE.CLOSED) {
+								p_eventList.push(new LinkEvent(edge.x, edge.y, edge.direction, LOOP_STATE.LINKED));
+								ok = true;
+								//return;
+							}
+						});
+						if (!ok) {
+							p_eventList.push(new FailureEvent());
+						}
 					}
 				}
-			}
+			}	
 		} else {
 			// ...
 		}
@@ -472,7 +443,7 @@ otherDeductionsRLSClosure = function(p_solver) {
 }
 
 // One edge in a region border is linked : close the other ones.
-RegionLoopSolver.prototype.closeNotLinkedEdgesBorder = function(p_eventList, p_border) {
+RegionLoopSolver.prototype.deductionsCloseNotLinkedEdgesBorder = function(p_eventList, p_border) {
 	var indexOpening = 0;
 	var foundOpening = false;
 	while (!foundOpening && indexOpening < p_border.length) { // Also warning ! 

@@ -1,6 +1,7 @@
+var solver;
 function main() {
 	var drawer = new Drawer();
-	var solver = DummySolver();
+	solver = DummySolver();
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
 
