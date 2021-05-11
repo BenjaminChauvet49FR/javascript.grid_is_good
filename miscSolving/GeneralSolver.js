@@ -174,6 +174,7 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
 			});
 		}
         this.undoEventList(listEventsApplied, p_methodPack.undoEventMethod);
+		autoLogGeneralFail();
 		return DEDUCTIONS_RESULT.FAILURE;
     } else {
 		if (listEventsApplied.length > 0) {

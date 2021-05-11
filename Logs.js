@@ -28,3 +28,8 @@ function autoLogTryToPutNew(p_string) {
 function autoLogFail(p_string) {
 	console.log("FAILURE ! " + p_string);
 }
+
+// To be used for any failure case.
+function autoLogGeneralFail() {
+	//console.log("FAILURE ! ");
+}

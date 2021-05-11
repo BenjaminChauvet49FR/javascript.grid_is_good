@@ -6,7 +6,9 @@ const KIND_DRAWABLE_ITEM = {
 	CIRCLE : 3,
 	LITTLE_X : 4,
 	X : 4,
-	SQUARE : 5
+	SQUARE : 5,
+	CIRCLE_UPPER_RIGHT : 6,
+	PLUS_UPPER_RIGHT : 7,
 }
 
 /*
@@ -55,6 +57,22 @@ function DrawableLittleX(p_color) {
 	item.color = p_color;
 	return item;
 }
+
+function DrawableLittleCircleUpperRight(p_color) { 
+	var item = new DrawableItem();
+	item.kind = KIND_DRAWABLE_ITEM.CIRCLE_UPPER_RIGHT;
+	item.color = p_color;
+	return item;
+}
+
+function DrawableLittlePlusUpperRight(p_color) { 
+	var item = new DrawableItem();
+	item.kind = KIND_DRAWABLE_ITEM.PLUS_UPPER_RIGHT;
+	item.color = p_color;
+	return item;
+}
+
+// ---------
 
 DrawableItem.prototype.setupImage = function(p_idElement,p_x1,p_y1,p_x2,p_y2){
 	this.kind = KIND_DRAWABLE_ITEM.IMAGE;

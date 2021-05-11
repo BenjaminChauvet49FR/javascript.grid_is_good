@@ -558,7 +558,7 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore) { // TODO OK, 
 			saveLoadModeId = PUZZLES_KIND.NUMBERS_ONLY.id;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]);
 			break;
-		case 'Chocona': case 'CountryRoad': case 'Heyawake': case 'Shimaguni' :
+		case 'Chocona': case 'CountryRoad': case 'Detour': case 'Heyawake': case 'Shimaguni':
 			saveLoadModeId = PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS.id;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_REGION]);
 			break;

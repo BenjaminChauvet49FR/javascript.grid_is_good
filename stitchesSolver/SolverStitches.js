@@ -427,22 +427,15 @@ SolverStitches.prototype.eventsOneOrNoBorderReachable = function(p_listEventsToA
 	return p_listEventsToApply;
 }
 
+function spaceClosure(p_solver) { return function(p_x, p_y) { return p_solver.answerArray[p_y][p_x].state }}
+function eventClosure(p_symbol) { return function(p_x, p_y) { return new SpaceEvent(p_x, p_y, p_symbol)}}
+
 SolverStitches.prototype.eventsFillRow = function(p_listEventsToApply, p_y, p_symbolToFill) {
-	for (var x = 0; x < this.xLength ; x++) {
-		if (this.getSpace(x, p_y) == SPACE_STATE.UNDECIDED) {
-			p_listEventsToApply.push(new SpaceEvent(x, p_y, p_symbolToFill));
-		}
-	}
-	return p_listEventsToApply;
+	return this.deductionsFillingRow(p_listEventsToApply, p_y, spaceClosure(this), SPACE_STATE.UNDECIDED, eventClosure(p_symbolToFill));
 }
 
 SolverStitches.prototype.eventsFillColumn = function(p_listEventsToApply, p_x, p_symbolToFill) {
-	for (var y = 0; y < this.yLength ; y++) {
-		if (this.getSpace(p_x, y) == SPACE_STATE.UNDECIDED) {
-			p_listEventsToApply.push(new SpaceEvent(p_x, y, p_symbolToFill));
-		}
-	}
-	return p_listEventsToApply;
+	return this.deductionsFillingColumn(p_listEventsToApply, p_x, spaceClosure(this), SPACE_STATE.UNDECIDED, eventClosure(p_symbolToFill));
 }
 
 SolverStitches.prototype.eventsMayFindBreachInBorder = function(p_listEventsToApply, p_r1, p_r2) {

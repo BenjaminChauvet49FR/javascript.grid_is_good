@@ -250,6 +250,10 @@ Tries to put a new symbol into a grid and then forces the filling of all stars a
 -repeat until either new can be newly deduced (good, although this may be a wrong answer) or there is an absurd situation with two opposite symbols deduced in the same space (bad). 
 If the end is successful, the list of spaces will be put into eventsApplied. But this doesn't mean they are all fine !
 */
+
+closureSpace = function(p_solver) { return function(p_x, p_y) {return p_solver.answerArray[p_y][p_x]}}
+closureEvent = function(p_state) { return function(p_x, p_y) {return new SpaceEvent(p_x, p_y, p_state)}}
+
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
 		x = p_eventBeingApplied.x;
@@ -263,73 +267,25 @@ deductionsClosure = function (p_solver) {
 				p_listEventsToApply.push(spaceEventToAdd);
 				autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
 			});
-			//Final alert on column : fill the missing spaces in the column 
 			if (p_solver.notPlacedYet.columns[x].Os == 0) {
-				for(yi = 0 ; yi < p_solver.xyLength ; yi++) {
-					//there may be stars already, hence the (if STAR.UNDECIDED) guard
-					if (p_solver.answerArray[yi][x] == STAR.UNDECIDED) {
-						spaceEventToAdd = new SpaceEvent(x, yi, STAR.NO);
-						p_listEventsToApply.push(spaceEventToAdd);
-						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString()); 
-					}
-				}
+				p_listEventsToApply = p_solver.deductionsFillingColumn(p_listEventsToApply, x, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.NO));
 			}
-			//Final alert on row
 			if (p_solver.notPlacedYet.rows[y].Os == 0) {
-				for(xi=0 ; xi < p_solver.xyLength ; xi++) {
-					if (p_solver.answerArray[y][xi] == STAR.UNDECIDED) {
-						spaceEventToAdd = new SpaceEvent(xi, y, STAR.NO);
-						p_listEventsToApply.push(spaceEventToAdd);
-						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
-					}
-				}
+				p_listEventsToApply = p_solver.deductionsFillingRow(p_listEventsToApply, y, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.NO));
 			}
-			//Final alert on region
-			if (p_solver.notPlacedYet.regions[r].Os == 0){
-				var spaceInRegion;
-				for(var si=0;si< p_solver.spacesByRegion[r].length;si++){
-					spaceInRegion = p_solver.spacesByRegion[r][si];
-					if (p_solver.answerArray[spaceInRegion.y][spaceInRegion.x] == STAR.UNDECIDED){
-						spaceEventToAdd = new SpaceEvent(spaceInRegion.x, spaceInRegion.y, STAR.NO);
-						p_listEventsToApply.push(spaceEventToAdd);
-						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
-					}
-				}
+			if (p_solver.notPlacedYet.regions[r].Os == 0) {
+				p_listEventsToApply = p_solver.deductionsFillingSetSpace(p_listEventsToApply, p_solver.spacesByRegion[r], closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.NO));
 			}
 		}
-		if (symbol == STAR.NO){
-			//Final alert on column : fill the missing spaces in the column 
-			if (p_solver.notPlacedYet.columns[x].Xs == 0){
-				for(yi=0;yi<p_solver.xyLength;yi++){
-					//there may be stars already, hence the (if STAR.UNDECIDED) guard
-					if (p_solver.answerArray[yi][x] == STAR.UNDECIDED) {
-						spaceEventToAdd = new SpaceEvent(x, yi, STAR.YES);
-						p_listEventsToApply.push(spaceEventToAdd);
-						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
-					}
-				}
+		if (symbol == STAR.NO) {
+			if (p_solver.notPlacedYet.columns[x].Xs == 0) {
+				p_listEventsToApply = p_solver.deductionsFillingColumn(p_listEventsToApply, x, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.YES));
 			}
-			//Final alert on row
-			if (p_solver.notPlacedYet.rows[y].Xs == 0){
-				for(xi=0;xi<p_solver.xyLength;xi++){
-					if (p_solver.answerArray[y][xi] == STAR.UNDECIDED){
-						spaceEventToAdd = new SpaceEvent(xi, y, STAR.YES);
-						p_listEventsToApply.push(spaceEventToAdd);
-						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
-					}
-				}
+			if (p_solver.notPlacedYet.rows[y].Xs == 0) {
+				p_listEventsToApply = p_solver.deductionsFillingRow(p_listEventsToApply, y, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.YES));
 			}
-			//Final alert on region
-			if (p_solver.notPlacedYet.regions[r].Xs == 0){
-				var spaceInRegion;
-				for(var si=0;si< p_solver.spacesByRegion[r].length;si++){
-					spaceInRegion = p_solver.spacesByRegion[r][si];
-					if (p_solver.answerArray[spaceInRegion.y][spaceInRegion.x] == STAR.UNDECIDED) {
-						spaceEventToAdd = new SpaceEvent(spaceInRegion.x, spaceInRegion.y, STAR.YES);
-						p_listEventsToApply.push(spaceEventToAdd);
-						autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
-					}
-				}
+			if (p_solver.notPlacedYet.regions[r].Xs == 0) {
+				p_listEventsToApply = p_solver.deductionsFillingSetSpace(p_listEventsToApply, p_solver.spacesByRegion[r], closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.YES));
 			}
 		}
 		return p_listEventsToApply;

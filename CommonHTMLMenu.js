@@ -81,6 +81,7 @@ menuSolvers.push({
 	documentPage : "Solver",
 	typeList : [
 		{name : "countryRoad", displayName : "CountryRoad"},
+		{name : "detour", displayName : "Detour"},
 		{name : "entryExit", displayName : "EntryExit"},
 		{name : "koburin", displayName : "Koburin"},
 		{name : "masyu", displayName : "Masyu"},

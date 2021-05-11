@@ -352,13 +352,29 @@ Drawer.prototype.drawSpaceContents = function (p_context, p_drawableItems, p_fun
 					this.drawCrossLittleX(p_context, ix, iy, item);
 				} else if (item.kind == KIND_DRAWABLE_ITEM.SQUARE) {
 					this.drawSquare(p_context, ix, iy, item);
-				}
+				} 
             }
             pixDrawX += this.pix.sideSpace;
         }
         pixDrawY += this.pix.sideSpace;
         pixDrawX = pixStartX;
     }
+}
+
+Drawer.prototype.drawSpaceContentsUpperRightCorner = function(p_context, p_drawableItems, p_function, p_xLength, p_yLength) {
+	for (iy = 0; iy < p_yLength; iy++) {
+		for (ix = 0; ix < p_xLength; ix++) {
+			indexItem = p_function(ix, iy);
+			if (indexItem >= 0 && indexItem < p_drawableItems.length) {
+				item = p_drawableItems[indexItem];
+				if (item.kind == KIND_DRAWABLE_ITEM.CIRCLE_UPPER_RIGHT) {
+					this.drawLittleRoundUpperRight(p_context, ix, iy, item);
+				} else if (item.kind == KIND_DRAWABLE_ITEM.PLUS_UPPER_RIGHT) {
+					this.drawLittlePlusUpperRight(p_context, ix, iy, item);
+				}
+			}
+		}
+	}
 }
 
 // Draw a polyomino according to a 4x5-tiled picture
@@ -637,6 +653,30 @@ Drawer.prototype.drawSquare = function(p_context, p_xSpace, p_ySpace, p_item) {
 	p_context.lineTo(pixRight, pixUp);
 	p_context.stroke();
 	p_context.fill();
+}
+
+// Draw li'l shapes
+
+Drawer.prototype.drawLittleRoundUpperRight = function(p_context, p_xSpace, p_ySpace, p_item) {
+	p_context.beginPath();
+	const radius = this.pix.sideSpace / 6;
+	const pixXCenter = this.getPixXRight(p_xSpace) - 1 - radius;
+	const pixYCenter = this.getPixYUp(p_ySpace) + 1 + radius;
+	p_context.beginPath();
+	p_context.ellipse(pixXCenter, pixYCenter, radius, radius, 0, 0, 2 * Math.PI);
+	p_context.stroke();
+}
+
+Drawer.prototype.drawLittlePlusUpperRight = function(p_context, p_xSpace, p_ySpace, p_item) {
+	p_context.beginPath();
+	const radius = this.pix.sideSpace / 6;
+	const pixXCenter = this.getPixXRight(p_xSpace) - 1 - radius;
+	const pixYCenter = this.getPixYUp(p_ySpace) + 1 + radius;
+	p_context.moveTo(pixXCenter, pixYCenter - radius);
+	p_context.lineTo(pixXCenter, pixYCenter + radius);
+	p_context.moveTo(pixXCenter - radius, pixYCenter);
+	p_context.lineTo(pixXCenter + radius, pixYCenter);
+	p_context.stroke();
 }
 
 // ------------------
