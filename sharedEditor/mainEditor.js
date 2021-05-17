@@ -2,6 +2,8 @@
 // All the main variables
 var drawer = new Drawer();
 var editorCore = new EditorCore(10, 10);
+var saveLoadMode = {}
+
 Object.keys(GRID_ID).forEach(id => {
 	editorCore.addCleanGrid(GRID_ID[id], 10, 10); //  See GRID_ID in EditorCore
 });
@@ -15,6 +17,8 @@ var modesManager = {
 };
 var actualFieldX;
 var actualFieldY;
+
+
 
 //The main draw function (at start)
 function drawCanvas() {
@@ -61,10 +65,10 @@ putActionElementClick("submit_rename_puzzle", function (event) {
     renameAction(puzzleName(), fieldName)
 });
 putActionElementClick("submit_save_grid", function (event) {
-    saveAction(editorCore, puzzleName(), fieldName.value, saveLoadModeId, {numberStars : parseInt(fieldStars.value, 10)}) 
+    saveAction(editorCore, puzzleName(), fieldName.value, saveLoadMode, {numberStars : parseInt(fieldStars.value, 10)}) 
 });
 putActionElementClick("submit_load_grid", function (event) {
-    editorLoadAction(canevas, drawer, editorCore, puzzleName(), fieldName.value, saveLoadModeId, {
+    editorLoadAction(canevas, drawer, editorCore, puzzleName(), fieldName.value, saveLoadMode, {
         xLengthField: actualFieldX,
         yLengthField: actualFieldY,
 		numberStarsField : fieldStars
@@ -79,7 +83,7 @@ putActionElementClick("submit_resize_grid", function (event) {
 });
 
 putActionElementClick("submit_rotate_clockwise", function (event) {
-    rotateCWAction(canevas, drawer, editorCore)
+    rotateCWAction(canevas, drawer, editorCore); // Not 100% sure
 });
 putActionElementClick("submit_rotate_uturn", function (event) {
     rotateUTurnAction(canevas, drawer, editorCore)
@@ -106,12 +110,19 @@ putActionElementClick("submit_move_selection", function (event) {
 putActionElementClick("submit_copy_selection", function (event) {
     actionCopySelection(editorCore, parseInt(fieldXMove.value, 10), parseInt(fieldYMove.value, 10));
 });
+putActionElementClick("submit_clear_spaces_selection", function (event) {
+    actionClearContentsSelection(editorCore);
+});
 
+// Widgets whose states can change + setup
 function combo(p_docElt) {
-	comboChange(p_docElt, canevas, drawer, editorCore);
+	comboChange(p_docElt, canevas, drawer, editorCore, saveLoadMode);
 }
-
 combo(document.getElementById('select_puzzle_type')); //TODO c'est comme ça que ça se passe au démarrage, j'espère que c'est chargé. On peut le mettre directement sur la combobox ? Mais ce serait peut-être un peu lourd pour le mélange fond/forme, non ?
+function checkboxTransparencyChange(p_checkbox) {
+	editorCore.setTransparencyState(p_checkbox.checked);
+}
+checkboxTransparencyChange(document.getElementById('checkbox_transparency_empty_spaces'));
 
 /**
 Matches true if puzzle is square-shaped. 

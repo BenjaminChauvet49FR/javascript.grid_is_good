@@ -64,19 +64,18 @@
 		<input type="submit" id="submit_clear_selection" value="Annuler sélection"></input>
 		<input type="submit" id="submit_move_selection" value="Déplacer sélection"></input>
 		<input type="submit" id="submit_copy_selection" value="Copier sélection"></input>
+		<input type="submit" id="submit_clear_spaces_selection" value="Effacer sélection"></input>
 		Dépl. X : <input type="number" id="input_number_xMove" value="0"></input>
-		Dépl. Y : <input type="number" id="input_number_yMove" value="0"></input> 
-
-		</br>
-		</br>
-		Etoiles par RLC : <input type="number" id="input_number_stars" value="10"></input> </br>
-		</br>
-
+		Dépl. Y : <input type="number" id="input_number_yMove" value="0"></input> </br>
+		Transformer sélection / grille : 
 		<input type="submit" id="submit_rotate_clockwise" value="Rotation sens horaire"></input>
 		<input type="submit" id="submit_rotate_uturn" value="Rotation 180°"></input>
 		<input type="submit" id="submit_rotate_counter_clockwise" value="Rotation sens anti-horaire"></input>
 		<input type="submit" id="submit_mirror_horizontal" value="Réflexion horizontale"></input>
 		<input type="submit" id="submit_mirror_vertical" value="Réflexion verticale"></input></br>
+		<input type="checkbox" id="checkbox_transparency_empty_spaces" onChange="checkboxTransparencyChange(this)"></input>Cases vides transparentes pour transformations et déplacements</br>
+		Autres : </br>
+		Etoiles par RLC : <input type="number" id="input_number_stars" value="10"></input> </br>
 
 		<script src="../Directions.js"></script>
 		<script src="../DirectionFunctions.js"></script>

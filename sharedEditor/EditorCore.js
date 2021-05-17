@@ -32,6 +32,7 @@ function EditorCore(p_xLength, p_yLength, p_parameters) {
     this.isWithWalls = (!p_parameters || !p_parameters.hasWalls || (p_parameters.hasWalls != false));
 	this.resetMargins(); 
 	this.inputSybol = null;
+	this.nullIsTransparent = false;
 }
 
 /**
@@ -91,7 +92,6 @@ EditorCore.prototype.initializeGridData = function() {
 // NB : fonction de convénience. //TODO devrait être renommé "extra grid data" puisque ce sont des données indépendantes des grilles
 EditorCore.prototype.reinitializeGridData = function() {
 	this.regionArray = null;
-    this.isRegionGridValid = true;
     this.selectedCornerSpace = null;
     this.selectedArray = null;
 	this.resetSelection();
@@ -217,6 +217,9 @@ EditorCore.prototype.getPromptValue = function () {
 EditorCore.prototype.setPromptValue = function (p_promptValue) {
     this.promptValue = p_promptValue
 }
+EditorCore.prototype.setTransparencyState = function (p_nullIsTransparent) {
+	this.nullIsTransparent = p_nullIsTransparent;
+}
 
 
 EditorCore.prototype.getWallR = function (p_x, p_y) {
@@ -255,8 +258,12 @@ EditorCore.prototype.set = function (p_idGrid, p_x, p_y, p_value) {
     this.grids[p_idGrid].set(p_x, p_y, p_value);
 }
 
-EditorCore.prototype.clear = function (p_idGrid, p_x, p_y) {
-    this.grids[p_idGrid].clear(p_x, p_y);
+EditorCore.prototype.clearSpaceContents = function (p_x, p_y) {
+	Object.keys(GRID_ID).forEach(id => {
+		if (this.visibleGrids[GRID_ID[id]]) {
+			this.set(GRID_ID[id], p_x, p_y, null);
+		}
+	});
 }
 
 EditorCore.prototype.getXLength = function () {
@@ -294,16 +301,80 @@ EditorCore.prototype.setMarginArray = function(p_edge, p_array) {
 // --------------------
 // Grid transformations
 
-
+// If no spaces are selected, transform everything.
+// If some spaces are selected, do not touch wall grid + transform locally all spaces. 
+// IMPORTANT : this.selectionData should be up to date !
 EditorCore.prototype.transformGrid = function (p_transformation, p_xDatum, p_yDatum) {
 	this.reinitializeGridData();
-	this.wallGrid.transform(p_transformation, p_xDatum, p_yDatum);
-	this.xLength = this.wallGrid.getXLength();
-	this.yLength = this.wallGrid.getYLength();
-	for (const id in this.grids) {
-		this.grids[id].transform(p_transformation, p_xDatum, p_yDatum);
+	const formerXLength = this.xLength;
+	const formerYLength = this.yLength;
+	if (this.selectionData.list.length == 0 || p_transformation == GRID_TRANSFORMATION.RESIZE) { // Global
+		this.wallGrid.transform(p_transformation, p_xDatum, p_yDatum);
+		this.xLength = this.wallGrid.getXLength();
+		this.yLength = this.wallGrid.getYLength();
+		for (const id in this.grids) {
+			this.grids[id].transform(p_transformation, p_xDatum, p_yDatum, isOrientedGrid(id));
+		}
+		this.transformMargins(p_transformation, formerXLength, formerYLength);
+	} else { // Local
+		for (const id in this.grids) {
+			this.grids[id].transformLocal(p_transformation, this.selectionData.list, 
+			(this.selectionData.xMin+this.selectionData.xMax)/2, 
+			(this.selectionData.yMin+this.selectionData.yMax)/2, isOrientedGrid(id));
+		}
 	}
 	this.resetSelection();
+}
+
+EditorCore.prototype.transformMargins = function(p_transformation, p_formerXLength, p_formerYLength) {
+	if (this.getMarginRightLength() == 0) {
+		this.margins[EDGES.RIGHT] = this.margins[EDGES.LEFT].slice();
+	}
+	if (this.getMarginDownLength() == 0) {
+		this.margins[EDGES.DOWN] = this.margins[EDGES.UP].slice(); // Note : mind the use of slice
+	}
+	switch(p_transformation) {
+		case GRID_TRANSFORMATION.ROTATE_CW :
+			this.replacementMarginsCycle([EDGES.LEFT, EDGES.UP, EDGES.RIGHT, EDGES.DOWN]);
+			this.margins[EDGES.UP].reverse();
+			this.margins[EDGES.DOWN].reverse(); break;
+		case GRID_TRANSFORMATION.ROTATE_CCW :
+			this.replacementMarginsCycle([EDGES.LEFT, EDGES.DOWN, EDGES.RIGHT, EDGES.UP]);
+			this.margins[EDGES.LEFT].reverse();
+			this.margins[EDGES.RIGHT].reverse(); break;
+		case GRID_TRANSFORMATION.ROTATE_UTURN :
+			this.replacementMarginsCycle([EDGES.UP, EDGES.DOWN]);
+			this.replacementMarginsCycle([EDGES.LEFT, EDGES.RIGHT]);
+			Object.keys(EDGES).forEach(dir => {
+				this.margins[EDGES[dir]].reverse();
+			}); break;
+		case GRID_TRANSFORMATION.MIRROR_VERTICAL :
+			this.replacementMarginsCycle([EDGES.UP, EDGES.DOWN]);
+			this.margins[EDGES.LEFT].reverse();
+			this.margins[EDGES.RIGHT].reverse(); break;
+		case GRID_TRANSFORMATION.MIRROR_HORIZONTAL : 
+			this.replacementMarginsCycle([EDGES.LEFT, EDGES.RIGHT]);
+			this.margins[EDGES.UP].reverse();
+			this.margins[EDGES.DOWN].reverse(); break;
+		case GRID_TRANSFORMATION.RESIZE : 
+			// New grid larger than previous ones ? Margins need to be extended as well.
+			for (var x = p_formerXLength ; x < this.xLength ; x++) {
+				this.margins[EDGES.UP].push(null); // Note : default values for margins are supposed to be null
+				this.margins[EDGES.DOWN].push(null);
+			}
+			for (var y = p_formerYLength ; y < this.yLength ; y++) {
+				this.margins[EDGES.LEFT].push(null);
+				this.margins[EDGES.RIGHT].push(null);
+			}
+	}
+}
+
+EditorCore.prototype.replacementMarginsCycle = function(p_edgesOrder) { // Note : margins are not "oriented" yet, but it may change soon... well, someday I'll make such a solver.
+	var tmp = this.margins[p_edgesOrder[p_edgesOrder.length - 1]].slice();
+	for (var i = p_edgesOrder.length-2 ; i >= 0 ; i--) {
+		this.margins[p_edgesOrder[i+1]] = this.margins[p_edgesOrder[i]].slice(); // Note : mind the use of slice
+	}
+	this.margins[p_edgesOrder[0]] = tmp;
 }
 
 //-------------------------------------------
@@ -390,8 +461,40 @@ EditorCore.prototype.setAppropriatePlace = function (p_destinationKind, p_destin
 //-------------------------------------------
 // Selections 
 
+EditorCore.prototype.updateSelectionData = function() {
+	var xMin = this.xLength;
+	var yMin = this.yLength;
+	var xMax = -1;
+	var yMax = -1;
+	listCoors = [];
+	for (var iy = 0 ; iy < this.yLength ; iy++) {
+		for (var ix = 0 ; ix < this.xLength ; ix++) {
+			if (this.selectedArray[iy][ix] == SELECTED.YES) {
+				xMin = Math.min(ix, xMin);
+				xMax = Math.max(ix, xMax);
+				yMin = Math.min(iy, yMin);
+				yMax = iy;
+				listCoors.push({x : ix, y : iy});
+			}
+		}
+	}
+	this.selectionData = {list : listCoors, xMin : xMin, xMax : xMax, yMin : yMin, yMax : yMax}
+}
+
+// Note : for getters about selection not about the spaces themselves, 'selection data' must have been updated !
+EditorCore.prototype.getNumberSelectedSpaces = function() {
+	return listCoors.length;
+}
+
+EditorCore.prototype.getXMinSelected = function() {return this.selectionData.xMin;}
+EditorCore.prototype.getXMaxSelected = function() {return this.selectionData.xMax;}
+EditorCore.prototype.getYMinSelected = function() {return this.selectionData.yMin;}
+EditorCore.prototype.getYMaxSelected = function() {return this.selectionData.yMax;}
+
+
+
 EditorCore.prototype.switchSelectedSpace = function (p_x, p_y) {
-    if (this.selectedArray[p_y][p_x] == SELECTED.YES){
+    if (this.selectedArray[p_y][p_x] == SELECTED.YES) {
 		this.selectedArray[p_y][p_x] = SELECTED.NO;
 		return;
 	}
@@ -491,7 +594,7 @@ EditorCore.prototype.countSpacesSelection = function() {
 	return answer;
 }
 
-EditorCore.prototype.moveCopySelection = function(p_deltaX, p_deltaY, p_move) {
+EditorCore.prototype.moveCopySelection = function(p_deltaX, p_deltaY, p_move, p_transparencyNull) { // 551551 traquer ça 
 	const progressX = p_deltaX >= 0 ? -1 : 1;
 	const startX = p_deltaX >= 0 ? this.getXLength()-1 : 0;
 	const overEndX = p_deltaX >= 0 ? -1 : this.getXLength();
@@ -500,12 +603,12 @@ EditorCore.prototype.moveCopySelection = function(p_deltaX, p_deltaY, p_move) {
 	const overEndY = p_deltaY >= 0 ? -1 : this.getYLength();
 	for (var y = startY ; y != overEndY ; y += progressY) {
 		for (var x = startX ; x != overEndX ; x += progressX) {
-			this.moveCopySpace(x, y, p_deltaX, p_deltaY, p_move);
+			this.moveCopySpace(x, y, p_deltaX, p_deltaY, p_move, p_transparencyNull);
 		}
 	}
 }
 
-EditorCore.prototype.moveCopySpace = function(p_x, p_y, p_deltaX, p_deltaY, p_move) {
+EditorCore.prototype.moveCopySpace = function(p_x, p_y, p_deltaX, p_deltaY, p_move, p_transparencyNull) {
 	const xDest = p_x + p_deltaX;
 	const yDest = p_y + p_deltaY;
 	if (this.selectedArray[p_y][p_x]) { 
@@ -517,23 +620,23 @@ EditorCore.prototype.moveCopySpace = function(p_x, p_y, p_deltaX, p_deltaY, p_mo
 						this.set(GRID_ID[id], p_x, p_y, null);
 					}
 				});
-				if (this.isWithWalls) {
+				/*if (this.isWithWalls) { // TODO : what to do with wall grids ?
 					this.setWallR(p_x, p_y, WALLGRID.OPEN);
 					this.setWallD(p_x, p_y, WALLGRID.OPEN);
 					this.setState(p_x, p_y, WALLGRID.OPEN);
-				}
+				}*/
 			}
 		} else {
 			this.selectedArray[yDest][xDest] = true;
 			Object.keys(GRID_ID).forEach(id => {
-				if (this.grids[GRID_ID[id]] && (this.get(GRID_ID[id], p_x, p_y) != null)) {
+				if (this.grids[GRID_ID[id]] && (!this.nullIsTransparent || (this.get(GRID_ID[id], p_x, p_y) != null))) {
 					this.set(GRID_ID[id], xDest, yDest, this.get(GRID_ID[id], p_x, p_y));
 					if (p_move) {
 						this.set(GRID_ID[id], p_x, p_y, null);
 					}
 				}
 			});
-			if (this.isWithWalls) {
+			/*if (this.isWithWalls) {
 				this.setWallR(xDest, yDest, this.getWallR(p_x, p_y));
 				this.setWallD(xDest, yDest, this.getWallD(p_x, p_y));
 				this.setState(xDest, yDest, this.getState(p_x, p_y));
@@ -542,9 +645,27 @@ EditorCore.prototype.moveCopySpace = function(p_x, p_y, p_deltaX, p_deltaY, p_mo
 					this.setWallD(p_x, p_y, WALLGRID.OPEN);
 					this.setState(p_x, p_y, WALLGRID.OPEN);
 				}
+			}*/
+		}
+	}
+}
+
+EditorCore.prototype.clearContentsSelection = function() {
+	for (var y = 0; y < this.getYLength(); y++) {
+        for (var x = 0; x < this.getXLength(); x++) {
+			if (this.selectedArray[y][x] == SELECTED.YES) {
+				this.clearSpaceContents(x, y);
 			}
 		}
 	}
+	this.resetSelection();
+}
+
+//-------------------------------------------
+// Parameters for grids
+
+function isOrientedGrid(p_name) {
+	return (p_name == GRID_ID.YAJILIN_LIKE);
 }
 
 //-------------------------------------------

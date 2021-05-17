@@ -29,7 +29,10 @@ function main() {
 
 	const puzzleTypeName = "SternenSchlacht";
 	putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("SternenSchlacht")});
-	putActionElementClick("submit_load_grid",function(event){loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value)});
+	putActionElementClick("submit_load_grid",function(event) {
+		loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value);
+		document.getElementById("span_stars").innerHTML = solver.numberStars;
+	});
 	putActionElementClick("submit_undo",function(event){undoAction(solver)});
 	putActionElementClick("submit_quickStart",function(event){quickStartAction(solver)});
 	putActionElementClick("submit_multiPass",function(event){multiPassAction(solver)});

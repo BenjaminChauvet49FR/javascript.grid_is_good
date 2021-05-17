@@ -35,6 +35,7 @@ function DummySolver() {
 
 SolverStarBattle.prototype.construct = function(p_wallArray, p_starNumber) { 
 	this.generalConstruct();
+	this.numberStars = p_starNumber;
 	this.answerArray = [];
 	this.notPlacedYet = {regions:[], rows:[], columns:[]};
 	this.happenedEventsSeries = [];	

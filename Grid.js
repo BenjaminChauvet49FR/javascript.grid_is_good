@@ -99,26 +99,26 @@ Grid.prototype.getYLength = function() {
 	return this.yLength;
 }
 
-Grid.prototype.transform = function(p_transformation, p_xDatum, p_yDatum) {
+Grid.prototype.transform = function(p_transformation, p_xDatum, p_yDatum, p_orientedSpaces) {
 	switch (p_transformation) {
-		case GRID_TRANSFORMATION.ROTATE_CW : this.rotateCWGrid(); break;
-		case GRID_TRANSFORMATION.ROTATE_CCW : this.rotateCCWGrid(); break;
-		case GRID_TRANSFORMATION.ROTATE_UTURN : this.rotateUTurnGrid(); break;
-		case GRID_TRANSFORMATION.MIRROR_HORIZONTAL : this.mirrorHorizontalGrid(); break;
-		case GRID_TRANSFORMATION.MIRROR_VERTICAL : this.mirrorVerticalGrid(); break;
+		case GRID_TRANSFORMATION.ROTATE_CW : this.rotateCWGrid(p_orientedSpaces); break;
+		case GRID_TRANSFORMATION.ROTATE_CCW : this.rotateCCWGrid(p_orientedSpaces); break;
+		case GRID_TRANSFORMATION.ROTATE_UTURN : this.rotateUTurnGrid(p_orientedSpaces); break;
+		case GRID_TRANSFORMATION.MIRROR_HORIZONTAL : this.mirrorHorizontalGrid(p_orientedSpaces); break;
+		case GRID_TRANSFORMATION.MIRROR_VERTICAL : this.mirrorVerticalGrid(p_orientedSpaces); break;
 		case GRID_TRANSFORMATION.RESIZE : this.resizeGrid(p_xDatum, p_yDatum); break;
 	}
 }
 
-
-Grid.prototype.rotateCWGrid = function () {
+Grid.prototype.rotateCWGrid = function (p_orientedSpaces) {
     var newArray = [];
     var newWallR;
     var newWallD;
     for (var iy = 0; iy < this.xLength; iy++) {
         newArray.push([]);
         for (var ix = 0; ix < this.yLength; ix++) {
-            newArray[iy].push(this.get(iy, this.yLength - 1 - ix));
+			const value = this.get(iy, this.yLength - 1 - ix);
+            newArray[iy].push(p_orientedSpaces ? rotateCWString(value) : value);
         }
     }
     this.array = newArray;
@@ -127,23 +127,25 @@ Grid.prototype.rotateCWGrid = function () {
     this.yLength = saveXLength;
 }
 
-Grid.prototype.rotateUTurnGrid = function () {
+Grid.prototype.rotateUTurnGrid = function (p_orientedSpaces) {
     var newArray = [];
     for (var iy = 0; iy < this.yLength; iy++) {
         newArray.push([]);
         for (var ix = 0; ix < this.xLength; ix++) {
-            newArray[iy].push(this.get(this.xLength - 1 - ix, this.yLength - 1 - iy));
+			const value = this.get(this.xLength - 1 - ix, this.yLength - 1 - iy);
+            newArray[iy].push(p_orientedSpaces ? rotateUTurnString(value) : value);
         }
     }
     this.array = newArray;
 }
 
-Grid.prototype.rotateCCWGrid = function () {
+Grid.prototype.rotateCCWGrid = function (p_orientedSpaces) {
     var newArray = [];
     for (var iy = 0; iy < this.xLength; iy++) {
         newArray.push([]);
         for (var ix = 0; ix < this.yLength; ix++) {
-            newArray[iy].push(this.get(this.xLength - 1 - iy, ix));
+			const value = this.get(this.xLength - 1 - iy, ix);
+            newArray[iy].push(p_orientedSpaces ? rotateCCWString(value) : value);
         }
     }
     this.array = newArray;
@@ -152,23 +154,25 @@ Grid.prototype.rotateCCWGrid = function () {
     this.yLength = saveXLength;
 }
 
-Grid.prototype.mirrorHorizontalGrid = function () {
+Grid.prototype.mirrorHorizontalGrid = function (p_orientedSpaces) {
     var newArray = [];
     for (var iy = 0; iy < this.yLength; iy++) {
         newArray.push([]);
         for (var ix = 0; ix < this.xLength; ix++) {
-            newArray[iy].push(this.get(this.xLength - 1 - ix, iy));
+			const value = this.get(this.xLength - 1 - ix, iy)
+            newArray[iy].push(p_orientedSpaces ? mirrorHorizontalString(value) : value);
         }
     }
     this.array = newArray;
 }
 
-Grid.prototype.mirrorVerticalGrid = function () {
+Grid.prototype.mirrorVerticalGrid = function (p_orientedSpaces) {
     var newArray = [];
     for (var iy = 0; iy < this.yLength; iy++) {
         newArray.push([]);
         for (var ix = 0; ix < this.xLength; ix++) {
-            newArray[iy].push(this.get(ix, this.yLength - 1 - iy));
+			const value = this.get(ix, this.yLength - 1 - iy);
+            newArray[iy].push(p_orientedSpaces ? mirrorVerticalString(value) : value);
         }
     }
     this.array = newArray;
@@ -191,6 +195,118 @@ Grid.prototype.resizeGrid = function (p_xLength, p_yLength) {
     this.array = newArray;
     this.xLength = p_xLength;
     this.yLength = p_yLength;
+}
+
+// Now, local transformations !
+Grid.prototype.transformLocal = function(p_transformation, p_coorsList, p_xMid, p_yMid, p_orientedSpaces) {
+	var newList;
+	switch (p_transformation) {
+		case GRID_TRANSFORMATION.ROTATE_CW : newList = this.listSpacesRotateCW(p_coorsList, p_xMid, p_yMid, p_orientedSpaces); break;
+		case GRID_TRANSFORMATION.ROTATE_CCW : newList = this.listSpacesRotateCCW(p_coorsList, p_xMid, p_yMid, p_orientedSpaces); break;
+		case GRID_TRANSFORMATION.ROTATE_UTURN : newList = this.listSpacesRotateUturn(p_coorsList, p_xMid, p_yMid, p_orientedSpaces); break;
+		case GRID_TRANSFORMATION.MIRROR_HORIZONTAL : newList = this.listSpacesMirrorHorizontal(p_coorsList, p_xMid, p_orientedSpaces); break;
+		case GRID_TRANSFORMATION.MIRROR_VERTICAL : newList = this.listSpacesMirrorVertical(p_coorsList, p_yMid, p_orientedSpaces); break;
+	}
+	p_coorsList.forEach(coors => {
+		this.array[coors.y][coors.x] = null;
+	});
+	newList.forEach(coorsVal => {
+		this.array[coorsVal.y][coorsVal.x] = coorsVal.value;
+	});
+}
+
+Grid.prototype.listSpacesRotateCW = function(p_coors, p_xMiddle, p_yMiddle, p_isOriented) {
+	var newList = [];
+	var x, y, val;
+	p_coors.forEach(coors => {
+		x = coors.x;
+		y = coors.y;
+		val = p_isOriented ? rotateCWString(this.array[y][x]) : this.array[y][x];
+		newList.push({x : p_xMiddle - (y - p_yMiddle), y : p_yMiddle + (x - p_xMiddle), value : val}); // Superfluous parentheses but it makes reading easier
+	});
+	return newList
+}
+
+Grid.prototype.listSpacesRotateCCW = function(p_coors, p_xMiddle, p_yMiddle, p_isOriented) {
+	var newList = [];
+	var x, y, val;
+	p_coors.forEach(coors => {
+		x = coors.x;
+		y = coors.y;
+		val = p_isOriented ? rotateCWString(this.array[y][x]) : this.array[y][x];
+		newList.push({x : p_xMiddle + (y - p_yMiddle), y : p_yMiddle - (x - p_xMiddle), value : val}); // Superfluous parentheses but it makes reading easier
+	});
+	return newList
+}
+
+Grid.prototype.listSpacesRotateUturn = function(p_coors, p_xMiddle, p_yMiddle, p_isOriented) {
+	var newList = [];
+	var x, y, val;
+	p_coors.forEach(coors => {
+		x = coors.x;
+		y = coors.y;
+		val = p_isOriented ? rotateUTurnString(this.array[y][x]) : this.array[y][x];
+		newList.push({x : p_xMiddle*2-x, y : p_yMiddle*2-y, value : val});
+	});
+	return newList
+}
+
+Grid.prototype.listSpacesMirrorHorizontal = function(p_coors, p_xMiddle, p_isOriented) {
+	var newList = [];
+	var x, y, val;
+	p_coors.forEach(coors => {
+		x = coors.x;
+		y = coors.y;
+		val = p_isOriented ? mirrorHorizontalString(this.array[y][x]) : this.array[y][x];
+		newList.push({x : p_xMiddle*2-x, y : y, value : val});
+	});
+	return newList
+}
+
+Grid.prototype.listSpacesMirrorVertical = function(p_coors, p_yMiddle, p_isOriented) {
+	var newList = [];
+	var x, y, val;
+	p_coors.forEach(coors => {
+		x = coors.x;
+		y = coors.y;
+		val = p_isOriented ? mirrorVerticalString(this.array[y][x]) : this.array[y][x];
+		newList.push({x : x, y : p_yMiddle*2-y, value : val});
+	});
+	return newList
+}
+
+// Important to symbolize the directions. Not linked to the main 'directions' since it is for pure array representation.
+// Directions in strings MUST BE 'L' 'U' 'R' 'D' ; strings MUST NOT CONTAIN '%'
+
+function replacementCycle(p_string, p_array) {
+	if (p_string == null) {
+		return null;
+	}
+	var answer = p_string.replace(p_array[p_array.length-1], "%");
+	for (var i = p_array.length-2 ; i >= 0 ; i--) {
+		answer = answer.replace(p_array[i], p_array[i+1]);
+	}
+	return answer.replace("%", p_array[0]);
+}
+
+function rotateCWString(p_string) {
+	return replacementCycle(p_string, ["L", "U", "R", "D"]);
+}
+
+function rotateCCWString(p_string) {
+	return replacementCycle(p_string, ["L", "D", "R", "U"]);
+}
+
+function mirrorHorizontalString(p_string) {
+	return replacementCycle(p_string, ["L", "R"]);
+}
+
+function mirrorVerticalString(p_string) {
+	return replacementCycle(p_string, ["U", "D"]);
+}
+
+function rotateUTurnString(p_string) {
+	return mirrorHorizontalString(mirrorVerticalString(p_string));
 }
 
 //---------------------

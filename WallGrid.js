@@ -245,23 +245,18 @@ WallGrid.prototype.getState = function (p_x, p_y) {
 }
 WallGrid.prototype.setWallR = function (p_x, p_y, p_state) {
     this.array[p_y][p_x].wallR = p_state;
-    this.isRegionGridValid = false;
 }
 WallGrid.prototype.setWallD = function (p_x, p_y, p_state) {
     this.array[p_y][p_x].wallD = p_state;
-    this.isRegionGridValid = false;
 }
 WallGrid.prototype.setWallU = function (p_x, p_y, p_state) {
     this.array[p_y - 1][p_x].wallD = p_state;
-    this.isRegionGridValid = false;
 }
 WallGrid.prototype.setWallL = function (p_x, p_y, p_state) {
     this.array[p_y][p_x - 1].wallR = p_state;
-    this.isRegionGridValid = false;
 }
 WallGrid.prototype.setState = function (p_x, p_y, p_state) {
     this.array[p_y][p_x].state = p_state;
-    this.isRegionGridValid = false;
 }
 WallGrid.prototype.switchWallR = function (p_x, p_y) {
     this.setWallR(p_x, p_y, switchedState(this.getWallR(p_x, p_y)));
