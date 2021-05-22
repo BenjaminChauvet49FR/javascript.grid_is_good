@@ -40,6 +40,7 @@ const ACTION_PUT_STITCH = {id:19, htmlCaption:"Placer point de couture"};
 const ACTION_BIND_STITCHES = {id:20, htmlCaption:"Déclarer liaison entre points"};
 const ACTION_NOT_BIND_STITCHES = {id:21, htmlCaption:"Non-liaison entre points"};
 const ACTION_PASS_BORDER = {id:22, htmlCaption:"Passer frontière"};
+const ACTION_PASS_AROUND_SPACES = {id:22, htmlCaption:"Passer alentour case indice"};
 
 /**
 Getter of setter for a specific mode

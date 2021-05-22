@@ -64,6 +64,7 @@ menuSolvers.push({
 		{name : "curvingRoad", displayName : "Curving road"},
 		{name : "heyawake", displayName : "Heyawake"},
 		{name : "LITS", displayName : "LITS"},
+		{name : "Tapa", displayName : "Tapa"},
 		{name : "yajikabe", displayName : "Yajikabe"}
 	]
 });

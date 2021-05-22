@@ -31,6 +31,7 @@ function Drawer() {
 
 	this.colors = {
 		combinedArrowRingIndications : '#440000',
+		tapaIndications : '#000044',
 		marginText : '#440000'
 	}
 	this.wallColorSet = {
@@ -567,6 +568,53 @@ Drawer.prototype.drawNumbersInsideStandard = function(p_context, p_function, p_x
 				p_context.fillStyle = supposedValue.writeColour;
 				p_context.fillText(supposedValue.value, this.getPixCenterX(ix), this.getPixCenterY(iy));
 			} 
+		}
+	}
+}
+
+// Tapa
+Drawer.prototype.drawTapaGrid = function (p_context, p_tapaGrid) {
+	const yLength = p_tapaGrid.getYLength();
+	if (yLength > 0) {
+		const xLength = p_tapaGrid.getXLength();
+		var ix, iy, tapaClue;
+		const pixDeltaInnerX = 1/5*this.getPixInnerSide();
+		const pixDeltaInnerY = 1/4*this.getPixInnerSide();
+		p_context.fillStyle = this.colors.tapaIndications;
+		alignFontCenter(p_context);
+		p_context.fillStyle = "#000000";
+		for (iy = 0; iy < yLength; iy++) {
+			for (ix = 0; ix < xLength; ix++) {
+				tapaClue = p_tapaGrid.get(ix, iy);
+				if (tapaClue != null) {
+					if (tapaClue.length == 1) {
+						setupFont(p_context, this.getPixInnerSide()*4/5, "Arial");
+						pixArray = [{pixX : this.getPixCenterX(ix), pixY : this.getPixCenterY(iy)}];
+					}
+					if (tapaClue.length == 2) {
+						setupFont(p_context, this.getPixInnerSide()*1/2, "Arial");
+						pixArray = [{pixX : this.getPixCenterX(ix)-pixDeltaInnerX, pixY : this.getPixCenterY(iy)},
+									{pixX : this.getPixCenterX(ix)+pixDeltaInnerX, pixY : this.getPixCenterY(iy)}];
+					}
+					if (tapaClue.length == 3) {
+						setupFont(p_context, this.getPixInnerSide()*2/5, "Arial");
+						pixArray = [{pixX : this.getPixCenterX(ix), pixY : this.getPixCenterY(iy)-pixDeltaInnerY},
+									{pixX : this.getPixCenterX(ix)-pixDeltaInnerX, pixY : this.getPixCenterY(iy)+pixDeltaInnerY},
+									{pixX : this.getPixCenterX(ix)+pixDeltaInnerX, pixY : this.getPixCenterY(iy)+pixDeltaInnerY}];
+					}
+					if (tapaClue.length == 4) {
+						setupFont(p_context, this.getPixInnerSide()*2/5, "Arial");
+						pixArray = [{pixX : this.getPixCenterX(ix)-pixDeltaInnerX, pixY : this.getPixCenterY(iy)-pixDeltaInnerY},
+									{pixX : this.getPixCenterX(ix)+pixDeltaInnerX, pixY : this.getPixCenterY(iy)-pixDeltaInnerY},
+									{pixX : this.getPixCenterX(ix)-pixDeltaInnerX, pixY : this.getPixCenterY(iy)+pixDeltaInnerY},
+									{pixX : this.getPixCenterX(ix)+pixDeltaInnerX, pixY : this.getPixCenterY(iy)+pixDeltaInnerY}];
+					}
+					for(var i = 0 ; i < tapaClue.length ; i++) {
+						pixCoors = pixArray[i];
+						p_context.fillText(tapaClue.charAt(i), pixCoors.pixX, pixCoors.pixY);
+					};
+				}
+			}
 		}
 	}
 }

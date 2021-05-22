@@ -89,6 +89,15 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			validityTokenMethod : validityTokenYajilin,
 			parameters : {emptySpaceChar : "<", isMonoChar : false}
 		}		
+	} else if (p_editorCore.isVisibleGrid(GRID_ID.TAPA)) {
+		return {
+			descriptionPrompt : "Entrer suite de combinaisons de chiffres (au plus quatre chiffres) ou '?' pouvant correspondre à un indice valide de Tapa",
+			descriptionPromptMono : "Entrer combinaison de chiffres (au plus quatre chiffres) ou '?' pouvant correspondre à un indice valide de Tapa",
+			defaultToken : "21?",
+			gridId : GRID_ID.TAPA,
+			validityTokenMethod : validityTokenTapa,
+			parameters : {emptySpaceChar : "<", isMonoChar : false}
+		}		
 	}
 }
 
@@ -205,6 +214,34 @@ validityTokenYajilin = function(p_clue) {
 		return ((p_clue.length > 1) && !isNaN(p_clue.substring(1)));
 	}
 	return false;
+}
+
+validityTokenTapa = function(p_clue) {
+	// Check if clue contains valid characters
+	var c;
+	var arrayChars = [];
+	for (var i = 0 ; i < p_clue.length ; i++) {
+		c = p_clue.charAt(i);
+		if (c != '?' && (c < '0' || c > '8')) {
+			return false;
+		} 
+		//arrayChars.push(c);
+	}
+	var clue = sortedTapaClueString(p_clue);
+	// Reorder clue
+	/*arrayChars.sort(function(a, b) { 
+		if (a == b) return 0;
+		if (a == "?") return 1;
+		if (b == "?") return -1;
+		if (a < b) return 1;
+		if (a > b) return -1;
+		return 0;
+	});
+	clue = "";
+	arrayChars.forEach(c => {
+		clue += c;
+	});*/
+	return (indexTapaCombination(clue) != TAPA_INDEX_NOT_FOUND);
 }
 
 //------------------------
@@ -406,6 +443,7 @@ const PUZZLES_KIND = {
 	REGIONS_NUMBERS : {id:6},
 	NUMBERS_X_ONLY : {id:7},
 	YAJILIN_LIKE : {id:8},
+	TAPA : {id:9},
 	WALLS_ONLY_ONE_NUMBER_LEFT_UP : {id:9},
 	STAR_BATTLE : {id:1001, squareGrid : true},
 	GRAND_TOUR : {id:99102},
@@ -445,6 +483,9 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
             puzzleToSaveString = puzzleNumbersSymbolsToString(p_editorCore.getArray(GRID_ID.DIGIT_X_SPACE), ["X"]);
         } else if (p_saveLoadMode.id == PUZZLES_KIND.YAJILIN_LIKE.id) {
             puzzleToSaveString = arrowNumberCombinationsPuzzleToString(p_editorCore.getArray(GRID_ID.YAJILIN_LIKE));
+        } else if (p_saveLoadMode.id == PUZZLES_KIND.TAPA.id) {
+            sortTapaCluesInGrid(p_editorCore.getArray(GRID_ID.TAPA)); 
+            puzzleToSaveString = tapaPuzzleToString(p_editorCore.getArray(GRID_ID.TAPA)); 
         } else if (p_saveLoadMode.id == PUZZLES_KIND.REGIONS_NUMBERS.id) {
 			puzzleToSaveString = wallsNumbersPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_SPACE));
 		} else if (p_saveLoadMode.id == PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS.id) {
@@ -497,6 +538,11 @@ function getLoadedStuff(p_kindId, p_localStorageName) { // Not the load action !
 			var loadedItem = stringToRegionsNumericIndicationsPuzzle(localStorage.getItem(p_localStorageName));
 			loadedItem.desiredIDs = [GRID_ID.NUMBER_REGION];
 			loadedItem.desiredArrays = [getRegionIndicArray(loadedItem)];
+			return loadedItem; break;
+		case PUZZLES_KIND.TAPA.id :
+			var loadedItem = stringToTapaPuzzle(localStorage.getItem(p_localStorageName)); 
+			loadedItem.desiredIDs = [GRID_ID.TAPA];
+			loadedItem.desiredArrays = [loadedItem.combinationsArray];
 			return loadedItem; break;
 		case PUZZLES_KIND.WALLS_ONLY_ONE_NUMBER_LEFT_UP.id :
 			return stringToRegionsMarginOneLeftUpNumbersPuzzle(localStorage.getItem(p_localStorageName)); break;
@@ -620,6 +666,10 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.YAJILIN_LIKE.id;
 			p_editorCore.setVisibleGrids([GRID_ID.YAJILIN_LIKE]); break;
+		case 'Tapa': 
+			p_editorCore.setWallsOff();
+			saveLoadModeId = PUZZLES_KIND.TAPA.id;
+			p_editorCore.setVisibleGrids([GRID_ID.TAPA]); break;
 		case 'Stitches':
 			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY_ONE_NUMBER_LEFT_UP.id;
 			p_editorCore.setMarginInfo(MARGIN_KIND.NUMBERS_LEFT_UP);

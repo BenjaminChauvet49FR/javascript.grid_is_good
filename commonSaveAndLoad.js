@@ -385,7 +385,6 @@ function stringToArrowNumberCombinationsPuzzle(p_string) {
 }
 
 // ---------------
-
 // Region puzzle (classic) with one marginal puzzle a top and one marginal puzzle at left
 
 function regionsMarginOneLeftUpNumbersPuzzleToString(p_wallArray, p_edgeLeft, p_edgeUp) {
@@ -399,4 +398,44 @@ function stringToRegionsMarginOneLeftUpNumbersPuzzle(p_string) {
 	return {wallArray : string64toWallArray(tokens[1], dims.xLength, dims.yLength) , 
 			marginLeft : belt.left,
 			marginUp : belt.up};
+}
+
+// ---------------
+// Tapa 
+
+function tapaPuzzleToString(p_symbolsArray) {
+	var value;
+	var symbolArray;
+	var streamSpaces = new StreamEncodingSparseAny();
+	for (var y = 0 ; y < p_symbolsArray.length ; y++) {
+		for (var x = 0 ; x < p_symbolsArray[0].length ; x++) {
+			if (p_symbolsArray[y][x] == null) {
+				streamSpaces.encode(null);
+			} else {
+				streamSpaces.encode(indexTapaCombination(p_symbolsArray[y][x]));
+			}
+		}
+	}
+	return dimensionsToString(p_symbolsArray) + " " + streamSpaces.getString();
+}
+
+function stringToTapaPuzzle(p_string) {
+	const tokens = p_string.split(" ");
+	const dims = new stringToDimensions(tokens[0]);
+	const stream = new StreamDecodingSparseAny(tokens[1]);
+	var character;
+	var decode;
+	var array = [];
+	for (var y = 0; y < dims.yLength ; y++) {
+		array.push([]);
+		for (var x = 0 ; x < dims.xLength ; x++) {
+			decode = stream.decode();
+			if (decode == null || decode == END_OF_DECODING_STREAM) {
+				array[y].push(null);
+			} else {
+				array[y].push(TAPA_COMBINATIONS[decode]);
+			}
+		}
+	}
+	return {combinationsArray : array};
 }

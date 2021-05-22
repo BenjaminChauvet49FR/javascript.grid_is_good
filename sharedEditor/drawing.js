@@ -36,6 +36,9 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	if (p_editorCore.isVisibleGrid(GRID_ID.PEARL)) {
 		this.drawPearlGrid(p_context, p_editorCore.getGrid(GRID_ID.PEARL));
 	}
+	if (p_editorCore.isVisibleGrid(GRID_ID.TAPA)) {
+		this.drawTapaGrid(p_context, p_editorCore.getGrid(GRID_ID.TAPA));
+	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_SPACE)) {
 	    this.drawNumbersGrid(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_SPACE));
 	}
@@ -107,4 +110,6 @@ Drawer.prototype.drawPearlGrid = function (p_context, p_pearlGrid) {
 		}
 	}
 }
+
+
 
