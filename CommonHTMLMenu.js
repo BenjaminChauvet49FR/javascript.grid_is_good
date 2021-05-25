@@ -65,6 +65,7 @@ menuSolvers.push({
 		{name : "heyawake", displayName : "Heyawake"},
 		{name : "LITS", displayName : "LITS"},
 		{name : "Tapa", displayName : "Tapa"},
+		{name : "usoone", displayName : "Usoone"},
 		{name : "yajikabe", displayName : "Yajikabe"}
 	]
 });

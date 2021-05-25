@@ -18,8 +18,9 @@ function massConversionLocalStorageString(p_puzzleName) {
 			newName = name;
 			if (name.startsWith(baseString)) {
 				stringPuzzleOld = localStorage.getItem(name); 	// Copy-paste these lines into the if block of the for loop when ready
-				loadedItemOld = stringToLexicalSpacesPuzzle(stringPuzzleOld); // former (string -> puzzle) method
-				puzzleString = arrowNumberCombinationsPuzzleToString(loadedItemOld.valuesArray); // new (puzzle -> string) method (in order to save)
+				loadedItemOld = stringToNumbersOnlyPuzzle(stringPuzzleOld); // former (string -> puzzle) method
+				loadedItemOld.numberArray = numericToStringArray(loadedItemOld.numberArray); // Convert item if needed
+				puzzleString = puzzleNumbersSymbolsToString(loadedItemOld.numberArray, ["X"]); // new (puzzle -> string) method (in order to save)
 				localStorage.setItem(newName, puzzleString);
 			} 
 		}
@@ -28,12 +29,13 @@ function massConversionLocalStorageString(p_puzzleName) {
 	
 	// Isolated test (but what if the console runs in strict mode, with 'const' and 'var' items required here and there ? Well, is it even possible ?)
 	/*
-	name = "grid_is_good_Yajilin20"; // Name of a known puzzle
-	newName = "grid_is_good_Yajilin" // Name of a puzzle we are ready to overwrite
+	name = "grid_is_good_Koburin1"; // Name of a known puzzle
+	newName = "grid_is_good_KoburinDefault" // Name of a puzzle we are ready to overwrite
 
 	stringPuzzleOld = localStorage.getItem(name); 	// Copy-paste these lines into the if block of the for loop when ready
-	loadedItemOld = stringToLexicalSpacesPuzzle(stringPuzzleOld); // former (string -> puzzle) method
-	puzzleString = arrowNumberCombinationsPuzzleToString(loadedItemOld.valuesArray, loadedItemOld.numberArray); // new (puzzle -> string) method (in order to save)
+	loadedItemOld = stringToNumbersOnlyPuzzle(stringPuzzleOld); // former (string -> puzzle) method
+	loadedItemOld.numberArray = numericToStringArray(loadedItemOld.numberArray); // Convert item if needed
+	puzzleString = puzzleNumbersSymbolsToString(loadedItemOld.numberArray, ["X"]); // new (puzzle -> string) method (in order to save)
 	localStorage.setItem(newName, puzzleString);
 	*/
 	
@@ -104,3 +106,21 @@ function viewPuzzles(p_puzzleName) {
 		}
 	}
 }*/
+
+// Transforms all the numeric spaces of an array into string ones
+function numericToStringArray(p_array) {
+	var answer = [];
+	var val;
+	for (var iy = 0 ; iy < p_array.length ; iy ++) {
+		answer.push([]);
+		for (var ix = 0 ; ix < p_array[iy].length ; ix ++) {
+			val = p_array[iy][ix];
+			if (val != null) {
+				answer[iy].push("" + val);
+			} else {
+				answer[iy].push(null);
+			}
+		}
+	}
+	return answer;
+}

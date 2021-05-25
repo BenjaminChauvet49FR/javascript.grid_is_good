@@ -34,3 +34,12 @@ GeneralSolver.prototype.deductionsFillingRow = function(p_eventList, p_y, p_meth
 	}
 	return p_eventList;
 }
+
+GeneralSolver.prototype.deductionsFillingSurroundings = function(p_eventList, p_x, p_y, p_methodValueSpace, p_undecidedValue, p_methodEvent) {
+	this.existingNeighborsCoorsDirections(p_x, p_y).forEach(coorsDir => {
+		if (p_methodValueSpace(coorsDir.x, coorsDir.y) == p_undecidedValue) {
+			p_eventList.push(p_methodEvent(coorsDir.x, coorsDir.y, coorsDir.direction)); // Adds coorsDir
+		}
+	});
+	return p_eventList;
+}

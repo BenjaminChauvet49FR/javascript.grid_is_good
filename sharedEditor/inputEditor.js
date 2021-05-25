@@ -1,5 +1,15 @@
-// Clicks on the canvas 
+// A few setup :
 
+var inputOptions = {
+	forceMonoCharacter : false,
+	minNumber : 0,
+	maxNumber : null,
+	nonNumericStrings : []
+}
+
+// ------------------
+
+// Clicks on the canvas 
 function clickCanvas(event, p_canvas, p_drawer, p_editorCore, p_modes) {
     var doneClicking = false;
 	const p_xLength = p_editorCore.getXLength();
@@ -45,13 +55,15 @@ function clickCanvas(event, p_canvas, p_drawer, p_editorCore, p_modes) {
 // According to the "visible grid", returns elements for prompt 
 getPromptElementsFromVisibleGrid = function(p_editorCore) {
 	if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_SPACE)) {
+		const validityTokenMethod = (inputOptions.maxNumber != null || inputOptions.minNumber != null || inputOptions.nonNumericStrings == []) ? 
+		validityNumberRangeOrSymbolClosure(inputOptions.minNumber, inputOptions.maxNumber, inputOptions.nonNumericStrings) : validityTokenNumber;
 		return {
 			descriptionPrompt : "Entrer valeurs numériques >= 0",
 			descriptionPromptMono : "Entrer valeur numérique >= 0",
 			defaultToken : "1",
 			gridId : GRID_ID.NUMBER_SPACE,
-			validityTokenMethod : validityTokenNumber,
-			parameters : {emptySpaceChar : "<", isMonoChar : false, isNumeric : true}
+			validityTokenMethod : validityTokenMethod,
+			parameters : {emptySpaceChar : inputOptions.forceMonoCharacter ? " " : "<", isMonoChar : inputOptions.forceMonoCharacter, isNumeric : true}
 		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.DIGIT_X_SPACE)) {
 		return {
@@ -342,6 +354,7 @@ function resizeAction(p_canvas, p_drawer, p_editorCore, p_xLengthString, p_yLeng
 		p_yLengthString = p_xLengthString;
 	} 
 	if (confirm("Redimensionner la grille ?")) {
+		p_editorCore.updateSelectionData();
 		p_editorCore.transformGrid(GRID_TRANSFORMATION.RESIZE, parseInt(p_xLengthString, 10),  parseInt(p_yLengthString, 10));
 		adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);	
 	}
@@ -636,6 +649,12 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 	p_editorCore.setWallsOn();
 	p_editorCore.setMarginInfo(MARGIN_KIND.NONE);
 	p_editorCore.resetMargins();
+	// Default input options 
+	inputOptions.forceMonoCharacter = false;
+	inputOptions.minNumber = 0;
+	inputOptions.maxNumber = null;
+	inputOptions.nonNumericStrings = []; // Note : not useful yet !
+	
 	// Specific options
     switch (content) { // Should break be forgotten, following instructions are read... and saveLoadModeId is overset ! This was problematic with Stitches !
 		case 'CurvingRoad' : 
@@ -646,19 +665,24 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.MASYU.id;
 			p_editorCore.setVisibleGrids([GRID_ID.PEARL]); break;
-		case 'Koburin': case 'Usotatami':
+		case 'Usotatami':
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.NUMBERS_ONLY.id;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]); break;
 		case 'Chocona': case 'CountryRoad': case 'Detour': case 'Heyawake': case 'Shimaguni':
 			saveLoadModeId = PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS.id;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_REGION]); break;
-		case 'Hakyuu':
+		case 'Hakyuu': case 'Usoone':
 			saveLoadModeId = PUZZLES_KIND.REGIONS_NUMBERS.id;
-			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]); break;
+			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]); 
+			if (content == 'Usoone') {
+				inputOptions.forceMonoCharacter = true;
+				inputOptions.maxNumber = 4;
+			}
+			break; // Forgot break !!
 		case 'SternenSchlacht':
 			saveLoadModeId = PUZZLES_KIND.STAR_BATTLE.id; p_editorCore.maskAllGrids(); break;
-		case 'Akari': case 'Shugaku':
+		case 'Akari': case 'Koburin': case 'Shugaku':
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.NUMBERS_X_ONLY.id;
 			p_editorCore.setVisibleGrids([GRID_ID.DIGIT_X_SPACE]); break;

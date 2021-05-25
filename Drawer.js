@@ -339,12 +339,12 @@ Drawer.prototype.drawSpaceContents = function (p_context, p_drawableItems, p_fun
 					p_context.lineWidth = (item.thickness || item.thickness == 0) ? item.thickness : Math.max(1, this.getPixInnerSide()*1/16);
 					const radius = this.getPixInnerSide()*1/3;
 					p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
-					p_context.fillStyle = item.colorInner; //An item property was taken rather than a method. I think this is better this way.
-					if (p_context.fillStyle) {
+					if (item.colorInner && item.colorInner != null) { // Note : "p_context.fillStyle = X" seems not to change p_context.fillStyle when X is null.
+						p_context.fillStyle = item.colorInner; //An item property was taken rather than a method. I think this is better this way.
 						p_context.fill();
 					}
-					p_context.strokeStyle = item.colorBorder;
-					if (p_context.strokeStyle) {
+					if (item.colorBorder && item.colorBorder != null) {
+						p_context.strokeStyle = item.colorBorder;
 						p_context.stroke();
 					}
 				} else if (item.kind == KIND_DRAWABLE_ITEM.X) {

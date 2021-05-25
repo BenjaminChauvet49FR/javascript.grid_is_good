@@ -3,6 +3,7 @@ const ADJACENCY = {
     NO : 1,
     UNDECIDED : 0
 };
+const LabelAdjacency = ['-', 'X', 'O'];
 
 DIRECTION.HERE = 5;
 

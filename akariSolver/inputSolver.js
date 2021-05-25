@@ -52,7 +52,7 @@ Called by common save and load !
 */
 loadPuzzle = function(p_canvas, p_drawer, p_solver, p_loadedString) {
 	const loadedItem = stringToNumbersSymbolsPuzzle(p_loadedString, ["X"]);
-	p_solver.construct(loadedItem.numbersSymbolsArray, loadedItem.indications);
+	p_solver.construct(loadedItem.numbersSymbolsArray);
 	p_drawer.adaptCanvasDimensions(p_canvas, {xLength : p_solver.xLength , yLength : p_solver.yLength});
 }
 
