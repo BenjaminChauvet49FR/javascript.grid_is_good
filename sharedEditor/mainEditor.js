@@ -2,7 +2,7 @@
 // All the main variables
 var drawer = new Drawer();
 var editorCore = new EditorCore(10, 10);
-var saveLoadMode = {}
+var saveLoadMode = {}; // Used in inputEditor
 
 Object.keys(GRID_ID).forEach(id => {
 	editorCore.addCleanGrid(GRID_ID[id], 10, 10); //  See GRID_ID in EditorCore
@@ -15,10 +15,6 @@ var modesManager = {
     clickWallD: null,
     clickWallR: null
 };
-var actualFieldX;
-var actualFieldY;
-
-
 
 //The main draw function (at start)
 function drawCanvas() {
@@ -30,20 +26,18 @@ canevas.addEventListener('click', function (event) {
     clickCanvas(event, canevas, drawer, editorCore, modesManager)
 }, false);
 setInterval(drawCanvas, 30);
-
-const fieldX = document.getElementById("input_number_xLength");
-const fieldY = document.getElementById("input_number_yLength");
-const fieldXY = document.getElementById("input_number_xyLength");
 const fieldXMove = document.getElementById("input_number_xMove");
 const fieldYMove = document.getElementById("input_number_yMove");
 const fieldName = document.getElementById("input_grid_name");
 const puzzleTypeComboBox = document.getElementById("select_puzzle_type");
 
-const fieldStars = document.getElementById("input_number_stars");
 
-
-var actualFieldX = fieldX;
-var actualFieldY = fieldY;
+const fieldsDefiningPuzzle = {	
+	fieldStars : document.getElementById("input_number_stars"),
+	fieldX : document.getElementById("input_number_xLength"),
+	fieldY : document.getElementById("input_number_yLength"),
+	fieldXY : document.getElementById("input_number_xyLength")
+}
 
 adaptCanvasAndGrid(canevas, drawer, editorCore);
 
@@ -65,21 +59,21 @@ putActionElementClick("submit_rename_puzzle", function (event) {
     renameAction(puzzleName(), fieldName)
 });
 putActionElementClick("submit_save_grid", function (event) {
-    saveAction(editorCore, puzzleName(), fieldName.value, saveLoadMode, {numberStars : parseInt(fieldStars.value, 10)}) 
+    saveAction(editorCore, puzzleName(), fieldName.value, saveLoadMode, {numberStars : parseInt(fieldsDefiningPuzzle.fieldStars.value, 10)}) 
 });
 putActionElementClick("submit_load_grid", function (event) {
-    editorLoadAction(canevas, drawer, editorCore, puzzleName(), fieldName.value, saveLoadMode, {
-        xLengthField: actualFieldX,
-        yLengthField: actualFieldY,
+    editorLoadAction(canevas, drawer, editorCore, puzzleName(), fieldName.value, saveLoadMode, fieldsDefiningPuzzle/*{
+        xLengthField : actualFieldX,
+        yLengthField : actualFieldY,
 		numberStarsField : fieldStars
-    })
+    }*/)
 });
 
 putActionElementClick("submit_new_grid", function (event) {
-    restartAction(canevas, drawer, editorCore, actualFieldX.value, actualFieldY.value)
+    restartAction(canevas, drawer, editorCore, fieldsDefiningPuzzle/*actualFieldX.value, actualFieldY.value*/)
 });
 putActionElementClick("submit_resize_grid", function (event) {
-    resizeAction(canevas, drawer, editorCore, actualFieldX.value, actualFieldY.value)
+    resizeAction(canevas, drawer, editorCore, fieldsDefiningPuzzle/*actualFieldX.value, actualFieldY.value*/)
 });
 
 putActionElementClick("submit_rotate_clockwise", function (event) {
@@ -116,21 +110,13 @@ putActionElementClick("submit_clear_spaces_selection", function (event) {
 
 // Widgets whose states can change + setup
 function combo(p_docElt) {
-	comboChange(p_docElt, canevas, drawer, editorCore, saveLoadMode);
+	comboChange(p_docElt, canevas, drawer, editorCore, saveLoadMode, fieldsDefiningPuzzle);
 }
 combo(document.getElementById('select_puzzle_type')); //TODO c'est comme ça que ça se passe au démarrage, j'espère que c'est chargé. On peut le mettre directement sur la combobox ? Mais ce serait peut-être un peu lourd pour le mélange fond/forme, non ?
 function checkboxTransparencyChange(p_checkbox) {
 	editorCore.setTransparencyState(p_checkbox.checked);
 }
 checkboxTransparencyChange(document.getElementById('checkbox_transparency_empty_spaces'));
-
-/**
-Matches true if puzzle is square-shaped. 
-TODO obviously not the best way, obviously it only takes account of Star battle, but hey it's temporary !
-*/
-function correspondsToSquarePuzzle(p_id) {
-	return (p_id == PUZZLES_KIND.STAR_BATTLE.id);
-}
 
 //-------------------------
 // Mode of selection

@@ -367,6 +367,15 @@ EditorCore.prototype.transformMargins = function(p_transformation, p_formerXLeng
 				this.margins[EDGES.LEFT].push(null);
 				this.margins[EDGES.RIGHT].push(null);
 			}
+			// New grid smaller ? Remove previous elements !
+			for (var x = this.xLength ; x < p_formerXLength ; x++) {
+				this.margins[EDGES.UP].pop();
+				this.margins[EDGES.DOWN].pop();
+			}
+			for (var y = this.yLength ; y < p_formerYLength ; y++) {
+				this.margins[EDGES.LEFT].pop();
+				this.margins[EDGES.RIGHT].pop();
+			}
 	}
 }
 

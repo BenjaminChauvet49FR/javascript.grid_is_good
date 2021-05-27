@@ -267,9 +267,9 @@ p_editorCore : the Global item
 p_xLength : horizontal dimension
 p_yLength : vertical dimension
  */
-restartAction = function (p_canvas, p_drawer, p_editorCore, p_xLengthString, p_yLengthString) {
-	const xLength = parseInt(p_xLengthString, 10);
-	const yLength = parseInt(p_yLengthString, 10);
+restartAction = function (p_canvas, p_drawer, p_editorCore, p_fieldsDefiningPuzzle) {
+	const xLength = parseInt(getFieldX(p_fieldsDefiningPuzzle).value, 10);
+	const yLength = parseInt(getFieldY(p_fieldsDefiningPuzzle).value, 10);
     if (confirm("Redémarrer la grille ?")) {
         p_editorCore.restartGrid(xLength, yLength);
 		Object.keys(GRID_ID).forEach(id => {
@@ -349,13 +349,12 @@ function sepc(p_xMin, p_yMin, p_xMax, p_yMax) {
 	return sepm(p_xMin, p_xMax) + "," + sepm(p_yMin, p_yMax);
 }
 
-function resizeAction(p_canvas, p_drawer, p_editorCore, p_xLengthString, p_yLengthString) {
-	if (!p_yLengthString) {
-		p_yLengthString = p_xLengthString;
-	} 
+function resizeAction(p_canvas, p_drawer, p_editorCore, p_fieldsDefiningPuzzle) {
 	if (confirm("Redimensionner la grille ?")) {
+		const xLength = parseInt(getFieldX(p_fieldsDefiningPuzzle).value, 10);
+		const yLength = parseInt(getFieldY(p_fieldsDefiningPuzzle).value, 10);
 		p_editorCore.updateSelectionData();
-		p_editorCore.transformGrid(GRID_TRANSFORMATION.RESIZE, parseInt(p_xLengthString, 10),  parseInt(p_yLengthString, 10));
+		p_editorCore.transformGrid(GRID_TRANSFORMATION.RESIZE, xLength, yLength);
 		adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);	
 	}
 }
@@ -366,6 +365,38 @@ function resizeAction(p_canvas, p_drawer, p_editorCore, p_xLengthString, p_yLeng
 function applyChangesForSpaceMode(p_editorCore, p_mode) {
 	if ((p_mode.id != MODE_SELECTION.id) && (p_mode.id != MODE_SELECTION_RECTANGLE.id)) {
 		actionUnselectAll(p_editorCore);
+	}
+}
+
+// -----------------------
+// Misc functions 
+
+getFieldX = function(p_fieldsDefiningPuzzle) { // TODO déplacer ceci ! 551551
+	if (p_fieldsDefiningPuzzle.fieldXY.disabled) {
+		return p_fieldsDefiningPuzzle.fieldX;
+	} else {
+		return p_fieldsDefiningPuzzle.fieldXY;
+	}
+}
+
+getFieldY = function(p_fieldsDefiningPuzzle) {
+	if (p_fieldsDefiningPuzzle.fieldXY.disabled) {
+		return p_fieldsDefiningPuzzle.fieldY;
+	} else {
+		return p_fieldsDefiningPuzzle.fieldXY;
+	}
+}
+
+function correspondsToSquarePuzzle(p_puzzleKind) {	
+	return p_puzzleKind.squareGrid; // Note : may be undefined, but typically used in boolean context (if (...))
+}
+
+function copySaveModeInto(p_start, p_destination) {
+	p_destination.id = p_start.id;
+	if (p_start.squareGrid) {
+		p_destination.squareGrid = true;
+	} else {
+		p_destination.squareGrid = false;
 	}
 }
 
@@ -456,8 +487,9 @@ const PUZZLES_KIND = {
 	REGIONS_NUMBERS : {id:6},
 	NUMBERS_X_ONLY : {id:7},
 	YAJILIN_LIKE : {id:8},
-	TAPA : {id:9},
 	WALLS_ONLY_ONE_NUMBER_LEFT_UP : {id:9},
+	ONLY_ONE_NUMBER_LEFT_UP_SQUARE : {id:10, squareGrid : true},
+	TAPA : {id:11},
 	STAR_BATTLE : {id:1001, squareGrid : true},
 	GRAND_TOUR : {id:99102},
 }
@@ -475,6 +507,10 @@ p_detachedName : the detached name (without the prefix) to store into local stor
 saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMode, p_externalOptions) {
     var localStorageName = getLocalStorageName(p_puzzleName, p_detachedName);
     var letsSave = true;
+	if (correspondsToSquarePuzzle(p_saveLoadMode) && p_editorCore.getXLength() != p_editorCore.getYLength()) {
+		alert("Les grilles des puzzles de type "+ p_puzzleName + " doivent être carrées. Redimensionner la grille avant de sauvegarder.");
+		return;
+	}
     if (localStorage.hasOwnProperty(localStorageName)) {
         if (!confirm("Le stockage local a déjà une propriété nommée '" + localStorageName + "'. L'écraser ?")) {
             letsSave = false;
@@ -482,8 +518,8 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
     }
     if (letsSave) {
         var puzzleToSaveString = "";
-		p_editorCore.cleanRedundantWalls(); // TODO move this away ?
-		
+		// Edit puzzles before moving away 
+		p_editorCore.cleanRedundantWalls(); 
         if (p_saveLoadMode.id == PUZZLES_KIND.STAR_BATTLE.id) {
             puzzleToSaveString = starBattlePuzzleToString(p_editorCore.getWallArray(), p_externalOptions.numberStars);
         } else if (p_saveLoadMode.id == PUZZLES_KIND.MASYU.id) {
@@ -506,6 +542,8 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
 			puzzleToSaveString = regionsNumericIndicationsPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION));
         } else if (p_saveLoadMode.id == PUZZLES_KIND.WALLS_ONLY_ONE_NUMBER_LEFT_UP.id) {
 			puzzleToSaveString = regionsMarginOneLeftUpNumbersPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getMarginArray(EDGES.LEFT), p_editorCore.getMarginArray(EDGES.UP));
+		} else if (p_saveLoadMode.id == PUZZLES_KIND.ONLY_ONE_NUMBER_LEFT_UP_SQUARE.id) {
+			puzzleToSaveString = marginOneLeftUpNumbersSquarePuzzleToString(p_editorCore.getMarginArray(EDGES.LEFT), p_editorCore.getMarginArray(EDGES.UP)); 
 		} else {
 			puzzleToSaveString = wallsOnlyPuzzleToString(p_editorCore.getWallArray());
 		}
@@ -559,6 +597,8 @@ function getLoadedStuff(p_kindId, p_localStorageName) { // Not the load action !
 			return loadedItem; break;
 		case PUZZLES_KIND.WALLS_ONLY_ONE_NUMBER_LEFT_UP.id :
 			return stringToRegionsMarginOneLeftUpNumbersPuzzle(localStorage.getItem(p_localStorageName)); break;
+		case PUZZLES_KIND.ONLY_ONE_NUMBER_LEFT_UP_SQUARE.id :
+			return stringToMarginOneLeftUpNumbersSquarePuzzle(localStorage.getItem(p_localStorageName)); break; 
 		default :
 			return stringToWallsOnlyPuzzle(localStorage.getItem(p_localStorageName));
 	} 
@@ -577,7 +617,11 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_puzzleName, p_d
 			var wallArray = loadedStuff.wallArray;
 			if (!wallArray) {
 				// Note : all we want is a wallArray with a number of spaces in x and y, should it be empty !
-				wallArray = generateWallArray(loadedStuff.desiredArrays[0][0].length, loadedStuff.desiredArrays[0].length);
+				if (loadedStuff.desiredArrays && loadedStuff.desiredArrays.length > 0) {					
+					wallArray = generateWallArray(loadedStuff.desiredArrays[0][0].length, loadedStuff.desiredArrays[0].length); 
+				} else {
+					wallArray = generateWallArray(loadedStuff.marginLeft.length, loadedStuff.marginUp.length);
+				}
 			}
 			p_editorCore.setupFromWallArray(wallArray);
 			if (loadedStuff.desiredIDs) {
@@ -607,10 +651,10 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_puzzleName, p_d
 
 // Updates all relevant fields in HTML
 function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem, p_xLength, p_yLength) {
-	p_fieldsToUpdate.xLengthField.value = p_xLength;
-	p_fieldsToUpdate.yLengthField.value = p_yLength;
+	p_fieldsToUpdate.fieldX.value = p_xLength;
+	p_fieldsToUpdate.fieldY.value = p_yLength;
 	if (p_loadedItem.starNumber) {
-		p_fieldsToUpdate.numberStarsField.value = p_loadedItem.starNumber;
+		p_fieldsToUpdate.fieldStars.value = p_loadedItem.starNumber;
 	}
 }
 
@@ -641,10 +685,13 @@ function getRegionIndicArray(p_loadedItem) {
 
 // --------------------
 
+// TODO change puzzle size if a puzzle is square !
+
 //How to use the change of a combobox. Credits : https://www.scriptol.fr/html5/combobox.php
-function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode) {
+function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode, p_fields) {
     var idx = p_thelist.selectedIndex;
     var content = p_thelist.options[idx].innerHTML;
+	var hasStars = false;
 	// Default options
 	p_editorCore.setWallsOn();
 	p_editorCore.setMarginInfo(MARGIN_KIND.NONE);
@@ -659,21 +706,21 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
     switch (content) { // Should break be forgotten, following instructions are read... and saveLoadModeId is overset ! This was problematic with Stitches !
 		case 'CurvingRoad' : 
 			p_editorCore.setWallsOff();
-			saveLoadModeId = PUZZLES_KIND.CURVING_ROAD.id;
+			saveLoadModeId = PUZZLES_KIND.CURVING_ROAD;
 			p_editorCore.setVisibleGrids([GRID_ID.PEARL]); break;
 		case 'Masyu':
 			p_editorCore.setWallsOff();
-			saveLoadModeId = PUZZLES_KIND.MASYU.id;
+			saveLoadModeId = PUZZLES_KIND.MASYU;
 			p_editorCore.setVisibleGrids([GRID_ID.PEARL]); break;
 		case 'Usotatami':
 			p_editorCore.setWallsOff();
-			saveLoadModeId = PUZZLES_KIND.NUMBERS_ONLY.id;
+			saveLoadModeId = PUZZLES_KIND.NUMBERS_ONLY;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]); break;
 		case 'Chocona': case 'CountryRoad': case 'Detour': case 'Heyawake': case 'Shimaguni':
-			saveLoadModeId = PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS.id;
+			saveLoadModeId = PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_REGION]); break;
 		case 'Hakyuu': case 'Usoone':
-			saveLoadModeId = PUZZLES_KIND.REGIONS_NUMBERS.id;
+			saveLoadModeId = PUZZLES_KIND.REGIONS_NUMBERS;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]); 
 			if (content == 'Usoone') {
 				inputOptions.forceMonoCharacter = true;
@@ -681,42 +728,42 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			}
 			break; // Forgot break !!
 		case 'SternenSchlacht':
-			saveLoadModeId = PUZZLES_KIND.STAR_BATTLE.id; p_editorCore.maskAllGrids(); break;
+			saveLoadModeId = PUZZLES_KIND.STAR_BATTLE; 
+			p_editorCore.maskAllGrids();
+			hasStars = true; break;
 		case 'Akari': case 'Koburin': case 'Shugaku':
 			p_editorCore.setWallsOff();
-			saveLoadModeId = PUZZLES_KIND.NUMBERS_X_ONLY.id;
+			saveLoadModeId = PUZZLES_KIND.NUMBERS_X_ONLY;
 			p_editorCore.setVisibleGrids([GRID_ID.DIGIT_X_SPACE]); break;
 		case 'Yajilin': case 'Yajikabe': // Can also include Yajisan-Kazusan
 			p_editorCore.setWallsOff();
-			saveLoadModeId = PUZZLES_KIND.YAJILIN_LIKE.id;
+			saveLoadModeId = PUZZLES_KIND.YAJILIN_LIKE;
 			p_editorCore.setVisibleGrids([GRID_ID.YAJILIN_LIKE]); break;
 		case 'Tapa': 
 			p_editorCore.setWallsOff();
-			saveLoadModeId = PUZZLES_KIND.TAPA.id;
+			saveLoadModeId = PUZZLES_KIND.TAPA;
 			p_editorCore.setVisibleGrids([GRID_ID.TAPA]); break;
 		case 'Stitches':
-			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY_ONE_NUMBER_LEFT_UP.id;
+			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY_ONE_NUMBER_LEFT_UP;
 			p_editorCore.setMarginInfo(MARGIN_KIND.NUMBERS_LEFT_UP);
 			p_editorCore.maskAllGrids(); break; 
+		case 'Gappy':
+			saveLoadModeId = PUZZLES_KIND.ONLY_ONE_NUMBER_LEFT_UP_SQUARE;
+			p_editorCore.setMarginInfo(MARGIN_KIND.NUMBERS_LEFT_UP);
+			p_editorCore.setWallsOff();
+			p_editorCore.maskAllGrids(); break; 
 		default: // norinori, lits, entryExit... no numbers, only regions
-			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY.id;
+			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY;
 			p_editorCore.maskAllGrids();	
     } // Credits for multiple statements in cases : https://stackoverflow.com/questions/13207927/switch-statement-multiple-cases-in-javascript
 	
 	this.adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
 	const squarePuzzle = correspondsToSquarePuzzle(saveLoadModeId); 
-	if (squarePuzzle) {
-		actualFieldX = fieldXY;
-		actualFieldY = fieldXY; 
-	} else {
-		actualFieldX = fieldX;
-		actualFieldY = fieldY;
-	}
-	fieldX.disabled = squarePuzzle;
-	fieldY.disabled = squarePuzzle;
-	fieldXY.disabled = !squarePuzzle;
-	
-	p_saveLoadMode.id = saveLoadModeId;
+	p_fields.fieldX.disabled = squarePuzzle;
+	p_fields.fieldY.disabled = squarePuzzle;
+	p_fields.fieldXY.disabled = !squarePuzzle;
+	p_fields.fieldStars.disabled = !hasStars;
+	copySaveModeInto(saveLoadModeId, p_saveLoadMode);
 }
 
 function switchVisibilityDivAction(p_div) {

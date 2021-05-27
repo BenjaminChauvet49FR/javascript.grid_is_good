@@ -401,6 +401,23 @@ function stringToRegionsMarginOneLeftUpNumbersPuzzle(p_string) {
 }
 
 // ---------------
+// Square puzzle with nothing but rounding indications
+function marginOneLeftUpNumbersSquarePuzzleToString(p_marginLeft, p_marginUp, p_marginRight, p_marginDown) {
+	const streamParam = new StreamEncodingString64();
+	streamParam.encode(p_marginLeft.length); 
+	return streamParam.getString() + " " + numericBeltToString(p_marginLeft, p_marginUp);
+}
+
+function stringToMarginOneLeftUpNumbersSquarePuzzle(p_string) {
+	const tokens = p_string.split(" ");
+	const streamDim = new StreamDecodingString64(tokens[0]);
+	const dim = streamDim.decode();
+	const belt = stringToNumericBelt(tokens[1], dim, dim, true, true, false, false);
+	return {marginLeft : belt.left,
+			marginUp : belt.up};
+}
+
+// ---------------
 // Tapa 
 
 function tapaPuzzleToString(p_symbolsArray) {

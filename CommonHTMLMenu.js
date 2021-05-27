@@ -43,6 +43,7 @@ menuSolvers.push({
 	typeList : [
 		{name : "akari", displayName : "Akari"},
 		{name : "chocona", displayName : "Chocona"},
+		{name : "gappy", displayName : "Gappy"},
 		{name : "norinori", displayName : "Norinori"},
 		{name : "shimaguni", displayName : "Shimaguni"},
 		{name : "starBattle", displayName : "Star battle"},

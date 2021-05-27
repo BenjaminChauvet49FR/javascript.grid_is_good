@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+    <head>
+		<link rel="icon" type="image/png" href="star.png">
+        <title>Gappy solver</title>
+		<link rel="stylesheet" type="text/css" href="../style.css">
+    </head>
+    <body>
+		<div id="div_common_menu"></div>
+		<img id="img_star" src="star.png" style="display:none">
+		<canvas id="canevas" width="800" height="500">
+            Message pour les navigateurs ne supportant pas encore canvas.
+        </canvas></br>
+		
+		<input type="submit" id="submit_view_puzzle_list" value="Voir numéros puzzles Gappy"></input></br>
+		Grille à charger : <input type="text" id="input_grid_name" value="1"></input> 
+		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
+		Action à réaliser : <span id="text_canvas_action"></span></br>
+		<input type="submit" id="submit_put_star" value="Placer ETOILE"></input></br>
+		<input type="submit" id="submit_put_X" value="Placer X"></input></br>
+		<input type="submit" id="submit_pass_row" value="Passe sur ligne"></input></br>
+		<input type="submit" id="submit_pass_column" value="Passe sur colonne"></input></br>
+		
+		<!--Démarrage rapide :
+		<input type="submit" id="submit_quickStart" value="Démarrage rapide"></input></br-->
+		
+		Multipasse :
+		<input type="submit" id="submit_multiPass" value="Multi passe"></input></br>
+		
+		Résolution : 
+		<input type="submit" id="submit_solve" value="Résolution"></input></br>
+		
+		<input type="submit" id="submit_undo" value="Annuler"></input></br>	
+				
+		<script src="../Importation.js"></script>
+		<script>
+		"use strict";
+		window.onload = function() {
+			addScriptsSolving();
+			addScriptsDirections();
+			addScriptsGeneric();
+			addScript("../Margin.js");
+			addScriptsLocal();
+			addScriptConstants();
+			addScript("SpaceEvent.js");
+			addScript("SolverGappy.js");
+			startScriptLoading();
+		}		 
+		</script>
+	</body>
+</html>
