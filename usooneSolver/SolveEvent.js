@@ -54,7 +54,7 @@ SpaceEvent.prototype.opening = function() {
 }
 
 SpaceEvent.prototype.toString = function() {	
-	return "[S"+ LabelAdjacency[this.symbol]+" "+this.coorX+","+this.coorY+"]";
+	return standardAdjacencyEventString(this.coorX, this.coorY, this.symbol, "S");
 }
 
 SpaceEvent.prototype.copy = function() {

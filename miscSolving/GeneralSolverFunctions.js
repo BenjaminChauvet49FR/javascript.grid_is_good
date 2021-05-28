@@ -43,3 +43,12 @@ GeneralSolver.prototype.deductionsFillingSurroundings = function(p_eventList, p_
 	});
 	return p_eventList;
 }
+
+function standardAdjacencyEventString(p_x, p_y, p_adjacency, p_stringLabel) {
+	if (!p_stringLabel) {
+		p_stringLabel = "";
+	} else {
+		p_stringLabel += " ";
+	}
+	return "[" + p_stringLabel + LabelAdjacency[p_adjacency]+" "+p_x+","+p_y+"]";
+}

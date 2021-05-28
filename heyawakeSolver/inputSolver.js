@@ -20,7 +20,10 @@ function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action){
 			p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, ADJACENCY.NO); 
 		break;
 		case ACTION_PASS_REGION.id:
-			p_solver.passRegion(p_solver.getRegionIndex(p_spaceIndexX, p_spaceIndexY));
+			p_solver.emitPassRegion(p_solver.getRegionIndex(p_spaceIndexX, p_spaceIndexY));
+		break;
+		case ACTION_SMART_PASS_REGION.id:
+			p_solver.emitSmartPassRegion(p_solver.getRegionIndex(p_spaceIndexX, p_spaceIndexY));
 		break;
 	}
 }

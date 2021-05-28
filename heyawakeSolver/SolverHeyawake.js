@@ -3,7 +3,10 @@
 const NOT_FORCED = -1; 
 const NOT_RELEVANT = -1;
 
-const EVENTLIST_KIND = {HYPOTHESIS:"H",PASS:"P"};
+const HEYAWAKE_PASS_CATEGORY = {
+	SINGLE_REGION : 0,
+	BLOCK_REGION : 1
+}
 
 function SolverHeyawake(p_wallArray, p_indications) {
 	GeneralSolver.call(this);
@@ -14,7 +17,7 @@ SolverHeyawake.prototype = Object.create(GeneralSolver.prototype);
 SolverHeyawake.prototype.constructor = SolverHeyawake;
 
 function DummySolver() {
-	return new SolverHeyawake(generateWallArray(1,1), []);
+	return new SolverHeyawake(generateWallArray(1, 1), []);
 }
 
 SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
@@ -49,7 +52,8 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 	
 	this.answerArray = generateValueArray(this.xLength, this.yLength, ADJACENCY.UNDECIDED);
 	this.stripesArray = generateFunctionValueArray(this.xLength, this.yLength, function() {
-		return {leftMost:NOT_RELEVANT, horizIn:NOT_RELEVANT, rightMost:NOT_RELEVANT, topMost:NOT_RELEVANT, vertIn:NOT_RELEVANT, bottomMost:NOT_RELEVANT}
+		return {leftMost : NOT_RELEVANT, horizIn : NOT_RELEVANT, rightMost : NOT_RELEVANT, 
+				topMost : NOT_RELEVANT, vertIn : NOT_RELEVANT, bottomMost : NOT_RELEVANT}
 	});
 	
 	const spacesByRegion = listSpacesByRegion(this.regionArray);
@@ -86,7 +90,7 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 		}
 	}
 	
-	//And now, the stripes for Heyawake ! (ie the smallest series of contiguous aligned spaces that cross 2 borders)
+	//And now, the stripes for Heyawake ! (ie the series of contiguous aligned spaces that cross 2 borders)
 	var endStrip;
 	var indexStrip;
 	for(iy = 0;iy < this.yLength ; iy++) {
@@ -94,12 +98,12 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 			//If it has a right boundary, draw an horizontal band to the right boundary if it exists.
 			if (this.gridWall.getWallR(ix, iy) == WALLGRID.CLOSED) {
 				endStrip = ix+1;
-				while (endStrip < this.xLength-1 && this.gridWall.getState(endStrip+1, iy) != WALLGRID.CLOSED && this.gridWall.getWallR(endStrip,iy) != WALLGRID.CLOSED){
+				while (endStrip < this.xLength-1 && this.gridWall.getState(endStrip+1, iy) != WALLGRID.CLOSED && this.gridWall.getWallR(endStrip, iy) != WALLGRID.CLOSED){
 					endStrip++;
 				}
 				endStrip++; 
 				//Right now, endStrip corresponds to "the right of a boundary" or "a banned/out-of-bounds space"
-				if (endStrip < this.xLength && this.gridWall.getState(endStrip,iy) != WALLGRID.CLOSED){
+				if (endStrip < this.xLength && this.gridWall.getState(endStrip, iy) != WALLGRID.CLOSED) {
 					//We met a true region boundary ? Fine, to work now !
 					irInner = this.regionArray[iy][ix+1]; //Region of the inner grid
 					indexStrip = this.horizontalStripes.length;
@@ -109,18 +113,18 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 					for(var ix2 = ix+1; ix2 < endStrip ; ix2++){
 						this.stripesArray[iy][ix2].horizIn = indexStrip;
 					}
-					this.horizontalStripes.push({row:iy,xStart:ix,xEnd:endStrip, UNDEFs: endStrip-ix+1, CLOSEDs:0});
+					this.horizontalStripes.push({row : iy, xStart : ix, xEnd : endStrip, UNDEFs: endStrip-ix+1, CLOSEDs:0});
 				}
 			}
 			//Same down.
 			if (this.gridWall.getWallD(ix, iy) == WALLGRID.CLOSED) {
 				endStrip = iy+1;
-				while (endStrip < this.yLength-1 && this.gridWall.getState(ix,endStrip+1) != WALLGRID.CLOSED && this.gridWall.getWallD(ix,endStrip) != WALLGRID.CLOSED) {
+				while (endStrip < this.yLength-1 && this.gridWall.getState(ix, endStrip + 1) != WALLGRID.CLOSED && this.gridWall.getWallD(ix, endStrip) != WALLGRID.CLOSED) {
 					endStrip++;
 				}
 				endStrip++; 
 				// ... "the bottom of a boundary" ... "a banned/out-of-bounds space"
-				if (endStrip < this.yLength && this.gridWall.getState(ix,endStrip) != WALLGRID.CLOSED){
+				if (endStrip < this.yLength && this.gridWall.getState(ix,endStrip) != WALLGRID.CLOSED) {
 					irInner = this.regionArray[iy+1][ix]; 
 					indexStrip = this.verticalStripes.length;
 					this.regions[irInner].verticalInnerStripesIndexes.push(indexStrip);
@@ -129,13 +133,30 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 					for(var iy2 = iy+1; iy2 < endStrip ; iy2++){
 						this.stripesArray[iy2][ix].vertIn = indexStrip;
 					}
-					this.verticalStripes.push({column:ix,yStart:iy,yEnd:endStrip, UNDEFs: endStrip-iy+1, CLOSEDs:0});
+					this.verticalStripes.push({column : ix, yStart : iy, yEnd : endStrip, UNDEFs: endStrip-iy+1, CLOSEDs:0});
 				}
 			}
 		}
 	}
 	
 	//Note : grid not purified.
+	
+	
+	// For general pass
+	bordersTriangle = getBordersTriangle(this.regionArray, this.regionsNumber);
+	this.adjacencyWithIndics = [];
+	for (var ir = 0 ; ir < this.regionsNumber ; ir++) {
+		this.adjacencyWithIndics.push([]);
+		if (this.regions[ir].expectedNumberOfClosedsInRegion != NOT_FORCED) {			
+			for (var is = 0 ; is < ir ; is++) {
+				if(bordersTriangle[ir][is].length > 0 && this.regions[is].expectedNumberOfClosedsInRegion != NOT_FORCED) {
+					this.adjacencyWithIndics[ir].push(is);
+					this.adjacencyWithIndics[is].push(ir);
+				}					
+			}
+		}
+	}
+	this.checkerAdjacencyRegionsTotal = new CheckCollection(this.regionsNumber);
 }
 
 //--------------------------------
@@ -202,7 +223,7 @@ SolverHeyawake.prototype.modifyVerticalStrip = function(p_index, p_symbol, p_mod
 //--------------------------------
 
 // Input methods
-SolverHeyawake.prototype.emitHypothesis = function(p_x,p_y,p_symbol) {
+SolverHeyawake.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
 	this.tryToPutNew(p_x, p_y, p_symbol);
 }
 
@@ -214,24 +235,36 @@ SolverHeyawake.prototype.quickStart = function() {
 	this.initiateQuickStart();
 	this.regions.forEach(region => {
 		if (region.size == 1 && region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 1){
-			this.tryToPutNew(region.spaces[0].x,region.spaces[0].y,ADJACENCY.NO);
+			this.tryToPutNew(region.spaces[0].x, region.spaces[0].y, ADJACENCY.NO);
 		};
 		if (region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 0){
 			region.spaces.forEach(space => {
-				this.tryToPutNew(space.x,space.y,ADJACENCY.YES);
+				this.tryToPutNew(space.x, space.y, ADJACENCY.YES);
 			});
 		}
 	});
 	this.terminateQuickStart();
 }
 
-SolverHeyawake.prototype.passRegion = function(p_indexRegion) {
+SolverHeyawake.prototype.emitPassRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, p_indexRegion, "Region "+p_indexRegion); 
+	const index = {category : HEYAWAKE_PASS_CATEGORY, value : p_indexRegion};
+	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, index); 
+}
+
+SolverHeyawake.prototype.emitSmartPassRegion = function(p_indexRegion) {
+	this.smartPassRegion(p_indexRegion);
 }
 
 SolverHeyawake.prototype.makeMultiPass = function() {
 	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
+}
+
+SolverHeyawake.prototype.smartPassRegion = function(p_indexRegion) {
+	const indexes = this.findTightRegionsAdjacentFromRegion(p_indexRegion);
+	const generatedEvents = this.generateEventsForRegionSmartPass(indexes);
+	const indexGroup = {category : HEYAWAKE_PASS_CATEGORY.BLOCK_REGION, value : indexes};
+	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, indexGroup);
 }
 
 //--------------------------------
@@ -249,7 +282,7 @@ SolverHeyawake.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 
 //--------------------------------
 
-// Doing, undoing and transforming
+// Doing and undoing
 SolverHeyawake.prototype.putNew = function(p_x, p_y, p_symbol) {
 	if (this.answerArray[p_y][p_x] == p_symbol) {
 		return EVENT_RESULT.HARMLESS;
@@ -260,22 +293,22 @@ SolverHeyawake.prototype.putNew = function(p_x, p_y, p_symbol) {
 	this.answerArray[p_y][p_x] = p_symbol;
 	var ir = this.regionArray[p_y][p_x];
 	var region = this.regions[ir];
-	if (region.notPlacedYet != null){
-		if (p_symbol == ADJACENCY.YES){
+	if (region.notPlacedYet != null) {
+		if (p_symbol == ADJACENCY.YES) {
 			region.notPlacedYet.OPENs--;
-		} else if (p_symbol == ADJACENCY.NO){
+		} else if (p_symbol == ADJACENCY.NO) {
 			region.notPlacedYet.CLOSEDs--;
 		}
 	} else {
 		region.notDecidedYet--;
 	}
 	const stripSpace = this.stripesArray[p_y][p_x];
-	this.lowerHorizontalStrip(stripSpace.leftMost,p_symbol);
-	this.lowerHorizontalStrip(stripSpace.horizIn,p_symbol);
-	this.lowerHorizontalStrip(stripSpace.rightMost,p_symbol);	
-	this.lowerVerticalStrip(stripSpace.topMost,p_symbol);
-	this.lowerVerticalStrip(stripSpace.vertIn,p_symbol);
-	this.lowerVerticalStrip(stripSpace.bottomMost,p_symbol);
+	this.lowerHorizontalStrip(stripSpace.leftMost, p_symbol);
+	this.lowerHorizontalStrip(stripSpace.horizIn, p_symbol);
+	this.lowerHorizontalStrip(stripSpace.rightMost, p_symbol);	
+	this.lowerVerticalStrip(stripSpace.topMost, p_symbol);
+	this.lowerVerticalStrip(stripSpace.vertIn, p_symbol);
+	this.lowerVerticalStrip(stripSpace.bottomMost, p_symbol);
 	return EVENT_RESULT.SUCCESS;
 }
 
@@ -294,27 +327,26 @@ undoEventClosure = function(p_solver) {
 		p_solver.answerArray[y][x] = ADJACENCY.UNDECIDED;
 		var ir = p_solver.regionArray[y][x];
 		var region = p_solver.regions[ir];
-		if (region.notPlacedYet != null){
-			if (symbol == ADJACENCY.YES){
+		if (region.notPlacedYet != null) {
+			if (symbol == ADJACENCY.YES) {
 				region.notPlacedYet.OPENs++;
-			} else if (symbol == ADJACENCY.NO){
+			} else if (symbol == ADJACENCY.NO) {
 				region.notPlacedYet.CLOSEDs++;
 			}
 		} else {
 			region.notDecidedYet++;
 		}
 		const stripSpace = p_solver.stripesArray[y][x];
-		p_solver.raiseHorizontalStrip(stripSpace.leftMost,symbol);
-		p_solver.raiseHorizontalStrip(stripSpace.horizIn,symbol);
-		p_solver.raiseHorizontalStrip(stripSpace.rightMost,symbol);	
-		p_solver.raiseVerticalStrip(stripSpace.topMost,symbol);
-		p_solver.raiseVerticalStrip(stripSpace.vertIn,symbol);
-		p_solver.raiseVerticalStrip(stripSpace.bottomMost,symbol);
+		p_solver.raiseHorizontalStrip(stripSpace.leftMost, symbol);
+		p_solver.raiseHorizontalStrip(stripSpace.horizIn, symbol);
+		p_solver.raiseHorizontalStrip(stripSpace.rightMost, symbol);	
+		p_solver.raiseVerticalStrip(stripSpace.topMost, symbol);
+		p_solver.raiseVerticalStrip(stripSpace.vertIn, symbol);
+		p_solver.raiseVerticalStrip(stripSpace.bottomMost, symbol);
 	}
 }
 
 //--------------------------------
-
 // Exchanges solver and geographical
 
 /**
@@ -346,17 +378,17 @@ deductionsClosure = function (p_solver) {
 				p_listEventsToApply.push(SpaceEvent(coors.x, coors.y, ADJACENCY.YES));
 			});
 			//Alert on region
-			if (region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 0){
-				p_listEventsToApply = p_solver.alertRegion(p_listEventsToApply,ir,ADJACENCY.YES,region.notPlacedYet.OPENs);			
+			if (region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 0) {
+				p_listEventsToApply = p_solver.alertRegion(p_listEventsToApply, ir, ADJACENCY.YES, region.notPlacedYet.OPENs);			
 			}			
 		} else {
 			stripSpace = p_solver.stripesArray[y][x];
-			p_listEventsToApply = p_solver.testAlertHorizontalStrip(p_listEventsToApply,stripSpace.leftMost);
-			p_listEventsToApply = p_solver.testAlertHorizontalStrip(p_listEventsToApply,stripSpace.horizIn);
-			p_listEventsToApply = p_solver.testAlertHorizontalStrip(p_listEventsToApply,stripSpace.rightMost);
-			p_listEventsToApply = p_solver.testAlertVerticalStrip(p_listEventsToApply,stripSpace.topMost);
-			p_listEventsToApply = p_solver.testAlertVerticalStrip(p_listEventsToApply,stripSpace.vertIn);
-			p_listEventsToApply = p_solver.testAlertVerticalStrip(p_listEventsToApply,stripSpace.bottomMost);
+			p_listEventsToApply = p_solver.testAlertHorizontalStrip(p_listEventsToApply, stripSpace.leftMost);
+			p_listEventsToApply = p_solver.testAlertHorizontalStrip(p_listEventsToApply, stripSpace.horizIn);
+			p_listEventsToApply = p_solver.testAlertHorizontalStrip(p_listEventsToApply, stripSpace.rightMost);
+			p_listEventsToApply = p_solver.testAlertVerticalStrip(p_listEventsToApply, stripSpace.topMost);
+			p_listEventsToApply = p_solver.testAlertVerticalStrip(p_listEventsToApply, stripSpace.vertIn);
+			p_listEventsToApply = p_solver.testAlertVerticalStrip(p_listEventsToApply, stripSpace.bottomMost);
 			//Alert on region
 			if (region.notPlacedYet != null && region.notPlacedYet.OPENs == 0){
 				p_listEventsToApply = p_solver.alertRegion(p_listEventsToApply,ir,ADJACENCY.NO,region.notPlacedYet.CLOSEDs);			
@@ -367,11 +399,11 @@ deductionsClosure = function (p_solver) {
 }
 
 // Classic logical verifications 
-SolverHeyawake.prototype.testAlertHorizontalStrip = function(p_eventsList,p_index){
-	if (p_index != NOT_RELEVANT && this.horizontalStripes[p_index].CLOSEDs == 0 && this.horizontalStripes[p_index].UNDEFs == 1){
+SolverHeyawake.prototype.testAlertHorizontalStrip = function(p_eventsList, p_index) {
+	if (p_index != NOT_RELEVANT && this.horizontalStripes[p_index].CLOSEDs == 0 && this.horizontalStripes[p_index].UNDEFs == 1) {
 		const y = this.horizontalStripes[p_index].row;
 		var ix = this.horizontalStripes[p_index].xStart;
-		while(this.answerArray[y][ix] == ADJACENCY.YES){
+		while(this.answerArray[y][ix] == ADJACENCY.YES) {
 			ix++;
 		}
 		p_eventsList.push(SpaceEvent(ix,y,ADJACENCY.NO));
@@ -379,28 +411,28 @@ SolverHeyawake.prototype.testAlertHorizontalStrip = function(p_eventsList,p_inde
 	return p_eventsList;
 }
 
-SolverHeyawake.prototype.testAlertVerticalStrip = function(p_eventsList,p_index){
-	if (p_index != NOT_RELEVANT && this.verticalStripes[p_index].CLOSEDs == 0 && this.verticalStripes[p_index].UNDEFs == 1){
+SolverHeyawake.prototype.testAlertVerticalStrip = function(p_eventsList, p_index) {
+	if (p_index != NOT_RELEVANT && this.verticalStripes[p_index].CLOSEDs == 0 && this.verticalStripes[p_index].UNDEFs == 1) {
 		const x = this.verticalStripes[p_index].column;
 		var iy = this.verticalStripes[p_index].yStart;
 		while(this.answerArray[iy][x] == ADJACENCY.YES){
 			iy++;
 		}
-		p_eventsList.push(SpaceEvent(x,iy,ADJACENCY.NO));
+		p_eventsList.push(SpaceEvent(x, iy, ADJACENCY.NO));
 	}
 	return p_eventsList;
 }
 
-SolverHeyawake.prototype.alertRegion = function(p_listEvents,p_regionIndex,p_missingSymbol,p_missingNumber){
+SolverHeyawake.prototype.alertRegion = function(p_listEvents, p_regionIndex, p_missingSymbol, p_missingNumber) {
 	const region = this.regions[p_regionIndex];
 	var xa,ya,alertSpace;
 	var remaining = p_missingNumber
-	for(var i = 0;i<region.size;i++){
+	for(var i = 0 ; i < region.size ; i++) {
 		alertSpace = region.spaces[i];
 		xa = alertSpace.x;
 		ya = alertSpace.y;
-		if (this.answerArray[ya][xa] == ADJACENCY.UNDECIDED){
-			p_listEvents.push(SpaceEvent(xa,ya,p_missingSymbol));
+		if (this.answerArray[ya][xa] == ADJACENCY.UNDECIDED) {
+			p_listEvents.push(SpaceEvent(xa, ya, p_missingSymbol));
 			remaining--;
 			if (remaining == 0){
 				break;
@@ -414,8 +446,13 @@ SolverHeyawake.prototype.alertRegion = function(p_listEvents,p_regionIndex,p_mis
 // Passing
 
 generateEventsForRegionPassClosure = function(p_solver) {
-	return function(p_indexRegion) {
-		return p_solver.generateEventsForRegionPass(p_indexRegion);
+	return function(p_index) {
+		switch(p_index.category) {
+			case HEYAWAKE_PASS_CATEGORY.SINGLE_REGION : 
+				return p_solver.generateEventsForRegionPass(p_index.value);
+			case HEYAWAKE_PASS_CATEGORY.BLOCK_REGION :
+				return p_solver.generateEventsForRegionSmartPass(p_index.value);
+		}
 	}
 }
 
@@ -430,18 +467,13 @@ SolverHeyawake.prototype.generateEventsForRegionPass = function(p_indexRegion) {
 	return eventList;
 }
 
-// Generate covering event for "region pass", propaging to adjacent regions where it is tight (number of sizes to fill left <= undecided spaces left / 2)
-/*SolverHeyawake.prototype.generateEventsForRegionPassTight = function(p_indexRegion) {
+SolverHeyawake.prototype.generateEventsForRegionSmartPass = function(p_listIndexes) {
 	var eventList = [];
-	this.propagationFoundRegions = [];
-	this.regions[p_indexRegion].spaces.forEach(space => {
-		if (this.answerArray[space.y][space.x] == ADJACENCY.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
-			eventList.push([SpaceEvent(space.x, space.y, ADJACENCY.YES), SpaceEvent(space.x, space.y, ADJACENCY.NO)]);
-		}			 
+	p_listIndexes.forEach(index => {
+		eventList = eventList.concat(this.generateEventsForRegionPass(index));
 	});
 	return eventList;
-}*/
-
+}
 
 copying = function(p_event) {
 	return p_event.copy();
@@ -451,23 +483,64 @@ comparison = function(p_event1, p_event2) {
 	return commonComparison([[p_event1.coorY, p_event1.coorX, p_event1.symbol], [p_event2.coorY, p_event2.coorX, p_event2.symbol]]);
 }
 
+// Pass region and propagate to adjacent tight regions (number of closed spaces expected && remaining number of closed spaces >= remaining number of open spaces)
+// Should a region be without indication, it is checked alone. //551551 can be changed !
+SolverHeyawake.prototype.findTightRegionsAdjacentFromRegion = function(p_indexRegion) {
+	var listRegionsToPass = [];
+	var waitingIndexes = [p_indexRegion];
+	var index, npy;
+	var checkerAdjacencyRegions = new CheckCollection(this.regionsNumber);
+	checkerAdjacencyRegions.add(p_indexRegion);
+	this.checkerAdjacencyRegionsTotal.add(p_indexRegion);
+	npy = this.regions[p_indexRegion].notPlacedYet;
+	if (npy == null || (npy.OPENs > npy.CLOSEDs)) {
+		return [p_indexRegion];
+	}
+	while (waitingIndexes.length > 0) {
+		index = waitingIndexes.pop();
+		npy = this.regions[index].notPlacedYet;
+		if (npy.OPENs > 0 && npy.OPENs <= npy.CLOSEDs) {
+			this.checkerAdjacencyRegionsTotal.add(index);
+			listRegionsToPass.push(index);
+			this.adjacencyWithIndics[index].forEach(i => {
+				if (checkerAdjacencyRegions.add(i)) {
+					waitingIndexes.push(i);
+				}
+			});
+		}
+	}
+	checkerAdjacencyRegions.clean();
+	return listRegionsToPass;
+}
+
+// --------------------
+// Multipass
+
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
 		var indexList = [];
 		var valueList = []; 
+		var indexPass;
+		p_solver.checkerAdjacencyRegionsTotal.clean();
 		for (var i = 0; i < p_solver.regions.length ; i++) {
 			if ((p_solver.regions[i].notDecidedYet && p_solver.regions[i].notDecidedYet > 0) ||
-			(p_solver.regions[i].notPlacedYet && p_solver.regions[i].notPlacedYet.CLOSEDs > 0)) {
-				indexList.push(i); 
-				valueList.push(p_solver.incertainity(i));
+			(p_solver.regions[i].notPlacedYet && p_solver.regions[i].notPlacedYet.CLOSEDs > 0) && !p_solver.checkerAdjacencyRegionsTotal.array[i]) {
+				const listIndexes = p_solver.findTightRegionsAdjacentFromRegion(i);
+				if (listIndexes.length == 1) {
+					indexPass = {category : HEYAWAKE_PASS_CATEGORY.SINGLE_REGION, value : i};
+				} else {
+					indexPass = {category : HEYAWAKE_PASS_CATEGORY.BLOCK_REGION, value : listIndexes};
+				}
+				indexList.push(indexPass); 
+				valueList.push(p_solver.incertainity(indexPass));
 			} else {
 				valueList.push(-1); // There MUST be one of these per region.
 			}
 		}
-		indexList.sort(function(p_i1, p_i2) {
-			const val1 = valueList[p_i1]-valueList[p_i2];
+		indexList.sort(function(p_index1, p_index2) {
+			const val1 = valueList[p_index1.value] - valueList[p_index2.value];
 			if (val1 == 0) {
-				return p_i1-p_i2;
+				return p_index1.value - p_index2.value;
 			} else {
 				return val1;
 			}
@@ -477,13 +550,32 @@ orderedListPassArgumentsClosure = function(p_solver) {
 }
 
 namingCategoryClosure = function(p_solver) {
-	return function (p_indexRegion) {
-		return "Region "+ p_indexRegion + " (" + p_solver.getFirstSpaceRegion(p_indexRegion).x +" "+ p_solver.getFirstSpaceRegion(p_indexRegion).y + ")"; 
+	return function(p_index) {
+		switch(p_index.category) {
+			case HEYAWAKE_PASS_CATEGORY.SINGLE_REGION : 
+				return "Region "+ p_index.value + " (" + p_solver.getFirstSpaceRegion(p_index.value).x +" "+ p_solver.getFirstSpaceRegion(p_index.value).y + ")"; break;
+			case HEYAWAKE_PASS_CATEGORY.BLOCK_REGION :
+				return "Multi-region " + p_solver.reportIndexes(p_index.value); break;
+		}
 	}
 }
 
-SolverHeyawake.prototype.incertainity = function(p_i) { // Can go below 0. The more it is, the more "uncertain" the region is. Arbitrary measurement.
-	const region = this.regions[p_i];
+// Index of several passed regions
+SolverHeyawake.prototype.reportIndexes = function(p_listIndexes) {
+	var answer = "[";
+	var space = "";
+	p_listIndexes.forEach(index => {
+		answer += space + index + " (" + this.getFirstSpaceRegion(index).x + "," + this.getFirstSpaceRegion(index).y + ")";
+		space = " ";
+	});
+	return answer + "]";
+}
+
+SolverHeyawake.prototype.incertainity = function(p_index) { // Can go below 0. The more it is, the more "uncertain" the region is. Arbitrary measurement.
+	if (p_index.category == HEYAWAKE_PASS_CATEGORY.BLOCK_REGION) {
+		return 500;
+	} 
+	const region = this.regions[p_index.value];
 	if (region.notPlacedYet) {
 		const closeds = region.notPlacedYet.CLOSEDs;
 		const total = closeds + region.notPlacedYet.OPENs;
@@ -506,7 +598,7 @@ SolverHeyawake.prototype.incertainity = function(p_i) { // Can go below 0. The m
 }
 
 skipPassClosure = function(p_solver) {
-	return function (p_indexRegion) {
-		return p_solver.incertainity(p_indexRegion) > 500; // Arbitrary value
+	return function (p_index) {
+		return p_solver.incertainity(p_index) > 500; // Arbitrary value
 	}
 }

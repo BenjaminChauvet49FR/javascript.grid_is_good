@@ -1,4 +1,4 @@
-function SolveEvent(){
+function SolveEvent() {
 
 }
 
@@ -10,11 +10,11 @@ function SpaceEvent(p_x,p_y,p_symbol){
 	return solveEvent;
 }
 
-SolveEvent.prototype.toString = function(){	
-	return "["+this.symbol+" "+this.coorX+","+this.coorY+"]";
+SolveEvent.prototype.toString = function() {
+	return standardAdjacencyEventString(this.coorX, this.coorY, this.symbol);
 }
 
-SolveEvent.prototype.copy = function(){
+SolveEvent.prototype.copy = function() {
 	return new SpaceEvent(this.coorX, this.coorY, this.symbol);
 }
 
