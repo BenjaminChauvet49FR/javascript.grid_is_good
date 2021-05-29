@@ -41,8 +41,9 @@ const ACTION_BIND_STITCHES = {id:20, htmlCaption:"Déclarer liaison entre points
 const ACTION_NOT_BIND_STITCHES = {id:21, htmlCaption:"Non-liaison entre points"};
 const ACTION_PASS_BORDER = {id:22, htmlCaption:"Passer frontière"};
 const ACTION_PASS_AROUND_SPACES = {id:23, htmlCaption:"Passer alentour case indice"};
-const ACTION_PASS_NUMBERS_SET = {id:24, htmlCaption:"Passer ensemble de cases"};
-const ACTION_SMART_PASS_REGION = {id:25, htmlCaption:"Passer région intelligemment"};
+const ACTION_PASS_NUMBERS_SET = {id:24, htmlCaption : "Passer ensemble de cases"};
+const ACTION_SMART_PASS_REGION = {id:25, htmlCaption : "Passer région intelligemment"};
+const ACTION_SELECTION = {id:26, htmlCaption : "Sélectionner cases"};
 
 /**
 Getter of setter for a specific mode

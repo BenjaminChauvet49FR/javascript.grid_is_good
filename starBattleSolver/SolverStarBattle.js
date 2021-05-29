@@ -12,10 +12,11 @@ function stringStar(p_star) {
 	return stringStarArray[p_star];
 }
 
-const STAR_BATTLE_CATEGORY = {
+const STAR_BATTLE_PASS_CATEGORY = {
 	REGION : 1,
 	ROW : 2,
-	COLUMN : 3
+	COLUMN : 3,
+	CUSTOM : 4
 };
 
 // ---------------------
@@ -127,17 +128,17 @@ SolverStarBattle.prototype.undo = function() {
 
 SolverStarBattle.prototype.emitPassRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {family : STAR_BATTLE_CATEGORY.REGION, index : p_indexRegion}); 
+	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {family : STAR_BATTLE_PASS_CATEGORY.REGION, index : p_indexRegion}); 
 }
 
 SolverStarBattle.prototype.emitPassRow = function(p_y) {
 	const generatedEvents = this.generateEventsForRowPass(p_y);
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {family : STAR_BATTLE_CATEGORY.ROW, index : p_y}); 
+	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {family : STAR_BATTLE_PASS_CATEGORY.ROW, index : p_y}); 
 }
 
 SolverStarBattle.prototype.emitPassColumn = function(p_x) {
 	const generatedEvents = this.generateEventsForColumnPass(p_x);
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {family : STAR_BATTLE_CATEGORY.COLUMN, index : p_x}); 
+	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {family : STAR_BATTLE_PASS_CATEGORY.COLUMN, index : p_x}); 
 }
 
 SolverStarBattle.prototype.makeMultiPass = function() {	
@@ -155,16 +156,9 @@ SolverStarBattle.prototype.quickStart = function() {
 	this.terminateQuickStart();
 }
 
-namingCategoryClosure = function(p_solver) {
-	return function(p_indexAndFamily) {
-		const index = p_indexAndFamily.index;
-		switch (p_indexAndFamily.family) {
-			case STAR_BATTLE_CATEGORY.REGION : return "Region "+ index + " (" + p_solver.getFirstSpaceRegion(index).x +" "+ p_solver.getFirstSpaceRegion(index).y + ")"; break;
-			case STAR_BATTLE_CATEGORY.ROW : return "Row " + index; break;
-			case STAR_BATTLE_CATEGORY.COLUMN : return "Column " + index; break;
-			default : return "";
-		}
-	}
+SolverStarBattle.prototype.passSelectedSpaces = function(p_coorsList) {
+	const eventsForPass = this.generateEventsForSpacesList(p_coorsList);
+	this.passEvents(eventsForPass, this.methodsSetDeductions, this.methodsSetPass, {family : STAR_BATTLE_PASS_CATEGORY.CUSTOM, numberSpaces : eventsForPass.length});
 }
 
 //------------------
@@ -220,12 +214,12 @@ undoEventClosure = function(p_solver) {
 		var symbol = p_solver.answerArray[y][x];
 		p_solver.answerArray[y][x] = STAR.UNDECIDED;
 		autoLogDeduction("Removing the following : "+x+" "+y+" "+symbol);
-		if (symbol == STAR.YES){
+		if (symbol == STAR.YES) {
 			p_solver.notPlacedYet.regions[indexRegion].Os++;
 			p_solver.notPlacedYet.rows[y].Os++;
 			p_solver.notPlacedYet.columns[x].Os++;
 		}
-		if (symbol == STAR.NO){
+		if (symbol == STAR.NO) {
 			p_solver.notPlacedYet.regions[indexRegion].Xs++;
 			p_solver.notPlacedYet.rows[y].Xs++;
 			p_solver.notPlacedYet.columns[x].Xs++;	
@@ -317,22 +311,16 @@ generateEventsForRegionColumnClosure = function(p_solver) {
 generateEventsForRLCPassClosure = function(p_solver) {
 	return function(p_indexAndFamily) {
 		switch (p_indexAndFamily.family) {
-			case STAR_BATTLE_CATEGORY.ROW : return p_solver.generateEventsForRowPass(p_indexAndFamily.index); break;
-			case STAR_BATTLE_CATEGORY.COLUMN : return p_solver.generateEventsForColumnPass(p_indexAndFamily.index); break;
-			case STAR_BATTLE_CATEGORY.REGION : return p_solver.generateEventsForRegionPass(p_indexAndFamily.index); break;
+			case STAR_BATTLE_PASS_CATEGORY.ROW : return p_solver.generateEventsForRowPass(p_indexAndFamily.index); break;
+			case STAR_BATTLE_PASS_CATEGORY.COLUMN : return p_solver.generateEventsForColumnPass(p_indexAndFamily.index); break;
+			case STAR_BATTLE_PASS_CATEGORY.REGION : return p_solver.generateEventsForRegionPass(p_indexAndFamily.index); break;
 		}
 		return [];
 	}
 }
 
 SolverStarBattle.prototype.generateEventsForRegionPass = function(p_indexRegion) {
-	var eventList = [];
-	this.spacesByRegion[p_indexRegion].forEach(space => {
-		if (this.answerArray[space.y][space.x] == STAR.UNDECIDED) { 
-			eventList.push([new SpaceEvent(space.x, space.y, STAR.YES), new SpaceEvent(space.x, space.y, STAR.NO)]);
-		}			 
-	});
-	return eventList;
+	return this.generateEventsForSpacesList(this.spacesByRegion[p_indexRegion]);
 }
 
 SolverStarBattle.prototype.generateEventsForRowPass = function(p_y) {
@@ -355,6 +343,16 @@ SolverStarBattle.prototype.generateEventsForColumnPass = function(p_x) {
 	return eventList;
 }
 
+SolverStarBattle.prototype.generateEventsForSpacesList = function(p_coorsList) {
+	var eventList = [];
+	p_coorsList.forEach(space => {
+		if (this.answerArray[space.y][space.x] == STAR.UNDECIDED) { 
+			eventList.push([new SpaceEvent(space.x, space.y, STAR.YES), new SpaceEvent(space.x, space.y, STAR.NO)]);
+		}			 
+	});
+	return eventList;
+}
+
 copying = function(p_event) {
 	return p_event.copy();
 }
@@ -368,11 +366,11 @@ orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
 		var iafList = [];
 		for (var i = 0; i < p_solver.spacesByRegion.length ; i++) {
-			iafList.push({index : i, family : STAR_BATTLE_CATEGORY.REGION}); // , value : p_solver.notPlacedYet.regions[i]
+			iafList.push({index : i, family : STAR_BATTLE_PASS_CATEGORY.REGION}); // , value : p_solver.notPlacedYet.regions[i]
 		} 
 		for (var i = 0; i < p_solver.xyLength ; i++) {
-			iafList.push({index : i, family : STAR_BATTLE_CATEGORY.ROW}); //, value : p_solver.notPlacedYet.rows[i]
-			iafList.push({index : i, family : STAR_BATTLE_CATEGORY.COLUMN}); //, value : p_solver.notPlacedYet.columns[i]
+			iafList.push({index : i, family : STAR_BATTLE_PASS_CATEGORY.ROW}); //, value : p_solver.notPlacedYet.rows[i]
+			iafList.push({index : i, family : STAR_BATTLE_PASS_CATEGORY.COLUMN}); //, value : p_solver.notPlacedYet.columns[i]
 		}
 		iafList.sort(function(p_iaf1, p_iaf2) {
 			return p_solver.uncertainity(p_iaf1)-p_solver.uncertainity(p_iaf2); // TODO too lazy to improve it like it is on the other solvers. 
@@ -383,9 +381,9 @@ orderedListPassArgumentsClosure = function(p_solver) {
 
 SolverStarBattle.prototype.getNotPlacedYetSet = function(p_indexAndFamily) {
 	switch (p_indexAndFamily.family) {
-		case STAR_BATTLE_CATEGORY.ROW : return this.notPlacedYet.rows[p_indexAndFamily.index];
-		case STAR_BATTLE_CATEGORY.COLUMN : return this.notPlacedYet.columns[p_indexAndFamily.index];
-		case STAR_BATTLE_CATEGORY.REGION : return this.notPlacedYet.regions[p_indexAndFamily.index];
+		case STAR_BATTLE_PASS_CATEGORY.ROW : return this.notPlacedYet.rows[p_indexAndFamily.index];
+		case STAR_BATTLE_PASS_CATEGORY.COLUMN : return this.notPlacedYet.columns[p_indexAndFamily.index];
+		case STAR_BATTLE_PASS_CATEGORY.REGION : return this.notPlacedYet.regions[p_indexAndFamily.index];
 	}
 }
 
@@ -396,6 +394,19 @@ SolverStarBattle.prototype.uncertainity = function(p_iaf) {
 skipPassClosure = function(p_solver) {
 	return function (p_iaf) {
 		return p_solver.uncertainity(p_iaf) > 5; // Arbitrary value
+	}
+}
+
+namingCategoryClosure = function(p_solver) {
+	return function(p_indexAndFamily) {
+		const index = p_indexAndFamily.index;
+		switch (p_indexAndFamily.family) {
+			case STAR_BATTLE_PASS_CATEGORY.REGION : return "Region "+ index + " (" + p_solver.getFirstSpaceRegion(index).x +" "+ p_solver.getFirstSpaceRegion(index).y + ")"; break;
+			case STAR_BATTLE_PASS_CATEGORY.ROW : return "Row " + index; break;
+			case STAR_BATTLE_PASS_CATEGORY.COLUMN : return "Column " + index; break;
+			case STAR_BATTLE_PASS_CATEGORY.CUSTOM : return "Selection " + p_indexAndFamily.numberSpaces + " space" + (p_indexAndFamily.numberSpaces > 1 ? "s" : ""); break;
+			default : return "";
+		}
 	}
 }
 
