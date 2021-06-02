@@ -3,11 +3,11 @@
 */
 function clickCanvas(event,p_canvas, p_drawer, p_solver, p_actionsManager) {
 	var clicked = p_drawer.getClickWallR(event,p_canvas,p_solver.xLength,p_solver.yLength);
-	if (clicked != null) {
+	if (clicked != null && p_actionsManager.clickWallR.id != ACTION_NOTHING.id) {
 		clickWallRAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickWallR);
 	} else {
 		clicked = p_drawer.getClickWallD(event,p_canvas,p_solver.xLength,p_solver.yLength);
-		if (clicked != null) {
+		if (clicked != null && p_actionsManager.clickWallD.id != ACTION_NOTHING.id) {
 			clickWallDAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickWallD);
 		} else {
 			clicked = p_drawer.getClickSpace(event,p_canvas,p_solver.xLength,p_solver.yLength);
@@ -22,7 +22,7 @@ function clickCanvas(event,p_canvas, p_drawer, p_solver, p_actionsManager) {
 You successfully clicked on a region space (coordinates in parameter). Then what ? 
 */
 function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
-	switch(p_action.id){
+	switch(p_action.id) {
 		case ACTION_OPEN_SPACE.id:
 			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, SPACE_SHUGAKU.OPEN, true); 
 		break;
@@ -35,7 +35,9 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 		case ACTION_PUT_SQUARE.id:
 			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, SPACE_SHUGAKU.SQUARE, true);  
 		break;
-		// No pass job yet
+		case ACTION_PASS_SPACE.id:
+			p_solver.emitPassSpace(p_spaceIndexX, p_spaceIndexY);
+		break;
 	}
 }
 
@@ -43,8 +45,8 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 You successfully clicked on a region space (coordinates in parameter) or a wall. Then, what ? 
 */
 // C/P from Usotatami
-function clickWallDAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action) {
-	switch(p_action.id){
+function clickWallDAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
+	switch(p_action.id) {
 		case ACTION_OPEN_FENCE.id:
 			p_solver.emitHypothesisDown(p_spaceIndexX, p_spaceIndexY, FENCE_STATE.OPEN); 
 		break;
@@ -65,17 +67,6 @@ function clickWallRAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 	}
 }
 
-function clickWallDAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
-	switch(p_action.id){
-		case ACTION_OPEN_FENCE.id:
-			p_solver.emitHypothesisDown(p_spaceIndexX, p_spaceIndexY, FENCE_STATE.OPEN); 
-		break;
-		case ACTION_CLOSE_FENCE.id:
-			p_solver.emitHypothesisDown(p_spaceIndexX, p_spaceIndexY, FENCE_STATE.CLOSED); 
-		break;
-	}
-}
-
 //--------------------------
 // Game action buttons
 
@@ -88,7 +79,7 @@ undoAction = function(p_solver){
 }
 
 multiPassAction = function (p_solver){
-	//p_solver.makeMultiPass(); // note : "make" in order to differ from "multiPass" which is reserved to general solver
+	p_solver.makeMultiPass(); // note : "make" in order to differ from "multiPass" which is reserved to general solver
 }
 
 /*solveAction = function (p_solver,p_textArea){

@@ -1,10 +1,4 @@
-const SPACE_SHUGAKU = { // From 0 to N for compatibility with SpaceNumeric
-	OPEN : 0,
-	ROUND : 1,
-	SQUARE : 2
-}
-
-const SPACE_CROSS = 5;
+const SPACE_CROSS = 5; // See SPACE_SHUGAKU in SolveEvent
 
 function SolverShugaku(p_numberSymbolArray) {
 	GeneralSolver.call(this);
@@ -34,6 +28,7 @@ SolverShugaku.prototype.construct = function(p_numberSymbolsArray) {
 		undoEventClosure(this)
 	);
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterDominosClosure(this)]);
+	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
 
 	this.answerArray = [];	
 	
@@ -203,6 +198,14 @@ SolverShugaku.prototype.emitHypothesisDown = function(p_x, p_y, p_symbol) {
 	this.tryToPutNew(new FenceShugakuEvent(p_x, p_y, DIRECTION.DOWN, p_symbol));
 }
 
+SolverShugaku.prototype.emitPassSpace = function(p_x, p_y) {
+	const generatedEvents = this.generateEventsForSpacePass({x : p_x, y : p_y});
+	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y}); 
+}
+
+SolverShugaku.prototype.makeMultiPass = function() {
+	return this.customMultipass();
+}
 
 //--------------------------------
 
@@ -368,6 +371,10 @@ deductionsClosure = function (p_solver) {
 						p_listEventsToApply = p_solver.deductionsOpenLastUndecidedFence(p_listEventsToApply, x, y);
 					}
 					// Add itself to "spaces to check" and adjacent closed spaces. So when filter occurs we will be able to see when a domino is about to be fully surrounded.
+					p_solver.newClosedSpacesAndAround.add(x, y);
+					p_solver.existingNeighborsCoorsDirections(x, y).forEach(coors => {
+						p_solver.newClosedSpacesAndAround.add(coors.x, coors.y);
+					});
 				}
 			}
 			if (symbol == SPACE_SHUGAKU.SQUARE) {
@@ -629,7 +636,7 @@ SolverShugaku.prototype.threeSpacesAroundHalfDomino = function(p_xDomino, p_yDom
 	var xUndecided = null;
 	var yUndecided;
 	var foundAtLeastOne = false;
-	autoLogFilter("Half domino " + p_xDomino + "," + p_yDomino + ", direction " + stringDirection(p_directionOtherHalf));
+	autoLogFilter("Half domino " + p_xDomino + "," + p_yDomino + ", direction " + LabelDirection[p_directionOtherHalf]);
 	this.existingNeighborsCoorsDirections(p_xDomino, p_yDomino).forEach(coorsDirAD => { // AD = around domino
 		if (coorsDirAD.direction != p_directionOtherHalf) {
 			xxx = coorsDirAD.x;
@@ -653,4 +660,78 @@ SolverShugaku.prototype.threeSpacesAroundHalfDomino = function(p_xDomino, p_yDom
 		}
 	}); // A null value for xUndecided can mean that either 2 or 0 undecided spaces have been found.
 	return {openFound : openFound, foundAtLeastOne : foundAtLeastOne, xUndecided : xUndecided, yUndecided : yUndecided}
+}
+
+// --------------------
+// Passes
+
+generateEventsForSpacePassClosure = function(p_solver) {
+	return function(p_space) {
+		return p_solver.generateEventsForSpacePass(p_space);
+	}
+}
+
+SolverShugaku.prototype.generateEventsForSpacePass = function(p_space) {
+	//return [[new SpaceEvent(p_space.x, p_space.y, SPACE_SHUGAKU.OPEN, true), new SpaceEvent(p_space.x, p_space.y, SPACE_SHUGAKU.OPEN, false)]];
+	return [[new SpaceEvent(p_space.x, p_space.y, SPACE_SHUGAKU.OPEN, true), 
+	new SpaceEvent(p_space.x, p_space.y, SPACE_SHUGAKU.SQUARE, true),
+	new SpaceEvent(p_space.x, p_space.y, SPACE_SHUGAKU.ROUND, true)]];
+}
+
+namingCategoryClosure = function(p_solver) {
+	return function (p_space) {
+		return "Space (" + p_space.x + "," + p_space.y + ")"; 
+	}
+}
+
+copying = function(p_event) {
+	return p_event.copy();
+}
+
+comparison = function(p_event1, p_event2) {
+	const k1 = isSpaceEvent(p_event1) ? 0 : 1;
+	const k2 = isSpaceEvent(p_event2) ? 0 : 1;
+	return commonComparisonMultiKinds([0, 1], 
+		[
+		[p_event1.coorY, p_event1.coorX, p_event1.symbol, p_event1.choice], [p_event2.coorY, p_event2.coorX, p_event2.symbol, p_event2.choice],
+		[p_event1.fenceY, p_event1.fenceX, p_event1.direction, p_event1.state], [p_event2.fenceY, p_event2.fenceX, p_event2.direction, p_event2.state]
+		], k1, k2);
+}
+
+SolverShugaku.prototype.customMultipass = function() {
+	var coorsToPass = [];
+	var neoCoorsToPass;
+	var nokPass = false;
+	var okPass = false;
+	var resultPass;
+	var spaceInArray;
+	for (var iy = 0 ; iy < this.yLength ; iy++) {
+		for (var ix = 0 ; ix < this.xLength ; ix++) {
+			if (!this.isBanned(ix, iy)) {
+				resultPass = this.passEvents(this.generateEventsForSpacePass({x : ix, y : iy}), this.methodsSetDeductions, this.methodsSetPass, {x : ix, y : iy});
+				nokPass = nokPass || (resultPass == PASS_RESULT.FAILURE); // TODO nokpass not useful... 551551
+				okPass = okPass || (resultPass == PASS_RESULT.SUCCESS); // Should this be forgotten, we can loop indefinitelty !
+				spaceInArray = this.answerArray[iy][ix];
+				if (spaceInArray.getState(SPACE_SHUGAKU.OPEN) == SPACE_CHOICE.UNDECIDED || spaceInArray.getState(SPACE_SHUGAKU.SQUARE) == SPACE_CHOICE.UNDECIDED || 
+				spaceInArray.getState(SPACE_SHUGAKU.ROUND) == SPACE_CHOICE.UNDECIDED) {
+					coorsToPass.push({x : ix, y : iy});
+				}
+			}
+		}
+	}
+	while (okPass && coorsToPass.length > 0) {
+		neoCoorsToPass = [];
+		okPass = false;
+		coorsToPass.forEach(coors => {			
+			resultPass = this.passEvents(this.generateEventsForSpacePass(coors), this.methodsSetDeductions, this.methodsSetPass, coors);
+			nokPass = nokPass || (resultPass == PASS_RESULT.FAILURE); // TODO nokpass not useful... 551551
+			spaceInArray = this.answerArray[coors.y][coors.x];
+			okPass = okPass || (resultPass == PASS_RESULT.SUCCESS); // Should this be forgotten, we can loop indefinitelty ! (Shugaku n°11)
+			if (spaceInArray.getState(SPACE_SHUGAKU.OPEN) == SPACE_CHOICE.UNDECIDED || spaceInArray.getState(SPACE_SHUGAKU.SQUARE) == SPACE_CHOICE.UNDECIDED || 
+			spaceInArray.getState(SPACE_SHUGAKU.ROUND) == SPACE_CHOICE.UNDECIDED) {
+				neoCoorsToPass.push(coors);
+			}
+		});
+		coorsToPass = neoCoorsToPass;
+	}
 }

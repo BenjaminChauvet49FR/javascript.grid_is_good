@@ -1,4 +1,15 @@
 // No "kind" this time.
+const SPACE_SHUGAKU = { // From 0 to N for compatibility with SpaceNumeric
+	OPEN : 0,
+	ROUND : 1,
+	SQUARE : 2
+}
+
+const LabelShugaku = ['O', 'R', 'S'];
+
+function isSpaceEvent(p_event) {
+	return p_event.symbol || (p_event.symbol == 0);
+}
 
 function SpaceEvent(p_x, p_y, p_symbol, p_choice) {
 	this.symbol = p_symbol;
@@ -8,11 +19,11 @@ function SpaceEvent(p_x, p_y, p_symbol, p_choice) {
 }
 
 SpaceEvent.prototype.toString = function() {	
-	return "["+this.symbol+" "+this.coorX+","+this.coorY+"]";
+	return "["+ LabelShugaku[this.symbol] + (this.choice ? "Y" : "N") + " " + this.coorX + "," + this.coorY + "]";
 }
 
 SpaceEvent.prototype.copy = function() {
-	return new SpaceEvent(this.coorX, this.coorY, this.symbol);
+	return new SpaceEvent(this.coorX, this.coorY, this.symbol, this.choice);
 }
 
 SpaceEvent.prototype.opening = function() {
@@ -44,4 +55,8 @@ FenceShugakuEvent.prototype.constructor = FenceShugakuEvent;
 
 FenceShugakuEvent.prototype.opening = function() {
 	return ADJACENCY.UNDECIDED
+}
+
+FenceShugakuEvent.prototype.copy = function() {
+	return new FenceShugakuEvent(this.fenceX, this.fenceY, this.direction, this.state); // Cannot use the standard copying method (in FenceEvent) since it won't return an instance of the child (FenceShugakuEvent) class
 }

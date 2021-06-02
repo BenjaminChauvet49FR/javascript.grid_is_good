@@ -265,7 +265,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
     var numberOfClustersWithAdjacency = 0;
 
 	// Method : tests if an EXISTING space is "potentially adjacent", ie it's not a new-to-be closed space and it is either undecided and open.
-    function isPotentiallyAdjacent(p_x, p_y) {
+    function isPotentiallyInOpenCluster(p_x, p_y) {
         return ((!newBarriersGrid[p_y][p_x]) && (p_function(p_x, p_y) != ADJACENCY.NO));
     }
 	
@@ -291,7 +291,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
 			if (neighborExists(x, y, dir)) {
 				const xx = x + DeltaX[dir];
 				const yy = y + DeltaY[dir];
-				if (isPotentiallyAdjacent(xx, yy)) {
+				if (isPotentiallyInOpenCluster(xx, yy)) {
 				//if (p_function(p_x, p_y) == ADJACENCY.UNDECIDED && (!newBarriersGrid[p_y][p_x])) { // Only spaces "that ain't decided yet
 					turningLeftArray[yy][xx][OppositeDirection[dir]] = TASK.TBD;
 					newTurningLeftStartPointsList.push({
@@ -315,7 +315,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
             i++;
             purgeLog("Looking for turning left (" + p_x + " " + p_y + ") : " + pointingDirection);
 			if (p_limitArray[p_y][p_x].isAccessible(pointingDirection, p_originDirection)) { // This row is (partially) the reason of existing of limits. But are they that useful after all ?
-				if (neighborExists(p_x, p_y, pointingDirection) && isPotentiallyAdjacent(p_x + DeltaX[pointingDirection], p_y + DeltaY[pointingDirection])) {
+				if (neighborExists(p_x, p_y, pointingDirection) && isPotentiallyInOpenCluster(p_x + DeltaX[pointingDirection], p_y + DeltaY[pointingDirection])) {
 					return {
 						x : p_x + DeltaX[pointingDirection],
 						y : p_y + DeltaY[pointingDirection],
@@ -325,7 +325,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
 			}	
 			pointingDirection = TurningRightDirection[pointingDirection];		
         }
-        return null;
+        return null; // Null may happen if the open space is completely alone !
     }
 
     // Now let's turn left for each "starting point". Spaces that are run twice ought to contain limits.
@@ -368,11 +368,15 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
             }
             nextSpaceDir = nextFreeSpaceDirTurningLeft(x, y, direction, origin);
 			//lastWalkDirectionArray[y][x] = TurningRightDirection[nextSpaceDir.dir];
-            x = nextSpaceDir.x;
-            y = nextSpaceDir.y;
-            direction = nextSpaceDir.dir;
-			origin = ((x == spaceDir.x) && (y == spaceDir.y)) ? DIRECTION.HERE : TurningLeftDirection[direction]; // If not on start (where no direction should be excluded for limit check), take the direction we fled from
-		}
+			if (nextSpaceDir != null) { // Case of a single open space surrounded by closed spaces. Happens in the pass of some puzzles.
+				x = nextSpaceDir.x;
+				y = nextSpaceDir.y;
+				direction = nextSpaceDir.dir;
+				origin = ((x == spaceDir.x) && (y == spaceDir.y)) ? DIRECTION.HERE : TurningLeftDirection[direction]; // If not on start (where no direction should be excluded for limit check), take the direction we fled from
+			} else {
+				// Nothing since turningLeftArray[y][x][direction] = TASK.DONE already !
+			}
+ 		}
         if (spacesWalkedLocal.length > 0) {
             turningLog("Amount grid : ");
             amountStepsArray.forEach(row => turningLog(row));
@@ -403,7 +407,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
     }
 	
 	function isWorthDigging(p_x, p_y, p_origin, p_direction) {
-		return (neighborExists(p_x, p_y, p_direction) && isPotentiallyAdjacent(p_x + DeltaX[p_direction], p_y + DeltaY[p_direction])); // && p_limitArray[p_y + DeltaY[p_direction]][p_x + DeltaX[p_direction]].isAccessible(p_direction, p_origin);
+		return (neighborExists(p_x, p_y, p_direction) && isPotentiallyInOpenCluster(p_x + DeltaX[p_direction], p_y + DeltaY[p_direction])); // && p_limitArray[p_y + DeltaY[p_direction]][p_x + DeltaX[p_direction]].isAccessible(p_direction, p_origin);
 	}
 
 	// spacesWithLimits = open or undecided spaces that the "turning left" walks have crossed twice or more OR that were former limits. 
@@ -419,7 +423,7 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList, 
 				linked : DIRECTION.UNDECIDED,
 				alone : (p_limitArray[yRisk][xRisk] == null) ? false : p_limitArray[yRisk][xRisk].isDirectionAlone(dir)
 			}	
-			if (neighborExists(xRisk, yRisk, dir) && isPotentiallyAdjacent(xRisk + DeltaX[dir], yRisk + DeltaY[dir])) {
+			if (neighborExists(xRisk, yRisk, dir) && isPotentiallyInOpenCluster(xRisk + DeltaX[dir], yRisk + DeltaY[dir])) {
 				exploList[dir].spacesExploToDo.push({
 					x : xRisk + DeltaX[dir],
 					y : yRisk + DeltaY[dir],

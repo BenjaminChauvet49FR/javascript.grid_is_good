@@ -52,4 +52,6 @@ function main() {
 	addEventListenerAndCaptionActionSubmit(actionsManager, textActionSpace, "submit_put_square", ENTRY.SPACE, ACTION_PUT_SQUARE);
 	addEventListenerAndCaptionActionSubmit(actionsManager, textActionWall, "submit_open_fence", ENTRY.WALLS, ACTION_OPEN_FENCE);
 	addEventListenerAndCaptionActionSubmit(actionsManager, textActionWall, "submit_close_fence", ENTRY.WALLS, ACTION_CLOSE_FENCE);
+	addEventListenerAndCaptionActionSubmit(actionsManager, textActionWall, "submit_no_touch_fence", ENTRY.WALLS, ACTION_NOTHING);
+	addEventListenerAndCaptionActionSubmit(actionsManager, textActionSpace, "submit_pass_space", ENTRY.SPACE, ACTION_PASS_SPACE);
 }

@@ -2,7 +2,7 @@ function autoLogDeduction(p_string) {
 	//console.log(p_string)
 }
 function autoLogFilter(p_string) {
-	console.log(p_string)
+	//console.log(p_string)
 }
 function autoLogMultipass(p_string) {
 	//console.log(p_string);

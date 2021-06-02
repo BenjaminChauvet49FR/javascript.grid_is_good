@@ -8,7 +8,7 @@ const KnownDirections = [DIRECTION.LEFT, DIRECTION.UP, DIRECTION.RIGHT, DIRECTIO
 const ORIENTATION = {HORIZONTAL : "h", VERTICAL : "v"}
 const OrientationDirection = [ORIENTATION.HORIZONTAL, ORIENTATION.VERTICAL, ORIENTATION.HORIZONTAL, ORIENTATION.VERTICAL]
 
-const dirToString = ['l', 'u', 'r', 'd'];
+const LabelDirection = ['l', 'u', 'r', 'd'];
 function stringDirection(p_dir) {
-	return dirToString[p_dir];
+	return LabelDirection[p_dir];
 }

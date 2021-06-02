@@ -143,7 +143,7 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
 				});
                 this.happenedEventsSeries.forEach(eventSerie => {
                     eventSerie.list.forEach(solveEvent => {
-						if (solveEvent.opening() == ADJACENCY.YES) {
+						if (solveEvent.opening() == ADJACENCY.NO) {
 							newClosedSpaces.push({
 								x: solveEvent.x(),
 								y: solveEvent.y()

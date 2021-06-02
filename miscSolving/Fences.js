@@ -1,4 +1,5 @@
 const FENCE_STATE = {OPEN : 2, CLOSED : 1, UNDECIDED : 0}
+const LabelFenceState = ["-", "C", "O"];
 const FENCE_EVENT_KIND = 'Fence'
 
 function FenceEvent(p_x, p_y, p_direction, p_state) {
@@ -9,9 +10,13 @@ function FenceEvent(p_x, p_y, p_direction, p_state) {
 	this.direction = p_direction;
 }
 
-FenceEvent.prototype.toString = function(){	
-	return "["+"F"+this.state+" "+this.fenceX+","+this.fenceY+" "+this.direction+"]";
+FenceEvent.prototype.toString = function() {	
+	return "[" + "F" + LabelFenceState[this.state] + " " + this.fenceX + "," + this.fenceY + " " + LabelDirection[this.direction] + "]";
 }
+
+/*FenceEvent.prototype.standardCopy = function() { // Not useful for Shugaku. BTW could it be named "copy" ?
+	return new FenceEvent(this.fenceX, this.fenceY, this.direction, this.state);
+}*/
 
 // ==================================================================
 
