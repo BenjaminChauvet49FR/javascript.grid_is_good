@@ -3,6 +3,7 @@ function main() {
 	var drawer = new Drawer();
 	solver = DummySolver();
 	var canevas = document.getElementById("canevas");
+	var spanState = document.getElementById("span_resolution_state");
 	var	context = canevas.getContext("2d");
 	var actionsManager = {}; 
 	var drawIndications;
@@ -26,14 +27,16 @@ function main() {
 
 	//--------------------
 	//The main draw function (at start)
-	function drawCanvas(){
+	function drawCanvas() {
 		drawer.drawWallGrid(context, solver.gridWall, solver.xLength, solver.yLength); 
 		drawInsideSpaces(context, drawer, colors, solver);
+		solver.callStateForItem(spanState);
 	}
 
 	canevas.addEventListener('click', function(event){clickCanvas(event, canevas, drawer, solver, actionsManager)},false);
 	setInterval(drawCanvas,30);
 	var fieldName = document.getElementById("input_grid_name");
+
 
 	const puzzleTypeName = "LITS";
 	putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList(puzzleTypeName)});

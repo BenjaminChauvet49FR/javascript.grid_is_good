@@ -8,6 +8,7 @@ function main() {
 		previousStateSelectedCornerSpace : null
 	}; // Note : this solver has a unique (for now) feature of selectable spaces. This item be irrelevant without that feature.
 	
+	var spanState = document.getElementById("span_resolution_state");
 	var canevasInteraction = document.getElementById("canevas");
 	var	context = canevasInteraction.getContext("2d");
 	var actionsManager  = {};
@@ -27,6 +28,7 @@ function main() {
 	function drawCanvas() {
 		drawer.drawWallGrid(context, solver.gridWall, solver.xyLength, solver.xyLength); 
 		drawInsideSpaces(context, drawer, colors, solver, selectedSpacesGrid);
+		solver.callStateForItem(spanState);
 	}
 
 	setInterval(drawCanvas,30);

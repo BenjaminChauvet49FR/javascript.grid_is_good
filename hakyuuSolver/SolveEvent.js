@@ -12,3 +12,7 @@ SpaceAllowEvent.prototype.toString = function() {
 SpaceAllowEvent.prototype.copy = function() {
 	return new SpaceAllowEvent(this.x, this.y, this.number, this.choice);
 }
+
+shouldBeLoggedEvent = function(p_event) {
+	return (p_event.choice);
+}

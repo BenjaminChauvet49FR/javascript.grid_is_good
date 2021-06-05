@@ -1,4 +1,10 @@
 // Constants and items
+const OTHER_RESULTS = {
+	DEFAULT : 4,
+	QUICKSTART : 6,
+	CANCEL : 5
+}
+
 const EVENT_RESULT = { 
     SUCCESS : 1,
     FAILURE : 2,
@@ -16,10 +22,16 @@ const PASS_RESULT = {
 	HARMLESS : 23
 }
 
+const MULTIPASS_RESULT = {
+	SUCCESS : 31,
+	FAILURE : 32,
+	HARMLESS : 33
+}
+
 const SERIE_KIND = {
-	HYPOTHESIS : 'H',
-	PASS : 'P',
-	QUICKSTART : 'QS'
+	HYPOTHESIS : 1,
+	PASS : 2,
+	QUICKSTART : 3
 }
 
 function FailureEvent() {
@@ -36,6 +48,7 @@ function GeneralSolver() { }
 GeneralSolver.prototype.generalConstruct = function() {
 	this.separatelyStackDeductions = true; // When true, stacks a new list for a deduction ; when false, adds the events to the last array of happenedEventsSeries. 
 	this.happenedEventsSeries = []; // List of (non-empty list of events). All events beyond the first must be logical deductions (logic of any kind, including geographic) of the first one.	
+	this.setStateHappening(OTHER_RESULTS.DEFAULT); // this.counterSameState = 0 an this.lastHappeningState = OTHER_RESULTS.DEFAULT
 }
 
 // ----------------
@@ -175,6 +188,7 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
 		}
         this.undoEventList(listEventsApplied, p_methodPack.undoEventMethod);
 		autoLogGeneralFail();
+		this.setStateHappening(DEDUCTIONS_RESULT.FAILURE);
 		return DEDUCTIONS_RESULT.FAILURE;
     } else {
 		if (listEventsApplied.length > 0) {
@@ -186,6 +200,7 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
 				});
 			}
 		}
+		this.setStateHappening(DEDUCTIONS_RESULT.SUCCESS);
 		return DEDUCTIONS_RESULT.SUCCESS;
     }
 }
@@ -256,6 +271,7 @@ GeneralSolver.prototype.undoToLastHypothesis = function (p_undoEventMethod) {
 			this.undoEventList(lastEventsSerie.list, p_undoEventMethod);
 		} while(wasPass && this.happenedEventsSeries.length > 0);
     }
+	this.setStateHappening(OTHER_RESULTS.CANCEL);
 }
 
 /** 
@@ -279,6 +295,7 @@ Passes a list of covering events (for instance, if a region contains spaces "1 2
 */
 GeneralSolver.prototype.passEvents = function (p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_passArgument) {
 	var listExtractedEvents = this.passEventsAnnex(p_listListCoveringEvent, p_methodSet ,p_eventsTools, 0);
+	var answer;
 	if (listExtractedEvents != DEDUCTIONS_RESULT.FAILURE) {
 		
 		if (listExtractedEvents.length > 0) {
@@ -288,14 +305,15 @@ GeneralSolver.prototype.passEvents = function (p_listListCoveringEvent, p_method
 				this.tryToApplyHypothesis(deductedEvent, p_methodSet);	
 			});
 			this.separatelyStackDeductions = true;
-			return PASS_RESULT.SUCCESS;
+			answer = PASS_RESULT.SUCCESS;
 		} else {
-			return PASS_RESULT.HARMLESS;
+			answer = PASS_RESULT.HARMLESS;
 		}
 	} else {
-		//alert("Failed pass !"); TODO mark this !
-		return PASS_RESULT.FAILURE;
+		answer = PASS_RESULT.FAILURE;
 	}
+	this.setStateHappening(answer);
+	return answer;
 }
 
 
@@ -426,6 +444,7 @@ GeneralSolver.prototype.multiPass = function(p_methodSet, p_eventsTools, p_passT
 	var resultPass;
 	var i;
 	var argPass;
+	var answer;
 	const lengthBeforeMultiPass = this.happenedEventsSeries.length;
 	do {
 		oneMoreLoop = false;
@@ -454,7 +473,14 @@ GeneralSolver.prototype.multiPass = function(p_methodSet, p_eventsTools, p_passT
 			var lastEventsList = this.happenedEventsSeries.pop();
 			this.undoEventList(lastEventsList.list, p_methodSet.undoEventMethod);
 		}
+		answer = MULTIPASS_RESULT.FAILURE;
+	} else if (this.happenedEventsSeries.length > lengthBeforeMultiPass) {
+		answer = MULTIPASS_RESULT.SUCCESS;
+	} else {
+		answer = MULTIPASS_RESULT.HARMLESS;
 	}
+	this.setStateHappening(answer);
+	return answer;
 }
 
 GeneralSolver.prototype.isPassSerie = function (p_eventsSerie) {
@@ -485,6 +511,16 @@ GeneralSolver.prototype.terminateQuickStart = function() {
 		this.happenedEventsSeries.pop();
 	}
 	this.separatelyStackDeductions = true;
+	this.setStateHappening(OTHER_RESULTS.QUICKSTART);
+}
+
+// --------------------------------
+// For input (see GeneralSolverInterface)
+
+// Always call this method when changing the 'state' that is to be displayed by the viewer !
+GeneralSolver.prototype.setStateHappening = function(p_value) {
+	this.lastHappeningState = p_value;
+	this.stateChangedSinceLastRefresh = true;
 }
 
 // --------------------------------
@@ -494,10 +530,15 @@ GeneralSolver.prototype.happenedEventsLogQuick = function() {
 	return this.happenedEventsLog({quick : true});
 }
 
+GeneralSolver.prototype.happenedEventsLogComplete = function() {
+	return this.happenedEventsLog({complete : true});
+}
+
 GeneralSolver.prototype.happenedEventsLog = function(p_options) {
 	answer = "";
-	var displayGeographical = (p_options && p_options.displayGeographical);
-	var displayQuick = (p_options && p_options.quick);
+	const displayGeographical = (p_options && p_options.displayGeographical);
+	const displayQuick = (p_options && p_options.quick);
+	const displayComplete = (p_options && p_options.complete);
 	this.happenedEventsSeries.forEach(eventSerie => {
 		if (eventSerie.kind == SERIE_KIND.PASS) {
 			answer += "Pass - " + eventSerie.label + " ";
@@ -507,7 +548,8 @@ GeneralSolver.prototype.happenedEventsLog = function(p_options) {
 			answer += "Hypothesis - " + (displayQuick ? eventSerie.list[0] : "");
 		} 
 		if (!displayQuick) {
-			eventSerie.list.forEach(event_ => {
+			for (var i = 0 ; i < eventSerie.list.length ; i++) {
+				event_ = eventSerie.list[i];
 				if (event_.firstOpen) {
 					if (displayGeographical) {
 						answer += "<1st open>";
@@ -516,13 +558,18 @@ GeneralSolver.prototype.happenedEventsLog = function(p_options) {
 					if (displayGeographical) {
 						answer += "<Adjacency>";
 					}
-				} 
-				else {
-					answer += event_.toString() + " ";
+				} else {
+					if (displayComplete || (eventSerie.kind == SERIE_KIND.HYPOTHESIS && i == 0) || shouldBeLoggedEvent(event_)) {						
+						answer += event_.toString() + " ";
+					}
 				}
-			});
+			}
 		}
 		answer += "\n";
 	});
 	console.log(answer); // If 'answer' is simply returned, hitting solver.happenedEventsLog() or its quick variation will keep the literal \n.
+}
+
+shouldBeLoggedEvent = function(p_event) {
+	return true;
 }
