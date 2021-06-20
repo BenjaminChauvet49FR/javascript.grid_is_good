@@ -23,6 +23,12 @@ SpaceNumeric.prototype.ban = function(p_number) {
 	this.possibilities[p_number - this.offset] = SPACE_CHOICE.NO;		
 }
 
+SpaceNumeric.prototype.banIfNecessary = function(p_number) { // Except for this one !
+	if (this.getState(p_number) == SPACE_CHOICE.UNDECIDED) {
+		this.ban(p_number);
+	}
+}
+
 SpaceNumeric.prototype.unban = function(p_number) {
 	this.numberPossibilities++;
 	this.possibilities[p_number - this.offset] = SPACE_CHOICE.UNDECIDED;	

@@ -113,6 +113,7 @@ SolverStarBattle.prototype.purifyAnswerArray = function() {
 
 SolverStarBattle.prototype.getAnswer = function(p_x, p_y){return this.answerArray[p_y][p_x];}
 SolverStarBattle.prototype.getRegion = function(p_x, p_y){return this.regionArray[p_y][p_x];}
+SolverStarBattle.prototype.getRegionSpacesFromSpace = function(p_x, p_y){return this.spacesByRegion[this.regionArray[p_y][p_x]];} // Array of {x, y} items
 SolverStarBattle.prototype.getFirstSpaceRegion = function(p_i){return this.spacesByRegion[p_i][0];}
 
 //------------------
@@ -158,7 +159,7 @@ SolverStarBattle.prototype.quickStart = function() {
 
 SolverStarBattle.prototype.passSelectedSpaces = function(p_coorsList) {
 	const eventsForPass = this.generateEventsForSpacesList(p_coorsList);
-	this.passEvents(eventsForPass, this.methodsSetDeductions, this.methodsSetPass, {family : STAR_BATTLE_PASS_CATEGORY.CUSTOM, numberSpaces : eventsForPass.length});
+	return this.passEvents(eventsForPass, this.methodsSetDeductions, this.methodsSetPass, {family : STAR_BATTLE_PASS_CATEGORY.CUSTOM, numberSpaces : eventsForPass.length});
 }
 
 //------------------

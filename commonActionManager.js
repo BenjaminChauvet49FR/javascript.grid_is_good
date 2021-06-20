@@ -43,8 +43,10 @@ const ACTION_PASS_BORDER = {id:22, htmlCaption:"Passer frontière"};
 const ACTION_PASS_AROUND_SPACES = {id:23, htmlCaption:"Passer alentour case indice"};
 const ACTION_PASS_NUMBERS_SET = {id:24, htmlCaption : "Passer ensemble de cases"};
 const ACTION_SMART_PASS_REGION = {id:25, htmlCaption : "Passer région intelligemment"};
-const ACTION_SELECTION = {id:26, htmlCaption : "Sélectionner cases"};
-const ACTION_NOTHING = {id:27, htmlCaption : "Ne rien faire"};
+const ACTION_SELECTION_RECTANGLE = {id:26, htmlCaption : "Sélectionner cases en rectangle"};
+const ACTION_SELECTION_REGION = {id:27, htmlCaption : "Sélectionner région"};
+const ACTION_PASS_GRIDS = {id:27, htmlCaption : "Passer grilles"};
+const ACTION_NOTHING = {id:55, htmlCaption : "Ne rien faire"};
 
 /**
 Getter of setter for a specific mode

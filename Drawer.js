@@ -212,50 +212,33 @@ Drawer.prototype.drawGridPuzzle = function (p_context, p_xLength, p_yLength, p_c
         pixTotalWidth, this.pix.borderSpace);
 }
 
-Drawer.prototype.drawEmptyGrid = function (p_context, p_xLength, p_yLength) {
-	this.drawWalllessGrid(p_context, null, p_xLength, p_yLength);
-}
-
-Drawer.prototype.drawWalllessGrid = function (p_context, p_wallGrid, p_xLength, p_yLength) {
-    var i;
-	p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight);
-    const pixTotalWidth = p_xLength * this.pix.sideSpace;
-    const pixTotalHeight = p_yLength * this.pix.sideSpace;
-    var pixXStart = this.pix.marginGrid.left;
-    var pixYStart = this.pix.marginGrid.up;
-    var pixY = pixYStart - this.pix.borderSpace;
-    const pixInsideThickness = 2 * this.pix.borderSpace;
-    const pixInnerLength = this.getPixInnerSide();
-    p_context.fillStyle = this.wallColorSet.open_wall;
-    for (i = 0; i < p_yLength; i++) {
-        pixY += this.pix.sideSpace;
-        p_context.fillRect(pixXStart, pixY, pixTotalWidth, pixInsideThickness);
-    }
-    var pixX = pixXStart - this.pix.borderSpace;
-    for (i = 0; i < p_xLength; i++) {
-        pixX += this.pix.sideSpace;
-        p_context.fillRect(pixX, pixYStart, pixInsideThickness, pixTotalHeight);
-    }
-    p_context.fillStyle = this.wallColorSet.edge_walls;
-    p_context.fillRect(pixXStart, pixYStart, pixTotalWidth, this.pix.borderSpace);
-    p_context.fillRect(pixXStart, pixYStart, this.pix.borderSpace, pixTotalHeight);
-    p_context.fillRect(pixXStart, pixY, pixTotalWidth, this.pix.borderSpace);
-    p_context.fillRect(pixX, pixYStart, this.pix.borderSpace, pixTotalHeight);
-    p_context.fillStyle = this.wallColorSet.bannedSpace;
-    if (p_wallGrid != null) {
-        var ix;
-        pixY = this.getPixInnerYUp(0);
-        for (var iy = 0; iy < p_yLength; iy++) {
-            pixX = this.getPixInnerXLeft(0);
-            for (ix = 0; ix < p_xLength; ix++) {
-                if (p_wallGrid.getState(ix, iy) == WALLGRID.CLOSED) {
-                    p_context.fillRect(pixX, pixY, pixInnerLength, pixInnerLength);
-                }
-                pixX += this.pix.sideSpace;
-            }
-            pixY += this.pix.sideSpace;
-        }
-    }
+Drawer.prototype.drawCornersFrame = function(p_context, p_xLeft, p_yUp, p_width, p_height, p_colour, p_borders, p_corners) {
+	const pixXLeft = this.getPixInnerXLeft(p_xLeft);
+	const pixYUp = this.getPixInnerYUp(p_yUp);
+	const pixXRight = this.getPixInnerXRight(p_xLeft + p_width - 1);
+	const pixYDown = this.getPixInnerYDown(p_yUp + p_height - 1);
+	p_context.fillStyle = p_colour;
+	if (p_borders) {
+		const pixWidth = pixXRight - pixXLeft + 1;
+		const pixHeight = pixYDown - pixYUp + 1;
+		const pixThickness = 1;
+		p_context.fillRect(pixXLeft, pixYUp, pixWidth, pixThickness);
+		p_context.fillRect(pixXLeft, pixYUp, pixThickness, pixHeight);
+		p_context.fillRect(pixXRight - pixThickness, pixYUp, pixThickness, pixHeight);
+		p_context.fillRect(pixXLeft, pixYDown - pixThickness, pixWidth, pixThickness);
+	}
+	if (p_corners) {
+		const pixExpansionAngle = this.pix.sideSpace;
+		const pixThicknessAngle = 2;
+		p_context.fillRect(pixXLeft, pixYUp, pixThicknessAngle, pixExpansionAngle);
+		p_context.fillRect(pixXLeft, pixYUp, pixExpansionAngle, pixThicknessAngle);
+		p_context.fillRect(pixXLeft, pixYDown - pixExpansionAngle, pixThicknessAngle, pixExpansionAngle);
+		p_context.fillRect(pixXLeft, pixYDown - pixThicknessAngle, pixExpansionAngle, pixThicknessAngle);
+		p_context.fillRect(pixXRight - pixExpansionAngle, pixYUp, pixExpansionAngle, pixThicknessAngle);
+		p_context.fillRect(pixXRight - pixThicknessAngle, pixYUp, pixThicknessAngle, pixExpansionAngle);
+		p_context.fillRect(pixXRight - pixExpansionAngle, pixYDown - pixThicknessAngle, pixExpansionAngle, pixThicknessAngle);
+		p_context.fillRect(pixXRight - pixThicknessAngle, pixYDown - pixExpansionAngle, pixThicknessAngle, pixExpansionAngle);		
+	}
 }
 
 // Draws paths  (or junctions) between spaces out of functions
@@ -303,6 +286,61 @@ Drawer.prototype.drawClosablePaths = function (p_context, p_drawHorizPathsMethod
         pixLeft = pixLeftStart;
         pixUp += this.pix.sideSpace;
     }
+}
+
+// Now for grids that don't need specific drawings between two spaces, albeit potentially between two rows
+
+Drawer.prototype.drawEmptyGrid = function (p_context, p_xLength, p_yLength) {
+	this.drawQuadrillageGrid(p_context, p_xLength, p_yLength);
+}
+
+// Some separation between columns being bigger
+// Note : replaced by a good ol' drawWallGrid right now
+/*Drawer.prototype.drawSudokuRectanglesGrid = function (p_context, p_xLength, p_yLength, p_rightToColumnIndexes, p_downToColumIndexes) { // Not a private method unlike the called one !
+	this.drawQuadrillageGrid(p_context, p_xLength, p_yLength, p_rightToColumnIndexes, p_downToColumIndexes);
+}*/
+
+Drawer.prototype.drawQuadrillageGrid = function (p_context, p_xLength, p_yLength, p_rightToColumnIndexes, p_downToRowIndexes) { // Private method 
+    var i;
+	p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight);
+    const pixTotalWidth = p_xLength * this.pix.sideSpace;
+    const pixTotalHeight = p_yLength * this.pix.sideSpace;
+    var pixXStart = this.pix.marginGrid.left;
+    var pixYStart = this.pix.marginGrid.up;
+    var pixY = pixYStart - this.pix.borderSpace;
+    const pixInsideThickness = 2 * this.pix.borderSpace;
+    const pixInnerLength = this.getPixInnerSide();
+    p_context.fillStyle = this.wallColorSet.open_wall;
+    for (i = 0; i < p_yLength; i++) {
+        pixY += this.pix.sideSpace;
+        p_context.fillRect(pixXStart, pixY, pixTotalWidth, pixInsideThickness); // Some will be overdrawn but that's it !
+    }
+    var pixX = pixXStart - this.pix.borderSpace;
+    for (i = 0; i < p_xLength; i++) {
+        pixX += this.pix.sideSpace;
+        p_context.fillRect(pixX, pixYStart, pixInsideThickness, pixTotalHeight);
+    }
+	
+	p_context.fillStyle = this.wallColorSet.closed_wall;
+	if (p_rightToColumnIndexes) {
+		const pixXOffset = pixXStart + this.pix.sideSpace - this.pix.borderSpace; // pix.sidespace counted once in this offset constant ! We could have multiplied pix.sidespace by (index+1) otherwise.
+		p_rightToColumnIndexes.forEach(indexRtoC => {
+			 p_context.fillRect(pixXOffset + indexRtoC * this.pix.sideSpace, pixYStart, pixInsideThickness, pixTotalHeight);
+		});
+	}
+	if (p_downToRowIndexes) {		
+		const pixYOffset = pixYStart + this.pix.sideSpace - this.pix.borderSpace;
+		p_downToRowIndexes.forEach(indexDtoR => {
+			 p_context.fillRect(pixXStart, pixYOffset + indexDtoR * this.pix.sideSpace, pixTotalWidth, pixInsideThickness);
+		});
+	}
+	
+	// All four walls on the edge
+    p_context.fillStyle = this.wallColorSet.edge_walls;
+    p_context.fillRect(pixXStart, pixYStart, pixTotalWidth, this.pix.borderSpace);
+    p_context.fillRect(pixXStart, pixYStart, this.pix.borderSpace, pixTotalHeight);
+    p_context.fillRect(pixXStart, pixY, pixTotalWidth, this.pix.borderSpace);
+    p_context.fillRect(pixX, pixYStart, this.pix.borderSpace, pixTotalHeight);
 }
 
 // -----------------

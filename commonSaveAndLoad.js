@@ -13,7 +13,7 @@ Returns a name to store into / load from local storage
 function getLocalStorageName(p_puzzleName, p_name) {
 	return "grid_is_good_" + p_puzzleName + p_name;
 }
-
+30
 // ------------------------------------------
 // All "new" (as to beginning March 2021) puzzle save and load methods
 
@@ -30,6 +30,16 @@ function stringToDimensions(p_string) {
 	const xLength = streamDim.decode();
 	const yLength = streamDim.decode();
 	return {xLength : xLength, yLength : yLength}
+}
+
+function monoValueToString(p_value) {
+	const streamParam = new StreamEncodingString64();
+	streamParam.encode(p_value); 
+	return streamParam.getString();
+}
+
+function stringToMonoValue(p_string) {
+	return (new StreamDecodingString64(p_string)).decode();
 }
 
 function symbolsArrayToString(p_symbolsArray, p_symbolsList) {
@@ -82,42 +92,56 @@ function fillArrayWithSymbols(p_array, p_string, p_xLength, p_yLength, p_symbols
 If the array contains non-number non-null values, treat them as null
 */
 function numbersArrayToString(p_numbersArray, p_numbersAreStrings) {
+	return numberAndIgnoreClosedArraysToString(p_numbersArray, null, p_numbersAreStrings);
+}
+
+// Builds a number array from a string
+function stringToNumberArray(p_string, p_xLength, p_yLength, p_numbersAreStrings) {
+	return stringToNumberArrayWithSomeSpacesIgnored(p_string, p_xLength, p_yLength, null, p_numbersAreStrings);
+}
+
+function numberAndIgnoreClosedArraysToString(p_numbersArray, p_wallArray, p_numbersAreStrings) {
 	const streamValues = new StreamEncodingSparseAny();
 	for(var iy = 0 ; iy < p_numbersArray.length ; iy++) {
 		for(var ix = 0 ; ix < p_numbersArray[0].length; ix++) {
-			if (!isNaN(p_numbersArray[iy][ix])) {
-				if (p_numbersAreStrings) {
-					if ((p_numbersArray[iy][ix] == null) || (p_numbersArray[iy][ix] == "") || (p_numbersArray[iy][ix].charAt(0) == " ")) { // yeah, isNaN(null), isNaN("") and isNaN(" ") are false
-						streamValues.encode(null); 
+			if (p_wallArray == null || p_wallArray[iy][ix].state != WALLGRID.CLOSED) {
+				if (!isNaN(p_numbersArray[iy][ix])) {
+					if (p_numbersAreStrings) {
+						if ((p_numbersArray[iy][ix] == null) || (p_numbersArray[iy][ix] == "") || (p_numbersArray[iy][ix].charAt(0) == " ")) { // yeah, isNaN(null), isNaN("") and isNaN(" ") are false
+							streamValues.encode(null); 
+						} else {
+							streamValues.encode(parseInt(p_numbersArray[iy][ix], 10));
+						}
 					} else {
-						streamValues.encode(parseInt(p_numbersArray[iy][ix], 10));
+						streamValues.encode(p_numbersArray[iy][ix]); // Note : maybe this habit of nullifying NaN characters will perdure, who knows ?
 					}
 				} else {
-					streamValues.encode(p_numbersArray[iy][ix]); // Note : maybe this habit of nullifying NaN characters will perdure, who knows ?
-				}
-			} else {
-				streamValues.encode(null); 
+					streamValues.encode(null); 
+				}	
 			}
 		}
 	}
 	return streamValues.getString();
 }
 
-// Builds a number array from a string
-function stringToNumberArray(p_string, p_xLength, p_yLength, p_numbersAreStrings) {
+function stringToNumberArrayWithSomeSpacesIgnored(p_string, p_xLength, p_yLength, p_wallArray, p_numbersAreStrings) {
 	const streamValues = new StreamDecodingSparseAny(p_string);
 	var answer = [];
 	for(var iy = 0 ; iy < p_yLength ; iy++) {
 		answer.push([]);
 		for(var ix = 0 ; ix < p_xLength ; ix++) {
-			decode = streamValues.decode();
-			if ((decode != null) && (!isNaN(decode)) && decode != END_OF_DECODING_STREAM) { // Well, isNan(null) = true
-				if (p_numbersAreStrings) {
-					answer[iy].push(""+decode);
-				} else {
-					answer[iy].push(decode);
+			if ((p_wallArray == null || p_wallArray[iy][ix].state != WALLGRID.CLOSED)) {
+				decode = streamValues.decode();
+				if ((decode != null) && (!isNaN(decode)) && decode != END_OF_DECODING_STREAM) { // Well, isNan(null) = true
+					if (p_numbersAreStrings) {
+						answer[iy].push(""+decode);
+					} else {
+						answer[iy].push(decode);
+					}
+				}  else {
+					answer[iy].push(null);
 				}
-			}  else {
+			} else {
 				answer[iy].push(null);
 			}
 		}
@@ -279,9 +303,9 @@ function numbersOnlyPuzzleToString(p_numbersArray) {
 // Building an array with only null and numbers 
 function stringToNumbersOnlyPuzzle(p_string) {
 	const tokens = p_string.split(" ");
-	const dims = stringToDimensions(tokens[0]);
+	const dim = stringToDimensions(tokens[0]);
 	return {
-	    numberArray : stringToNumberArray(tokens[1], dims.xLength, dims.yLength)
+	    numberArray : stringToNumberArray(tokens[1], dim.xLength, dim.yLength)
 	}
 }
 
@@ -403,15 +427,12 @@ function stringToRegionsMarginOneLeftUpNumbersPuzzle(p_string) {
 // ---------------
 // Square puzzle with nothing but rounding indications
 function marginOneLeftUpNumbersSquarePuzzleToString(p_marginLeft, p_marginUp, p_marginRight, p_marginDown) {
-	const streamParam = new StreamEncodingString64();
-	streamParam.encode(p_marginLeft.length); 
-	return streamParam.getString() + " " + numericBeltToString(p_marginLeft, p_marginUp);
+	return monoValueToString(p_marginLeft.length) + " " + numericBeltToString(p_marginLeft, p_marginUp);
 }
 
 function stringToMarginOneLeftUpNumbersSquarePuzzle(p_string) {
 	const tokens = p_string.split(" ");
-	const streamDim = new StreamDecodingString64(tokens[0]);
-	const dim = streamDim.decode();
+	const dim = stringToMonoValue(tokens[0]);
 	const belt = stringToNumericBelt(tokens[1], dim, dim, true, true, false, false);
 	return {marginLeft : belt.left,
 			marginUp : belt.up};
@@ -455,4 +476,17 @@ function stringToTapaPuzzle(p_string) {
 		}
 	}
 	return {combinationsArray : array};
+}
+
+// ---------------
+// Sudoku
+
+function sudokuPuzzleToString(p_numbersArray, p_wallArray) {
+	return numberAndIgnoreClosedArraysToString(p_numbersArray, p_wallArray);
+} 
+
+function stringToSudokuPuzzle(p_string, p_wallArray) {
+	return {
+	    numberArray : stringToNumberArrayWithSomeSpacesIgnored(p_string, p_wallArray[0].length, p_wallArray.length, p_wallArray, false)
+	}
 }

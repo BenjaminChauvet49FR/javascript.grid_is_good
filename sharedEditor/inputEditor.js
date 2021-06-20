@@ -1,20 +1,14 @@
-// A few setup :
+// See "inputOptions" in inputComboChange.js
 
-var inputOptions = {
-	forceMonoCharacter : false,
-	minNumber : 0,
-	maxNumber : null,
-	nonNumericStrings : []
-}
-
-// ------------------
+// Note : what's gonna happen when we have other models of regions ? (Sudoku Killer)
+// Also, Admit that that combobox is for "normal sudoku"
 
 // Clicks on the canvas 
 function clickCanvas(event, p_canvas, p_drawer, p_editorCore, p_modes) {
     var doneClicking = false;
 	const p_xLength = p_editorCore.getXLength();
 	const p_yLength = p_editorCore.getYLength();
-	if (p_editorCore.hasWalls()) {
+	if (p_editorCore.hasWalls() && !inputOptions.lockedWalls) {
 		var indexWallR = p_drawer.getClickWallR(event, p_canvas, p_xLength, p_yLength);
 		var indexWallD = p_drawer.getClickWallD(event, p_canvas, p_xLength, p_yLength);
 		if (indexWallR != null) {
@@ -146,7 +140,9 @@ clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
 			}
 		break;
 		default :
-			p_editorCore.switchState(p_x, p_y);
+			if (!inputOptions.lockedWalls) {				
+				p_editorCore.switchState(p_x, p_y);
+			}
 	}
 }
 
@@ -201,7 +197,7 @@ validityNumberRangeOrSymbolClosure = function(p_min, p_max, p_symbol) {
 	return function(p_clue) {
 		if (!isNaN(p_clue)) {
 			const number = parseInt(p_clue, 10);//p_clue == "X" || 
-			return (p_min <= number) && (p_max >= number);
+			return ((p_min == null) || (p_min <= number)) && ((p_max == null) || (p_max >= number));
 		} else {
 			for (var i = 0; i < p_symbol.length ; i++) {
 				if (p_clue == p_symbol[i]) {
@@ -268,10 +264,22 @@ p_xLength : horizontal dimension
 p_yLength : vertical dimension
  */
 restartAction = function (p_canvas, p_drawer, p_editorCore, p_fieldsDefiningPuzzle) {
-	const xLength = parseInt(getFieldX(p_fieldsDefiningPuzzle).value, 10);
-	const yLength = parseInt(getFieldY(p_fieldsDefiningPuzzle).value, 10);
     if (confirm("Redémarrer la grille ?")) {
-        p_editorCore.restartGrid(xLength, yLength);
+		var xLength, yLength;
+		if (correspondsToSudokuPuzzle(p_fieldsDefiningPuzzle)) {
+			const sudokuMode = getSudokuIdFromLabel(p_fieldsDefiningPuzzle.fieldSudoku.value);
+			xLength = sudokuMode.xTotalLength;
+			yLength = sudokuMode.yTotalLength;
+		} else {
+			xLength = parseInt(getFieldX(p_fieldsDefiningPuzzle).value, 10);
+			yLength = parseInt(getFieldY(p_fieldsDefiningPuzzle).value, 10);
+		}
+		if (inputOptions.lockedWalls) {
+			const storedWallArray = p_editorCore.getWallArray();
+			p_editorCore.setupFromWallArray(storedWallArray);
+		} else {			
+			p_editorCore.restartGrid(xLength, yLength);
+		}
 		Object.keys(GRID_ID).forEach(id => {
 			editorCore.addCleanGrid(id, xLength, yLength); //  See GRID_ID in EditorCore
 		});
@@ -372,7 +380,7 @@ function applyChangesForSpaceMode(p_editorCore, p_mode) {
 // Misc functions 
 
 getFieldX = function(p_fieldsDefiningPuzzle) { // TODO déplacer ceci ! 551551
-	if (p_fieldsDefiningPuzzle.fieldXY.disabled) {
+	if (p_fieldsDefiningPuzzle.spanXYBound.display == "none") {
 		return p_fieldsDefiningPuzzle.fieldX;
 	} else {
 		return p_fieldsDefiningPuzzle.fieldXY;
@@ -380,7 +388,7 @@ getFieldX = function(p_fieldsDefiningPuzzle) { // TODO déplacer ceci ! 551551
 }
 
 getFieldY = function(p_fieldsDefiningPuzzle) {
-	if (p_fieldsDefiningPuzzle.fieldXY.disabled) {
+	if (p_fieldsDefiningPuzzle.spanXYBound.display == "none") {
 		return p_fieldsDefiningPuzzle.fieldY;
 	} else {
 		return p_fieldsDefiningPuzzle.fieldXY;
@@ -398,6 +406,10 @@ function copySaveModeInto(p_start, p_destination) {
 	} else {
 		p_destination.squareGrid = false;
 	}
+}
+
+function correspondsToSudokuPuzzle(p_fieldsDefiningPuzzle) {
+	return (p_fieldsDefiningPuzzle.spanSelectSudoku.display != "none");
 }
 
 //------------------------
@@ -490,8 +502,9 @@ const PUZZLES_KIND = {
 	WALLS_ONLY_ONE_NUMBER_LEFT_UP : {id:9},
 	ONLY_ONE_NUMBER_LEFT_UP_SQUARE : {id:10, squareGrid : true},
 	TAPA : {id:11},
-	STAR_BATTLE : {id:1001, squareGrid : true},
+	STAR_BATTLE : {id:12, squareGrid : true},
 	GRAND_TOUR : {id:99102},
+	SUDOKU : {id:1001}
 }
 
 const MARGIN_KIND = {
@@ -544,14 +557,15 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
 			puzzleToSaveString = regionsMarginOneLeftUpNumbersPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getMarginArray(EDGES.LEFT), p_editorCore.getMarginArray(EDGES.UP));
 		} else if (p_saveLoadMode.id == PUZZLES_KIND.ONLY_ONE_NUMBER_LEFT_UP_SQUARE.id) {
 			puzzleToSaveString = marginOneLeftUpNumbersSquarePuzzleToString(p_editorCore.getMarginArray(EDGES.LEFT), p_editorCore.getMarginArray(EDGES.UP)); 
-		} else {
-			puzzleToSaveString = wallsOnlyPuzzleToString(p_editorCore.getWallArray());
+		} else if (p_saveLoadMode.id == PUZZLES_KIND.SUDOKU.id) {
+			const sudokuMode = p_externalOptions.sudokuMode;
+			puzzleToSaveString = sudokuPuzzleToString(p_editorCore.getArray(GRID_ID.NUMBER_SPACE), getSudokuWallGrid(sudokuMode).array); 
 		}
         localStorage.setItem(localStorageName, puzzleToSaveString);
     }
 }
 
-function getLoadedStuff(p_kindId, p_localStorageName) { // Not the load action ! 
+function getLoadedStuff(p_kindId, p_localStorageName, p_externalOptions) { // Not the load action ! 
 	switch(p_kindId) {
 		case PUZZLES_KIND.STAR_BATTLE.id : // Note : some arrays in loadedItem are written several times. But is it a problem as the array is not sliced ?
 			return stringToStarBattlePuzzle(localStorage.getItem(p_localStorageName)); break;
@@ -567,6 +581,13 @@ function getLoadedStuff(p_kindId, p_localStorageName) { // Not the load action !
 			return loadedItem; break;
 		case PUZZLES_KIND.NUMBERS_ONLY.id :
 			var loadedItem = stringToNumbersOnlyPuzzle(localStorage.getItem(p_localStorageName));
+			loadedItem.desiredIDs = [GRID_ID.NUMBER_SPACE];
+			loadedItem.desiredArrays = [loadedItem.numberArray];
+			return loadedItem; break;
+		case PUZZLES_KIND.SUDOKU.id :
+			const wallArray = getSudokuWallGrid(p_externalOptions.sudokuMode).array;
+			var loadedItem = stringToSudokuPuzzle(localStorage.getItem(p_localStorageName), wallArray);
+			loadedItem.wallArray = wallArray;
 			loadedItem.desiredIDs = [GRID_ID.NUMBER_SPACE];
 			loadedItem.desiredArrays = [loadedItem.numberArray];
 			return loadedItem; break;
@@ -608,12 +629,12 @@ function getLoadedStuff(p_kindId, p_localStorageName) { // Not the load action !
 Loads the desired grid from the local storage
 p_detachedName is the name in the field
 */
-editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMode, p_fieldsToUpdate) {
+editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMode, p_fieldsToUpdate,  p_externalOptions) {
     var localStorageName = getLocalStorageName(p_puzzleName, p_detachedName);
     if (localStorage.hasOwnProperty(localStorageName)) {
         if (confirm("Charger le puzzle " + localStorageName + " ?")) {
 			p_editorCore.maskAllGrids();
-			const loadedStuff = getLoadedStuff(p_saveLoadMode.id, localStorageName); // loadedStuff and not "loadedItem" because this is an item loaded but with extra properties
+			const loadedStuff = getLoadedStuff(p_saveLoadMode.id, localStorageName, p_externalOptions); // loadedStuff and not "loadedItem" because this is an item loaded but with extra properties
 			var wallArray = loadedStuff.wallArray;
 			if (!wallArray) {
 				// Note : all we want is a wallArray with a number of spaces in x and y, should it be empty !
@@ -685,86 +706,7 @@ function getRegionIndicArray(p_loadedItem) {
 
 // --------------------
 
-// TODO change puzzle size if a puzzle is square !
 
-//How to use the change of a combobox. Credits : https://www.scriptol.fr/html5/combobox.php
-function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode, p_fields) {
-    var idx = p_thelist.selectedIndex;
-    var content = p_thelist.options[idx].innerHTML;
-	var hasStars = false;
-	// Default options
-	p_editorCore.setWallsOn();
-	p_editorCore.setMarginInfo(MARGIN_KIND.NONE);
-	p_editorCore.resetMargins();
-	// Default input options 
-	inputOptions.forceMonoCharacter = false;
-	inputOptions.minNumber = 0;
-	inputOptions.maxNumber = null;
-	inputOptions.nonNumericStrings = []; // Note : not useful yet !
-	
-	// Specific options
-    switch (content) { // Should break be forgotten, following instructions are read... and saveLoadModeId is overset ! This was problematic with Stitches !
-		case 'CurvingRoad' : 
-			p_editorCore.setWallsOff();
-			saveLoadModeId = PUZZLES_KIND.CURVING_ROAD;
-			p_editorCore.setVisibleGrids([GRID_ID.PEARL]); break;
-		case 'Masyu':
-			p_editorCore.setWallsOff();
-			saveLoadModeId = PUZZLES_KIND.MASYU;
-			p_editorCore.setVisibleGrids([GRID_ID.PEARL]); break;
-		case 'Usotatami':
-			p_editorCore.setWallsOff();
-			saveLoadModeId = PUZZLES_KIND.NUMBERS_ONLY;
-			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]); break;
-		case 'Chocona': case 'CountryRoad': case 'Detour': case 'Heyawake': case 'Shimaguni':
-			saveLoadModeId = PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS;
-			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_REGION]); break;
-		case 'Hakyuu': case 'Usoone':
-			saveLoadModeId = PUZZLES_KIND.REGIONS_NUMBERS;
-			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]); 
-			if (content == 'Usoone') {
-				inputOptions.forceMonoCharacter = true;
-				inputOptions.maxNumber = 4;
-			}
-			break; // Forgot break !!
-		case 'SternenSchlacht':
-			saveLoadModeId = PUZZLES_KIND.STAR_BATTLE; 
-			p_editorCore.maskAllGrids();
-			hasStars = true; break;
-		case 'Akari': case 'Koburin': case 'Shugaku':
-			p_editorCore.setWallsOff();
-			saveLoadModeId = PUZZLES_KIND.NUMBERS_X_ONLY;
-			p_editorCore.setVisibleGrids([GRID_ID.DIGIT_X_SPACE]); break;
-		case 'Yajilin': case 'Yajikabe': // Can also include Yajisan-Kazusan
-			p_editorCore.setWallsOff();
-			saveLoadModeId = PUZZLES_KIND.YAJILIN_LIKE;
-			p_editorCore.setVisibleGrids([GRID_ID.YAJILIN_LIKE]); break;
-		case 'Tapa': 
-			p_editorCore.setWallsOff();
-			saveLoadModeId = PUZZLES_KIND.TAPA;
-			p_editorCore.setVisibleGrids([GRID_ID.TAPA]); break;
-		case 'Stitches':
-			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY_ONE_NUMBER_LEFT_UP;
-			p_editorCore.setMarginInfo(MARGIN_KIND.NUMBERS_LEFT_UP);
-			p_editorCore.maskAllGrids(); break; 
-		case 'Gappy':
-			saveLoadModeId = PUZZLES_KIND.ONLY_ONE_NUMBER_LEFT_UP_SQUARE;
-			p_editorCore.setMarginInfo(MARGIN_KIND.NUMBERS_LEFT_UP);
-			p_editorCore.setWallsOff();
-			p_editorCore.maskAllGrids(); break; 
-		default: // norinori, lits, entryExit... no numbers, only regions
-			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY;
-			p_editorCore.maskAllGrids();	
-    } // Credits for multiple statements in cases : https://stackoverflow.com/questions/13207927/switch-statement-multiple-cases-in-javascript
-	
-	this.adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
-	const squarePuzzle = correspondsToSquarePuzzle(saveLoadModeId); 
-	p_fields.fieldX.disabled = squarePuzzle;
-	p_fields.fieldY.disabled = squarePuzzle;
-	p_fields.fieldXY.disabled = !squarePuzzle;
-	p_fields.fieldStars.disabled = !hasStars;
-	copySaveModeInto(saveLoadModeId, p_saveLoadMode);
-}
 
 function switchVisibilityDivAction(p_div) {
 	if (p_div.style.display != "none") { // If I said ' == "block"' the first click wouldn't set to 'none' since style.display seems not to be set yet.

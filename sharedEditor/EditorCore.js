@@ -9,7 +9,10 @@ const GRID_ID = {
     DIGIT_X_SPACE: 'DXS',
     PEARL: 'P',
 	YAJILIN_LIKE: 'YAJILIN', 
-	TAPA: 'TAPA'
+	TAPA: 'TAPA',
+	SUDOKU: {
+		CLASSIC_9x9 : 'SUDO9'
+	}
 }
 
 const GRID_TRANSFORMATION = {
@@ -133,6 +136,18 @@ EditorCore.prototype.setVisibleGrids = function(p_list) {
 	p_list.forEach(id => {
 		this.visibleGrids[id] = true;
 	});
+}
+
+// Resize the grid according to the newly added array, performing all subjacent operations. 
+// For this we use the resize operation which works great (why bother changing it ?)
+/*EditorCore.prototype.addGridForceSize = function(p_id, p_array) {
+	this.updateSelectionData();
+	this.transformGrid(GRID_TRANSFORMATION.RESIZE, p_array[0].length, p_array.length); 
+	this.addGrid(p_id, p_array);
+}*/
+
+EditorCore.prototype.addWalledGridForceSize = function(p_wallArray) {
+	this.setupFromWallArray(p_wallArray);
 }
 
 // ----------
@@ -267,11 +282,12 @@ EditorCore.prototype.clearSpaceContents = function (p_x, p_y) {
 	});
 }
 
-EditorCore.prototype.getXLength = function () {
-    return this.xLength;
+EditorCore.prototype.getXLength = function () {		
+	return this.xLength;
 }
+
 EditorCore.prototype.getYLength = function () {
-    return this.yLength;
+	return this.yLength;
 }
 
 EditorCore.prototype.setWallsOn = function () {

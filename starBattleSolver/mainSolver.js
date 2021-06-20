@@ -2,11 +2,7 @@ var solver;
 function main() { 
 	var drawer = new Drawer();
 	solver = DummySolver();
-	var selectedSpacesGrid = {
-		array : [[]], 
-		selectedCornerSpace : null,
-		previousStateSelectedCornerSpace : null
-	}; // Note : this solver has a unique (for now) feature of selectable spaces. This item be irrelevant without that feature.
+	var selectedSpacesGrid = new InputSpacesSelection(solver.xyLength, solver.xyLength);
 	
 	var spanState = document.getElementById("span_resolution_state");
 	var canevasInteraction = document.getElementById("canevas");
@@ -41,7 +37,7 @@ function main() {
 	putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("SternenSchlacht")});
 	putActionElementClick("submit_load_grid",function(event) {
 		loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value);
-		restartSelectedSpaces(selectedSpacesGrid, solver.xyLength, solver.xyLength);
+		selectedSpacesGrid.restartSelectedSpaces(solver.xyLength, solver.xyLength);
 		document.getElementById("span_stars").innerHTML = solver.numberStars;
 	});
 	putActionElementClick("submit_undo",function(event){undoAction(solver)});
@@ -58,8 +54,8 @@ function main() {
 	addEventListenerAndCaption("submit_pass_region", ACTION_PASS_REGION);
 	addEventListenerAndCaption("submit_pass_row", ACTION_PASS_ROW);
 	addEventListenerAndCaption("submit_pass_column", ACTION_PASS_COLUMN);
-	addEventListenerAndCaption("submit_select", ACTION_SELECTION);
-	addEventListenerAndCaption("submit_select", ACTION_SELECTION);
+	addEventListenerAndCaption("submit_select_rectangle", ACTION_SELECTION_RECTANGLE);
+	addEventListenerAndCaption("submit_select_region", ACTION_SELECTION_REGION);
 
 	function addEventListenerAndCaption(p_identifier, p_action) { //Shortcut action
 		addEventListenerAndCaptionActionSubmit(actionsManager, textAction, p_identifier, ENTRY.SPACE, p_action);

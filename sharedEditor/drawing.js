@@ -2,36 +2,36 @@
 Draw the grid on-screen on p_context, with p_editorCore informations, with this.pix and p_colors information for pixels and colors
 */
 Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
-    const xLength = p_editorCore.getXLength();
-    const yLength = p_editorCore.getYLength();
-    if (p_editorCore.hasWallGrid()) {
-        if (p_editorCore.hasWalls()) {
-            this.drawWallGrid(p_context, p_editorCore.wallGrid, xLength, yLength);
-        } else {
-            this.drawWalllessGrid(p_context, p_editorCore.wallGrid, xLength, yLength);
-        }
-        // Selection
-        for (var iy = 0; iy < yLength; iy++) {
-            for (var ix = 0; ix < xLength; ix++) {
-                if (p_editorCore.getSelection(ix, iy) == SELECTED.YES) {
-                    p_context.fillStyle = this.editorColorSet.selectedSpace;
-                    p_context.fillRect(this.getPixInnerXLeft(ix), this.getPixInnerYUp(iy), this.getPixInnerSide(), this.getPixInnerSide());
-                }
-            }
-        }
+	const xLength = p_editorCore.getXLength();
+	const yLength = p_editorCore.getYLength();
+	if (p_editorCore.hasWallGrid()) {
+		if (p_editorCore.hasWalls()) {
+			this.drawWallGrid(p_context, p_editorCore.wallGrid, xLength, yLength);
+		} else {
+			this.drawEmptyGrid(p_context, xLength, yLength);
+		}
+		// Selection
+		for (var iy = 0; iy < yLength; iy++) {
+			for (var ix = 0; ix < xLength; ix++) {
+				if (p_editorCore.getSelection(ix, iy) == SELECTED.YES) {
+					p_context.fillStyle = this.editorColorSet.selectedSpace;
+					p_context.fillRect(this.getPixInnerXLeft(ix), this.getPixInnerYUp(iy), this.getPixInnerSide(), this.getPixInnerSide());
+				}
+			}
+		}
 		const sc = p_editorCore.getSelectedSpaceForRectangle();
 		if (sc != null) {
 			p_context.fillStyle = this.editorColorSet.selectedCornerSpace;
-            p_context.fillRect(this.getPixInnerXLeft(sc.x), this.getPixInnerYUp(sc.y), this.getPixInnerSide(), this.getPixInnerSide());
+			p_context.fillRect(this.getPixInnerXLeft(sc.x), this.getPixInnerYUp(sc.y), this.getPixInnerSide(), this.getPixInnerSide());
 		}
-    }
+	}
 	
 	// Which grids and margins are to be drawn ?
 	if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_REGION)) {
-	    this.drawNumbersLittleInCorner(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_REGION));
+		this.drawNumbersLittleInCorner(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_REGION));
 	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.DIGIT_X_SPACE)) {
-	    this.drawNumbersGrid(p_context, p_editorCore.getGrid(GRID_ID.DIGIT_X_SPACE)); // TODO : add some actual crosses ? Letter X looks fine to me.
+		this.drawNumbersGrid(p_context, p_editorCore.getGrid(GRID_ID.DIGIT_X_SPACE)); // TODO : add some actual crosses ? Letter X looks fine to me.
 	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.PEARL)) {
 		this.drawPearlGrid(p_context, p_editorCore.getGrid(GRID_ID.PEARL));
@@ -40,14 +40,14 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 		this.drawTapaGrid(p_context, p_editorCore.getGrid(GRID_ID.TAPA));
 	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_SPACE)) {
-	    this.drawNumbersGrid(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_SPACE));
+		this.drawNumbersGrid(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_SPACE));
 	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.YAJILIN_LIKE)) {
-	    this.drawCombinedArrowGridIndications(p_context, p_editorCore.getGrid(GRID_ID.YAJILIN_LIKE));
+		this.drawCombinedArrowGridIndications(p_context, p_editorCore.getGrid(GRID_ID.YAJILIN_LIKE));
 	}
 	if (p_editorCore.getMarginInfoId() == MARGIN_KIND.NUMBERS_LEFT_UP.id) {
 		this.drawMarginLeftUpOne(p_context, p_editorCore.margins[EDGES.LEFT], p_editorCore.margins[EDGES.UP]);
-	}
+	}		
 }
 
 Drawer.prototype.drawNumbersLittleInCorner = function (p_context, p_numberGrid) {

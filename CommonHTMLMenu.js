@@ -108,6 +108,13 @@ menuSolvers.push({
 	]
 });
 
+menuSolvers.push({
+	displayName : "Sudokus",
+	documentPage : "Solver",
+	typeList : [
+		{name : "sudoku", displayName : "Sudoku"}
+	]
+});
 
 menuSolvers.push({
 	displayName : "Théorique",

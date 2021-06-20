@@ -543,7 +543,8 @@ GeneralSolver.prototype.happenedEventsLog = function(p_options) {
 		if (eventSerie.kind == SERIE_KIND.PASS) {
 			answer += "Pass - " + eventSerie.label + " ";
 		} else if (eventSerie.kind == SERIE_KIND.QUICKSTART) {
-			answer += "Quickstart - " + eventSerie.label + " ";
+			answer += "Quickstart - " + (
+			(eventSerie.label && eventSerie.label != null && eventSerie.label != "") ? (eventSerie.label + " ") : "" );
 		} else {
 			answer += "Hypothesis - " + (displayQuick ? eventSerie.list[0] : "");
 		} 

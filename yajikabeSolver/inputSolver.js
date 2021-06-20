@@ -44,7 +44,7 @@ multiPassAction = function (p_solver){
 
 /** 
 Transforms a loaded string into the appropriate item (see common save and load), updates intelligence, updates canvas.
-Called by common save and load !
+Called from outside !
 */
 loadPuzzle = function(p_canvas, p_drawer, p_solver, p_loadedString) {
 	const loadedItem = stringToArrowNumberCombinationsPuzzle(p_loadedString);

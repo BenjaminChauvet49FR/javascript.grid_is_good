@@ -49,6 +49,7 @@ addScriptsAdjacency = addScriptsClosure(["../miscSolving/AdjacencyCheck.js", "..
 function addScriptCheckCollection() { addScript("../miscSolving/CheckCollection.js"); } // For filters 
 function addScriptConstants() { addScript("../miscSolving/Constants.js"); }
 function addScriptFences() { addScript("../miscSolving/Fences.js"); }
-function addScriptSpacesSelection() { addScript("../miscSolving/SpaceNumeric.js"); }
+function addScriptNonBinarySpaces() { addScript("../miscSolving/SpaceNumeric.js"); }
+function addScriptInputSpacesSelection() { addScript("../miscSolving/InputSpacesSelection.js"); }
 
 addScriptsLoopRegion = addScriptsClosure(["../LoopSolver/RegionLoopSolver.js", "../LoopSolver/RegionJunctionEvent.js"]);

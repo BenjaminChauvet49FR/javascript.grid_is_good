@@ -7,9 +7,9 @@ function drawInsideSpaces(p_context, p_drawer, p_colors, p_solver, p_selectionSe
 		if (p_solver.getRegion(x, y) == WALLGRID.OUT_OF_REGIONS) {
 			return -1;
 		}
-		if (p_selectionSet.array[y][x] == STAR_BATTLE_INPUT.SELECTED) {
+		if (p_selectionSet.array[y][x] == SPACE_SELECTION_INPUT.SELECTED) {
 			return 0;
-		} else if (p_selectionSet.array[y][x] == STAR_BATTLE_INPUT.CORNER_SELECTED) {
+		} else if (p_selectionSet.array[y][x] == SPACE_SELECTION_INPUT.CORNER_SELECTED) {
 			return 1;
 		}
 		return -1;

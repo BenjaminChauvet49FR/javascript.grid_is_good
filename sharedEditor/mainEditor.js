@@ -36,13 +36,30 @@ const fieldsDefiningPuzzle = {
 	fieldStars : document.getElementById("input_number_stars"),
 	fieldX : document.getElementById("input_number_xLength"),
 	fieldY : document.getElementById("input_number_yLength"),
-	fieldXY : document.getElementById("input_number_xyLength")
+	fieldXY : document.getElementById("input_number_xyLength"),
+	fieldSudoku : document.getElementById("select_sudoku_type"),
+	// 
+	spanXYSeparated : document.getElementById("span_xy_separated"),
+	spanXYBound : document.getElementById("span_xy_bound"),
+	spanSelectSudoku : document.getElementById("span_select_sudoku"),
+	spanStars : document.getElementById("span_stars"),
+	submitResizeGrid : document.getElementById("submit_resize_grid")
+}
+
+function comboMain() {
+	combo(puzzleTypeComboBox);
 }
 
 adaptCanvasAndGrid(canevas, drawer, editorCore);
+fillSudokuSelectCombobox(fieldsDefiningPuzzle.fieldSudoku);
 
 function puzzleName() {
-	return puzzleTypeComboBox.options[puzzleTypeComboBox.selectedIndex].innerHTML;
+	const name = puzzleTypeComboBox.options[puzzleTypeComboBox.selectedIndex].innerHTML;
+	if (name == 'Sudoku') {
+		const sudokuMode = getSudokuIdFromLabel(fieldsDefiningPuzzle.fieldSudoku.value);
+		return name + "_" + sudokuMode.savedId + "_";
+	}
+	return name;
 }
 
 putActionElementClick("submit_display_menu", function (event) {
@@ -59,14 +76,13 @@ putActionElementClick("submit_rename_puzzle", function (event) {
     renameAction(puzzleName(), fieldName)
 });
 putActionElementClick("submit_save_grid", function (event) {
-    saveAction(editorCore, puzzleName(), fieldName.value, saveLoadMode, {numberStars : parseInt(fieldsDefiningPuzzle.fieldStars.value, 10)}) 
+	const sudokuMode = getSudokuIdFromLabel(fieldsDefiningPuzzle.fieldSudoku.value);
+    saveAction(editorCore, puzzleName(), fieldName.value, saveLoadMode, 
+	{numberStars : parseInt(fieldsDefiningPuzzle.fieldStars.value, 10), sudokuMode : sudokuMode}) 
 });
 putActionElementClick("submit_load_grid", function (event) {
-    editorLoadAction(canevas, drawer, editorCore, puzzleName(), fieldName.value, saveLoadMode, fieldsDefiningPuzzle/*{
-        xLengthField : actualFieldX,
-        yLengthField : actualFieldY,
-		numberStarsField : fieldStars
-    }*/)
+    const sudokuMode = getSudokuIdFromLabel(fieldsDefiningPuzzle.fieldSudoku.value);
+	editorLoadAction(canevas, drawer, editorCore, puzzleName(), fieldName.value, saveLoadMode, fieldsDefiningPuzzle, {sudokuMode : sudokuMode})
 });
 
 putActionElementClick("submit_new_grid", function (event) {
@@ -113,6 +129,11 @@ function combo(p_docElt) {
 	comboChange(p_docElt, canevas, drawer, editorCore, saveLoadMode, fieldsDefiningPuzzle);
 }
 combo(document.getElementById('select_puzzle_type')); //TODO c'est comme ça que ça se passe au démarrage, j'espère que c'est chargé. On peut le mettre directement sur la combobox ? Mais ce serait peut-être un peu lourd pour le mélange fond/forme, non ?
+
+function comboSudoku(p_docElt) {
+	comboSudokuChange(p_docElt, canevas, drawer, editorCore, saveLoadMode, fieldsDefiningPuzzle);
+}
+
 function checkboxTransparencyChange(p_checkbox) {
 	editorCore.setTransparencyState(p_checkbox.checked);
 }

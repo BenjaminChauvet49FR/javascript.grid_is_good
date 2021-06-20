@@ -42,7 +42,7 @@ SolverHakyuu.prototype.construct = function(p_wallArray, p_numberArray) {
 		this.regions.push({
 			spaces : spacesByRegion[ir],
 			size : spacesByRegion[ir].length,
-			numbers : new SpaceSetNumeric(1, spacesByRegion[ir].length)
+			possibilities : null
 		});
 	}
 	
@@ -51,7 +51,6 @@ SolverHakyuu.prototype.construct = function(p_wallArray, p_numberArray) {
 		region = this.regions[ir];
 		//region.size = region.spaces.length;
 		for (is = 0 ; is < region.spaces.length ; is++) {
-			//region.numbers = new SpaceSetNumeric(1, region.size);
 			x = region.spaces[is].x;
 			y = region.spaces[is].y;
 			if (p_numberArray[y][x] == null) {
@@ -68,7 +67,6 @@ SolverHakyuu.prototype.construct = function(p_wallArray, p_numberArray) {
 			y = region.spaces[is].y;
 			fixedVal = p_numberArray[y][x];
 			if (fixedVal != null) {
-				//region.numbers.warn(fixedVal);
 				this.numbersArray[y][x] = {fixedValue : p_numberArray[y][x]};
 				region.spaces.forEach(space => {
 					x2 = space.x;
@@ -133,8 +131,8 @@ SolverHakyuu.prototype.construct = function(p_wallArray, p_numberArray) {
 }
 
 SolverHakyuu.prototype.banIfNecessary = function(p_numberArray, p_x, p_y, p_fixedVal) {
-	if ((p_numberArray[p_y][p_x] == null) && (p_fixedVal <= this.numbersArray[p_y][p_x].getMax()) && (this.numbersArray[p_y][p_x].getState(p_fixedVal) == SPACE_CHOICE.UNDECIDED)) {
-		this.numbersArray[p_y][p_x].ban(p_fixedVal);
+	if ((p_numberArray[p_y][p_x] == null) && (p_fixedVal <= this.numbersArray[p_y][p_x].getMax())) {
+		this.numbersArray[p_y][p_x].banIfNecessary(p_fixedVal);
 	}
 }
 
