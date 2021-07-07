@@ -5,6 +5,8 @@
 const SPACE_STATE = {BUTTON : 2, EMPTY : 1, UNDECIDED : 0};
 const LINK_STATE = {LINKED : 2, CLOSED : 1, UNDECIDED : 0};
 const EVENT_KIND = {SPACE : 1, LINK : 0}
+const LABEL_SPACE_STATE = ["-", "E", "B"];
+const LABEL_LINK_STATE = ["-", "C", "L"];
 
 function SpaceEvent(p_x, p_y, p_symbol) {
 	this.kind = EVENT_KIND.SPACE;
@@ -14,7 +16,7 @@ function SpaceEvent(p_x, p_y, p_symbol) {
 }
 
 SpaceEvent.prototype.toString = function(){	
-	return "["+this.symbol+" "+this.x+","+this.y+"]";
+	return "["+LABEL_SPACE_STATE[this.symbol]+" "+this.x+","+this.y+"]";
 }
 
 SpaceEvent.prototype.copy = function() {
@@ -35,7 +37,7 @@ LinkEvent.prototype.copy = function() {
 }
 
 LinkEvent.prototype.toString = function() {	
-	return "["+"L"+this.state+" "+this.linkX+","+this.linkY+" "+this.direction+"]";
+	return "["+"L"+LABEL_LINK_STATE[this.state]+" "+this.linkX+","+this.linkY+" "+LabelDirection[this.direction]+"]";
 }
 
 function isSpaceEvent(p_event) {

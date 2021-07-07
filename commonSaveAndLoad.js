@@ -412,19 +412,27 @@ function stringToArrowNumberCombinationsPuzzle(p_string) {
 }
 
 // ---------------
-// Region puzzle (classic) with one marginal puzzle a top and one marginal puzzle at left
+// Stitches puzzle
 
-function regionsMarginOneLeftUpNumbersPuzzleToString(p_wallArray, p_edgeLeft, p_edgeUp) {
-	return wallsOnlyPuzzleToString(p_wallArray) + " " + numericBeltToString(p_edgeLeft, p_edgeUp);
+function stitchesPuzzleToString(p_wallArray, p_edgeLeft, p_edgeUp, p_numberBounds) { 
+	const streamParam = new StreamEncodingString64();
+	streamParam.encode(p_numberBounds);
+	streamParam.encode(p_wallArray[0].length);
+	streamParam.encode(p_wallArray.length);
+	return streamParam.getString() + " " + wallArrayToString64(p_wallArray) + " " + numericBeltToString(p_edgeLeft, p_edgeUp);
 }
 
-function stringToRegionsMarginOneLeftUpNumbersPuzzle(p_string) {
+function stringToStitchesPuzzle(p_string) {
 	const tokens = p_string.split(" ");
-	const dims = stringToDimensions(tokens[0]);
-	const belt = stringToNumericBelt(tokens[2], dims.xLength, dims.yLength, true, true, false, false);
-	return {wallArray : string64toWallArray(tokens[1], dims.xLength, dims.yLength) , 
-			marginLeft : belt.left,
-			marginUp : belt.up};
+	const streamParam = new StreamDecodingString64(tokens[0]);
+	const numberBounds = streamParam.decode();
+	const xLength = streamParam.decode();
+	const yLength = streamParam.decode();
+	const belt = stringToNumericBelt(tokens[2], xLength, yLength, true, true, false, false);
+	return {wallArray : string64toWallArray(tokens[1], xLength, yLength), 
+	boundNumber : numberBounds,
+	marginLeft : belt.left,
+	marginUp : belt.up}; // "wallArray" is necessary for updating fields in the editor, we cannot just return an array.
 }
 
 // ---------------

@@ -34,6 +34,7 @@ const puzzleTypeComboBox = document.getElementById("select_puzzle_type");
 
 const fieldsDefiningPuzzle = {	
 	fieldStars : document.getElementById("input_number_stars"),
+	fieldBounds : document.getElementById("input_number_bounds"),
 	fieldX : document.getElementById("input_number_xLength"),
 	fieldY : document.getElementById("input_number_yLength"),
 	fieldXY : document.getElementById("input_number_xyLength"),
@@ -43,6 +44,7 @@ const fieldsDefiningPuzzle = {
 	spanXYBound : document.getElementById("span_xy_bound"),
 	spanSelectSudoku : document.getElementById("span_select_sudoku"),
 	spanStars : document.getElementById("span_stars"),
+	spanBounds : document.getElementById("span_bounds"),
 	submitResizeGrid : document.getElementById("submit_resize_grid")
 }
 
@@ -78,7 +80,9 @@ putActionElementClick("submit_rename_puzzle", function (event) {
 putActionElementClick("submit_save_grid", function (event) {
 	const sudokuMode = getSudokuIdFromLabel(fieldsDefiningPuzzle.fieldSudoku.value);
     saveAction(editorCore, puzzleName(), fieldName.value, saveLoadMode, 
-	{numberStars : parseInt(fieldsDefiningPuzzle.fieldStars.value, 10), sudokuMode : sudokuMode}) 
+	{numberStars : parseInt(fieldsDefiningPuzzle.fieldStars.value, 10), 
+	 numberBounds : parseInt(fieldsDefiningPuzzle.fieldBounds.value, 10), 
+	 sudokuMode : sudokuMode}) 
 });
 putActionElementClick("submit_load_grid", function (event) {
     const sudokuMode = getSudokuIdFromLabel(fieldsDefiningPuzzle.fieldSudoku.value);

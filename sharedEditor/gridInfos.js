@@ -33,7 +33,7 @@ const PUZZLES_KIND = {
 	REGIONS_NUMBERS : {id:6},
 	NUMBERS_X_ONLY : {id:7},
 	YAJILIN_LIKE : {id:8},
-	WALLS_ONLY_ONE_NUMBER_LEFT_UP : {id:9},
+	STITCHES : {id:9},
 	ONLY_ONE_NUMBER_LEFT_UP_SQUARE : {id:10, squareGrid : true},
 	TAPA : {id:11},
 	REGIONS_PLAYSTATION_SHAPES : {id:12},

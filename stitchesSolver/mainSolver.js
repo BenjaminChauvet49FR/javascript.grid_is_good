@@ -2,6 +2,7 @@ var solver;
 function main() {
 	var drawer = new Drawer();
 	solver = DummySolver();
+	var spanState = document.getElementById("span_resolution_state");
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
 	var actionsManager = {}; 
@@ -23,6 +24,7 @@ function main() {
 		drawer.drawWallGrid(context, solver.gridWall, solver.xLength, solver.yLength); 
 		drawer.drawMarginLeftUpOne(context, solver.numbersMarginsLeft, solver.numbersMarginsUp);
 		drawInsideSpaces(context, drawer, colors, solver);
+		solver.callStateForItem(spanState);
 	}
 
 	canevas.addEventListener('click', function(event){clickCanvas(event, canevas, drawer, solver, actionsManager)},false);
@@ -31,7 +33,10 @@ function main() {
 
 	const puzzleTypeName = "Stitches";
 	putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList(puzzleTypeName)});
-	putActionElementClick("submit_load_grid",function(event){loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value)});
+	putActionElementClick("submit_load_grid",function(event){
+		loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value);
+		document.getElementById("span_bounds").innerHTML = solver.numberBounds;
+	});
 	putActionElementClick("submit_quickStart",function(event){quickStartAction(solver)});
 	putActionElementClick("submit_multiPass",function(event){multiPassAction(solver)});
 	putActionElementClick("submit_undo",function(event){undoAction(solver)});

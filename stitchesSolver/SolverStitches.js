@@ -8,22 +8,23 @@ const STITCHES_PASS_KIND = {
 
 // Setup
 
-function SolverStitches(p_wallArray, p_marginLeftArray, p_marginUpArray) {
+function SolverStitches(p_wallArray, p_marginLeftArray, p_marginUpArray, p_boundNumber) {
 	GeneralSolver.call(this);
-	this.construct(p_wallArray, p_marginLeftArray, p_marginUpArray);
+	this.construct(p_wallArray, p_marginLeftArray, p_marginUpArray, p_boundNumber);
 }
 
 SolverStitches.prototype = Object.create(GeneralSolver.prototype);
 SolverStitches.prototype.constructor = SolverStitches;
 
 function DummySolver() {
-	return new SolverStitches(generateWallArray(1, 1), [null], [null]);
+	return new SolverStitches(generateWallArray(1, 1), [null], [null], 1);
 }
 
-SolverStitches.prototype.construct = function(p_wallArray, p_marginLeftArray, p_marginUpArray) {
+SolverStitches.prototype.construct = function(p_wallArray, p_marginLeftArray, p_marginUpArray, p_boundNumber) {
 	this.generalConstruct();
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
+	this.numberBounds = p_boundNumber;
 	this.methodsSetDeductions = new ApplyEventMethodPack( 
 		applyEventClosure(this),
 		deductionsClosure(this),
@@ -76,8 +77,8 @@ SolverStitches.prototype.construct = function(p_wallArray, p_marginLeftArray, p_
 			} else {
 				var tmp = this.triangleBorders[r1][r2];
 				this.triangleBorders[r1][r2] = {};
-				this.triangleBorders[r1][r2].notClosedYet = tmp.length-1;
-				this.triangleBorders[r1][r2].notLinkedYet = 1;
+				this.triangleBorders[r1][r2].notClosedYet = tmp.length - this.numberBounds;
+				this.triangleBorders[r1][r2].notLinkedYet = this.numberBounds;
 				this.triangleBorders[r1][r2].listLinks = tmp;
 				tmp.forEach(coorsDir => {
 					if (coorsDir.direction == DIRECTION.RIGHT) {
@@ -383,7 +384,10 @@ deductionsClosure = function (p_solver) {
 			if (state == LINK_STATE.LINKED) {
 				p_listEventsToApply.push(new SpaceEvent(x, y, SPACE_STATE.BUTTON));
 				p_listEventsToApply.push(new SpaceEvent(dx, dy, SPACE_STATE.BUTTON));
-				p_listEventsToApply = p_solver.eventsFillBorder(p_listEventsToApply, p_solver.getBorder(r1, r2), LINK_STATE.CLOSED);
+				const border = p_solver.getBorder(r1, r2);
+				if ((border.notClosedYet > 0) && (border.notLinkedYet == 0)) {				
+					p_listEventsToApply = p_solver.eventsFillBorder(p_listEventsToApply, border, LINK_STATE.CLOSED);
+				}
 				// Close all other links in both spaces
 				p_solver.bordersDirectionsArray[y][x].forEach(dir2 => {
 					if (dir2 != dir) {						
@@ -440,7 +444,7 @@ SolverStitches.prototype.eventsFillColumn = function(p_listEventsToApply, p_x, p
 
 SolverStitches.prototype.eventsMayFindBreachInBorder = function(p_listEventsToApply, p_r1, p_r2) {
 	const border = this.getBorder(p_r1, p_r2);
-	if ((border.notClosedYet == 0) && (border.notLinkedYet == 1)) {
+	if ((border.notClosedYet == 0) && (border.notLinkedYet > 0)) {
 		return this.eventsFillBorder(p_listEventsToApply, border, LINK_STATE.LINKED);
 	}
 	return p_listEventsToApply;

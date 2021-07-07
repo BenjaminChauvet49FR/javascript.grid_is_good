@@ -17,6 +17,7 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 	p_editorCore.resetMargins();
 	p_editorCore.maskAllGrids(); 
 	var hasStars = false;
+	var hasBounds = false;
 	forcedSizePuzzle = false;
 	
 	// Default input options 
@@ -71,8 +72,9 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			saveLoadModeId = PUZZLES_KIND.TAPA;
 			p_editorCore.setVisibleGrids([GRID_ID.TAPA]); break;
 		case 'Stitches':
-			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY_ONE_NUMBER_LEFT_UP;
+			saveLoadModeId = PUZZLES_KIND.STITCHES;
 			p_editorCore.setMarginInfo(MARGIN_KIND.NUMBERS_LEFT_UP);
+			hasBounds = true;
 			break;
 		case 'Gappy':
 			saveLoadModeId = PUZZLES_KIND.ONLY_ONE_NUMBER_LEFT_UP_SQUARE;
@@ -101,6 +103,7 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 	maskElementConditional(p_fields.spanStars, !hasStars);
 	maskElementConditional(p_fields.spanSelectSudoku, saveLoadModeId != PUZZLES_KIND.SUDOKU);
 	maskElementConditional(p_fields.submitResizeGrid, forcedSizePuzzle);
+	maskElementConditional(p_fields.spanBounds, !hasBounds);
 	copySaveModeInto(saveLoadModeId, p_saveLoadMode);
 }
 

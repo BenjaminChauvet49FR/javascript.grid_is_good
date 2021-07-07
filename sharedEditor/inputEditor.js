@@ -546,8 +546,8 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
 		} else if (p_saveLoadMode.id == PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS.id) {
 			p_editorCore.alignToRegions(GRID_ID.NUMBER_REGION);
 			puzzleToSaveString = regionsNumericIndicationsPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.NUMBER_REGION));
-        } else if (p_saveLoadMode.id == PUZZLES_KIND.WALLS_ONLY_ONE_NUMBER_LEFT_UP.id) {
-			puzzleToSaveString = regionsMarginOneLeftUpNumbersPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getMarginArray(EDGES.LEFT), p_editorCore.getMarginArray(EDGES.UP));
+        } else if (p_saveLoadMode.id == PUZZLES_KIND.STITCHES.id) {
+			puzzleToSaveString = stitchesPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getMarginArray(EDGES.LEFT), p_editorCore.getMarginArray(EDGES.UP), p_externalOptions.numberBounds);
 		} else if (p_saveLoadMode.id == PUZZLES_KIND.ONLY_ONE_NUMBER_LEFT_UP_SQUARE.id) {
 			puzzleToSaveString = marginOneLeftUpNumbersSquarePuzzleToString(p_editorCore.getMarginArray(EDGES.LEFT), p_editorCore.getMarginArray(EDGES.UP)); 
 		} else if (p_saveLoadMode.id == PUZZLES_KIND.SUDOKU.id) {
@@ -614,8 +614,8 @@ function getLoadedStuff(p_kindId, p_localStorageName, p_externalOptions) { // No
 			loadedItem.desiredIDs = [GRID_ID.TAPA];
 			loadedItem.desiredArrays = [loadedItem.combinationsArray];
 			return loadedItem; break;
-		case PUZZLES_KIND.WALLS_ONLY_ONE_NUMBER_LEFT_UP.id :
-			return stringToRegionsMarginOneLeftUpNumbersPuzzle(localStorage.getItem(p_localStorageName)); break;
+		case PUZZLES_KIND.STITCHES.id :
+			return stringToStitchesPuzzle (localStorage.getItem(p_localStorageName)); break;
 		case PUZZLES_KIND.ONLY_ONE_NUMBER_LEFT_UP_SQUARE.id :
 			return stringToMarginOneLeftUpNumbersSquarePuzzle(localStorage.getItem(p_localStorageName)); break; 
 		default :
@@ -674,6 +674,9 @@ function updateFieldsAfterLoad(p_fieldsToUpdate, p_loadedItem, p_xLength, p_yLen
 	p_fieldsToUpdate.fieldY.value = p_yLength;
 	if (p_loadedItem.starNumber) {
 		p_fieldsToUpdate.fieldStars.value = p_loadedItem.starNumber;
+	}
+	if (p_loadedItem.boundNumber) {
+		p_fieldsToUpdate.fieldBounds.value = p_loadedItem.boundNumber;
 	}
 }
 

@@ -15,7 +15,7 @@
 		Grille à charger : <input type="text" id="input_grid_name" value="30"></input> 
 		<input type="submit" id="submit_view_puzzle_list" value="Voir les puzzles Stitches"></input></br>
 		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
-		
+		Liens par frontière : <span id="span_bounds" value="X"></span></br>
 		Démarrage rapide :
 		<input type="submit" id="submit_quickStart" value="Démarrage rapide"></input></br>
 		
@@ -33,6 +33,7 @@
 		<input type="submit" id="submit_multiPass" value="Multi passe"></input></br>
 		
 		<input type="submit" id="submit_undo" value="Annuler"></input></br>	
+		<span id="span_resolution_state"></span></br>	
 		
 		<script src="../Importation.js"></script>
 		<script>
@@ -43,8 +44,6 @@
 			addScriptsGeneric();
 			addScript("../Margin.js");
 			addScriptsLocal();
-			//addScriptsAdjacency();
-			//addScriptCheckCollection();
 			addScript("SolveEvent.js");
 			addScript("SolverStitches.js");
 			startScriptLoading();
