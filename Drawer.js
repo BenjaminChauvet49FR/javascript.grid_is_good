@@ -391,6 +391,8 @@ Drawer.prototype.drawSpaceContents = function (p_context, p_drawableItems, p_fun
 					this.drawCrossLittleX(p_context, ix, iy, item);
 				} else if (item.kind == KIND_DRAWABLE_ITEM.SQUARE) {
 					this.drawSquare(p_context, ix, iy, item);
+				} else if (item.kind == KIND_DRAWABLE_ITEM.TRIANGLE) {
+					this.drawTriangle(p_context, ix, iy, item);
 				} 
             }
             pixDrawX += this.pix.sideSpace;
@@ -737,7 +739,31 @@ Drawer.prototype.drawSquare = function(p_context, p_xSpace, p_ySpace, p_item) {
 	p_context.lineTo(pixLeft, pixDown);
 	p_context.lineTo(pixLeft, pixUp);
 	p_context.lineTo(pixRight, pixUp);
-	p_context.stroke();
+	if (p_item.colorBorder != null) {		
+		p_context.stroke();
+	}
+	p_context.fill();
+}
+
+Drawer.prototype.drawTriangle = function(p_context, p_xSpace, p_ySpace, p_item) {
+	p_context.beginPath();
+	p_context.strokeStyle = p_item.colorBorder; 
+	p_context.fillStyle = p_item.colorInner; 
+	p_context.lineWidth = Math.max(Math.floor(this.getPixInnerSide()/10, 2));
+	
+	const pixAway = Math.floor(this.getPixInnerSide()/6);
+	const pixLeft = this.getPixInnerXLeft(p_xSpace) + pixAway;
+	const pixRight = this.getPixInnerXRight(p_xSpace) - pixAway;
+	const pixMid = (pixLeft + pixRight) / 2;
+	const pixUp = this.getPixInnerYUp(p_ySpace) + pixAway;
+	const pixDown = this.getPixInnerYDown(p_ySpace) - pixAway;
+	p_context.moveTo(pixMid , pixUp);
+	p_context.lineTo(pixRight, pixDown);
+	p_context.lineTo(pixLeft, pixDown);
+	p_context.lineTo(pixMid, pixUp);
+	if (p_item.colorBorder != null) {
+		p_context.stroke();
+	}
 	p_context.fill();
 }
 

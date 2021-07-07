@@ -43,6 +43,9 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 		case 'Chocona': case 'CountryRoad': case 'Detour': case 'Heyawake': case 'Shimaguni':
 			saveLoadModeId = PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_REGION]); break;
+		case 'Hakoiri':
+			saveLoadModeId = PUZZLES_KIND.REGIONS_PLAYSTATION_SHAPES;
+			p_editorCore.setVisibleGrids([GRID_ID.PLAYSTATION_SHAPES]); break;
 		case 'Hakyuu': case 'Usoone':
 			saveLoadModeId = PUZZLES_KIND.REGIONS_NUMBERS;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]); 

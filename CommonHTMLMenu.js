@@ -75,7 +75,8 @@ menuSolvers.push({
 	displayName : "Multiples avec adjacence",
 	documentPage : "Solver",
 	typeList : [
-		{name : "shugaku", displayName : "Shugaku"}
+		{name : "shugaku", displayName : "Shugaku"},
+		{name : "hakoiri", displayName : "Hakoiri"}
 	]
 });
 

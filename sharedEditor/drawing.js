@@ -36,6 +36,9 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	if (p_editorCore.isVisibleGrid(GRID_ID.PEARL)) {
 		this.drawPearlGrid(p_context, p_editorCore.getGrid(GRID_ID.PEARL));
 	}
+	if (p_editorCore.isVisibleGrid(GRID_ID.PLAYSTATION_SHAPES)) {
+		this.drawPlaystationShapeGrid(p_context, p_editorCore.getGrid(GRID_ID.PLAYSTATION_SHAPES));
+	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.TAPA)) {
 		this.drawTapaGrid(p_context, p_editorCore.getGrid(GRID_ID.TAPA));
 	}
@@ -111,5 +114,18 @@ Drawer.prototype.drawPearlGrid = function (p_context, p_pearlGrid) {
 	}
 }
 
-
+Drawer.prototype.drawPlaystationShapeGrid = function (p_context, p_shapeGrid) {
+	function getShape (x, y) {
+		if (p_shapeGrid.get(x, y) == SYMBOL_ID.ROUND) {
+			return 0;
+		} else if (p_shapeGrid.get(x, y) == SYMBOL_ID.SQUARE) {
+			return 1;
+		} else if (p_shapeGrid.get(x, y) == SYMBOL_ID.TRIANGLE) {
+			return 2;
+		}
+		return -1;
+	}
+	const shapes = [DrawableCircle("#000000", "#ff0000"), DrawableSquare("#000000", "#008800"), DrawableTriangle("#000000", "#4400ff")];
+	this.drawSpaceContents(p_context, shapes, getShape, p_shapeGrid.getXLength(), p_shapeGrid.getYLength()); 
+}
 

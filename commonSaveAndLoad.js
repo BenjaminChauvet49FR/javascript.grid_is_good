@@ -4,7 +4,10 @@
 
 const SYMBOL_ID = { 
     WHITE: 'W',
-    BLACK: 'B'
+    BLACK: 'B',
+	ROUND: 'R',
+	SQUARE: 'S',
+	TRIANGLE: 'T'
 }
 
 /**
@@ -13,7 +16,7 @@ Returns a name to store into / load from local storage
 function getLocalStorageName(p_puzzleName, p_name) {
 	return "grid_is_good_" + p_puzzleName + p_name;
 }
-30
+
 // ------------------------------------------
 // All "new" (as to beginning March 2021) puzzle save and load methods
 
@@ -227,9 +230,9 @@ function stringToNumericBelt (p_string, p_xLength, p_yLength, p_leftAvailable, p
 	return {left : answerLeft, up : answerUp, right : answerRight, down : answerDown}
 }
 
-//----
+//----------------------------------------------------------------------------------------------------------------
 
-// Now to the savers/loaders themselves
+// Now to the savers/loaders themselves !
 function wallsOnlyPuzzleToString(p_wallArray) {
 	return dimensionsToString(p_wallArray) + " " + wallArrayToString64(p_wallArray);
 }
@@ -489,4 +492,18 @@ function stringToSudokuPuzzle(p_string, p_wallArray) {
 	return {
 	    numberArray : stringToNumberArrayWithSomeSpacesIgnored(p_string, p_wallArray[0].length, p_wallArray.length, p_wallArray, false)
 	}
+}
+
+// ----------------
+// Limited symbols AND walls
+
+function limitedSymbolsWallsPuzzleToString(p_wallArray, p_symbolsArray, p_symbolsList) {
+	return wallsOnlyPuzzleToString(p_wallArray ) + " " + symbolsArrayToString(p_symbolsArray, p_symbolsList);
+}
+
+function stringToLimitedSymbolsWallsPuzzle(p_string, p_symbolsList) {
+	const tokens = p_string.split(" ");
+	const dims = stringToDimensions(tokens[0]);
+	return {wallArray : string64toWallArray(tokens[1], dims.xLength, dims.yLength), 
+			symbolArray : stringToSymbolsArray(tokens[2], dims.xLength, dims.yLength, p_symbolsList)}
 }

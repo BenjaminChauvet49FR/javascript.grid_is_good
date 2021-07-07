@@ -86,6 +86,15 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			validityTokenMethod : validityTokenPearl,
 			parameters : {emptySpaceChar : " ", isMonoChar : true}
 		}
+	} else if (p_editorCore.isVisibleGrid(GRID_ID.PLAYSTATION_SHAPES)) {
+		return {
+			descriptionPrompt : "Entrer suite de formes (R|S|T)",
+			descriptionPromptMono : "Entrer lettre de forme (R|S|T)",
+			defaultToken : "R",
+			gridId : GRID_ID.PLAYSTATION_SHAPES,
+			validityTokenMethod : validityTokenPlaystationShape,
+			parameters : {emptySpaceChar : " ", isMonoChar : true}
+		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.YAJILIN_LIKE)) {
 		return {
 			descriptionPrompt : "Entrer suite d'indices à la Yajilin (L|U|R|D)(nombre) ou X",
@@ -211,6 +220,10 @@ validityNumberRangeOrSymbolClosure = function(p_min, p_max, p_symbol) {
 
 validityTokenPearl = function(p_clue) {
 	return (p_clue == "B") || (p_clue == "W");
+}
+
+validityTokenPlaystationShape = function(p_clue) {
+	return (p_clue == "R") || (p_clue == "S") || (p_clue == "T");
 }
 
 validityTokenYajilin = function(p_clue) {
@@ -380,7 +393,7 @@ function applyChangesForSpaceMode(p_editorCore, p_mode) {
 // Misc functions 
 
 getFieldX = function(p_fieldsDefiningPuzzle) { // TODO déplacer ceci ! 551551
-	if (p_fieldsDefiningPuzzle.spanXYBound.display == "none") {
+	if (p_fieldsDefiningPuzzle.spanXYBound.style.display == "none") {
 		return p_fieldsDefiningPuzzle.fieldX;
 	} else {
 		return p_fieldsDefiningPuzzle.fieldXY;
@@ -388,7 +401,7 @@ getFieldX = function(p_fieldsDefiningPuzzle) { // TODO déplacer ceci ! 551551
 }
 
 getFieldY = function(p_fieldsDefiningPuzzle) {
-	if (p_fieldsDefiningPuzzle.spanXYBound.display == "none") {
+	if (p_fieldsDefiningPuzzle.spanXYBound.style.display == "none") {
 		return p_fieldsDefiningPuzzle.fieldY;
 	} else {
 		return p_fieldsDefiningPuzzle.fieldXY;
@@ -409,7 +422,7 @@ function copySaveModeInto(p_start, p_destination) {
 }
 
 function correspondsToSudokuPuzzle(p_fieldsDefiningPuzzle) {
-	return (p_fieldsDefiningPuzzle.spanSelectSudoku.display != "none");
+	return (p_fieldsDefiningPuzzle.spanSelectSudoku.style.display != "none");
 }
 
 //------------------------
@@ -490,28 +503,6 @@ renameAction = function (p_puzzleName, p_fieldValue) {
 //------------------------
 // Saving and loading
 
-const PUZZLES_KIND = {
-	WALLS_ONLY : {id : 1},
-	REGIONS_NUMERICAL_INDICATIONS : {id:2},
-	NUMBERS_ONLY : {id:3},
-	CURVING_ROAD : {id:4},
-	MASYU : {id:5},
-	REGIONS_NUMBERS : {id:6},
-	NUMBERS_X_ONLY : {id:7},
-	YAJILIN_LIKE : {id:8},
-	WALLS_ONLY_ONE_NUMBER_LEFT_UP : {id:9},
-	ONLY_ONE_NUMBER_LEFT_UP_SQUARE : {id:10, squareGrid : true},
-	TAPA : {id:11},
-	STAR_BATTLE : {id:12, squareGrid : true},
-	GRAND_TOUR : {id:99102},
-	SUDOKU : {id:1001}
-}
-
-const MARGIN_KIND = {
-	NONE : {id : 0},
-	NUMBERS_LEFT_UP : {id : 1, leftLength : 1, upLength : 1}
-}
-
 /** 
 Saves a walled grid into local storage
 p_editorCore : the Global item
@@ -539,6 +530,8 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
             puzzleToSaveString = limitedSymbolsWalllessPuzzleToString(p_editorCore.getArray(GRID_ID.PEARL), [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK]);
         } else if (p_saveLoadMode.id == PUZZLES_KIND.CURVING_ROAD.id) {
             puzzleToSaveString = limitedSymbolsWalllessPuzzleToString(p_editorCore.getArray(GRID_ID.PEARL), [SYMBOL_ID.WHITE]);
+		} else if (p_saveLoadMode.id == PUZZLES_KIND.REGIONS_PLAYSTATION_SHAPES.id) {
+            puzzleToSaveString = limitedSymbolsWallsPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.PLAYSTATION_SHAPES), [SYMBOL_ID.ROUND, SYMBOL_ID.SQUARE, SYMBOL_ID.TRIANGLE]);
 		} else if (p_saveLoadMode.id == PUZZLES_KIND.NUMBERS_ONLY.id) {
             puzzleToSaveString = numbersOnlyPuzzleToString(p_editorCore.getArray(GRID_ID.NUMBER_SPACE));
         } else if (p_saveLoadMode.id == PUZZLES_KIND.NUMBERS_X_ONLY.id) {
@@ -605,6 +598,11 @@ function getLoadedStuff(p_kindId, p_localStorageName, p_externalOptions) { // No
 			var loadedItem = stringToWallsNumbersPuzzle(localStorage.getItem(p_localStorageName));
 			loadedItem.desiredIDs = [GRID_ID.NUMBER_SPACE];
 			loadedItem.desiredArrays = [loadedItem.numberArray];
+			return loadedItem; break;
+		case PUZZLES_KIND.REGIONS_PLAYSTATION_SHAPES.id :
+			var loadedItem = stringToLimitedSymbolsWallsPuzzle(localStorage.getItem(p_localStorageName), [SYMBOL_ID.ROUND, SYMBOL_ID.SQUARE, SYMBOL_ID.TRIANGLE]);
+			loadedItem.desiredIDs = [GRID_ID.PLAYSTATION_SHAPES];
+			loadedItem.desiredArrays = [loadedItem.symbolArray];
 			return loadedItem; break;
 		case PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS.id :
 			var loadedItem = stringToRegionsNumericIndicationsPuzzle(localStorage.getItem(p_localStorageName));

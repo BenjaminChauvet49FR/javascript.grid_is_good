@@ -7,8 +7,9 @@ const KIND_DRAWABLE_ITEM = {
 	LITTLE_X : 4,
 	X : 4,
 	SQUARE : 5,
-	CIRCLE_UPPER_RIGHT : 6,
-	PLUS_UPPER_RIGHT : 7,
+	TRIANGLE : 6,
+	CIRCLE_UPPER_RIGHT : 101,
+	PLUS_UPPER_RIGHT : 102
 }
 
 /*
@@ -38,6 +39,15 @@ function DrawableCircle(p_colorBorder, p_colorInner, p_thickness) {
 function DrawableSquare(p_colorBorder, p_colorInner, p_thickness) { 
 	var item = new DrawableItem();
 	item.kind = KIND_DRAWABLE_ITEM.SQUARE;
+	item.colorBorder = p_colorBorder;
+	item.colorInner = p_colorInner;
+	item.thickness = p_thickness;
+	return item;
+}
+
+function DrawableTriangle(p_colorBorder, p_colorInner, p_thickness) { 
+	var item = new DrawableItem();
+	item.kind = KIND_DRAWABLE_ITEM.TRIANGLE;
 	item.colorBorder = p_colorBorder;
 	item.colorInner = p_colorInner;
 	item.thickness = p_thickness;

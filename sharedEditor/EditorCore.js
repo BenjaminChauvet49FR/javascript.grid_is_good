@@ -3,27 +3,6 @@ const SELECTED = {
     NO: false
 }
 
-const GRID_ID = {
-    NUMBER_REGION: 'NR',
-    NUMBER_SPACE: 'NS',
-    DIGIT_X_SPACE: 'DXS',
-    PEARL: 'P',
-	YAJILIN_LIKE: 'YAJILIN', 
-	TAPA: 'TAPA',
-	SUDOKU: {
-		CLASSIC_9x9 : 'SUDO9'
-	}
-}
-
-const GRID_TRANSFORMATION = {
-	ROTATE_CW : "RCW",
-	ROTATE_CCW : "RCCW",
-	ROTATE_UTURN : "RUT",
-	MIRROR_HORIZONTAL : "MH",
-	MIRROR_VERTICAL : "MV",
-	RESIZE : "Rs"
-}
-
 function EditorCore(p_xLength, p_yLength, p_parameters) {
     this.xLength = p_xLength;
 	this.yLength = p_yLength;
