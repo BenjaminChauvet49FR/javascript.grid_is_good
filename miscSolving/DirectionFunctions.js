@@ -47,3 +47,7 @@ GeneralSolver.prototype.existingNeighborsDirections = function(p_x, p_y) {
 	});
 	return answer;
 }
+
+GeneralSolver.prototype.areCoordinatesInPuzzle = function(p_x, p_y) {
+	return p_x >= 0 && p_y >= 0 && p_x < this.xLength && p_y < this.yLength;
+}

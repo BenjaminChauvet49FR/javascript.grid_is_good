@@ -10,6 +10,13 @@ const SYMBOL_ID = {
 	TRIANGLE: 'T'
 }
 
+const GALAXIES_POSITION = {
+	CENTER: 0,
+	RIGHT: 1,
+	DOWN:2,
+	RIGHT_DOWN: 3
+}
+
 /**
 Returns a name to store into / load from local storage
 */

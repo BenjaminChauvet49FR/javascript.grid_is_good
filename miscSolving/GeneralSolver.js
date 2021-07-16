@@ -425,8 +425,12 @@ function commonComparisonMultiKinds(p_differentKinds, p_array, p_kind1, p_kind2)
 	return 0;
 }
 
-function commonComparison(p_twoArrays) {
-	return commonComparisonMultiKinds([], p_twoArrays);
+function commonComparison(p_twoArrays, p_arraysTwo) {
+	if (p_arraysTwo) {
+		return commonComparisonMultiKinds([], [p_twoArrays, p_arraysTwo]);
+	} else {		
+		return commonComparisonMultiKinds([], p_twoArrays);
+	}
 }
 
 /**

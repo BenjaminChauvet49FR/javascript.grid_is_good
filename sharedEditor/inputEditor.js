@@ -19,6 +19,26 @@ function clickCanvas(event, p_canvas, p_drawer, p_editorCore, p_modes) {
 			p_editorCore.switchWallD(indexWallD.x, indexWallD.y);
 			doneClicking = true;
 		}
+	} else if (p_editorCore.isGalaxy()) {
+		const indexKnot = p_drawer.getClickKnotRD(event, p_canvas, p_xLength, p_yLength);
+		if (indexKnot != null) {
+			p_editorCore.manageGalaxyGridRightDown(indexKnot.x, indexKnot.y);
+			return;
+		}
+		const indexWallR = p_drawer.getClickWallR(event, p_canvas, p_xLength, p_yLength);
+		if (indexWallR != null) {
+			p_editorCore.manageGalaxyGridRight(indexWallR.x, indexWallR.y);
+			return;
+		}
+		const indexWallD = p_drawer.getClickWallD(event, p_canvas, p_xLength, p_yLength);
+		if (indexWallD != null) {
+			p_editorCore.manageGalaxyGridDown(indexWallD.x, indexWallD.y);
+			return;
+		}
+		const indexSpaces = p_drawer.getClickSpace(event, p_canvas, p_xLength, p_yLength);
+		if (indexSpaces != null) {
+			p_editorCore.manageGalaxyGridSpace(indexSpaces.x, indexSpaces.y);
+		}
 	}
 	/*if (p_editorCore.hasPathGrid()) { // TODO gérer les clics pour quand la grille sera en mode "affichage édition de sommets"
 		var indexAroundWallR = p_drawer.getClickAroundWallR(event, p_canvas, p_xLength, p_yLength);
@@ -329,6 +349,10 @@ function mirrorVerticalAction(p_canvas, p_drawer, p_editorCore) {
 
 // Note : this method is not called by resizing
 function transformGrid(p_canvas, p_drawer, p_editorCore, p_transformation) {
+	if (p_editorCore.isGalaxy()) {
+		alert("Transformations impossibles pour le puzzle 'Galaxy'.");
+		return;
+	}
 	var confirmation, xMin, xMax, yMin, yMax;
 	p_editorCore.updateSelectionData();
 	if (!p_editorCore.getNumberSelectedSpaces() == 0) {
@@ -553,7 +577,9 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
 		} else if (p_saveLoadMode.id == PUZZLES_KIND.SUDOKU.id) {
 			const sudokuMode = p_externalOptions.sudokuMode;
 			puzzleToSaveString = sudokuPuzzleToString(p_editorCore.getArray(GRID_ID.NUMBER_SPACE), getSudokuWallGrid(sudokuMode).array); 
-		}
+		} else if (p_saveLoadMode.id == PUZZLES_KIND.GALAXIES.id) {
+            puzzleToSaveString = limitedSymbolsWalllessPuzzleToString(p_editorCore.getArray(GRID_ID.GALAXIES), [GALAXIES_POSITION.CENTER, GALAXIES_POSITION.RIGHT, GALAXIES_POSITION.DOWN, GALAXIES_POSITION.RIGHT_DOWN]);
+        }
         localStorage.setItem(localStorageName, puzzleToSaveString);
     }
 }
@@ -617,7 +643,12 @@ function getLoadedStuff(p_kindId, p_localStorageName, p_externalOptions) { // No
 		case PUZZLES_KIND.STITCHES.id :
 			return stringToStitchesPuzzle (localStorage.getItem(p_localStorageName)); break;
 		case PUZZLES_KIND.ONLY_ONE_NUMBER_LEFT_UP_SQUARE.id :
-			return stringToMarginOneLeftUpNumbersSquarePuzzle(localStorage.getItem(p_localStorageName)); break; 
+			return stringToMarginOneLeftUpNumbersSquarePuzzle(localStorage.getItem(p_localStorageName)); break;
+		case PUZZLES_KIND.GALAXIES.id :
+			var loadedItem = stringToLimitedSymbolsWalllessPuzzle(localStorage.getItem(p_localStorageName), [GALAXIES_POSITION.CENTER, GALAXIES_POSITION.RIGHT, GALAXIES_POSITION.DOWN, GALAXIES_POSITION.RIGHT_DOWN]);
+			loadedItem.desiredIDs = [GRID_ID.GALAXIES];
+			loadedItem.desiredArrays = [loadedItem.symbolArray];
+			return loadedItem; break;			
 		default :
 			return stringToWallsOnlyPuzzle(localStorage.getItem(p_localStorageName));
 	} 

@@ -91,6 +91,11 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			inputOptions.forceMonoCharacter = sudokuId.max < 10;
 			inputOptions.minNumber = sudokuId.min;
 			inputOptions.maxNumber = sudokuId.max;
+			break;
+		case 'Galaxies':
+			saveLoadModeId = PUZZLES_KIND.GALAXIES;
+			p_editorCore.setVisibleGrids([GRID_ID.GALAXIES]); 
+			p_editorCore.setWallsOff();
 			break; 
 		default: // norinori, lits, entryExit... no numbers, only regions
 			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY;

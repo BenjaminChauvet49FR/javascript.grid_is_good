@@ -4,7 +4,15 @@ const SPACE_CHOICE = {
 	UNDECIDED : 1
 }
 
+function SpaceChoice() {
+	this.value = null;
+}
+
+SpaceNumeric.prototype = Object.create(SpaceChoice.prototype);
+SpaceNumeric.prototype.constructor = SpaceChoice;
+
 function SpaceNumeric(p_min, p_max) {
+	SpaceChoice.call(this);
 	this.offset = p_min;
 	this.max = p_max;
 	this.possibilities = [];
@@ -15,37 +23,45 @@ function SpaceNumeric(p_min, p_max) {
 	this.value = null;
 }
 
+SpaceNumeric.prototype.selectPrivateIndex = function(p_number) {
+	return p_number - this.offset;
+}
+
 /**
 WARNING : offensive programming ! All controls are assumed to be already made !
 */
-SpaceNumeric.prototype.ban = function(p_number) {
+SpaceChoice.prototype.ban = function(p_number) {
 	this.numberPossibilities--;
-	this.possibilities[p_number - this.offset] = SPACE_CHOICE.NO;		
+	this.possibilities[this.selectPrivateIndex(p_number)] = SPACE_CHOICE.NO;		
 }
 
-SpaceNumeric.prototype.banIfNecessary = function(p_number) { // Except for this one !
+SpaceChoice.prototype.banIfNecessary = function(p_number) { // Except for this one !
 	if (this.getState(p_number) == SPACE_CHOICE.UNDECIDED) {
 		this.ban(p_number);
 	}
 }
 
-SpaceNumeric.prototype.unban = function(p_number) {
+SpaceChoice.prototype.unban = function(p_number) {
 	this.numberPossibilities++;
-	this.possibilities[p_number - this.offset] = SPACE_CHOICE.UNDECIDED;	
+	this.possibilities[this.selectPrivateIndex(p_number)] = SPACE_CHOICE.UNDECIDED;	
 }
 
-SpaceNumeric.prototype.choose = function(p_number) {
+SpaceChoice.prototype.choose = function(p_number) {
 	this.value = p_number;
-	this.possibilities[p_number - this.offset] = SPACE_CHOICE.YES;	
+	this.possibilities[this.selectPrivateIndex(p_number)] = SPACE_CHOICE.YES;	
 }
 
-SpaceNumeric.prototype.unchoose = function(p_number) {
+SpaceChoice.prototype.unchoose = function(p_number) {
 	this.value = null;
-	this.possibilities[p_number - this.offset] = SPACE_CHOICE.UNDECIDED;
+	this.possibilities[this.selectPrivateIndex(p_number)] = SPACE_CHOICE.UNDECIDED;
 }
 
-SpaceNumeric.prototype.getValue = function() {
+SpaceChoice.prototype.getValue = function() {
 	return this.value;
+}
+
+SpaceChoice.prototype.getState = function(p_number) {
+	return this.possibilities[this.selectPrivateIndex(p_number)];
 }
 
 SpaceNumeric.prototype.getMin = function() {
@@ -56,20 +72,68 @@ SpaceNumeric.prototype.getMax = function() {
 	return this.max;
 }
 
-
-SpaceNumeric.prototype.getState = function(p_number) {
-	return this.possibilities[p_number - this.offset];
-}
-
 SpaceNumeric.prototype.getOneLeft = function() {
 	if (this.numberPossibilities == 1) {
 		for (var number = this.offset ; number <= this.max ; number++) {
-			if (this.possibilities[number - this.offset] != SPACE_CHOICE.NO) {
+			if (this.possibilities[this.selectPrivateIndex(number)] != SPACE_CHOICE.NO) {
 				return number;
 			}
 		}
 	}
 	return null;
+}
+
+SpaceNumericSelect.prototype = Object.create(SpaceChoice.prototype);
+SpaceNumericSelect.prototype.constructor = SpaceChoice;
+
+// Use similar to SpaceNumeric. It has sparse values (instead of values from min to max) and shoud NOT be used with SpaceSetNumeric.
+// Important : values must be already sorted !!!
+function SpaceNumericSelect(p_sortedArray) {
+	SpaceChoice.call(this);
+	this.sortedValues = p_sortedArray;
+	this.possibilities = [];
+	this.numberPossibilities = p_sortedArray.length;
+	for (var i = 0; i < p_sortedArray.length; i++) {
+		this.possibilities.push(SPACE_CHOICE.UNDECIDED);
+	}
+}
+
+// Offensive : p_number MUST be present in the selection.
+SpaceNumericSelect.prototype.selectPrivateIndex = function(p_number) {
+	return getIndexInSortedArray(this.sortedValues, p_number);
+}
+
+SpaceNumericSelect.prototype.contains = function(p_number) {
+	return this.selectPrivateIndex(p_number) != null;
+}
+
+// Test : 
+// mySelect = new SpaceNumericSelect([0, 1, 2, 4, 8, 16, 17]);
+// mySelect.selectPrivateIndex(16);
+// mySelect.selectPrivateIndex(2);
+// mySelect.selectPrivateIndex(4);
+// mySelect.selectPrivateIndex(5);
+
+SpaceNumericSelect.prototype.getOneLeft = function() {
+	if (this.numberPossibilities == 1) {
+		for (var i = 0 ; i < this.possibilities.length ; i++) {
+			if (this.possibilities[i] != SPACE_CHOICE.NO) {
+				return this.sortedValues[i];
+			}
+		}
+	}
+	return null;
+}
+
+SpaceNumericSelect.prototype.values = function() {
+	return this.sortedValues;
+}
+
+SpaceNumericSelect.prototype.getSingleValue = function() {
+	if (this.sortedValues.length != 1) {
+		return null;
+	}
+	return this.sortedValues[0];
 }
 
 // ================================================

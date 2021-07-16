@@ -14,9 +14,19 @@ FenceEvent.prototype.toString = function() {
 	return "[" + "F" + LabelFenceState[this.state] + " " + this.fenceX + "," + this.fenceY + " " + LabelDirection[this.direction] + "]";
 }
 
-/*FenceEvent.prototype.standardCopy = function() { // Not useful for Shugaku. BTW could it be named "copy" ?
-	return new FenceEvent(this.fenceX, this.fenceY, this.direction, this.state);
-}*/
+FenceEvent.prototype.standardFenceCopy = function() {
+	switch(this.direction) {
+		case DIRECTION.LEFT : return new FenceEvent(this.fenceX - 1, this.fenceY, DIRECTION.RIGHT, this.state); break;
+		case DIRECTION.UP : return new FenceEvent(this.fenceX, this.fenceY - 1, DIRECTION.DOWN, this.state); break;
+		default : return new FenceEvent(this.fenceX, this.fenceY, this.direction, this.state); break;
+	}
+}
+
+function standardFenceComparison(p_event1, p_event2) {
+	const p_event1bis = p_event1.standardFenceCopy();
+	const p_event2bis = p_event2.standardFenceCopy();
+	return commonComparison([[p_event1bis.fenceY, p_event1bis.fenceX, p_event1bis.direction, p_event1bis.state], [p_event2bis.fenceY, p_event2bis.fenceX, p_event2bis.direction, p_event2bis.state]]);
+}
 
 // ==================================================================
 

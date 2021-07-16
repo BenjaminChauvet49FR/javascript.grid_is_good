@@ -253,6 +253,15 @@ EditorCore.prototype.set = function (p_idGrid, p_x, p_y, p_value) {
     this.grids[p_idGrid].set(p_x, p_y, p_value);
 }
 
+EditorCore.prototype.switchValue = function (p_idGrid, p_x, p_y, p_value) {
+	if (this.get(p_idGrid, p_x, p_y) == p_value) {
+		this.set(p_idGrid, p_x, p_y, null);
+	} else {
+		this.set(p_idGrid, p_x, p_y, p_value);
+	}
+}
+
+
 EditorCore.prototype.clearSpaceContents = function (p_x, p_y) {
 	Object.keys(GRID_ID).forEach(id => {
 		if (this.visibleGrids[GRID_ID[id]]) {
@@ -674,6 +683,93 @@ function isOrientedGrid(p_name) {
 }
 
 //-------------------------------------------
+// Pack of methods for 'Galaxies' puzzle, as it is kind of unique
+// Note : a space cannot contain two different spaces ; since the positions are center, R, D and RD, not all centers are erased when a new is added.
+
+EditorCore.prototype.isGalaxy = function() {
+	return this.visibleGrids[GRID_ID.GALAXIES];
+}
+
+EditorCore.prototype.manageGalaxyGridRightDown = function(p_x, p_y) {
+	this.switchValue(GRID_ID.GALAXIES, p_x, p_y, GALAXIES_POSITION.RIGHT_DOWN);
+	this.set(GRID_ID.GALAXIES, p_x, p_y+1, null);
+	this.set(GRID_ID.GALAXIES, p_x+1, p_y, null);
+	this.set(GRID_ID.GALAXIES, p_x+1, p_y+1, null);
+	if (p_y > 0) {
+		this.conditionalEraseSpaceGalaxies(p_x, p_y-1, GALAXIES_POSITION.DOWN);
+		this.conditionalEraseSpaceGalaxies(p_x, p_y-1, GALAXIES_POSITION.RIGHT_DOWN);
+		this.conditionalEraseSpaceGalaxies(p_x+1, p_y-1, GALAXIES_POSITION.DOWN);
+		this.conditionalEraseSpaceGalaxies(p_x+1, p_y-1, GALAXIES_POSITION.RIGHT_DOWN);
+	}
+	if (p_x > 0) {
+		this.conditionalEraseSpaceGalaxies(p_x-1, p_y, GALAXIES_POSITION.RIGHT);
+		this.conditionalEraseSpaceGalaxies(p_x-1, p_y, GALAXIES_POSITION.RIGHT_DOWN);
+		this.conditionalEraseSpaceGalaxies(p_x-1, p_y+1, GALAXIES_POSITION.RIGHT);
+		this.conditionalEraseSpaceGalaxies(p_x-1, p_y+1, GALAXIES_POSITION.RIGHT_DOWN);
+		if (p_y > 0) {
+			this.conditionalEraseSpaceGalaxies(p_x-1, p_y-1, GALAXIES_POSITION.RIGHT_DOWN);
+		}
+	}
+}
+
+EditorCore.prototype.manageGalaxyGridRight = function(p_x, p_y) {
+	this.switchValue(GRID_ID.GALAXIES, p_x, p_y, GALAXIES_POSITION.RIGHT);
+	this.set(GRID_ID.GALAXIES, p_x + 1, p_y, null);
+	if (p_y > 0) {
+		this.conditionalEraseSpaceGalaxies(p_x, p_y-1, GALAXIES_POSITION.DOWN);
+		this.conditionalEraseSpaceGalaxies(p_x, p_y-1, GALAXIES_POSITION.RIGHT_DOWN);
+		this.conditionalEraseSpaceGalaxies(p_x+1, p_y-1, GALAXIES_POSITION.DOWN);
+		this.conditionalEraseSpaceGalaxies(p_x+1, p_y-1, GALAXIES_POSITION.RIGHT_DOWN);
+	}
+	if (p_x > 0) {
+		if (p_y > 0) {
+			this.conditionalEraseSpaceGalaxies(p_x-1, p_y-1, GALAXIES_POSITION.RIGHT_DOWN);
+		}
+		this.conditionalEraseSpaceGalaxies(p_x-1, p_y, GALAXIES_POSITION.RIGHT);
+		this.conditionalEraseSpaceGalaxies(p_x-1, p_y, GALAXIES_POSITION.RIGHT_DOWN);
+	}
+}
+
+EditorCore.prototype.manageGalaxyGridDown = function(p_x, p_y) {
+	this.switchValue(GRID_ID.GALAXIES, p_x, p_y, GALAXIES_POSITION.DOWN);
+	this.set(GRID_ID.GALAXIES, p_x, p_y + 1, null);
+	if (p_x > 0) {
+		this.conditionalEraseSpaceGalaxies(p_x-1, p_y, GALAXIES_POSITION.RIGHT);
+		this.conditionalEraseSpaceGalaxies(p_x-1, p_y, GALAXIES_POSITION.RIGHT_DOWN);
+		this.conditionalEraseSpaceGalaxies(p_x-1, p_y+1, GALAXIES_POSITION.RIGHT);
+		this.conditionalEraseSpaceGalaxies(p_x-1, p_y+1, GALAXIES_POSITION.RIGHT_DOWN);
+	}
+	if (p_y > 0) {
+		if (p_x > 0) {
+			this.conditionalEraseSpaceGalaxies(p_x-1, p_y-1, GALAXIES_POSITION.RIGHT_DOWN);
+		}
+		this.conditionalEraseSpaceGalaxies(p_x, p_y-1, GALAXIES_POSITION.DOWN);
+		this.conditionalEraseSpaceGalaxies(p_x, p_y-1, GALAXIES_POSITION.RIGHT_DOWN);
+	}
+}
+
+EditorCore.prototype.manageGalaxyGridSpace = function(p_x, p_y) {
+	this.switchValue(GRID_ID.GALAXIES, p_x, p_y, GALAXIES_POSITION.CENTER);
+	if (p_x > 0) {
+		this.conditionalEraseSpaceGalaxies(p_x-1, p_y, GALAXIES_POSITION.RIGHT);
+		this.conditionalEraseSpaceGalaxies(p_x-1, p_y, GALAXIES_POSITION.RIGHT_DOWN);
+	}
+	if (p_y > 0) {
+		this.conditionalEraseSpaceGalaxies(p_x, p_y-1, GALAXIES_POSITION.DOWN);
+		this.conditionalEraseSpaceGalaxies(p_x, p_y-1, GALAXIES_POSITION.RIGHT_DOWN);
+		if (p_x > 0) {
+			this.conditionalEraseSpaceGalaxies(p_x-1, p_y-1, GALAXIES_POSITION.RIGHT_DOWN);
+		}
+	}
+}
+
+EditorCore.prototype.conditionalEraseSpaceGalaxies = function(p_xCond, p_yCond, p_posCond) {
+	if (this.get(GRID_ID.GALAXIES, p_xCond, p_yCond) == p_posCond) {
+		this.set(GRID_ID.GALAXIES, p_xCond, p_yCond, null);
+	}
+}
+
+//-------------------------------------------
 // Misc.
 
 EditorCore.prototype.alignToRegions = function (p_idGrid) {
@@ -683,4 +779,5 @@ EditorCore.prototype.alignToRegions = function (p_idGrid) {
 EditorCore.prototype.cleanRedundantWalls = function () { // Note : name transfer...
     this.wallGrid.cleanRedundantWalls();
 }
+
 

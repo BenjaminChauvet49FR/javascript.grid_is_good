@@ -97,7 +97,8 @@ menuSolvers.push({
 	displayName : "Découpage en région",
 	documentPage : "Solver",
 	typeList : [
-		{name : "usotatami", displayName : "Usotatami"}
+		{name : "usotatami", displayName : "Usotatami"},
+		{name : "galaxies", displayName : "Galaxies"}
 	]
 });
 

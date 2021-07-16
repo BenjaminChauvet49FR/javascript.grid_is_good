@@ -11,7 +11,8 @@ const GRID_ID = {
 	SUDOKU: {
 		CLASSIC_9x9 : 'SUDO9'
 	},
-	PLAYSTATION_SHAPES: 'PSH'
+	PLAYSTATION_SHAPES: 'PSH',
+	GALAXIES: 'GAL'
 }
 
 const GRID_TRANSFORMATION = {
@@ -37,6 +38,7 @@ const PUZZLES_KIND = {
 	ONLY_ONE_NUMBER_LEFT_UP_SQUARE : {id:10, squareGrid : true},
 	TAPA : {id:11},
 	REGIONS_PLAYSTATION_SHAPES : {id:12},
+	GALAXIES : {id:13},
 	GRAND_TOUR : {id:99102},
 	SUDOKU : {id:1001}
 }

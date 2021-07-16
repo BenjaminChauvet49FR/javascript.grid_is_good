@@ -30,6 +30,7 @@ const ACTION_LINK_SPACES = {id:10,htmlCaption:"Lier cases"};
 const ACTION_CLOSE_LINKS = {id:11,htmlCaption:"Fermer liaison cases"};
 const ACTION_OPEN_FENCE = {id:12,htmlCaption:"Déclarer cloison ouverte"};
 const ACTION_CLOSE_FENCE = {id:13,htmlCaption:"Déclarer cloison fermée"};
+const ACTION_PASS_FENCE = {id:14,htmlCaption:"Passer cloison"};
 const ACTION_ENTER_NUMBER = {id:14,htmlCaption:"Entrer un nombre"};
 const ACTION_PUT_ROUND = {id:15, htmlCaption:"Placer un rond"};
 const ACTION_PUT_SQUARE = {id:16, htmlCaption:"Placer un carré"};
@@ -48,6 +49,7 @@ const ACTION_SELECTION_RECTANGLE = {id:26, htmlCaption : "Sélectionner cases en
 const ACTION_SELECTION_REGION = {id:27, htmlCaption : "Sélectionner région"};
 const ACTION_PASS_GRIDS = {id:27, htmlCaption : "Passer grilles"};
 const ACTION_NOTHING = {id:55, htmlCaption : "Ne rien faire"};
+const ACTION_PASS_GALAXY_DELIMITATION = {id:55, htmlCaption : "Passer autour centre galaxie"};
 
 /**
 Getter of setter for a specific mode

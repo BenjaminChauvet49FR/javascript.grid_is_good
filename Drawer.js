@@ -49,6 +49,10 @@ function Drawer() {
 		selectedSpace: '#bbffcc',
 		selectedCornerSpace : '#bbccff'
 	}
+	this.galaxiesColourSet = {
+		inner : '#ffffdd',
+		border : '#440000'
+	}
 }
 
 Drawer.prototype.setWallColors = function(p_wallColorSet) {
@@ -659,6 +663,45 @@ Drawer.prototype.drawTapaGrid = function (p_context, p_tapaGrid) {
 	}
 }
 
+Drawer.prototype.drawGalaxiesGrid = function (p_context, p_galaxiesGrid) {
+	const yLength = p_galaxiesGrid.getYLength();
+	const xLength = p_galaxiesGrid.getXLength();
+	var galaxiePosition, pixXCenter, pixYCenter;
+	p_context.fillStyle = this.galaxiesColourSet.inner;
+	p_context.strokeStyle = this.galaxiesColourSet.border;
+	for (var y = 0 ; y < yLength ; y++) {
+		for (var x = 0 ; x < xLength ; x++) {
+			galaxiePosition = p_galaxiesGrid.get(x, y);
+			pixXCenter = 0;
+			switch(galaxiePosition) {
+				case GALAXIES_POSITION.CENTER :
+					pixXCenter = this.getPixCenterX(x);
+					pixYCenter = this.getPixCenterY(y);
+				break;
+				case GALAXIES_POSITION.RIGHT :
+					pixXCenter = this.getPixXRight(x);
+					pixYCenter = this.getPixCenterY(y);
+				break;
+				case GALAXIES_POSITION.DOWN :
+					pixXCenter = this.getPixCenterX(x);
+					pixYCenter = this.getPixYDown(y);
+				break;
+				case GALAXIES_POSITION.RIGHT_DOWN :
+					pixXCenter = this.getPixXRight(x);
+					pixYCenter = this.getPixYDown(y);
+				break;
+			}
+			if (pixXCenter != 0) {
+				const radius = this.pix.sideSpace / 6;
+				p_context.beginPath();
+				p_context.ellipse(pixXCenter, pixYCenter, radius, radius, 0, 0, 2 * Math.PI);
+				p_context.stroke();
+				p_context.fill();
+			}
+		}
+	}
+}
+
 // -----------------
 // Drawing "one value per region" in the upper-left corner of the space
 
@@ -770,7 +813,6 @@ Drawer.prototype.drawTriangle = function(p_context, p_xSpace, p_ySpace, p_item) 
 // Draw li'l shapes
 
 Drawer.prototype.drawLittleRoundUpperRight = function(p_context, p_xSpace, p_ySpace, p_item) {
-	p_context.beginPath();
 	const radius = this.pix.sideSpace / 6;
 	const pixXCenter = this.getPixXRight(p_xSpace) - 1 - radius;
 	const pixYCenter = this.getPixYUp(p_ySpace) + 1 + radius;
@@ -873,6 +915,23 @@ Drawer.prototype.getClickSpace = function (event, p_canvas, p_xLength, p_yLength
         x: indexX,
         y: indexY
     }
+}
+
+Drawer.prototype.getClickKnotRD = function (event, p_canvas, p_xLength, p_yLength) {
+	const pixX = this.getPixXWithinGrid(event, p_canvas);
+	const pixY = this.getPixYWithinGrid(event, p_canvas);
+	const pixXModulo = (pixX + this.pix.borderClickDetection) % this.pix.sideSpace;
+	const pixYModulo = (pixY + this.pix.borderClickDetection) % this.pix.sideSpace;
+	if ((pixXModulo < 2 * this.pix.borderClickDetection) &&  (pixYModulo < 2 * this.pix.borderClickDetection)) {
+		const answer = {
+			x: Math.floor((pixX + this.pix.borderClickDetection) / this.pix.sideSpace) - 1,
+			y: Math.floor((pixY + this.pix.borderClickDetection) / this.pix.sideSpace) - 1
+		};
+		if ((answer.x < (p_xLength - 1)) && (answer.x >= 0) && (answer.y < p_yLength) && (answer.y >= 0)) {
+			return answer;
+		}
+	}
+    return null;
 }
 
 /**
