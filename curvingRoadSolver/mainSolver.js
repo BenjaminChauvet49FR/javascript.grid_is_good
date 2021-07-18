@@ -6,6 +6,7 @@ function main() {
 	var	context = canevas.getContext("2d");
 	var actionsManager = {}; 
 	var drawIndications;
+	var spanState = document.getElementById("span_resolution_state");
 
 	var colors = {
 		circleIn:'#ffe100',
@@ -22,6 +23,7 @@ function main() {
 	function drawCanvas() {
 		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength); 
 		drawInsideSpaces(context, drawer, colors, solver);
+		solver.callStateForItem(spanState);
 	}
 
 	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)},false);

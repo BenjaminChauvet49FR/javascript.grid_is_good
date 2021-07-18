@@ -1,7 +1,6 @@
 // Initialization
 
 const NOT_FORCED = -1; 
-const NOT_RELEVANT = -1;
 
 const HEYAWAKE_PASS_CATEGORY = {
 	SINGLE_REGION : 0,
@@ -43,18 +42,14 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 
 	this.gridWall = WallGrid_data(p_wallArray); 
 	this.regionArray = this.gridWall.toRegionArray();
-	this.answerArray = [];
-	this.stripesArray = [];
+	this.answerArray = generateValueArray(this.xLength, this.yLength, ADJACENCY.UNDECIDED);
+	this.stripesArray = generateFunctionValueArray(this.xLength, this.yLength, function() {
+		return {horizontal : [], vertical : []}
+	});
 	this.horizontalStripes = [];
 	this.verticalStripes = [];
 	var ix,iy;
 	var lastRegionNumber = 0;
-	
-	this.answerArray = generateValueArray(this.xLength, this.yLength, ADJACENCY.UNDECIDED);
-	this.stripesArray = generateFunctionValueArray(this.xLength, this.yLength, function() {
-		return {leftMost : NOT_RELEVANT, horizIn : NOT_RELEVANT, rightMost : NOT_RELEVANT, 
-				topMost : NOT_RELEVANT, vertIn : NOT_RELEVANT, bottomMost : NOT_RELEVANT}
-	});
 	
 	const spacesByRegion = listSpacesByRegion(this.regionArray);
 	this.regionsNumber = spacesByRegion.length;
@@ -108,10 +103,10 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 					irInner = this.regionArray[iy][ix+1]; //Region of the inner grid
 					indexStrip = this.horizontalStripes.length;
 					this.regions[irInner].horizontalInnerStripesIndexes.push(indexStrip);
-					this.stripesArray[iy][ix].leftMost = indexStrip;
-					this.stripesArray[iy][endStrip].rightMost = indexStrip;
+					this.stripesArray[iy][ix].horizontal.push(indexStrip);
+					this.stripesArray[iy][endStrip].horizontal.push(indexStrip);
 					for(var ix2 = ix+1; ix2 < endStrip ; ix2++){
-						this.stripesArray[iy][ix2].horizIn = indexStrip;
+						this.stripesArray[iy][ix2].horizontal.push(indexStrip);
 					}
 					this.horizontalStripes.push({row : iy, xStart : ix, xEnd : endStrip, UNDEFs: endStrip-ix+1, CLOSEDs:0});
 				}
@@ -128,10 +123,10 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 					irInner = this.regionArray[iy+1][ix]; 
 					indexStrip = this.verticalStripes.length;
 					this.regions[irInner].verticalInnerStripesIndexes.push(indexStrip);
-					this.stripesArray[iy][ix].topMost = indexStrip;
-					this.stripesArray[endStrip][ix].bottomMost = indexStrip;
+					this.stripesArray[iy][ix].vertical.push(indexStrip);
+					this.stripesArray[endStrip][ix].vertical.push(indexStrip);
 					for(var iy2 = iy+1; iy2 < endStrip ; iy2++){
-						this.stripesArray[iy2][ix].vertIn = indexStrip;
+						this.stripesArray[iy2][ix].vertical.push(indexStrip);
 					}
 					this.verticalStripes.push({column : ix, yStart : iy, yEnd : endStrip, UNDEFs: endStrip-iy+1, CLOSEDs:0});
 				}
@@ -139,8 +134,7 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 		}
 	}
 	
-	//Note : grid not purified.
-	
+	//Note : grid not purified. (if there are banned spaces)
 	
 	// For general pass
 	bordersTriangle = getBordersTriangle(this.regionArray, this.regionsNumber);
@@ -162,6 +156,7 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 //--------------------------------
 
 // Misc. methods
+
 SolverHeyawake.prototype.expectedNumberInRegion = function(p_ir) {
 	return this.regions[p_ir].expectedNumberOfClosedsInRegion;
 }
@@ -186,37 +181,33 @@ SolverHeyawake.prototype.getFirstSpaceRegion = function(p_ir) {
 
 // Misc. inner methods 
 
-SolverHeyawake.prototype.lowerHorizontalStrip = function(p_index, p_symbol) {
+SolverHeyawake.prototype.warnPlacedHorizontalStrip = function(p_index, p_symbol) {
 	this.modifyHorizontalStrip(p_index, p_symbol, -1);
 }
 
-SolverHeyawake.prototype.lowerVerticalStrip = function(p_index, p_symbol) {
+SolverHeyawake.prototype.warnPlacedVerticalStrip = function(p_index, p_symbol) {
 	this.modifyVerticalStrip(p_index, p_symbol, -1);
 }
 
-SolverHeyawake.prototype.raiseHorizontalStrip = function(p_index, p_symbol) {
+SolverHeyawake.prototype.warnUnplacedHorizontalStrip = function(p_index, p_symbol) {
 	this.modifyHorizontalStrip(p_index, p_symbol, 1);
 }
 
-SolverHeyawake.prototype.raiseVerticalStrip = function(p_index, p_symbol) {
+SolverHeyawake.prototype.warnUnplacedVerticalStrip = function(p_index, p_symbol) {
 	this.modifyVerticalStrip(p_index, p_symbol, 1);
 }
 
 SolverHeyawake.prototype.modifyHorizontalStrip = function(p_index, p_symbol, p_modify) {
-	if (p_index != NOT_RELEVANT) {
-		this.horizontalStripes[p_index].UNDEFs += p_modify;
-		if (p_symbol == ADJACENCY.NO) {
-			this.horizontalStripes[p_index].CLOSEDs += p_modify;
-		}
+	this.horizontalStripes[p_index].UNDEFs += p_modify;
+	if (p_symbol == ADJACENCY.NO) {
+		this.horizontalStripes[p_index].CLOSEDs += p_modify;
 	}
 }
 
 SolverHeyawake.prototype.modifyVerticalStrip = function(p_index, p_symbol, p_modify) {
-	if (p_index != NOT_RELEVANT) {
-		this.verticalStripes[p_index].UNDEFs  += p_modify;
-		if (p_symbol == ADJACENCY.NO) {
-			this.verticalStripes[p_index].CLOSEDs += p_modify;
-		}
+	this.verticalStripes[p_index].UNDEFs += p_modify;
+	if (p_symbol == ADJACENCY.NO) {
+		this.verticalStripes[p_index].CLOSEDs += p_modify;
 	}
 }
 
@@ -275,7 +266,7 @@ SolverHeyawake.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
 	this.tryToApplyHypothesis(
-		SpaceEvent(p_x, p_y, p_symbol),
+		new SpaceEvent(p_x, p_y, p_symbol),
 		this.methodsSetDeductions
 	);
 }
@@ -303,12 +294,12 @@ SolverHeyawake.prototype.putNew = function(p_x, p_y, p_symbol) {
 		region.notDecidedYet--;
 	}
 	const stripSpace = this.stripesArray[p_y][p_x];
-	this.lowerHorizontalStrip(stripSpace.leftMost, p_symbol);
-	this.lowerHorizontalStrip(stripSpace.horizIn, p_symbol);
-	this.lowerHorizontalStrip(stripSpace.rightMost, p_symbol);	
-	this.lowerVerticalStrip(stripSpace.topMost, p_symbol);
-	this.lowerVerticalStrip(stripSpace.vertIn, p_symbol);
-	this.lowerVerticalStrip(stripSpace.bottomMost, p_symbol);
+	stripSpace.horizontal.forEach(index => {		
+		this.warnPlacedHorizontalStrip(index, p_symbol);
+	});
+	stripSpace.vertical.forEach(index => {		
+		this.warnPlacedVerticalStrip(index, p_symbol);
+	});
 	return EVENT_RESULT.SUCCESS;
 }
 
@@ -337,12 +328,12 @@ undoEventClosure = function(p_solver) {
 			region.notDecidedYet++;
 		}
 		const stripSpace = p_solver.stripesArray[y][x];
-		p_solver.raiseHorizontalStrip(stripSpace.leftMost, symbol);
-		p_solver.raiseHorizontalStrip(stripSpace.horizIn, symbol);
-		p_solver.raiseHorizontalStrip(stripSpace.rightMost, symbol);	
-		p_solver.raiseVerticalStrip(stripSpace.topMost, symbol);
-		p_solver.raiseVerticalStrip(stripSpace.vertIn, symbol);
-		p_solver.raiseVerticalStrip(stripSpace.bottomMost, symbol);
+		stripSpace.horizontal.forEach(index => {		
+			p_solver.warnUnplacedHorizontalStrip(index, symbol);
+		});
+		stripSpace.vertical.forEach(index => {		
+			p_solver.warnUnplacedVerticalStrip(index, symbol);
+		});
 	}
 }
 
@@ -354,7 +345,7 @@ Transforms a geographical deduction (see dedicated class GeographicalDeduction) 
 */
 transformClosure = function (p_solver) {
     return function (p_geographicalDeduction) {
-		return SpaceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, p_geographicalDeduction.opening);
+		return new SpaceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, p_geographicalDeduction.opening);
     }
 };
 
@@ -365,7 +356,8 @@ adjacencyClosure = function (p_solver) {
 }
 
 //--------------------------------
-// Intelligence
+// Deductions
+
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
 		var x = p_eventBeingApplied.x();
@@ -375,23 +367,23 @@ deductionsClosure = function (p_solver) {
 		symbol = p_eventBeingApplied.symbol;
 		if (symbol == ADJACENCY.NO) {
 			p_solver.existingNeighborsCoorsDirections(x, y).forEach(coors => {
-				p_listEventsToApply.push(SpaceEvent(coors.x, coors.y, ADJACENCY.YES));
+				p_listEventsToApply.push(new SpaceEvent(coors.x, coors.y, ADJACENCY.YES));
 			});
 			//Alert on region
 			if (region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 0) {
-				p_listEventsToApply = p_solver.alertRegion(p_listEventsToApply, ir, ADJACENCY.YES, region.notPlacedYet.OPENs);			
+				p_listEventsToApply = p_solver.alertRegionDeductions(p_listEventsToApply, ir, ADJACENCY.YES, region.notPlacedYet.OPENs);			
 			}			
 		} else {
 			stripSpace = p_solver.stripesArray[y][x];
-			p_listEventsToApply = p_solver.testAlertHorizontalStrip(p_listEventsToApply, stripSpace.leftMost);
-			p_listEventsToApply = p_solver.testAlertHorizontalStrip(p_listEventsToApply, stripSpace.horizIn);
-			p_listEventsToApply = p_solver.testAlertHorizontalStrip(p_listEventsToApply, stripSpace.rightMost);
-			p_listEventsToApply = p_solver.testAlertVerticalStrip(p_listEventsToApply, stripSpace.topMost);
-			p_listEventsToApply = p_solver.testAlertVerticalStrip(p_listEventsToApply, stripSpace.vertIn);
-			p_listEventsToApply = p_solver.testAlertVerticalStrip(p_listEventsToApply, stripSpace.bottomMost);
+			stripSpace.horizontal.forEach(index => {	
+				p_listEventsToApply = p_solver.testAlertHorizontalStripDeductions(p_listEventsToApply, index);
+			});
+			stripSpace.vertical.forEach(index => {		
+				p_listEventsToApply = p_solver.testAlertVerticalStripDeductions(p_listEventsToApply, index);
+			});
 			//Alert on region
 			if (region.notPlacedYet != null && region.notPlacedYet.OPENs == 0){
-				p_listEventsToApply = p_solver.alertRegion(p_listEventsToApply,ir,ADJACENCY.NO,region.notPlacedYet.CLOSEDs);			
+				p_listEventsToApply = p_solver.alertRegionDeductions(p_listEventsToApply, ir, ADJACENCY.NO, region.notPlacedYet.CLOSEDs);			
 			}
 		}
 		return p_listEventsToApply;
@@ -399,31 +391,31 @@ deductionsClosure = function (p_solver) {
 }
 
 // Classic logical verifications 
-SolverHeyawake.prototype.testAlertHorizontalStrip = function(p_eventsList, p_index) {
-	if (p_index != NOT_RELEVANT && this.horizontalStripes[p_index].CLOSEDs == 0 && this.horizontalStripes[p_index].UNDEFs == 1) {
+SolverHeyawake.prototype.testAlertHorizontalStripDeductions = function(p_eventsList, p_index) {
+	if (this.horizontalStripes[p_index].CLOSEDs == 0 && this.horizontalStripes[p_index].UNDEFs == 1) {
 		const y = this.horizontalStripes[p_index].row;
 		var ix = this.horizontalStripes[p_index].xStart;
 		while(this.answerArray[y][ix] == ADJACENCY.YES) {
 			ix++;
 		}
-		p_eventsList.push(SpaceEvent(ix,y,ADJACENCY.NO));
+		p_eventsList.push(new SpaceEvent(ix, y, ADJACENCY.NO));
 	}
 	return p_eventsList;
 }
 
-SolverHeyawake.prototype.testAlertVerticalStrip = function(p_eventsList, p_index) {
-	if (p_index != NOT_RELEVANT && this.verticalStripes[p_index].CLOSEDs == 0 && this.verticalStripes[p_index].UNDEFs == 1) {
+SolverHeyawake.prototype.testAlertVerticalStripDeductions = function(p_eventsList, p_index) {
+	if (this.verticalStripes[p_index].CLOSEDs == 0 && this.verticalStripes[p_index].UNDEFs == 1) {
 		const x = this.verticalStripes[p_index].column;
 		var iy = this.verticalStripes[p_index].yStart;
 		while(this.answerArray[iy][x] == ADJACENCY.YES){
 			iy++;
 		}
-		p_eventsList.push(SpaceEvent(x, iy, ADJACENCY.NO));
+		p_eventsList.push(new SpaceEvent(x, iy, ADJACENCY.NO));
 	}
 	return p_eventsList;
 }
 
-SolverHeyawake.prototype.alertRegion = function(p_listEvents, p_regionIndex, p_missingSymbol, p_missingNumber) {
+SolverHeyawake.prototype.alertRegionDeductions = function(p_listEvents, p_regionIndex, p_missingSymbol, p_missingNumber) {
 	const region = this.regions[p_regionIndex];
 	var xa,ya,alertSpace;
 	var remaining = p_missingNumber
@@ -432,7 +424,7 @@ SolverHeyawake.prototype.alertRegion = function(p_listEvents, p_regionIndex, p_m
 		xa = alertSpace.x;
 		ya = alertSpace.y;
 		if (this.answerArray[ya][xa] == ADJACENCY.UNDECIDED) {
-			p_listEvents.push(SpaceEvent(xa, ya, p_missingSymbol));
+			p_listEvents.push(new SpaceEvent(xa, ya, p_missingSymbol));
 			remaining--;
 			if (remaining == 0){
 				break;
@@ -461,7 +453,7 @@ SolverHeyawake.prototype.generateEventsForRegionPass = function(p_indexRegion) {
 	var eventList = [];
 	this.regions[p_indexRegion].spaces.forEach(space => {
 		if (this.answerArray[space.y][space.x] == ADJACENCY.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
-			eventList.push([SpaceEvent(space.x, space.y, ADJACENCY.YES), SpaceEvent(space.x, space.y, ADJACENCY.NO)]);
+			eventList.push([new SpaceEvent(space.x, space.y, ADJACENCY.YES), new SpaceEvent(space.x, space.y, ADJACENCY.NO)]);
 		}			 
 	});
 	return eventList;

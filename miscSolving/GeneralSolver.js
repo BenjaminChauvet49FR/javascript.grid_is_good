@@ -570,6 +570,9 @@ GeneralSolver.prototype.happenedEventsLog = function(p_options) {
 				}
 			}
 		}
+		if (answer.charAt(answer.length - 2) == '-' && answer.charAt(answer.length - 1) == ' ') { // Scrap superfluous characters
+			answer = answer.substring(0, answer.length-2);
+		}
 		answer += "\n";
 	});
 	console.log(answer); // If 'answer' is simply returned, hitting solver.happenedEventsLog() or its quick variation will keep the literal \n.

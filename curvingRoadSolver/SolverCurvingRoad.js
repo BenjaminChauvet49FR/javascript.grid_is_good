@@ -373,14 +373,14 @@ SolverCurvingRoad.prototype.undo = function() {
 SolverCurvingRoad.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
 	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.tryToApplyHypothesis(SpaceEvent(p_x, p_y, p_symbol), this.methodsSetDeductions);
+	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol), this.methodsSetDeductions);
 }
 
 //--------------------------------
 
 // Doing, undoing and transforming
 SolverCurvingRoad.prototype.putNew = function (p_x, p_y, p_symbol) {
-    if ((p_x < 0) || (p_y < 0) || (p_x >= this.xLength) || (p_y >= this.yLength) || (this.answerArray[p_y][p_x] == p_symbol)) {
+    if (this.answerArray[p_y][p_x] == p_symbol) {
         return EVENT_RESULT.HARMLESS;
     }
     if (this.answerArray[p_y][p_x] != ADJACENCY.UNDECIDED) {
@@ -430,7 +430,7 @@ adjacencyClosure = function(p_solver) {
 
 transformClosure = function (p_solver) {
     return function (p_geographicalDeduction) {
-		return SpaceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, p_geographicalDeduction.opening);
+		return new SpaceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, p_geographicalDeduction.opening);
     }
 };
 
@@ -440,24 +440,20 @@ deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
 		x = p_eventBeingApplied.x();
 		y = p_eventBeingApplied.y();
-		symbol = p_eventBeingApplied.symbol;
-		//result = this.putNew(x, y, symbol);
-		// Deduction time !
-		if (symbol == ADJACENCY.NO) {
-			p_listEventsToApply.push(SpaceEvent(x, y - 1, ADJACENCY.YES));
-			p_listEventsToApply.push(SpaceEvent(x, y + 1, ADJACENCY.YES));
-			p_listEventsToApply.push(SpaceEvent(x - 1, y, ADJACENCY.YES));
-			p_listEventsToApply.push(SpaceEvent(x + 1, y, ADJACENCY.YES));
+		if (p_eventBeingApplied.symbol == ADJACENCY.NO) {
+			p_solver.existingNeighborsCoorsDirections(x, y).forEach(coorsDir => {				
+				p_listEventsToApply.push(new SpaceEvent(coorsDir.x, coorsDir.y, ADJACENCY.YES));
+			});
 		} else {
 			p_solver.curvingLinkArray[y][x].forEach(index => {
-				p_listEventsToApply = p_solver.testAlertCurvingList(p_listEventsToApply, index); 
+				p_listEventsToApply = p_solver.testAlertCurvingListDeductions(p_listEventsToApply, index); 
 			});
 		}
 		return p_listEventsToApply
 	}	
 }
 
-SolverCurvingRoad.prototype.testAlertCurvingList = function (p_listEvents, p_index) {
+SolverCurvingRoad.prototype.testAlertCurvingListDeductions = function (p_listEvents, p_index) {
     const curvingLink = this.curvingLinkList[p_index];
     if (curvingLink.undecided == 1 && curvingLink.closeds == 0) {
         var xSpot,
@@ -485,7 +481,7 @@ SolverCurvingRoad.prototype.testAlertCurvingList = function (p_listEvents, p_ind
                 }
             }
         }
-        p_listEvents.push(SpaceEvent(xSpot, ySpot, ADJACENCY.NO));
+        p_listEvents.push(new SpaceEvent(xSpot, ySpot, ADJACENCY.NO));
     }
     return p_listEvents;
 }
@@ -498,19 +494,7 @@ copying = function(p_event) {
 }
 
 comparison = function(p_event1, p_event2) {
-	if (p_event2.coorY > p_event1.coorY) {
-		return -1;
-	} else if (p_event2.coorY < p_event1.coorY) {
-		return 1;
-	} else if (p_event2.coorX > p_event1.coorX) {
-		return -1;
-	} else if (p_event2.coorX < p_event1.coorX) {
-		return 1;
-	} else {
-		var c1 = (p_event1.symbol == ADJACENCY.NO ? 1 : 0);
-		var c2 = (p_event2.symbol == ADJACENCY.NO ? 1 : 0); // Unstable : works because only "O" and "C" values are admitted
-		return c1-c2;
-	}
+	return this.commonComparison([p_event1.y, p_event1.x, p_event1.symbol], [p_event2.y, p_event2.x, p_event2.symbol]);
 }
 
 namingCategoryClosure = function(p_solver) {
@@ -526,7 +510,7 @@ generateEventsForSpacePassClosure = function(p_solver) {
 }
 
 SolverCurvingRoad.prototype.generateEventsForSpacePass = function(p_space) {
-	return [[SpaceEvent(p_space.x, p_space.y, ADJACENCY.NO),SpaceEvent(p_space.x, p_space.y, ADJACENCY.YES)]];
+	return [[new SpaceEvent(p_space.x, p_space.y, ADJACENCY.NO), new SpaceEvent(p_space.x, p_space.y, ADJACENCY.YES)]];
 }
 
 orderedListPassArgumentsClosure = function(p_solver) {
