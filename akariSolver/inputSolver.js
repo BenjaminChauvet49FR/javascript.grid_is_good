@@ -20,7 +20,7 @@ function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 			p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, FILLING.NO); 
 		break;
 		case ACTION_PASS_NUMERIC_SPACES.id:
-			p_solver.passSetNumericSpaces(p_spaceIndexX, p_spaceIndexY);
+			p_solver.passSpaceOrSetNumericSpaces(p_spaceIndexX, p_spaceIndexY);
 		break;
 	}
 }

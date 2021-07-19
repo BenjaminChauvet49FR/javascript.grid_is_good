@@ -1,5 +1,10 @@
-// Setup
 const NOT_FORCED = -1;
+const AKARI_PASS_CATEGORY = {
+	SPACE : 'S',
+	SET_NUMERIC : 'N'
+}
+
+// Setup
 
 function SolverAkari(p_numberSymbolArray) {
 	GeneralSolver.call(this);
@@ -26,7 +31,7 @@ SolverAkari.prototype.construct = function(p_numberSymbolArray) {
 	this.methodSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterClustersClosure(this)]);
 	this.methodSetPass = {comparisonMethod : compareSolveEvents, copyMethod : copying, argumentToLabelMethod : namingSetClosure(this)};
 	this.methodsSetMultiPass = {
-		generatePassEventsMethod : generateEventsForSetsAroundNumericSpacesClosure(this),
+		generatePassEventsMethod : generateEventsForPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
 	};
@@ -268,11 +273,14 @@ SolverAkari.prototype.quickStart = function() {
 	this.terminateQuickStart();
 }
 
-SolverAkari.prototype.passSetNumericSpaces = function(p_x, p_y) {
+SolverAkari.prototype.passSpaceOrSetNumericSpaces = function(p_x, p_y) {
 	const spaceInfos = this.numericArray[p_y][p_x];
 	if (this.getNumericValueFromSpace(spaceInfos) != null) {
-		generatedEvents = this.generateEventsForSetsAroundNumericSpaces(this.numericArray[p_y][p_x].indexSetNumeric);
-		this.passEvents(generatedEvents, this.methodSetDeductions, this.methodSetPass, this.numericArray[p_y][p_x].indexSetNumeric); // TODO for logs...
+		generatedEvents = this.generateAllEventsForSetsAroundNumericSpacesPass(this.numericArray[p_y][p_x].indexSetNumeric);
+		this.passEvents(generatedEvents, this.methodSetDeductions, this.methodSetPass, {passCategory : AKARI_PASS_CATEGORY.SET_NUMERIC, index : this.numericArray[p_y][p_x].indexSetNumeric});
+	} else if (!this.numericArray[p_y][p_x].blocked) {
+		generatedEvents = [this.generateListEventsForOneSpace(p_x, p_y)];
+		this.passEvents(generatedEvents, this.methodSetDeductions, this.methodSetPass, {passCategory : AKARI_PASS_CATEGORY.SPACE, x : x, y : y});
 	}
 }
 
@@ -544,18 +552,26 @@ SolverAkari.prototype.cleanOneLighterLeftSpaces = function() {
 // ---------------------
 // Pass methods
 
-generateEventsForSetsAroundNumericSpacesClosure = function(p_solver) {
-	return function(p_indexSpaces) {
-		return p_solver.generateEventsForSetsAroundNumericSpaces(p_indexSpaces);
+generateEventsForPassClosure = function(p_solver) {
+	return function(p_indexPass) {
+		if (p_indexPass.passCategory == AKARI_PASS_CATEGORY.NUMERIC_SET) {			
+			return p_solver.generateAllEventsForSetsAroundNumericSpacesPass(p_indexPass.index);
+		} else {
+			return [p_solver.generateListEventsForOneSpace(p_indexPass.x, p_indexPass.y)];
+		}
 	}
 }
 
-SolverAkari.prototype.generateEventsForSetsAroundNumericSpaces = function(p_indexSpaces) {
+SolverAkari.prototype.generateAllEventsForSetsAroundNumericSpacesPass = function(p_indexSpaces) {
 	var eventList = [];
 	this.setsAroundNumericSpaces[p_indexSpaces].forEach(coors => {
-		eventList.push([new SpaceEvent(coors.x, coors.y, FILLING.YES), new SpaceEvent(coors.x, coors.y, FILLING.NO)]);
+		eventList.push(this.generateListEventsForOneSpace(coors.x, coors.y));
 	});
 	return eventList;
+}
+
+SolverAkari.prototype.generateListEventsForOneSpace = function(p_x, p_y) {
+	return [new SpaceEvent(p_x, p_y, FILLING.YES), new SpaceEvent(p_x, p_y, FILLING.NO)];
 }
 
 copying = function(p_event) {
@@ -567,23 +583,32 @@ function compareSolveEvents(p_event1, p_event2) {
 }
 
 namingSetClosure = function(p_solver) {
-	return function (p_indexSetSpace) {
-		const setCoors = p_solver.setsAroundNumericSpaces[p_indexSetSpace];
-		return "Space set (" + setCoors[0].x + " " + setCoors[0].y + ", size " + setCoors.length + ")"; 
+	return function (p_index) {
+		if (p_index.passCategory == AKARI_PASS_CATEGORY.NUMERIC_SET) {			
+			const setCoors = p_solver.setsAroundNumericSpaces[p_index.index];
+			return "Space set (" + setCoors[0].x + "," + setCoors[0].y + ", size " + setCoors.length + ")"; 
+		} else {
+			return "Space (" + p_index.x + "," + p_index.y + ")";
+		}
 	}
 }
-
-
 
 // ---------------------
 // Multipass methods
 
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		// TODO may be optimized.
+		// Note : may be optimized.
 		var answer = [];
 		for (var i = 0; i < p_solver.setsAroundNumericSpaces.length ; i++) {
-			answer.push(i);
+			answer.push({passCategory : AKARI_PASS_CATEGORY.NUMERIC_SET, index : i});
+		}
+		for (var y = 0 ; y < p_solver.yLength ; y++) {
+			for (var x = 0 ; x < p_solver.xLength ; x++) {
+				if (!p_solver.numericArray[y][x].blocked && p_solver.numericArray[y][x].numericNeighbors.length == 0) {					
+					answer.push({passCategory : AKARI_PASS_CATEGORY.SPACE, x : x, y : y});
+				}
+			}
 		}
 		return answer;
 	}
@@ -592,6 +617,6 @@ orderedListPassArgumentsClosure = function(p_solver) {
 // Skip...
 skipPassClosure = function(p_solver) {
 	return function(p_argument) {
-		return false; // TODO Only skip spaces ? (spaces not provided now)
+		return false; // TODO Only skip spaces ?
 	}
 }

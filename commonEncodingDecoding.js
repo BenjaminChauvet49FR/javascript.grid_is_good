@@ -132,15 +132,11 @@ StreamDecodingString64.prototype.decode = function (p_withPrefix) {
 		if (this.index < this.string.length && this.string.charAt(this.index) == "]") {
 			this.index++;
 		}
-		return {prefix : preNumber, value : value} ;
+		return p_withPrefix ? {prefix : preNumber, value : value} : value;
 	} else {
 		value = decode64FromCharacter(this.string.charAt(this.index));
 		this.index++;
-		if (p_withPrefix) {
-			return {prefix : preNumber, value : value};	
-		} else {
-			return value;
-		}
+		return p_withPrefix ? {prefix : preNumber, value : value} : value;	
 	}
 }
 

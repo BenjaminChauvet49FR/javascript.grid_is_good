@@ -18,9 +18,6 @@ function Drawer() {
         sideSpace: 30,
         borderSpace: 2, //Inner border
         borderClickDetection: 0, //How many pixels from the side of a space can you click to trigger the border ?
-        canvasWidth: 800,
-        canvasHeight: 512,
-        canvasHeight: 512,
         marginGrid: {
             left: 0,
             up: 0,
@@ -69,6 +66,13 @@ Drawer.prototype.setFenceColors = function(p_fenceColours) {
 
 //---------------------
 // All draw functions are below
+
+//---------------------
+// Refresh
+
+function clearDrawing(p_context) {
+	p_context.clearRect(0, 0, 9999, 9999 ); // Note : this used to be (800, 500) but the size of the canvas eventually went over this limit...
+}
 
 //---------------------
 // Drawing grids
@@ -149,7 +153,7 @@ Drawer.prototype.drawGridPuzzle = function (p_context, p_xLength, p_yLength, p_c
 	var ix,
     iy,
     indexRegion;
-	p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight); 
+	clearDrawing(p_context);
 	
     //Upper-left pixel of the horizontal walls (Horiz) and vertical walls (Vert) ; pillars aren't part of walls (meeting of 4 walls)
     const pixStartXVert = this.pix.marginGrid.left + this.pix.sideSpace - this.pix.borderSpace;
@@ -306,7 +310,7 @@ Drawer.prototype.drawEmptyGrid = function (p_context, p_xLength, p_yLength) {
 
 Drawer.prototype.drawQuadrillageGrid = function (p_context, p_xLength, p_yLength, p_rightToColumnIndexes, p_downToRowIndexes) { // Private method 
     var i;
-	p_context.clearRect(0, 0, this.pix.canvasWidth, this.pix.canvasHeight);
+	clearDrawing(p_context);
     const pixTotalWidth = p_xLength * this.pix.sideSpace;
     const pixTotalHeight = p_yLength * this.pix.sideSpace;
     var pixXStart = this.pix.marginGrid.left;
@@ -610,7 +614,7 @@ Drawer.prototype.drawNumbersInsideStandard = function(p_context, p_function, p_x
 			supposedValue = p_function(ix, iy);
 			if (supposedValue != null) {
 				p_context.fillStyle = supposedValue.writeColour;
-				p_context.fillText(supposedValue.value, this.getPixCenterX(ix), this.getPixCenterY(iy));
+				p_context.fillText(supposedValue.value, this.getPixCenterX(ix), this.getPixWriteCenterY(iy));
 			} 
 		}
 	}
@@ -879,6 +883,9 @@ Drawer.prototype.getPixCenterX = function (p_xIndex) {
 Drawer.prototype.getPixCenterY = function (p_yIndex) {
     return this.pix.marginGrid.up + (p_yIndex + 0.5) * this.pix.sideSpace;
 }
+Drawer.prototype.getPixWriteCenterY = function (p_yIndex) {
+    return this.pix.marginGrid.up + (p_yIndex + 0.55) * this.pix.sideSpace;
+}
 Drawer.prototype.getPixInnerSide = function () {
     return this.pix.sideSpace - 2 * this.pix.borderSpace;
 }
@@ -1085,6 +1092,7 @@ Offensive programming : if "margin" is defined, all four directions (left/up/rig
 Drawer.prototype.adaptCanvasDimensions = function (p_canvas, p_parameters) {
 
     const pixMaxSpace = 32; //TODO peut changer
+	const pixMinSpace = 16;
     const pixXCanvasSize = 800; //TODO peut changer
     const pixYCanvasSize = 512; //TODO peut changer
     var totalXLength = p_parameters.xLength ? p_parameters.xLength : p_parameters.xyLength;
@@ -1095,7 +1103,7 @@ Drawer.prototype.adaptCanvasDimensions = function (p_canvas, p_parameters) {
         if (p_parameters.margin.rightLength) { totalXLength += p_parameters.margin.rightLength; }
         if (p_parameters.margin.downLength) { totalYLength += p_parameters.margin.downLength; }
     }
-    this.pix.sideSpace = Math.min(pixMaxSpace, Math.min(Math.floor(pixXCanvasSize / totalXLength), Math.floor(pixYCanvasSize / totalYLength)));
+    this.pix.sideSpace = Math.max(pixMinSpace, Math.min(pixMaxSpace, Math.min(Math.floor(pixXCanvasSize / totalXLength), Math.floor(pixYCanvasSize / totalYLength))));
     this.pix.borderSpace = Math.max(1, Math.floor(this.pix.sideSpace / 10));
 	this.pix.borderClickDetection = this.pix.borderSpace * 2;
 	if (p_parameters.margin) {

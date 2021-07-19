@@ -5,6 +5,7 @@ function main() {
 	solver = DummySolver();
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
+	var spanState = document.getElementById("span_resolution_state");
 	var actionsManager = {}; 
 	var drawIndications;
 
@@ -21,6 +22,7 @@ function main() {
 	function drawCanvas() {
 		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength); 
 		drawInsideSpaces(context, drawer, colors, solver);
+		solver.callStateForItem(spanState);
 	}
 	setInterval(drawCanvas, 30);
 
