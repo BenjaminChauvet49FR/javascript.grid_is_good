@@ -3,12 +3,15 @@
 */
 function clickCanvas(event, p_canvas, p_drawer, p_solver, p_actionsManager) {
 	var clicked = p_drawer.getClickWallR(event, p_canvas, p_solver.xLength, p_solver.yLength);
-	if (clicked != null){
+	if (clicked != null && p_actionsManager.clickWallR.id != ACTION_NOTHING.id) {
 		clickWallRAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickWallR);
 	} else {
 		clicked = p_drawer.getClickWallD(event, p_canvas, p_solver.xLength, p_solver.yLength);
-		if (clicked != null){
+		if (clicked != null && p_actionsManager.clickWallR.id != ACTION_NOTHING.id) {
 			clickWallDAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickWallD);
+		} else {
+			clicked = p_drawer.getClickSpace(event, p_canvas, p_solver.xLength, p_solver.yLength);
+			clickSpaceAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickSpace);
 		}
 	}
 }
@@ -39,6 +42,12 @@ function clickWallRAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action) {
 	}
 }
 
+function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
+	if (p_action.id == ACTION_PASS_AROUND_SPACE.id) {
+		p_solver.emitPassSpace(p_spaceIndexX, p_spaceIndexY);
+	}
+}
+
 //--------------------------
 // Game action buttons
 
@@ -48,6 +57,10 @@ quickStartAction = function(p_solver) {
 
 undoAction = function(p_solver) {
 	p_solver.undo();
+}
+
+multipassAction = function(p_solver) {
+	p_solver.makeMultiPass();
 }
 
 //--------------------------

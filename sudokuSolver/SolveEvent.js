@@ -5,6 +5,9 @@ function SpaceAllowEvent(p_x, p_y, p_number, p_valid) {
 	this.y = p_y;
 }
 
+// ---------
+// Interfacing 
+
 SpaceAllowEvent.prototype.toString = function() {	
 	return "[" + this.x + "," + this.y + " " + this.number + (this.choice ? "" : "X")+ "]";
 }

@@ -18,20 +18,28 @@ SolverUsotatami.prototype.construct = function(p_numberGrid) {
 	this.generalConstruct();
 	this.xLength = p_numberGrid[0].length;
 	this.yLength = p_numberGrid.length;
-	this.fenceGrid = new FencesGrid(this.xLength, this.yLength);
-	//this.constructLightFences(p_numberGrid[0].length, p_numberGrid.length); // If any construct method is forgotten we can have surprises when trying to apply a tiny event
-	// this.xLength, this.yLength, this.fenceArray defined above
-	// spaces of this.fenceArray initialized as {right : FENCE_STATE.UNDECIDED, down : FENCE_STATE.UNDECIDED}
+	this.answerFencesGrid = new FencesGrid(this.xLength, this.yLength);
 	
-	this.methodSetDeductions = new ApplyEventMethodPack(
+	this.methodsSetDeductions = new ApplyEventMethodPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	//this.methodSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterNumbersSpacesClosure(this)]);
+	//this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterNumbersSpacesClosure(this)]);
+	this.methodsSetPass = {
+		comparisonMethod : comparison, 
+		copyMethod : copying, 
+		argumentToLabelMethod : namingCategoryClosure(this)
+	};
+	
+	this.methodsSetMultiPass = {
+		generatePassEventsMethod : generateEventsForPassClosure(this),
+		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
+		//skipPassMethod : skipPassClosure(this)
+	};
 	
 	this.indicArray = []; // Spaces without number : ; with a number : {expansions left / up / right / down}
-	this.numberSpacesArray = []; // For filters on numbers
+	this.numberSpacesList = []; // For filters on numbers
 	this.numberSpacesToCheckList = []; // For filters on numbers
 	for (var y = 0; y < this.yLength; y++) {
 		this.indicArray.push([]);
@@ -47,20 +55,20 @@ SolverUsotatami.prototype.construct = function(p_numberGrid) {
 			} else { // Number space : range {left, up, right, down : UNKNOWN_RANGE at start, a number >= 0 then} + (const) indexNumber
 				this.indicArray[y].push({number : p_numberGrid[y][x]});
 				this.indicArray[y][x].range = {};
-				this.numberSpacesArray.push({x : x, y : y, checkRanges : false});
 				KnownDirections.forEach(dir => {
 					this.indicArray[y][x].range[dir] = UNKNOWN_RANGE;
-					this.indicArray[y][x].indexNumber = this.numberSpacesArray.length;
+					this.indicArray[y][x].indexNumber = this.numberSpacesList.length;
 				});
+				this.numberSpacesList.push({x : x, y : y, checkRanges : false});
 			}
 		}
 	}	
 	
 	// Initialize "1st number seen" in each direction of non-number spaces (per space)
 	var x, y, xx, yy, number;
-	for (var indexNumber = 0; indexNumber < this.numberSpacesArray.length ; indexNumber++) {
-		x = this.numberSpacesArray[indexNumber].x;
-		y = this.numberSpacesArray[indexNumber].y;
+	for (var indexNumber = 0; indexNumber < this.numberSpacesList.length ; indexNumber++) {
+		x = this.numberSpacesList[indexNumber].x;
+		y = this.numberSpacesList[indexNumber].y;
 		number = this.getNumber(x, y);
 		xx = x-1;
 		while (xx >= 0 && this.getNumber(xx, y) == null) {
@@ -160,19 +168,6 @@ SolverUsotatami.prototype.setRange = function(p_x, p_y, p_dir, p_value) {
 	this.indicArray[p_y][p_x].range[p_dir] = p_value;
 }
 
-// ------------------------
-// Misc. inner methods
-
-SolverUsotatami.prototype.neighborExists = function(p_x, p_y, p_dir) {
-	switch(p_dir) {
-		case DIRECTION.RIGHT : return p_x <= this.xLength-2; break;
-		case DIRECTION.DOWN : return p_y <= this.yLength-2; break;
-		case DIRECTION.LEFT : return p_x > 0; break;
-		case DIRECTION.UP : return p_y > 0; break;
-		default : autoLogFail("neighborExists returned an undefined result ! ");
-	}
-}
-
 /* Many getters about getting and setting fences defined in the parent solver. */
 
 // ------------------------
@@ -190,13 +185,13 @@ SolverUsotatami.prototype.undo = function(){
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverUsotatami.prototype.passRegion = function(p_indexRegion) {
-	/*const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, p_indexRegion); */
+SolverUsotatami.prototype.emitPassSpace = function(p_x, p_y) {
+	const generatedEvents = this.generateEventsPassNumericSpace(p_x, p_y);
+	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y}); 
 }
 
 SolverUsotatami.prototype.makeMultiPass = function() {	
-	//this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
 }
 
 // In this puzzle, quickstart is vital for the separation of numbers
@@ -215,10 +210,10 @@ SolverUsotatami.prototype.quickStart = function(p_x, p_y) {
 				});
 			}
 			// Claustrophobia test.
-			list = this.testClaustrophobia(list, x, y);
+			list = this.claustrophobiaDeductions(list, x, y);
 			// Applying 
 			list.forEach(_event => {
-				this.tryToApplyHypothesis(_event, this.methodSetDeductions); // And not "applyFenceEvent"... 
+				this.tryToApplyHypothesis(_event, this.methodsSetDeductions); // And not "applyFenceEvent"... 
 			});
 		}
 	}
@@ -229,7 +224,7 @@ SolverUsotatami.prototype.quickStart = function(p_x, p_y) {
 
 // Central method
 SolverUsotatami.prototype.tryToPutNew = function(p_x, p_y, p_direction, p_state) {
-	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, p_direction, p_state), this.methodSetDeductions);
+	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, p_direction, p_state), this.methodsSetDeductions);
 }
 
 //--------------------------------
@@ -260,13 +255,13 @@ undoEventClosure = function(p_solver) {
 }
 
 SolverUsotatami.prototype.applyFenceEvent = function(p_x, p_y, p_dir, p_state) {
-	const state = this.fenceGrid.getFence(p_x, p_y, p_dir); // Could've been slightly optimized by some "getFenceRight/getFenceDown" and "setFenceRight/setFenceDown" but is it that much of a deal ?
+	const state = this.answerFencesGrid.getFence(p_x, p_y, p_dir); // Could've been slightly optimized by some "getFenceRight/getFenceDown" and "setFenceRight/setFenceDown" but is it that much of a deal ?
 	if (p_state == state) {
 		return EVENT_RESULT.HARMLESS;
 	} else if (state != FENCE_STATE.UNDECIDED) {
 		return EVENT_RESULT.FAILURE;
 	}
-	this.fenceGrid.setFence(p_x, p_y, p_dir, p_state);
+	this.answerFencesGrid.setFence(p_x, p_y, p_dir, p_state);
 	return EVENT_RESULT.SUCCESS;
 }
 
@@ -306,7 +301,7 @@ SolverUsotatami.prototype.applyRangeEvent = function(p_x, p_y, p_dir, p_range) {
 }
 
 SolverUsotatami.prototype.undoFenceEvent = function(p_x, p_y, p_dir) {
-	this.fenceGrid.setFence(p_x, p_y, p_dir, FENCE_STATE.UNDECIDED);
+	this.answerFencesGrid.setFence(p_x, p_y, p_dir, FENCE_STATE.UNDECIDED);
 }
 
 SolverUsotatami.prototype.undoViewEvent = function(p_x, p_y, p_dir) {
@@ -332,7 +327,7 @@ deductionsClosure = function(p_solver) {
 			const n1 = p_solver.getNumber(x, y);
 			const n2 = p_solver.getNumber(dx, dy);
 			if (p_eventBeingApplied.state == FENCE_STATE.OPEN) {
-				p_eventList = p_solver.fenceGrid.stripBuild(p_eventList, x, y, dx, dy, dir);
+				p_eventList = p_solver.answerFencesGrid.stripBuild(p_eventList, x, y, dx, dy, dir);
 
 				// Hypothesis : thanks to setup/quickstart, it is impossible for both spaces to have numbers if a fence is open here
 				if (n1 != null) {
@@ -345,18 +340,18 @@ deductionsClosure = function(p_solver) {
 					p_eventList.push(new ViewEvent(dx, dy, odir, USOTATAMI_VIEW.NUMBER));
 				}
 			} else {
-				p_eventList = p_solver.fenceGrid.avoidCrossBuild(p_eventList, x, y, dx, dy, dir);
+				p_eventList = p_solver.answerFencesGrid.avoidCrossBuildDeductions(p_eventList, x, y, dx, dy, dir);
 				if (n1 != null) {
 					p_eventList.push(new RangeEvent(x, y, dir, 0));
 				} else {
 					p_eventList.push(new ViewEvent(x, y, dir, USOTATAMI_VIEW.WALL));
-					p_eventList = p_solver.testDeadEndSeeingNumber(p_eventList, x, y); // If a space is surrounded by 3 walls and sees a number, set a range
+					p_eventList = p_solver.deadEndSeeingNumberRangeDeductions(p_eventList, x, y); // If a space is surrounded by 3 walls and sees a number, set a range
 				}
 				if (n2 != null) {
 					p_eventList.push(new RangeEvent(dx, dy, odir, 0));
 				} else {
 					p_eventList.push(new ViewEvent(dx, dy, odir, USOTATAMI_VIEW.WALL));
-					p_eventList = p_solver.testDeadEndSeeingNumber(p_eventList, dx, dy);
+					p_eventList = p_solver.deadEndSeeingNumberRangeDeductions(p_eventList, dx, dy);
 				}
 			}
 		} else if (p_eventBeingApplied.kind == VIEW_EVENT_KIND) { // VIEW_EVENT_KIND (damn, it was .state)
@@ -367,7 +362,7 @@ deductionsClosure = function(p_solver) {
 			const odir = OppositeDirection[dir];
 			if (p_eventBeingApplied.view == USOTATAMI_VIEW.WALL) {
 				// Propagate wall view behind if not blocked by a wall, a number or the edge of the grid 
-				if (p_solver.neighborExists(x, y, odir) && p_solver.fenceGrid.getFence(x, y, odir) != FENCE_STATE.CLOSED) {
+				if (p_solver.neighborExists(x, y, odir) && p_solver.answerFencesGrid.getFence(x, y, odir) != FENCE_STATE.CLOSED) {
 					const bx = x - DeltaX[dir];
 					const by = y - DeltaY[dir];
 					if (p_solver.getNumber(bx, by) == null) {
@@ -383,7 +378,7 @@ deductionsClosure = function(p_solver) {
 					}
 				}
 				// If 3 directions see walls : claustrophobia, create opening events until meeting a number ! (exactly 1 number per strip = at least one)
-				p_eventList = p_solver.testClaustrophobia(p_eventList, x, y);
+				p_eventList = p_solver.claustrophobiaDeductions(p_eventList, x, y);
 				// If all 4 directions see wall : failure !
 				if (p_solver.getWallDirections(x, y) == 4) {
 					return [new FailureEvent()];
@@ -401,7 +396,7 @@ deductionsClosure = function(p_solver) {
 					const by = y - DeltaY[dir];
 					if (p_solver.getNumber(bx, by) != null) { // Space behind is a number : immediately close the space
 						p_eventList.push(new FenceEvent(x, y, odir, FENCE_STATE.CLOSED));
-					} else if (p_solver.fenceGrid.getFence(bx, by, dir) == FENCE_STATE.OPEN) { // Open space behind : propagate vision.
+					} else if (p_solver.answerFencesGrid.getFence(bx, by, dir) == FENCE_STATE.OPEN) { // Open space behind : propagate vision.
 						p_eventList.push(new ViewEvent(bx, by, dir, USOTATAMI_VIEW.NUMBER));
 					} else {
 						if (p_solver.getView(bx, by, odir) == FENCE_STATE.OPEN) {
@@ -410,7 +405,7 @@ deductionsClosure = function(p_solver) {
 					} 
 				}
 				// If 3 spaces are seen, maybe go for a range event.
-				p_eventList = p_solver.testDeadEndSeeingNumber(p_eventList, x, y);
+				p_eventList = p_solver.deadEndSeeingNumberRangeDeductions(p_eventList, x, y);
 				// By the way, do not close other visions because it should be done when adding fences, open or closed.
 			}
 		}
@@ -421,7 +416,8 @@ deductionsClosure = function(p_solver) {
 	}
 }
 
-SolverUsotatami.prototype.testClaustrophobia = function(p_eventList, p_x, p_y) {
+// If a non-number space sees numbers in 1 direction, open towards it
+SolverUsotatami.prototype.claustrophobiaDeductions = function(p_eventList, p_x, p_y) {
 	if (this.getWallDirections(p_x, p_y) == 3) {
 		KnownDirections.forEach(dir => {
 			if (this.getView(p_x, p_y, dir) != USOTATAMI_VIEW.WALL) {
@@ -433,13 +429,13 @@ SolverUsotatami.prototype.testClaustrophobia = function(p_eventList, p_x, p_y) {
 }
 
 // Test if a non-number space is a dead end and sees a number. If yes, add a range event.
-SolverUsotatami.prototype.testDeadEndSeeingNumber = function(p_eventList, p_x, p_y) {
+SolverUsotatami.prototype.deadEndSeeingNumberRangeDeductions = function(p_eventList, p_x, p_y) {
 	var numberWalls = 0;
 	var directionSight = DIRECTION.UNDECIDED;
 	var dir;
 	for (var i = 0; i < KnownDirections.length ; i++) {
 		dir = KnownDirections[i];
-		if (!this.neighborExists(p_x, p_y, dir) || this.fenceGrid.getFence(p_x, p_y, dir) == USOTATAMI_VIEW.WALL) {
+		if (!this.neighborExists(p_x, p_y, dir) || this.answerFencesGrid.getFence(p_x, p_y, dir) == USOTATAMI_VIEW.WALL) {
 			numberWalls++;
 		} else if (this.getView(p_x, p_y, dir) == USOTATAMI_VIEW.NUMBER) {
 			directionSight = dir;
@@ -450,8 +446,8 @@ SolverUsotatami.prototype.testDeadEndSeeingNumber = function(p_eventList, p_x, p
 	if ((directionSight != DIRECTION.UNDECIDED) && (numberWalls == 3)) {
 		// Test is positive. x,y : space of the seen number.
 		indexNumber = this.indicArray[p_y][p_x].firstIndexNumberSeen[directionSight];
-		const x = this.numberSpacesArray[indexNumber].x;
-		const y = this.numberSpacesArray[indexNumber].y;
+		const x = this.numberSpacesList[indexNumber].x;
+		const y = this.numberSpacesList[indexNumber].y;
 		var range;
 		// Check for filter. (remainder : directionSight = from (p_x, p_y) space)
 		switch(directionSight) {
@@ -465,19 +461,18 @@ SolverUsotatami.prototype.testDeadEndSeeingNumber = function(p_eventList, p_x, p
 	return p_eventList;
 }
 
-//--------------------------------
 // Filters (well, likely slower than a pass for the same result)
 
 /*SolverUsotatami.prototype.addCheckNumberSpace = function(p_indexNumber) {
-	if (!this.numberSpacesArray[p_indexNumber].checkRanges) {
-		this.numberSpacesArray[p_indexNumber].checkRanges = true;
+	if (!this.numberSpacesList[p_indexNumber].checkRanges) {
+		this.numberSpacesList[p_indexNumber].checkRanges = true;
 		this.numberSpacesToCheckList.push(p_indexNumber);
 	}
 }
 
 SolverUsotatami.prototype.cleanNumberSpaceChecks = function() {
 	this.numberSpacesToCheckList.forEach(index => {
-		this.numberSpacesArray[index].checkRanges = false;
+		this.numberSpacesList[index].checkRanges = false;
 	});
 }
 
@@ -498,11 +493,73 @@ filterNumbersSpacesClosure = function(p_solver) {
 		// Make sure the number space has exactly 3 known ranges since it is about the 4th one.
 		// Look for the undecided fences before next closed fence/edge of grid in relevant orientations, if any.
 		// If there isn't exactly one, no point in trying to put a fence. If there is exactly one, we should try. 
-		x = numberSpacesArray[index].x;
-		y = numberSpacesArray[index].y;
+		x = numberSpacesList[index].x;
+		y = numberSpacesList[index].y;
 		// TODO OK superfluous
 		
 	});
 	p_solver.cleanNumberSpaceChecks();
 	return eventList;
 }*/ 
+
+// -----------------------
+// Passing
+
+function comparison(p_event1, p_event2) {
+	const kind1 = (p_event1.kind == FENCE_EVENT_KIND ? 0 : p_event1.kind == VIEW_EVENT_KIND ? 1 : 2);
+	const kind2 = (p_event2.kind == FENCE_EVENT_KIND ? 0 : p_event2.kind == VIEW_EVENT_KIND ? 1 : 2);
+	if (kind1 == 0 && kind2 == 0) { 
+		return standardFenceComparison(p_event1, p_event2);
+	} else { 
+		return commonComparisonMultiKinds([0, 1, 2], 
+		[[], [], 
+		[p_event1.y, p_event1.x, p_event1.direction, p_event1.view], [p_event2.y, p_event2.x, p_event2.direction, p_event2.view], 
+		[p_event1.y, p_event1.x, p_event1.direction, p_event1.range], [p_event2.y, p_event2.x, p_event2.direction, p_event2.range]], 
+		kind1, 
+		kind2);
+	}
+}
+
+function copying(p_event) {
+	if (p_event.kind == FENCE_EVENT_KIND) { 
+		return p_event.standardFenceCopy();
+	} else {
+		return p_event.copy();
+	}
+}
+
+// Preconditions : p_x, p_y are coordinates of a numeric space
+// We coud have checked the whole row and column of a space but let's go administrative !
+SolverUsotatami.prototype.generateEventsPassNumericSpace = function(p_x, p_y) {
+	var answer = [];
+	var x, y;
+	KnownDirections.forEach(dir => {
+		x = p_x;
+		y = p_y;
+		while (this.neighborExists(x, y, dir) && (this.getNumber(x + DeltaX[dir], y + DeltaY[dir]) == null) && this.answerFencesGrid.getFence(x, y, dir) != FENCE_STATE.CLOSED) {			
+			answer.push([new FenceEvent(x, y, dir, FENCE_STATE.OPEN), new FenceEvent(x, y, dir, FENCE_STATE.CLOSED)]);
+			x += DeltaX[dir];
+			y += DeltaY[dir];
+		}
+	});
+	return answer;
+}
+
+namingCategoryClosure = function(p_solver) {
+	return function(p_index) {
+		return (p_solver.getNumber(p_index.x, p_index.y) != null ? "(numeric)" : "(simple)") + " " + p_index.x + "," + p_index.y;
+	}
+}
+
+function generateEventsForPassClosure(p_solver) {
+	return function(p_index) {
+		return p_solver.generateEventsPassNumericSpace(p_index.x, p_index.y);
+	}
+}
+
+function orderedListPassArgumentsClosure(p_solver) {
+	return function() {
+		return p_solver.numberSpacesList;
+	}
+}
+	

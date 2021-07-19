@@ -10,10 +10,6 @@ function FenceEvent(p_x, p_y, p_direction, p_state) {
 	this.direction = p_direction;
 }
 
-FenceEvent.prototype.toString = function() {	
-	return "[" + "F" + LabelFenceState[this.state] + " " + this.fenceX + "," + this.fenceY + " " + LabelDirection[this.direction] + "]";
-}
-
 FenceEvent.prototype.standardFenceCopy = function() {
 	switch(this.direction) {
 		case DIRECTION.LEFT : return new FenceEvent(this.fenceX - 1, this.fenceY, DIRECTION.RIGHT, this.state); break;
@@ -146,7 +142,7 @@ FencesGrid.prototype.stripBuild = function(p_eventList, p_x, p_y, p_dx, p_dy, p_
 /**
 Closed fence : When up to 3 fences may meet at a given point and the fence (x,y,dir) just got closed
 */
-FencesGrid.prototype.avoidCrossBuild = function(p_eventList, p_x, p_y, p_dx, p_dy, p_dir) { // Can be exported ?
+FencesGrid.prototype.avoidCrossBuildDeductions = function(p_eventList, p_x, p_y, p_dx, p_dy, p_dir) { // Can be exported ?
 	if ((p_dir == DIRECTION.UP) || (p_dir == DIRECTION.DOWN)) {
 		if (p_x > 0) { // Check cross left
 			const state1 = this.getFenceLeft(p_x, p_y) == FENCE_STATE.CLOSED;
@@ -213,4 +209,11 @@ FencesGrid.prototype.avoidCrossBuild = function(p_eventList, p_x, p_y, p_dx, p_d
 		}
 	}
 	return p_eventList;
+}
+
+// ---------
+// Interfacing 
+
+FenceEvent.prototype.toString = function() {	
+	return "[" + "F" + LabelFenceState[this.state] + " " + this.fenceX + "," + this.fenceY + " " + LabelDirection[this.direction] + "]";
 }

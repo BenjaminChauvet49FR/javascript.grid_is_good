@@ -50,6 +50,7 @@ const ACTION_SELECTION_REGION = {id:27, htmlCaption : "Sélectionner région"};
 const ACTION_PASS_GRIDS = {id:27, htmlCaption : "Passer grilles"};
 const ACTION_NOTHING = {id:55, htmlCaption : "Ne rien faire"};
 const ACTION_PASS_GALAXY_DELIMITATION = {id:55, htmlCaption : "Passer autour centre galaxie"};
+const ACTION_PASS_AROUND_SPACE = {id:55, htmlCaption : "Passer aux alentours d'une case"};
 
 /**
 Getter of setter for a specific mode
