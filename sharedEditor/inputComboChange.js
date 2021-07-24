@@ -97,6 +97,10 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			p_editorCore.setVisibleGrids([GRID_ID.GALAXIES]); 
 			p_editorCore.setWallsOff();
 			break; 
+		case 'Moonsun':
+			saveLoadModeId = PUZZLES_KIND.MOONSUN;
+			p_editorCore.setVisibleGrids([GRID_ID.MOONSUN]); break;
+			break; 
 		default: // norinori, lits, entryExit... no numbers, only regions
 			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY;
 			break; 

@@ -19,23 +19,53 @@ function RegionLoopSolver() {
 
 RegionLoopSolver.prototype.constructor = RegionLoopSolver;
 
+function identityDeductionsClosure() {return function(p_listEvents) {return p_listEvents}}
+function doNothingClosure() {return function() {}}
+
 RegionLoopSolver.prototype.regionLoopSolverConstruct = function(p_wallArray, p_packMethods) {
+	if (!p_packMethods.setSpaceClosedPSAtomicDos) {
+		p_packMethods.setSpaceClosedPSAtomicDos = doNothingClosure();
+	}
+	if (!p_packMethods.setSpaceLinkedPSAtomicDos) {
+		p_packMethods.setSpaceLinkedPSAtomicDos = doNothingClosure();
+	}
+	if (!p_packMethods.setSpaceClosedPSAtomicUndos) {
+		p_packMethods.setSpaceClosedPSAtomicUndos = doNothingClosure();
+	}
+	if (!p_packMethods.setSpaceLinkedPSAtomicUndos) {
+		p_packMethods.setSpaceLinkedPSAtomicUndos = doNothingClosure();
+	}
+	if (!p_packMethods.setBorderLinkedPSDeductions) {
+		p_packMethods.setBorderLinkedPSDeductions = identityDeductionsClosure();
+	}
+	if (!p_packMethods.setBorderClosedPSDeductions) {
+		p_packMethods.setBorderClosedPSDeductions = identityDeductionsClosure();
+	}
+	if (!p_packMethods.setEdgeLinkedPSDeductions) {
+		p_packMethods.setEdgeLinkedPSDeductions = identityDeductionsClosure();
+	}
+	if (!p_packMethods.setEdgeClosedPSDeductions) {
+		p_packMethods.setEdgeClosedPSDeductions = identityDeductionsClosure();
+	}
+	if (!p_packMethods.otherPSDeductions) {
+		p_packMethods.otherPSDeductions = identityDeductionsClosure();
+	}
 	this.loopSolverConstruct(p_wallArray, {
 		setSpaceClosedPSAtomicDos : setSpaceClosedPSAtomicDoRLSClosure(this, p_packMethods.setSpaceClosedPSAtomicDos),
 		setSpaceLinkedPSAtomicDos : p_packMethods.setSpaceLinkedPSAtomicDos,
 		setEdgeClosedPSAtomicDos : setEdgeClosedAtomicDoRLSClosure(this),
 		setEdgeLinkedPSAtomicDos : setEdgeLinkedAtomicDoRLSClosure(this),
-		otherPSAtomicDos : otherAtomicDoRLSClosure(this),
+		otherPSAtomicDos : otherAtomicDoRLSClosure(this, p_packMethods.otherPSAtomicDos),
 		setSpaceClosedPSAtomicUndos : p_packMethods.setSpaceClosedPSAtomicUndos,
 		setSpaceLinkedPSAtomicUndos : p_packMethods.setSpaceLinkedPSAtomicUndos,
 		setEdgeClosedPSAtomicUndos : setEdgeClosedAtomicUndosRLSClosure(this),
 		setEdgeLinkedPSAtomicUndos : setEdgeLinkedAtomicUndosRLSClosure(this),
-		otherPSAtomicUndos : otherAtomicUndosRLSClosure(this),
+		otherPSAtomicUndos : otherAtomicUndosRLSClosure(this, p_packMethods.otherPSAtomicUndos),
 		setSpaceClosedPSDeductions : p_packMethods.setSpaceClosedPSDeductions,
 		setSpaceLinkedPSDeductions : p_packMethods.setSpaceLinkedPSDeductions,
-		setEdgeClosedPSDeductions : setEdgeClosedDeductionsRLSClosure(this),
-		setEdgeLinkedPSDeductions : setEdgeLinkedDeductionsRLSClosure(this),
-		otherPSDeductions : otherDeductionsRLSClosure(this),
+		setEdgeClosedPSDeductions : setEdgeClosedDeductionsRLSClosure(this, p_packMethods.setEdgeClosedPSDeductions),
+		setEdgeLinkedPSDeductions : setEdgeLinkedDeductionsRLSClosure(this, p_packMethods.setEdgeLinkedPSDeductions),
+		otherPSDeductions : otherDeductionsRLSClosure(this, p_packMethods.setBorderLinkedPSDeductions, p_packMethods.setBorderClosedPSDeductions, p_packMethods.otherPSDeductions), // "setBorder" methods arguments : p_eventList, index1, index2
 		PSQuickStart : quickStartRegionLoopSolverClosure(this, p_packMethods.PSQuickStart)
 	}); 
 	this.gridWall = WallGrid_data(p_wallArray);
@@ -211,7 +241,7 @@ setEdgeLinkedAtomicDoRLSClosure = function(p_solver) {
 }
 
 
-otherAtomicDoRLSClosure = function(p_solver) {
+otherAtomicDoRLSClosure = function(p_solver, p_methodOtherPSDos) {
 	return function (p_event) {
 		if (p_event.kind == LOOP_EVENT.REGION_JUNCTION) {
 			const newState = p_event.state;
@@ -264,7 +294,7 @@ otherAtomicDoRLSClosure = function(p_solver) {
 				return EVENT_RESULT.SUCCESS;			
 			}	
 		} else {
-			// ... 
+			return p_methodOtherPSDos(p_event);
 		}
 	}
 }
@@ -289,7 +319,7 @@ setEdgeLinkedAtomicUndosRLSClosure = function(p_solver) {
 	}
 }
 
-otherAtomicUndosRLSClosure = function(p_solver) {
+otherAtomicUndosRLSClosure = function(p_solver, p_methodOtherPSUndos) {
 	return function (p_event) {
 		if (p_event.kind == LOOP_EVENT.REGION_JUNCTION) {
 			const region1 = p_solver.regions[p_event.index1];
@@ -324,7 +354,7 @@ otherAtomicUndosRLSClosure = function(p_solver) {
 			}				
 			p_solver.getBorder(p_event.index1, p_event.index2).state = BORDER_STATE.UNDECIDED;	
 		} else {
-			// ...
+			return p_methodOtherPSUndos(p_event);
 		}
 	}
 }
@@ -332,7 +362,7 @@ otherAtomicUndosRLSClosure = function(p_solver) {
 // ---------------------------
 // Deductions
 
-setEdgeClosedDeductionsRLSClosure = function(p_solver) {
+setEdgeClosedDeductionsRLSClosure = function(p_solver, p_methodEdgeClosedDeductionsPS) {
 	return function (p_eventList, p_eventBeingApplied) {
 		const x = p_eventBeingApplied.linkX;
 		const y = p_eventBeingApplied.linkY;
@@ -348,11 +378,12 @@ setEdgeClosedDeductionsRLSClosure = function(p_solver) {
 				}
 			}
 		}
+		p_eventList = p_methodEdgeClosedDeductionsPS(p_eventList, p_eventBeingApplied);
 		return p_eventList;
 	}
 }
 
-setEdgeLinkedDeductionsRLSClosure = function(p_solver) {
+setEdgeLinkedDeductionsRLSClosure = function(p_solver, p_methodEdgeLinkedDeductionsPS) {
 	return function (p_eventList, p_eventBeingApplied) {
 		const x = p_eventBeingApplied.linkX;
 		const y = p_eventBeingApplied.linkY;
@@ -366,11 +397,12 @@ setEdgeLinkedDeductionsRLSClosure = function(p_solver) {
 			p_eventList.push(new RegionJunctionEvent(ir, dr, BORDER_STATE.LINKED));
 			p_eventList = p_solver.deductionsCloseNotLinkedEdgesBorder(p_eventList, border);
 		}
+		p_eventList = p_methodEdgeLinkedDeductionsPS(p_eventList, p_eventBeingApplied);
 		return p_eventList;
 	}
 }
 
-otherDeductionsRLSClosure = function(p_solver) {
+otherDeductionsRLSClosure = function(p_solver, p_methodSetBorderLinkedPSDeductions, p_methodSetBorderClosedPSDeductions, p_methodOtherPSDeductions) {
 	return function (p_eventList, p_eventBeingApplied) {
 		if (p_eventBeingApplied.kind == LOOP_EVENT.REGION_JUNCTION) {
 			if (borderingIndexes(p_eventBeingApplied.index1, p_eventBeingApplied.index2)) {
@@ -382,8 +414,9 @@ otherDeductionsRLSClosure = function(p_solver) {
 						p_eventList.push(new LinkEvent(edge.x, edge.y, edge.direction, LOOP_STATE.CLOSED));
 					});
 					// If all borders surrounding a region but 2 are closed, these regions must be open. (Also, should be added to quickstart.)
-					p_eventList = p_solver.alertClosedBorders(p_eventList, region1);
-					p_eventList = p_solver.alertClosedBorders(p_eventList, region2);
+					p_eventList = p_solver.deductionsAlertClosedBorder(p_eventList, region1);
+					p_eventList = p_solver.deductionsAlertClosedBorder(p_eventList, region2);
+					p_eventList = p_methodSetBorderClosedPSDeductions(p_eventList, p_eventBeingApplied.index1, p_eventBeingApplied.index2);
 				} else { // p_eventBeingApplied.state == BORDER_STATE.LINKED
 					// When a border  has a linked edge, close the other edges.
 					if (border.edgesLinked == 1) { // Warning : different behaviour in 2-region grid !
@@ -433,10 +466,11 @@ otherDeductionsRLSClosure = function(p_solver) {
 							p_eventList.push(new FailureEvent());
 						}
 					}
+					p_eventList = p_methodSetBorderLinkedPSDeductions(p_eventList, p_eventBeingApplied.index1, p_eventBeingApplied.index2);
 				}
 			}	
 		} else {
-			// ...
+			p_eventList = p_methodOtherPSDeductions(p_eventList, p_eventBeingApplied);
 		}
 		return p_eventList;
 	}
@@ -467,7 +501,7 @@ RegionLoopSolver.prototype.deductionsCloseNotLinkedEdgesBorder = function(p_even
 	return p_eventList;
 }
 
-RegionLoopSolver.prototype.alertClosedBorders = function(p_eventList, p_region) {
+RegionLoopSolver.prototype.deductionsAlertClosedBorder = function(p_eventList, p_region) {
 	if (p_region.notYetClosedBorders == 0) {
 		var linkedFound = 0;
 		const index = p_region.index;
@@ -492,7 +526,7 @@ quickStartRegionLoopSolverClosure = function(p_solver, p_PSQuickStart) {
 		p_solver.initiateQuickStart("Region loop");
 		var events = [];
 		for (var i = 0; i < p_solver.regions.length ; i++) {
-			events = p_solver.alertClosedBorders(events, p_solver.regions[i]);
+			events = p_solver.deductionsAlertClosedBorder(events, p_solver.regions[i]);
 			if (p_solver.regions[i].size == 1) { // "Each region must be crossed exactly once"
 				const space = p_solver.regions[i].spaces[0];
 				events.push(new SpaceEvent(space.x, space.y, LOOP_STATE.LINKED));

@@ -89,6 +89,7 @@ menuSolvers.push({
 		{name : "entryExit", displayName : "EntryExit"},
 		{name : "koburin", displayName : "Koburin"},
 		{name : "masyu", displayName : "Masyu"},
+		{name : "moonsun", displayName : "Moonsun"},
 		{name : "yajilin", displayName : "Yajilin"}
 	]
 });

@@ -12,7 +12,8 @@ const GRID_ID = {
 		CLASSIC_9x9 : 'SUDO9'
 	},
 	PLAYSTATION_SHAPES: 'PSH',
-	GALAXIES: 'GAL'
+	GALAXIES: 'GAL',
+	MOONSUN: 'MS'
 }
 
 const GRID_TRANSFORMATION = {
@@ -39,6 +40,7 @@ const PUZZLES_KIND = {
 	TAPA : {id:11},
 	REGIONS_PLAYSTATION_SHAPES : {id:12},
 	GALAXIES : {id:13},
+	MOONSUN : {id:14},
 	GRAND_TOUR : {id:99102},
 	SUDOKU : {id:1001}
 }

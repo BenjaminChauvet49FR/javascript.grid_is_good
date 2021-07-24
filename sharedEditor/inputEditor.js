@@ -103,7 +103,7 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			descriptionPromptMono : "Entrer lettre de perle (B|W)",
 			defaultToken : "W",
 			gridId : GRID_ID.PEARL,
-			validityTokenMethod : validityTokenPearl,
+			validityTokenMethod : validityTokenCharacterSelectionClosure(['B', 'W']),
 			parameters : {emptySpaceChar : " ", isMonoChar : true}
 		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.PLAYSTATION_SHAPES)) {
@@ -112,7 +112,7 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			descriptionPromptMono : "Entrer lettre de forme (R|S|T)",
 			defaultToken : "R",
 			gridId : GRID_ID.PLAYSTATION_SHAPES,
-			validityTokenMethod : validityTokenPlaystationShape,
+			validityTokenMethod : validityTokenCharacterSelectionClosure(['R', 'S', 'T']),
 			parameters : {emptySpaceChar : " ", isMonoChar : true}
 		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.YAJILIN_LIKE)) {
@@ -132,6 +132,15 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			gridId : GRID_ID.TAPA,
 			validityTokenMethod : validityTokenTapa,
 			parameters : {emptySpaceChar : "<", isMonoChar : false}
+		}		
+	} else if (p_editorCore.isVisibleGrid(GRID_ID.MOONSUN)) {
+		return {
+			descriptionPrompt : "Entrer suite d'astres (S|M)",
+			descriptionPromptMono : "Entrer astre (S|M)",
+			defaultToken : "S",
+			gridId : GRID_ID.MOONSUN,
+			validityTokenMethod : validityTokenCharacterSelectionClosure(['M', 'S']),
+			parameters : {emptySpaceChar : " ", isMonoChar : true}
 		}		
 	}
 }
@@ -238,12 +247,15 @@ validityNumberRangeOrSymbolClosure = function(p_min, p_max, p_symbol) {
 	}
 }
 
-validityTokenPearl = function(p_clue) {
-	return (p_clue == "B") || (p_clue == "W");
-}
-
-validityTokenPlaystationShape = function(p_clue) {
-	return (p_clue == "R") || (p_clue == "S") || (p_clue == "T");
+validityTokenCharacterSelectionClosure = function(p_array) {
+	return function(p_clue) {
+		for (var i = 0 ; i < p_array.length ; i++) {
+			if (p_array[i] == p_clue) {
+				return true;
+			}
+		}
+		return false;
+	}
 }
 
 validityTokenYajilin = function(p_clue) {
@@ -579,6 +591,8 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
 			puzzleToSaveString = sudokuPuzzleToString(p_editorCore.getArray(GRID_ID.NUMBER_SPACE), getSudokuWallGrid(sudokuMode).array); 
 		} else if (p_saveLoadMode.id == PUZZLES_KIND.GALAXIES.id) {
             puzzleToSaveString = limitedSymbolsWalllessPuzzleToString(p_editorCore.getArray(GRID_ID.GALAXIES), [GALAXIES_POSITION.CENTER, GALAXIES_POSITION.RIGHT, GALAXIES_POSITION.DOWN, GALAXIES_POSITION.RIGHT_DOWN]);
+        } else if (p_saveLoadMode.id == PUZZLES_KIND.MOONSUN.id) {
+            puzzleToSaveString = moonsunPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.MOONSUN));
         }
         localStorage.setItem(localStorageName, puzzleToSaveString);
     }
@@ -628,6 +642,11 @@ function getLoadedStuff(p_kindId, p_localStorageName, p_externalOptions) { // No
 		case PUZZLES_KIND.REGIONS_PLAYSTATION_SHAPES.id :
 			var loadedItem = stringToLimitedSymbolsWallsPuzzle(localStorage.getItem(p_localStorageName), [SYMBOL_ID.ROUND, SYMBOL_ID.SQUARE, SYMBOL_ID.TRIANGLE]);
 			loadedItem.desiredIDs = [GRID_ID.PLAYSTATION_SHAPES];
+			loadedItem.desiredArrays = [loadedItem.symbolArray];
+			return loadedItem; break;
+		case PUZZLES_KIND.MOONSUN.id :
+			var loadedItem = stringToMoonsunPuzzle(localStorage.getItem(p_localStorageName));
+			loadedItem.desiredIDs = [GRID_ID.MOONSUN];
 			loadedItem.desiredArrays = [loadedItem.symbolArray];
 			return loadedItem; break;
 		case PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS.id :

@@ -620,6 +620,9 @@ Drawer.prototype.drawNumbersInsideStandard = function(p_context, p_function, p_x
 	}
 }
 
+// -------------------------------
+// Draw specific grid contents, used both in editor and solvers
+
 // Tapa
 Drawer.prototype.drawTapaGrid = function (p_context, p_tapaGrid) {
 	const yLength = p_tapaGrid.getYLength();
@@ -701,6 +704,39 @@ Drawer.prototype.drawGalaxiesGrid = function (p_context, p_galaxiesGrid) {
 				p_context.ellipse(pixXCenter, pixYCenter, radius, radius, 0, 0, 2 * Math.PI);
 				p_context.stroke();
 				p_context.fill();
+			}
+		}
+	}
+}
+
+Drawer.prototype.drawDiscGrid = function (p_context, p_discGrid, p_symbols, p_colorsStroke, p_colorsFill) {
+	const yLength = p_discGrid.getYLength();
+	if (yLength > 0) {
+		const xLength = p_discGrid.getXLength();
+		var ix, iy, disc, i, found;
+		const radius = this.getPixInnerSide()*1/3;
+		for (iy = 0; iy < yLength; iy++) {
+			for (ix = 0; ix < xLength; ix++) {
+				disc = p_discGrid.get(ix, iy);
+				found = false;
+				i = 0;
+				while (!found && i < p_symbols.length) {
+					if (disc == p_symbols[i]) {
+						found = true;
+						//Crédits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/ellipse 
+						p_context.beginPath();
+						p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
+						if (p_colorsStroke[i] && p_colorsStroke[i] != null) {
+							p_context.strokeStyle = p_colorsStroke[i];
+							p_context.stroke();
+						}
+						if (p_colorsFill[i] && p_colorsFill[i] != null) {
+							p_context.fillStyle = p_colorsFill[i];
+							p_context.fill();
+						}
+					}
+					i++;
+				}
 			}
 		}
 	}

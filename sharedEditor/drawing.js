@@ -1,3 +1,13 @@
+const colourSet = { 
+	sunOut : "#888800",
+	sunIn : "#ffff88",
+	moonOut : "#222222",
+	moonIn : "#aa88cc",
+	pearlOut : "#000000",
+	pearlWhite : "#ffffff",
+	pearlBlack : "#000044"
+}
+
 /**
 Draw the grid on-screen on p_context, with p_editorCore informations, with this.pix and p_colors information for pixels and colors
 */
@@ -35,6 +45,9 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.PEARL)) {
 		this.drawPearlGrid(p_context, p_editorCore.getGrid(GRID_ID.PEARL));
+	}
+	if (p_editorCore.isVisibleGrid(GRID_ID.MOONSUN)) {
+		this.drawMoonsunGrid(p_context, p_editorCore.getGrid(GRID_ID.MOONSUN));
 	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.PLAYSTATION_SHAPES)) {
 		this.drawPlaystationShapeGrid(p_context, p_editorCore.getGrid(GRID_ID.PLAYSTATION_SHAPES));
@@ -90,31 +103,11 @@ Drawer.prototype.drawOneNumberPerSpace = function (p_context, p_numberGrid, p_pi
 }
 
 Drawer.prototype.drawPearlGrid = function (p_context, p_pearlGrid) {
-	const yLength = p_pearlGrid.getYLength();
-	if (yLength > 0) {
-		const xLength = p_pearlGrid.getXLength();
-		var ix,
-		iy,
-		pearl;
-		const radius = this.getPixInnerSide()*1/3;
-		p_context.fillStyle = "#000000";
-		for (iy = 0; iy < yLength; iy++) {
-			for (ix = 0; ix < xLength; ix++) {
-				pearl = p_pearlGrid.get(ix, iy);
-				if (pearl == SYMBOL_ID.WHITE) {
-					//Crédits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/ellipse 
-					p_context.beginPath();
-					p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
-					p_context.stroke();
-				}
-				if (pearl == SYMBOL_ID.BLACK) {
-					p_context.beginPath();
-					p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
-					p_context.fill();
-				}
-			}
-		}
-	}
+	this.drawDiscGrid(p_context, p_pearlGrid, [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK], [colourSet.pearlOut, colourSet.pearlOut], [colourSet.pearlWhite, colourSet.pearlBlack]);
+}
+
+Drawer.prototype.drawMoonsunGrid = function (p_context, p_astresGrid) {
+	this.drawDiscGrid(p_context, p_astresGrid, [SYMBOL_ID.SUN, SYMBOL_ID.MOON], [colourSet.sunOut, colourSet.moonOut], [colourSet.sunIn, colourSet.moonIn]);
 }
 
 Drawer.prototype.drawPlaystationShapeGrid = function (p_context, p_shapeGrid) {

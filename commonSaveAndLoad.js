@@ -7,7 +7,9 @@ const SYMBOL_ID = {
     BLACK: 'B',
 	ROUND: 'R',
 	SQUARE: 'S',
-	TRIANGLE: 'T'
+	TRIANGLE: 'T',
+	MOON: 'M',
+	SUN: 'S'
 }
 
 const GALAXIES_POSITION = {
@@ -521,4 +523,54 @@ function stringToLimitedSymbolsWallsPuzzle(p_string, p_symbolsList) {
 	const dims = stringToDimensions(tokens[0]);
 	return {wallArray : string64toWallArray(tokens[1], dims.xLength, dims.yLength), 
 			symbolArray : stringToSymbolsArray(tokens[2], dims.xLength, dims.yLength, p_symbolsList)}
+}
+
+// ----------------
+// Moonsun specific
+function moonsunPuzzleToString(p_wallArray, p_symbolsArray) {
+	const base2streamSpaces = new StreamEncodingFullBase(2);
+	const base2streamAstres = new StreamEncodingFullBase(2);
+	var symbol;
+	for (var y = 0; y < p_wallArray.length ; y++) {
+		for (var x = 0 ; x < p_wallArray[y].length ; x++) {
+			symbol = p_symbolsArray[y][x];
+			base2streamSpaces.encode(symbol != null ? 1 : 0);
+			if (symbol != null) {
+				base2streamAstres.encode(symbol == SYMBOL_ID.SUN ? 1 : 0);
+			}
+		}
+	}
+	return wallsOnlyPuzzleToString(p_wallArray) + " " + base2streamSpaces.getString() + base2streamAstres.getString();
+}
+
+function stringToMoonsunPuzzle(p_string) {
+	const tokens = p_string.split(" ");
+	const dims = stringToDimensions(tokens[0]);
+	var listCoors = [];
+	var bit, symbol;
+	const streamDecoding = new StreamDecodingFullBase(2, tokens[2]);
+	for (var y = 0; y < dims.yLength ; y++) {
+		for (var x = 0 ; x < dims.xLength ; x++) {
+			bit = streamDecoding.decode();
+			if (bit == 1) {
+				listCoors.push({x : x, y : y});
+			}
+		}
+	}
+	// Decode last bits into the void so a multiple of 6 bits is read
+	var remaining = (6 - (dims.yLength * dims.xLength) % 6)
+	if (remaining == 6) {
+		remaining = 0;
+	}
+	for (var i = 0; i < remaining ; i++) {
+		streamDecoding.decode();
+	}
+	
+	var symbolArray = generateValueArray(dims.xLength, dims.yLength, null);
+	for (var i = 0 ; i < listCoors.length ; i++) {
+		bit = streamDecoding.decode();
+		symbolArray[listCoors[i].y][listCoors[i].x] = (bit == 1 ? SYMBOL_ID.SUN : SYMBOL_ID.MOON);
+	}
+	return {wallArray : string64toWallArray(tokens[1], dims.xLength, dims.yLength), 
+			symbolArray : symbolArray} 
 }
