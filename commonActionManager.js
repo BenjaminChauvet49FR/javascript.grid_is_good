@@ -51,6 +51,10 @@ const ACTION_PASS_GRIDS = {id:27, htmlCaption : "Passer grilles"};
 const ACTION_NOTHING = {id:55, htmlCaption : "Ne rien faire"};
 const ACTION_PASS_GALAXY_DELIMITATION = {id:55, htmlCaption : "Passer autour centre galaxie"};
 const ACTION_PASS_AROUND_SPACE = {id:55, htmlCaption : "Passer aux alentours d'une case"};
+const ACTION_PASS_REGION_OR_SPACE = {id:56, htmlCaption : "Passer région ou case"};
+const ACTION_PASS_STRIP_OR_SPACE = {id:56, htmlCaption : "Passer bande ou case"};
+const ACTION_PASS_INCLUDE_LOOP_SPACE = {id:56, htmlCaption : "Inclure case dans boucle"};
+const ACTION_PASS_EXCLUDE_LOOP_SPACE = {id:56, htmlCaption : "Ecarter case de boucle"};
 
 /**
 Getter of setter for a specific mode
@@ -64,6 +68,20 @@ function getSubmitElementSetValue(p_idSubmitElement, p_value) {
 	return submitElement;	
 }
 
+
+
+
+// Adds events liteners to submits to make the texts change.
+// Precondition : same length for p_identifiers and p_actions ; entries in same index in both arrays are linked together
+// Item 0 considered "more interesting" since it is the first one when puzzle is initiated.
+function addEventsListenersAndCaptionsAndSetOne(p_actionsManager, p_textActionIdentifier, p_submitIdentifiers, p_entry, p_actions) {
+	const textActionItem = document.getElementById(p_textActionIdentifier);
+	for (var i = 0 ; i < p_submitIdentifiers.length ; i++) {			
+		addEventListenerAndCaptionActionSubmit(p_actionsManager, textActionItem, p_submitIdentifiers[i], p_entry, p_actions[i]);
+	}
+	setMode(textActionItem, p_actionsManager, p_entry, p_actions[0]);
+}
+
 /**
 Adds the event listener of an action submit by linking it to an action for the canvas
 */
@@ -74,17 +92,15 @@ function addEventListenerAndCaptionActionSubmit(p_entriesManager, p_textElement,
 	});
 }
 
-
-
 /**
 Changes the mode, both visually (innerHTML) and in model
 */
 function setMode(p_textElement, p_entriesManager, p_entry, p_value) {
     p_textElement.innerHTML = p_value.html ? p_value.html : p_value.htmlCaption;
 	switch(p_entry){
-		case (ENTRY.SPACE):p_entriesManager.clickSpace = p_value;break; 
-		case (ENTRY.WALL_R):p_entriesManager.clickWallD = p_value;break; 
-		case (ENTRY.WALL_D):p_entriesManager.clickWallR = p_value;break; 
+		case (ENTRY.SPACE):p_entriesManager.clickSpace = p_value; break; 
+		case (ENTRY.WALL_R):p_entriesManager.clickWallD = p_value; break; 
+		case (ENTRY.WALL_D):p_entriesManager.clickWallR = p_value; break; 
 		case (ENTRY.WALLS): 
 			p_entriesManager.clickWallD = p_value;
 			p_entriesManager.clickWallR = p_value;

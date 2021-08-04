@@ -75,10 +75,15 @@ SolverEntryExit.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 	this.tryToPutNewSpace(p_x, p_y, p_state);
 }
 
-SolverEntryExit.prototype.passSpace = function(p_x, p_y) {
-	/*const generatedEvents = generateEventsForSpaceClosure(this)({x : p_x, y : p_y}); // Yeah, that method (returned by the closure) should have one single argument as it will be passed to multipass...
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y});*/
-	alert("To be done");
+SolverEntryExit.prototype.emitPassRegionFromSpace = function(p_x, p_y) {
+	const index = this.regionArray[p_y][p_x];
+	if (index != WALLGRID.OUT_OF_REGIONS) {
+		this.passLoop({passCategory : LOOP_PASS_CATEGORY.REGION, index : index}); 
+	}
+}
+
+SolverEntryExit.prototype.makeMultipass = function() {
+	this.multipassLoop();
 }
 
 // -------------------
@@ -150,11 +155,11 @@ SolverEntryExit.prototype.buildPatrioticBorderParity = function(p_eventsToApply,
 // -------------------
 // Passing
 
-function namingCategoryClosure(p_solver) {
+/*function namingCategoryClosure(p_solver) {
 	return function (p_space) {
 		const x = p_space.x;
 		const y = p_space.y;
 		var answer = x+","+y;
 		return answer;
 	}
-}
+}*/

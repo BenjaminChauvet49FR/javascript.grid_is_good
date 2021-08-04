@@ -2,6 +2,7 @@ var solver;
 function main() {
 	var drawer = new Drawer();
 	solver = DummySolver();
+	var spanState = document.getElementById("span_resolution_state");
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
 	var actionsManager = {}; 
@@ -19,6 +20,7 @@ function main() {
 		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength);
 		drawer.drawCombinedArrowGridIndications(context, solver.clueGrid);
 		drawInsideSpaces(context, drawer, colors, solver);
+		solver.callStateForItem(spanState);
 	}
 
 	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)},false);
@@ -39,7 +41,7 @@ function main() {
 	addEventListenerAndCaption("submit_open_space", ACTION_OPEN_SPACE);
 	addEventListenerAndCaption("submit_close_space", ACTION_CLOSE_SPACE);
 	addEventListenerAndCaption("submit_pass_strip", ACTION_PASS_STRIP);
-	function addEventListenerAndCaption(p_identifier,p_action){ //Shortcut action
-		addEventListenerAndCaptionActionSubmit(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
+	function addEventListenerAndCaption(p_identifier, p_action) { //Shortcut action
+		addEventListenerAndCaptionActionSubmit(actionsManager, textAction, p_identifier, ENTRY.SPACE, p_action);
 	}
 }

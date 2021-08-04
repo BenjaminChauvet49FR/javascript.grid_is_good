@@ -29,6 +29,7 @@ SolverShugaku.prototype.construct = function(p_numberSymbolsArray) {
 	);
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterDominosClosure(this)]);
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsSetMultipass = {generatePassEventsMethod : generateEventsForSpacePassClosure(this), orderPassArgumentsMethod : orderedListPassArgumentsClosure(this), passTodoMethod : multipassDefineTodoClosure(this)};
 
 	this.answerArray = [];	
 	
@@ -204,7 +205,7 @@ SolverShugaku.prototype.emitPassSpace = function(p_x, p_y) {
 }
 
 SolverShugaku.prototype.makeMultiPass = function() {
-	return this.customMultipass();
+	return this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultipass);
 }
 
 //--------------------------------
@@ -698,40 +699,24 @@ comparison = function(p_event1, p_event2) {
 		], k1, k2);
 }
 
-SolverShugaku.prototype.customMultipass = function() {
-	var coorsToPass = [];
-	var neoCoorsToPass;
-	var nokPass = false;
-	var okPass = false;
-	var resultPass;
-	var spaceInArray;
-	for (var iy = 0 ; iy < this.yLength ; iy++) {
-		for (var ix = 0 ; ix < this.xLength ; ix++) {
-			if (!this.isBanned(ix, iy)) {
-				resultPass = this.passEvents(this.generateEventsForSpacePass({x : ix, y : iy}), this.methodsSetDeductions, this.methodsSetPass, {x : ix, y : iy});
-				nokPass = nokPass || (resultPass == PASS_RESULT.FAILURE); // TODO nokpass not useful... 551551
-				okPass = okPass || (resultPass == PASS_RESULT.SUCCESS); // Should this be forgotten, we can loop indefinitelty !
-				spaceInArray = this.answerArray[iy][ix];
-				if (spaceInArray.getState(SPACE_SHUGAKU.OPEN) == SPACE_CHOICE.UNDECIDED || spaceInArray.getState(SPACE_SHUGAKU.SQUARE) == SPACE_CHOICE.UNDECIDED || 
-				spaceInArray.getState(SPACE_SHUGAKU.ROUND) == SPACE_CHOICE.UNDECIDED) {
-					coorsToPass.push({x : ix, y : iy});
+orderedListPassArgumentsClosure = function(p_solver) {
+	return function() {
+		var answer = [];
+		for (var iy = 0 ; iy < p_solver.yLength ; iy++) {
+			for (var ix = 0 ; ix < p_solver.xLength ; ix++) {
+				if (!p_solver.isBanned(ix, iy)) {
+					answer.push({x : ix, y : iy});
 				}
 			}
 		}
+		return answer;
 	}
-	while (okPass && coorsToPass.length > 0) {
-		neoCoorsToPass = [];
-		okPass = false;
-		coorsToPass.forEach(coors => {			
-			resultPass = this.passEvents(this.generateEventsForSpacePass(coors), this.methodsSetDeductions, this.methodsSetPass, coors);
-			nokPass = nokPass || (resultPass == PASS_RESULT.FAILURE); // TODO nokpass not useful... 551551
-			spaceInArray = this.answerArray[coors.y][coors.x];
-			okPass = okPass || (resultPass == PASS_RESULT.SUCCESS); // Should this be forgotten, we can loop indefinitelty ! (Shugaku n°11)
-			if (spaceInArray.getState(SPACE_SHUGAKU.OPEN) == SPACE_CHOICE.UNDECIDED || spaceInArray.getState(SPACE_SHUGAKU.SQUARE) == SPACE_CHOICE.UNDECIDED || 
-			spaceInArray.getState(SPACE_SHUGAKU.ROUND) == SPACE_CHOICE.UNDECIDED) {
-				neoCoorsToPass.push(coors);
-			}
-		});
-		coorsToPass = neoCoorsToPass;
+}
+
+multipassDefineTodoClosure = function(p_solver) {
+	return function(p_category) {
+		const spaceInArray = p_solver.answerArray[p_category.y][p_category.x];
+		return (spaceInArray.getState(SPACE_SHUGAKU.OPEN) == SPACE_CHOICE.UNDECIDED || spaceInArray.getState(SPACE_SHUGAKU.SQUARE) == SPACE_CHOICE.UNDECIDED || 
+			spaceInArray.getState(SPACE_SHUGAKU.ROUND) == SPACE_CHOICE.UNDECIDED);
 	}
 }

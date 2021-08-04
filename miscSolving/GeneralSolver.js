@@ -264,12 +264,16 @@ GeneralSolver.prototype.undoEventList = function (p_eventsList, p_undoEventMetho
 
 GeneralSolver.prototype.undoToLastHypothesis = function (p_undoEventMethod) {
     if (this.happenedEventsSeries.length > 0) {
-		var wasPass;
+		var stillCancel; 
+		const cancelQS = isQuickStart(this.happenedEventsSeries[this.happenedEventsSeries.length - 1]); // As soon as we hit the 1st quickstart, don't cancel it ! But if we cancel one QS, cancel them all !
 		do {
-			var lastEventsSerie = this.happenedEventsSeries.pop();
-			wasPass = this.isPassSerie(lastEventsSerie);
-			this.undoEventList(lastEventsSerie.list, p_undoEventMethod);
-		} while(wasPass && this.happenedEventsSeries.length > 0);
+			var lastEventsSerie = this.happenedEventsSeries[this.happenedEventsSeries.length - 1];
+			stillCancel = cancelQS || isPassSerie(lastEventsSerie);
+			if (cancelQS || !isQuickStart(lastEventsSerie)) {				
+				this.undoEventList(lastEventsSerie.list, p_undoEventMethod);
+				this.happenedEventsSeries.pop();
+			}
+		} while(stillCancel && this.happenedEventsSeries.length > 0);
     }
 	this.setStateHappening(OTHER_RESULTS.CANCEL);
 }
@@ -403,6 +407,7 @@ Length of p_array must be equal to 2 * (length of p_differentKinds ). Each array
 Typical example in StarBattleSolve and Shimaguni solver. 
 p_kind1 : kind of first event (to be ignored if only 1 event)
 p_kind2 : kind of 2nd event
+Precondition about p_differentKinds, p_kind1 and p_kind2 : if these two kinds are equal THEN they must belong to the array.
 */
 // Performance tests have been done on Star Battle n° 148 to test which version is the best in a multipass.
 function commonComparisonMultiKinds(p_differentKinds, p_array, p_kind1, p_kind2) {
@@ -438,12 +443,14 @@ Performs a multipass
 p_passTools must contain the following methods :
 - generatePassEventsMethod : method that turns a pass argument into a list of "list of covering events" usable by the passing method)
 - orderPassArgumentsMethod : method that reorders the argument list, taking no argument and returning a list of pass arguments, each of which should be passed to p_generatePassEventsMethod)
+May be used only once at start or several times, depending on passTodoMethod
 - skipPassMethod (optional) : method that takes a pass argument and that determinates whether the set of possibilites designated by the pass argument is too big to be passed or not. The set of possibilities will have to be tested anyways if no other set has been tested so far in this cycle of multipasses.)
+- passTodoMethod (optional) : if defined, the orderedListPassArguments will be used only once by orderPassArgumentsMethod, and then reskipped. Useful when there are lots of items to pass and there is no point to sort them or recreate a list. Typically when passing all spaces or all fences in relevant solvers.
 p_methodSet, p_eventsTools : same arguments as in the pass method.
 */
 GeneralSolver.prototype.multiPass = function(p_methodSet, p_eventsTools, p_passTools) {  
 	var oneMoreLoop;
-	var orderedListPassArguments;
+	var orderedListPassArguments = p_passTools.orderPassArgumentsMethod(); 
 	var ok = true;
 	var resultPass;
 	var i;
@@ -452,8 +459,7 @@ GeneralSolver.prototype.multiPass = function(p_methodSet, p_eventsTools, p_passT
 	const lengthBeforeMultiPass = this.happenedEventsSeries.length;
 	do {
 		oneMoreLoop = false;
-		orderedListPassArguments = p_passTools.orderPassArgumentsMethod();
-		const happenedEventsBeforePassingAllRegions = this.happenedEventsSeries.length;
+		
 		i = 0;
 		while (ok && i < orderedListPassArguments.length) {
 			argPass = orderedListPassArguments[i];
@@ -471,6 +477,21 @@ GeneralSolver.prototype.multiPass = function(p_methodSet, p_eventsTools, p_passT
 			}
 			i++;
 		}
+		
+		if (ok && oneMoreLoop) {
+			if (!p_passTools.passTodoMethod) {
+				orderedListPassArguments = p_passTools.orderPassArgumentsMethod(); 
+			} else {
+				var newOrderedListPassArguments = [];
+				orderedListPassArguments.forEach(argPass => {
+					if (p_passTools.passTodoMethod(argPass)) {
+						newOrderedListPassArguments.push(argPass);
+					}
+				});
+				orderedListPassArguments = newOrderedListPassArguments;
+			}
+
+		}
 	} while (ok && oneMoreLoop);
 	if (!ok) {
 		while (this.happenedEventsSeries.length > lengthBeforeMultiPass) {
@@ -487,11 +508,12 @@ GeneralSolver.prototype.multiPass = function(p_methodSet, p_eventsTools, p_passT
 	return answer;
 }
 
-GeneralSolver.prototype.isPassSerie = function (p_eventsSerie) {
-	if (p_eventsSerie.kind == SERIE_KIND.PASS) {
-		return true;
-	} 
-	return false;
+function isPassSerie (p_eventsSerie) {
+	return p_eventsSerie.kind == SERIE_KIND.PASS;
+}
+
+function isQuickStart(p_eventsSerie) {
+	return p_eventsSerie.kind == SERIE_KIND.QUICKSTART;
 }
 
 // --------------------------------

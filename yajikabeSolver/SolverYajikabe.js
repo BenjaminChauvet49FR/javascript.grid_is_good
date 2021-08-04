@@ -25,8 +25,8 @@ SolverYajikabe.prototype.construct = function(p_combinationArray) {
 			undoEventClosure(this));
 	this.methodsSetPass = {
 		comparisonMethod : comparison,
-		copyMethod : copying
-		//argumentToLabelMethod : namingCategoryClosure(this)
+		copyMethod : copying,
+		argumentToLabelMethod : namingCategoryClosure(this)
 		};
 	this.methodsSetMultiPass = {
 		generatePassEventsMethod : generateEventsForStripesAndUnionsClosure(this),
@@ -79,6 +79,7 @@ SolverYajikabe.prototype.construct = function(p_combinationArray) {
 		}
 	}
 	
+	// Calculate not...yet variables
 	var finalCoor, numberEmptySpaces, x, y, xx, yy, openSpacesInStrip;
 	for (var i = 0; i < this.cluesSpacesList.length ; i++) {
 		x = this.cluesSpacesList[i].x;
@@ -199,19 +200,11 @@ function testExistingCoordinate(coor, dir, xMax, yMax) {
 
 // -------------------------------
 
-// Warning : values in hard. Part was copy-colled on Yajilin.
+// Warning : values in hard. Duplicated in Yajilin.
 
 //Offensive !
 SolverYajikabe.prototype.getDirection = function(p_x, p_y) { 
-	return getDirectionString(this.clueGrid.get(p_x, p_y));
-}
-
-SolverYajikabe.prototype.getNumber = function(p_x, p_y) {
-	return getNumberString(this.clueGrid.get(p_x, p_y));
-}
-
-function getDirectionString(p_valueString) {
-	switch (p_valueString.charAt(0)) {
+	switch (this.clueGrid.get(p_x, p_y).charAt(0)) {
 		case 'L' : return DIRECTION.LEFT; break;
 		case 'U' : return DIRECTION.UP; break;
 		case 'R' : return DIRECTION.RIGHT; break;
@@ -220,8 +213,8 @@ function getDirectionString(p_valueString) {
 	}
 }
 
-function getNumberString(p_valueString) {
-	return parseInt(p_valueString.substring(1),10);
+SolverYajikabe.prototype.getNumber = function(p_x, p_y) {
+	return parseInt(this.clueGrid.get(p_x, p_y).substring(1), 10);
 }
 
 //--------------------------------
@@ -505,14 +498,27 @@ orderedListPassArgumentsClosure = function(p_solver) {
 	}
 }
 
-/*namingCategoryClosure = function(p_solver) {
-	return function (p_indexRegion) {
-		return "Region "+ p_indexRegion + " (" + p_solver.getFirstSpaceRegion(p_indexRegion).x +" "+ p_solver.getFirstSpaceRegion(p_indexRegion).y + ")"; 
+namingCategoryClosure = function(p_solver) {
+	return function(p_passIndex) {
+		if (p_passIndex.passCategory == YAJIKABE_CATEGORY.UNION) {
+			const uni = p_solver.unionsStripesList[p_passIndex.index];
+			if (uni.orientation == ORIENTATION.VERTICAL) {
+				return "(Stripes V " + uni.x + "," + uni.yMin + "-" + uni.yMax +")";
+			} else {
+				return "(Stripes H " + uni.xMin + "-" + uni.xMax + "," + uni.y +")";
+			}
+		} else {
+			const str = p_solver.cluesSpacesList[p_passIndex.index];
+			if (str.direction == DIRECTION.UP || str.direction == DIRECTION.DOWN) {
+				return "(Strip V " + str.x + "," + str.yMin + "-" + str.yMax +")";
+			} else {
+				return "(Strip H " + str.xMin + "-" + str.xMax + "," + str.y +")";
+			}
+		}
 	}
 }
 
-
-skipPassClosure = function(p_solver) {
+/*skipPassClosure = function(p_solver) {
 	return function (p_indexRegion) {
 		return p_solver.incertainity(p_indexRegion) > 500; // Arbitrary value
 	}

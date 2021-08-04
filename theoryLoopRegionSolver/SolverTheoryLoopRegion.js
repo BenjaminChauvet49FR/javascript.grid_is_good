@@ -8,7 +8,7 @@ function SolverTheoryLoopRegion(p_wallArray) {
 SolverTheoryLoopRegion.prototype.constructor = SolverTheoryLoopRegion;
 
 function DummySolver() {
-	return new SolverTheoryLoopRegion(generateWallArray(1,1));
+	return new SolverTheoryLoopRegion(generateWallArray(1, 1));
 }
 
 SolverTheoryLoopRegion.prototype.construct = function(p_wallArray) {
@@ -36,6 +36,14 @@ SolverTheoryLoopRegion.prototype.emitHypothesisSpace = function(p_x, p_y, p_stat
 	this.tryToPutNewSpace(p_x, p_y, p_state);
 }
 
-/*SolverTheoryLoopRegion.prototype.undo = function() {
-	this.undoToLastHypothesis();
-}*/ // Already defined in LoopSolver
+
+SolverTheoryLoopRegion.prototype.emitPassRegionFromSpace = function(p_x, p_y) {
+	const index = this.regionArray[p_y][p_x];
+	if (index != WALLGRID.OUT_OF_REGIONS) {
+		this.passLoop({passCategory : LOOP_PASS_CATEGORY.REGION, index : index}); 
+	}
+}
+
+SolverTheoryLoopRegion.prototype.makeMultipass = function() {
+	this.multipassLoop();
+}

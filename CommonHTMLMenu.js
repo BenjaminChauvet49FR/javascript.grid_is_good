@@ -84,13 +84,20 @@ menuSolvers.push({
 	displayName : "Boucles",
 	documentPage : "Solver",
 	typeList : [
-		{name : "countryRoad", displayName : "CountryRoad"},
 		{name : "detour", displayName : "Detour"},
-		{name : "entryExit", displayName : "EntryExit"},
 		{name : "koburin", displayName : "Koburin"},
 		{name : "masyu", displayName : "Masyu"},
-		{name : "moonsun", displayName : "Moonsun"},
 		{name : "yajilin", displayName : "Yajilin"}
+	]
+});
+
+menuSolvers.push({
+	displayName : "Boucles à région",
+	documentPage : "Solver",
+	typeList : [
+		{name : "countryRoad", displayName : "CountryRoad"},
+		{name : "entryExit", displayName : "EntryExit"},	
+		{name : "moonsun", displayName : "Moonsun"}
 	]
 });
 

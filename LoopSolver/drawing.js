@@ -72,7 +72,7 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
         pixUp += this.pix.sideSpace;
     }
 	if (p_solver.ergonomicOptions.displayOppositeEnds) {
-		const fontSize = drawer.pix.sideSpace / 3;
+		const fontSize = this.pix.sideSpace / 3;
 		setupFont(p_context, fontSize, "Arial");
 		alignFontCenter(p_context);
 		p_context.fillStyle = p_colorSet.oppositeSpaceWrite;

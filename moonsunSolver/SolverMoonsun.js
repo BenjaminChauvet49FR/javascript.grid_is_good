@@ -24,9 +24,10 @@ SolverMoonsun.prototype.construct = function(p_wallArray, p_symbolsArray) {
 		setSpaceLinkedPSDeductions : setSpaceLinkedDeductionsClosure(this),
 		setBorderLinkedPSDeductions : setBorderLinkedDeductionsClosure(this),
 		otherPSDeductions : otherDeductionsClosure(this),
-		PSQuickStart : quickStartClosure(this)
+		PSQuickStart : quickStartClosure(this),
+		comparisonPS : comparisonMoonsunEventsClosure(this)
 	});
-		
+
 	// Affecting regions
 	this.regions.forEach(region => {
 		region.astre = ASTRE.UNDECIDED;
@@ -96,28 +97,19 @@ SolverMoonsun.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 	this.tryToPutNewSpace(p_x, p_y, p_state);
 }
 
+SolverMoonsun.prototype.emitPassRegionFromSpace = function(p_x, p_y) {
+	const index = this.regionArray[p_y][p_x];
+	if (index != WALLGRID.OUT_OF_REGIONS) {
+		this.passLoop({passCategory : LOOP_PASS_CATEGORY.REGION, index : index}); 
+	}
+}
+
+SolverMoonsun.prototype.makeMultipass = function() {
+	this.multipassLoop();
+}
+
 // -------------------
 // Doing & undoing
-
-/*setEdgeClosedDosClosure = function(p_solver) {
-	return function(p_todo) {
-	}	
-}
-
-setEdgeLinkedDosClosure = function(p_solver) {
-	return function(p_todo) {
-	}	
-}
-
-setEdgeClosedUndosClosure = function(p_solver) {
-	return function(p_todo) {
-	}	
-}
-
-setEdgeLinkedUndosClosure = function(p_solver) {
-	return function(p_todo) {
-	}	
-}*/
 
 // Only other events are AstreEvents
 function otherAtomicDosClosure(p_solver) {
@@ -261,5 +253,15 @@ quickStartClosure = function(p_solver) {
 			p_solver.tryToApplyHypothesis(event_, p_solver.methodSetDeductions);
 		});
 		p_solver.terminateQuickStart();
+	}
+}
+
+// -------------
+// Pass
+
+comparisonMoonsunEventsClosure = function(p_methodPS) {
+	return function(p_event1, p_event2) {
+		// If it's not an already treated event then it's an astre event
+		return commonComparison([p_event1.index, p_event1.astre], [p_event2.index, p_event2.astre]);
 	}
 }

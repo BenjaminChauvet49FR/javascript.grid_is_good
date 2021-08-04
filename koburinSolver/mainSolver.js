@@ -16,6 +16,7 @@ function main() {
 	var drawer = new Drawer(colors);
 	solver = DummySolver();
 	var canevas = document.getElementById("canevas");
+	var spanState = document.getElementById("span_resolution_state");
 	var	context = canevas.getContext("2d");
 	var actionsManager = {}; 
 	var drawIndications;
@@ -28,6 +29,7 @@ function main() {
 		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength);
 		drawInsideSpaces(context, drawer, colors, solver);
 		// Note : no drawing of non-clue banned spaces
+		solver.callStateForItem(spanState);
 	}
 
 	canevas.addEventListener('click', function(event){clickCanvas(event,canevas,drawer,solver,actionsManager)},false);
@@ -40,23 +42,15 @@ function main() {
 	putActionElementClick("submit_quickStart",function(event){quickStartAction(solver)});
 	putActionElementClick("submit_multipass",function(event){multiPassAction(solver)});
 	putActionElementClick("submit_undo",function(event){undoAction(solver)});
-	putActionElementClick("submit_color_chains",function(event){solver.seeColorChainsAction()}); 
-	putActionElementClick("submit_see_opposite_ends",function(event){solver.seeOppositeEndsAction()});
-	putActionElementClick("submit_mask_information_chains",function(event){solver.maskChainsInformation()});
+	initializeItemsLoopInfos("div_common_loop_display", solver);
 
 	//------
 
-	var textActionSpace = document.getElementById("text_canvas_action_space");
-	var textActionWall = document.getElementById("text_canvas_action_wall");
-	setMode(textActionSpace,actionsManager,ENTRY.SPACE,ACTION_CLOSE_SPACE);
-	setMode(textActionWall,actionsManager,ENTRY.WALLS,ACTION_LINK_SPACES);
-	addEventListenerAndCaption("submit_open_space", ENTRY.SPACE, ACTION_OPEN_SPACE, textActionSpace);
-	addEventListenerAndCaption("submit_close_space", ENTRY.SPACE, ACTION_CLOSE_SPACE, textActionSpace);
-	addEventListenerAndCaption("submit_link_spaces", ENTRY.WALLS, ACTION_LINK_SPACES, textActionWall);
-	addEventListenerAndCaption("submit_close_links", ENTRY.WALLS, ACTION_CLOSE_LINKS, textActionWall);
-	addEventListenerAndCaption("submit_pass_space", ENTRY.SPACE, ACTION_PASS_SPACE, textActionSpace);
-
-	function addEventListenerAndCaption(p_identifier, p_entry, p_action, p_textAction) { //Shortcut action
-		addEventListenerAndCaptionActionSubmit(actionsManager, p_textAction, p_identifier, p_entry, p_action);
-	}
+	addEventsListenersAndCaptionsAndSetOne(actionsManager, 
+	"text_canvas_action_space", ["submit_close_space", "submit_open_space", "submit_pass_space", "submit_do_nothing_spaces"], 
+	ENTRY.SPACE, [ACTION_PASS_EXCLUDE_LOOP_SPACE, ACTION_PASS_INCLUDE_LOOP_SPACE, ACTION_PASS_SPACE, ACTION_NOTHING]);
+	
+	addEventsListenersAndCaptionsAndSetOne(actionsManager, 
+	"text_canvas_action_wall", ["submit_link_spaces", "submit_close_links", "submit_do_nothing_links"], 
+	ENTRY.WALLS, [ACTION_LINK_SPACES, ACTION_CLOSE_LINKS, ACTION_NOTHING]);	
 }

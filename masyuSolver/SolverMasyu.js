@@ -10,6 +10,8 @@ const PEARL = {
 	EMPTY : '-'
 }
 
+LOOP_PASS_CATEGORY.MASYU = -1;
+
 // -----------------
 // Setup
 
@@ -29,23 +31,35 @@ SolverMasyu.prototype.construct = function(p_symbolGrid) {
 	this.loopSolverConstruct(generateWallArray(p_symbolGrid[0].length, p_symbolGrid.length), {
 		setEdgeLinkedPSDeductions : setEdgeLinkedDeductionsClosure(this),
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
-		PSQuickStart : quickStartClosure(this)
+		PSQuickStart : quickStartClosure(this),
+		generateEventsForPassPS : generateEventsForSpaceClosure(this),
+		orderedListPassArgumentsPS : startingOrderedListPassArgumentsMasyuClosure(this),
+		namingCategoryPS : namingCategoryClosure(this),
+		multipassPessimismPS : true,
+		passDefineTodoPSMethod : function(p_categoryPass) {
+			const x = p_categoryPass.x;
+			const y = p_categoryPass.y;
+			return (this.grid[y][x].state != LOOP_STATE.CLOSED && this.grid[y][x].chains.length != 2);
+		}
+		
 	}); // this.xLength and yLength defined in the upper solver
-	// comparisonLoopEvents and copyLoopEventMethod defined in LoopSolver
-	this.methodSetPass = {comparisonMethod : comparisonLoopEventsMethod, copyMethod : copyLoopEventMethod,  argumentToLabelMethod : namingCategoryClosure(this)};
-	this.setMultipass = {numberPSCategories : 2, PSCategoryMethod : multiPassMasyuCategoryClosure(this), generatePassEventsMethod : generateEventsForSpaceClosure(this)}
+	// comparisonLoopEvents and copyLoopSolverEventMethod defined in LoopSolver
+	//this.setMultipass = {numberPSCategories : 2, PSCategoryMethod : multiPassMasyuCategoryClosure(this), generatePassEventsMethod : generateEventsForSpaceClosure(this)} RELIQUAT
 	this.pearlArray = [];
+	this.pearlSpaceList = [];
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
 		this.pearlArray.push([]);
 		for (var ix = 0 ; ix < this.xLength ; ix++) {
 			if (p_symbolGrid[iy][ix] == SYMBOL_ID.WHITE) {
                 this.pearlArray[iy].push(PEARL.WHITE);
 				this.setLinkSpace(ix, iy, LOOP_STATE.LINKED);
+				this.pearlSpaceList.push({x : ix, y : iy});
             } else if (p_symbolGrid[iy][ix] == SYMBOL_ID.BLACK) {
                 this.pearlArray[iy].push(PEARL.BLACK);
 				this.setLinkSpace(ix, iy, LOOP_STATE.LINKED);
+				this.pearlSpaceList.push({x : ix, y : iy});
             } else {
-                this.pearlArray[iy].push(PEARL.EMPTY);
+                this.pearlArray[iy].push(null);
             }
 		}
 	}
@@ -78,8 +92,13 @@ SolverMasyu.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 }
 
 SolverMasyu.prototype.emitPassSpace = function(p_x, p_y) {
-	const generatedEvents = generateEventsForSpaceClosure(this)({x : p_x, y : p_y}); // Yeah, that method (returned by the closure) should have one single argument as it will be passed to multipass...
-	this.passEvents(generatedEvents, this.methodSetDeductions, this.methodSetPass, {x : p_x, y : p_y}); 
+	var passIndex;
+	if (this.pearlArray[p_y][p_x] != null) {		
+		passIndex = {passCategory : LOOP_PASS_CATEGORY.MASYU, x : p_x, y : p_y};
+	} else {
+		passIndex = {passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
+	}
+	return this.passLoop(passIndex);
 }
 
 quickStartClosure = function(p_solver) {
@@ -122,7 +141,7 @@ quickStartClosure = function(p_solver) {
 }
 
 SolverMasyu.prototype.makeMultipass = function() {
-	this.multiPass(this.methodSetDeductions, this.methodSetPass, this.setMultipass); 
+	this.multipassLoop();
 }
 
 // -------------------
@@ -296,11 +315,10 @@ SolverMasyu.prototype.testExpansionWhitePearlSpace = function(p_eventList, p_x, 
 // Passing
 
 generateEventsForSpaceClosure = function(p_solver) {
-	return function(p_space) {
-		switch (p_solver.pearlArray[p_space.y][p_space.x]) {
-			case PEARL.WHITE : return generateWhitePearlPassEvents(p_space.x, p_space.y); break;
-			case PEARL.BLACK : return p_solver.generateBlackPearlPassEvents(p_space.x, p_space.y); break;
-			default : return p_solver.standardSpacePassEvents(p_space.x, p_space.y); break;
+	return function(p_category) {
+		switch (p_solver.pearlArray[p_category.y][p_category.x]) {
+			case PEARL.WHITE : return generateWhitePearlPassEvents(p_category.x, p_category.y); break;
+			case PEARL.BLACK : return p_solver.generateBlackPearlPassEvents(p_category.x, p_category.y); break;
 		}
 		return [];
 	}
@@ -335,26 +353,33 @@ SolverMasyu.prototype.generateBlackPearlPassEvents = function(p_x, p_y) {
 
 
 function namingCategoryClosure(p_solver) {
-	return function (p_space) {
-		const x = p_space.x;
-		const y = p_space.y;
-		var answer = x+","+y;
+	return function (p_passIndex) {
+		const x = p_passIndex.x;
+		const y = p_passIndex.y;
+		var answer = "";
 		switch (p_solver.pearlArray[y][x]) {
-			case PEARL.WHITE : answer += " (white) "; break;
-			case PEARL.BLACK : answer += " (black) "; break;
+			case PEARL.WHITE : answer += "(white) "; break;
+			case PEARL.BLACK : answer += "(black) "; break;
 		}
-		return answer;
+		return answer + x + "," + y;
 	}
 }
 
-// Category determination for multipass order for Masyu only (see LoopSolver multipass for more details)
-multiPassMasyuCategoryClosure = function(p_solver) {
-	return function (p_x, p_y) {
-		if (p_solver.getPearl(p_x, p_y) == PEARL.WHITE) {
+function startingOrderedListPassArgumentsMasyuClosure(p_solver) {
+	return function() {
+		return p_solver.pearlSpaceList;
+	}
+}
+
+// Category determination for multipass order for Masyu only (see LoopSolver multipass for more details) RELIQUAT
+/*multiPassMasyuCategoryClosure = function(p_solver) {
+	return function (p_category) {
+		const pearl = p_solver.getPearl(p_category.x, p_category.y);
+		if (pearl == PEARL.WHITE) {
 			return 0;
-		} else if (p_solver.getPearl(p_x, p_y) == PEARL.BLACK) {
+		} else if (pearl == PEARL.BLACK) {
 			return 1;
 		}
 	}
 	return -1;
-}
+} */

@@ -43,7 +43,7 @@ addScriptsGeneric = addScriptsClosure(["../WallGrid.js", "../Grid.js",
 "../CommonHTMLMenu.js",
 "../Logs.js"]);
 addScriptsLocal = addScriptsClosure(["drawing.js", "mainSolver.js", "inputSolver.js"]);
-addScriptsLoop = addScriptsClosure(["../LoopSolver/drawing.js", "../LoopSolver/LoopEvent.js", "../LoopSolver/CompoundLinkEvent.js", "../LoopSolver/LoopSolver.js", "../LoopSolver/Constants.js"]);
+addScriptsLoop = addScriptsClosure(["../LoopSolver/drawing.js", "../LoopSolver/LoopEvent.js", "../LoopSolver/CompoundLinkEvent.js", "../LoopSolver/LoopSolver.js", "../LoopSolver/Constants.js", "../LoopSolver/PassCategories.js", "../LoopSolver/CommonLoopDisplay.js"]);
 addScriptsAdjacency = addScriptsClosure(["../miscSolving/AdjacencyCheck.js", "../miscSolving/AdjacencyLimit.js", "../miscSolving/GeographicalSolver.js"]);
 
 function addScriptCheckCollection() { addScript("../miscSolving/CheckCollection.js"); } // For filters 

@@ -61,6 +61,8 @@ FenceShugakuEvent.prototype.copy = function() {
 	return new FenceShugakuEvent(this.fenceX, this.fenceY, this.direction, this.state); // Cannot use the standard copying method (in FenceEvent) since it won't return an instance of the child (FenceShugakuEvent) class
 }
 
+// ---
+
 shouldBeLoggedEvent = function(p_event) {
 	return (isSpaceEvent(p_event) && p_event.choice);
 }

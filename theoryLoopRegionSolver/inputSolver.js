@@ -3,15 +3,15 @@
 */
 function clickCanvas(event, p_canvas, p_drawer, p_solver, p_actionsManager) {
 	var clicked = p_drawer.getClickWallR(event, p_canvas, p_solver.xLength, p_solver.yLength);
-	if (clicked != null){
+	if (clicked != null && p_actionsManager.clickWallR.id != ACTION_NOTHING.id) {
 		clickWallRAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickWallR);
 	} else {
 		clicked = p_drawer.getClickWallD(event, p_canvas, p_solver.xLength, p_solver.yLength);
-		if (clicked != null){
+		if (clicked != null && p_actionsManager.clickWallD.id != ACTION_NOTHING.id) {
 			clickWallDAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickWallD);
 		} else {
 			clicked = p_drawer.getClickSpace(event, p_canvas, p_solver.xLength, p_solver.yLength);
-			if (clicked != null){
+			if (clicked != null) {
 				clickSpaceAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickSpace);
 			}
 		}
@@ -47,11 +47,14 @@ function clickWallRAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action) {
 
 function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action) {
 	switch(p_action.id){
-		case ACTION_OPEN_SPACE.id:
+		case ACTION_PASS_INCLUDE_LOOP_SPACE.id:
 			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, LOOP_STATE.LINKED); 
 		break;
-		case ACTION_CLOSE_SPACE.id:
+		case ACTION_PASS_EXCLUDE_LOOP_SPACE.id:
 			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, LOOP_STATE.CLOSED); 
+		break;
+		case ACTION_PASS_REGION.id:
+			p_solver.emitPassRegionFromSpace(p_spaceIndexX, p_spaceIndexY); 
 		break;
 	}
 }
@@ -63,6 +66,10 @@ function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action) {
 
 quickStartAction = function(p_solver) {
 	p_solver.quickStart();
+}
+
+multipassAction = function(p_solver) {
+	p_solver.makeMultipass();
 }
 
 undoAction = function(p_solver) {

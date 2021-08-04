@@ -2,16 +2,16 @@
  When you click on the canvas
 */
 function clickCanvasAction(event, p_canvas, p_drawer, p_solver, p_actionsManager) {
-	var clicked = p_drawer.getClickWallR(event,p_canvas,p_solver.xLength,p_solver.yLength);
-	if (clicked != null){
+	var clicked = p_drawer.getClickWallR(event, p_canvas, p_solver.xLength, p_solver.yLength);
+	if (clicked != null && p_actionsManager.clickWallR != ACTION_NOTHING) {
 		clickWallRAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickWallR);
 	} else {
 		clicked = p_drawer.getClickWallD(event, p_canvas, p_solver.xLength, p_solver.yLength);
-		if (clicked != null){
+		if (clicked != null && p_actionsManager.clickWallD != ACTION_NOTHING) {
 			clickWallDAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickWallD);
 		} else {
 			clicked = p_drawer.getClickSpace(event, p_canvas, p_solver.xLength, p_solver.yLength);
-			if (clicked != null){
+			if (clicked != null) {
 				clickSpaceAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickSpace);
 			}
 		}
@@ -23,7 +23,7 @@ You successfully clicked on a region space (coordinates in parameter) or a wall.
 */
 
 function clickWallDAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
-	switch(p_action.id){
+	switch(p_action.id) {
 		case ACTION_LINK_SPACES.id:
 			p_solver.emitHypothesisDown(p_spaceIndexX, p_spaceIndexY, LOOP_STATE.LINKED); 
 		break;
@@ -47,10 +47,10 @@ function clickWallRAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 
 function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 	switch(p_action.id){
-		case ACTION_OPEN_SPACE.id:
+		case ACTION_PASS_INCLUDE_LOOP_SPACE.id:
 			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, LOOP_STATE.LINKED); 
 		break;
-		case ACTION_CLOSE_SPACE.id:
+		case ACTION_PASS_EXCLUDE_LOOP_SPACE.id:
 			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, LOOP_STATE.CLOSED); 
 		break;
 		case ACTION_PASS_SPACE.id:

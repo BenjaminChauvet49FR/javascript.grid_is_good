@@ -3,8 +3,15 @@ LOOP_EVENT.REGION_JUNCTION = "RJ"
 
 function RegionJunctionEvent(p_i1, p_i2, p_state) {
 	this.kind = LOOP_EVENT.REGION_JUNCTION;
-	this.index1 = p_i1;
-	this.index2 = p_i2;
+	this.index1 = Math.min(p_i1, p_i2);
+	this.index2 = Math.max(p_i1, p_i2);
 	this.state = p_state;
 }
-// Is it worth classing it ?
+
+RegionJunctionEvent.prototype.copy = function() {
+	return new RegionJunctionEvent(this.index1, this.index2, this.state);
+}
+
+RegionJunctionEvent.prototype.toString = function() {
+ 	return "["+"RJ "+ (this.state == BORDER_STATE.LINKED ? "O" : "X") +" "+this.index1+","+this.index2+"]";
+}

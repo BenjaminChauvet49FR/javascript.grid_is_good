@@ -51,3 +51,12 @@ GeneralSolver.prototype.existingNeighborsDirections = function(p_x, p_y) {
 GeneralSolver.prototype.areCoordinatesInPuzzle = function(p_x, p_y) {
 	return p_x >= 0 && p_y >= 0 && p_x < this.xLength && p_y < this.yLength;
 }
+
+GeneralSolver.prototype.testExistingCoordinate = function(coor, dir) {
+	switch (dir) {
+		case DIRECTION.LEFT : 
+		case DIRECTION.UP : return coor >= 0; break;
+		case DIRECTION.RIGHT : return coor < this.xLength; break;
+		case DIRECTION.DOWN : return coor < this.yLength; break;
+	}
+}

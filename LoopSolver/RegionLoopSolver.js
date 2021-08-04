@@ -50,6 +50,16 @@ RegionLoopSolver.prototype.regionLoopSolverConstruct = function(p_wallArray, p_p
 	if (!p_packMethods.otherPSDeductions) {
 		p_packMethods.otherPSDeductions = identityDeductionsClosure();
 	}
+	
+	// Pass and multipass related 
+	p_packMethods.comparisonPS = p_packMethods.comparisonPS;
+	if (!p_packMethods.comparisonPS) { p_packMethods.comparisonPS = function(){}} // Should not be sollicited
+	p_packMethods.namingCategoryPS = p_packMethods.namingCategoryPS;
+	if (!p_packMethods.namingCategoryPS) { p_packMethods.namingCategoryPS = function() {} } // Should not be sollicited 
+	if (!p_packMethods.orderedListPassArgumentsPS) {p_packMethods.orderedListPassArgumentsPS = function() { return []}}
+	if (!p_packMethods.generateEventsForPassPS) {p_packMethods.generateEventsForPassPS = function() { return []}}
+	
+	// Transmit the pack method to above 
 	this.loopSolverConstruct(p_wallArray, {
 		setSpaceClosedPSAtomicDos : setSpaceClosedPSAtomicDoRLSClosure(this, p_packMethods.setSpaceClosedPSAtomicDos),
 		setSpaceLinkedPSAtomicDos : p_packMethods.setSpaceLinkedPSAtomicDos,
@@ -66,7 +76,13 @@ RegionLoopSolver.prototype.regionLoopSolverConstruct = function(p_wallArray, p_p
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsRLSClosure(this, p_packMethods.setEdgeClosedPSDeductions),
 		setEdgeLinkedPSDeductions : setEdgeLinkedDeductionsRLSClosure(this, p_packMethods.setEdgeLinkedPSDeductions),
 		otherPSDeductions : otherDeductionsRLSClosure(this, p_packMethods.setBorderLinkedPSDeductions, p_packMethods.setBorderClosedPSDeductions, p_packMethods.otherPSDeductions), // "setBorder" methods arguments : p_eventList, index1, index2
-		PSQuickStart : quickStartRegionLoopSolverClosure(this, p_packMethods.PSQuickStart)
+		PSQuickStart : quickStartRegionLoopSolverClosure(this, p_packMethods.PSQuickStart),
+		// Pass related. Note that not all the methods '"pass and multipass related" in LoopSolver' have been used.
+		multipassPessimismPS : false, 
+		comparisonPS : comparisonRegionLoopSolverEventsClosure(p_packMethods.comparisonPS),
+		generateEventsForPassPS : generateEventsForPassRegionLoopClosure(this, p_packMethods.generateEventsForPassPS),
+		orderedListPassArgumentsPS : orderedListPassArgumentsRegionLoopClosure(this, p_packMethods.orderedListPassArgumentsPS),
+		namingCategoryPS : namingCategoryRegionLoopClosure(this, p_packMethods.namingCategoryPS)
 	}); 
 	this.gridWall = WallGrid_data(p_wallArray);
 	this.borders = []; // Triangular array of borders
@@ -201,8 +217,8 @@ function borderingIndexes(p_index1, p_index2) {
 // ---------------------------
 // Classic getters
 
-RegionLoopSolver.prototype.getSpaceCoordinates = function(p_indexRegion, p_indexSpace) {
-	return this.regions[p_indexRegion].spaces[p_indexSpace];
+RegionLoopSolver.prototype.getSpaceCoordinates = function(p_indexRegion, p_Argumentspace) {
+	return this.regions[p_indexRegion].spaces[p_Argumentspace];
 }
 
 // ---------------------------
@@ -211,9 +227,6 @@ RegionLoopSolver.prototype.getSpaceCoordinates = function(p_indexRegion, p_index
 setSpaceClosedPSAtomicDoRLSClosure = function(p_solver, p_methodSetSpaceClosedPSAtomicDos) {
 	return function(p_args) {
 		const ir = p_solver.getRegionIndex(p_args.x, p_args.y);
-		if (ir != WALLGRID.OUT_OF_REGIONS) {			
-			p_solver.regions[ir].spacesNotClosedYet--;
-		}
 		p_methodSetSpaceClosedPSAtomicDos(p_args);
 	}
 }
@@ -260,7 +273,7 @@ otherAtomicDoRLSClosure = function(p_solver, p_methodOtherPSDos) {
 					region2.linkedRegions.push(p_event.index1);
 					const l1 = region1.linkedRegions.length;
 					const l2 = region2.linkedRegions.length;
-					p_solver.nbRemainingLinksBetweenRegions--; //TODO 551551 gérer pour quand c'est égal à 0
+					p_solver.nbRemainingLinksBetweenRegions--; 
 					if (l1 == 1) { 
 						if (l2 == 1) {
 							region1.oppositeLinkedRegion = p_event.index2;
@@ -538,6 +551,99 @@ quickStartRegionLoopSolverClosure = function(p_solver, p_PSQuickStart) {
 		p_solver.terminateQuickStart();
 		if (p_PSQuickStart) {
 			p_PSQuickStart();			
+		}
+	}
+}
+
+// ---------------------------
+// Pass
+
+function generateEventsForPassRegionLoopClosure(p_solver, p_methodPS) {
+	return function(p_passIndex) {
+		return p_solver.generateEventsForRegionPass(p_passIndex, p_methodPS);
+	}
+}
+
+RegionLoopSolver.prototype.generateEventsForRegionPass = function(p_passIndex, p_methodPS) {
+	switch(p_passIndex.passCategory) {
+		case LOOP_PASS_CATEGORY.REGION : 
+			return this.generateEventsForRegionPassStandard(p_passIndex.index);
+		break;
+		default : 
+			return p_methodPS(p_passIndex);
+		break;
+	}
+}
+
+RegionLoopSolver.prototype.generateEventsForRegionPassStandard = function(p_indexRegion) {
+	var answer = [];
+	const region = this.regions[p_indexRegion];
+	var x, y;
+	region.spaces.forEach(coors => {
+		x = coors.x;
+		y = coors.y;
+		KnownDirections.forEach(dir => {			
+			if (this.neighborExists(x, y, dir) && this.regionArray[y + DeltaY[dir]][x + DeltaX[dir]] != WALLGRID.OUT_OF_REGIONS) {
+				if (this.regionArray[y+ DeltaY[dir]][x + DeltaX[dir]] != p_indexRegion || dir == DIRECTION.LEFT || dir == DIRECTION.UP) {
+					answer.push([new LinkEvent(x, y, dir, LOOP_STATE.LINKED), new LinkEvent(x, y, dir, LOOP_STATE.CLOSED)]);
+				}
+			}
+		});
+	});
+	return answer;
+}
+
+// Rememver : the function inside CLSEC (see LoopSolver) is called only if p_event1.kind == p_event2.kind
+comparisonRegionLoopSolverEventsClosure = function(p_methodPS) {
+	return comparisonLoopSolverEventsClosure(
+		function(p_event1, p_event2) {
+			if (p_event1.kind == LOOP_EVENT.REGION_JUNCTION) {
+				return commonComparison([p_event1.index1, p_event1.index2, p_event1.state], [p_event2.index1, p_event2.index2, p_event2.state]);
+			} else {
+				return p_methodPS(p_event1, p_event2);
+			}
+		}
+	);
+}
+
+function orderedListPassArgumentsRegionLoopClosure(p_solver, p_methodPS) {
+	return function() {
+		return p_solver.orderedListPassArgumentsRegionLoop(p_methodPS);
+	}
+}
+
+RegionLoopSolver.prototype.orderedListPassArgumentsRegionLoop = function(p_methodPS) {	
+	var answer = p_methodPS();
+	const list2 = this.orderedListPassArgumentsRegionLoopStandard();
+	list2.forEach(passArg => {
+		answer.push(passArg);
+	});
+	return answer;
+}
+
+RegionLoopSolver.prototype.orderedListPassArgumentsRegionLoopStandard = function() { // Shouldn't have any level below. 
+	var answer = [];
+	for (var i = 0 ; i < this.regions.length ; i++) {
+		answer.push({passCategory : LOOP_PASS_CATEGORY.REGION, index : i});
+	}
+	var regions = this.regions; 
+	answer.sort(function(i1, i2) {
+		//return this.regions[i1.index].size - this.regions[i2.index].size; // Inside sort, "this" is window. Well... 
+		return regions[i1.index].size - regions[i2.index].size;
+	});
+	return answer;
+}
+
+function namingCategoryRegionLoopClosure (p_solver, p_namingCategoryPSMethod) { // Should also not have any level below, but...
+	return function(p_passIndex) {
+		switch(p_passIndex.passCategory) {
+			case LOOP_PASS_CATEGORY.REGION : 
+				const regionSpace = p_solver.regions[p_passIndex.index].spaces[0];
+				return "Region " + p_passIndex.index + " (" + regionSpace.x + "," + regionSpace.y + ")";
+			break;
+			default : 
+				return p_namingCategoryPSMethod(p_passIndex);
+			break;
 		}
 	}
 }

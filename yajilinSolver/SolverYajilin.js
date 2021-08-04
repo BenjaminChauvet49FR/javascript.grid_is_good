@@ -3,6 +3,9 @@ function SolverYajilin(p_valueGrid) {
 	this.construct(p_valueGrid);
 }
 
+LOOP_PASS_CATEGORY.YAJI_STRIP = -1;
+LOOP_PASS_CATEGORY.YAJI_UNION = -2;
+
 SolverYajilin.prototype = Object.create(LoopSolver.prototype);
 SolverYajilin.prototype.constructor = SolverYajilin;
 
@@ -19,135 +22,149 @@ SolverYajilin.prototype.construct = function(p_valueGrid) {
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
 		PSQuickStart : quickStartClosure(this),
 		PSFilters : [filterStripsClosure(this)],
-		PSAbortMethods : [abortYajilinClosure(this)]
+		PSAbortMethods : [abortYajilinClosure(this)],
+		
+		generateEventsForPassPS : generateEventsForStripesAndUnionsClosure(this),
+		orderedListPassArgumentsPS : orderedListPassArgumentsClosureYajilin(this),
+		namingCategoryPS : namingCategoryClosure(this),
+		multipassPessimismPS : true
 	});
 	this.declareClosedSpacesActing();
-	
-	
-	// comparisonLoopEvents and copyLoopEventMethod defined in LoopSolver
-	//this.methodSetPass = {comparisonMethod : comparisonLoopEventsMethod, copyMethod : copyLoopEventMethod,  argumentToLabelMethod : namingCategoryClosure(this)};
-	//this.setMultipass = {numberPSCategories : 1, PSCategoryMethod : multiPassKoburinCategoryClosure(this), tolerateClosedSpaces : true, generatePassEventsMethod : generateEventsForSpaceClosure(this)}
 	this.clueGrid = Grid_data(p_valueGrid);
-	this.setupClues = [];
-	this.stripesGrid = [];
-	this.stripes = [];
-	var valueString;
-	for (var iy = 0 ; iy < this.yLength ; iy++) {
-		this.stripesGrid.push([]);
-		for (var ix = 0 ; ix < this.xLength ; ix++) {
-			this.stripesGrid[iy].push([]);
-			valueString = p_valueGrid[iy][ix]; 
-			if (valueString != null) {
-				this.banSpace(ix, iy); // Banning spaces is here, but not only !
-				if (valueString != 'X') {
-					this.setupClues.push({x : ix, y : iy, direction : getDirection(valueString), number : getNumber(valueString)});
+	
+	// What follows in the setup is copied onto Yajikabe (created after Yajilin but it handles unions)
+	this.stripesArray = []; 
+	this.cluesList = [];
+	this.unionsStripesList = []; 
+	
+	// Initialize clues (could have been done above but I decided to separate everythin') 
+	for(iy = 0;iy < this.yLength ; iy++) {
+		this.stripesArray.push([]);
+		for(ix = 0 ; ix < this.xLength ; ix++) {
+			if (this.isNotEmpty(ix, iy)) {
+				this.banSpace(ix, iy); // Spaces are banned here ! So we can use 'this.isBanned' everywhere.
+				if (this.isNumeric(ix, iy)) {
+					this.stripesArray[iy].push(this.cluesList.length);
+					this.cluesList.push({
+						x : ix, 
+						y : iy, 
+						direction : this.getDirection(ix, iy),
+						notLinkedYet : -1,
+						notClosedYet : -1,
+						union : null
+					});
+				} else {
+					this.stripesArray[iy].push(null); 
 				}
+			} else {
+				this.stripesArray[iy].push([]);
 			}
 		}
 	}
 	
-	var numberSpaces, x, y, lastX, lastY;
-	var newNumber;
-	this.setupClues.forEach(clue => {
-		numberSpaces = 0;
-		switch (clue.direction) {
-			case DIRECTION.LEFT : 
-				x = clue.x - 1;
-				y = clue.y;
-				while (x >= 0 && (this.clueGrid.get(x, y) == null || getDirection(this.clueGrid.get(x, y)) != DIRECTION.LEFT)) {
-					if (!this.isBanned(x, y)) {
-						numberSpaces++;
-						lastX = x;
-						this.stripesGrid[y][x].push(this.stripes.length);
-					}
-					x--;
+	// Calculate not...yet variables
+	var finalCoor, numberEmptySpaces, x, y, xx, yy, closedSpacesInStrip;
+	for (var i = 0; i < this.cluesList.length ; i++) {
+		x = this.cluesList[i].x;
+		y = this.cluesList[i].y;
+		dir = this.cluesList[i].direction;
+		numberEmptySpaces = 0;
+		if ((dir == DIRECTION.LEFT) || (dir == DIRECTION.RIGHT)) {
+			xx = x + DeltaX[dir];
+			finalCoor = xx;
+			while (this.testExistingCoordinate(xx, dir) && (!this.isNumeric(xx, y) || (this.getDirection(xx, y) != dir) )) {
+				if (!this.isBanned(xx, y)) {
+					this.stripesArray[y][xx].push(i);
+					numberEmptySpaces++;
+					finalCoor = xx;
 				}
-				if (x > 0) { // Interruption in strip = we met another space going this sense / direction / whatever...
-					newNumber = getNumber(this.clueGrid.get(x, y));
-				} else {
-					newNumber = 0;
+				// Union of two opposite stripes
+				if (this.cluesList[i].union == null && this.isNumeric(xx, y) && (this.getDirection(xx, y) == OppositeDirection[dir]) && !this.isBanned(finalCoor, y)) {
+					this.cluesList[i].union = this.stripesArray[y][xx]; 
 				}
-				if (numberSpaces > 0) {
-					this.stripes.push({direction : ORIENTATION.HORIZONTAL, xMin : lastX, xMax : clue.x-1, y : y, 
-					notClosedYet : clue.number - newNumber, notLinkedYet : numberSpaces - (clue.number - newNumber)});
+				xx += DeltaX[dir];
+			}
+			if (this.testExistingCoordinate(xx, dir) && this.isNumeric(xx, y)) { // Premature end of strip
+				closedSpacesInStrip = this.getNumber(x, y) - this.getNumber(xx, y);
+			} else {
+				closedSpacesInStrip = this.getNumber(x, y);
+			}
+			this.cluesList[i].xMin = Math.min(x + DeltaX[dir], finalCoor);
+			this.cluesList[i].xMax = Math.max(x + DeltaX[dir], finalCoor);
+			this.cluesList[i].notClosedYet = closedSpacesInStrip;
+			this.cluesList[i].notLinkedYet = numberEmptySpaces - closedSpacesInStrip;
+			
+		} else {
+			yy = y + DeltaY[dir];
+			finalCoor = yy;
+			while (this.testExistingCoordinate(yy, dir) && (!this.isNumeric(x, yy) || (this.getDirection(x, yy) != dir) )) {
+				if (!this.isBanned(x, yy)) {
+					this.stripesArray[yy][x].push(i);
+					numberEmptySpaces++;
+					finalCoor = yy;
+				} 
+				if (this.cluesList[i].union == null && this.isNumeric(x, yy) && (this.getDirection(x, yy) == OppositeDirection[dir]) && !this.isBanned(x, finalCoor)) {
+					this.cluesList[i].union = this.stripesArray[yy][x];
 				}
-				break; // TODO possibility of deltaX and deltaY for the directions... ? Well, I'll see it later
-			case DIRECTION.UP : 
-				x = clue.x;
-				y = clue.y - 1;
-				while (y >= 0 && (this.clueGrid.get(x, y) == null || getDirection(this.clueGrid.get(x, y)) != DIRECTION.UP)) {
-					if (!this.isBanned(x, y)) {
-						numberSpaces++;
-						lastY = y;
-						this.stripesGrid[y][x].push(this.stripes.length);
-					}
-					y--;
-				}
-				if (y > 0) {
-					newNumber = getNumber(this.clueGrid.get(x, y));
-				} else {
-					newNumber = 0;
-				}
-				if (numberSpaces > 0) {
-					this.stripes.push({direction : ORIENTATION.VERTICAL, yMin : lastY, yMax : clue.y-1, x : x,
-					notClosedYet : clue.number - newNumber, notLinkedYet : numberSpaces - (clue.number - newNumber)});					
-				}
-				break; 
-			case DIRECTION.RIGHT : 
-				x = clue.x + 1;
-				y = clue.y;
-				while (x < this.xLength && (this.clueGrid.get(x, y) == null || getDirection(this.clueGrid.get(x, y)) != DIRECTION.RIGHT)) {
-					if (!this.isBanned(x, y)) {
-						numberSpaces++;
-						lastX = x;
-						this.stripesGrid[y][x].push(this.stripes.length);
-					}
-					x++;
-				}
-				if (x < this.xLength) {
-					newNumber = getNumber(this.clueGrid.get(x, y));
-				} else {
-					newNumber = 0;
-				}
-				if (numberSpaces > 0) {
-					this.stripes.push({direction : ORIENTATION.HORIZONTAL, xMin : clue.x+1, xMax : lastX, y : y,
-					notClosedYet : clue.number - newNumber, notLinkedYet : numberSpaces - (clue.number - newNumber)});
-				}
-				break; 
-			case DIRECTION.DOWN : 
-				x = clue.x;
-				y = clue.y + 1;
-				while (y < this.yLength && (this.clueGrid.get(x, y) == null || getDirection(this.clueGrid.get(x, y)) != DIRECTION.DOWN)) {
-					if (!this.isBanned(x, y)) {
-						numberSpaces++;
-						lastY = y;
-						this.stripesGrid[y][x].push(this.stripes.length);
-					}
-					y++;
-				}
-				if (y < this.yLength) {
-					newNumber = getNumber(this.clueGrid.get(x, y));
-				} else {
-					newNumber = 0;
-				}
-				if (numberSpaces > 0) {
-					this.stripes.push({direction : ORIENTATION.VERTICAL, yMin : clue.y+1, yMax : lastY, x : x,
-					notClosedYet : clue.number - newNumber, notLinkedYet : numberSpaces - (clue.number - newNumber)});					
-				}
-				break;
+				yy += DeltaY[dir];
+			}
+			if (this.testExistingCoordinate(yy, dir) && this.isNumeric(x, yy)) { // Premature end of strip
+				closedSpacesInStrip = this.getNumber(x, y) - this.getNumber(x, yy);
+			} else {
+				closedSpacesInStrip = this.getNumber(x, y);
+			}
+			this.cluesList[i].yMin = Math.min(y + DeltaY[dir], finalCoor);
+			this.cluesList[i].yMax = Math.max(y + DeltaY[dir], finalCoor);
+			this.cluesList[i].notClosedYet = closedSpacesInStrip;
+			this.cluesList[i].notLinkedYet = numberEmptySpaces - closedSpacesInStrip;
 		}
-	});	
+	}
+	
+	var ui, otherClue;
+	// Now let's solve unions. Since they are mirrored, we will only do those coming from left or from up.
+	for (var i = 0; i < this.cluesList.length ; i++) {
+		clue = this.cluesList[i];
+		ui = clue.union;
+		if (ui != null) {
+			if (clue.direction == DIRECTION.RIGHT) {
+				otherClue = this.cluesList[ui];
+				this.cluesList[i].union = this.unionsStripesList.length;
+				this.cluesList[ui].union = this.unionsStripesList.length;
+				this.unionsStripesList.push({
+					orientation : ORIENTATION.HORIZONTAL, 
+					y : clue.y, 
+					xMin : Math.min(clue.xMin, otherClue.xMin), 
+					xMax : Math.max(clue.xMax, otherClue.xMax)
+				});
+			}
+			else if (clue.direction == DIRECTION.DOWN) {
+				otherClue = this.cluesList[ui];
+				this.cluesList[i].union = this.unionsStripesList.length;
+				this.cluesList[ui].union = this.unionsStripesList.length;
+				this.unionsStripesList.push({
+					orientation : ORIENTATION.VERTICAL, 
+					x : clue.x, 
+					yMin : Math.min(clue.yMin, otherClue.yMin), 
+					yMax : Math.max(clue.yMax, otherClue.yMax)
+				});
+			}
+		}
+	}
 	
 	this.stripesToCheckList = [];
 	this.stripesToCheckArray = [];
-	for (var i = 0 ; i < this.stripes.length ; i++) {
+	var coors;
+	for (var i = 0 ; i < this.cluesList.length ; i++) {
 		this.stripesToCheckArray.push(false);
+		coors = this.cluesList[i];
 	}
 }
 
-// Warning : values in hard.
-function getDirection(p_valueString) {
-	switch (p_valueString.charAt(0)) {
+// Warning : values in hard. Duplicated in Yajikabe.
+
+//Offensive !
+SolverYajilin.prototype.getDirection = function(p_x, p_y) { 
+	switch (this.clueGrid.get(p_x, p_y).charAt(0)) {
 		case 'L' : return DIRECTION.LEFT; break;
 		case 'U' : return DIRECTION.UP; break;
 		case 'R' : return DIRECTION.RIGHT; break;
@@ -156,13 +173,21 @@ function getDirection(p_valueString) {
 	}
 }
 
-function getNumber(p_valueString) {
-	return parseInt(p_valueString.substring(1),10);
+SolverYajilin.prototype.getNumber = function(p_x, p_y) {
+	return parseInt(this.clueGrid.get(p_x, p_y).substring(1), 10);
 }
 
 // -------------------
-// Getters and setters
+// Getters and setters shamelessly taken on Yajikabe
 
+SolverYajilin.prototype.isNotEmpty = function(p_x, p_y) { // "isBanned" is reserved by LoopSolver but serves indeed to check if a space is banned in a loop puzzle
+	return this.clueGrid.get(p_x, p_y) != null;
+}
+
+SolverYajilin.prototype.isNumeric = function(p_x, p_y) {
+	const num = this.clueGrid.get(p_x, p_y);
+	return (num != null && num.charAt(0) != "X");
+}
 
 // -------------------
 // Input methods
@@ -183,22 +208,37 @@ SolverYajilin.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 	this.tryToPutNewSpace(p_x, p_y, p_state);
 }
 
-/*SolverYajilin.prototype.passSpace = function(p_x, p_y) {
-	const generatedEvents = generateEventsForSpaceClosure(this)({x : p_x, y : p_y}); // Yeah, that method (returned by the closure) should have one single argument as it will be passed to multipass...
-	this.passEvents(generatedEvents, this.methodSetDeductions, this.methodSetPass, {x : p_x, y : p_y}); 
+SolverYajilin.prototype.passSpace = function(p_x, p_y) {
+	var passIndex;
+	if (!this.isBanned(p_x, p_y)) {		
+		passIndex = {passCategory : LOOP_PASS_CATEGORY.STANDARD_SPACE, x : p_x, y : p_y};
+	} else {
+		var value = this.stripesArray[p_y][p_x];
+		if (value != null) {
+			if (this.cluesList[value].union != null) {
+				passIndex = {passCategory : LOOP_PASS_CATEGORY.YAJI_UNION, index : value};
+			} else {			
+				passIndex = {passCategory : LOOP_PASS_CATEGORY.YAJI_STRIP,  index : value};
+			}
+		}
+	}
+	if (passIndex) {
+		this.passLoop(passIndex); 
+	}
 }
 
 SolverYajilin.prototype.makeMultipass = function() {
-	this.multiPass(this.methodSetDeductions, this.methodSetPass, this.setMultipass); 
-}*/
+	this.multipassLoop();
+}
+
 
 // -------------------
 // Atomic closures 
 
 function setSpaceLinkedPSAtomicDosClosure(p_solver) {
 	return function(p_space) {
-		p_solver.stripesGrid[p_space.y][p_space.x].forEach ( stripeIndex => {
-			p_solver.stripes[stripeIndex].notLinkedYet--;
+		p_solver.stripesArray[p_space.y][p_space.x].forEach ( stripeIndex => {
+			p_solver.cluesList[stripeIndex].notLinkedYet--;
 			p_solver.freshStrip(stripeIndex);
 		});
 	}
@@ -206,25 +246,28 @@ function setSpaceLinkedPSAtomicDosClosure(p_solver) {
 
 function setSpaceClosedPSAtomicDosClosure(p_solver) {
 	return function(p_space) {
-		p_solver.stripesGrid[p_space.y][p_space.x].forEach ( stripeIndex => {
-			p_solver.stripes[stripeIndex].notClosedYet--;
-			p_solver.freshStrip(stripeIndex);
-		});
+		// For banned spaces, a 'if' is necessary
+		if (!p_solver.isBanned(p_space.x, p_space.y)) {	
+			p_solver.stripesArray[p_space.y][p_space.x].forEach ( stripeIndex => {
+				p_solver.cluesList[stripeIndex].notClosedYet--;
+				p_solver.freshStrip(stripeIndex);
+			});
+		}
 	}
 }
 
 function setSpaceLinkedPSAtomicUndosClosure(p_solver) {
 	return function(p_space) {
-		p_solver.stripesGrid[p_space.y][p_space.x].forEach ( stripeIndex => {
-			p_solver.stripes[stripeIndex].notLinkedYet++;
+		p_solver.stripesArray[p_space.y][p_space.x].forEach ( stripeIndex => {
+			p_solver.cluesList[stripeIndex].notLinkedYet++;
 		});
 	}
 }
 
 function setSpaceClosedPSAtomicUndosClosure(p_solver) {
 	return function(p_space) {
-		p_solver.stripesGrid[p_space.y][p_space.x].forEach ( stripeIndex => {
-			p_solver.stripes[stripeIndex].notClosedYet++;
+		p_solver.stripesArray[p_space.y][p_space.x].forEach ( stripeIndex => {
+			p_solver.cluesList[stripeIndex].notClosedYet++;
 		});
 	}
 }
@@ -237,9 +280,9 @@ function setSpaceClosedPSDeductionsClosure(p_solver) {
 	return function(p_listEvents, p_eventToApply) {
 		const x = p_eventToApply.x;
 		const y = p_eventToApply.y;
-		const indexStripes = p_solver.stripesGrid[y][x];
+		const indexStripes = p_solver.stripesArray[y][x];
 		for (var i = 0; i < indexStripes.length ; i++) {
-			if (p_solver.stripes[indexStripes[i]].notClosedYet < 0) {
+			if (p_solver.cluesList[indexStripes[i]].notClosedYet < 0) {
 				p_listEvents.push(new FailureEvent());
 				return p_listEvents;
 			}
@@ -256,9 +299,9 @@ function setSpaceClosedPSDeductionsClosure(p_solver) {
 // Space linked
 function setSpaceLinkedPSDeductionsClosure(p_solver) {
 	return function(p_listEvents, p_eventToApply) {
-		const indexStripes = p_solver.stripesGrid[p_eventToApply.y][p_eventToApply.x];
+		const indexStripes = p_solver.stripesArray[p_eventToApply.y][p_eventToApply.x];
 		for (var i = 0; i < indexStripes.length ; i++) {
-			if (p_solver.stripes[indexStripes[i]].notLinkedYet < 0) {
+			if (p_solver.cluesList[indexStripes[i]].notLinkedYet < 0) {
 				p_listEvents.push(new FailureEvent());
 				return p_listEvents;
 			}
@@ -312,8 +355,8 @@ function filterStripsClosure(p_solver) {
 		var strip;
 		var x, y;
 		var xOrYSpacesToCloseInOdd, xOrYSpacesToCloseInEven, currentChainLength, numberClosableSpaces;
-		for (var iCheck = 0; iCheck < p_solver.stripesToCheckList.length ; iCheck++) { 
-			listEvents = p_solver.testStrip(listEvents, p_solver.stripes[p_solver.stripesToCheckList[iCheck]]);
+		for (var iCheck = 0 ; iCheck < p_solver.stripesToCheckList.length ; iCheck++) { 
+			listEvents = p_solver.testStrip(listEvents, p_solver.cluesList[p_solver.stripesToCheckList[iCheck]]);
 			if (listEvents == EVENT_RESULT.FAILURE) {
 				return EVENT_RESULT.FAILURE;
 			}
@@ -324,7 +367,8 @@ function filterStripsClosure(p_solver) {
 }
 
 SolverYajilin.prototype.testStrip = function(p_listEvents, p_strip) {
-	if (p_strip.direction == ORIENTATION.VERTICAL) {
+	const direction = p_strip.direction;
+	if (direction == DIRECTION.UP || direction == DIRECTION.DOWN) {
 		if (p_strip.notClosedYet == 0) {
 			this.fillVerticalStripWithEvents(p_listEvents, p_strip, LOOP_STATE.LINKED);
 		} else if (p_strip.notLinkedYet == 0) {
@@ -358,7 +402,7 @@ SolverYajilin.prototype.testStrip = function(p_listEvents, p_strip) {
 			} 
 		}
 	} 
-	if (p_strip.direction == ORIENTATION.HORIZONTAL) { //Copied onto vertical !
+	if (direction == DIRECTION.LEFT || direction == DIRECTION.RIGHT) { //Copied onto vertical !
 		if (p_strip.notClosedYet == 0) {
 			this.fillHorizontalStripWithEvents(p_listEvents, p_strip, LOOP_STATE.LINKED);
 		} else if (p_strip.notLinkedYet == 0) {
@@ -471,86 +515,109 @@ quickStartClosure = function(p_solver) {
 	return function() { 
 		p_solver.initiateQuickStart("Yajilin");
 		var list = [];
-		p_solver.stripes.forEach(strip => {
+		p_solver.cluesList.forEach(strip => {
 			list = p_solver.testStrip(list, strip);
-			for (var y = 0 ; y < p_solver.yLength ; y++) {
-				for (var x = 0 ; x < p_solver.xLength ; x++) {
-					// Smartness of Yajilin
-					if (!p_solver.isBanned(x, y)) {
-						list = p_solver.tryAndCloseBeforeAndAfter2Closed(list, x, y);
-					}
+		});
+		for (var y = 0 ; y < p_solver.yLength ; y++) {
+			for (var x = 0 ; x < p_solver.xLength ; x++) {
+				// Smartness of Yajilin
+				if (!p_solver.isBanned(x, y)) {
+					list = p_solver.tryAndCloseBeforeAndAfter2Closed(list, x, y);
 				}
 			}
-			list.forEach(p_event => {
-				p_solver.tryToPutNewSpace(p_event.x, p_event.y, p_event.state);
-			});
+		}
+		list.forEach(p_event => {
+			p_solver.tryToPutNewSpace(p_event.x, p_event.y, p_event.state);
 		});
 		p_solver.terminateQuickStart();
 	}
 }
 
 // -------------------
-// Passing (TODO : copied from Koburin)
-
-/*generateEventsForSpaceClosure = function(p_solver) {
-	return function(p_space) {
-		// To be done
-		return p_solver.standardSpacePassEvents(p_space.x, p_space.y);
-	}
-}
-
-function namingCategoryClosure(p_solver) { // TODO factorize with other solvers that pass spaces
-	return function (p_space) {
-		const x = p_space.x;
-		const y = p_space.y;
-		var answer = x+","+y;
-		if (p_solver.getNumber(x,y) != null) {
-			answer += " ("+p_solver.getNumber(x,y)+")";
-		}
-		return answer;
-	}
-}
-
-// -------------------
-// Multipass
-
-multiPassKoburinCategoryClosure = function(p_solver) {
-	return function (p_x, p_y) {
-		if ((p_solver.getNumber(p_x, p_y) != null) && (p_solver.numericGrid[p_y][p_x].notClosedYet > 0)) {
-			return 0;
+// Passing & multipassing (copied onto Yajikabe)
+		
+generateEventsForStripesAndUnionsClosure = function (p_solver) {
+	return function (p_indexFamily) {
+		if (p_indexFamily.passCategory == LOOP_PASS_CATEGORY.YAJI_STRIP) {
+			return p_solver.generateEventsForSingleStripPass(p_indexFamily.index);
 		} else {
-			return -1;
+			return  p_solver.generateEventsForUnionStripPass(p_indexFamily.index); 
 		}
 	}
 }
 
-// -------------------
-// Log of the numerical grid (copied on LoopSolver's other logOppositeEnd)
-
-LoopSolver.prototype.logNumericGrid = function(p_xStart = 0, p_yStart = 0, p_xEnd, p_yEnd) {
-	var answer = "\n";
-	var numeric;
-	var stringSpace;
-	if (!p_xEnd) {
-		p_xEnd = this.xLength;
-	} 
-	if (!p_yEnd) {
-		p_yEnd = this.yLength;
-	}
-	for (var iy = p_yStart; iy < p_yEnd ; iy++) {
-		for (var ix = p_xStart; ix < p_xEnd ; ix++) {
-			numeric = this.numericGrid[iy][ix];
-			if (numeric.notLinkedYet || numeric.notLinkedYet == 0) {
-				stringSpace = numeric.notClosedYet+" "+numeric.notLinkedYet;
-			} else {
-				stringSpace = "ND";
-			}
-			while(stringSpace.length < 5) {
-				stringSpace+= " ";
-			}
-			answer+=stringSpace+"|";
+SolverYajilin.prototype.generateEventsForSingleStripPass = function(p_indexStrip) {
+	const clue = this.cluesList[p_indexStrip];
+	var eventList = [];
+	if ((clue.direction == DIRECTION.LEFT) || (clue.direction == DIRECTION.RIGHT)) {
+		const y = clue.y;
+		for (var x = clue.xMin ; x <= clue.xMax ; x++) {
+			eventList = this.spacePass(eventList, x, y);
 		}
-		answer+="\n";
+	} else {
+		const x = clue.x;
+		for (var y = clue.yMin ; y <= clue.yMax ; y++) {
+			eventList = this.spacePass(eventList, x, y);
+		}
 	}
-	console.log(answer);
-}*/
+	return eventList;
+}
+
+SolverYajilin.prototype.generateEventsForUnionStripPass = function(p_indexUnion) {
+	const clue = this.unionsStripesList[p_indexUnion];
+	var eventList = [];
+	if ((clue.orientation == ORIENTATION.HORIZONTAL)) {
+		const y = clue.y;
+		for (var x = clue.xMin ; x <= clue.xMax ; x++) {
+			eventList = this.spacePass(eventList, x, y);
+		}
+	} else {
+		const x = clue.x;
+		for (var y = clue.yMin ; y <= clue.yMax ; y++) {
+			eventList = this.spacePass(eventList, x, y);
+		}
+	}
+	return eventList;
+}
+
+SolverYajilin.prototype.spacePass = function(p_passList, p_x, p_y) {
+	if (this.getLinkSpace(p_x, p_y) == LOOP_STATE.UNDECIDED) {
+		p_passList.push([new SpaceEvent(p_x, p_y, LOOP_STATE.LINKED), new SpaceEvent(p_x, p_y, LOOP_STATE.CLOSED)]);		
+	}
+	return p_passList;
+}
+
+orderedListPassArgumentsClosureYajilin = function(p_solver) {
+	return function() {
+		var indexList = [];
+		for (var i = 0 ; i < p_solver.cluesList.length ; i++) {
+			if (p_solver.cluesList[i].union == null) {
+				indexList.push({passCategory : LOOP_PASS_CATEGORY.YAJI_STRIP, index : i}); // TODO possibility of adding more details for incertainity
+			} 
+		}
+		for (var i = 0 ; i < p_solver.unionsStripesList.length ; i++) {
+			indexList.push({passCategory : LOOP_PASS_CATEGORY.YAJI_UNION, index : i});
+		}
+		return indexList;
+	}
+}
+
+namingCategoryClosure = function(p_solver) {
+	return function(p_passIndex) {
+		if (p_passIndex.passCategory == LOOP_PASS_CATEGORY.YAJI_UNION) {
+			const uni = p_solver.unionsStripesList[p_passIndex.index];
+			if (uni.orientation == ORIENTATION.VERTICAL) {
+				return "(Stripes V " + uni.x + "," + uni.yMin + "-" + uni.yMax +")";
+			} else {
+				return "(Stripes H " + uni.xMin + "-" + uni.xMax + "," + uni.y +")";
+			}
+		} else {
+			const str = p_solver.cluesList[p_passIndex.index];
+			if (str.direction == DIRECTION.UP || str.direction == DIRECTION.DOWN) {
+				return "(Strip V " + str.x + "," + str.yMin + "-" + str.yMax +")";
+			} else {
+				return "(Strip H " + str.xMin + "-" + str.xMax + "," + str.y +")";
+			}
+		}
+	}
+}

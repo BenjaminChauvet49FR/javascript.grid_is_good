@@ -6,6 +6,8 @@ const TURNING = {
 	UNDECIDED : 0
 }
 
+LOOP_PASS_CATEGORY.REGION_DETOUR = -1;
+
 function SolverDetour(p_wallGrid, p_regionIndications) {
 	LoopSolver.call(this);
 	this.construct(p_wallGrid, p_regionIndications);
@@ -28,12 +30,14 @@ SolverDetour.prototype.construct = function(p_wallArray, p_regionIndications) {
 		otherPSAtomicUndos : otherAtomicUndosClosure(this),
 		otherPSAtomicDos : otherAtomicDosClosure(this),
 		otherPSDeductions : otherDeductionsClosure(this),
-		PSQuickStart : quickStartClosure(this)
+		PSQuickStart : quickStartClosure(this),
+		generateEventsForPassPS : generateEventsForSpaceClosure(this),
+		orderedListPassArgumentsPS : startingOrderedListPassArgumentsDetourClosure(this),
+		namingCategoryPS : namingCategoryClosure(this),
+		comparisonPS : comparisonDetourMethod,
+		multipassPessimismPS : true
 	});
-	// comparisonLoopEvents and copyLoopEventMethod defined in LoopSolver
-	//this.methodSetPass = {comparisonMethod : comparisonLoopEventsMethod, copyMethod : copyLoopEventMethod,  argumentToLabelMethod : namingCategoryClosure(this)};
-	//this.setMultipass = {numberPSCategories : 1, PSCategoryMethod : multiPassKoburinCategoryClosure(this), tolerateClosedSpaces : true, generatePassEventsMethod : generateEventsForSpaceClosure(this)}
-	
+		
 	// Puzzle with ALL open spaces
 	this.signalAllOpenSpaces();
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
@@ -123,17 +127,18 @@ SolverDetour.prototype.emitHypothesisRight = function(p_x, p_y, p_state) {
 	}
 }
 
-SolverDetour.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
-	//this.tryToPutNewSpace(p_x, p_y, p_state); TODO scrap this unless it's used for space
-}
-
-SolverDetour.prototype.passSpace = function(p_x, p_y) {
-	//const generatedEvents = generateEventsForSpaceClosure(this)({x : p_x, y : p_y}); // Yeah, that method (returned by the closure) should have one single argument as it will be passed to multipass...
-	//this.passEvents(generatedEvents, this.methodSetDeductions, this.methodSetPass, {x : p_x, y : p_y}); 
+SolverDetour.prototype.emitPassRegionOrSpace = function(p_x, p_y) {
+	var passIndex;
+	if (this.getRegion(p_x, p_y).expectedNumberOfTurningsInRegion != NOT_FORCED) {		
+		passIndex = {passCategory : LOOP_PASS_CATEGORY.REGION_DETOUR, index : this.regionArray[p_y][p_x]};
+	} else {
+		passIndex = {passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
+	}
+	return this.passLoop(passIndex);
 }
 
 SolverDetour.prototype.makeMultipass = function() {
-	//this.multiPass(this.methodSetDeductions, this.methodSetPass, this.setMultipass); 
+	this.multipassLoop();
 }
 
 // -------------------
@@ -340,53 +345,55 @@ quickStartClosure = function(p_solver) {
 }
 
 // -------------------
-// Passing
+// Pass & multipass
 
-/*generateEventsForSpaceClosure = function(p_solver) {
-	return function(p_space) {
-		if (p_solver.getNumber(p_space.x, p_space.y) != null) {
-			var answer = [];
-			KnownDirections.forEach(dir => {
-				if (p_solver.neighborExists(p_space.x, p_space.y, dir)) {
-					answer.push([new SpaceEvent(p_space.x + DeltaX[dir], p_space.y + DeltaY[dir], LOOP_STATE.CLOSED),
-						new SpaceEvent(p_space.x + DeltaX[dir], p_space.y + DeltaY[dir], LOOP_STATE.LINKED)]);	
-				}
-			});
-			return answer; // If the first events of the lists are applied in a glutton-algorithm style (here, closed in up and closed in left around a numeric space with value 2) are applied, the brackets are forgotten this is not a (list of list of events).
-		} else {
-			return p_solver.standardSpacePassEvents(p_space.x, p_space.y);
-		}
-		return [];
-	}
-}*/
-
-function namingCategoryClosure(p_solver) { // TODO factorize with other solvers that pass spaces
-	return function (p_space) {
-		/*const x = p_space.x;
-		const y = p_space.y;
-		var answer = x+","+y;
-		if (p_solver.getNumber(x,y) != null) {
-			answer += " ("+p_solver.getNumber(x,y)+")";
-		}
-		return answer;*/
-		return "";
+generateEventsForSpaceClosure = function(p_solver) {
+	return function(p_index) {
+		return p_solver.passCurveVSStraightRegion(p_index.index);
 	}
 }
-/*
-// -------------------
-// Multipass
 
-multiPassKoburinCategoryClosure = function(p_solver) {
-	return function (p_x, p_y) {
-		if ((p_solver.getNumber(p_x, p_y) != null) && (p_solver.numericArray[p_y][p_x].notClosedYet > 0)) {
-			return 0;
-		} else {
-			return -1;
+function startingOrderedListPassArgumentsDetourClosure(p_solver) {
+	return function() {
+		var answer = [];
+		for (var i = 0 ; i < p_solver.regionsNumber ; i++) {
+			if (p_solver.regions[i].notPlacedStraightYet) {				
+				answer.push({passCategory : LOOP_PASS_CATEGORY.REGION_DETOUR, index : i});
+			}
 		}
+		answer.sort(function(passIndex1, passIndex2) {
+			const region1 = p_solver.regions[passIndex1.index]
+			const region2 = p_solver.regions[passIndex2.index]
+			const v1 = region1.notPlacedTurningYet * region1.notPlacedStraightYet;
+			const v2 = region2.notPlacedTurningYet * region2.notPlacedStraightYet;
+			const diff = v1 - v2;
+			if (diff != 0) {
+				return diff;
+			}
+			return passIndex1.index - passIndex2.index;
+		});
+		return answer;
 	}
-} */
+}
 
-// -------------------
+function namingCategoryClosure(p_solver) {
+	return function (p_passIndex) {
+		const regionSpace = p_solver.regions[p_passIndex.index].spaces[0];
+		return "Region " + p_passIndex.index + " (" + regionSpace.x + "," + regionSpace.y + ")";
+	}
+}
 
-// Log of the numerical grid
-// TODO (see LoopSolver's other logOppositeEnd or Koburin's)
+SolverDetour.prototype.passCurveVSStraightRegion = function(p_index) {
+	var answer = [];
+	var x, y;
+	this.regions[p_index].spaces.forEach(coors => {
+		x = coors.x;
+		y = coors.y;
+		answer.push([new TurnEvent(x, y, TURNING.YES), new TurnEvent(x, y, TURNING.NO)]);
+	});
+	return answer;
+}
+
+comparisonDetourMethod = function(p_event1, p_event2) {
+	return commonComparison([p_event1.y, p_event1.x, p_event1.turningState], [p_event2.y, p_event2.x, p_event2.turningState]);
+}

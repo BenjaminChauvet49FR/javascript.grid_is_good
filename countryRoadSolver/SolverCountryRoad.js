@@ -16,10 +16,10 @@ SolverCountryRoad.prototype.construct = function(p_wallArray, p_indications) {
 	this.regionLoopSolverConstruct(p_wallArray, {
 		setSpaceLinkedPSDeductions : setSpaceLinkedDeductionsClosure(this),
 		setSpaceClosedPSDeductions : setSpaceClosedDeductionsClosure(this),
-		setSpaceClosedPSAtomicDos : setEdgeClosedDosClosure(this),
-		setSpaceLinkedPSAtomicDos : setEdgeLinkedDosClosure(this),
-		setSpaceClosedPSAtomicUndos : setEdgeClosedUndosClosure(this),
-		setSpaceLinkedPSAtomicUndos : setEdgeLinkedUndosClosure(this),
+		setSpaceClosedPSAtomicDos : setSpaceClosedDosClosure(this),
+		setSpaceLinkedPSAtomicDos : setSpaceLinkedDosClosure(this),
+		setSpaceClosedPSAtomicUndos : setSpaceClosedUndosClosure(this),
+		setSpaceLinkedPSAtomicUndos : setSpaceLinkedUndosClosure(this),
 		PSQuickStart : quickStartClosure(this)
 	});
 	
@@ -75,34 +75,44 @@ SolverCountryRoad.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 	this.tryToPutNewSpace(p_x, p_y, p_state);
 }
 
+SolverCountryRoad.prototype.emitPassRegionFromSpace = function(p_x, p_y) {
+	const index = this.regionArray[p_y][p_x];
+	if (index != WALLGRID.OUT_OF_REGIONS) {
+		this.passLoop({passCategory : LOOP_PASS_CATEGORY.REGION, index : index}); 
+	}
+}
+
+SolverCountryRoad.prototype.makeMultipass = function() {
+	this.multipassLoop();
+}
+
 // -------------------
 // Doing & undoing
 
-setEdgeClosedDosClosure = function(p_solver) {
+setSpaceClosedDosClosure = function(p_solver) {
 	return function(p_space) {
 		const ir = p_solver.getRegionIndex(p_space.x, p_space.y);
 		if (ir != WALLGRID.OUT_OF_REGIONS) {			
 			p_solver.regions[ir].spacesNotClosedYet--;
 		}
-		console.log("OK appel");
 	}
 }
 
-setEdgeLinkedDosClosure = function(p_solver) {
+setSpaceLinkedDosClosure = function(p_solver) {
 	return function(p_space) {
 		const ir = p_solver.getRegionIndex(p_space.x, p_space.y);
 		p_solver.regions[ir].spacesNotLinkedYet--;
 	}
 }
 
-setEdgeClosedUndosClosure = function(p_solver) {
+setSpaceClosedUndosClosure = function(p_solver) {
 	return function(p_space) {
 		const ir = p_solver.getRegionIndex(p_space.x, p_space.y);
 		p_solver.regions[ir].spacesNotClosedYet++;
 	}
 }
 
-setEdgeLinkedUndosClosure = function(p_solver) {
+setSpaceLinkedUndosClosure = function(p_solver) {
 	return function(p_space) {
 		const ir = p_solver.getRegionIndex(p_space.x, p_space.y);
 		p_solver.regions[ir].spacesNotLinkedYet++;

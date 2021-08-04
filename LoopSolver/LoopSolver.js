@@ -77,6 +77,8 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 	// setSpaceClosedPSDeductions (2) setSpaceLinkedPSDeductions (2) setEdgeClosedPSDeductions (2) setEdgeLinkedPSDeductions (2)
 	// otherPSDeductions(2)
 	
+	// QS & filters :
+	
 	this.PSQuickStart = p_packMethods.PSQuickStart;
 	if (!this.PSQuickStart) {
 		this.PSQuickStart = function() {}
@@ -90,21 +92,55 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 	if (!this.PSAbortMethods) {
 		this.PSAbortMethods = [];
 	}
+	
+	// Pass and multipass related 
+	this.comparisonPS = p_packMethods.comparisonPS;
+	if (!this.comparisonPS) { this.comparisonPS = function(){}} // Should not be sollicited
+	this.copyingPS = p_packMethods.copyingPS;         
+	if (!this.copyingPS) { this.copyingPS = function(p_event) {return p_event.copy();}} // Will likely be sollicited
+	this.namingCategoryPS = p_packMethods.namingCategoryPS;
+	if (!this.namingCategoryPS) { this.namingCategoryPS = function(p_event) {return ""}}
+	this.generateEventsForPassPS = p_packMethods.generateEventsForPassPS;
+	if (!this.generateEventsForPassPS) { this.generateEventsForPassPS = function(p_indexPass) {return []} }
+	this.orderedListPassArgumentsPS = p_packMethods.orderedListPassArgumentsPS;
+	if (!this.orderedListPassArgumentsPS) { this.orderedListPassArgumentsPS = function() {return []} }
+	this.passDefineTodoPSMethod = p_packMethods.passDefineTodoPSMethod;
+	if (!this.passDefineTodoPSMethod) { this.passDefineTodoPSMethod = function() {return false;} }
+	if (p_packMethods.multipassPessimismPS != true && p_packMethods.multipassPessimismPS != false) {
+		if (!this.orderedListPassArgumentsPS) {
+			this.multipassPessimismPS = true;
+		} else {
+			this.multipassPessimismPS = false;
+		}
+	} else {
+		this.multipassPessimismPS = p_packMethods.multipassPessimismPS;
+	}
 }
 
 LoopSolver.prototype.loopSolverConstruct = function(p_array, p_puzzleSpecificMethodPack) {
 	this.generalConstruct();
 	this.xLength = p_array[0].length;
     this.yLength = p_array.length;
+	
+	this.setPuzzleSpecificMethods(p_puzzleSpecificMethodPack);
+	
 	this.methodSetDeductions = new ApplyEventMethodPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.setPuzzleSpecificMethods(p_puzzleSpecificMethodPack);
 	this.methodSetDeductions.setOneAbortAndFilters(abortClosure(this), [testLoopsClosure(this), separateEndsClosure(this)]);
 	this.methodSetDeductions.addMoreFilters(this.PSFilters);
 	this.methodSetDeductions.addMoreAborts(this.PSAbortMethods);
+	this.methodSetPass = {comparisonMethod : comparisonLoopSolverEventsClosure(this.comparisonPS), copyMethod : this.copyingPS, argumentToLabelMethod : namingCategoryLoopClosure(this.namingCategoryPS)};
+	this.methodSetMultiPass = {
+		generatePassEventsMethod : generateEventsForPassLoopClosure(this, this.generateEventsForPassPS),
+		orderPassArgumentsMethod : orderedListpassArgumentsClosure(this, this.orderedListPassArgumentsPS, this.multipassPessimismPS),
+		passTodoMethod : passDefineTodoClosure(this)
+	};
+	
+	
+	
     this.grid = [];
     this.bannedSpacesGrid = [];
 	this.checkNewEnds = {
@@ -755,14 +791,26 @@ abortClosure = function(p_solver) {
 	}
 }
 
-// If during this deduction, either more than one loop was made OR one loop was made but there is still an unlooped chain somewhere...
+// If during the deductions, either more than one loop was made OR one loop was made but there is still an unlooped chain somewhere...
+// If there is one loop, close the spaces that don't belong to it.
 testLoopsClosure = function(p_solver) {
 	return function() {
 		if ((p_solver.loopMade > 1) || (p_solver.endedChainCount > 0 && p_solver.loopMade == 1)) {
 			return EVENT_RESULT.FAILURE;
 		} else {
+			var answer = [];
+			if (p_solver.loopMade == 1) {
+				var x, y;
+				for (y = 0 ; y < p_solver.yLength ; y++) {
+					for (x = 0 ; x < p_solver.xLength ; x++) {
+						if (p_solver.grid[y][x].state == LOOP_STATE.UNDECIDED) {
+							answer.push(new SpaceEvent(x, y, LOOP_STATE.CLOSED));
+						}
+					}
+				}
+			}
 			p_solver.loopMade = 0;
-			return [];
+			return answer;
 		}
 	}
 }
@@ -822,6 +870,11 @@ LoopSolver.prototype.quickStart = function() {
 // --------------------------
 // Methods for passing
 
+// Unitary pass. Uses methodSetMultiPass.generatePassEventsMethod because... it's commode ! 
+LoopSolver.prototype.passLoop = function(p_argumentPass) {	
+	this.passEvents(this.methodSetMultiPass.generatePassEventsMethod(p_argumentPass), this.methodSetDeductions, this.methodSetPass, p_argumentPass); 
+}
+
 /**
  Pass absolutely any space. TODO : Really cound be optimized.
 */
@@ -856,14 +909,24 @@ LoopSolver.prototype.standardSpacePassEvents = function(p_x, p_y) { // TODO Warn
 	return [answer];
 }
 
-// The events passed in comparison must be "converted", e.g. going either down or right.
-comparisonLoopEventsMethod = function(p_event1, p_event2) {
+comparisonLoopSolverEventsClosure = function(p_PSComparisonMethod) {
+	return function(p_event1, p_event2) {
+		return comparisonLoopSolverEventsMethod(p_event1, p_event2, p_PSComparisonMethod);
+	}
+}
+
+comparisonLoopSolverEventsMethod = function(p_event1, p_event2, p_PSComparisonMethod) {
+	const managedKinds = [LOOP_EVENT.LINK, LOOP_EVENT.STATE];
 	const cEvent1 = convertLoopEvent(p_event1);
-	const cEvent2 = convertLoopEvent(p_event2); // TODO yeah, the events must be converted for sure, but they could be converted before the function is called. Anyway, this comparison method is potentially optimizable...
-	return commonComparison([LOOP_EVENT.LINK, LOOP_EVENT.STATE], 
-	[[cEvent1.linkY, cEvent1.linkX, cEvent1.direction, cEvent1.state], [cEvent2.linkY, cEvent2.linkX, cEvent2.direction, cEvent2.state], 
-	[cEvent1.y, cEvent1.x, cEvent1.state], [cEvent2.y, cEvent2.x, cEvent2.state]], 
-	cEvent1.kind, cEvent2.kind);
+	const cEvent2 = convertLoopEvent(p_event2);
+	if ((cEvent1.kind != cEvent2.kind) || managedKinds.includes(cEvent1.kind)) {
+		// The events passed in comparison must be "converted", e.g. going either down or right.
+		return commonComparisonMultiKinds(managedKinds, 
+			[[cEvent1.linkY, cEvent1.linkX, cEvent1.direction, cEvent1.state], [cEvent2.linkY, cEvent2.linkX, cEvent2.direction, cEvent2.state], 
+			[cEvent1.y, cEvent1.x, cEvent1.state], [cEvent2.y, cEvent2.x, cEvent2.state]],
+			cEvent1.kind, cEvent2.kind);
+	}
+	return p_PSComparisonMethod(cEvent1, cEvent2);
 }
 
 // Convert a loop event to make it compatible with the comparison method above 
@@ -875,157 +938,86 @@ convertLoopEvent = function(p_event) {
 	}
 }
 
-copyLoopEventMethod = function(p_event) {
-	return p_event.copy();
-}
-
 // ----------------
 // Multipass
 
-/**
-Multipass for all loop solvers that focuses on the spaces. 
-All spaces are sorted into categories (arrays) and a pass is executed on each space, in the order of categories, to the most relevant (the first one) to the least relevant (last one).
-p_setMultipass contains all these optional parameters : 
-numberPSCategories : number of extra categories specific to the puzzle.
-PSCategoryMethod : method that determinates the category. Must return a number ; between 0 and (numberPSCategories-1), it is selected. Otherwise, the space will be sorted in a standard category.
-generatePassEventsMethod : the list of contradictory events that should be generated relative to this space. May call standardSpacePassEvents to generate a standard list of up to 7 possibilites (closed space + up to 6 combinations of 2 linked edges)
-tolerateClosedSpaces : boolean that tells whether the category should be tested or not.
-WARNING : standardSpacePassEvents uses (p_x, p_y) as arguments instead of p_space !
-*/
-// TODO may be optimized considering cases where the undecided links are consecutive in direction order or opposite.
-LoopSolver.prototype.multiPass = function(p_methodSetDeductions, p_methodSetPass, p_setMultipass) {
-	const numberPSCategories = (p_setMultipass.numberPSCategories ? p_setMultipass.numberPSCategories : 0);
-	var categoriesSpaces = [];
-			var trash = [];
-	for (var i = 0; i < numberPSCategories ; i++) {
-		categoriesSpaces.push([]);
-	}
-	this.arrayPassStandardOrderIndexes(categoriesSpaces);
-	var cat;
-	for (var y = 0; y < this.yLength ; y++) {
-		for (var x = 0; x < this.xLength ; x++) {
-			cat = this.getPassOrderIndex(p_setMultipass, x, y);
-			if (cat >= 0 && cat < categoriesSpaces.length) {
-				categoriesSpaces[cat].push({x : x, y : y});
-			} else {
-				trash.push({x : x, y : y});
-			}
-		}
-	}
-	
-	var oneMoreLoop = false;
-	var space;
-	var ok = true;
-	const lengthBeforeMultiPass = this.happenedEventsSeries.length;
-	do {
-		oneMoreLoop = false;
-		const happenedEventsBeforePassingAllRegions = this.happenedEventsSeries.length;
-		i = 0;
-		var trash = [];
-		
-		// "break" porte sur les boucles for, while, do..while et la bien connue switch.
-		// Crédits : https://developer.mozilla.org/fr/docs/Web/JavaScript/Guide/Boucles_et_it%C3%A9ration#linstruction_break 
-		for (var ic = 0; ic < categoriesSpaces.length ; ic++) {
-			for (var is = 0 ; is < categoriesSpaces[ic].length ; is++) {
-				space = categoriesSpaces[ic][is];
-				resultPass = [];
-				if (p_setMultipass.generatePassEventsMethod) {
-					resultpass = this.passEvents(p_setMultipass.generatePassEventsMethod(space), p_methodSetDeductions ,p_methodSetPass, space);
-				}
-				if (resultPass.length == 0) {
-					resultPass = this.passEvents(this.standardSpacePassEvents(space.x, space.y), p_methodSetDeductions ,p_methodSetPass, space); 
-				}
-				if (resultPass == PASS_RESULT.SUCCESS) {
-					oneMoreLoop = true;
-				} else if (resultPass == PASS_RESULT.FAILURE) {
-					ok = false;
-					break;
-				}
-			}
-			if (!ok) {
-				break;
-			}
-		}
-		if (ok && oneMoreLoop) {
-			var newCategoriesSpaces = [];
-			for (var i = 0; i < numberPSCategories ; i++) {
-				newCategoriesSpaces.push([]);
-			}
-			this.arrayPassStandardOrderIndexes(newCategoriesSpaces);
-			var trash = [];
-			for (var ic = 0; ic < categoriesSpaces.length ; ic++) {
-				for (var is = 0 ; is < categoriesSpaces[ic].length ; is++) {
-					space = categoriesSpaces[ic][is];
-					cat = this.getPassOrderIndex(p_setMultipass, space.x, space.y);
-					if (cat >= 0 && cat < newCategoriesSpaces.length) {
-						newCategoriesSpaces[cat].push({x : space.x, y : space.y});
+LoopSolver.prototype.multipassLoop = function() {	
+	return this.multiPass(this.methodSetDeductions, this.methodSetPass, this.methodSetMultiPass);
+}
+
+function orderedListpassArgumentsClosure(p_solver, p_orderedListPassArgumentsPSMethod, p_pessimistic) {
+	return function() {
+		var passIndex;
+		var answer = p_orderedListPassArgumentsPSMethod();
+		if (p_pessimistic) {			
+			for (var y = 0 ; y < p_solver.yLength ; y++) {
+				for (var x = 0 ; x < p_solver.xLength ; x++) {
+					//if (p_solver.grid[y][x].state != CLOSED && p_solver.grid[y][x].chains.length != 2) {
+					passIndex = {x : x, y : y, passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD}
+					if (p_solver.passDefineTodoLoop(passIndex)) {
+						answer.push(passIndex);
 					}
-					if (cat == -1) {
-						trash.push({x : space.x, y : space.y});
-					}
-				}
+				}	
 			}
-			categoriesSpaces = newCategoriesSpaces;
 		}
-	} while (ok && oneMoreLoop);
-	if (!ok) {
-		while (this.happenedEventsSeries.length > lengthBeforeMultiPass) {
-			var lastEventsList = this.happenedEventsSeries.pop();
-			this.undoEventList(lastEventsList.list, this.methodSetDeductions.undoEventMethod);
+		return answer;
+	}
+}
+
+function generateEventsForPassLoopClosure(p_solver) {
+	return function(p_passIndex) {		
+		return p_solver.generateEventsForPassLoop(p_passIndex);
+	}
+}
+
+LoopSolver.prototype.generateEventsForPassLoop = function(p_passIndex) {
+	switch(p_passIndex.passCategory) {
+		case LOOP_PASS_CATEGORY.SPACE_STANDARD : 
+			return this.standardSpacePassEvents(p_passIndex.x, p_passIndex.y);
+		break;
+		default : 
+			return this.generateEventsForPassPS(p_passIndex);
+		break;
+	}
+}
+
+function namingCategoryLoopClosure(p_namingCategoryPSMethod) {
+	return function(p_passIndex) {
+		switch(p_passIndex.passCategory) {
+			case LOOP_PASS_CATEGORY.SPACE_STANDARD : 
+				return "Space " + p_passIndex.x + " " + p_passIndex.y;
+			break;
+			default : 
+				return p_namingCategoryPSMethod(p_passIndex);
+			break;
 		}
 	}
 }
 
-// Returns the index of a passing-priority category the space should be pushed into. I guess this can be accelerated.
-LoopSolver.prototype.getPassOrderIndex = function(p_setMultipass, p_x, p_y) {
-	const existentPSPassOrderIndexMethods = (p_setMultipass.numberPSCategories > 0 && p_setMultipass.PSCategoryMethod);
-	if (this.getLinkSpace(p_x, p_y) != LOOP_STATE.CLOSED && this.getLinkedEdges(p_x, p_y) != 2) {
-		if (existentPSPassOrderIndexMethods) {
-			const cat = p_setMultipass.PSCategoryMethod(p_x, p_y);
-			if (cat >= 0 && cat < p_setMultipass.numberPSCategories) {
-				return cat;
-			} else {
-				return this.getPassStandardPriorityIndex(p_x, p_y) + p_setMultipass.numberPSCategories;
-			}
-		}
-	} else if ((p_setMultipass.tolerateClosedSpaces) && this.getLinkSpace(p_x, p_y) == LOOP_STATE.CLOSED) { // If not for this, closed spaces are purely skipped even when they may have valuable information
-		if (existentPSPassOrderIndexMethods) {
-			const cat = p_setMultipass.PSCategoryMethod(p_x, p_y);
-			if (cat >= 0 && cat < p_setMultipass.numberPSCategories) {
-				return cat;
-			}
-		}
+function passDefineTodoClosure(p_solver) {
+	return function(p_passIndex) {		
+		return p_solver.passDefineTodoLoop(p_passIndex);
 	}
-	return -1;
 }
 
-// WARNING : assumes that the space isn't already determined. (space is closed or has 2 linked edges)
-// Returns an "order index" : 0 for a space that should be passed first, 1 for a space that should be passed then, etc...
-LoopSolver.prototype.getPassStandardPriorityIndex = function(p_x, p_y) {
-	if (this.getClosedEdges(p_x, p_y) == 2) {
-		return 0; // Two edges closed.
-	} else if (this.getLinkedEdges(p_x, p_y) == 1) {	
-		if (this.getClosedEdges(p_x, p_y) == 1) {
-			return 1; // One closed, one open
-		} else {
-			return 2; // One open and that's it
-		}
+LoopSolver.prototype.passDefineTodoLoop = function(p_passIndex) {
+	if (p_passIndex.passCategory == LOOP_PASS_CATEGORY.SPACE_STANDARD) {
+		const x = p_passIndex.x;
+		const y = p_passIndex.y;
+		return (this.grid[y][x].state != LOOP_STATE.CLOSED && this.grid[y][x].chains.length != 2);
 	} else {
-		const oneClosed = this.getClosedEdges(p_x, p_y) == 1;
-		const isOpen = (this.getLinkSpace(p_x, p_y) == LOOP_STATE.LINKED);
-		return 3 + (oneClosed ? 0 : 2) + (isOpen ? 0 : 1);
-		// 3 4 5 6 : oneClosed not open ; oneClosed not open ; open only ; totally unknown (or already fully known)
+		return this.passDefineTodoPSMethod(p_passIndex);
 	}
 }
 
-/**
-Returns an array of empty arrays ; there should be one for each standard order index, since spaces will be deposed into these arrays afterwards
-*/
-LoopSolver.prototype.arrayPassStandardOrderIndexes = function(p_passCategorySpaces) {
-	for (var i = 0; i < 7 ; i++ ) { // This loop size may have to be changed.
-		p_passCategorySpaces.push([]);
-	}
-	return p_passCategorySpaces;
+LoopSolver.prototype.lazyStandardSpacepassArgumentsClosure = function() {
+	var answer = [];
+	for (var y = 0 ; y < this.yLength ; y++) {
+		for (var x = 0 ; x < this.xLength ; x++) {
+			answer.push({x : x, y : y});
+		}
+	} 
+	return answer;
 }
 
 // ----------------
