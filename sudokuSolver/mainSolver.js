@@ -44,21 +44,11 @@ function main() {
 		canevas, drawer, solver, puzzleName(), fieldName.value, {sudokuMode : getSudokuIdFromLabel(fieldMode.value)})
 			selectedSpacesGrid.restartSelectedSpaces(solver.xLength, solver.yLength);
 	});
-	putActionElementClick("submit_quickStart", function(event){quickStartAction(solver)});
-	putActionElementClick("submit_totalPass", function(event){totalPassAction(solver)});
-	putActionElementClick("submit_selectionPass",function(event){selectionPassAction(solver, selectedSpacesGrid)});
-	putActionElementClick("submit_undo", function(event){undoAction(solver)});
-	putActionElementClick("submit_unselect",function(event){unselectAction(solver, selectedSpacesGrid)});
 
-	//------
+	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
+	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_ENTER_NUMBER, ACTION_PASS_GRIDS, ACTION_SELECTION_RECTANGLE]);
+	buildActionsGlobal("div_global_actions", "textido", ["Passe totale (résolution)", "Déselectionner cases", "Passer cases sélectionnées", "Annuler"], 
+		[function(event){totalPassAction(solver)}, function(event){unselectAction(solver, selectedSpacesGrid)}, function(event){selectionPassAction(solver)}, function(event){undoAction(solver)}] );
 
-	var textAction = document.getElementById("text_canvas_action");
-	setMode(textAction, actionsManager, ENTRY.SPACE, ACTION_ENTER_NUMBER);
-	addEventListenerAndCaption("submit_enter_number", ACTION_ENTER_NUMBER);
-	addEventListenerAndCaption("submit_pass_grids", ACTION_PASS_GRIDS);
-	addEventListenerAndCaption("submit_select_rectangle", ACTION_SELECTION_RECTANGLE);
-	function addEventListenerAndCaption(p_identifier,p_action){ //Shortcut action
-		addEventListenerAndCaptionActionSubmit(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
-	}
 
 }

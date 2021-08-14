@@ -36,7 +36,7 @@ undoAction = function(p_solver){
 	p_solver.undo();
 }
 
-multiPassAction = function (p_solver){
+multipassAction = function (p_solver){
 	p_solver.makeMultiPass();
 }
 

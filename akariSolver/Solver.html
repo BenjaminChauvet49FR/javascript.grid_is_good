@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
-		<link rel="icon" type="image/png" href="icon.png">
+		<meta charset="utf-8"/>
+		<link rel="icon" type="image/png" href="../resources/star.png">
         <title>Akari solver !!!</title>
 		<link rel="stylesheet" type="text/css" href="../style.css">
     </head>
@@ -11,25 +12,11 @@
             Message pour les navigateurs ne supportant pas encore canvas.
         </canvas></br>
 		
-		Grille à charger : <input type="text" id="input_grid_name" value="20"></input> 
-		<input type="submit" id="submit_view_puzzle_list" value="Voir les puzzles Akari"></input></br>
-		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
-		Action à réaliser : <span id="text_canvas_action"></span></br>
-		<input type="submit" id="submit_put_bulb" value="Placer ampoule"></input></br>
-		<input type="submit" id="submit_put_X" value="Placer X"></input></br>
-		<input type="submit" id="submit_pass_numeric_spaces" value="Passe sur case / ensemble de cases numériques"></input></br>
-		
-		Démarrage rapide :
-		<input type="submit" id="submit_quickStart" value="Démarrage rapide"></input></br>
-		
-		Multipasse :
-		<input type="submit" id="submit_multiPass" value="Multi passe"></input></br>
-		
-		Résolution : 
-		<input type="submit" id="submit_solve" value="Résolution"></input></br>
-		<input type="submit" id="submit_undo" value="Annuler"></input></br>	
-		<span id="span_resolution_state">-</span></br>	
-				
+		<div id="div_puzzle_management"></div>		
+		<div id="div_quickStart"></div>		
+		<div id="div_canvas_buttons"></div>
+		<div id="div_global_actions"></div>
+		<span id="span_resolution_state"></span></br>	
 		<script src="../Importation.js"></script>
 		<script>
 		"use strict";

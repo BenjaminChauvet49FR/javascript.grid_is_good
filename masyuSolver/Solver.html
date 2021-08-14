@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
-		<link rel="icon" type="image/png" href="icon.png">
+		<meta charset="utf-8"/>
+		<link rel="icon" type="image/png" href="../resources/star.png">
         <title>Solveur Masyu</title>
 		<link rel="stylesheet" type="text/css" href="../style.css">
     </head>
@@ -11,29 +12,13 @@
             Message pour les navigateurs ne supportant pas encore canvas.
         </canvas></br>
 		
-		Grille à charger : <input type="text" id="input_grid_name" value="1"></input> 
-		<input type="submit" id="submit_view_puzzle_list" value="Voir les grilles Masyu"></input></br>
-		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
-		
-		Démarrage rapide :
-		<input type="submit" id="submit_quickStart" value="Démarrage rapide"></input></br>
-		
-		Actions - Case : <span id="text_canvas_action_space"></span> ; Mur : <span id="text_canvas_action_wall"></span> </br>
-		<input type="submit" id="submit_open_space" value="XXX"></input>
-		<input type="submit" id="submit_close_space" value="XXX"></input>
-		<input type="submit" id="submit_pass_space" value="XXX"></input>
-		<input type="submit" id="submit_do_nothing_spaces" value="XXX"></input></br>
-		<input type="submit" id="submit_link_spaces" value="XXX"></input>
-		<input type="submit" id="submit_close_links" value="XXX"></input>
-		<input type="submit" id="submit_do_nothing_links" value="XXX"></input></br>
-		
-		<input type="submit" id="submit_multipass" value="Multi passe"></input></br>
-		
-		<input type="submit" id="submit_undo" value="Annuler"></input></br>	
-		
+		<div id="div_puzzle_management"></div>		
+		<div id="div_quickStart"></div>		
+		<div id="div_canvas_buttons"></div>
+		<div id="div_global_actions"></div>
+		<span id="span_resolution_state"></span></br>	
 		<div id="div_common_loop_display"></div>
-		<span id="span_resolution_state"></span></br>		
-
+				
 		<script src="../Importation.js"></script>
 		<script>
 		"use strict";
@@ -46,8 +31,6 @@
 			addScript("SolverMasyu.js");
 			startScriptLoading();
 		}		 
-		// AND IT WORKS ! Order of method calls seem relevant however : if a script b when run (not when its main method is run !) calls a script a, then Sb should be called after Sa. Here, Sb = SolverMasyu and Sa = scripts relevant to LoopSolvers.
-		// Even more true with GeneralSolver that must be called first as it contains the prototypes called in addScriptsLoop scripts.
 		</script>
 	</body>
 </html>

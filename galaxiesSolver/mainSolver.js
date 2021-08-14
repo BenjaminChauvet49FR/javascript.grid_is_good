@@ -17,7 +17,7 @@ function main() {
 		solver.callStateForItem(spanState);
 	}
 
-	canevas.addEventListener('click', function(event){clickCanvas(event, canevas, drawer, solver, actionsManager)},false);
+	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)},false);
 	setInterval(drawCanvas, 30);
 	var fieldName = document.getElementById("input_grid_name");
 	const puzzleTypeName = "Galaxies";
@@ -27,7 +27,7 @@ function main() {
 	putActionElementClick("submit_load_grid",function(event){loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value)});
 	putActionElementClick("submit_quickStart",function(event){quickStartAction(solver)});
 	putActionElementClick("submit_undo",function(event){undoAction(solver)});
-	putActionElementClick("submit_multipass", function(event){multiPassAction(solver)});
+	putActionElementClick("submit_multipass", function(event){multipassAction(solver)});
 
 	// Canvas actions
 	var textActionFence = document.getElementById("text_canvas_action_fence");

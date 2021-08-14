@@ -7,6 +7,7 @@ function main() {
 	var	context = canevas.getContext("2d");
 	var actionsManager = {}; 
 	var drawIndications;
+	var spanState = document.getElementById("span_resolution_state");
 
 	var colors = {
 		openSquare : '#ccffff',
@@ -27,31 +28,19 @@ function main() {
 	function drawCanvas() {
 		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength); 
 		drawInsideSpaces(context, drawer, colors, solver);
+		solver.callStateForItem(spanState);
 	}
 	setInterval(drawCanvas, 30);
 	
-	canevas.addEventListener('click', function(event){clickCanvas(event, canevas, drawer, solver, actionsManager)}, false);
-	var fieldName = document.getElementById("input_grid_name");
-
+	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)}, false);
+		
+	const defaultPuzzleValue = "1";
 	const puzzleTypeName = "Shugaku";
-	putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList(puzzleTypeName)});
-	putActionElementClick("submit_load_grid", function(event){loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value)});
-	putActionElementClick("submit_quickStart", function(event){quickStartAction(solver)});
-	putActionElementClick("submit_multiPass", function(event){multiPassAction(solver)});
-	putActionElementClick("submit_undo", function(event){undoAction(solver)});
-
-	//------
-
-	var textActionSpace = document.getElementById("text_canvas_action_space");
-	var textActionWall = document.getElementById("text_canvas_action_fence");
-	setMode(textActionSpace, actionsManager,ENTRY.SPACE, ACTION_OPEN_SPACE);
-	setMode(textActionWall, actionsManager,ENTRY.WALLS, ACTION_OPEN_FENCE);
-	addEventListenerAndCaptionActionSubmit(actionsManager, textActionSpace, "submit_open_space", ENTRY.SPACE, ACTION_OPEN_SPACE);
-	addEventListenerAndCaptionActionSubmit(actionsManager, textActionSpace, "submit_close_space", ENTRY.SPACE, ACTION_CLOSE_SPACE);
-	addEventListenerAndCaptionActionSubmit(actionsManager, textActionSpace, "submit_put_round", ENTRY.SPACE, ACTION_PUT_ROUND);
-	addEventListenerAndCaptionActionSubmit(actionsManager, textActionSpace, "submit_put_square", ENTRY.SPACE, ACTION_PUT_SQUARE);
-	addEventListenerAndCaptionActionSubmit(actionsManager, textActionWall, "submit_open_fence", ENTRY.WALLS, ACTION_OPEN_FENCE);
-	addEventListenerAndCaptionActionSubmit(actionsManager, textActionWall, "submit_close_fence", ENTRY.WALLS, ACTION_CLOSE_FENCE);
-	addEventListenerAndCaptionActionSubmit(actionsManager, textActionWall, "submit_no_touch_fence", ENTRY.WALLS, ACTION_NOTHING);
-	addEventListenerAndCaptionActionSubmit(actionsManager, textActionSpace, "submit_pass_space", ENTRY.SPACE, ACTION_PASS_SPACE);
+	
+	buildPuzzleManagementMenu("div_puzzle_management", "input_grid_name", "submit_load_grid", puzzleTypeName, defaultPuzzleValue);
+	putActionElementClick("submit_load_grid", function(event){loadAction(canevas, drawer, solver, puzzleTypeName, document.getElementById("input_grid_name").value)});
+	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
+	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_OPEN_SPACE, ACTION_CLOSE_SPACE, ACTION_PUT_ROUND, ACTION_PUT_SQUARE, ACTION_PASS_SPACE]);
+	buildInputCanvas("div_canvas_buttons", actionsManager, "cloison", "textid", ENTRY.WALLS, [ACTION_OPEN_FENCE, ACTION_CLOSE_FENCE, ACTION_NOTHING]);
+	buildActionsGlobal("div_global_actions", "textido", ["Multipasse", "Annuler"], [function(event){multipassAction(solver)}, function(event){undoAction(solver)}] );
 }

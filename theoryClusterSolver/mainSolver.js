@@ -23,7 +23,7 @@ function main() {
 		drawInsideSpaces(context, drawer, colors, solver);
 	}
 
-	canevas.addEventListener('click', function(event){clickCanvas(event, canevas, drawer, solver, actionsManager)},false);
+	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)},false);
 	setInterval(drawCanvas,30);
 	var fieldName = document.getElementById("input_grid_name");
 

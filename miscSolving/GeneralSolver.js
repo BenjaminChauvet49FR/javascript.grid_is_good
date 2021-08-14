@@ -6,9 +6,15 @@ const OTHER_RESULTS = {
 }
 
 const EVENT_RESULT = { 
-    SUCCESS : 1,
-    FAILURE : 2,
-    HARMLESS : 3
+    SUCCESS : 3,
+    FAILURE : 1,
+    HARMLESS : 2
+}
+
+const GEOGRAPHICAL_DEDUCTION = {
+	SUCCESS : 3,
+    FAILURE : 1,
+    HARMLESS : 2
 }
 
 const DEDUCTIONS_RESULT = {
@@ -17,15 +23,15 @@ const DEDUCTIONS_RESULT = {
 }
 
 const PASS_RESULT = {
-	SUCCESS : 21,
-	FAILURE : 22,
-	HARMLESS : 23
+	SUCCESS : 23,
+	FAILURE : 21,
+	HARMLESS : 22
 }
 
 const MULTIPASS_RESULT = {
-	SUCCESS : 31,
-	FAILURE : 32,
-	HARMLESS : 33
+	SUCCESS : 33,
+	FAILURE : 31,
+	HARMLESS : 32
 }
 
 const SERIE_KIND = {
@@ -168,7 +174,7 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
             if (this.atLeastOneOpen) {
                 //Geographical verification.
                 geoV = this.geographicalVerification(newClosedSpaces, p_methodPack.adjacencyMethod);
-				ok = (geoV.result == EVENT_RESULT.SUCCESS);
+				ok = (geoV.result != GEOGRAPHICAL_DEDUCTION.FAILURE);
 				if (ok) {
 					geoV.listGeographicalDeductionsToApply.forEach(geographicalDeduction =>
 						listEventsToApply.push(p_methodPack.retrieveGeographicalDeductionMethod(geographicalDeduction))
@@ -199,9 +205,12 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
 					this.happenedEventsSeries[this.happenedEventsSeries.length-1].list.push(happenedEvent);
 				});
 			}
+			this.setStateHappening(DEDUCTIONS_RESULT.SUCCESS);
+			return DEDUCTIONS_RESULT.SUCCESS;
+		} else {
+			this.setStateHappening(DEDUCTIONS_RESULT.HARMLESS);
+			return DEDUCTIONS_RESULT.HARMLESS;
 		}
-		this.setStateHappening(DEDUCTIONS_RESULT.SUCCESS);
-		return DEDUCTIONS_RESULT.SUCCESS;
     }
 }
 
@@ -235,14 +244,22 @@ GeneralSolver.prototype.geographicalVerification = function (p_listNewXs, p_adja
             });
             this.adjacencyLimitGrid[spaceLimit.y][spaceLimit.x] = spaceLimit.limit;
         });
-        return {
-            result: EVENT_RESULT.SUCCESS,
-            listGeographicalDeductionsToApply: newListEvents,
-            listGeographicalDeductionsApplied: newListEventsApplied
-        };
+		if (newListEvents.length || newListEventsApplied.length > 0) {			
+			return {
+				result : GEOGRAPHICAL_DEDUCTION.SUCCESS,
+				listGeographicalDeductionsToApply : newListEvents,
+				listGeographicalDeductionsApplied : newListEventsApplied
+			} 
+		} else {
+			return {
+				result : GEOGRAPHICAL_DEDUCTION.HARMLESS,
+				listGeographicalDeductionsToApply : [],
+				listGeographicalDeductionsApplied : []
+			}
+		}
     } else {
         return {
-            result: EVENT_RESULT.FAILURE
+            result: GEOGRAPHICAL_DEDUCTION.FAILURE
         };
     }
 }
@@ -335,7 +352,7 @@ GeneralSolver.prototype.passEventsAnnex = function (p_listListCoveringEvent, p_m
 			possibleEvent = listCoveringEvent[i];
 			const happenedEventsBeforeDeduction = this.happenedEventsSeries.length;
 			answer = this.tryToApplyHypothesis(possibleEvent, p_methodSet);
-			if (answer == DEDUCTIONS_RESULT.SUCCESS) {
+			if (answer != DEDUCTIONS_RESULT.FAILURE) {
 				const afterEvents = this.passEventsAnnex(p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_indexInList + 1);
 				if (afterEvents != DEDUCTIONS_RESULT.FAILURE) {
 					eventsToIntersect = afterEvents;

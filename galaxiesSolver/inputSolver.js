@@ -1,7 +1,7 @@
 /**
  When you click on the canvas
 */
-function clickCanvas(event, p_canvas, p_drawer, p_solver, p_actionsManager) {
+function clickCanvasAction(event, p_canvas, p_drawer, p_solver, p_actionsManager) {
 	var clicked = p_drawer.getClickWallR(event, p_canvas, p_solver.xLength, p_solver.yLength);
 	if (clicked != null && p_actionsManager.clickWallR.id != ACTION_NOTHING.id) {
 		clickWallRAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickWallR);
@@ -65,7 +65,7 @@ undoAction = function(p_solver) {
 	p_solver.undo();
 }
 
-multiPassAction = function (p_solver){
+multipassAction = function (p_solver){
 	p_solver.makeMultiPass();
 }
 

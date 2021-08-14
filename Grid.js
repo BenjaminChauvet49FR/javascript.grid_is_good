@@ -178,12 +178,12 @@ Grid.prototype.mirrorVerticalGrid = function (p_orientedSpaces) {
     this.array = newArray;
 }
 
-Grid.prototype.resizeGrid = function (p_xLength, p_yLength) {
+Grid.prototype.resizeGrid = function (p_xNewLength, p_yNewLength) {
     var newArray = [];
     var value;
-    for (var iy = 0; iy < p_yLength; iy++) {
+    for (var iy = 0 ; iy < p_yNewLength ; iy++) {
         newArray.push([]);
-        for (var ix = 0; ix < p_xLength; ix++) {
+        for (var ix = 0 ; ix < p_xNewLength ; ix++) {
             if (ix < this.xLength && iy < this.yLength) {
                 value = this.get(ix, iy);
             } else {
@@ -193,8 +193,8 @@ Grid.prototype.resizeGrid = function (p_xLength, p_yLength) {
         }
     }
     this.array = newArray;
-    this.xLength = p_xLength;
-    this.yLength = p_yLength;
+    this.xLength = p_xNewLength;
+    this.yLength = p_yNewLength;
 }
 
 // Now, local transformations !

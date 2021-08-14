@@ -309,16 +309,16 @@ EditorCore.prototype.setMarginArray = function(p_edge, p_array) {
 // If no spaces are selected, transform everything.
 // If some spaces are selected, do not touch wall grid + transform locally all spaces. 
 // IMPORTANT : this.selectionData should be up to date !
-EditorCore.prototype.transformGrid = function (p_transformation, p_xDatum, p_yDatum) {
+EditorCore.prototype.transformGrid = function (p_transformation, p_xNewLength, p_yNewLength) {
 	this.reinitializeGridData();
 	const formerXLength = this.xLength;
 	const formerYLength = this.yLength;
 	if (this.selectionData.list.length == 0 || p_transformation == GRID_TRANSFORMATION.RESIZE) { // Global
-		this.wallGrid.transform(p_transformation, p_xDatum, p_yDatum);
+		this.wallGrid.transform(p_transformation, p_xNewLength, p_yNewLength);
 		this.xLength = this.wallGrid.getXLength();
 		this.yLength = this.wallGrid.getYLength();
 		for (const id in this.grids) {
-			this.grids[id].transform(p_transformation, p_xDatum, p_yDatum, isOrientedGrid(id));
+			this.grids[id].transform(p_transformation, p_xNewLength, p_yNewLength, isOrientedGrid(id));
 		}
 		this.transformMargins(p_transformation, formerXLength, formerYLength);
 	} else { // Local
@@ -408,7 +408,7 @@ EditorCore.prototype.insertChainMargin = function(p_edge, p_valuesChain, p_valid
 	this.insertChainPrivate(INPUT_PLACE_KIND.MARGIN, p_edge, p_valuesChain, p_validityMethod, p_parameters, p_index, -1, appropriateLength, -1);
 }
 
-// See below for p_destinationKind" and p_destinationNomination
+// See below for p_destinationKind and p_destinationNomination
 // Also, p_x, p_y are coordinates if we use grid, but not otherwise ! p_length1, p_length2 are supposed to be the size of the desired array so... grid or margin
 EditorCore.prototype.insertChainPrivate = function(p_destinationKind, p_destinationNomination, p_valuesChain, p_validityMethod, p_parameters, p_x, p_y, p_length1, p_length2) {
 	// Blank character and monocharacter

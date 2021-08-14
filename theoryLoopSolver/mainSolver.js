@@ -33,7 +33,7 @@ function main() {
 		solver.callStateForItem(spanState);		
 	}
 
-	canevas.addEventListener('click', function(event){clickCanvas(event, canevas, drawer, solver, actionsManager)},false);
+	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)},false);
 	setInterval(drawCanvas,30);
 	var fieldName = document.getElementById("input_grid_name");
 
@@ -46,7 +46,7 @@ function main() {
 
 	addEventsListenersAndCaptionsAndSetOne(actionsManager, 
 	"text_canvas_action_space", ["submit_close_space", "submit_open_space", "submit_do_nothing_spaces"], 
-	ENTRY.SPACE, [ACTION_PASS_EXCLUDE_LOOP_SPACE, ACTION_PASS_INCLUDE_LOOP_SPACE, ACTION_NOTHING]);
+	ENTRY.SPACE, [ACTION_EXCLUDE_LOOP_SPACE, ACTION_INCLUDE_LOOP_SPACE, ACTION_NOTHING]);
 	
 	addEventsListenersAndCaptionsAndSetOne(actionsManager, 
 	"text_canvas_action_wall", ["submit_link_spaces", "submit_close_links", "submit_do_nothing_links"], 

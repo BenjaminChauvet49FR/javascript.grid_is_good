@@ -27,22 +27,16 @@ function main() {
 	setInterval(drawCanvas, 30);
 
 	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)},false);
-	var fieldName = document.getElementById("input_grid_name");
-
+	const defaultPuzzleValue = "627";
 	const puzzleTypeName = "Akari";
-	putActionElementClick("submit_load_grid",function(event){loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value)});
-	putActionElementClick("submit_undo",function(event){undoAction(solver)});
-	putActionElementClick("submit_quickStart",function(event){quickStartAction(solver)});
-	putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList(puzzleTypeName)});
-	putActionElementClick("submit_multiPass",function(event){multiPassAction(solver)});
-
-	var textAction = document.getElementById("text_canvas_action");
-	setMode(textAction,actionsManager, ENTRY.SPACE, ACTION_PUT_BULB);
-	addEventListenerAndCaption("submit_put_bulb", ACTION_PUT_BULB);
-	addEventListenerAndCaption("submit_put_X", ACTION_PUT_NO_FILL);
-	addEventListenerAndCaption("submit_pass_numeric_spaces", ACTION_PASS_NUMERIC_SPACES);
-	function addEventListenerAndCaption(p_identifier, p_action) { //Shortcut action
-		addEventListenerAndCaptionActionSubmit(actionsManager, textAction, p_identifier, ENTRY.SPACE, p_action);
-	}
+	
+	buildPuzzleManagementMenu("div_puzzle_management", "input_grid_name", "submit_load_grid", puzzleTypeName, defaultPuzzleValue);
+	putActionElementClick("submit_load_grid", function(event) {
+		loadAction(canevas, drawer, solver, puzzleTypeName, document.getElementById("input_grid_name").value)
+	});
+	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
+	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_PUT_BULB, ACTION_PUT_NO_FILL, ACTION_PASS_AROUND_NUMERIC_SPACES_OR_SPACE]);
+	buildActionsGlobal("div_global_actions", "textido", ["Multipasse", "Annuler"], 
+		[function(event){multipassAction(solver)}, function(event){undoAction(solver)}] );
 }
 

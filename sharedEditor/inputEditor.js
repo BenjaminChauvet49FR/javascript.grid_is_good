@@ -4,7 +4,7 @@
 // Also, Admit that that combobox is for "normal sudoku"
 
 // Clicks on the canvas 
-function clickCanvas(event, p_canvas, p_drawer, p_editorCore, p_modes) {
+function clickCanvasAction(event, p_canvas, p_drawer, p_editorCore, p_modes) {
     var doneClicking = false;
 	const p_xLength = p_editorCore.getXLength();
 	const p_yLength = p_editorCore.getYLength();
@@ -278,22 +278,8 @@ validityTokenTapa = function(p_clue) {
 		if (c != '?' && (c < '0' || c > '8')) {
 			return false;
 		} 
-		//arrayChars.push(c);
 	}
 	var clue = sortedTapaClueString(p_clue);
-	// Reorder clue
-	/*arrayChars.sort(function(a, b) { 
-		if (a == b) return 0;
-		if (a == "?") return 1;
-		if (b == "?") return -1;
-		if (a < b) return 1;
-		if (a > b) return -1;
-		return 0;
-	});
-	clue = "";
-	arrayChars.forEach(c => {
-		clue += c;
-	});*/
 	return (indexTapaCombination(clue) != TAPA_INDEX_NOT_FOUND);
 }
 
@@ -408,10 +394,10 @@ function sepc(p_xMin, p_yMin, p_xMax, p_yMax) {
 
 function resizeAction(p_canvas, p_drawer, p_editorCore, p_fieldsDefiningPuzzle) {
 	if (confirm("Redimensionner la grille ?")) {
-		const xLength = parseInt(getFieldX(p_fieldsDefiningPuzzle).value, 10);
-		const yLength = parseInt(getFieldY(p_fieldsDefiningPuzzle).value, 10);
+		const xNewLength = parseInt(getFieldX(p_fieldsDefiningPuzzle).value, 10);
+		const yNewLength = parseInt(getFieldY(p_fieldsDefiningPuzzle).value, 10);
 		p_editorCore.updateSelectionData();
-		p_editorCore.transformGrid(GRID_TRANSFORMATION.RESIZE, xLength, yLength);
+		p_editorCore.transformGrid(GRID_TRANSFORMATION.RESIZE, xNewLength, yNewLength);
 		adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);	
 	}
 }
@@ -756,8 +742,6 @@ function getRegionIndicArray(p_loadedItem) {
 }
 
 // --------------------
-
-
 
 function switchVisibilityDivAction(p_div) {
 	if (p_div.style.display != "none") { // If I said ' == "block"' the first click wouldn't set to 'none' since style.display seems not to be set yet.

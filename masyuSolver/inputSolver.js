@@ -47,10 +47,10 @@ function clickWallRAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 
 function clickSpaceAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 	switch(p_action.id){
-		case ACTION_PASS_INCLUDE_LOOP_SPACE.id:
+		case ACTION_INCLUDE_LOOP_SPACE.id:
 			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, LOOP_STATE.LINKED); 
 		break;
-		case ACTION_PASS_EXCLUDE_LOOP_SPACE.id:
+		case ACTION_EXCLUDE_LOOP_SPACE.id:
 			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, LOOP_STATE.CLOSED); 
 		break;
 		case ACTION_PASS_SPACE.id:
@@ -68,7 +68,7 @@ quickStartAction = function(p_solver) {
 	p_solver.quickStart();
 }
 
-multiPassAction = function(p_solver) {
+multipassAction = function(p_solver) {
 	p_solver.makeMultipass();
 }
 

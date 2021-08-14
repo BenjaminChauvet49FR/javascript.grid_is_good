@@ -33,7 +33,7 @@ function main() {
 		solver.callStateForItem(spanState);
 	}
 
-	canevas.addEventListener('click', function(event){clickCanvas(event, canevas, drawer, solver, actionsManager)},false);
+	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)},false);
 	setInterval(drawCanvas,30);
 	var fieldName = document.getElementById("input_grid_name");
 
@@ -42,18 +42,13 @@ function main() {
 	putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList(puzzleTypeName)});
 	putActionElementClick("submit_load_grid",function(event){loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value)});
 	putActionElementClick("submit_quickStart",function(event){quickStartAction(solver)});
-	putActionElementClick("submit_multiPass",function(event){multiPassAction(solver)});
+	putActionElementClick("submit_multiPass",function(event){multipassAction(solver)});
 	putActionElementClick("submit_undo",function(event){undoAction(solver)});
 
 	//------
+	
+	addEventsListenersAndCaptionsAndSetOne(actionsManager, 
+	"text_canvas_action", ["submit_open_space", "submit_close_space", "submit_pass_region", "submit_pass_region_and_adjacency"], 
+	ENTRY.SPACE, [ACTION_OPEN_SPACE, ACTION_CLOSE_SPACE, ACTION_PASS_REGION, ACTION_PASS_REGION_AND_ADJACENCY_SPACES]);
 
-	var textAction = document.getElementById("text_canvas_action");
-	setMode(textAction,actionsManager,ENTRY.SPACE,ACTION_CLOSE_SPACE);
-	addEventListenerAndCaption("submit_open_space",ACTION_OPEN_SPACE);
-	addEventListenerAndCaption("submit_close_space",ACTION_CLOSE_SPACE);
-	addEventListenerAndCaption("submit_pass_region",ACTION_PASS_REGION);
-	addEventListenerAndCaption("submit_pass_region_and_adjacency", ACTION_PASS_REGION_AND_ADJACENCY_SPACES);
-	function addEventListenerAndCaption(p_identifier,p_action){ //Shortcut action
-		addEventListenerAndCaptionActionSubmit(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
-	}
 }

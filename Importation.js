@@ -35,15 +35,15 @@ function startScriptLoading() {
 }
 
 addScriptsSolving = addScriptsClosure(["../miscSolving/GeneralSolver.js", "../miscSolving/GeneralSolverFunctions.js", "../miscSolving/GeneralSolverInterface.js", "../miscSolving/SolvingMethodPacks.js"]); // Must be charged first since basically that calls constructors everything depends upon GeneralSolver
-addScriptsDirections = addScriptsClosure(["../Directions.js", "../DirectionFunctions.js", "../MiscSolving/DirectionFunctions.js"]);
+addScriptsDirections = addScriptsClosure(["../Directions.js", "../DirectionFunctions.js", "../miscSolving/DirectionFunctions.js"]);
 addScriptsGeneric = addScriptsClosure(["../WallGrid.js", "../Grid.js",
 "../commonSaveAndLoad.js", "../commonEncodingDecoding.js",
 "../DrawableItem.js", "../Drawer.js",
-"../commonInput.js", "../commonActionManager.js", 
+"../commonInput.js", "../commonActionManager.js", "../commonHTMLSolverInterface.js", "../commonHTMLItemGenerations.js",
 "../CommonHTMLMenu.js",
 "../Logs.js"]);
 addScriptsLocal = addScriptsClosure(["drawing.js", "mainSolver.js", "inputSolver.js"]);
-addScriptsLoop = addScriptsClosure(["../LoopSolver/drawing.js", "../LoopSolver/LoopEvent.js", "../LoopSolver/CompoundLinkEvent.js", "../LoopSolver/LoopSolver.js", "../LoopSolver/Constants.js", "../LoopSolver/PassCategories.js", "../LoopSolver/CommonLoopDisplay.js"]);
+addScriptsLoop = addScriptsClosure(["../LoopSolver/drawing.js", "../LoopSolver/LoopEvent.js", "../LoopSolver/CompoundLinkEvent.js", "../LoopSolver/LoopSolver.js", "../LoopSolver/Constants.js", "../LoopSolver/PassCategories.js", "../LoopSolver/CommonHTMLLoopDisplay.js"]);
 addScriptsAdjacency = addScriptsClosure(["../miscSolving/AdjacencyCheck.js", "../miscSolving/AdjacencyLimit.js", "../miscSolving/GeographicalSolver.js"]);
 
 function addScriptCheckCollection() { addScript("../miscSolving/CheckCollection.js"); } // For filters 

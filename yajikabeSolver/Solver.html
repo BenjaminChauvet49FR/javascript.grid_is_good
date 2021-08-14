@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
-		<link rel="icon" type="image/png" href="icon.png">
+		<meta charset="utf-8"/>
+		<link rel="icon" type="image/png" href="../resources/star.png">
         <title>Yajikabe solver !!!</title>
 		<link rel="stylesheet" type="text/css" href="../style.css">
     </head>
@@ -12,23 +13,27 @@
             Message pour les navigateurs ne supportant pas encore canvas.
         </canvas></br>
 		
-		Grille à charger : <input type="text" id="input_grid_name" value="19"></input> 
-		<input type="submit" id="submit_view_puzzle_list" value="Voir les puzzles Yajikabe"></input></br>
-		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
-		
-		Démarrage rapide :
-		<input type="submit" id="submit_quickStart" value="Démarrage rapide"></input></br>
-		
-		Action : <span id="text_canvas_action"></span>
-		<input type="submit" id="submit_open_space" value="XXX"></input>
-		<input type="submit" id="submit_close_space" value="XXX"></input></br>
-		<input type="submit" id="submit_pass_strip" value="XXX"></input></br>
-		
-		<input type="submit" id="submit_multipass" value="Multi passe"></input></br>	
-		<input type="submit" id="submit_undo" value="Annuler"></input></br>	
+		<div id="div_puzzle_management"></div>		
+		<div id="div_quickStart"></div>		
+		<div id="div_canvas_buttons"></div>
+		<div id="div_global_actions"></div>
 		<span id="span_resolution_state"></span></br>	
-
+				
 		<script src="../Importation.js"></script>
+		<script>
+		"use strict";
+		window.onload = function() {
+			addScriptsSolving();
+			addScriptsDirections();
+			addScriptsGeneric();
+			addScriptsLocal();
+			addScriptConstants();
+			addScriptCheckCollection();
+			addScript("SolveEvent.js");
+			addScript("SolverShimaguni.js");
+			startScriptLoading();
+		}		 
+		</script>
 		<script>
 		"use strict";
 		window.onload = function() {

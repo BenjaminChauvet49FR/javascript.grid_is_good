@@ -19,7 +19,7 @@ function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 		case ACTION_PUT_NO_FILL.id:
 			p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, FILLING.NO); 
 		break;
-		case ACTION_PASS_NUMERIC_SPACES.id:
+		case ACTION_PASS_AROUND_NUMERIC_SPACES_OR_SPACE.id:
 			p_solver.passSpaceOrSetNumericSpaces(p_spaceIndexX, p_spaceIndexY);
 		break;
 	}
@@ -36,7 +36,7 @@ undoAction = function(p_solver,p_textArea){
 	p_solver.undo();
 }
 
-multiPassAction = function (p_solver,p_textArea){
+multipassAction = function (p_solver,p_textArea){
 	p_solver.makeMultiPass();
 }
 

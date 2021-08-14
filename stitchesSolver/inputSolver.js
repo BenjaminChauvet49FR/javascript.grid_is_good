@@ -3,7 +3,7 @@ const marginInfo = new MarginInfo(1, 1);
 /**
  When you click on the canvas
 */
-function clickCanvas(event,p_canvas, p_drawer, p_solver, p_actionsManager) { //TODO rename this as an action ? But what about loadAction ? //TODO modifier la fonction qui a ce nom dans les autres solveurs.
+function clickCanvasAction(event,p_canvas, p_drawer, p_solver, p_actionsManager) { //TODO rename this as an action ? But what about loadAction ? //TODO modifier la fonction qui a ce nom dans les autres solveurs.
 	var spaceClicked = p_drawer.getClickWallR(event, p_canvas, p_solver.xLength, p_solver.yLength);
     if (spaceClicked != null) {
 		clickWallRAction(p_solver, spaceClicked.x, spaceClicked.y, p_actionsManager.clickWallR);
@@ -87,7 +87,7 @@ undoAction = function(p_solver) {
 	p_solver.undo();
 }
 
-multiPassAction = function (p_solver) {
+multipassAction = function (p_solver) {
 	p_solver.makeMultiPass(); // note : "make" in order to differ from "multiPass" which is reserved to general solver
 }
 

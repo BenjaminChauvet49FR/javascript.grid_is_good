@@ -34,17 +34,12 @@ function main() {
 	putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("CurvingRoad")});
 	putActionElementClick("submit_load_grid",function(event){loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value)});
 	putActionElementClick("submit_quickStart",function(event){quickStartAction(solver, null)});
-	putActionElementClick("submit_multipass",function(event){multiPassAction(solver)});
+	putActionElementClick("submit_multipass",function(event){multipassAction(solver)});
 	putActionElementClick("submit_undo",function(event){undoAction(solver,null)});
 
 	//------
-
-	var textAction = document.getElementById("text_canvas_action");
-	setMode(textAction, actionsManager, ENTRY.SPACE, ACTION_CLOSE_SPACE);
-	addEventListenerAndCaption("submit_open_space", ACTION_OPEN_SPACE);
-	addEventListenerAndCaption("submit_close_space", ACTION_CLOSE_SPACE);
-	addEventListenerAndCaption("submit_pass_space", ACTION_PASS_SPACE);
-	function addEventListenerAndCaption(p_identifier,p_action) { //Shortcut action
-		addEventListenerAndCaptionActionSubmit(actionsManager, textAction, p_identifier, ENTRY.SPACE, p_action);
-	}
+	
+	addEventsListenersAndCaptionsAndSetOne(actionsManager, 
+	"text_canvas_action", ["submit_close_space", "submit_open_space", "submit_pass_space"], 
+	ENTRY.SPACE, [ACTION_CLOSE_SPACE, ACTION_OPEN_SPACE, ACTION_PASS_SPACE]);
 }

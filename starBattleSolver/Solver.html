@@ -9,37 +9,14 @@
 		<div id="div_common_menu"></div>
 		<img id="img_star" src="star.png" style="display:none">
 		<canvas id="canevas" width="800" height="500">
-            Message pour les navigateurs ne supportant pas encore canvas.
+            Message pour les navigateurs ne supportant pas encore canvas. é (une lettre accentuée nativement présente dans le HTML empêche les accents de partir n'importe comment)
         </canvas></br>
 		Etoiles : <span id="span_stars"></span></br>
-		
-		<input type="submit" id="submit_view_puzzle_list" value="Voir numéros puzzles Star battle"></input></br>
-		Grille à charger : <input type="text" id="input_grid_name" value="15"></input> 
-		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
-		Action à réaliser : <span id="text_canvas_action"></span></br>
-		<input type="submit" id="submit_put_star" value="Placer ETOILE"></input></br>
-		<input type="submit" id="submit_put_X" value="Placer X"></input></br>
-		<input type="submit" id="submit_pass_region" value="Passe sur région"></input></br>
-		<input type="submit" id="submit_pass_row" value="Passe sur ligne"></input></br>
-		<input type="submit" id="submit_pass_column" value="Passe sur colonne"></input></br>
-		<input type="submit" id="submit_select_rectangle" value="Sélectionner cases en rectangle"></input> 
-		<input type="submit" id="submit_select_region" value="Sélectionner région"></input> 
-		<input type="submit" id="submit_unselect" value="Annuler sélection"></input></br>
-		
-		Démarrage rapide :
-		<input type="submit" id="submit_quickStart" value="Démarrage rapide"></input></br>
-		
-		Multipasse :
-		<input type="submit" id="submit_multiPass" value="Multi passe"></input></br>
-		
-		Passe de sélection :
-		<input type="submit" id="submit_selectionPass" value="Passe de sélection"></input></br>
-		
-		Résolution : 
-		<input type="submit" id="submit_solve" value="Résolution"></input></br>
-		<input type="submit" id="submit_undo" value="Annuler"></input></br>	
-		<span id="span_resolution_state"></span></br>		
-		
+		<div id="div_puzzle_management"></div>		
+		<div id="div_quickStart"></div>		
+		<div id="div_canvas_buttons"></div>
+		<div id="div_global_actions"></div>
+		<span id="span_resolution_state"></span></br>	
 		<script src="../Importation.js"></script>
 		<script>
 		"use strict";

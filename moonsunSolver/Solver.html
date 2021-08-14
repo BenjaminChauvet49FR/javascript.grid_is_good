@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
     <head>
-    	<link rel="icon">
+		<meta charset="utf-8"/>
 		<link rel="icon" 
 		  type="image/png" 
-		  href="icon.png">
+		  href="../resources/star.png">
         <title>Moonsun solver !!!</title>
 		<link rel="stylesheet" type="text/css" href="../style.css">
     </head>
@@ -13,27 +13,12 @@
 		<canvas id="canevas" width="800" height="500">
             Message pour les navigateurs ne supportant pas encore canvas.
         </canvas></br>
-		
-		Grille à charger : <input type="text" id="input_grid_name" value="110"></input> 
-		<input type="submit" id="submit_view_puzzle_list" value="Voir les grilles Moonsun"></input></br>
-		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
-		
-		Démarrage rapide :
-		<input type="submit" id="submit_quickStart" value="Démarrage rapide"></input></br>
-		
-		Actions - Case : <span id="text_canvas_action_space"></span> ; Mur : <span id="text_canvas_action_wall"></span> </br>
-		<input type="submit" id="submit_open_space" value="XXX"></input>
-		<input type="submit" id="submit_close_space" value="XXX"></input>
-		<input type="submit" id="submit_pass_region" value="XXX"></input>
-		<input type="submit" id="submit_do_nothing_spaces" value="XXX"></input></br>
-		<input type="submit" id="submit_link_spaces" value="XXX"></input>
-		<input type="submit" id="submit_close_links" value="XXX"></input>
-		<input type="submit" id="submit_do_nothing_links" value="XXX"></input></br>
-		
-		<input type="submit" id="submit_multipass" value="Multipasse"></input></br>	
-		<input type="submit" id="submit_undo" value="Annuler"></input></br>	
+			
+		<div id="div_puzzle_management"></div>		
+		<div id="div_quickStart"></div>		
+		<div id="div_canvas_buttons"></div>
+		<div id="div_global_actions"></div>
 		<span id="span_resolution_state"></span></br>	
-
 		<div id="div_common_loop_display"></div>
 
 		<script src="../Importation.js"></script>

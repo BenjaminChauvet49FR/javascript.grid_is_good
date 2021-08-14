@@ -1,7 +1,7 @@
 /**
  When you click on the canvas
 */
-function clickCanvas(event,p_canvas, p_drawer, p_solver, p_actionsManager) {
+function clickCanvasAction(event,p_canvas, p_drawer, p_solver, p_actionsManager) {
 	const clicked = p_drawer.getClickSpace(event,p_canvas,p_solver.xLength,p_solver.yLength);
 	if (clicked != null) {
 		clickSpaceAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickSpace);
@@ -45,7 +45,7 @@ undoAction = function(p_solver) {
 	p_solver.undo();
 }
 
-multiPassAction = function (p_solver) {
+multipassAction = function (p_solver) {
 	p_solver.makeMultiPass(); // note : "make" in order to differ from "multiPass" which is reserved to general solver
 }
 

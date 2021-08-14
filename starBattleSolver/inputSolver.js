@@ -3,7 +3,7 @@
 /**
  When you click on the canvas
 */
-function clickCanvas(event, p_canvas, p_drawer, p_solver, p_actionsManager, p_selectionSet) { 
+function clickCanvasAction(event, p_canvas, p_drawer, p_solver, p_actionsManager, p_selectionSet) { 
 	var spaceClicked = p_drawer.getClickSpace(event, p_canvas, p_solver.xyLength, p_solver.xyLength);
     if (spaceClicked != null) {
 		clickSpaceAction(p_solver, spaceClicked.x, spaceClicked.y, p_actionsManager.clickSpace, p_selectionSet);
@@ -19,7 +19,7 @@ function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action, p_se
 			autoLogInput("HYPOTHESIS : "+p_spaceIndexX+" "+p_spaceIndexY+" "+STAR.YES);
 			p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, STAR.YES); 
 		break;
-		case ACTION_PUT_NO_STAR.id :
+		case ACTION_PUT_NO_FILL.id :
 			autoLogInput("HYPOTHESIS : " + p_spaceIndexX + " " + p_spaceIndexY + " " + STAR.NO);
 			p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, STAR.NO); 
 		break;		
@@ -50,7 +50,7 @@ undoAction = function(p_solver) {
 	p_solver.undo();
 }
 
-multiPassAction = function (p_solver) {
+multipassAction = function (p_solver) {
 	p_solver.makeMultiPass();
 }
 

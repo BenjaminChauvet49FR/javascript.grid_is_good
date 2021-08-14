@@ -1,7 +1,7 @@
 /**
  When you click on the canvas
 */
-function clickCanvas(event, p_canvas, p_drawer, p_solver, p_actionsManager) {
+function clickCanvasAction(event, p_canvas, p_drawer, p_solver, p_actionsManager) {
 	var clicked = p_drawer.getClickWallR(event, p_canvas, p_solver.xLength, p_solver.yLength);
 	if (clicked != null && p_actionsManager.clickWallR != ACTION_NOTHING) {
 		clickWallRAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickWallR);
@@ -44,16 +44,13 @@ function clickWallRAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 	}
 }
 
-
 function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 	switch(p_action.id) {
-		case ACTION_PASS_REGION_OR_SPACE.id:
+		case ACTION_PASS_REGION.id:
 			p_solver.emitPassRegionOrSpace(p_spaceIndexX, p_spaceIndexY);
 		break;
 	}
 }
-
-
 
 //--------------------------
 // Game action buttons
@@ -62,7 +59,7 @@ quickStartAction = function(p_solver) {
 	p_solver.quickStart();
 }
 
-multiPassAction = function(p_solver) {
+multipassAction = function(p_solver) {
 	p_solver.makeMultipass();
 }
 

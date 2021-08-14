@@ -27,7 +27,7 @@ function main() {
 		solver.callStateForItem(spanState);
 	}
 
-	canevas.addEventListener('click', function(event){clickCanvas(event, canevas, drawer, solver, actionsManager)},false);
+	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)},false);
 	setInterval(drawCanvas,30);
 	var fieldName = document.getElementById("input_grid_name");
 
@@ -38,7 +38,7 @@ function main() {
 		document.getElementById("span_bounds").innerHTML = solver.numberBounds;
 	});
 	putActionElementClick("submit_quickStart",function(event){quickStartAction(solver)});
-	putActionElementClick("submit_multiPass",function(event){multiPassAction(solver)});
+	putActionElementClick("submit_multiPass",function(event){multipassAction(solver)});
 	putActionElementClick("submit_undo",function(event){undoAction(solver)});
 
 	//------

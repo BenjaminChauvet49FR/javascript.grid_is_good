@@ -1,14 +1,5 @@
 // Methods that are used by many inputs
 
-//--------------------
-/**
-A generic straightforward function
-*/
-function putActionElementClick(p_idElement, p_eventFunction) {
-    document.getElementById(p_idElement).addEventListener('click', p_eventFunction);
-}
-
-//--------------------
 /**
 View the numbers of puzzle list
 */ 

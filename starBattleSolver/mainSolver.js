@@ -28,36 +28,21 @@ function main() {
 	}
 
 	setInterval(drawCanvas,30);
-	//--------------------
-
-	var fieldName = document.getElementById("input_grid_name");
-	canevas.addEventListener('click', function(event){clickCanvas(event, canevas, drawer, solver, actionsManager, selectedSpacesGrid)},false);
-
+	
+	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager, selectedSpacesGrid)},false);
+	
+	const defaultPuzzleValue = "15";
 	const puzzleTypeName = "SternenSchlacht";
-	putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList("SternenSchlacht")});
-	putActionElementClick("submit_load_grid",function(event) {
-		loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value);
+	
+	buildPuzzleManagementMenu("div_puzzle_management", "input_grid_name", "submit_load_grid", puzzleTypeName, defaultPuzzleValue);
+	putActionElementClick("submit_load_grid", function(event) {
+		loadAction(canevas, drawer, solver, puzzleTypeName, document.getElementById("input_grid_name").value)
 		selectedSpacesGrid.restartSelectedSpaces(solver.xyLength, solver.xyLength);
 		document.getElementById("span_stars").innerHTML = solver.numberStars;
 	});
-	putActionElementClick("submit_undo",function(event){undoAction(solver)});
-	putActionElementClick("submit_quickStart",function(event){quickStartAction(solver)});
-	putActionElementClick("submit_multiPass",function(event){multiPassAction(solver)});
-	putActionElementClick("submit_solve",function(event){solveAction(solver)});
-	putActionElementClick("submit_selectionPass",function(event){selectionPassAction(solver, selectedSpacesGrid)});
-	putActionElementClick("submit_unselect",function(event){unselectAction(solver, selectedSpacesGrid)});
-
-	var textAction = document.getElementById("text_canvas_action");
-	setMode(textAction, actionsManager, ENTRY.SPACE, ACTION_PUT_STAR);
-	addEventListenerAndCaption("submit_put_star", ACTION_PUT_STAR);
-	addEventListenerAndCaption("submit_put_X", ACTION_PUT_NO_STAR);
-	addEventListenerAndCaption("submit_pass_region", ACTION_PASS_REGION);
-	addEventListenerAndCaption("submit_pass_row", ACTION_PASS_ROW);
-	addEventListenerAndCaption("submit_pass_column", ACTION_PASS_COLUMN);
-	addEventListenerAndCaption("submit_select_rectangle", ACTION_SELECTION_RECTANGLE);
-	addEventListenerAndCaption("submit_select_region", ACTION_SELECTION_REGION);
-
-	function addEventListenerAndCaption(p_identifier, p_action) { //Shortcut action
-		addEventListenerAndCaptionActionSubmit(actionsManager, textAction, p_identifier, ENTRY.SPACE, p_action);
-	}
+	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
+	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_PUT_STAR, ACTION_PUT_NO_FILL, ACTION_PASS_REGION, ACTION_PASS_ROW, ACTION_PASS_COLUMN, ACTION_SELECTION_RECTANGLE, ACTION_SELECTION_REGION]);
+	buildActionsGlobal("div_global_actions", "textido", ["Multipasse", "Résolution", "Passer sélection", "Déselectionner", "Annuler"], 
+		[function(event){multipassAction(solver)}, function(event){solveAction(solver)}, function(event){selectionPassAction(solver, selectedSpacesGrid)}, 
+		function(event){unselectAction(solver, selectedSpacesGrid)}, function(event){undoAction(solver)}] );
 }

@@ -11,7 +11,7 @@ function initializeItemsLoopInfos(p_itemId, p_solver) {
 	const inputColour = itemInputSubmit("submit_color_chains", "Colorier les chaînes");
 	const inputDisplayEnds = itemInputSubmit("submit_see_opposite_ends", "Afficher les bouts opposés");
 	const inputDisplayOut = itemInputSubmit("submit_mask_information_chains", "Masquer informations");
-	divCommonLoopDisplayElement.innerText = "Affichage :";
+	divCommonLoopDisplayElement.innerText = "Affichage : ";
 	divCommonLoopDisplayElement.appendChild(inputColour);
 	divCommonLoopDisplayElement.appendChild(inputDisplayEnds);
 	divCommonLoopDisplayElement.appendChild(inputDisplayOut);

@@ -10,12 +10,15 @@ function main() {
 		numberWriteFixed : '#880044',
 		numberWriteNotFixed : '#440088'
 	}
+	
+	var spanState = document.getElementById("span_resolution_state");
 
 	//--------------------
 	//The main draw function (at start)
-	function drawCanvas(){
+	function drawCanvas() {
 		drawer.drawWallGrid(context, solver.gridWall, solver.xLength, solver.yLength); 
 		drawInsideSpaces(context, drawer, colourSet, solver);
+		solver.callStateForItem(spanState);
 	}
 
 	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)},false);
@@ -26,17 +29,12 @@ function main() {
 	putActionElementClick("submit_view_puzzle_list", function(event){viewPuzzleList(puzzleTypeName)});
 	putActionElementClick("submit_load_grid", function(event){loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value)});
 	putActionElementClick("submit_quickStart", function(event){quickStartAction(solver)});
-	putActionElementClick("submit_multipass", function(event){multiPassAction(solver)});
+	putActionElementClick("submit_multipass", function(event){multipassAction(solver)});
 	putActionElementClick("submit_undo", function(event){undoAction(solver)});
 
-	//------
-
-	var textAction = document.getElementById("text_canvas_action");
-	setMode(textAction, actionsManager, ENTRY.SPACE, ACTION_ENTER_NUMBER);
-	addEventListenerAndCaption("submit_enter_number", ACTION_ENTER_NUMBER);
-	addEventListenerAndCaption("submit_pass_region", ACTION_PASS_REGION);
-	function addEventListenerAndCaption(p_identifier,p_action){ //Shortcut action
-		addEventListenerAndCaptionActionSubmit(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
-	}
-
+	// ------
+	
+	addEventsListenersAndCaptionsAndSetOne(actionsManager, 
+	"text_canvas_action", ["submit_enter_number", "submit_pass_region"], 
+	ENTRY.SPACE, [ACTION_ENTER_NUMBER, ACTION_PASS_REGION]);
 }

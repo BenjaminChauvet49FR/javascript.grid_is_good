@@ -23,7 +23,7 @@ function drawCanvas() {
 
 // Canvas
 canevas.addEventListener('click', function (event) {
-    clickCanvas(event, canevas, drawer, editorCore, modesManager)
+    clickCanvasAction(event, canevas, drawer, editorCore, modesManager)
 }, false);
 setInterval(drawCanvas, 30);
 const fieldXMove = document.getElementById("input_number_xMove");

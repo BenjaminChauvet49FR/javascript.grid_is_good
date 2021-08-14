@@ -220,8 +220,10 @@ SolverYajikabe.prototype.getNumber = function(p_x, p_y) {
 //--------------------------------
 
 // Input methods
-SolverYajikabe.prototype.emitHypothesis = function(p_x, p_y, p_symbol){
-	this.tryToPutNew(p_x, p_y, p_symbol);
+SolverYajikabe.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
+	if (!this.isBanned(p_x, p_y)) {
+		this.tryToPutNew(p_x, p_y, p_symbol);
+	}
 }
 
 SolverYajikabe.prototype.undo = function() {
@@ -252,10 +254,11 @@ SolverYajikabe.prototype.passStripFromSpace = function(p_x, p_y) {
 		var generatedEvents;
 		if (unionIndex != null) {
 			generatedEvents = this.generateEventsForUnionStripPass(unionIndex);
+			this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {category : YAJIKABE_CATEGORY.UNION, index : unionIndex}); 
 		} else {
 			generatedEvents = this.generateEventsForSingleStripPass(index);
+			this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {category : YAJIKABE_CATEGORY.STRIP, index : index}); 
 		}
-		this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, p_x + "," + p_y + "," + this.cluesSpacesList[index].direction); 
 	}
 }
 
@@ -395,12 +398,6 @@ SolverYajikabe.prototype.fillWithBlanks = function(p_listEventsToApply, p_clue, 
 // --------------------
 // Passing
 
-/*generateEventsForSingleStripPassClosure = function(p_solver) {
-	return function(p_indexStrip) {
-		return p_solver.generateEventsForSingleStripPass(p_indexStrip);
-	}
-}*/
-
 // Index strip must match the index of a strip WITHOUT UNION !
 SolverYajikabe.prototype.generateEventsForSingleStripPass = function(p_indexStrip) {
 	const clue = this.cluesSpacesList[p_indexStrip];
@@ -450,19 +447,8 @@ copying = function(p_event) {
 }
 
 comparison = function(p_event1, p_event2) {
-	if (p_event2.coorY > p_event1.coorY) {
-		return -1;
-	} else if (p_event2.coorY < p_event1.coorY) {
-		return 1;
-	} else if (p_event2.coorX > p_event1.coorX) {
-		return -1;
-	} else if (p_event2.coorX < p_event1.coorX) {
-		return 1;
-	} else {
-		var c1 = (p_event1.symbol == ADJACENCY.YES ? 1 : 0);
-		var c2 = (p_event2.symbol == ADJACENCY.YES ? 1 : 0); // Unstable : works because only "O" and "C" values are admitted
-		return c1-c2;
-	}
+	return commonComparison([[p_event1.coorY, p_event1.coorX, p_event1.symbol],
+		[p_event2.coorY, p_event2.coorX, p_event2.symbol]]);
 }
 
 // -----
