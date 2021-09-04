@@ -61,8 +61,12 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			hasStars = true; break;
 		case 'Akari': case 'Koburin': case 'Shugaku':
 			p_editorCore.setWallsOff();
-			saveLoadModeId = PUZZLES_KIND.NUMBERS_X_ONLY;
+			saveLoadModeId = PUZZLES_KIND.DIGITS_X_ONLY;
 			p_editorCore.setVisibleGrids([GRID_ID.DIGIT_X_SPACE]); break;
+		case 'Corral': case 'Kuromasu':
+			p_editorCore.setWallsOff();
+			saveLoadModeId = PUZZLES_KIND.NUMBERS_X_ONLY;
+			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_X_SPACE]); break;
 		case 'Yajilin': case 'Yajikabe': // Can also include Yajisan-Kazusan
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.YAJILIN_LIKE;

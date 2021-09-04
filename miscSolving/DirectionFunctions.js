@@ -60,3 +60,12 @@ GeneralSolver.prototype.testExistingCoordinate = function(coor, dir) {
 		case DIRECTION.DOWN : return coor < this.yLength; break;
 	}
 }
+
+GeneralSolver.prototype.testExistingCoordinates = function(x, y, dir) {
+	switch (dir) {
+		case DIRECTION.LEFT : return x >= 0; break;
+		case DIRECTION.UP : return y >= 0; break;
+		case DIRECTION.RIGHT : return x < this.xLength; break;
+		case DIRECTION.DOWN : return y < this.yLength; break;
+	}
+}

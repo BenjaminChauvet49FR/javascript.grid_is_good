@@ -72,8 +72,8 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 		const validityTokenMethod = (inputOptions.maxNumber != null || inputOptions.minNumber != null || inputOptions.nonNumericStrings == []) ? 
 		validityNumberRangeOrSymbolClosure(inputOptions.minNumber, inputOptions.maxNumber, inputOptions.nonNumericStrings) : validityTokenNumber;
 		return {
-			descriptionPrompt : "Entrer valeurs numériques >= 0",
-			descriptionPromptMono : "Entrer valeur numérique >= 0",
+			descriptionPrompt : "Entrer valeurs numériques " + stringRange(inputOptions.minNumber, inputOptions.maxNumber),
+			descriptionPromptMono : "Entrer valeur numérique " + stringRange(inputOptions.minNumber, inputOptions.maxNumber),
 			defaultToken : "1",
 			gridId : GRID_ID.NUMBER_SPACE,
 			validityTokenMethod : validityTokenMethod,
@@ -87,6 +87,15 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			gridId : GRID_ID.DIGIT_X_SPACE,
 			validityTokenMethod : validityNumberRangeOrSymbolClosure(0, 4, ["X"]),
 			parameters : {emptySpaceChar : " ", isMonoChar : true, isNumeric : false}
+		}
+	} else if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_X_SPACE)) {
+		return {
+			descriptionPrompt : "Entrer valeurs numériques " + stringRange(inputOptions.minNumber, inputOptions.maxNumber) + " ou X",
+			descriptionPromptMono : "Entrer valeur numérique " + stringRange(inputOptions.minNumber, inputOptions.maxNumber) + " ou X",
+			defaultToken : "1",
+			gridId : GRID_ID.NUMBER_X_SPACE,
+			validityTokenMethod : validityNumberRangeOrSymbolClosure(inputOptions.minNumber, inputOptions.maxNumber, ["X"]),
+			parameters : {emptySpaceChar : "<", isMonoChar : false, isNumeric : false}
 		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_REGION)) {
 		return {			
@@ -165,8 +174,8 @@ clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
 			if ((!defaultVal && (defaultVal != "0")) || (defaultVal == null) || (defaultVal == "")) {
 				defaultVal = promptElements.defaultToken;
 			}
-			optionalChain = (!promptElements.parameters.isMonoChar) ? "(Penser à séparer les indices des caractères " + promptElements.parameters.emptySpaceChar + " par des espaces) " : "";
-			var clueChain = prompt(promptElements.descriptionPrompt + " ou " + promptElements.parameters.emptySpaceChar + " pour case vide " + optionalChain + ":", defaultVal);
+			optionalChain = (!promptElements.parameters.isMonoChar && promptElements.parameters.emptySpaceChar != ' ') ? "(Penser à séparer les indices des caractères " + promptElements.parameters.emptySpaceChar + " par des espaces) " : "";
+			var clueChain = prompt(promptElements.descriptionPrompt + " ou '" + promptElements.parameters.emptySpaceChar + "' pour case vide " + optionalChain + ":", defaultVal);
 			p_editorCore.insertChainGrid(promptElements.gridId, clueChain, promptElements.validityTokenMethod, promptElements.parameters, p_x, p_y);
 		break;
 		case (MODE_MASS_SYMBOL_PROMPT.id) :
@@ -284,6 +293,25 @@ validityTokenTapa = function(p_clue) {
 }
 
 //------------------------
+// Strings for prompt
+
+/**
+p_min and p_max must be either numbers or null
+*/
+function stringRange(p_min, p_max) {
+	var answer = "";
+	var optionalSpace = "";
+	if (p_min != null) {
+		answer = ">= " + p_min;
+		optionalSpace = " et ";
+	}
+	if (p_max != null) {
+		answer += optionalSpace + "<= " + p_max;
+	}
+	return answer;
+}
+
+//------------------------
 // Things to be done when puzzle is restarted
 
 /**
@@ -314,10 +342,6 @@ restartAction = function (p_canvas, p_drawer, p_editorCore, p_fieldsDefiningPuzz
 		Object.keys(GRID_ID).forEach(id => {
 			editorCore.addCleanGrid(id, xLength, yLength); //  See GRID_ID in EditorCore
 		});
-		p_editorCore.addCleanGrid(GRID_ID.DIGIT_X_SPACE, xLength, yLength);
-		p_editorCore.addCleanGrid(GRID_ID.NUMBER_REGION, xLength, yLength);
-		p_editorCore.addCleanGrid(GRID_ID.NUMBER_SPACE, xLength, yLength);
-		p_editorCore.addCleanGrid(GRID_ID.PEARL, xLength, yLength);
         adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
     }
 }
@@ -556,8 +580,10 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
             puzzleToSaveString = limitedSymbolsWallsPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.PLAYSTATION_SHAPES), [SYMBOL_ID.ROUND, SYMBOL_ID.SQUARE, SYMBOL_ID.TRIANGLE]);
 		} else if (p_saveLoadMode.id == PUZZLES_KIND.NUMBERS_ONLY.id) {
             puzzleToSaveString = numbersOnlyPuzzleToString(p_editorCore.getArray(GRID_ID.NUMBER_SPACE));
-        } else if (p_saveLoadMode.id == PUZZLES_KIND.NUMBERS_X_ONLY.id) {
+        } else if (p_saveLoadMode.id == PUZZLES_KIND.DIGITS_X_ONLY.id) {
             puzzleToSaveString = puzzleNumbersSymbolsToString(p_editorCore.getArray(GRID_ID.DIGIT_X_SPACE), ["X"]);
+        } else if (p_saveLoadMode.id == PUZZLES_KIND.NUMBERS_X_ONLY.id) {
+            puzzleToSaveString = puzzleNumbersSymbolsToString(p_editorCore.getArray(GRID_ID.NUMBER_X_SPACE), ["X"]);
         } else if (p_saveLoadMode.id == PUZZLES_KIND.YAJILIN_LIKE.id) {
             puzzleToSaveString = arrowNumberCombinationsPuzzleToString(p_editorCore.getArray(GRID_ID.YAJILIN_LIKE));
         } else if (p_saveLoadMode.id == PUZZLES_KIND.TAPA.id) {
@@ -610,9 +636,14 @@ function getLoadedStuff(p_kindId, p_localStorageName, p_externalOptions) { // No
 			loadedItem.desiredIDs = [GRID_ID.NUMBER_SPACE];
 			loadedItem.desiredArrays = [loadedItem.numberArray];
 			return loadedItem; break;
-		case PUZZLES_KIND.NUMBERS_X_ONLY.id :
+		case PUZZLES_KIND.DIGITS_X_ONLY.id :
 			var loadedItem = stringToNumbersSymbolsPuzzle(localStorage.getItem(p_localStorageName), ["X"]);
 			loadedItem.desiredIDs = [GRID_ID.DIGIT_X_SPACE];
+			loadedItem.desiredArrays = [loadedItem.numbersSymbolsArray];
+			return loadedItem; break;
+		case PUZZLES_KIND.NUMBERS_X_ONLY.id :
+			var loadedItem = stringToNumbersSymbolsPuzzle(localStorage.getItem(p_localStorageName), ["X"]);
+			loadedItem.desiredIDs = [GRID_ID.NUMBER_X_SPACE];
 			loadedItem.desiredArrays = [loadedItem.numbersSymbolsArray];
 			return loadedItem; break;
 		case PUZZLES_KIND.YAJILIN_LIKE.id :

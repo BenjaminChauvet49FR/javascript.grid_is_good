@@ -5,6 +5,7 @@ const GRID_ID = {
     NUMBER_REGION: 'NR',
     NUMBER_SPACE: 'NS',
     DIGIT_X_SPACE: 'DXS',
+    NUMBER_X_SPACE: 'NXS',
     PEARL: 'P',
 	YAJILIN_LIKE: 'YAJILIN', 
 	TAPA: 'TAPA',
@@ -34,13 +35,14 @@ const PUZZLES_KIND = {
 	MASYU : {id:5},
 	REGIONS_NUMBERS : {id:6},
 	NUMBERS_X_ONLY : {id:7},
+	DIGITS_X_ONLY : {id:15},
 	YAJILIN_LIKE : {id:8},
 	STITCHES : {id:9},
 	ONLY_ONE_NUMBER_LEFT_UP_SQUARE : {id:10, squareGrid : true},
 	TAPA : {id:11},
 	REGIONS_PLAYSTATION_SHAPES : {id:12},
 	GALAXIES : {id:13},
-	MOONSUN : {id:14},
+	MOONSUN : {id:14}, // 15
 	GRAND_TOUR : {id:99102},
 	SUDOKU : {id:1001}
 }

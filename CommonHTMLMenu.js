@@ -63,8 +63,10 @@ menuSolvers.push({
 	displayName : "Binaires avec adjacence",
 	documentPage : "Solver",
 	typeList : [
+		{name : "corral", displayName : "Corral", hoverDescription : "Visions de cases ouvertes consécutives en lignes et colonnes, les cases fermées doivent accéder à l'extérieur"},
 		{name : "curvingRoad", displayName : "Curving road", hoverDescription : "Pas plus de 2 tournants sur un chemin ouvert entre deux cercles, sans contact orthogonal fermé"},
 		{name : "heyawake", displayName : "Heyawake", hoverDescription : "Bande de cases ouvertes traversant une frontière maximum, sans contact orthogonal fermé"},
+		{name : "kuromasu", displayName : "Kuromasu", hoverDescription : "Visions de cases ouvertes consécutives en lignes et colonnes, sans contact orthogonal fermé"},
 		{name : "LITS", displayName : "LITS", hoverDescription : "Tetrominos, deux en contact doivent être différents, sans 2x2"},
 		{name : "Tapa", displayName : "Tapa", hoverDescription : "Alentours d'une case, sans 2x2"},
 		{name : "usoone", displayName : "Usoone", hoverDescription : "Indications de contact numérique, 1 case menteuse par région, sans contact orthogonal fermé"},

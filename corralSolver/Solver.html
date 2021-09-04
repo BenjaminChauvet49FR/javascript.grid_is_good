@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+    <head>
+		<meta charset="utf-8"/>
+		<link rel="icon" type="image/png" href="../resources/star.png">
+        <title>Corral solver !!!</title>
+		<link rel="stylesheet" type="text/css" href="../style.css">
+    </head>
+    <body>
+		<div id="div_common_menu"></div>
+		<img id="img_map" src="../resources/mapField.png" style="display:none">
+		<canvas id="canevas" width="800" height="500">
+            Message pour les navigateurs ne supportant pas encore canvas.
+        </canvas></br>
+		
+		<div id="div_puzzle_management"></div>		
+		<div id="div_quickStart"></div>		
+		<div id="div_canvas_buttons"></div>
+		<div id="div_global_actions"></div>
+		<span id="span_resolution_state"></span></br>	
+		
+		<script src="../Importation.js"></script>
+		<script>
+		"use strict";
+		window.onload = function() {
+			addScriptsSolving();
+			addScriptsDirections();
+			addScriptsGeneric();
+			//addScriptsLocal();
+			addScript("mainSolver.js");
+			addScript("../kuromasuSolver/drawing.js");
+			addScript("../kuromasuSolver/inputSolver.js");
+			addScriptsAdjacency();
+			addScriptCheckCollection();
+			addScript("../kuromasuSolver/SolveEvent.js");
+			addScript("../kuromasuSolver/SolverKuromasu.js");
+			startScriptLoading();
+		}		 
+		</script>
+	</body>
+</html>

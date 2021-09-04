@@ -43,6 +43,9 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	if (p_editorCore.isVisibleGrid(GRID_ID.DIGIT_X_SPACE)) {
 		this.drawNumbersGrid(p_context, p_editorCore.getGrid(GRID_ID.DIGIT_X_SPACE)); // TODO : add some actual crosses ? Letter X looks fine to me.
 	}
+	if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_X_SPACE)) {
+		this.drawNumbersGrid(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_X_SPACE)); // See TODO above
+	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.PEARL)) {
 		this.drawPearlGrid(p_context, p_editorCore.getGrid(GRID_ID.PEARL));
 	}
