@@ -25,12 +25,12 @@ function main() {
 	setInterval(drawCanvas, 30);
 
 	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)}, false);
-	const defaultPuzzleValue = "672";
-	const puzzleTypeName = "Heyawake";
+	const defaultPuzzleValue = "80";
+	const puzzleTypeName = "AYE-Heya";
 	
 	buildPuzzleManagementMenu("div_puzzle_management", "input_grid_name", "submit_load_grid", puzzleTypeName, defaultPuzzleValue);
 	putActionElementClick("submit_load_grid", function(event) {
-		loadAction(canevas, drawer, solver, puzzleTypeName, document.getElementById("input_grid_name").value, {isAyeHeya : false})
+		loadAction(canevas, drawer, solver, puzzleTypeName, document.getElementById("input_grid_name").value, {isAyeHeya : true})
 	});
 	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
 	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_CLOSE_SPACE, ACTION_OPEN_SPACE, ACTION_PASS_REGION, ACTION_SMART_PASS_REGION]);

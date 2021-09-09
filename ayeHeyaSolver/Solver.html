@@ -3,12 +3,12 @@
     <head>
 		<meta charset="utf-8"/>
 		<link rel="icon" type="image/png" href="../resources/star.png">
-        <title>Yajikabe solver !!!</title>
+        <title>AYE-Heya solver !!!</title>
 		<link rel="stylesheet" type="text/css" href="../style.css">
     </head>
     <body>
 		<div id="div_common_menu"></div>
-		<img id="img_map" src="../resources/mapFieldThin.png" style="display:none">
+		<img id="img_map" src="../resources/mapField.png" style="display:none">
 		<canvas id="canevas" width="800" height="500">
             Message pour les navigateurs ne supportant pas encore canvas.
         </canvas></br>
@@ -18,7 +18,7 @@
 		<div id="div_canvas_buttons"></div>
 		<div id="div_global_actions"></div>
 		<span id="span_resolution_state"></span></br>	
-				
+		
 		<script src="../Importation.js"></script>
 		<script>
 		"use strict";
@@ -26,10 +26,14 @@
 			addScriptsSolving();
 			addScriptsDirections();
 			addScriptsGeneric();
-			addScriptsLocal();
+			//addScriptsLocal();
+			addScript("mainSolver.js");
+			addScript("../heyawakeSolver/drawing.js");
+			addScript("../heyawakeSolver/inputSolver.js");
 			addScriptsAdjacency();
-			addScript("SolveEvent.js");
-			addScript("SolverYajikabe.js");
+			addScriptCheckCollection();
+			addScript("../heyawakeSolver/SolveEvent.js");
+			addScript("../heyawakeSolver/SolverHeyawake.js");
 			startScriptLoading();
 		}		 
 		</script>

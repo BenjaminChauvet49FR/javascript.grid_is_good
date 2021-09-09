@@ -2,6 +2,10 @@
 // If this was in the same file as parent "DirectionFunctions.js", the file wouldn't be loaded by editor since GeneralSolver wouldn't be known.
 
 // Warning : forces the solver to have functions named xLength, yLength (already forced if the solver is geographic
+
+// ---------
+// Test if direction exists (from a space)
+
 GeneralSolver.prototype.neighborExists = function(p_x, p_y, p_dir) {
 	switch (p_dir) {
 		case DIRECTION.LEFT : return leftNeighborExists(p_x); break;
@@ -19,6 +23,9 @@ GeneralSolver.prototype.distantNeighborExists = function(p_x, p_y, p_dist, p_dir
 		case DIRECTION.DOWN : return p_y + p_dist < this.yLength; break;
 	}
 }
+
+// ---------
+// Lists directions and/or coordinates around a space
 
 // Around the space, returns coordinates and/or directions
 GeneralSolver.prototype.existingNeighborsCoorsDirections = function(p_x, p_y) {
@@ -47,6 +54,9 @@ GeneralSolver.prototype.existingNeighborsDirections = function(p_x, p_y) {
 	});
 	return answer;
 }
+
+// ----------
+// Existences of coordinates
 
 GeneralSolver.prototype.areCoordinatesInPuzzle = function(p_x, p_y) {
 	return p_x >= 0 && p_y >= 0 && p_x < this.xLength && p_y < this.yLength;

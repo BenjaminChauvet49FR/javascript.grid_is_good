@@ -7,19 +7,19 @@ const HEYAWAKE_PASS_CATEGORY = {
 	BLOCK_REGION : 1
 }
 
-function SolverHeyawake(p_wallArray, p_indications) {
+function SolverHeyawake(p_wallArray, p_indications, p_isAyeHeya) {
 	GeneralSolver.call(this);
-	this.construct(p_wallArray, p_indications);
+	this.construct(p_wallArray, p_indications, p_isAyeHeya);
 }
 
 SolverHeyawake.prototype = Object.create(GeneralSolver.prototype);
 SolverHeyawake.prototype.constructor = SolverHeyawake;
 
-function DummySolver() {
-	return new SolverHeyawake(generateWallArray(1, 1), []);
+function DummySolver(p_isAyeHeya) {
+	return new SolverHeyawake(generateWallArray(1, 1), [], p_isAyeHeya);
 }
 
-SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
+SolverHeyawake.prototype.construct = function(p_wallArray, p_indications, p_isAyeHeya) {
 	this.generalConstruct();
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
@@ -39,6 +39,8 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
 	};
+	
+	this.isAyeHeya = p_isAyeHeya;
 
 	this.gridWall = WallGrid_data(p_wallArray); 
 	this.regionArray = this.gridWall.toRegionArray();
@@ -62,10 +64,31 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 			spaces : spacesByRegion[ir],
 			expectedNumberOfClosedsInRegion : NOT_FORCED,
 			notPlacedYet : null,
-			size : spacesByRegion[ir].length,
-			horizontalInnerStripesIndexes : [],
-			verticalInnerStripesIndexes : [] 
+			size : spacesByRegion[ir].length
+			//horizontalInnerStripesIndexes : [],
+			//verticalInnerStripesIndexes : [] 
 		});
+		if (this.isAyeHeya) {
+			var halfList = [];
+			var centerX, centerY;
+			var xMax = 0; xMin = this.xLength; yMax = 0; yMin = this.yLength;
+			this.regions[ir].spaces.forEach(coors => {
+				xMin = Math.min(coors.x, xMin);
+				xMax = Math.max(coors.x, xMax);
+				yMin = Math.min(coors.y, yMin);
+				yMax = Math.max(coors.y, yMax);
+			});
+			centerX = (xMin + xMax) / 2; 
+			centerY = (yMin + yMax) / 2;
+			this.regions[ir].spaces.forEach(coors => {
+				if (coors.y < centerY || (coors.y == centerY && coors.x <= centerX)) {					
+					halfList.push({x : coors.x, y : coors.y});
+				}
+			});
+			this.regions[ir].halfSpaces = halfList;
+			this.regions[ir].centerX = centerX;
+			this.regions[ir].centerY = centerY;
+		}
 	}
 	
 	var region;
@@ -100,15 +123,18 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 				//Right now, endStrip corresponds to "the right of a boundary" or "a banned/out-of-bounds space"
 				if (endStrip < this.xLength && this.gridWall.getState(endStrip, iy) != WALLGRID.CLOSED) {
 					//We met a true region boundary ? Fine, to work now !
-					irInner = this.regionArray[iy][ix+1]; //Region of the inner grid
 					indexStrip = this.horizontalStripes.length;
-					this.regions[irInner].horizontalInnerStripesIndexes.push(indexStrip);
+					//this.regions[irInner].horizontalInnerStripesIndexes.push(indexStrip); Note : useful for a pass or a deduction someday ? (irInner defined below)
 					this.stripesArray[iy][ix].horizontal.push(indexStrip);
 					this.stripesArray[iy][endStrip].horizontal.push(indexStrip);
 					for(var ix2 = ix+1; ix2 < endStrip ; ix2++){
 						this.stripesArray[iy][ix2].horizontal.push(indexStrip);
 					}
 					this.horizontalStripes.push({row : iy, xStart : ix, xEnd : endStrip, UNDEFs: endStrip-ix+1, CLOSEDs:0});
+					if (this.isAyeHeya) {
+						irInner = this.regionArray[iy][ix+1]; //Region of the inner grid
+						// 551551 Si la stripe est centrale dans la région qu'elle traverse
+					} 
 				}
 			}
 			//Same down.
@@ -120,15 +146,19 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications) {
 				endStrip++; 
 				// ... "the bottom of a boundary" ... "a banned/out-of-bounds space"
 				if (endStrip < this.yLength && this.gridWall.getState(ix,endStrip) != WALLGRID.CLOSED) {
-					irInner = this.regionArray[iy+1][ix]; 
+					//irInner = this.regionArray[iy+1][ix]; 
 					indexStrip = this.verticalStripes.length;
-					this.regions[irInner].verticalInnerStripesIndexes.push(indexStrip);
+					//this.regions[irInner].verticalInnerStripesIndexes.push(indexStrip);
 					this.stripesArray[iy][ix].vertical.push(indexStrip);
 					this.stripesArray[endStrip][ix].vertical.push(indexStrip);
 					for(var iy2 = iy+1; iy2 < endStrip ; iy2++){
 						this.stripesArray[iy2][ix].vertical.push(indexStrip);
 					}
 					this.verticalStripes.push({column : ix, yStart : iy, yEnd : endStrip, UNDEFs: endStrip-iy+1, CLOSEDs:0});
+					if (this.isAyeHeya) {
+						irInner = this.regionArray[iy+1][ix]; 
+						// 551551 Si la stripe est centrale dans la région qu'elle traverse ("Région" = irInner)
+					} 
 				}
 			}
 		}
@@ -225,13 +255,28 @@ SolverHeyawake.prototype.undo = function() {
 SolverHeyawake.prototype.quickStart = function() {
 	this.initiateQuickStart();
 	this.regions.forEach(region => {
-		if (region.size == 1 && region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 1){
+		if (region.size == 1 && region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 1) {
 			this.tryToPutNew(region.spaces[0].x, region.spaces[0].y, ADJACENCY.NO);
 		};
-		if (region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 0){
+		if (region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 0) {
 			region.spaces.forEach(space => {
 				this.tryToPutNew(space.x, space.y, ADJACENCY.YES);
 			});
+		}
+		// Quickly place in centers of region (smartness)
+		if (this.isAyeHeya) {
+			const integerX = (region.centerX == Math.floor(region.centerX));
+			const integerY = (region.centerY == Math.floor(region.centerY));
+			if (region.expectedNumberOfClosedsInRegion != NOT_FORCED && integerX && integerY) {
+				this.tryToPutNew(region.centerX, region.centerY, (region.expectedNumberOfClosedsInRegion % 2 == 0) ? ADJACENCY.YES : ADJACENCY.NO);
+			}
+			if (integerX) {
+				if (!integerY) {
+					this.tryToPutNew(region.centerX, region.centerY - 0.5, ADJACENCY.YES);
+				}
+			} else if (integerY) {
+				this.tryToPutNew(region.centerX - 0.5, region.centerY, ADJACENCY.YES);
+			}
 		}
 	});
 	this.terminateQuickStart();
@@ -360,11 +405,16 @@ adjacencyClosure = function (p_solver) {
 
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
-		var x = p_eventBeingApplied.x();
-		var y = p_eventBeingApplied.y();
-		var ir = p_solver.regionArray[y][x];
-		var region = p_solver.regions[ir];
-		symbol = p_eventBeingApplied.symbol;
+		const x = p_eventBeingApplied.x();
+		const y = p_eventBeingApplied.y();
+		const ir = p_solver.regionArray[y][x];
+		const region = p_solver.regions[ir];
+		const symbol = p_eventBeingApplied.symbol;
+		if (p_solver.isAyeHeya) {
+			xx = region.centerX * 2 - x;
+			yy = region.centerY * 2 - y;
+			p_listEventsToApply.push(new SpaceEvent(xx, yy, symbol));
+		}
 		if (symbol == ADJACENCY.NO) {
 			p_solver.existingNeighborsCoorsDirections(x, y).forEach(coors => {
 				p_listEventsToApply.push(new SpaceEvent(coors.x, coors.y, ADJACENCY.YES));

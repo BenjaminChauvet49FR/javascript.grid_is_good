@@ -63,6 +63,8 @@ menuSolvers.push({
 	displayName : "Binaires avec adjacence",
 	documentPage : "Solver",
 	typeList : [
+		{name : "ayeHeya", displayName : "AYE-Heya", hoverDescription : "Heyawake avec cases noires symétriques centralement"},
+		{name : "canalView", displayName : "CanalView", hoverDescription : "Visions de cases ouvertes consécutives en lignes et colonnes, sans 2x2, les cases de vision sont fermées"},
 		{name : "corral", displayName : "Corral", hoverDescription : "Visions de cases ouvertes consécutives en lignes et colonnes, les cases fermées doivent accéder à l'extérieur"},
 		{name : "curvingRoad", displayName : "Curving road", hoverDescription : "Pas plus de 2 tournants sur un chemin ouvert entre deux cercles, sans contact orthogonal fermé"},
 		{name : "heyawake", displayName : "Heyawake", hoverDescription : "Bande de cases ouvertes traversant une frontière maximum, sans contact orthogonal fermé"},

@@ -41,7 +41,7 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.NUMBERS_ONLY;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]); break;
-		case 'Chocona': case 'CountryRoad': case 'Detour': case 'Heyawake': case 'Shimaguni':
+		case 'AYE-Heya': case 'Chocona': case 'CountryRoad': case 'Detour': case 'Heyawake': case 'Shimaguni':
 			saveLoadModeId = PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_REGION]); break;
 		case 'Hakoiri':
@@ -63,7 +63,7 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.DIGITS_X_ONLY;
 			p_editorCore.setVisibleGrids([GRID_ID.DIGIT_X_SPACE]); break;
-		case 'Corral': case 'Kuromasu':
+		case 'CanalView': case 'Corral': case 'Kuromasu':
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.NUMBERS_X_ONLY;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_X_SPACE]); break;

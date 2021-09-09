@@ -89,7 +89,7 @@ SolverYajikabe.prototype.construct = function(p_combinationArray) {
 		if ((dir == DIRECTION.LEFT) || (dir == DIRECTION.RIGHT)) {
 			xx = x + DeltaX[dir];
 			finalCoor = xx;
-			while (testExistingCoordinate(xx, dir, this.xLength, this.yLength) && (!this.isNumeric(xx, y) || (this.getDirection(xx, y) != dir) )) {
+			while (this.testExistingCoordinate(xx, dir) && (!this.isNumeric(xx, y) || (this.getDirection(xx, y) != dir) )) {
 				if (!this.isBanned(xx, y)) {
 					this.stripesArray[y][xx].push(i);
 					numberEmptySpaces++;
@@ -101,7 +101,7 @@ SolverYajikabe.prototype.construct = function(p_combinationArray) {
 				}
 				xx += DeltaX[dir];
 			}
-			if (testExistingCoordinate(xx, dir, this.xLength, this.yLength) && this.isNumeric(xx, y)) { // Premature end of strip
+			if (this.testExistingCoordinate(xx, dir) && this.isNumeric(xx, y)) { // Premature end of strip
 				openSpacesInStrip = this.getNumber(x, y) - this.getNumber(xx, y);
 			} else {
 				openSpacesInStrip = this.getNumber(x, y);
@@ -114,7 +114,7 @@ SolverYajikabe.prototype.construct = function(p_combinationArray) {
 		} else {
 			yy = y + DeltaY[dir];
 			finalCoor = yy;
-			while (testExistingCoordinate(yy, dir, this.xLength, this.yLength) && (!this.isNumeric(x, yy) || (this.getDirection(x, yy) != dir) )) {
+			while (this.testExistingCoordinate(yy, dir) && (!this.isNumeric(x, yy) || (this.getDirection(x, yy) != dir) )) {
 				if (!this.isBanned(x, yy)) {
 					this.stripesArray[yy][x].push(i);
 					numberEmptySpaces++;
@@ -125,7 +125,7 @@ SolverYajikabe.prototype.construct = function(p_combinationArray) {
 				}
 				yy += DeltaY[dir];
 			}
-			if (testExistingCoordinate(yy, dir, this.xLength, this.yLength) && this.isNumeric(x, yy)) { // Premature end of strip
+			if (this.testExistingCoordinate(yy, dir) && this.isNumeric(x, yy)) { // Premature end of strip
 				openSpacesInStrip = this.getNumber(x, y) - this.getNumber(x, yy);
 			} else {
 				openSpacesInStrip = this.getNumber(x, y);
@@ -184,18 +184,6 @@ SolverYajikabe.prototype.isBanned = function(p_x, p_y) {
 SolverYajikabe.prototype.isNumeric = function(p_x, p_y) {
 	const num = this.clueGrid.get(p_x, p_y);
 	return (num != null && num.charAt(0) != "X");
-}
-
-//--------------------------------
-// Misc. inner methods 
-
-function testExistingCoordinate(coor, dir, xMax, yMax) {
-	switch (dir) {
-		case DIRECTION.LEFT : 
-		case DIRECTION.UP : return coor >= 0; break;
-		case DIRECTION.RIGHT : return coor < xMax; break;
-		case DIRECTION.DOWN : return coor < yMax; break;
-	}
 }
 
 // -------------------------------

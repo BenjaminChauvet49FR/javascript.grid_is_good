@@ -8,7 +8,7 @@ function main() {
 	var actionsManager = {}; 
 
 	var colors = {
-		openSquare : '#00ffcc',
+		openSquare : '#00ccff',
 		closedSquare : '#cc0022',
 		standardWrite : '#000000',
 		reflectWrite : "#ffff88"

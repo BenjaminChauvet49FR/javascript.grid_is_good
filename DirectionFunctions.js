@@ -14,17 +14,7 @@ function downNeighborExists(p_y, p_limit) {
 	return p_y <= p_limit - 2;
 }
 
-// Neighbor exists only for right and down
-function neighborRightOrDownExists(p_x, p_y, p_limitX, p_limitY, p_dir) {
-	if (p_dir == DIRECTION.RIGHT) {
-		return p_x < p_limitX - 2;
-	} else {
-		return p_y < p_limitY - 2;
-	}
-}
-
 // Below functions are mostly for editors and not solvers.
-
 existingNeighborsDirections = function(p_x, p_y, p_xLength, p_yLength) {
 	var answer = [];
 	if (leftNeighborExists(p_x)) {
