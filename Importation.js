@@ -51,6 +51,7 @@ function addScriptConstants() { addScript("../miscSolving/Constants.js"); }
 function addScriptFences() { addScript("../miscSolving/Fences.js"); }
 function addScriptNonBinarySpaces() { addScript("../miscSolving/SpaceNumeric.js"); }
 function addScriptInputSpacesSelection() { addScript("../miscSolving/InputSpacesSelection.js"); }
+function addClusterManagement() { addScript("../miscSolving/ClusterManager.js"); }
 function addMisc() { addScript("../Misc.js"); }
 
 addScriptsLoopRegion = addScriptsClosure(["../LoopSolver/RegionLoopSolver.js", "../LoopSolver/RegionJunctionEvent.js"]);

@@ -34,10 +34,17 @@ const MULTIPASS_RESULT = {
 	HARMLESS : 32
 }
 
+const GLOBAL_DEDUCTIONS_RESULT = {
+	SUCCESS : 43,
+	FAILURE : 41,
+	HARMLESS : 42
+}
+
 const SERIE_KIND = {
 	HYPOTHESIS : 1,
 	PASS : 2,
-	QUICKSTART : 3
+	QUICKSTART : 3,
+	GLOBAL_DEDUCTION : 4
 }
 
 function FailureEvent() {
@@ -285,7 +292,7 @@ GeneralSolver.prototype.undoToLastHypothesis = function (p_undoEventMethod) {
 		const cancelQS = isQuickStart(this.happenedEventsSeries[this.happenedEventsSeries.length - 1]); // As soon as we hit the 1st quickstart, don't cancel it ! But if we cancel one QS, cancel them all !
 		do {
 			var lastEventsSerie = this.happenedEventsSeries[this.happenedEventsSeries.length - 1];
-			stillCancel = cancelQS || isPassSerie(lastEventsSerie);
+			stillCancel = cancelQS || isPassSerie(lastEventsSerie) || isGlobalDeduction(lastEventsSerie);
 			if (cancelQS || !isQuickStart(lastEventsSerie)) {				
 				this.undoEventList(lastEventsSerie.list, p_undoEventMethod);
 				this.happenedEventsSeries.pop();
@@ -496,18 +503,23 @@ GeneralSolver.prototype.multiPass = function(p_methodSet, p_eventsTools, p_passT
 		}
 		
 		if (ok && oneMoreLoop) {
-			if (!p_passTools.passTodoMethod) {
-				orderedListPassArguments = p_passTools.orderPassArgumentsMethod(); 
-			} else {
-				var newOrderedListPassArguments = [];
-				orderedListPassArguments.forEach(argPass => {
-					if (p_passTools.passTodoMethod(argPass)) {
-						newOrderedListPassArguments.push(argPass);
-					}
-				});
-				orderedListPassArguments = newOrderedListPassArguments;
+			if (p_passTools.preOrganisationMethod) {
+				const result = p_passTools.preOrganisationMethod();
+				ok = (result != EVENT_RESULT.FAILURE);
 			}
-
+			if (ok) {				
+				if (!p_passTools.passTodoMethod) {
+					orderedListPassArguments = p_passTools.orderPassArgumentsMethod(); 
+				} else {
+					var newOrderedListPassArguments = [];
+					orderedListPassArguments.forEach(argPass => {
+						if (p_passTools.passTodoMethod(argPass)) {
+							newOrderedListPassArguments.push(argPass);
+						}
+					});
+					orderedListPassArguments = newOrderedListPassArguments;
+				}
+			}
 		}
 	} while (ok && oneMoreLoop);
 	if (!ok) {
@@ -533,6 +545,10 @@ function isQuickStart(p_eventsSerie) {
 	return p_eventsSerie.kind == SERIE_KIND.QUICKSTART;
 }
 
+function isGlobalDeduction(p_eventsSerie) {
+	return p_eventsSerie.kind == SERIE_KIND.GLOBAL_DEDUCTION;
+}
+
 // --------------------------------
 // Quickstart
 
@@ -555,6 +571,43 @@ GeneralSolver.prototype.terminateQuickStart = function() {
 	}
 	this.separatelyStackDeductions = true;
 	this.setStateHappening(OTHER_RESULTS.QUICKSTART);
+}
+
+
+// "do stuff method" must return GLOBAL_DEDUCTIONS_RESULT.FAILURE, GLOBAL_DEDUCTIONS_RESULT.HARMLESS or GLOBAL_DEDUCTIONS_RESULT.SUCCESS
+// Method set must contain an undoing method
+GeneralSolver.prototype.applyGlobalDeduction = function(p_doStuffMethod, p_methodSet, p_label) {
+	var ok = true;
+	var found = true;
+	const lengthBeforeGlobalDeduction = this.happenedEventsSeries.length;
+	var state;
+	this.separatelyStackDeductions = false;
+	const label = p_label ? p_label : "";
+	this.happenedEventsSeries.push({kind : SERIE_KIND.GLOBAL_DEDUCTION, label : label, list : [] }); 
+	while (found && ok) {
+		state = p_doStuffMethod();
+		ok &= (state != GLOBAL_DEDUCTIONS_RESULT.FAILURE);
+		found = (state == GLOBAL_DEDUCTIONS_RESULT.SUCCESS);
+	}
+	this.separatelyStackDeductions = true;
+	
+	if (!ok) {
+		var lastEventsList = this.happenedEventsSeries.pop();
+		//while (this.happenedEventsSeries.length > lengthBeforeGlobalDeduction) {			
+		this.undoEventList(lastEventsList.list, p_methodSet.undoEventMethod);
+		// }
+		this.setStateHappening(GLOBAL_DEDUCTIONS_RESULT.FAILURE);
+		return GLOBAL_DEDUCTIONS_RESULT.FAILURE;
+	}
+	const extraEvents = this.happenedEventsSeries[this.happenedEventsSeries.length - 1].list.length > 0;
+	if (extraEvents) {
+		answer = GLOBAL_DEDUCTIONS_RESULT.SUCCESS;
+	} else {
+		this.happenedEventsSeries.pop();
+		answer = GLOBAL_DEDUCTIONS_RESULT.HARMLESS;
+	}
+	this.setStateHappening(answer);
+	return answer;
 }
 
 // --------------------------------
@@ -585,6 +638,8 @@ GeneralSolver.prototype.happenedEventsLog = function(p_options) {
 	this.happenedEventsSeries.forEach(eventSerie => {
 		if (eventSerie.kind == SERIE_KIND.PASS) {
 			answer += "Pass - " + eventSerie.label + " ";
+		} else if (eventSerie.kind == SERIE_KIND.GLOBAL_DEDUCTION) {
+			answer += "Global deduction - " + eventSerie.label + " "; // 551551 Ajouter un label pertinent
 		} else if (eventSerie.kind == SERIE_KIND.QUICKSTART) {
 			answer += "Quickstart - " + (
 			(eventSerie.label && eventSerie.label != null && eventSerie.label != "") ? (eventSerie.label + " ") : "" );

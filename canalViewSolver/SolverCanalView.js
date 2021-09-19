@@ -32,7 +32,7 @@ SolverCanalView.prototype.construct = function(p_numericXArray) {
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		//skipPassMethod : skipPassClosure(this)
 	};
-	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filtersUpdateMinsFromNewlyOpenSpaces(this), filtersMinMaxClosure(this)]);
+	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filtersUpdateMinsFromNewlyOpenSpacesClosure(this), filtersMinMaxClosure(this)]);
 
 
 	this.answerArray = [];
@@ -225,7 +225,7 @@ SolverCanalView.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
 // Doing, undoing and transforming
 
 // Offensive programming : the coordinates are assumed to be in limits
-SolverCanalView.prototype.applyFillSpace = function(p_x,p_y,p_symbol) {
+SolverCanalView.prototype.applyFillSpace = function(p_x, p_y, p_symbol) {
 	if (this.answerArray[p_y][p_x] == p_symbol) {
 		return EVENT_RESULT.HARMLESS;
 	}
@@ -392,11 +392,9 @@ SolverCanalView.prototype.deductionsTestMinEqualsMax = function(p_listEventsToAp
 	return p_listEventsToApply;
 }
 
-// 551551 filtres non vérifiés (de toute façon la séquence de débug va être funky)
-
 // Each space that has 'mins' that may have to be updated 
 // For each space, for each direction, count the number of open spaces in that direction without an interruption and update mins as such
-filtersUpdateMinsFromNewlyOpenSpaces = function(p_solver) {
+filtersUpdateMinsFromNewlyOpenSpacesClosure = function(p_solver) {
 	return function() {
 		var listEvents = [];
 		var coors, space;

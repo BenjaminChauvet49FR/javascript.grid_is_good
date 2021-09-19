@@ -60,19 +60,34 @@ menuSolvers.push({
 });
 
 menuSolvers.push({
-	displayName : "Binaires avec adjacence",
+	displayName : "Binaires avec adjacence sans contact orthogonal fermé non banni",
 	documentPage : "Solver",
 	typeList : [
-		{name : "ayeHeya", displayName : "AYE-Heya", hoverDescription : "Heyawake avec cases noires symétriques centralement"},
-		{name : "canalView", displayName : "CanalView", hoverDescription : "Visions de cases ouvertes consécutives en lignes et colonnes, sans 2x2, les cases de vision sont fermées"},
-		{name : "corral", displayName : "Corral", hoverDescription : "Visions de cases ouvertes consécutives en lignes et colonnes, les cases fermées doivent accéder à l'extérieur"},
-		{name : "curvingRoad", displayName : "Curving road", hoverDescription : "Pas plus de 2 tournants sur un chemin ouvert entre deux cercles, sans contact orthogonal fermé"},
-		{name : "heyawake", displayName : "Heyawake", hoverDescription : "Bande de cases ouvertes traversant une frontière maximum, sans contact orthogonal fermé"},
-		{name : "kuromasu", displayName : "Kuromasu", hoverDescription : "Visions de cases ouvertes consécutives en lignes et colonnes, sans contact orthogonal fermé"},
-		{name : "LITS", displayName : "LITS", hoverDescription : "Tetrominos, deux en contact doivent être différents, sans 2x2"},
-		{name : "Tapa", displayName : "Tapa", hoverDescription : "Alentours d'une case, sans 2x2"},
-		{name : "usoone", displayName : "Usoone", hoverDescription : "Indications de contact numérique, 1 case menteuse par région, sans contact orthogonal fermé"},
-		{name : "yajikabe", displayName : "Yajikabe", hoverDescription : "Indications fléchées numériques, sans 2x2"}
+		{name : "ayeHeya", displayName : "AYE-Heya", hoverDescription : "Heyawake avec cases symétriques centralement dans une région"},
+		{name : "curvingRoad", displayName : "Curving road", hoverDescription : "Pas plus de 2 tournants sur un chemin ouvert entre deux cercles"},
+		{name : "heyawake", displayName : "Heyawake", hoverDescription : "Bandes de cases ouvertes traversant une frontière de région maximum"},
+		{name : "kuromasu", displayName : "Kuromasu", hoverDescription : "Visions de cases ouvertes"},
+		{name : "usoone", displayName : "Usoone", hoverDescription : "Indications de contact numérique, 1 case menteuse par région"},
+	]
+});
+
+menuSolvers.push({
+	displayName : "Binaires avec adjacence sans carré 2x2 ouvert",
+	documentPage : "Solver",
+	typeList : [
+		{name : "canalView", displayName : "CanalView", hoverDescription : "Visions de cases ouvertes consécutives en ligne et colonne"},
+		{name : "LITS", displayName : "LITS", hoverDescription : "Tetrominos, deux en contact doivent être différents"},
+		{name : "nurikabe", displayName : "Nurikabe", hoverDescription : "Les cases fermées forment des îles de surfaces imposées"},
+		{name : "Tapa", displayName : "Tapa", hoverDescription : "Alentour ortho-diagonal d'une case"},
+		{name : "yajikabe", displayName : "Yajikabe", hoverDescription : "Indications flécho-numériques"}
+	]
+});
+
+menuSolvers.push({
+	displayName : "Binaires avec adjacence divers",
+	documentPage : "Solver",
+	typeList : [
+		{name : "corral", displayName : "Corral", hoverDescription : "Visions de cases ouvertes en ligne et colonne, les cases fermées doivent accéder à l'extérieur"},
 	]
 });
 
@@ -92,7 +107,7 @@ menuSolvers.push({
 		{name : "detour", displayName : "Detour", hoverDescription : "Combien de tournants par région ?"},
 		{name : "koburin", displayName : "Koburin", hoverDescription : "Indications d'adjacence, sans contact orthogonal fermé non-banni"},
 		{name : "masyu", displayName : "Masyu", hoverDescription : "Perles blanches et noires à traverser"},
-		{name : "yajilin", displayName : "Yajilin", hoverDescription : "Indications fléchées numériques, sans contact orthogonal fermé non-banni"}
+		{name : "yajilin", displayName : "Yajilin", hoverDescription : "Indications flécho-numériques, sans contact orthogonal fermé non-banni"}
 	]
 });
 

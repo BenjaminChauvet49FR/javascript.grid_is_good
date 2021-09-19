@@ -461,7 +461,7 @@ deductionsClosure = function(p_solver) {
 					}
 					
 				});
-				// Aaand... an everything else in this space.
+				// Aaand... and everything else in this space.
 				p_solver.choiceGalaxyArray[y][x].values().forEach(index2 => {
 					if (index2 != index) {
 						p_eventList.push(new ChoiceEvent(x, y, index2, false));

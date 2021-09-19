@@ -31,6 +31,18 @@ GeneralSolver.prototype.callStateForItem = function(p_item) {
 				p_item.innerHTML = "Echec de la passe"; 
 				p_item.style.color = colorFailure;
 			break;
+			case GLOBAL_DEDUCTIONS_RESULT.SUCCESS : 
+				p_item.innerHTML = "Déduction globale réussie"; 
+				p_item.style.color = colorSuccess;
+			break;
+			case GLOBAL_DEDUCTIONS_RESULT.HARMLESS : 
+				p_item.innerHTML = "Déduction globale sans effet"; 
+				p_item.style.color = colorNeutral;
+			break;
+			case GLOBAL_DEDUCTIONS_RESULT.FAILURE : 
+				p_item.innerHTML = "Echec de la déduction globale"; 
+				p_item.style.color = colorFailure;
+			break;
 			case MULTIPASS_RESULT.SUCCESS : 
 				p_item.innerHTML = "Multipasse réussie"; 
 				p_item.style.color = colorSuccess;

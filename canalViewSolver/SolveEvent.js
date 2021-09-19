@@ -12,10 +12,6 @@ function SpaceEvent(p_x, p_y, p_symbol) {
 	this.coorY = p_y;
 }
 
-SpaceEvent.prototype.toString = function() {	
-	return "["+this.symbol+" "+this.coorX+","+this.coorY+"]";
-}
-
 SpaceEvent.prototype.copy = function(){
 	return new SpaceEvent(this.coorX, this.coorY, this.symbol);
 }

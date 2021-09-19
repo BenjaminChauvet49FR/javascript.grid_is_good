@@ -32,6 +32,23 @@ existingNeighborsDirections = function(p_x, p_y, p_xLength, p_yLength) {
 	return answer;
 }
 
+existingNeighborsCoors = function(p_x, p_y, p_xLength, p_yLength) {
+	var answer = [];
+	if (leftNeighborExists(p_x)) {
+		answer = [{x : p_x-1, y : p_y}];
+	}
+	if (upNeighborExists(p_y)) {
+		answer.push({x : p_x, y : p_y-1});
+	}
+	if (rightNeighborExists(p_x, p_xLength)) { // No reuse of the function below, sorry
+		answer.push({x : p_x+1, y : p_y});
+	}
+	if (downNeighborExists(p_y, p_yLength)) {
+		answer.push({x : p_x, y : p_y+1});
+	}
+	return answer;
+}
+
 existingNeighborsCoorsDirections = function(p_x, p_y, p_xLength, p_yLength) {
 	var answer = [];
 	if (leftNeighborExists(p_x)) {

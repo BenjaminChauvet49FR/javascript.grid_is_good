@@ -36,3 +36,13 @@ function getIndexInSortedArray(p_array, p_number) {
 	}
 	return (p_array[iMin] == p_number) ? iMin : null;
 }
+
+// Array of values 0 to n (included)
+function numericSequenceArray(p_min, p_max, p_incr) {
+	var answer = [];
+	const incr = (p_incr ? p_incr : 1);
+	for (var i = p_min ; i <= p_max ; i += incr) {
+		answer.push(i);
+	}
+	return answer;
+}

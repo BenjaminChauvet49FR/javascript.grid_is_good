@@ -24,12 +24,14 @@ const ACTION_OPEN_SPACE_FAKE = {id:1, htmlCaption:"Poser déduction case ouverte
 const ACTION_ENTER_NUMBER = {id:1, htmlCaption:"Entrer un nombre"};
 const ACTION_PUT_BULB = {id:1, htmlCaption:"Placer ampoule"};
 const ACTION_PUT_STITCH = {id:1, htmlCaption:"Placer point de couture"};
+const ACTION_SEA_SPACE = {id:1, htmlCaption:"Placer une case de mer (case ouverte)"};
 const ACTION_PUT_ROUND = {id:2, htmlCaption:"Placer un rond"};
 const ACTION_PUT_SQUARE = {id:3, htmlCaption:"Placer un carré"};
 const ACTION_PUT_TRIANGLE = {id:4, htmlCaption:"Placer un triangle"};
 // Negative actions on space
 const ACTION_EXCLUDE_LOOP_SPACE = {id:21, htmlCaption : "Ecarter case de boucle"};
 const ACTION_PUT_NO_FILL = {id:21, htmlCaption:"Placer un X"};
+const ACTION_ISLAND_SPACE = {id:21, htmlCaption:"Placer une île (case fermée)"};
 const ACTION_CLOSE_SPACE = {id:21, htmlCaption:"Déclarer case fermée"};
 const ACTION_CLOSE_SPACE_FAKE = {id:21, htmlCaption:"Poser déduction case fermée"};
 // Somewhat neutral actions on space

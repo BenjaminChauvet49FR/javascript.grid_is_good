@@ -63,7 +63,7 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.DIGITS_X_ONLY;
 			p_editorCore.setVisibleGrids([GRID_ID.DIGIT_X_SPACE]); break;
-		case 'CanalView': case 'Corral': case 'Kuromasu':
+		case 'CanalView': case 'Corral': case 'Kuromasu': case 'Nurikabe':
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.NUMBERS_X_ONLY;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_X_SPACE]); break;

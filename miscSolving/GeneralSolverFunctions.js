@@ -44,6 +44,49 @@ GeneralSolver.prototype.deductionsFillingSurroundings = function(p_eventList, p_
 	return p_eventList;
 }
 
+/**
+Gives all the 'accessible' spaces from p_startingSpaces
+within a Manhattan distance of p_range
+using the double entry true/false p_volcanicChecker.
+Criteria of accessibility is p_isAccessibleMethod.
+*/
+GeneralSolver.prototype.spacesAccessiblesInRangeFromSetSpaces = function(p_startingSpaces, p_range, p_volcanicChecker, p_isAccessibleMethod) {
+	p_volcanicChecker.clean();
+	var answer = [];
+	var newsSpacesToExplore = p_startingSpaces;
+	newsSpacesToExplore.forEach(coors => {		
+		p_volcanicChecker.add(coors.x, coors.y);
+	});
+	var spacesFloorBelow;
+	var height = p_range;
+	var x, y, otherGuarded, x2, y2, guardedSpaces;
+	while(newsSpacesToExplore.length > 0 && height >= 0) {
+		spacesFloorBelow = [];
+		newsSpacesToExplore.forEach(coors => {
+			x = coors.x;
+			y = coors.y;
+			answer.push({x : x, y : y});
+			this.existingNeighborsCoors(x, y).forEach(coors2 => {
+				x2 = coors2.x;
+				y2 = coors2.y;
+				if (p_isAccessibleMethod(x2, y2) && p_volcanicChecker.add(x2, y2)) {
+					spacesFloorBelow.push({x : x2, y : y2});
+				}
+			});
+		});
+		newsSpacesToExplore = spacesFloorBelow;
+		height--;
+	}
+	return answer;
+}
+
+// Returns spaces closest from p_startingSpaces first. 
+// It may be equal to spacesAccessiblesInRangeFromSetSpaces in fact
+GeneralSolver.prototype.spacesAccessiblesInRangeFromSetSpacesClosestFirst = function(p_startingSpaces, p_range, p_volcanicChecker, p_isAccessibleMethod) {
+	return this.spacesAccessiblesInRangeFromSetSpaces(p_startingSpaces, p_range, p_volcanicChecker, p_isAccessibleMethod);
+}
+
+
 function standardAdjacencyEventString(p_x, p_y, p_adjacency, p_stringLabel) {
 	if (!p_stringLabel) {
 		p_stringLabel = "";
