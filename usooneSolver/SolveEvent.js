@@ -26,7 +26,7 @@ TruthEvent.prototype.opening = function() {
 	return ADJACENCY.UNDECIDED; 
 }
 
-TruthEvent.prototype.toString = function() {	
+TruthEvent.prototype.toLogString = function() {	
 	return "[T"+ LabelUsooneTruth[this.truth]+" "+this.x+","+this.y+"]";
 }
 
@@ -53,7 +53,7 @@ SpaceEvent.prototype.opening = function() {
 	return this.symbol;
 }
 
-SpaceEvent.prototype.toString = function() {	
+SpaceEvent.prototype.toLogString = function() {	
 	return standardAdjacencyEventString(this.coorX, this.coorY, this.symbol, "S");
 }
 

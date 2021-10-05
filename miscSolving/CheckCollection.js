@@ -84,6 +84,54 @@ CheckCollectionDoubleEntryGeneric.prototype.cleanOne = function(p_x, p_y) {
 }
 
 // ------------------------
+// Same but with a 3rd dimension associated to directions. Uses {x, y, direction} items.
+
+function CheckCollectionDoubleEntryDirectionalGeneric(p_xLength, p_yLength, p_defaultValue) {
+	this.list = [];
+	this.defaultValue = p_defaultValue;
+	this.array = [];
+	for (var y = 0; y < p_yLength ; y++) {
+		this.array.push([]);
+		for (var x = 0 ; x < p_xLength ; x++) {
+			this.array[y].push([this.defaultValue, this.defaultValue, this.defaultValue, this.defaultValue]);
+			
+		}
+	}
+}
+
+CheckCollectionDoubleEntryDirectionalGeneric.prototype.addGeneric = function(p_x, p_y, p_direction, p_value) {
+	if (this.array[p_y][p_x][p_direction] != p_value) {
+		this.array[p_y][p_x][p_direction] = p_value;
+		this.list.push({x : p_x, y : p_y, direction : p_direction});
+		return true;
+	}
+	return false;
+}
+
+CheckCollectionDoubleEntryDirectionalGeneric.prototype.clean = function() {
+	this.list.forEach(spaceDir => {
+		this.array[spaceDir.y][spaceDir.x][spaceDir.direction] = this.defaultValue;
+	});
+	this.list = [];
+}
+
+function CheckCollectionDoubleEntryDirectional(p_xLength, p_yLength) {
+	CheckCollectionDoubleEntryDirectionalGeneric.call(this, p_xLength, p_yLength, false);
+}
+CheckCollectionDoubleEntryDirectional.prototype = Object.create(CheckCollectionDoubleEntryDirectionalGeneric.prototype);
+CheckCollectionDoubleEntryDirectional.prototype.constructor = CheckCollectionDoubleEntryDirectional;
+
+CheckCollectionDoubleEntryDirectional.prototype.add = function(p_x, p_y, p_dir) {
+	return this.addGeneric(p_x, p_y, p_dir, true);
+}
+
+// Considers that one space that has been added should be removed before general clean.
+CheckCollectionDoubleEntryDirectional.prototype.cleanOne = function(p_x, p_y, p_dir) {
+	this.array[p_y][p_x][p_dir] = this.defaultValue;
+}
+
+
+// ------------------------
 // Same as "double entry" but it deals with new spaces. (may be useless ...)
 /*
 function CheckCollectionPropagationDoubleEntry(p_xLength, p_yLength) {

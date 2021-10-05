@@ -127,7 +127,7 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
 					} else if (eventBeingApplied.opening() == ADJACENCY.YES) {
 						//If we are putting the first open space, add a corresponding event into the list of applied events (it isn't "to apply" anymore)
 						if (!this.atLeastOneOpen) {
-							listEventsApplied.push({firstOpen : true});
+							listEventsApplied.push({firstOpen : true, outOfPass : true});
 							this.atLeastOneOpen = true;
 							firstOpenThisTime = true;
 						}
@@ -243,7 +243,7 @@ GeneralSolver.prototype.geographicalVerification = function (p_listNewXs, p_adja
         });
         checking.newLimits.forEach(spaceLimit => {
             //Store the ancient limit into the solved event (in case of undoing), then overwrites the limit at once and pushes it into
-            newListEventsApplied.push({adjacency : true});
+            newListEventsApplied.push({adjacency : true, outOfPass : true});
             this.adjacencyLimitSpacesList.push({
                 x: spaceLimit.x,
                 y: spaceLimit.y,
@@ -386,11 +386,11 @@ function intersect(p_eventsListOld, p_eventsListNew, p_eventsTools) {
 		if (p_eventsListNew == DEDUCTIONS_RESULT.FAILURE) {
 			return DEDUCTIONS_RESULT.FAILURE;
 		} else {
-			return filterExternalMethods(p_eventsListNew).sort(p_eventsTools.comparisonMethod); // VERY IMPORTANT : apply "filter" first and "sort" then, otherwise elements supposed to be discarded by filter could be "sorted" and make the intersection bogus
+			return filterUnsortableEvents(p_eventsListNew).sort(p_eventsTools.comparisonMethod); // VERY IMPORTANT : apply "filter" first and "sort" then, otherwise elements supposed to be discarded by filter could be "sorted" and make the intersection bogus
 		}
 	} else {
 		const eventsList1 = p_eventsListOld; //Already sorted ;)
-		var eventsList2 = filterExternalMethods(p_eventsListNew);
+		var eventsList2 = filterUnsortableEvents(p_eventsListNew);
 		eventsList2 = eventsList2.sort(p_eventsTools.comparisonMethod);
 		var i1 = 0;
 		var i2 = 0;
@@ -412,11 +412,13 @@ function intersect(p_eventsListOld, p_eventsListNew, p_eventsTools) {
 	}
 }
 
-// Filter methods that are not reserved to the solver
-function filterExternalMethods(p_list) {
+// Exclude methods that shouldn't be applied for sort and intersection. (such as events for the solver)
+// These events don't need to be compared or copied.
+// Let's not forget that the purpose of a pass is to deduct a serie of events that are common among the possible combinations of events and then to apply these events. The "unapplicable for pass" events will be applied anyway. 
+function filterUnsortableEvents(p_list) {
 	var answer = [];
 	p_list.forEach(event_ => {
-		if (!event_.adjacency && !event_.firstOpen) {
+		if (!event_.outOfPass) {
 			answer.push(event_);
 		}
 	});
@@ -659,7 +661,7 @@ GeneralSolver.prototype.happenedEventsLog = function(p_options) {
 					}
 				} else {
 					if (displayComplete || (eventSerie.kind == SERIE_KIND.HYPOTHESIS && i == 0) || shouldBeLoggedEvent(event_)) {						
-						answer += event_.toString() + " ";
+						answer += event_.toLogString(this) + " ";
 					}
 				}
 			}

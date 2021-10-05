@@ -93,23 +93,23 @@ ClosedAdjacentOutsideEvent.prototype.opening = function() {
 // ---------------
 // Interface
 
-SpaceEvent.prototype.toString = function() {	
+SpaceEvent.prototype.toLogString = function() {	
 	return "["+LabelAdjacency[this.symbol]+" "+this.coorX+","+this.coorY+"]";
 }
 
-MinRangeEvent.prototype.toString = function() {
+MinRangeEvent.prototype.toLogString = function() {
 	return "["+this.x + "," + this.y + " " + LabelDirection[this.direction] + " min " + this.min + "]";
 }
 
-MaxRangeEvent.prototype.toString = function() {
+MaxRangeEvent.prototype.toLogString = function() {
 	return "["+this.x + "," + this.y + " " + LabelDirection[this.direction] + " max " + this.max + "]";
 }
 
-BindEvent.prototype.toString = function() {
+BindEvent.prototype.toLogString = function() {
 	return "["+this.x + "," + this.y + " " + LabelDirection[this.direction] + " bound]";
 }
 
-ClosedAdjacentOutsideEvent.prototype.toString = function() {
+ClosedAdjacentOutsideEvent.prototype.toLogString = function() {
 	return "["+this.x + "," + this.y + " free closed]";
 }
 

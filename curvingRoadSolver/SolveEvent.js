@@ -23,6 +23,6 @@ SpaceEvent.prototype.copy = function() {
 // ---------------
 // Interface
 
-SpaceEvent.prototype.toString = function() {	
+SpaceEvent.prototype.toLogString = function() {	
 	return "["+LabelAdjacency[this.symbol]+" "+this.coorX+","+this.coorY+"]";
 }

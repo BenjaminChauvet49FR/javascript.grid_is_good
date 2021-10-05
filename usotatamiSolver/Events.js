@@ -37,10 +37,10 @@ shouldBeLoggedEvent = function(p_event) {
 	return p_event.kind == FENCE_EVENT_KIND;
 }
 
-ViewEvent.prototype.toString = function() {
+ViewEvent.prototype.toLogString = function() {
 	return "["+"V"+this.view+" "+this.x+","+this.y+" "+LabelDirection[this.direction]+"]";
 }
 
-RangeEvent.prototype.toString = function() {	
+RangeEvent.prototype.toLogString = function() {	
 	return "[R "+this.x+","+this.y+" "+LabelDirection[this.direction] + " " + this.range+"]";
 }

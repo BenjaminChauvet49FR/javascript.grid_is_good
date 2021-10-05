@@ -78,7 +78,7 @@ menuSolvers.push({
 		{name : "canalView", displayName : "CanalView", hoverDescription : "Visions de cases ouvertes consécutives en ligne et colonne"},
 		{name : "LITS", displayName : "LITS", hoverDescription : "Tetrominos, deux en contact doivent être différents"},
 		{name : "nurikabe", displayName : "Nurikabe", hoverDescription : "Les cases fermées forment des îles de surfaces imposées"},
-		{name : "Tapa", displayName : "Tapa", hoverDescription : "Alentour ortho-diagonal d'une case"},
+		{name : "tapa", displayName : "Tapa", hoverDescription : "Alentour ortho-diagonal d'une case"},
 		{name : "yajikabe", displayName : "Yajikabe", hoverDescription : "Indications flécho-numériques"}
 	]
 });
@@ -134,7 +134,8 @@ menuSolvers.push({
 	displayName : "Inclassables",
 	documentPage : "Solver",
 	typeList : [
-		{name : "stitches", displayName : "Stitches", hoverDescription : "Points de couture entre régions"}
+		{name : "stitches", displayName : "Stitches", hoverDescription : "Points de couture entre régions"},
+		{name : "yagit", displayName : "Yagit", hoverDescription : "Séparer ronds et carrés avec des cloisons qui vont tout droit"}
 	]
 });
 

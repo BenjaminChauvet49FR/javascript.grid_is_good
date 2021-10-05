@@ -10,6 +10,6 @@ function CompoundLinkEvent(p_x, p_y, p_dir1, p_dir2, p_state) {
 	markCompoundEvent(this);
 }
 
-CompoundLinkEvent.prototype.toString = function() {
+CompoundLinkEvent.prototype.toLogString = function() {
 	return "";
 }

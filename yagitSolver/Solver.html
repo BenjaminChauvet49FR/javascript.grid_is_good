@@ -3,7 +3,7 @@
     <head>
 		<meta charset="utf-8"/>
 		<link rel="icon" type="image/png" href="../resources/star.png">
-        <title>Solveur Galaxies !!!</title>
+        <title>Solveur Yagit !!!</title>
 		<link rel="stylesheet" type="text/css" href="../style.css">
     </head>
     <body>
@@ -17,22 +17,20 @@
 		<div id="div_canvas_buttons"></div>
 		<div id="div_global_actions"></div>
 		<span id="span_resolution_state"></span></br>	
-		
+		<input type="checkbox" id="checkbox_color_deadEnds">Colorier les cases impasse</input>		
 		<script src="../Importation.js"></script>
 		<script>
 		"use strict";
 		window.onload = function() {
 			addScriptsSolving();
 			addScriptsDirections();
-			addScriptCheckCollection();
 			addScriptFences();
 			addScriptsGeneric();
 			addScriptsLocal();
 			addScriptConstants();
+			addScriptCheckCollection();
 			addScript("Events.js");
-			addScript("SolverGalaxies.js");
-			addScriptNonBinarySpaces();
-			addMisc();
+			addScript("SolverYagit.js");
 			startScriptLoading();
 		}		 
 		</script>

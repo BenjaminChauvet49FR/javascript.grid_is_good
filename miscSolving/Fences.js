@@ -214,6 +214,6 @@ FencesGrid.prototype.avoidCrossBuildDeductions = function(p_eventList, p_x, p_y,
 // ---------
 // Interfacing 
 
-FenceEvent.prototype.toString = function() {	
+FenceEvent.prototype.toLogString = function() {	
 	return "[" + "F" + LabelFenceState[this.state] + " " + this.fenceX + "," + this.fenceY + " " + LabelDirection[this.direction] + "]";
 }

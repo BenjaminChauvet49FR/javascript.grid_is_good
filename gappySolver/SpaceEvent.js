@@ -4,7 +4,7 @@ function SpaceEvent(p_x, p_y, p_symbol) {
 	this.y = p_y;
 }
 
-SpaceEvent.prototype.toString = function() {	
+SpaceEvent.prototype.toLogString = function() {	
 	return "[" + stringStar(this.symbol) + " " + this.x + "," + this.y + "]";
 }
 
@@ -14,5 +14,5 @@ SpaceEvent.prototype.copy = function() {
 		symbol : this.symbol,
 		x : this.x,
 		y : this.y
-	}*/ //I tried something as simple as that but it wasn't a SpaceEvent object, hence a few problems when using toString (and undoing, I think)
+	}*/ //I tried something as simple as that but it wasn't a SpaceEvent object, hence a few problems when using toLogString (and undoing, I think)
 }

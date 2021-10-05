@@ -34,7 +34,7 @@ SolveEvent.prototype.setupValue = function(p_index, p_val) {
 
 //
 
-SolveEvent.prototype.toString = function(){	
+SolveEvent.prototype.toLogString = function(){	
 	if (this.kind == KIND.SYMBOL){
 		return "["+this.x+","+this.y+"] ("+this.symbol+")";
 	}

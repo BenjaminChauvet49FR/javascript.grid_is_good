@@ -1,7 +1,8 @@
 const ENTRY = {
 	SPACE:'1',
 	WALL_R:'2',
-	WALL_D:'3'
+	WALL_D:'3',
+	CORNER:'4'
 }
 
 // These items are used in 'main' but also in 'input' where the value is checked, which is why this file is not named (yet) commonHTMLActionManager.
@@ -52,6 +53,7 @@ const ACTION_PASS_AROUND_NUMERIC_SPACES_OR_SPACE = {id:108, html : "Passer case 
 const ACTION_PASS_AROUND_SPACES = {id:108, htmlCaption:"Passer alentour case indice"};
 const ACTION_PASS_STRIP = {id:109, htmlCaption:"Passer bande(s)"};
 const ACTION_PASS_STRIP_OR_SPACE = {id:109, htmlCaption : "Passer bande ou case"};
+const ACTION_PASS_AROUND_KNOT = {id:109, htmlCaption : "Passer autour noeud"};
 const ACTION_PASS_NUMBERS_SET = {id:101, htmlCaption : "Passer ensemble de cases"};
 const ACTION_PASS_GALAXY_DELIMITATION = {id:101, htmlCaption : "Passer autour centre galaxie"};
 
@@ -139,6 +141,7 @@ function setMode(p_textElement, p_entriesManager, p_entry, p_value) {
     p_textElement.innerHTML = p_value.html ? p_value.html : p_value.htmlCaption;
 	switch(p_entry) {
 		case (ENTRY.SPACE) : p_entriesManager.clickSpace = p_value; break; 
+		case (ENTRY.CORNER) : p_entriesManager.clickCorner = p_value; break; 
 		case (ENTRY.WALL_R) : p_entriesManager.clickWallD = p_value; break; 
 		case (ENTRY.WALL_D) : p_entriesManager.clickWallR = p_value; break; 
 		case (ENTRY.WALLS) : 

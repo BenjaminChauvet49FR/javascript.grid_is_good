@@ -10,7 +10,7 @@ function SpaceEvent(p_x,p_y,p_symbol) {
 	return solveEvent;
 }
 
-SolveEvent.prototype.toString = function(){	
+SolveEvent.prototype.toLogString = function(){	
 	return "["+this.symbol+" "+this.x+","+this.y+"]";
 }
 

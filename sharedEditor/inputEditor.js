@@ -8,7 +8,12 @@ function clickCanvasAction(event, p_canvas, p_drawer, p_editorCore, p_modes) {
     var doneClicking = false;
 	const p_xLength = p_editorCore.getXLength();
 	const p_yLength = p_editorCore.getYLength();
-	if (p_editorCore.hasWalls() && !inputOptions.lockedWalls) {
+	if (p_editorCore.isGalaxy()) {
+		clickCanvasActionGalaxy(event, p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength);
+		doneClicking = true;
+	} else if (p_editorCore.relevantCorners()) {
+		doneClicking = clickCornerAction(event, p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength);
+	} else if (p_editorCore.hasWalls() && !inputOptions.lockedWalls) {
 		var indexWallR = p_drawer.getClickWallR(event, p_canvas, p_xLength, p_yLength);
 		var indexWallD = p_drawer.getClickWallD(event, p_canvas, p_xLength, p_yLength);
 		if (indexWallR != null) {
@@ -19,40 +24,7 @@ function clickCanvasAction(event, p_canvas, p_drawer, p_editorCore, p_modes) {
 			p_editorCore.switchWallD(indexWallD.x, indexWallD.y);
 			doneClicking = true;
 		}
-	} else if (p_editorCore.isGalaxy()) {
-		const indexKnot = p_drawer.getClickKnotRD(event, p_canvas, p_xLength, p_yLength);
-		if (indexKnot != null) {
-			p_editorCore.manageGalaxyGridRightDown(indexKnot.x, indexKnot.y);
-			return;
-		}
-		const indexWallR = p_drawer.getClickWallR(event, p_canvas, p_xLength, p_yLength);
-		if (indexWallR != null) {
-			p_editorCore.manageGalaxyGridRight(indexWallR.x, indexWallR.y);
-			return;
-		}
-		const indexWallD = p_drawer.getClickWallD(event, p_canvas, p_xLength, p_yLength);
-		if (indexWallD != null) {
-			p_editorCore.manageGalaxyGridDown(indexWallD.x, indexWallD.y);
-			return;
-		}
-		const indexSpaces = p_drawer.getClickSpace(event, p_canvas, p_xLength, p_yLength);
-		if (indexSpaces != null) {
-			p_editorCore.manageGalaxyGridSpace(indexSpaces.x, indexSpaces.y);
-		}
-	}
-	/*if (p_editorCore.hasPathGrid()) { // TODO gérer les clics pour quand la grille sera en mode "affichage édition de sommets"
-		var indexAroundWallR = p_drawer.getClickAroundWallR(event, p_canvas, p_xLength, p_yLength);
-		var indexAroundWallD = p_drawer.getClickAroundWallD(event, p_canvas, p_xLength, p_yLength);
-		if (indexAroundWallR != null) {
-			p_editorCore.switchWallR(indexAroundWallR.x, indexAroundWallR.y);
-			doneClicking = true;
-		}
-	  
-		if (indexAroundWallD != null && (typeof(clickAroundWallDAction) == 'function')) {
-			p_editorCore.switchWallD(indexAroundWallD.x, indexAroundWallD.y);
-			doneClicking = true;
-		}
-	}*/
+	} 
     if (doneClicking) {
         return;
     }
@@ -127,7 +99,7 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.YAJILIN_LIKE)) {
 		return {
 			descriptionPrompt : "Entrer suite d'indices à la Yajilin (L|U|R|D)(nombre) ou X",
-			descriptionPromptMono : "Entrer indice à la Yajilin",
+			descriptionPromptMono : "Entrer indice à la Yajilin (L|U|R|D)(nombre) ou X",
 			defaultToken : "L1",
 			gridId : GRID_ID.YAJILIN_LIKE,
 			validityTokenMethod : validityTokenYajilin,
@@ -149,6 +121,15 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			defaultToken : "S",
 			gridId : GRID_ID.MOONSUN,
 			validityTokenMethod : validityTokenCharacterSelectionClosure(['M', 'S']),
+			parameters : {emptySpaceChar : " ", isMonoChar : true}
+		}		
+	} else if (p_editorCore.isVisibleGrid(GRID_ID.YAGIT)) {
+		return {
+			descriptionPrompt : "Entrer suite de formes Yagit (R|S)",
+			descriptionPromptMono : "Entrer forme Yagit (R|S)",
+			defaultToken : "S",
+			gridId : GRID_ID.YAGIT,
+			validityTokenMethod : validityTokenCharacterSelectionClosure(['R', 'S']),
 			parameters : {emptySpaceChar : " ", isMonoChar : true}
 		}		
 	}
@@ -209,6 +190,9 @@ clickMarginAction = function(p_editorCore, p_edge, p_index) {
 	}
 }
 
+// ----------------------
+
+// Prompt action (called from outside)
 function setSymbolAndTextAction(p_editorCore, p_textElement, p_modesManager) {
 	promptElements = getPromptElementsFromVisibleGrid(p_editorCore);
 	if (promptElements) {
@@ -223,13 +207,10 @@ function setSymbolAndTextAction(p_editorCore, p_textElement, p_modesManager) {
 	}
 }
 
-// Manages a value in a space in a grid : sets the space to the value, unless it already has it in which cas it gets cleared.
-// p_value may depend on p_editorCore.
-function manageValueInSpaceGrid(p_x, p_y, p_gridId, p_editorCore, p_value) {
-	if (p_editorCore.get(p_gridId, p_x, p_y) != p_value) {
-		p_editorCore.set(p_gridId, p_x, p_y, p_value);
-	} else {
-		p_editorCore.clearSpaceContents(p_x, p_y);
+// When the "space mode" is changed (put a number / some symbol, change state...)
+function applyChangesForSpaceMode(p_editorCore, p_mode) {
+	if ((p_mode.id != MODE_SELECTION.id) && (p_mode.id != MODE_SELECTION_RECTANGLE.id)) {
+		actionUnselectAll(p_editorCore);
 	}
 }
 
@@ -375,6 +356,9 @@ function transformGrid(p_canvas, p_drawer, p_editorCore, p_transformation) {
 		alert("Transformations impossibles pour le puzzle 'Galaxy'.");
 		return;
 	}
+	if (p_editorCore.hasCornersGridToBeMoved()) {
+		alert("Transformations impossibles pour les puzzles avec des noeuds (c'est amené à changer).");
+	}
 	var confirmation, xMin, xMax, yMin, yMax;
 	p_editorCore.updateSelectionData();
 	if (!p_editorCore.getNumberSelectedSpaces() == 0) {
@@ -426,19 +410,10 @@ function resizeAction(p_canvas, p_drawer, p_editorCore, p_fieldsDefiningPuzzle) 
 	}
 }
 
-//------------------------
-// When the "space mode" is changed (put a number / some symbol, change state...)
-
-function applyChangesForSpaceMode(p_editorCore, p_mode) {
-	if ((p_mode.id != MODE_SELECTION.id) && (p_mode.id != MODE_SELECTION_RECTANGLE.id)) {
-		actionUnselectAll(p_editorCore);
-	}
-}
-
 // -----------------------
-// Misc functions 
+// Misc functions for puzzle specificities
 
-getFieldX = function(p_fieldsDefiningPuzzle) { // TODO déplacer ceci ! 551551
+getFieldX = function(p_fieldsDefiningPuzzle) { 
 	if (p_fieldsDefiningPuzzle.spanXYBound.style.display == "none") {
 		return p_fieldsDefiningPuzzle.fieldX;
 	} else {
@@ -458,9 +433,10 @@ function correspondsToSquarePuzzle(p_puzzleKind) {
 	return p_puzzleKind.squareGrid; // Note : may be undefined, but typically used in boolean context (if (...))
 }
 
+// Note : rather than direct affectations, a distinctin between true and false
 function copySaveModeInto(p_start, p_destination) {
 	p_destination.id = p_start.id;
-	if (p_start.squareGrid) {
+	if (p_start.squareGrid) { 
 		p_destination.squareGrid = true;
 	} else {
 		p_destination.squareGrid = false;
@@ -495,6 +471,11 @@ function actionCopySelection(p_editorCore, p_xValue, p_yValue, p_transparencyNul
 }
 
 function actionMoveCopySelection(p_editorCore, p_xValue, p_yValue, p_mode, p_transparencyNull, p_verb, p_part2) {
+	if (p_editorCore.hasCornersGridToBeMoved()) {
+		if (!confirm("Attention : les noeuds sont considérés comme en bas à droite de la case et seront affectés également. Continuer ? ")) {
+			return;
+		}
+	}
 	const number = p_editorCore.countSpacesSelection();
 	if (number > 0 && (p_xValue != 0 || p_yValue != 0)) {
 		const confirmString1 = p_verb + " " + number + " case"+ (number > 1 ? "s" : "") + p_part2 + " ?";
@@ -605,7 +586,9 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
             puzzleToSaveString = limitedSymbolsWalllessPuzzleToString(p_editorCore.getArray(GRID_ID.GALAXIES), [GALAXIES_POSITION.CENTER, GALAXIES_POSITION.RIGHT, GALAXIES_POSITION.DOWN, GALAXIES_POSITION.RIGHT_DOWN]);
         } else if (p_saveLoadMode.id == PUZZLES_KIND.MOONSUN.id) {
             puzzleToSaveString = moonsunPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.MOONSUN));
-        }
+        } else if (p_saveLoadMode.id == PUZZLES_KIND.YAGIT.id) {
+			puzzleToSaveString = yagitPuzzleToString(p_editorCore.getArray(GRID_ID.YAGIT), p_editorCore.getArray(GRID_ID.KNOTS));
+		}
         localStorage.setItem(localStorageName, puzzleToSaveString);
     }
 }
@@ -684,7 +667,12 @@ function getLoadedStuff(p_kindId, p_localStorageName, p_externalOptions) { // No
 			var loadedItem = stringToLimitedSymbolsWalllessPuzzle(localStorage.getItem(p_localStorageName), [GALAXIES_POSITION.CENTER, GALAXIES_POSITION.RIGHT, GALAXIES_POSITION.DOWN, GALAXIES_POSITION.RIGHT_DOWN]);
 			loadedItem.desiredIDs = [GRID_ID.GALAXIES];
 			loadedItem.desiredArrays = [loadedItem.symbolArray];
-			return loadedItem; break;			
+			return loadedItem; break;		
+		case PUZZLES_KIND.YAGIT.id :
+			var loadedItem = stringToYagitPuzzle(localStorage.getItem(p_localStorageName));
+			loadedItem.desiredIDs = [GRID_ID.YAGIT, GRID_ID.KNOTS];
+			loadedItem.desiredArrays = [loadedItem.symbolArray, loadedItem.knotsArray];
+			return loadedItem; break;
 		default :
 			return stringToWallsOnlyPuzzle(localStorage.getItem(p_localStorageName));
 	} 

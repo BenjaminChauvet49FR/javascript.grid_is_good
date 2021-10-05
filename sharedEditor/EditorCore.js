@@ -676,10 +676,18 @@ EditorCore.prototype.clearContentsSelection = function() {
 }
 
 //-------------------------------------------
-// Parameters for grids
+// Parameters for / about grids
 
 function isOrientedGrid(p_name) {
 	return (p_name == GRID_ID.YAJILIN_LIKE);
+}
+
+EditorCore.prototype.relevantCorners = function () {
+	return (this.visibleGrids[GRID_ID.KNOTS]);
+}
+
+EditorCore.prototype.hasCornersGridToBeMoved = function() {
+	return (this.visibleGrids[GRID_ID.KNOTS]);
 }
 
 //-------------------------------------------
@@ -769,7 +777,7 @@ EditorCore.prototype.conditionalEraseSpaceGalaxies = function(p_xCond, p_yCond, 
 	}
 }
 
-//-------------------------------------------
+// -------------------------------------------
 // Misc.
 
 EditorCore.prototype.alignToRegions = function (p_idGrid) {

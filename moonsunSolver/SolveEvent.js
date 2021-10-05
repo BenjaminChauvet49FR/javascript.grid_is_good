@@ -16,7 +16,7 @@ AstreEvent.prototype.copy = function() {
 	return new AstreEvent(this.index, this.astre);
 }
 
-AstreEvent.prototype.toString = function() {
+AstreEvent.prototype.toLogString = function() {
 	return "(MS reg. " + this.index + " " + (this.astre == ASTRE.MOON ? "M" : "S") + ")";
 }
 

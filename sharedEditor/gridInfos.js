@@ -14,7 +14,9 @@ const GRID_ID = {
 	},
 	PLAYSTATION_SHAPES: 'PSH',
 	GALAXIES: 'GAL',
-	MOONSUN: 'MS'
+	MOONSUN: 'MS',
+	YAGIT: 'YG',
+	KNOTS: 'KNOTS'
 }
 
 const GRID_TRANSFORMATION = {
@@ -44,7 +46,8 @@ const PUZZLES_KIND = {
 	GALAXIES : {id:13},
 	MOONSUN : {id:14}, // 15
 	GRAND_TOUR : {id:99102},
-	SUDOKU : {id:1001}
+	SUDOKU : {id:1001},
+	YAGIT : {id:16}
 }
 
 const MARGIN_KIND = {

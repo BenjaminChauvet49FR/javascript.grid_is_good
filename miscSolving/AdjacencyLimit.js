@@ -162,7 +162,7 @@ function arrayAdjacencyLimitToString(p_array) {
     var stringSpace;
     for (var y = 0; y < p_array.length; y++) {
         for (x = 0; x < p_array[0].length; x++) {
-            stringSpace = p_array[y][x].toString();
+            stringSpace = p_array[y][x].toLogString();
             answer += stringSpace;
             for (i = stringSpace.length; i < 8; i++) {
                 answer += " ";

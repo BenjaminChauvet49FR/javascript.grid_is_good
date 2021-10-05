@@ -9,7 +9,8 @@ const SYMBOL_ID = {
 	SQUARE: 'S',
 	TRIANGLE: 'T',
 	MOON: 'M',
-	SUN: 'S'
+	SUN: 'S',
+	KNOT_HERE: 'K'
 }
 
 const GALAXIES_POSITION = {
@@ -362,6 +363,57 @@ function stringToWallsNumbersPuzzle(p_string) {
 }
 
 //----
+// Used for arrays that eithter contain empty spaces or 2 possible values and the number of non-empty spaces is quite important (Moonsun, Yagit)
+function base2HalfFullArrayToString(p_symbolsArray, p_symbol1) {
+	const base2streamSpaces = new StreamEncodingFullBase(2);
+	const base2streamSymbols = new StreamEncodingFullBase(2);
+	var symbol;
+	for (var y = 0; y < p_symbolsArray.length ; y++) {
+		for (var x = 0 ; x < p_symbolsArray[y].length ; x++) {
+			symbol = p_symbolsArray[y][x];
+			base2streamSpaces.encode(symbol != null ? 1 : 0);
+			if (symbol != null) {
+				base2streamSymbols.encode(symbol == p_symbol1 ? 1 : 0);
+			}
+		}
+	}
+	return base2streamSpaces.getString() + base2streamSymbols.getString();
+}
+
+function stringToBase2HalfFullArray(p_string, p_xLength, p_yLength, p_symbol1, p_symbol0) {
+	const streamDecoding = new StreamDecodingFullBase(2, p_string);
+	// List of non-empty spaces
+	var listCoors = []
+	for (var y = 0; y < p_yLength ; y++) {
+		for (var x = 0 ; x < p_xLength ; x++) {
+			bit = streamDecoding.decode();
+			if (bit == 1) {
+				listCoors.push({x : x, y : y});
+			}
+		}
+	}
+	// Decode last bits into the void so a multiple of 6 bits is read
+	var remaining = (6 - (p_yLength * p_xLength) % 6)
+	if (remaining == 6) {
+		remaining = 0;
+	}
+	for (var i = 0; i < remaining ; i++) {
+		streamDecoding.decode();
+	}
+	// Now, generate the desired array !
+	var symbolArray = generateValueArray(p_xLength, p_yLength, null);
+	for (var i = 0 ; i < listCoors.length ; i++) {
+		bit = streamDecoding.decode();
+		symbolArray[listCoors[i].y][listCoors[i].x] = (bit == 1 ? p_symbol1 : p_symbol0);
+	}
+	return symbolArray;
+}
+
+
+//----------------------------------------------------------------------------------------
+// Now for kinda specific puzzles
+//----------------------------------------------------------------------------------------
+
 // Yajilin and so grids
 // Grid must consist of Xs and "Ld|Ud|Rd|Dd" where d is a number
 
@@ -526,51 +578,44 @@ function stringToLimitedSymbolsWallsPuzzle(p_string, p_symbolsList) {
 }
 
 // ----------------
-// Moonsun specific
+// Moonsun 
+
 function moonsunPuzzleToString(p_wallArray, p_symbolsArray) {
-	const base2streamSpaces = new StreamEncodingFullBase(2);
-	const base2streamAstres = new StreamEncodingFullBase(2);
-	var symbol;
-	for (var y = 0; y < p_wallArray.length ; y++) {
-		for (var x = 0 ; x < p_wallArray[y].length ; x++) {
-			symbol = p_symbolsArray[y][x];
-			base2streamSpaces.encode(symbol != null ? 1 : 0);
-			if (symbol != null) {
-				base2streamAstres.encode(symbol == SYMBOL_ID.SUN ? 1 : 0);
-			}
-		}
-	}
-	return wallsOnlyPuzzleToString(p_wallArray) + " " + base2streamSpaces.getString() + base2streamAstres.getString();
+	return wallsOnlyPuzzleToString(p_wallArray) + " " + base2HalfFullArrayToString(p_symbolsArray, SYMBOL_ID.SUN);
 }
 
 function stringToMoonsunPuzzle(p_string) {
 	const tokens = p_string.split(" ");
 	const dims = stringToDimensions(tokens[0]);
-	var listCoors = [];
-	var bit, symbol;
-	const streamDecoding = new StreamDecodingFullBase(2, tokens[2]);
-	for (var y = 0; y < dims.yLength ; y++) {
-		for (var x = 0 ; x < dims.xLength ; x++) {
-			bit = streamDecoding.decode();
-			if (bit == 1) {
-				listCoors.push({x : x, y : y});
-			}
+	return {wallArray : string64toWallArray(tokens[1], dims.xLength, dims.yLength), 
+			symbolArray : stringToBase2HalfFullArray(tokens[2], dims.xLength, dims.yLength, SYMBOL_ID.SUN, SYMBOL_ID.MOON)} 
+}
+
+// ----------------
+// Yagit puzzle
+
+function yagitPuzzleToString(p_yagitArray, p_knotsArray) {
+	const base2streamKnots = new StreamEncodingFullBase(2);
+	var symbol;
+	for (var y = 0; y <= p_knotsArray.length-2 ; y++) {
+		for (var x = 0 ; x <= p_knotsArray[y].length-2 ; x++) {
+			base2streamKnots.encode(p_knotsArray[y][x] != null ? 1 : 0);
 		}
 	}
-	// Decode last bits into the void so a multiple of 6 bits is read
-	var remaining = (6 - (dims.yLength * dims.xLength) % 6)
-	if (remaining == 6) {
-		remaining = 0;
+	return dimensionsToString(p_yagitArray) + " " + base2HalfFullArrayToString(p_yagitArray, SYMBOL_ID.SQUARE) + " " + base2streamKnots.getString() ;
+}
+
+function stringToYagitPuzzle(p_string) {
+	const tokens = p_string.split(" ");
+	const dims = stringToDimensions(tokens[0]);
+	var knotsStream = new StreamDecodingFullBase(2, tokens[2]);
+	var knotsArray = generateValueArray(dims.xLength, dims.yLength, null);
+	var bit;
+	for (var y = 0; y <= knotsArray.length-2 ; y++) {
+		for (var x = 0 ; x <= knotsArray[y].length-2 ; x++) {
+			bit = knotsStream.decode();
+			knotsArray[y][x] = (bit == 1 ? SYMBOL_ID.KNOT_HERE : null);
+		}
 	}
-	for (var i = 0; i < remaining ; i++) {
-		streamDecoding.decode();
-	}
-	
-	var symbolArray = generateValueArray(dims.xLength, dims.yLength, null);
-	for (var i = 0 ; i < listCoors.length ; i++) {
-		bit = streamDecoding.decode();
-		symbolArray[listCoors[i].y][listCoors[i].x] = (bit == 1 ? SYMBOL_ID.SUN : SYMBOL_ID.MOON);
-	}
-	return {wallArray : string64toWallArray(tokens[1], dims.xLength, dims.yLength), 
-			symbolArray : symbolArray} 
+	return {symbolArray : stringToBase2HalfFullArray(tokens[1], dims.xLength, dims.yLength, SYMBOL_ID.SQUARE, SYMBOL_ID.ROUND), knotsArray : knotsArray} 
 }

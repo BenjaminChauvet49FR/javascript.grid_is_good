@@ -15,7 +15,7 @@ function SpaceEvent(p_x, p_y, p_symbol) {
 	this.y = p_y;
 }
 
-SpaceEvent.prototype.toString = function(){	
+SpaceEvent.prototype.toLogString = function(){	
 	return "["+LABEL_SPACE_STATE[this.symbol]+" "+this.x+","+this.y+"]";
 }
 
@@ -36,7 +36,7 @@ LinkEvent.prototype.copy = function() {
 	return new LinkEvent(this.linkX, this.linkY, this.direction, this.state);
 }
 
-LinkEvent.prototype.toString = function() {	
+LinkEvent.prototype.toLogString = function() {	
 	return "["+"L"+LABEL_LINK_STATE[this.state]+" "+this.linkX+","+this.linkY+" "+LabelDirection[this.direction]+"]";
 }
 

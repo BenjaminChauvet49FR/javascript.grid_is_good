@@ -78,7 +78,7 @@ function GeographicalDeduction(p_x, p_y, p_opening) {
 	this.y = p_y;
 }
 
-GeographicalDeduction.prototype.toString = function() {	
+GeographicalDeduction.prototype.toLogString = function() {	
 	return "[GD "+this.x+","+this.y+"] ("+this.opening+")";
 }
 

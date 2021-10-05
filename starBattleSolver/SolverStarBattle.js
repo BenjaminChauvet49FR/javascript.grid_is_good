@@ -261,7 +261,7 @@ deductionsClosure = function (p_solver) {
 			p_solver.existingNeighborsCoorsWithDiagonals(x, y).forEach(coors => {
 				spaceEventToAdd = new SpaceEvent(coors.x, coors.y, STAR.NO);
 				p_listEventsToApply.push(spaceEventToAdd);
-				autoLogDeduction("Event pushed : "+spaceEventToAdd.toString());
+				autoLogDeduction("Event pushed : "+spaceEventToAdd.toLogString());
 			});
 			if (p_solver.notPlacedYet.columns[x].Os == 0) {
 				p_listEventsToApply = p_solver.deductionsFillingColumn(p_listEventsToApply, x, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.NO));

@@ -6,7 +6,7 @@ function SpaceEvent(p_x, p_y, p_symbol) {
 	this.coorY = p_y;
 }
 
-SpaceEvent.prototype.toString = function() {	
+SpaceEvent.prototype.toLogString = function() {	
 	return "["+this.symbol+" "+this.coorX+","+this.coorY+"]";
 }
 
@@ -37,7 +37,7 @@ ShapeEvent.prototype.copy = function() {
 	return new ShapeEvent(this.coorX, this.coorY, this.shape);
 }
 
-ShapeEvent.prototype.toString = function() {	
+ShapeEvent.prototype.toLogString = function() {	
 	return "[S"+this.shape+" "+this.coorX+","+this.coorY+"]";
 }
 
@@ -59,7 +59,7 @@ function ShapeRegionEvent(p_ir, p_shape) {
 	this.region = p_ir;
 }
 
-ShapeRegionEvent.prototype.toString = function() {	
+ShapeRegionEvent.prototype.toLogString = function() {	
 	return "[SR "+this.shape+" "+this.region+"]";
 }
 

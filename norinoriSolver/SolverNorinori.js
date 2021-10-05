@@ -532,7 +532,7 @@ skipPassClosure = function(p_solver) {
 Logs that a space event is pushed into a list (in the calling function !) and returns the space event !
 */
 function loggedSpaceEvent(spaceEvt){
-	autoLogTryToPutNewGold("Event pushed : "+spaceEvt.toString());
+	autoLogTryToPutNewGold("Event pushed : "+spaceEvt.toLogString());
 	return spaceEvt
 }
 

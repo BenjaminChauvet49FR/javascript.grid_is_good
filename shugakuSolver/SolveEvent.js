@@ -18,7 +18,7 @@ function SpaceEvent(p_x, p_y, p_symbol, p_choice) {
 	this.choice = p_choice;
 }
 
-SpaceEvent.prototype.toString = function() {	
+SpaceEvent.prototype.toLogString = function() {	
 	return "["+ LabelShugaku[this.symbol] + (this.choice ? "Y" : "N") + " " + this.coorX + "," + this.coorY + "]";
 }
 

@@ -18,7 +18,7 @@ SpaceEvent.prototype.copy = function() {
 	return new SpaceEvent(this.x, this.y, this.state);
 }
 
-SpaceEvent.prototype.toString = function(){	
+SpaceEvent.prototype.toLogString = function(){	
 	return "["+LoopStateLabel[this.state]+" "+this.x+","+this.y+"]";
 }
 
@@ -36,7 +36,7 @@ LinkEvent.prototype.copy = function() {
 	return answer;
 }
 
-LinkEvent.prototype.toString = function(){	
+LinkEvent.prototype.toLogString = function(){	
 	return "["+"L"+LoopStateLabel[this.state]+" "+this.linkX+","+this.linkY+" "+this.direction+"]";
 }
 

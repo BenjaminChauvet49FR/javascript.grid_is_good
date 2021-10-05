@@ -8,7 +8,7 @@ function SpaceAllowEvent(p_x, p_y, p_number, p_valid) {
 // ---------
 // Interfacing 
 
-SpaceAllowEvent.prototype.toString = function() {	
+SpaceAllowEvent.prototype.toLogString = function() {	
 	return "[" + this.x + "," + this.y + " " + this.number + (this.choice ? "" : "X")+ "]";
 }
 

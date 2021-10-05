@@ -28,7 +28,7 @@ ChoiceEvent.prototype.opening = function() {
 // ---------------
 // Interface
 
-ChoiceEvent.prototype.toString = function() {	
+ChoiceEvent.prototype.toLogString = function() {	
 	return "["+ (this.index == NURIKABE_SEA ? "S" : this.index) + (this.choice ? "Y" : "N") + " " + this.coorX + "," + this.coorY + "]";
 }
 

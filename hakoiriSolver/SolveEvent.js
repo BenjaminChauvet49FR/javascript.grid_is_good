@@ -15,7 +15,7 @@ function SpaceAllowEvent(p_x, p_y, p_symbol, p_choice) {
 	this.choice = p_choice;
 }
 
-SpaceAllowEvent.prototype.toString = function() {	
+SpaceAllowEvent.prototype.toLogString = function() {	
 	return "["+ LabelHakoiri[this.symbol] + (this.choice ? "Y" : "N") + " " + this.coorX + "," + this.coorY + "]";
 }
 

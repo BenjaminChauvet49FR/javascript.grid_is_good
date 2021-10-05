@@ -5,7 +5,7 @@ function SpaceAllowEvent(p_x, p_y, p_number, p_valid) {
 	this.y = p_y;
 }
 
-SpaceAllowEvent.prototype.toString = function() {	
+SpaceAllowEvent.prototype.toLogString = function() {	
 	return "[" + this.number + (this.choice ? "" : "X") + " " + this.x + "," + this.y + "]";
 }
 

@@ -105,6 +105,11 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			saveLoadModeId = PUZZLES_KIND.MOONSUN;
 			p_editorCore.setVisibleGrids([GRID_ID.MOONSUN]); break;
 			break; 
+		case 'Yagit':
+			saveLoadModeId = PUZZLES_KIND.YAGIT;
+			p_editorCore.setVisibleGrids([GRID_ID.YAGIT, GRID_ID.KNOTS]); 
+			p_editorCore.setWallsOff(); break;
+			break; 	
 		default: // norinori, lits, entryExit... no numbers, only regions
 			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY;
 			break; 

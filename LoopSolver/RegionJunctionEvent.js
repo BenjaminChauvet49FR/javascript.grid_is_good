@@ -12,6 +12,6 @@ RegionJunctionEvent.prototype.copy = function() {
 	return new RegionJunctionEvent(this.index1, this.index2, this.state);
 }
 
-RegionJunctionEvent.prototype.toString = function() {
+RegionJunctionEvent.prototype.toLogString = function() {
  	return "["+"RJ "+ (this.state == BORDER_STATE.LINKED ? "O" : "X") +" "+this.index1+","+this.index2+"]";
 }

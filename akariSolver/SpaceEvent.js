@@ -8,6 +8,6 @@ SpaceEvent.prototype.copy = function() {
 	return new SpaceEvent(this.x, this.y, this.symbol);
 }
 
-SpaceEvent.prototype.toString = function() {	
+SpaceEvent.prototype.toLogString = function() {	
 	return "[" + this.symbol + " " + this.x  + "," + this.y + "]";
 }

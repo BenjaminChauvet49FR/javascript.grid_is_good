@@ -50,6 +50,16 @@ function Drawer() {
 		inner : '#ffffdd',
 		border : '#440000'
 	}
+	this.knotsColourSet = {
+		inner : '#002288',
+		border : '#000044'
+	}
+	this.yagitColourSet = {
+		roundBorder : "#000088",
+		roundInner : "#8844ff",
+		squareBorder : "#008800",
+		squareInner : "#00cc44"
+	}
 }
 
 Drawer.prototype.setWallColors = function(p_wallColorSet) {
@@ -121,14 +131,17 @@ fenceDownToColorClosure = function(p_solver, p_fenceMethodDown) {
 	}
 }
 
-pillarToColorFenceClosure = function(p_solver, p_fenceMethodRight, p_fenceMethodDown) {
+pillarToColorFenceClosure = function(p_solver, p_fenceMethodRight, p_fenceMethodDown, p_undecidedOverOpen) {
 	return function(p_x, p_y) {
 		if (p_fenceMethodRight(p_x, p_y) == FENCE_STATE.CLOSED || p_fenceMethodDown(p_x, p_y) == FENCE_STATE.CLOSED ||
 			p_fenceMethodRight(p_x, p_y + 1) == FENCE_STATE.CLOSED || p_fenceMethodDown(p_x + 1, p_y) == FENCE_STATE.CLOSED) {
 			return p_solver.fenceToColor(FENCE_STATE.CLOSED);
 		} else {
-			if (p_fenceMethodRight(p_x, p_y) == FENCE_STATE.OPEN || p_fenceMethodDown(p_x, p_y) == FENCE_STATE.OPEN ||
-			p_fenceMethodRight(p_x, p_y + 1) == FENCE_STATE.OPEN || p_fenceMethodDown(p_x + 1, p_y) == FENCE_STATE.OPEN) {
+			const cond1 = !p_undecidedOverOpen && (p_fenceMethodRight(p_x, p_y) == FENCE_STATE.OPEN || p_fenceMethodDown(p_x, p_y) == FENCE_STATE.OPEN ||
+			p_fenceMethodRight(p_x, p_y + 1) == FENCE_STATE.OPEN || p_fenceMethodDown(p_x + 1, p_y) == FENCE_STATE.OPEN);
+			const cond2 = p_undecidedOverOpen && p_fenceMethodRight(p_x, p_y) == FENCE_STATE.OPEN && p_fenceMethodDown(p_x, p_y) == FENCE_STATE.OPEN &&
+			p_fenceMethodRight(p_x, p_y + 1) == FENCE_STATE.OPEN && p_fenceMethodDown(p_x + 1, p_y) == FENCE_STATE.OPEN;
+			if (cond1 || cond2) {
 				return p_solver.fenceToColor(FENCE_STATE.OPEN);
 			} else {
 				return p_solver.fenceToColor(FENCE_STATE.UNDECIDED);
@@ -144,9 +157,19 @@ Drawer.prototype.drawWallGrid = function (p_context, p_wallGrid, p_xLength, p_yL
 }
 
 Drawer.prototype.drawFenceArray = function (p_context, p_xLength, p_yLength, p_fenceMethodRight, p_fenceMethodDown) {
+	this.drawFenceArrayPrivate(p_context, p_xLength, p_yLength, p_fenceMethodRight, p_fenceMethodDown, false);
+}
+
+// Well, there are no "open pillars"
+Drawer.prototype.drawFenceArrayGhostPillars = function (p_context, p_xLength, p_yLength, p_fenceMethodRight, p_fenceMethodDown) {
+	this.drawFenceArrayPrivate(p_context, p_xLength, p_yLength, p_fenceMethodRight, p_fenceMethodDown, true);
+}
+
+
+Drawer.prototype.drawFenceArrayPrivate = function (p_context, p_xLength, p_yLength, p_fenceMethodRight, p_fenceMethodDown, p_pillarsUnknownOverOpen) {
 	this.drawGridPuzzle(p_context, p_xLength, p_yLength, 
 	fenceRightToColorClosure(this, p_fenceMethodRight), fenceDownToColorClosure(this, p_fenceMethodDown), 
-	pillarToColorFenceClosure(this, p_fenceMethodRight, p_fenceMethodDown), null);
+	pillarToColorFenceClosure(this, p_fenceMethodRight, p_fenceMethodDown, p_pillarsUnknownOverOpen), null);
 }
 
 Drawer.prototype.drawGridPuzzle = function (p_context, p_xLength, p_yLength, p_colorMethodRight, p_colorMethodDown, p_colorMethodPillar, p_colorMethodSpace) {
@@ -620,7 +643,40 @@ Drawer.prototype.drawNumbersInsideStandard = function(p_context, p_function, p_x
 	}
 }
 
+// For Yagit. There is a puzzle with Yagit-related shapes added while solving (like Hakoiri has shapes added in solving but as I write this it's direcly handled by Hakoiri drawer), but I'll probably add a function variant of this method then.
+Drawer.prototype.drawYagitGrid = function (p_context, p_shapeGrid) {
+	function getShape (x, y) {
+		if (p_shapeGrid.get(x, y) == SYMBOL_ID.ROUND) {
+			return 0;
+		} else if (p_shapeGrid.get(x, y) == SYMBOL_ID.SQUARE) {
+			return 1;
+		}
+		return -1;
+	}
+	const shapes = [DrawableCircle(this.yagitColourSet.roundBorder, this.yagitColourSet.roundInner), DrawableSquare(this.yagitColourSet.squareBorder, this.yagitColourSet.squareInner)];
+	this.drawSpaceContents(p_context, shapes, getShape, p_shapeGrid.getXLength(), p_shapeGrid.getYLength()); 
+}
+
 // -------------------------------
+// Draw grid contents used both in editor and solvers
+Drawer.prototype.drawKnotsInRD = function(p_context, p_knotsGrid) {
+	const yLength = p_knotsGrid.getYLength();	
+	const xLength = p_knotsGrid.getXLength();
+	p_context.fillStyle = this.knotsColourSet.inner;
+	p_context.strokeStyle = this.knotsColourSet.border;
+	const radius = this.pix.sideSpace / 7;
+	for(var iy = 0 ; iy < yLength ; iy++) {
+		for(var ix = 0 ; ix < xLength ; ix++) {
+			if (p_knotsGrid.get(ix, iy) != null) {
+				p_context.beginPath();
+				p_context.ellipse(this.getPixXRight(ix), this.getPixYDown(iy), radius, radius, 0, 0, 2 * Math.PI);
+				p_context.stroke();
+				p_context.fill();	
+			}
+		}
+	}
+}
+
 // Draw specific grid contents, used both in editor and solvers
 
 // Tapa

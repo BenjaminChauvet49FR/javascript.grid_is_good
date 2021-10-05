@@ -17,7 +17,7 @@ ChoiceEvent.prototype.copy = function() {
 // ---------
 // Interfacing 
 
-ChoiceEvent.prototype.toString = function() {
+ChoiceEvent.prototype.toLogString = function() {
 	return "["+ (this.choice ? "BO" : "BX") + " " + this.x+","+this.y + " "+ this.index + "]";
 }
 

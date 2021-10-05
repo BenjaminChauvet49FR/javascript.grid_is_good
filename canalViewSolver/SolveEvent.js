@@ -63,15 +63,15 @@ MaxRangeEvent.prototype.opening = function() {
 // ---------------
 // Interface
 
-SpaceEvent.prototype.toString = function() {	
+SpaceEvent.prototype.toLogString = function() {	
 	return "["+LabelAdjacency[this.symbol]+" "+this.coorX+","+this.coorY+"]";
 }
 
-MinRangeEvent.prototype.toString = function() {
+MinRangeEvent.prototype.toLogString = function() {
 	return "["+this.x + "," + this.y + " " + LabelDirection[this.direction] + " min " + this.min + "]";
 }
 
-MaxRangeEvent.prototype.toString = function() {
+MaxRangeEvent.prototype.toLogString = function() {
 	return "["+this.x + "," + this.y + " " + LabelDirection[this.direction] + " max " + this.max + "]";
 }
 
