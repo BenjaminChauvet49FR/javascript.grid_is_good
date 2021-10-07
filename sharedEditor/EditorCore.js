@@ -3,6 +3,8 @@ const SELECTED = {
     NO: false
 }
 
+const WILD_CARD_CHARACTER = "*";
+
 function EditorCore(p_xLength, p_yLength, p_parameters) {
     this.xLength = p_xLength;
 	this.yLength = p_yLength;
@@ -16,6 +18,14 @@ function EditorCore(p_xLength, p_yLength, p_parameters) {
 	this.resetMargins(); 
 	this.inputSybol = null;
 	this.nullIsTransparent = false;
+	
+	// To undo chain prompt
+	this.chainInsertData = { 
+		valid : false,
+		affectedGridNonWildId : null, // TODO only one grid at a time ?
+		lastChanges : [] // items with x, y, formerVal, newVal
+	}
+	
 }
 
 /**
@@ -115,6 +125,10 @@ EditorCore.prototype.setVisibleGrids = function(p_list) {
 	p_list.forEach(id => {
 		this.visibleGrids[id] = true;
 	});
+}
+
+EditorCore.prototype.setVisibleWildcardGrid = function() {
+	this.visibleGrids[GRID_ID.WILDCARD] = true
 }
 
 // Resize the grid according to the newly added array, performing all subjacent operations. 
@@ -249,16 +263,22 @@ EditorCore.prototype.get = function (p_idGrid, p_x, p_y) {
     return this.grids[p_idGrid].get(p_x, p_y);
 }
 
+EditorCore.prototype.getWildCardGrid = function() {
+	return this.grids[GRID_ID.WILDCARD];
+}
+
 EditorCore.prototype.set = function (p_idGrid, p_x, p_y, p_value) {
     this.grids[p_idGrid].set(p_x, p_y, p_value);
 }
 
+EditorCore.prototype.switchWildCardWithGrid = function(p_idGrid, p_x, p_y) {
+	this.set(p_idGrid, p_x, p_y, null);
+	this.grids[GRID_ID.WILDCARD].toggle(p_x, p_y, WILD_CARD_CHARACTER);
+}
+
 EditorCore.prototype.switchValue = function (p_idGrid, p_x, p_y, p_value) {
-	if (this.get(p_idGrid, p_x, p_y) == p_value) {
-		this.set(p_idGrid, p_x, p_y, null);
-	} else {
-		this.set(p_idGrid, p_x, p_y, p_value);
-	}
+	this.grids[p_idGrid].toggle(p_x, p_y, p_value);
+	this.grids[GRID_ID.WILDCARD].set(p_x, p_y, null);
 }
 
 
@@ -318,14 +338,18 @@ EditorCore.prototype.transformGrid = function (p_transformation, p_xNewLength, p
 		this.xLength = this.wallGrid.getXLength();
 		this.yLength = this.wallGrid.getYLength();
 		for (const id in this.grids) {
-			this.grids[id].transform(p_transformation, p_xNewLength, p_yNewLength, isOrientedGrid(id));
+			if (p_transformation == GRID_TRANSFORMATION.RESIZE || !this.notInSpaces(id)) {				
+				this.grids[id].transform(p_transformation, p_xNewLength, p_yNewLength, isOrientedGrid(id));
+			}
 		}
 		this.transformMargins(p_transformation, formerXLength, formerYLength);
 	} else { // Local
 		for (const id in this.grids) {
-			this.grids[id].transformLocal(p_transformation, this.selectionData.list, 
-			(this.selectionData.xMin+this.selectionData.xMax)/2, 
-			(this.selectionData.yMin+this.selectionData.yMax)/2, isOrientedGrid(id));
+			if (!this.notInSpaces(id)) {				
+				this.grids[id].transformLocal(p_transformation, this.selectionData.list, 
+				(this.selectionData.xMin+this.selectionData.xMax)/2, 
+				(this.selectionData.yMin+this.selectionData.yMax)/2, isOrientedGrid(id));
+			}
 		}
 	}
 	this.resetSelection();
@@ -399,19 +423,40 @@ const INPUT_PLACE_KIND = {
 	MARGIN : 1
 }
 
-EditorCore.prototype.insertChainGrid = function(p_gridId, p_valuesChain, p_validityMethod, p_parameters, p_x, p_y) {
-	this.insertChainPrivate(INPUT_PLACE_KIND.GRID, p_gridId, p_valuesChain, p_validityMethod, p_parameters, p_x, p_y, this.getXLength(), -1);
+EditorCore.prototype.insertChainGrid = function(p_gridId, p_valuesChain, p_validityMethod, p_parameters, p_x, p_y, p_hasWildCardsSelected) {
+	this.insertChainPrivate(INPUT_PLACE_KIND.GRID, p_gridId, p_valuesChain, p_validityMethod, p_parameters, p_x, p_y, this.getXLength(), p_hasWildCardsSelected);
 }
 
 EditorCore.prototype.insertChainMargin = function(p_edge, p_valuesChain, p_validityMethod, p_parameters, p_index) {
 	const appropriateLength = ((p_edge == EDGES.LEFT || p_edge == EDGES.RIGHT) ? this.getYLength() : this.getXLength());
-	this.insertChainPrivate(INPUT_PLACE_KIND.MARGIN, p_edge, p_valuesChain, p_validityMethod, p_parameters, p_index, -1, appropriateLength, -1);
+	this.insertChainPrivate(INPUT_PLACE_KIND.MARGIN, p_edge, p_valuesChain, p_validityMethod, p_parameters, p_index, -1, appropriateLength);
 }
 
 // See below for p_destinationKind and p_destinationNomination
 // Also, p_x, p_y are coordinates if we use grid, but not otherwise ! p_length1, p_length2 are supposed to be the size of the desired array so... grid or margin
-EditorCore.prototype.insertChainPrivate = function(p_destinationKind, p_destinationNomination, p_valuesChain, p_validityMethod, p_parameters, p_x, p_y, p_length1, p_length2) {
+// selectionData must be updated
+EditorCore.prototype.insertChainPrivate = function(p_destinationKind, p_destinationNomination, p_valuesChain, p_validityMethod, p_parameters, p_x, p_y, p_length1, p_hasWildCardsSelected) {
+	if (p_destinationKind == INPUT_PLACE_KIND.GRID) {
+		this.chainInsertData.valid = true;
+		this.chainInsertData.lastChanges = [];
+		this.chainInsertData.affectedGridNonWildId = p_destinationNomination;		
+	}
+	
 	// Blank character and monocharacter
+	const selectionMode = (this.selectionData.list.length > 0 && p_destinationKind == INPUT_PLACE_KIND.GRID);
+	var listTS; //TS = target spaces
+	var indexlistTS;
+	var formerValues = [];
+	if (selectionMode) {
+		listTS = [];
+		indexlistTS = 0;
+		// selectionData.list is correctly ordonnated, right ?
+		this.selectionData.list.forEach(coors => {
+			if ((coors.y > p_y || (coors.y == p_y && coors.x >= p_x)) && (!p_hasWildCardsSelected || this.grids[GRID_ID.WILDCARD].get(coors.x, coors.y) == WILD_CARD_CHARACTER)) {
+				listTS.push({x : coors.x, y : coors.y});
+			}
+		});
+	}
 	if (p_valuesChain != null) {
 		var tokens;
 		var tokensNumber;
@@ -421,49 +466,112 @@ EditorCore.prototype.insertChainPrivate = function(p_destinationKind, p_destinat
 			tokens = p_valuesChain.split(" ");
 			tokensNumber = tokens.length;
 		}
-		var x = p_x;
+		var x, y; // Starting positions
+		if (selectionMode) {
+			x = listTS[0].x;
+			y = listTS[0].y;
+		} else {
+			x = p_x;
+			y = p_y;
+		}
 		var indexToken = 0;
-		while (x < p_length1 && indexToken < tokensNumber) {
+		var validXY = true;
+		while (validXY && indexToken < tokensNumber) {
 			value = (p_parameters.isMonoChar ? p_valuesChain.charAt(indexToken) : tokens[indexToken]);
 			var ok = false;
 			if (p_validityMethod(value)) {
 				var realValue = (value != "" ? value : null);
 				realValue = (p_parameters.isNumeric && realValue != null) ? parseInt(realValue, 10) : realValue;
-				this.setAppropriatePlace(p_destinationKind, p_destinationNomination, x, p_y, realValue);
+				this.setAppropriatePlace(p_destinationKind, p_destinationNomination, x, y, realValue);
 				ok = true;
 			}
+			// Handle several characters at once
 			if (!p_parameters.isMonoChar && (value.charAt(0) == p_parameters.emptySpaceChar)) {
-				this.setAppropriatePlace(p_destinationKind, p_destinationNomination, x, p_y, null);
+				this.setAppropriatePlace(p_destinationKind, p_destinationNomination, x, y, null);
 				var indexClue = 1;
-				while((indexClue < value.length) && (value.charAt(indexClue) == p_parameters.emptySpaceChar) && (x <= p_length1-2)) {
-					x++;
-					this.setAppropriatePlace(p_destinationKind, p_destinationNomination, x, p_y, null);
-					indexClue++;
+				var validXYLocal = true;
+				while((indexClue < value.length) && (value.charAt(indexClue) == p_parameters.emptySpaceChar) && validXYLocal) {
+					if (selectionMode) {
+						if (indexlistTS <= listTS.length) {
+							indexlistTS++;
+							x = listTS[indexlistTS].x;
+							y = listTS[indexlistTS].y;
+							this.validXYLocal = true;
+						} else {
+							validXYLocal = false;
+						}
+					} else {
+						if (x <= p_length1-2) {							
+							x++;
+						} else {
+							validXYLocal = false;
+						}
+					}
+					if (validXYLocal) {
+						this.setAppropriatePlace(p_destinationKind, p_destinationNomination, x, y, null);
+						indexClue++;
+					}
 				}
 				ok = (indexClue == value.length);
 			}
+			// Handle only one character
 			if (p_parameters.isMonoChar && (value == p_parameters.emptySpaceChar)) {
-				this.setAppropriatePlace(p_destinationKind, p_destinationNomination, x, p_y, null);
+				this.setAppropriatePlace(p_destinationKind, p_destinationNomination, x, y, null);
 				ok = true;
 			}
 			if (!ok) {
 				break;
 			}
+			// Reached the end of writable area ?
 			if (value != "") {
-				x++;
+				if (selectionMode) {
+					indexlistTS++
+					validXY = (indexlistTS < listTS.length);
+					if (validXY) {
+						x = listTS[indexlistTS].x;
+						y = listTS[indexlistTS].y;
+					}
+				} else {
+					x++
+					validXY = (x < p_length1);
+				};
 			}
 			indexToken++;
 		}
 		if ((tokensNumber == 1) && ok) { // If only one symbol, save it
 			this.setPromptValue(value);
 		}
+		// Clean wildcards that have been consumed (Note : I wish wildcards were always cleaned with characters... but instead we write it manually.)
+		if (selectionMode) {
+			listTS.forEach(coors => {
+				x = coors.x;
+				y = coors.y;
+				// Note : the selection doesn't always have wild cards
+				this.removeWildCardFromChainInsertion(p_destinationNomination, x, y);
+			});
+		} else {
+			const xMax = x-1;
+			for (x = p_x; x <= xMax; x++) {
+				this.removeWildCardFromChainInsertion(p_destinationNomination, x, p_y);
+			}
+		}			
 	}
+}
+
+// Removes a wild card from an insertion and adds it for the undoing
+EditorCore.prototype.removeWildCardFromChainInsertion = function(p_gridId, p_x, p_y) {
+	if (this.get(p_gridId, p_x, p_y) != null && this.grids[GRID_ID.WILDCARD].get(p_x, p_y) != null) {
+		this.grids[GRID_ID.WILDCARD].set(p_x, p_y, null);
+		this.chainInsertData.lastChanges.push({x : p_x, y : p_y, formerVal : WILD_CARD_CHARACTER, newVal : null});
+	}	
 }
 
 // Put value into place (space, margin, or whatever...). Role of "destination nomination" is given here.
 EditorCore.prototype.setAppropriatePlace = function (p_destinationKind, p_destinationNomination, p_x, p_y, p_val) {
 	switch(p_destinationKind) {
 		case INPUT_PLACE_KIND.GRID :  // p_destinationNomination = id of the grid
+			const formerValue = this.get(p_destinationNomination, p_x, p_y);
+			this.chainInsertData.lastChanges.push({x : p_x, y : p_y, formerVal : formerValue, newVal : p_val});
 			this.set(p_destinationNomination, p_x, p_y, p_val);
 		break;
 		case INPUT_PLACE_KIND.MARGIN :  // p_destinationNomination = EDGES.LEFT, UP, RIGHT, DOWN. Only the first coordinate matters. 
@@ -471,6 +579,31 @@ EditorCore.prototype.setAppropriatePlace = function (p_destinationKind, p_destin
 		break;
 	}
 }
+
+EditorCore.prototype.undoLastChainGridInsert = function() {
+	const nonWildId = this.chainInsertData.affectedGridNonWildId;
+	var myId;
+	var cancellable = (this.chainInsertData.valid && this.isVisibleGrid(this.chainInsertData.affectedGridNonWildId));
+	if (cancellable) {
+		var i = 0;
+		var change;
+		while (cancellable && i < this.chainInsertData.lastChanges.length) {
+			change = this.chainInsertData.lastChanges[i];
+			myId = (change.newVal == WILD_CARD_CHARACTER || change.formerVal == WILD_CARD_CHARACTER) ? GRID_ID.WILDCARD : nonWildId;
+			cancellable = (change.x < this.xLength && change.y < this.yLength && this.get(myId, change.x, change.y) == change.newVal);
+			i++;
+		}
+	}
+	if (cancellable) {
+		this.chainInsertData.lastChanges.forEach(change => {
+			myId = (change.newVal == WILD_CARD_CHARACTER || change.formerVal == WILD_CARD_CHARACTER) ? GRID_ID.WILDCARD : nonWildId;
+			this.set(myId, change.x, change.y, change.formerVal);
+		});
+	}
+	this.chainInsertData.valid = false;
+	return cancellable;
+}
+
 
 //-------------------------------------------
 // Selections 
@@ -480,7 +613,8 @@ EditorCore.prototype.updateSelectionData = function() {
 	var yMin = this.yLength;
 	var xMax = -1;
 	var yMax = -1;
-	listCoors = [];
+	var listCoors = [];
+	var hasWC = false;
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
 		for (var ix = 0 ; ix < this.xLength ; ix++) {
 			if (this.selectedArray[iy][ix] == SELECTED.YES) {
@@ -490,14 +624,21 @@ EditorCore.prototype.updateSelectionData = function() {
 				yMax = iy;
 				listCoors.push({x : ix, y : iy});
 			}
+			if (this.get(GRID_ID.WILDCARD, ix, iy) == WILD_CARD_CHARACTER) {
+				hasWC = true;
+			}
 		}
 	}
-	this.selectionData = {list : listCoors, xMin : xMin, xMax : xMax, yMin : yMin, yMax : yMax}
+	this.selectionData = {list : listCoors, xMin : xMin, xMax : xMax, yMin : yMin, yMax : yMax, hasWildCard : hasWC}
 }
 
 // Note : for getters about selection not about the spaces themselves, 'selection data' must have been updated !
 EditorCore.prototype.getNumberSelectedSpaces = function() {
-	return listCoors.length;
+	return this.selectionData.list.length;
+}
+
+EditorCore.prototype.hasWildCardsSelected = function() {
+	return this.selectionData.hasWildCard
 }
 
 EditorCore.prototype.getXMinSelected = function() {return this.selectionData.xMin;}
@@ -529,9 +670,22 @@ EditorCore.prototype.selectRectangleMechanism = function (p_x, p_y) {
 		if ((xMin == xMax) && (yMin == yMax)) {
 			this.switchSelectedSpace(xMin, yMin);
 		} else {
-			for (var ix = xMin; ix <= xMax; ix++) {
-				for (var iy = yMin; iy <= yMax; iy++) {
-					this.selectedArray[iy][ix] = SELECTED.YES;
+			var ix, iy;
+			iy = yMin;  ix = xMin;
+			var foundNS = false;
+			while (iy <= yMax && !foundNS) {
+				foundNS = this.selectedArray[iy][ix] == SELECTED.NO;
+				ix++; 
+				if (ix > xMax) {
+					ix = xMin;
+					iy++;
+				}
+			}
+			const selectSpaces = foundNS ? SELECTED.YES : SELECTED.NO;
+			
+			for (ix = xMin; ix <= xMax; ix++) {
+				for (iy = yMin; iy <= yMax; iy++) {
+					this.selectedArray[iy][ix] = selectSpaces;
 				}
 			}
 		}
@@ -562,38 +716,16 @@ EditorCore.prototype.resetSelection = function () {
 EditorCore.prototype.buildWallsAroundSelection = function () {
     for (var y = 0; y < this.getYLength(); y++) {
         for (var x = 0; x < this.getXLength(); x++) {
-            if (this.selectedArray[y][x] == SELECTED.YES) {
-                if (x > 0 && this.selectedArray[y][x - 1] == SELECTED.NO) {
-                    this.wallGrid.setWallR(x - 1, y, WALLGRID.CLOSED);
-                }
-                if (x < this.getXLength() - 1 && this.selectedArray[y][x + 1] == SELECTED.NO) {
-                    this.wallGrid.setWallR(x, y, WALLGRID.CLOSED);
-                }
-                if (y > 0 && this.selectedArray[y - 1][x] == SELECTED.NO) {
-                    this.wallGrid.setWallD(x, y - 1, WALLGRID.CLOSED);
-                }
-                if (y < this.getYLength() - 1 && this.selectedArray[y + 1][x] == SELECTED.NO) {
-                    this.wallGrid.setWallD(x, y, WALLGRID.CLOSED);
-                }
-            }
+			if (this.selectedArray[y][x] == SELECTED.YES) {
+				existingNeighborsDirections(x, y, this.xLength, this.yLength).forEach(coorsDir => {
+					if (this.selectedArray[coorsDir.y][coorsDir.x] == SELECTED.NO) {
+						this.wallGrid.setWall(x, y, coorsDir.direction, WALLGRID.CLOSED);
+					}
+				});
+			}
         }
     }
     this.unselectAll();
-}
-
-EditorCore.prototype.clearWallsAround = function (p_x, p_y) {
-    if (p_x > 0 && this.selectedArray[p_y][p_x - 1] == SELECTED.NO) {
-        this.wallGrid.setWallR(p_x - 1, p_y, WALLGRID.OPEN);
-    }
-    if (p_x < this.getXLength() - 1 && this.selectedArray[p_y][p_x + 1] == SELECTED.NO) {
-        this.wallGrid.setWallR(p_x, p_y, WALLGRID.OPEN);
-    }
-    if (p_y > 0 && this.selectedArray[p_y - 1][p_x] == SELECTED.NO) {
-        this.wallGrid.setWallD(p_x, p_y - 1, WALLGRID.OPEN);
-    }
-    if (p_y < this.getYLength() - 1 && this.selectedArray[p_y + 1][p_x] == SELECTED.NO) {
-        this.wallGrid.setWallD(p_x, p_y, WALLGRID.OPEN);
-    }
 }
 
 EditorCore.prototype.countSpacesSelection = function() {
@@ -630,39 +762,30 @@ EditorCore.prototype.moveCopySpace = function(p_x, p_y, p_deltaX, p_deltaY, p_mo
 		if ((xDest < 0) || (xDest >= this.getXLength()) || (yDest < 0) || (yDest >= this.getYLength())) {
 			if (p_move) {
 				Object.keys(GRID_ID).forEach(id => {
-					if (this.visibleGrids[GRID_ID[id]]) {
-						this.set(GRID_ID[id], p_x, p_y, null);
+					if (!this.notInSpaces(id)) {						
+						if (this.visibleGrids[GRID_ID[id]]) {
+							this.set(GRID_ID[id], p_x, p_y, null);
+						}
 					}
 				});
-				/*if (this.isWithWalls) { // TODO : what to do with wall grids ?
-					this.setWallR(p_x, p_y, WALLGRID.OPEN);
-					this.setWallD(p_x, p_y, WALLGRID.OPEN);
-					this.setState(p_x, p_y, WALLGRID.OPEN);
-				}*/
 			}
 		} else {
 			this.selectedArray[yDest][xDest] = true;
 			Object.keys(GRID_ID).forEach(id => {
 				if (this.grids[GRID_ID[id]] && (!this.nullIsTransparent || (this.get(GRID_ID[id], p_x, p_y) != null))) {
-					this.set(GRID_ID[id], xDest, yDest, this.get(GRID_ID[id], p_x, p_y));
-					if (p_move) {
-						this.set(GRID_ID[id], p_x, p_y, null);
+					if (!this.notInSpaces(id)) {
+						this.set(GRID_ID[id], xDest, yDest, this.get(GRID_ID[id], p_x, p_y));
+						if (p_move) {
+							this.set(GRID_ID[id], p_x, p_y, null);
+						}
 					}
 				}
 			});
-			/*if (this.isWithWalls) {
-				this.setWallR(xDest, yDest, this.getWallR(p_x, p_y));
-				this.setWallD(xDest, yDest, this.getWallD(p_x, p_y));
-				this.setState(xDest, yDest, this.getState(p_x, p_y));
-				if (p_move) {
-					this.setWallR(p_x, p_y, WALLGRID.OPEN);
-					this.setWallD(p_x, p_y, WALLGRID.OPEN);
-					this.setState(p_x, p_y, WALLGRID.OPEN);
-				}
-			}*/
 		}
 	}
 }
+// Move/copy wild cards. 
+// Exclude nodes from copy.
 
 EditorCore.prototype.clearContentsSelection = function() {
 	for (var y = 0; y < this.getYLength(); y++) {
@@ -682,12 +805,17 @@ function isOrientedGrid(p_name) {
 	return (p_name == GRID_ID.YAJILIN_LIKE);
 }
 
+// Corners don't include Galaxies !
 EditorCore.prototype.relevantCorners = function () {
 	return (this.visibleGrids[GRID_ID.KNOTS]);
 }
 
 EditorCore.prototype.hasCornersGridToBeMoved = function() {
 	return (this.visibleGrids[GRID_ID.KNOTS]);
+}
+
+EditorCore.prototype.notInSpaces = function(p_name) {
+	return (p_name == GRID_ID.KNOTS || p_name == GRID_ID.GALAXIES);
 }
 
 //-------------------------------------------
@@ -780,6 +908,12 @@ EditorCore.prototype.conditionalEraseSpaceGalaxies = function(p_xCond, p_yCond, 
 // -------------------------------------------
 // Misc.
 
+EditorCore.prototype.clearWallsAround = function (p_x, p_y) {
+	existingNeighborsDirections(p_x, p_y, this.xLength, this.yLength).forEach(dir => {
+		this.wallGrid.setWall(p_x, p_y, dir, WALLGRID.OPEN);
+	});
+}
+
 EditorCore.prototype.alignToRegions = function (p_idGrid) {
     this.grids[p_idGrid].arrangeSymbols(this.wallGrid.toRegionArray());
 }
@@ -787,5 +921,3 @@ EditorCore.prototype.alignToRegions = function (p_idGrid) {
 EditorCore.prototype.cleanRedundantWalls = function () { // Note : name transfer...
     this.wallGrid.cleanRedundantWalls();
 }
-
-

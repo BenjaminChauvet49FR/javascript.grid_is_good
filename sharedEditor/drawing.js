@@ -75,7 +75,8 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	}
 	if (p_editorCore.getMarginInfoId() == MARGIN_KIND.NUMBERS_LEFT_UP.id) {
 		this.drawMarginLeftUpOne(p_context, p_editorCore.margins[EDGES.LEFT], p_editorCore.margins[EDGES.UP]);
-	}		
+	}
+	this.drawWildCardGrid(p_context, p_editorCore.getWildCardGrid());
 }
 
 Drawer.prototype.drawNumbersLittleInCorner = function (p_context, p_numberGrid) {
@@ -134,3 +135,20 @@ Drawer.prototype.drawPlaystationShapeGrid = function (p_context, p_shapeGrid) {
 	this.drawSpaceContents(p_context, shapes, getShape, p_shapeGrid.getXLength(), p_shapeGrid.getYLength()); 
 }
 
+Drawer.prototype.drawWildCardGrid = function(p_context, p_withWildCardsGrid) {
+	const yLength = p_withWildCardsGrid.getYLength();
+	if (yLength > 0) {
+		const xLength = p_withWildCardsGrid.getXLength();
+		setupFont(p_context, this.getPixInnerSide() * 4/5, "Arial", "#000000");
+		alignFontCenter(p_context);
+		p_context.mix_blend_mode = "exclusion";
+		var ix, iy; 
+		for (iy = 0; iy < yLength; iy++) {
+			for (ix = 0; ix < xLength; ix++) {
+				if (p_withWildCardsGrid.get(ix, iy) == WILD_CARD_CHARACTER) {
+					p_context.fillText(WILD_CARD_CHARACTER, this.getPixCenterX(ix), this.getPixCenterY(iy));
+				}
+			}
+		}
+	}
+}

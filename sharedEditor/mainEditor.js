@@ -48,9 +48,19 @@ const fieldsDefiningPuzzle = {
 	submitResizeGrid : document.getElementById("submit_resize_grid")
 }
 
+const actionButtons = {
+	wallsAroundSelection : document.getElementById("submit_wall_selection"),
+	stateSpace : document.getElementById("submit_banned_space_mode"),
+	wildCards : document.getElementById("submit_add_wild_cards"),
+	symbolPrompt : document.getElementById("submit_add_symbols_prompt"),
+	massSymbolsPrompt : document.getElementById("submit_add_mass_symbol_prompt"),
+	oneSymbol : document.getElementById("submit_add_one_symbol")
+}
+
 function comboMain() {
 	combo(puzzleTypeComboBox);
 }
+comboMain();
 
 adaptCanvasAndGrid(canevas, drawer, editorCore);
 fillSudokuSelectCombobox(fieldsDefiningPuzzle.fieldSudoku);
@@ -115,7 +125,7 @@ putActionElementClick("submit_mirror_vertical", function (event) {
 putActionElementClick("submit_wall_selection", function (event) {
     actionBuildWallsAroundSelection(editorCore)
 });
-putActionElementClick("submit_clear_selection", function (event) {
+putActionElementClick("submit_unselect", function (event) {
     actionUnselectAll(editorCore)
 });
 putActionElementClick("submit_move_selection", function (event) {
@@ -127,10 +137,13 @@ putActionElementClick("submit_copy_selection", function (event) {
 putActionElementClick("submit_clear_spaces_selection", function (event) {
     actionClearContentsSelection(editorCore);
 });
+putActionElementClick("submit_undo_symbols_prompt", function (event) {
+    actionUndoSymbolsPrompt(editorCore);
+});
 
 // Widgets whose states can change + setup
 function combo(p_docElt) {
-	comboChange(p_docElt, canevas, drawer, editorCore, saveLoadMode, fieldsDefiningPuzzle);
+	comboChange(p_docElt, canevas, drawer, editorCore, saveLoadMode, fieldsDefiningPuzzle, actionButtons);
 }
 combo(document.getElementById('select_puzzle_type')); //TODO c'est comme ça que ça se passe au démarrage, j'espère que c'est chargé. On peut le mettre directement sur la combobox ? Mais ce serait peut-être un peu lourd pour le mélange fond/forme, non ?
 
@@ -147,15 +160,17 @@ checkboxTransparencyChange(document.getElementById('checkbox_transparency_empty_
 // Mode of selection
 
 var textMode = document.getElementById("span_mode");
-setMode(textMode, modesManager, ENTRY.SPACE, MODE_NORMAL);
+setMode(textMode, modesManager, ENTRY.SPACE, MODE_SYMBOLS_PROMPT);
 function setupEventListenerCaption(elementId, modeValue) {
     addEventListenerAndCaptionActionSubmitForEditor(editorCore, modesManager, textMode, elementId, ENTRY.SPACE, modeValue);
 }
-setupEventListenerCaption("submit_normal_mode", MODE_NORMAL);
+setupEventListenerCaption("submit_banned_space_mode", MODE_WALL_SPACE);
 setupEventListenerCaption("submit_select_mode", MODE_SELECTION);
 setupEventListenerCaption("submit_select_rectangles_mode", MODE_SELECTION_RECTANGLE);
 setupEventListenerCaption("submit_erase_mode", MODE_ERASE);
 setupEventListenerCaption("submit_add_symbols_prompt", MODE_SYMBOLS_PROMPT);
+setupEventListenerCaption("submit_add_wild_cards", MODE_ADD_WILD_CARDS);
+setupEventListenerCaption("submit_add_one_symbol", MODE_ADD_ONE_SYMBOL);
 const addMassSymbolPromptSubmitElement = getSubmitElementSetValue("submit_add_mass_symbol_prompt", MODE_MASS_SYMBOL_PROMPT);
 addMassSymbolPromptSubmitElement.addEventListener('click', function(event) {
 	setSymbolAndTextAction(editorCore, textMode, modesManager);

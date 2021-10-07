@@ -87,6 +87,15 @@ Grid.prototype.set = function (p_x, p_y, p_value) {
     this.array[p_y][p_x] = p_value
 }
 
+Grid.prototype.toggle = function (p_x, p_y, p_value1, p_value2) {
+	const val1 = this.array[p_y][p_x];
+	if (val1 == p_value1) {
+		this.array[p_y][p_x] = ((!p_value2 && p_value2 != 0) ? null : p_value2);
+	} else {
+		this.array[p_y][p_x] = p_value1;
+	}
+}
+
 Grid.prototype.clear = function (p_x, p_y) {
     this.array[p_y][p_x] = null
 }

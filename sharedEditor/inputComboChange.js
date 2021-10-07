@@ -3,11 +3,13 @@ var inputOptions = {
 	lockedWalls : false,
 	minNumber : 0,
 	maxNumber : null,
-	nonNumericStrings : []
+	nonNumericStrings : [],
+	monoSymbolToEnter : null ,// Must match a symbol that will be entered to the grid. 
+	monoSymbolGridId : null
 }
 
 //How to use the change of a combobox. Credits : https://www.scriptol.fr/html5/combobox.php
-function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode, p_fields) {
+function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode, p_fields, p_buttons) {
     var idx = p_thelist.selectedIndex;
     var content = p_thelist.options[idx].innerHTML;
 	
@@ -18,7 +20,8 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 	p_editorCore.maskAllGrids(); 
 	var hasStars = false;
 	var hasBounds = false;
-	forcedSizePuzzle = false;
+	var forcedSizePuzzle = false;
+	var usesChains = true;
 	
 	// Default input options 
 	inputOptions.forceMonoCharacter = false;
@@ -26,10 +29,14 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 	inputOptions.maxNumber = null;
 	inputOptions.nonNumericStrings = []; // Note : not useful yet !
 	inputOptions.lockedWalls = false;
+	inputOptions.monoSymbolToEnter = null;
 	
 	// Specific options
     switch (content) { // Should break be forgotten, following instructions are read... and saveLoadModeId is overset ! This was problematic with Stitches !
 		case 'CurvingRoad' : 
+			inputOptions.monoSymbolToEnter = SYMBOL_ID.WHITE;
+			inputOptions.monoSymbolGridId = GRID_ID.PEARL;
+			usesChains = false;
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.CURVING_ROAD;
 			p_editorCore.setVisibleGrids([GRID_ID.PEARL]); break;
@@ -56,6 +63,7 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			}
 			break; // Forgot break !!
 		case 'SternenSchlacht':
+			usesChains = false;
 			saveLoadModeId = PUZZLES_KIND.STAR_BATTLE; 
 			p_editorCore.maskAllGrids();
 			hasStars = true; break;
@@ -76,11 +84,13 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			saveLoadModeId = PUZZLES_KIND.TAPA;
 			p_editorCore.setVisibleGrids([GRID_ID.TAPA]); break;
 		case 'Stitches':
+			usesChains = false;
 			saveLoadModeId = PUZZLES_KIND.STITCHES;
 			p_editorCore.setMarginInfo(MARGIN_KIND.NUMBERS_LEFT_UP);
 			hasBounds = true;
 			break;
 		case 'Gappy':
+			usesChains = false;
 			saveLoadModeId = PUZZLES_KIND.ONLY_ONE_NUMBER_LEFT_UP_SQUARE;
 			p_editorCore.setMarginInfo(MARGIN_KIND.NUMBERS_LEFT_UP);
 			p_editorCore.setWallsOff();
@@ -97,6 +107,7 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			inputOptions.maxNumber = sudokuId.max;
 			break;
 		case 'Galaxies':
+			usesChains = false;
 			saveLoadModeId = PUZZLES_KIND.GALAXIES;
 			p_editorCore.setVisibleGrids([GRID_ID.GALAXIES]); 
 			p_editorCore.setWallsOff();
@@ -111,10 +122,16 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			p_editorCore.setWallsOff(); break;
 			break; 	
 		default: // norinori, lits, entryExit... no numbers, only regions
+			usesChains = false;
 			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY;
 			break; 
     } // Credits for multiple statements in cases : https://stackoverflow.com/questions/13207927/switch-statement-multiple-cases-in-javascript
+	if (usesChains) {		
+		p_editorCore.setVisibleWildcardGrid();
+	}
+	copySaveModeInto(saveLoadModeId, p_saveLoadMode);
 	this.adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
+	
 	const squarePuzzle = correspondsToSquarePuzzle(saveLoadModeId); 
 	maskElementConditional(p_fields.spanXYSeparated, squarePuzzle || forcedSizePuzzle);
 	maskElementConditional(p_fields.spanXYBound, !squarePuzzle || forcedSizePuzzle);
@@ -122,7 +139,12 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 	maskElementConditional(p_fields.spanSelectSudoku, saveLoadModeId != PUZZLES_KIND.SUDOKU);
 	maskElementConditional(p_fields.submitResizeGrid, forcedSizePuzzle);
 	maskElementConditional(p_fields.spanBounds, !hasBounds);
-	copySaveModeInto(saveLoadModeId, p_saveLoadMode);
+	maskElementConditional(p_buttons.stateSpace, !p_editorCore.hasWalls());
+	maskElementConditional(p_buttons.wallsAroundSelection, !p_editorCore.hasWalls());
+	maskElementConditional(p_buttons.symbolPrompt, !usesChains);
+	maskElementConditional(p_buttons.wildCards, !usesChains);
+	maskElementConditional(p_buttons.massSymbolsPrompt, !usesChains);
+	maskElementConditional(p_buttons.oneSymbol, inputOptions.monoSymbolToEnter == null);
 }
 
 

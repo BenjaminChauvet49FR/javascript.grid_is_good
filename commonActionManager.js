@@ -8,13 +8,14 @@ const ENTRY = {
 // These items are used in 'main' but also in 'input' where the value is checked, which is why this file is not named (yet) commonHTMLActionManager.
 
 // Editor things
-const MODE_NORMAL = {id:1,html:"Etat case",submitCaption:"Changer case grille"};
+const MODE_WALL_SPACE = {id:1,html:"Changer état muré/non muré case",submitCaption:"Etat case"};
 const MODE_SELECTION = {id:2,html:"Sélection",submitCaption:"Sélectionner cases"};
 const MODE_SELECTION_RECTANGLE = {id:3,html:"Sélection rectangulaire",submitCaption:"Sélectionner cases en rectangle"};
 const MODE_ERASE = {id:4,html:"Effaçage",submitCaption:"Effacer murs autour case / effacer case"};
 const MODE_SYMBOLS_PROMPT = {id:5, html : "Symboles en chaîne", submitCaption : "Ajouter symboles en chaîne"};
 const MODE_MASS_SYMBOL_PROMPT = {id:6, html : "Symbole à ajouter : ", submitCaption : "Ajouter symbole en masse "};
-const MODE_NORMAL_WALL = {id:7, html:"Murs", submitCaption : "Changer murs"};
+const MODE_ADD_WILD_CARDS = {id:7, html : "Ajout de wildcards (penser à les sélectionner ensuite)", submitCaption : "Ajouter wildcards"};
+const MODE_ADD_ONE_SYMBOL = {id:8, html : "Ajout de symbole", submitCaption : "Ajouter symbole"};
 
 // Positive actions on space
 const ACTION_INCLUDE_LOOP_SPACE = {id:1, htmlCaption : "Inclure case dans boucle"};

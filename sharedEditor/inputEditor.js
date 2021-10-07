@@ -138,6 +138,7 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 
 clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
     mode = p_modes.clickSpace;
+	var promptElements;
 	switch (mode.id) {
 		case (MODE_SELECTION.id) :
 		    p_editorCore.switchSelectedSpace(p_x, p_y);
@@ -149,15 +150,32 @@ clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
 		case (MODE_SELECTION_RECTANGLE.id) :
 		    p_editorCore.selectRectangleMechanism(p_x, p_y);
 		break;
+		case (MODE_ADD_WILD_CARDS.id) : 
+			promptElements = getPromptElementsFromVisibleGrid(p_editorCore);
+			p_editorCore.switchWildCardWithGrid(promptElements.gridId, p_x, p_y);
+		break;
+		case (MODE_ADD_ONE_SYMBOL.id) : 
+			p_editorCore.switchValue(inputOptions.monoSymbolGridId, p_x, p_y, inputOptions.monoSymbolToEnter); // Remember : see "input options" in inputComboChange
+		break;
 		case (MODE_SYMBOLS_PROMPT.id) :
-			const promptElements = getPromptElementsFromVisibleGrid(p_editorCore);
+			promptElements = getPromptElementsFromVisibleGrid(p_editorCore);
 			var defaultVal = p_editorCore.getPromptValue();
 			if ((!defaultVal && (defaultVal != "0")) || (defaultVal == null) || (defaultVal == "")) {
 				defaultVal = promptElements.defaultToken;
 			}
-			optionalChain = (!promptElements.parameters.isMonoChar && promptElements.parameters.emptySpaceChar != ' ') ? "(Penser à séparer les indices des caractères " + promptElements.parameters.emptySpaceChar + " par des espaces) " : "";
-			var clueChain = prompt(promptElements.descriptionPrompt + " ou '" + promptElements.parameters.emptySpaceChar + "' pour case vide " + optionalChain + ":", defaultVal);
-			p_editorCore.insertChainGrid(promptElements.gridId, clueChain, promptElements.validityTokenMethod, promptElements.parameters, p_x, p_y);
+			p_editorCore.updateSelectionData();
+			var optionalTargetString = "";
+			var getWildCards = false;
+			if (p_editorCore.hasWildCardsSelected()) {
+				optionalTargetString = "(Cible : les wildcards à partir de la case sélectionnée) ";
+				getWildCards = true;
+			} else if (p_editorCore.getNumberSelectedSpaces()) {
+				optionalTargetString = "(Cible : les cases sélectionnées) ";
+			}
+			// Chains for 
+			var optionalRemindString = (!promptElements.parameters.isMonoChar && promptElements.parameters.emptySpaceChar != ' ') ? "(Penser à séparer les indices des caractères " + promptElements.parameters.emptySpaceChar + " par des espaces) " : "";
+			var clueChain = prompt(promptElements.descriptionPrompt + " ou '" + promptElements.parameters.emptySpaceChar + "' pour case vide " + optionalRemindString + optionalTargetString + ":", defaultVal );
+			p_editorCore.insertChainGrid(promptElements.gridId, clueChain, promptElements.validityTokenMethod, promptElements.parameters, p_x, p_y, getWildCards);
 		break;
 		case (MODE_MASS_SYMBOL_PROMPT.id) :
 			const visibleGridId = getPromptElementsFromVisibleGrid(p_editorCore).gridId;
@@ -184,8 +202,8 @@ clickMarginAction = function(p_editorCore, p_edge, p_index) {
 			validityTokenMethod : validityTokenNumber,
 			parameters : {emptySpaceChar : "<", isMonoChar : false, isNumeric : true}
 		}
-		const optionalChain = (!promptElements.parameters.isMonoChar) ? "(Penser à séparer les indices des caractères " + promptElements.parameters.emptySpaceChar + " par des espaces) " : "";
-		var valuesChain = prompt(promptElements.descriptionPrompt + " ou " + promptElements.parameters.emptySpaceChar + " pour case vide " + optionalChain + ":", promptElements.defaultToken);
+		const optionalRemindString = (!promptElements.parameters.isMonoChar) ? "(Penser à séparer les indices des caractères " + promptElements.parameters.emptySpaceChar + " par des espaces) " : "";
+		var valuesChain = prompt(promptElements.descriptionPrompt + " ou " + promptElements.parameters.emptySpaceChar + " pour case vide " + optionalRemindString + ":", promptElements.defaultToken);
 		p_editorCore.insertChainMargin(p_edge, valuesChain, promptElements.validityTokenMethod, promptElements.parameters, p_index);
 	}
 }
@@ -209,8 +227,15 @@ function setSymbolAndTextAction(p_editorCore, p_textElement, p_modesManager) {
 
 // When the "space mode" is changed (put a number / some symbol, change state...)
 function applyChangesForSpaceMode(p_editorCore, p_mode) {
-	if ((p_mode.id != MODE_SELECTION.id) && (p_mode.id != MODE_SELECTION_RECTANGLE.id)) {
+	/*if ((p_mode.id != MODE_SELECTION.id) && (p_mode.id != MODE_SELECTION_RECTANGLE.id)) {
 		actionUnselectAll(p_editorCore);
+	}*/ // Now, we use wild cards that make selection always good
+}
+
+// Ba bye !
+function actionUndoSymbolsPrompt(p_editorCore) {
+	if (!p_editorCore.undoLastChainGridInsert()) {
+		alert("Derniers changements inexistants ou irréversibles.");
 	}
 }
 
@@ -351,17 +376,15 @@ function mirrorVerticalAction(p_canvas, p_drawer, p_editorCore) {
 }
 
 // Note : this method is not called by resizing
+// Also note : no warning yet, but it doesn't affect nodes at all. 
 function transformGrid(p_canvas, p_drawer, p_editorCore, p_transformation) {
 	if (p_editorCore.isGalaxy()) {
 		alert("Transformations impossibles pour le puzzle 'Galaxy'.");
 		return;
 	}
-	if (p_editorCore.hasCornersGridToBeMoved()) {
-		alert("Transformations impossibles pour les puzzles avec des noeuds (c'est amené à changer).");
-	}
 	var confirmation, xMin, xMax, yMin, yMax;
 	p_editorCore.updateSelectionData();
-	if (!p_editorCore.getNumberSelectedSpaces() == 0) {
+	if (p_editorCore.getNumberSelectedSpaces() != 0) {
 		xMin = p_editorCore.getXMinSelected();
 		xMax = p_editorCore.getXMaxSelected();
 		yMin = p_editorCore.getYMinSelected();
@@ -470,12 +493,8 @@ function actionCopySelection(p_editorCore, p_xValue, p_yValue, p_transparencyNul
 	actionMoveCopySelection(p_editorCore, p_xValue, p_yValue, false, p_transparencyNull, "Copier", "vers la destination");
 }
 
+// Same note as for transforms : no warning yet, but it doesn't affect nodes at all
 function actionMoveCopySelection(p_editorCore, p_xValue, p_yValue, p_mode, p_transparencyNull, p_verb, p_part2) {
-	if (p_editorCore.hasCornersGridToBeMoved()) {
-		if (!confirm("Attention : les noeuds sont considérés comme en bas à droite de la case et seront affectés également. Continuer ? ")) {
-			return;
-		}
-	}
 	const number = p_editorCore.countSpacesSelection();
 	if (number > 0 && (p_xValue != 0 || p_yValue != 0)) {
 		const confirmString1 = p_verb + " " + number + " case"+ (number > 1 ? "s" : "") + p_part2 + " ?";
