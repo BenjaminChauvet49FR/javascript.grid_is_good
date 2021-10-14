@@ -607,6 +607,8 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
             puzzleToSaveString = moonsunPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.MOONSUN));
         } else if (p_saveLoadMode.id == PUZZLES_KIND.YAGIT.id) {
 			puzzleToSaveString = yagitPuzzleToString(p_editorCore.getArray(GRID_ID.YAGIT), p_editorCore.getArray(GRID_ID.KNOTS));
+		} else {
+			puzzleToSaveString = wallsOnlyPuzzleToString(p_editorCore.getWallArray());
 		}
         localStorage.setItem(localStorageName, puzzleToSaveString);
     }

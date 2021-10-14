@@ -717,7 +717,7 @@ EditorCore.prototype.buildWallsAroundSelection = function () {
     for (var y = 0; y < this.getYLength(); y++) {
         for (var x = 0; x < this.getXLength(); x++) {
 			if (this.selectedArray[y][x] == SELECTED.YES) {
-				existingNeighborsDirections(x, y, this.xLength, this.yLength).forEach(coorsDir => {
+				existingNeighborsCoorsDirections(x, y, this.xLength, this.yLength).forEach(coorsDir => {
 					if (this.selectedArray[coorsDir.y][coorsDir.x] == SELECTED.NO) {
 						this.wallGrid.setWall(x, y, coorsDir.direction, WALLGRID.CLOSED);
 					}
