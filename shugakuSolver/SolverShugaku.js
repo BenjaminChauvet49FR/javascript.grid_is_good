@@ -19,14 +19,13 @@ SolverShugaku.prototype.construct = function(p_numberSymbolsArray) {
 	this.xLength = p_numberSymbolsArray[0].length;
 	this.yLength = p_numberSymbolsArray.length;
 	this.fencesGrid = new FencesGrid(this.xLength, this.yLength);
-	this.makeItGeographical(this.xLength, this.yLength);
-	this.methodsSetDeductions = new ApplyEventMethodGeographicalPack( 
+	this.makeItGeographical(this.xLength, this.yLength, new ApplyEventMethodGeographicalPack( 
 		applyEventClosure(this),
 		deductionsClosure(this),
 		adjacencyClosure(this),
 		transformClosure(this),
 		undoEventClosure(this)
-	);
+	));
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterDominosClosure(this)]);
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
 	this.methodsSetMultipass = {generatePassEventsMethod : generateEventsForSpacePassClosure(this), orderPassArgumentsMethod : orderedListPassArgumentsClosure(this), passTodoMethod : multipassDefineTodoClosure(this)};
@@ -67,7 +66,6 @@ SolverShugaku.prototype.construct = function(p_numberSymbolsArray) {
 	for (var y = 0; y < this.yLength ; y++) {
 		for (var x = 0 ; x < this.xLength ; x++) {
 			if (this.isBanned(x, y)) { 
-				this.addBannedSpace(x, y);
 				KnownDirections.forEach(dir => {
 					if (this.neighborExists(x, y, dir)) {
 						this.fencesGrid.setFence(x, y, dir, FENCE_STATE.CLOSED);
@@ -97,6 +95,7 @@ SolverShugaku.prototype.construct = function(p_numberSymbolsArray) {
 	}
 	
 	this.newClosedSpacesAndAround = new CheckCollectionDoubleEntry(this.xLength, this.yLength);
+	this.declarationsOpenAndClosed();
 }
 
 //--------------------------------
@@ -179,33 +178,31 @@ SolverShugaku.prototype.quickStart = function() {
 			});
 		}
 	});
-	listEvents.forEach(event_ => {
-		this.tryToPutNew(event_);
-	});
+	listEvents.forEach(event_ => {this.tryToApplyHypothesis(event_);});
 	this.terminateQuickStart();
 }
 
 SolverShugaku.prototype.emitHypothesisSpace = function(p_x, p_y, p_value, p_ok) {
 	if (!this.answerArray[p_y][p_x].block) {
-		this.tryToPutNew(new SpaceEvent(p_x, p_y, p_value, p_ok));
+		this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_value, p_ok));
 	}
 }
 
 SolverShugaku.prototype.emitHypothesisRight = function(p_x, p_y, p_symbol) {
-	this.tryToPutNew(new FenceShugakuEvent(p_x, p_y, DIRECTION.RIGHT, p_symbol));
+	this.tryToApplyHypothesis(new FenceShugakuEvent(p_x, p_y, DIRECTION.RIGHT, p_symbol));
 }
 
 SolverShugaku.prototype.emitHypothesisDown = function(p_x, p_y, p_symbol) {
-	this.tryToPutNew(new FenceShugakuEvent(p_x, p_y, DIRECTION.DOWN, p_symbol));
+	this.tryToApplyHypothesis(new FenceShugakuEvent(p_x, p_y, DIRECTION.DOWN, p_symbol));
 }
 
 SolverShugaku.prototype.emitPassSpace = function(p_x, p_y) {
 	const generatedEvents = this.generateEventsForSpacePass({x : p_x, y : p_y});
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y}); 
+	this.passEvents(generatedEvents, {x : p_x, y : p_y}); 
 }
 
 SolverShugaku.prototype.makeMultiPass = function() {
-	return this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultipass);
+	return this.multiPass(this.methodsSetMultipass);
 }
 
 //--------------------------------
@@ -307,13 +304,6 @@ undoEventClosure = function(p_solver) {
 			p_solver.fencesGrid.setFence(x, y, dir, FENCE_STATE.UNDECIDED);
 		}
 	}
-}
-
-//--------------------------------
-
-// Central method
-SolverShugaku.prototype.tryToPutNew = function (p_event) {
-	this.tryToApplyHypothesis(p_event, this.methodsSetDeductions);
 }
 
 //--------------------------------

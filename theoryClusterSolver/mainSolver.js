@@ -27,7 +27,21 @@ function main() {
 	setInterval(drawCanvas,30);
 	var fieldName = document.getElementById("input_grid_name");
 
+	const defaultPuzzleValue = "1";
 	const puzzleTypeName = "TheoryCluster";
+	
+	buildPuzzleManagementMenu("div_puzzle_management", "input_grid_name", "submit_load_grid", puzzleTypeName, defaultPuzzleValue);
+	putActionElementClick("submit_load_grid", function(event) {
+		loadAction(canevas, drawer, solver, puzzleTypeName, document.getElementById("input_grid_name").value)
+		resetCheckboxAdjacency();
+	});
+	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
+	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_OPEN_SPACE, ACTION_CLOSE_SPACE, ACTION_OPEN_SPACE_FAKE, ACTION_CLOSE_SPACE_FAKE]);
+	buildActionsGlobal("div_global_actions", "textido", ["Effacer déductions artificielles", "Annuler"], 
+		[function(event){discardDeductionsAction(solver)}, function(event){undoAction(solver)}] );
+	buildAdjacency("div_adjacency", solver, function(event){formerLimitsExplorationAction(solver)});
+
+	/*const puzzleTypeName = "TheoryCluster";
 	putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList(puzzleTypeName)});
 	putActionElementClick("submit_load_grid",function(event){loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value)});
 	//putActionElementClick("submit_quickStart",function(event){quickStartAction(solver)});
@@ -44,5 +58,5 @@ function main() {
 	addEventListenerAndCaption("submit_close_space_fake",ACTION_CLOSE_SPACE_FAKE);
 	function addEventListenerAndCaption(p_identifier,p_action){ //Shortcut action
 		addEventListenerAndCaptionActionSubmit(actionsManager,textAction,p_identifier,ENTRY.SPACE,p_action);
-	}
+	} */
 }

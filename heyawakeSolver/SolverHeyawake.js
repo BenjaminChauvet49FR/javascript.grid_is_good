@@ -23,13 +23,6 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications, p_isAy
 	this.generalConstruct();
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
-	this.makeItGeographical(this.xLength, this.yLength);
-	this.methodsSetDeductions = new ApplyEventMethodGeographicalPack(
-			applyEventClosure(this), 
-			deductionsClosure(this), 
-			adjacencyClosure(this), 
-			transformClosure(this), 
-			undoEventClosure(this));
 	this.methodsSetPass = {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
@@ -39,6 +32,13 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications, p_isAy
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
 	};
+	this.makeItGeographical(this.xLength, this.yLength, new ApplyEventMethodGeographicalPack(
+			applyEventClosure(this), 
+			deductionsClosure(this), 
+			adjacencyClosure(this), 
+			transformClosure(this), 
+			undoEventClosure(this)));
+	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterCentralStripesClosure(this)]);
 	
 	this.isAyeHeya = p_isAyeHeya;
 
@@ -88,6 +88,7 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications, p_isAy
 			this.regions[ir].halfSpaces = halfList;
 			this.regions[ir].centerX = centerX;
 			this.regions[ir].centerY = centerY;
+			this.regions[ir].index = ir;
 		}
 	}
 	
@@ -132,8 +133,10 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications, p_isAy
 					}
 					this.horizontalStripes.push({row : iy, xStart : ix, xEnd : endStrip, UNDEFs: endStrip-ix+1, CLOSEDs:0});
 					if (this.isAyeHeya) {
-						irInner = this.regionArray[iy][ix+1]; //Region of the inner grid
-						// 551551 Si la stripe est centrale dans la région qu'elle traverse
+						region = this.regions[this.regionArray[iy][ix + 1]]; // Region of inside the strip
+						strip = this.horizontalStripes[this.horizontalStripes.length-1];
+						strip.isCentral = 
+							(iy == region.centerY) && (strip.xStart <= region.centerX) && (strip.xEnd >= region.centerX);
 					} 
 				}
 			}
@@ -156,8 +159,10 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications, p_isAy
 					}
 					this.verticalStripes.push({column : ix, yStart : iy, yEnd : endStrip, UNDEFs: endStrip-iy+1, CLOSEDs:0});
 					if (this.isAyeHeya) {
-						irInner = this.regionArray[iy+1][ix]; 
-						// 551551 Si la stripe est centrale dans la région qu'elle traverse ("Région" = irInner)
+						region = this.regions[this.regionArray[iy+1][ix]];
+						strip = this.verticalStripes[this.verticalStripes.length-1];
+						strip.isCentral = 
+							(ix == region.centerX) && (strip.yStart <= region.centerY) && (strip.yEnd >= region.centerY);
 					} 
 				}
 			}
@@ -181,6 +186,9 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications, p_isAy
 		}
 	}
 	this.checkerAdjacencyRegionsTotal = new CheckCollection(this.regionsNumber);
+	this.horizontalStripesChecker = new CheckCollection(this.horizontalStripes.length);
+	this.verticalStripesChecker = new CheckCollection(this.verticalStripes.length);
+	this.declarationsOpenAndClosed();
 }
 
 //--------------------------------
@@ -267,15 +275,19 @@ SolverHeyawake.prototype.quickStart = function() {
 		if (this.isAyeHeya) {
 			const integerX = (region.centerX == Math.floor(region.centerX));
 			const integerY = (region.centerY == Math.floor(region.centerY));
-			if (region.expectedNumberOfClosedsInRegion != NOT_FORCED && integerX && integerY) {
+			if (region.expectedNumberOfClosedsInRegion != NOT_FORCED && integerX && integerY && this.regionArray[region.centerY][region.centerX] == region.index) {
 				this.tryToPutNew(region.centerX, region.centerY, (region.expectedNumberOfClosedsInRegion % 2 == 0) ? ADJACENCY.YES : ADJACENCY.NO);
 			}
 			if (integerX) {
 				if (!integerY) {
-					this.tryToPutNew(region.centerX, region.centerY - 0.5, ADJACENCY.YES);
+					if (this.regionArray[region.centerY - 0.5][region.centerX] == region.index) {						
+						this.tryToPutNew(region.centerX, region.centerY - 0.5, ADJACENCY.YES);
+					}
 				}
 			} else if (integerY) {
-				this.tryToPutNew(region.centerX - 0.5, region.centerY, ADJACENCY.YES);
+				if (this.regionArray[region.centerY][region.centerX - 0.5] == region.index) {
+					this.tryToPutNew(region.centerX - 0.5, region.centerY, ADJACENCY.YES);
+				}
 			}
 		}
 	});
@@ -285,7 +297,7 @@ SolverHeyawake.prototype.quickStart = function() {
 SolverHeyawake.prototype.emitPassRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
 	const index = {category : HEYAWAKE_PASS_CATEGORY, value : p_indexRegion};
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, index); 
+	this.passEvents(generatedEvents, index); 
 }
 
 SolverHeyawake.prototype.emitSmartPassRegion = function(p_indexRegion) {
@@ -293,14 +305,14 @@ SolverHeyawake.prototype.emitSmartPassRegion = function(p_indexRegion) {
 }
 
 SolverHeyawake.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultiPass);
 }
 
 SolverHeyawake.prototype.smartPassRegion = function(p_indexRegion) {
 	const indexes = this.findTightRegionsAdjacentFromRegion(p_indexRegion);
 	const generatedEvents = this.generateEventsForRegionSmartPass(indexes);
 	const indexGroup = {category : HEYAWAKE_PASS_CATEGORY.BLOCK_REGION, value : indexes};
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, indexGroup);
+	this.passEvents(generatedEvents, indexGroup);
 }
 
 //--------------------------------
@@ -308,12 +320,7 @@ SolverHeyawake.prototype.smartPassRegion = function(p_indexRegion) {
 // Central method
 
 SolverHeyawake.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
-	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.tryToApplyHypothesis(
-		new SpaceEvent(p_x, p_y, p_symbol),
-		this.methodsSetDeductions
-	);
+	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 //--------------------------------
@@ -341,9 +348,15 @@ SolverHeyawake.prototype.putNew = function(p_x, p_y, p_symbol) {
 	const stripSpace = this.stripesArray[p_y][p_x];
 	stripSpace.horizontal.forEach(index => {		
 		this.warnPlacedHorizontalStrip(index, p_symbol);
+		if (this.horizontalStripes[index].isCentral) {
+			this.horizontalStripesChecker.add(index);
+		}
 	});
 	stripSpace.vertical.forEach(index => {		
 		this.warnPlacedVerticalStrip(index, p_symbol);
+		if (this.verticalStripes[index].isCentral) {
+			this.verticalStripesChecker.add(index);
+		}
 	});
 	return EVENT_RESULT.SUCCESS;
 }
@@ -425,16 +438,19 @@ deductionsClosure = function (p_solver) {
 			}			
 		} else {
 			stripSpace = p_solver.stripesArray[y][x];
+			//Alert on region
+			if (region.notPlacedYet != null && region.notPlacedYet.OPENs == 0) {
+				p_listEventsToApply = p_solver.alertRegionDeductions(p_listEventsToApply, ir, ADJACENCY.NO, region.notPlacedYet.CLOSEDs);			
+			}
+			// AYE-HEYA : check a strip that is central in its region
 			stripSpace.horizontal.forEach(index => {	
 				p_listEventsToApply = p_solver.testAlertHorizontalStripDeductions(p_listEventsToApply, index);
+				p_solver.horizontalStripesChecker.add(index);
 			});
 			stripSpace.vertical.forEach(index => {		
 				p_listEventsToApply = p_solver.testAlertVerticalStripDeductions(p_listEventsToApply, index);
+				p_solver.verticalStripesChecker.add(index);
 			});
-			//Alert on region
-			if (region.notPlacedYet != null && region.notPlacedYet.OPENs == 0){
-				p_listEventsToApply = p_solver.alertRegionDeductions(p_listEventsToApply, ir, ADJACENCY.NO, region.notPlacedYet.CLOSEDs);			
-			}
 		}
 		return p_listEventsToApply;
 	}
@@ -442,9 +458,10 @@ deductionsClosure = function (p_solver) {
 
 // Classic logical verifications 
 SolverHeyawake.prototype.testAlertHorizontalStripDeductions = function(p_eventsList, p_index) {
-	if (this.horizontalStripes[p_index].CLOSEDs == 0 && this.horizontalStripes[p_index].UNDEFs == 1) {
-		const y = this.horizontalStripes[p_index].row;
-		var ix = this.horizontalStripes[p_index].xStart;
+	const strip = this.horizontalStripes[p_index];
+	const y = strip.row;
+	var ix = strip.xStart;
+	if (strip.CLOSEDs == 0 && strip.UNDEFs == 1) {
 		while(this.answerArray[y][ix] == ADJACENCY.YES) {
 			ix++;
 		}
@@ -454,10 +471,11 @@ SolverHeyawake.prototype.testAlertHorizontalStripDeductions = function(p_eventsL
 }
 
 SolverHeyawake.prototype.testAlertVerticalStripDeductions = function(p_eventsList, p_index) {
-	if (this.verticalStripes[p_index].CLOSEDs == 0 && this.verticalStripes[p_index].UNDEFs == 1) {
-		const x = this.verticalStripes[p_index].column;
-		var iy = this.verticalStripes[p_index].yStart;
-		while(this.answerArray[iy][x] == ADJACENCY.YES){
+	const strip = this.verticalStripes[p_index];
+	var iy = strip.yStart;
+	const x = strip.column;
+	if (strip.CLOSEDs == 0 && strip.UNDEFs == 1) {
+		while(this.answerArray[iy][x] == ADJACENCY.YES) {
 			iy++;
 		}
 		p_eventsList.push(new SpaceEvent(x, iy, ADJACENCY.NO));
@@ -482,6 +500,50 @@ SolverHeyawake.prototype.alertRegionDeductions = function(p_listEvents, p_region
 		}
 	}
 	return p_listEvents;
+}
+
+function filterCentralStripesClosure(p_solver) {
+	return function() {
+		var answer = [];
+		var ix, y, strip;
+		p_solver.horizontalStripesChecker.list.forEach(index => {
+			strip = p_solver.horizontalStripes[index];
+			y = strip.row;
+			ix = strip.xStart;
+			// Note : if both extremities aren't tested, we can be left with : the central and an extreme space can be unknown
+			if((strip.CLOSEDs == 0) && strip.isCentral && (strip.UNDEFs == 2) && (p_solver.answerArray[y][ix] == ADJACENCY.YES) && (p_solver.answerArray[y][strip.xEnd] == ADJACENCY.YES)) {
+				while(p_solver.answerArray[y][ix] == ADJACENCY.YES) {
+					ix++;
+				}
+				answer.push(new SpaceEvent(ix, y, ADJACENCY.NO));
+			}
+		});
+		var iy, x;
+		p_solver.verticalStripesChecker.list.forEach(index => {
+			strip = p_solver.verticalStripes[index];
+			iy = strip.yStart;
+			x = strip.column;
+			if((strip.CLOSEDs == 0) && strip.isCentral && (strip.UNDEFs == 2) && (p_solver.answerArray[iy][x] == ADJACENCY.YES) && (p_solver.answerArray[strip.yEnd][x] == ADJACENCY.YES)) {
+				while(p_solver.answerArray[iy][x] == ADJACENCY.YES) {
+					iy++;
+				}
+				answer.push(new SpaceEvent(x, iy, ADJACENCY.NO));
+			}
+		});
+		p_solver.cleanCentralStripCheckers();
+		return answer;
+	}
+}
+
+function abortClosure(p_solver) {
+	return function() {
+		p_solver.cleanCentralStripCheckers();
+	}
+}
+
+SolverHeyawake.prototype.cleanCentralStripCheckers = function() {
+	this.horizontalStripesChecker.clean();
+	this.verticalStripesChecker.clean();
 }
 
 // --------------------
@@ -526,7 +588,8 @@ comparison = function(p_event1, p_event2) {
 }
 
 // Pass region and propagate to adjacent tight regions (number of closed spaces expected && remaining number of closed spaces >= remaining number of open spaces)
-// Should a region be without indication, it is checked alone. //551551 can be changed !
+// Should a region be without indication, it is checked alone.
+// Note : more tolerance for Aye-heya to determine if a region is tight or not. This way, puzzle 80 should be solved.
 SolverHeyawake.prototype.findTightRegionsAdjacentFromRegion = function(p_indexRegion) {
 	var listRegionsToPass = [];
 	var waitingIndexes = [p_indexRegion];
@@ -541,7 +604,7 @@ SolverHeyawake.prototype.findTightRegionsAdjacentFromRegion = function(p_indexRe
 	while (waitingIndexes.length > 0) {
 		index = waitingIndexes.pop();
 		npy = this.regions[index].notPlacedYet;
-		if (npy.OPENs > 0 && npy.OPENs <= npy.CLOSEDs) {
+		if (npy.OPENs > 0 && npy.OPENs <= (this.isAyeHeya ? npy.CLOSEDs*3/2 : npy.CLOSEDs)) {
 			this.checkerAdjacencyRegionsTotal.add(index);
 			listRegionsToPass.push(index);
 			this.adjacencyWithIndics[index].forEach(i => {

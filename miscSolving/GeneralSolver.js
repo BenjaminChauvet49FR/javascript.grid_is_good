@@ -62,12 +62,14 @@ GeneralSolver.prototype.generalConstruct = function() {
 	this.separatelyStackDeductions = true; // When true, stacks a new list for a deduction ; when false, adds the events to the last array of happenedEventsSeries. 
 	this.happenedEventsSeries = []; // List of (non-empty list of events). All events beyond the first must be logical deductions (logic of any kind, including geographic) of the first one.	
 	this.setStateHappening(OTHER_RESULTS.DEFAULT); // this.counterSameState = 0 an this.lastHappeningState = OTHER_RESULTS.DEFAULT
+	
+	// In the setup, defining methods in method packs (for deductions, pass, multipass) is actually the right thing to do.
 }
 
 // ----------------
 // Deductions, geographical verification, undoing
 
-/**
+/** TODO : REWRITE THIS LOG ! (Historical...)
 	Generic method for any solver that includes a global adjacency check
 	
 	p_startingEvent : PRE (puzzle-related event, described below ; it must have a set of methods) that can lead to consequences
@@ -89,7 +91,7 @@ GeneralSolver.prototype.generalConstruct = function() {
 	Order of filters matter for optimisation since as soon as the application of a filter returns a non-empty list, the chain breaks and returns to individual event applications (or aborts)
 	Warning : methods should be provided, not expressions of methods ! Also, don't forget the keyword "return" in both the closure and the method.
 */
-GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_methodPack) {
+GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent) {
 	var listEventsToApply = [p_startingEvent]; //List of the "events" type used by the solver. 
 	// Events can be of any kind but, if the puzzle is geographical, must have the following methods :
 	// A "x" method (int), a "y" method (int), a "opening" method (ADJACENCY.YES | ADJACENCY.NO | SPACE.UNDEFINED), in which case no geographical check is performed)
@@ -103,6 +105,8 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
     var ir;
     var newClosedSpaces;
     var firstOpenThisTime;
+	geographicalDeductionsPseudoFilter = [];
+	
     while (ok && listEventsToApply.length > 0) {
 		// Overall (classical + geographical) verification
         newClosedSpaces = [];
@@ -110,41 +114,27 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
         while (ok && listEventsToApply.length > 0) {
             // Classical verification
             eventBeingApplied = listEventsToApply.pop();
-			result = (eventBeingApplied.failure ? EVENT_RESULT.FAILURE :
-				(eventBeingApplied.isCompoundEvent ? EVENT_RESULT.SUCCESS :
-					p_methodPack.applyEventMethod(eventBeingApplied)));
+			if (eventBeingApplied.isCompoundEvent) { // Compound event
+				listEventsToApply = this.methodsSetDeductions.compoundEventMethod(listEventsToApply, eventBeingApplied);
+				result = EVENT_RESULT.HARMLESS;
+			} else {				
+				result = (eventBeingApplied.failure ? EVENT_RESULT.FAILURE : this.methodsSetDeductions.applyEventMethod(eventBeingApplied));
+			}
 			if (result == EVENT_RESULT.FAILURE) {
 				ok = false;
 			}
 			if (result == EVENT_RESULT.SUCCESS) {
-				listEventsToApply = p_methodPack.deductionsMethod(listEventsToApply, eventBeingApplied);
-				if (p_methodPack.adjacencyMethod) { // https://stackoverflow.com/questions/3007460/how-to-check-if-anonymous-object-has-a-method/3007494
-					if (eventBeingApplied.opening() == ADJACENCY.NO) {
-					newClosedSpaces.push({
-						x: eventBeingApplied.x(),
-						y: eventBeingApplied.y()
-					});
-					} else if (eventBeingApplied.opening() == ADJACENCY.YES) {
-						//If we are putting the first open space, add a corresponding event into the list of applied events (it isn't "to apply" anymore)
-						if (!this.atLeastOneOpen) {
-							listEventsApplied.push({firstOpen : true, outOfPass : true});
-							this.atLeastOneOpen = true;
-							firstOpenThisTime = true;
-						}
-					}	
-				}
-				if (!eventBeingApplied.isCompoundEvent && !eventBeingApplied.nothingHappened) {
-					listEventsApplied.push(eventBeingApplied);
-				}
+				listEventsToApply = this.methodsSetDeductions.deductionsMethod(listEventsToApply, eventBeingApplied);
+				listEventsApplied.push(eventBeingApplied);
 			}
         }
 		
 		// listEventsToApply is empty at this point.
 		// When logical deductions are performed individually (e.g. each space is watched as itself), apply other methods that may lead to deductions
-		if (p_methodPack.filters) {
+		if (this.methodsSetDeductions.filters) {
 			var i = 0; // i = filter index
-			while (ok && listEventsToApply.length == 0 && i < p_methodPack.filters.length) {
-				filter = p_methodPack.filters[i];
+			while (ok && listEventsToApply.length == 0 && i < this.methodsSetDeductions.filters.length) {
+				filter = this.methodsSetDeductions.filters[i];
 				var result = filter();
 				ok = (result != EVENT_RESULT.FAILURE);
 				if (ok) {
@@ -156,50 +146,19 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
 				}
 			}
 		}
-
-		// listEventsToApply is empty at this point. Perform geographical deductions.
-        if (ok && p_methodPack.adjacencyMethod) {
-            if (firstOpenThisTime) {
-				// The first open space has been added this time (ie this succession of events before a check verification) : add all spaces that were listed as banned + all spaces that were previously closed to the list.
-				this.bannedSpacesList.forEach(space => {
-					newClosedSpaces.push({
-						x: space.x,
-						y: space.y
-					});
-				});
-                this.happenedEventsSeries.forEach(eventSerie => {
-                    eventSerie.list.forEach(solveEvent => {
-						if (solveEvent.opening() == ADJACENCY.NO) {
-							newClosedSpaces.push({
-								x: solveEvent.x(),
-								y: solveEvent.y()
-							});
-						}
-                    });
-                });
-            }
-            if (this.atLeastOneOpen) {
-                //Geographical verification.
-                geoV = this.geographicalVerification(newClosedSpaces, p_methodPack.adjacencyMethod);
-				ok = (geoV.result != GEOGRAPHICAL_DEDUCTION.FAILURE);
-				if (ok) {
-					geoV.listGeographicalDeductionsToApply.forEach(geographicalDeduction =>
-						listEventsToApply.push(p_methodPack.retrieveGeographicalDeductionMethod(geographicalDeduction))
-					);
-					geoV.listGeographicalDeductionsApplied.forEach(geographicalDeduction =>
-						listEventsApplied.push(geographicalDeduction)
-					);
-				}
-            }
-        }
+		// TODO : The last "geographical treatment". Any other trace of geographical solver has been successfully removed. (I think)
+		if (ok && listEventsToApply.length == 0 && this.methodsSetDeductions.adjacencyMethod) {			
+			listEventsToApply = this.geographicalDeductionsPseudoFilter(listEventsApplied, this.methodsSetDeductions);
+			ok = (listEventsToApply != EVENT_RESULT.FAILURE);
+		}
     }
     if (!ok) {
-		if (p_methodPack.abortMethods) {
-			p_methodPack.abortMethods.forEach( abortMethod => {
+		if (this.methodsSetDeductions.abortMethods) {
+			this.methodsSetDeductions.abortMethods.forEach( abortMethod => {
 				abortMethod();
 			});
 		}
-        this.undoEventList(listEventsApplied, p_methodPack.undoEventMethod);
+        this.undoEventList(listEventsApplied, this.methodsSetDeductions.undoEventMethod);
 		autoLogGeneralFail();
 		this.setStateHappening(DEDUCTIONS_RESULT.FAILURE);
 		return DEDUCTIONS_RESULT.FAILURE;
@@ -221,72 +180,15 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent, p_meth
     }
 }
 
-/**
-In entry : 
-p_listNewXs : a list of {x,y} items with the position of all "closed" spaces, 
-p_adjacencyMethod : a method that determines through (x,y) grid if a ... must be opened or not.
-In exit :
-listGeographicalDeductionsToApply : a list of GeographicalDeduction(x,y, OPEN|CLOSED) items
-listGeographicalDeductionsApplied : a list of {adjacency : true} items. Whenever it should be undone, the first element of adjacencyLimitSpacesList should be undone.
-*/
-GeneralSolver.prototype.geographicalVerification = function (p_listNewXs, p_adjacencyMethod) {
-    //autoLogGeographical("Perform geographicalVerification");
-    const checking = adjacencyCheck(p_listNewXs, this.adjacencyLimitGrid, this.adjacencyLimitSpacesList, p_adjacencyMethod, this.xLength, this.yLength);
-	if (checking.success) {
-        var newListEvents = [];
-        var newListEventsApplied = [];
-        checking.newADJACENCY.forEach(space => {
-            newListEvents.push(new GeographicalDeduction(space.x, space.y, ADJACENCY.YES));
-        });
-        checking.newBARRIER.forEach(space => {
-            newListEvents.push(new GeographicalDeduction(space.x, space.y, ADJACENCY.NO));
-        });
-        checking.newLimits.forEach(spaceLimit => {
-            //Store the ancient limit into the solved event (in case of undoing), then overwrites the limit at once and pushes it into
-            newListEventsApplied.push({adjacency : true, outOfPass : true});
-            this.adjacencyLimitSpacesList.push({
-                x: spaceLimit.x,
-                y: spaceLimit.y,
-                formerValue: this.adjacencyLimitGrid[spaceLimit.y][spaceLimit.x].copy()
-            });
-            this.adjacencyLimitGrid[spaceLimit.y][spaceLimit.x] = spaceLimit.limit;
-        });
-		if (newListEvents.length || newListEventsApplied.length > 0) {			
-			return {
-				result : GEOGRAPHICAL_DEDUCTION.SUCCESS,
-				listGeographicalDeductionsToApply : newListEvents,
-				listGeographicalDeductionsApplied : newListEventsApplied
-			} 
-		} else {
-			return {
-				result : GEOGRAPHICAL_DEDUCTION.HARMLESS,
-				listGeographicalDeductionsToApply : [],
-				listGeographicalDeductionsApplied : []
-			}
-		}
-    } else {
-        return {
-            result: GEOGRAPHICAL_DEDUCTION.FAILURE
-        };
-    }
-}
-
 // Undoing
-GeneralSolver.prototype.undoEventList = function (p_eventsList, p_undoEventMethod) {
+GeneralSolver.prototype.undoEventList = function (p_eventsList) {
 	while (p_eventsList.length > 0) {
 		eventToUndo = p_eventsList.pop();
-		if (eventToUndo.firstOpen) {
-			this.atLeastOneOpen = false;
-		} else if (eventToUndo.adjacency) {
-			const aals = this.adjacencyLimitSpacesList.pop(); //aals = added adjacency limit space
-			this.adjacencyLimitGrid[aals.y][aals.x] = aals.formerValue;
-		} else {
-			p_undoEventMethod(eventToUndo);
-		}
+		this.methodsSetDeductions.undoEventMethod(eventToUndo);
 	}
 }
 
-GeneralSolver.prototype.undoToLastHypothesis = function (p_undoEventMethod) {
+GeneralSolver.prototype.undoToLastHypothesis = function () {
     if (this.happenedEventsSeries.length > 0) {
 		var stillCancel; 
 		const cancelQS = isQuickStart(this.happenedEventsSeries[this.happenedEventsSeries.length - 1]); // As soon as we hit the 1st quickstart, don't cancel it ! But if we cancel one QS, cancel them all !
@@ -294,7 +196,7 @@ GeneralSolver.prototype.undoToLastHypothesis = function (p_undoEventMethod) {
 			var lastEventsSerie = this.happenedEventsSeries[this.happenedEventsSeries.length - 1];
 			stillCancel = cancelQS || isPassSerie(lastEventsSerie) || isGlobalDeduction(lastEventsSerie);
 			if (cancelQS || !isQuickStart(lastEventsSerie)) {				
-				this.undoEventList(lastEventsSerie.list, p_undoEventMethod);
+				this.undoEventList(lastEventsSerie.list, this.methodsSetDeductions.undoEventMethod);
 				this.happenedEventsSeries.pop();
 			}
 		} while(stillCancel && this.happenedEventsSeries.length > 0);
@@ -314,23 +216,23 @@ markCompoundEvent = function(p_event) {
 // ----------------
 // Pass and multipass
 
-/**
+/** TODO : REWRITE THIS LOG ! (Historical...)
 Passes a list of covering events (for instance, if a region contains spaces "1 2 3 4" and we want to apply a pass on it, it should have the following events :
  [[(open space 1),(close space 1)], [(open space 2),(close space 2)], [(open space 3),(close space 3)], [(open space 4),(close space 4)]]) 
  // p_methodSet : must contain applyEventMethod, deductionMethod, adjacencyClosureMethod, transformMethod, extras (or not)
  // p_eventsTools : must contain comparisonMethod, copyMethod, optionally argumentToLabelMethod
 
 */
-GeneralSolver.prototype.passEvents = function (p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_passArgument) {
-	var listExtractedEvents = this.passEventsAnnex(p_listListCoveringEvent, p_methodSet ,p_eventsTools, 0);
+GeneralSolver.prototype.passEvents = function (p_listListCoveringEvent, p_passArgument) {
+	var listExtractedEvents = this.passEventsAnnex(p_listListCoveringEvent, 0);
 	var answer;
 	if (listExtractedEvents != DEDUCTIONS_RESULT.FAILURE) {
 		
 		if (listExtractedEvents.length > 0) {
 			this.separatelyStackDeductions = false;
-			this.happenedEventsSeries.push({kind : SERIE_KIND.PASS , label : p_eventsTools.argumentToLabelMethod ? p_eventsTools.argumentToLabelMethod(p_passArgument) : p_passArgument, list : []}); 
+			this.happenedEventsSeries.push({kind : SERIE_KIND.PASS , label : this.methodsSetPass.argumentToLabelMethod ? this.methodsSetPass.argumentToLabelMethod(p_passArgument) : p_passArgument, list : []}); 
 			listExtractedEvents.forEach( deductedEvent => {
-				this.tryToApplyHypothesis(deductedEvent, p_methodSet);	
+				this.tryToApplyHypothesis(deductedEvent);	
 			});
 			this.separatelyStackDeductions = true;
 			answer = PASS_RESULT.SUCCESS;
@@ -345,7 +247,7 @@ GeneralSolver.prototype.passEvents = function (p_listListCoveringEvent, p_method
 }
 
 
-GeneralSolver.prototype.passEventsAnnex = function (p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_indexInList) {
+GeneralSolver.prototype.passEventsAnnex = function (p_listListCoveringEvent, p_indexInList) {
 	if (p_indexInList == p_listListCoveringEvent.length) {
 		return [];
 	} else {
@@ -358,21 +260,21 @@ GeneralSolver.prototype.passEventsAnnex = function (p_listListCoveringEvent, p_m
 		while (i < listCoveringEvent.length && !emptyResult) {
 			possibleEvent = listCoveringEvent[i];
 			const happenedEventsBeforeDeduction = this.happenedEventsSeries.length;
-			answer = this.tryToApplyHypothesis(possibleEvent, p_methodSet);
+			answer = this.tryToApplyHypothesis(possibleEvent);
 			if (answer != DEDUCTIONS_RESULT.FAILURE) {
-				const afterEvents = this.passEventsAnnex(p_listListCoveringEvent, p_methodSet ,p_eventsTools, p_indexInList + 1);
+				const afterEvents = this.passEventsAnnex(p_listListCoveringEvent, p_indexInList + 1);
 				if (afterEvents != DEDUCTIONS_RESULT.FAILURE) {
 					eventsToIntersect = afterEvents;
 					if (this.happenedEventsSeries.length > happenedEventsBeforeDeduction) {
 						this.happenedEventsSeries[this.happenedEventsSeries.length-1].list.forEach( recentEvent => {
 							eventsToIntersect.push(recentEvent);
 						});
-					}	// Get events that have been deducted by tryToApplyHypothesis)
-					deductedEvents = intersect(deductedEvents, eventsToIntersect, p_eventsTools);
+					}	// Get events that have been deducted by tryToApplyHypothesis
+					deductedEvents = intersect(deductedEvents, eventsToIntersect, this.methodsSetPass);
 					emptyResult = ((deductedEvents != DEDUCTIONS_RESULT.FAILURE) && (deductedEvents.length == 0));
 				}
 				if (this.happenedEventsSeries.length > happenedEventsBeforeDeduction) {
-					this.undoToLastHypothesis(p_methodSet.undoEventMethod);
+					this.undoToLastHypothesis(this.methodsSetDeductions.undoEventMethod);
 				}
 			} 
 			i++;
@@ -464,7 +366,7 @@ function commonComparison(p_twoArrays, p_arraysTwo) {
 	}
 }
 
-/**
+/** TODO : REWRITE THIS LOG ! (Historical...)
 Performs a multipass
 p_passTools must contain the following methods :
 - generatePassEventsMethod : method that turns a pass argument into a list of "list of covering events" usable by the passing method)
@@ -474,7 +376,7 @@ May be used only once at start or several times, depending on passTodoMethod
 - passTodoMethod (optional) : if defined, the orderedListPassArguments will be used only once by orderPassArgumentsMethod, and then reskipped. Useful when there are lots of items to pass and there is no point to sort them or recreate a list. Typically when passing all spaces or all fences in relevant solvers.
 p_methodSet, p_eventsTools : same arguments as in the pass method.
 */
-GeneralSolver.prototype.multiPass = function(p_methodSet, p_eventsTools, p_passTools) {  
+GeneralSolver.prototype.multiPass = function(p_passTools) {  
 	var oneMoreLoop;
 	var orderedListPassArguments = p_passTools.orderPassArgumentsMethod(); 
 	var ok = true;
@@ -492,11 +394,13 @@ GeneralSolver.prototype.multiPass = function(p_methodSet, p_eventsTools, p_passT
 			if (!oneMoreLoop || !p_passTools.skipPassMethod || !p_passTools.skipPassMethod(argPass)) {
 				p_listListCoveringEvent = p_passTools.generatePassEventsMethod(argPass);
 				// Where the pass is performed !
-				resultPass = this.passEvents(p_listListCoveringEvent, p_methodSet ,p_eventsTools, argPass); 
+				resultPass = this.passEvents(p_listListCoveringEvent, argPass); 
 				if (resultPass == PASS_RESULT.SUCCESS) {
 					oneMoreLoop = true;
+					//console.log("Successful pass !"+argPass);
 				} else if (resultPass == PASS_RESULT.FAILURE) {
 					ok = false;
+					//console.log("Failed pass !"+argPass);
 				}
 			} else {
 				autoLogMultipass("C'est trop pour nous, on passe la région "+argPass);
@@ -527,7 +431,7 @@ GeneralSolver.prototype.multiPass = function(p_methodSet, p_eventsTools, p_passT
 	if (!ok) {
 		while (this.happenedEventsSeries.length > lengthBeforeMultiPass) {
 			var lastEventsList = this.happenedEventsSeries.pop();
-			this.undoEventList(lastEventsList.list, p_methodSet.undoEventMethod);
+			this.undoEventList(lastEventsList.list, this.methodsSetDeductions.undoEventMethod);
 		}
 		answer = MULTIPASS_RESULT.FAILURE;
 	} else if (this.happenedEventsSeries.length > lengthBeforeMultiPass) {
@@ -581,7 +485,6 @@ GeneralSolver.prototype.terminateQuickStart = function() {
 GeneralSolver.prototype.applyGlobalDeduction = function(p_doStuffMethod, p_methodSet, p_label) {
 	var ok = true;
 	var found = true;
-	const lengthBeforeGlobalDeduction = this.happenedEventsSeries.length;
 	var state;
 	this.separatelyStackDeductions = false;
 	const label = p_label ? p_label : "";
@@ -595,9 +498,7 @@ GeneralSolver.prototype.applyGlobalDeduction = function(p_doStuffMethod, p_metho
 	
 	if (!ok) {
 		var lastEventsList = this.happenedEventsSeries.pop();
-		//while (this.happenedEventsSeries.length > lengthBeforeGlobalDeduction) {			
 		this.undoEventList(lastEventsList.list, p_methodSet.undoEventMethod);
-		// }
 		this.setStateHappening(GLOBAL_DEDUCTIONS_RESULT.FAILURE);
 		return GLOBAL_DEDUCTIONS_RESULT.FAILURE;
 	}
@@ -634,14 +535,13 @@ GeneralSolver.prototype.happenedEventsLogComplete = function() {
 
 GeneralSolver.prototype.happenedEventsLog = function(p_options) {
 	answer = "";
-	const displayGeographical = (p_options && p_options.displayGeographical);
 	const displayQuick = (p_options && p_options.quick);
 	const displayComplete = (p_options && p_options.complete);
 	this.happenedEventsSeries.forEach(eventSerie => {
 		if (eventSerie.kind == SERIE_KIND.PASS) {
 			answer += "Pass - " + eventSerie.label + " ";
 		} else if (eventSerie.kind == SERIE_KIND.GLOBAL_DEDUCTION) {
-			answer += "Global deduction - " + eventSerie.label + " "; // 551551 Ajouter un label pertinent
+			answer += "Global deduction - " + eventSerie.label + " ";
 		} else if (eventSerie.kind == SERIE_KIND.QUICKSTART) {
 			answer += "Quickstart - " + (
 			(eventSerie.label && eventSerie.label != null && eventSerie.label != "") ? (eventSerie.label + " ") : "" );
@@ -651,18 +551,8 @@ GeneralSolver.prototype.happenedEventsLog = function(p_options) {
 		if (!displayQuick) {
 			for (var i = 0 ; i < eventSerie.list.length ; i++) {
 				event_ = eventSerie.list[i];
-				if (event_.firstOpen) {
-					if (displayGeographical) {
-						answer += "<1st open>";
-					}
-				} else if (event_.adjacency) {
-					if (displayGeographical) {
-						answer += "<Adjacency>";
-					}
-				} else {
-					if (displayComplete || (eventSerie.kind == SERIE_KIND.HYPOTHESIS && i == 0) || shouldBeLoggedEvent(event_)) {						
-						answer += event_.toLogString(this) + " ";
-					}
+				if (displayComplete || (eventSerie.kind == SERIE_KIND.HYPOTHESIS && i == 0) || shouldBeLoggedEvent(event_)) { // Note : shouldBeLoggedEvent is a reserved name now !						
+					answer += event_.toLogString(this) + " ";
 				}
 			}
 		}

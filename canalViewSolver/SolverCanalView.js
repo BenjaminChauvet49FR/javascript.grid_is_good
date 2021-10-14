@@ -16,13 +16,12 @@ SolverCanalView.prototype.construct = function(p_numericXArray) {
 	this.generalConstruct();
 	this.xLength = p_numericXArray[0].length;
 	this.yLength = p_numericXArray.length;
-	this.makeItGeographical(this.xLength, this.yLength);
-	this.methodsSetDeductions = new ApplyEventMethodGeographicalPack(
+	this.makeItGeographical(this.xLength, this.yLength, new ApplyEventMethodGeographicalPack(
 			applyEventClosure(this), 
 			deductionsClosure(this), 
 			adjacencyClosure(this), 
 			transformClosure(this), 
-			undoEventClosure(this));
+			undoEventClosure(this)));
 	this.methodsSetPass = {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
@@ -39,12 +38,11 @@ SolverCanalView.prototype.construct = function(p_numericXArray) {
 	this.rangeGrid = Grid_data(p_numericXArray);
 	var ix,iy;
 
-	// Initialize answerArray purified + geographical purification through "addBannedSpace"
+	// Initialize answerArray purified
 	for(iy = 0;iy < this.yLength ; iy++) {
 		this.answerArray.push([]);
 		for(ix = 0;ix < this.xLength ; ix++) {
 			if (this.rangeGrid.get(ix, iy) != null) {
-				this.addBannedSpace(ix, iy);
 				this.answerArray[iy].push(ADJACENCY.NO);
 			} else {
 				this.answerArray[iy].push(ADJACENCY.UNDECIDED);
@@ -147,6 +145,8 @@ SolverCanalView.prototype.construct = function(p_numericXArray) {
 	
 	this.checkerNewlyOpenSpaces = new CheckCollection(this.rangedSpacesCoors.length);
 	this.checkerUpdatedMinMax = new CheckCollection(this.rangedSpacesCoors.length);
+	
+	this.declarationsOpenAndClosed();
 }
 
 //--------------------------------
@@ -174,7 +174,7 @@ SolverCanalView.prototype.getNumber = function(p_x, p_y) {
 // Input methods
 SolverCanalView.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
 	if (!this.isBanned(p_x, p_y)) {
-		this.tryToPutNew(p_x, p_y, p_symbol);
+		this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 	}
 }
 
@@ -188,7 +188,7 @@ SolverCanalView.prototype.quickStart = function() {
 	var eventList;
 	for (var i = 0 ; i < this.rangedSpacesCoors.length ; i++) {
 		eventList = this.deductionsSumsMinMax([], this.rangedSpacesCoors[i].x, this.rangedSpacesCoors[i].y);
-		eventList.forEach(event_ => {this.tryToApplyHypothesis(event_, this.methodsSetDeductions) } );
+		eventList.forEach(event_ => {this.tryToApplyHypothesis(event_) } );
 	}
 
 	this.terminateQuickStart();
@@ -198,26 +198,15 @@ SolverCanalView.prototype.emitPassSpace = function(p_x, p_y) {
 	const number = this.getNumber(p_x, p_y);
 	if (number != null) {		
 		const generatedEvents = this.generateEventsRangedDynamicPass(p_x, p_y, number);
-		this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y, number : number}); 
+		this.passEvents(generatedEvents, {x : p_x, y : p_y, number : number}); 
 	} else {
 		const generatedEvents = this.generateEventsSinglePass(p_x, p_y);
-		this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y}); 
+		this.passEvents(generatedEvents, {x : p_x, y : p_y}); 
 	}
 }
 
 SolverCanalView.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
-}
-
-//--------------------------------
-
-// Central method
-
-SolverCanalView.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(
-		new SpaceEvent(p_x, p_y, p_symbol),
-		this.methodsSetDeductions
-	);
+	this.multiPass(this.methodsSetMultiPass);
 }
 
 //--------------------------------

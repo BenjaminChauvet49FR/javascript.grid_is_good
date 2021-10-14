@@ -16,14 +16,13 @@ SolverHakoiri.prototype.construct = function(p_wallArray, p_symbolsArray) {
 	this.generalConstruct();
 	this.xLength = p_symbolsArray[0].length;
 	this.yLength = p_symbolsArray.length;
-	this.makeItGeographical(this.xLength, this.yLength);
-	this.methodsSetDeductions = new ApplyEventMethodGeographicalPack( 
+	this.makeItGeographical(this.xLength, this.yLength, new ApplyEventMethodGeographicalPack( 
 		applyEventClosure(this),
 		deductionsClosure(this),
 		adjacencyClosure(this),
 		transformClosure(this),
 		undoEventClosure(this)
-	);
+	));
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
 	this.methodsSetMultiPass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
@@ -45,7 +44,7 @@ SolverHakoiri.prototype.construct = function(p_wallArray, p_symbolsArray) {
 		for (var x = 0 ; x < this.xLength ; x++) {
 			if (this.regionArray[y][x] == WALLGRID.OUT_OF_REGIONS) {
 				this.answerArray[y].push({blocked : true, value : null});
-			} else {				
+			} else {	
 				symbol = p_symbolsArray[y][x];
 				switch(symbol) {
 					case (SYMBOL_ID.ROUND) : this.answerArray[y].push({blocked : true, value : SPACE_HAKOIRI.ROUND});  break;
@@ -132,6 +131,8 @@ SolverHakoiri.prototype.construct = function(p_wallArray, p_symbolsArray) {
 		}
 		region.possibilities = new SpaceSetNumeric(setupNumericSpaces, notPlacedYet, min, max);
 	}
+	
+	this.declarationsOpenAndClosed();
 }
 
 //--------------------------------
@@ -206,12 +207,12 @@ SolverHakoiri.prototype.emitPassRegion = function(p_x, p_y) {
 	const index = this.regionArray[p_y][p_x]; 
 	if (index != WALLGRID.OUT_OF_REGIONS) {
 		const generatedEvents = this.generateEventsForRegionPass(index);
-		this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, index); 
+		this.passEvents(generatedEvents, index); 
 	}
 }
 
 SolverHakoiri.prototype.makeMultiPass = function() {
-	return this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
+	return this.multiPass(this.methodsSetMultiPass);
 }
 
 //--------------------------------
@@ -278,7 +279,7 @@ undoEventClosure = function(p_solver) {
 
 // Central method
 SolverHakoiri.prototype.tryToPutNew = function (p_event) {
-	this.tryToApplyHypothesis(p_event, this.methodsSetDeductions);
+	this.tryToApplyHypothesis(p_event);
 }
 
 //--------------------------------

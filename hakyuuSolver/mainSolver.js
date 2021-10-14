@@ -23,18 +23,14 @@ function main() {
 
 	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)},false);
 	setInterval(drawCanvas, 30);
-	var fieldName = document.getElementById("input_grid_name");
-
+	const defaultPuzzleValue = "1";
 	const puzzleTypeName = "Hakyuu";
-	putActionElementClick("submit_view_puzzle_list", function(event){viewPuzzleList(puzzleTypeName)});
-	putActionElementClick("submit_load_grid", function(event){loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value)});
-	putActionElementClick("submit_quickStart", function(event){quickStartAction(solver)});
-	putActionElementClick("submit_multipass", function(event){multipassAction(solver)});
-	putActionElementClick("submit_undo", function(event){undoAction(solver)});
-
-	// ------
 	
-	addEventsListenersAndCaptionsAndSetOne(actionsManager, 
-	"text_canvas_action", ["submit_enter_number", "submit_pass_region"], 
-	ENTRY.SPACE, [ACTION_ENTER_NUMBER, ACTION_PASS_REGION]);
+	buildPuzzleManagementMenu("div_puzzle_management", "input_grid_name", "submit_load_grid", puzzleTypeName, defaultPuzzleValue);
+	putActionElementClick("submit_load_grid", function(event) {
+		loadAction(canevas, drawer, solver, puzzleTypeName, document.getElementById("input_grid_name").value);
+	});
+	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
+	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_ENTER_NUMBER, ACTION_PASS_REGION]);
+	buildActionsGlobal("div_global_actions", "textido", ["Multipasse", "Annuler"], [function(event){multipassAction(solver)}, function(event){undoAction(solver)}] );
 }

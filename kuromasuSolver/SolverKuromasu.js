@@ -18,14 +18,7 @@ SolverKuromasu.prototype.construct = function(p_numbersXArray, p_isCorral) {
 	this.generalConstruct();
 	this.xLength = p_numbersXArray[0].length;
 	this.yLength = p_numbersXArray.length;
-	this.makeItGeographical(this.xLength, this.yLength);
 	this.isCorral = p_isCorral;
-	this.methodsSetDeductions = new ApplyEventMethodGeographicalPack(
-			applyEventClosure(this), 
-			deductionsClosure(this), 
-			adjacencyClosure(this), 
-			transformClosure(this), 
-			undoEventClosure(this));
 	this.methodsSetPass = {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
@@ -35,6 +28,12 @@ SolverKuromasu.prototype.construct = function(p_numbersXArray, p_isCorral) {
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		//skipPassMethod : skipPassClosure(this)
 	};
+	this.makeItGeographical(this.xLength, this.yLength, new ApplyEventMethodGeographicalPack(
+			applyEventClosure(this), 
+			deductionsClosure(this), 
+			adjacencyClosure(this), 
+			transformClosure(this), 
+			undoEventClosure(this)));
 
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filtersUpdateMinsFromNewlyOpenSpaces(this), filtersMinMaxClosure(this), filterCorralClosure(this)]);
 	// Note : may be optimized with adding the last filter depending on this.isCorral
@@ -49,7 +48,7 @@ SolverKuromasu.prototype.construct = function(p_numbersXArray, p_isCorral) {
 		this.numericArray.push([]);
 		for (ix = 0 ; ix < p_numbersXArray[iy].length ; ix++) {
 			if (p_numbersXArray[iy][ix] != null) {
-				this.answerArray[iy][ix] = ADJACENCY.YES;		
+				this.answerArray[iy][ix] = ADJACENCY.YES;
 				this.numericArray[iy].push({
 					number : parseInt(p_numbersXArray[iy][ix], 10),
 					closestRanged : [null, null, null, null], // Index of closed space other than itself. Rather than coordinates, indexes are fine, since we don't have to separate x and y
@@ -131,6 +130,8 @@ SolverKuromasu.prototype.construct = function(p_numbersXArray, p_isCorral) {
 		this.checkerAdjacencyNewlyOpen = new CheckCollectionDoubleEntry(this.xLength, this.yLength);
 		this.checkerAdjacencyClustersFreeClosed = new CheckCollectionDoubleEntryGeneric(this.xLength, this.yLength, null);
 	}
+	
+	this.declarationsOpenAndClosed();
 }
 
 //--------------------------------
@@ -174,17 +175,14 @@ SolverKuromasu.prototype.quickStart = function() {
 	this.rangedSpacesCoors.forEach(coors => {
 		space = this.numericArray[coors.y][coors.x];
 		KnownDirections.forEach(dir => {
-			this.tryToApplyHypothesis(
-				new MinRangeEvent(coors.x, coors.y, dir, space.number),
-				this.methodsSetDeductions
-			);
+			this.tryToApplyHypothesis(new MinRangeEvent(coors.x, coors.y, dir, space.number));
 		});
 	});
 	// Mins and maxes
 	var listEvents;
 	for (var i = 0 ; i < this.rangedSpacesCoors.length ; i++) {
 		listEvents = this.deductionsSumsMinMax([], this.rangedSpacesCoors[i].x, this.rangedSpacesCoors[i].y);
-		listEvents.forEach(event_ => {this.tryToApplyHypothesis(event_, this.methodsSetDeductions) } );
+		listEvents.forEach(event_ => {this.tryToApplyHypothesis(event_) } );
 	}
 	this.terminateQuickStart();
 }
@@ -201,7 +199,7 @@ SolverKuromasu.prototype.emitPassSpace = function(p_x, p_y) {
 }
 
 SolverKuromasu.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultiPass);
 }
 
 //--------------------------------
@@ -209,10 +207,7 @@ SolverKuromasu.prototype.makeMultiPass = function() {
 // Central method
 
 SolverKuromasu.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(
-		new SpaceEvent(p_x, p_y, p_symbol),
-		this.methodsSetDeductions
-	);
+	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 //--------------------------------

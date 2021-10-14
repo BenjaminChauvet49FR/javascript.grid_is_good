@@ -21,13 +21,13 @@ SolverNurikabe.prototype.construct = function(p_numericXArray) {
 	this.generalConstruct();
 	this.xLength = p_numericXArray[0].length;
 	this.yLength = p_numericXArray.length;
-	this.makeItGeographical(this.xLength, this.yLength);
-	this.methodsSetDeductions = new ApplyEventMethodGeographicalPack(
-			applyEventClosure(this), 
-			deductionsClosure(this), 
-			adjacencyClosure(this), 
-			transformClosure(this), 
-			undoEventClosure(this));
+	this.makeItGeographical(this.xLength, this.yLength, new ApplyEventMethodGeographicalPack( 
+		applyEventClosure(this),
+		deductionsClosure(this),
+		adjacencyClosure(this),
+		transformClosure(this),
+		undoEventClosure(this)
+	));
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
 	this.methodsSetMultiPass = {generatePassEventsMethod : generateEventsForSpacePassClosure(this), orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 	skipPassMethod : skipPassClosure(this) };
@@ -42,7 +42,7 @@ SolverNurikabe.prototype.construct = function(p_numericXArray) {
 	this.accessibleIslandsArray = generateFunctionValueArray(this.xLength, this.yLength, function(p_x, p_y) {return [NURIKABE_SEA];});
 	
 	var ix,iy;
-	// Initialize answerArray purified + geographical purification through "addBannedSpace"
+	// Initialize answerArray purified
 	for(iy = 0;iy < this.yLength ; iy++) {
 		//this.answerArray.push([]);
 		for(ix = 0;ix < this.xLength ; ix++) {
@@ -94,7 +94,6 @@ SolverNurikabe.prototype.construct = function(p_numericXArray) {
 	this.islandList.forEach(island => {
 		ix = island.capitalX;
 		iy = island.capitalY;
-		this.addBannedSpace(ix, iy);
 		this.answerChoiceArray[iy][ix].ban(NURIKABE_SEA);
 		this.answerChoiceArray[iy][ix].choose(island.index);
 		island.spacesIncluded.push({x : ix, y : iy});
@@ -104,6 +103,8 @@ SolverNurikabe.prototype.construct = function(p_numericXArray) {
 	this.arbitrarySkipPassThreshold = Math.sqrt(this.xLength * this.yLength) / 2;
 
 	// Note : add strategies for troll puzzles such as 1030
+	
+	this.declarationsOpenAndClosed();
 }
 
 function notBordedByIndexClosure(p_solver, p_index) {
@@ -152,7 +153,7 @@ SolverNurikabe.prototype.getNumber = function(p_x, p_y) {
 // Input methods
 SolverNurikabe.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
 	if (!this.islandGrid.get(p_x, p_y)) {
-		this.tryToPutNew(p_x, p_y, p_symbol);
+		this.tryToApplyHypothesis(new ChoiceEvent(p_x, p_y, NURIKABE_SEA, p_symbol));
 	}
 }
 
@@ -172,20 +173,14 @@ SolverNurikabe.prototype.quickStart = function() {
 		for (var x = 0 ; x < this.xLength ; x++) {
 			singleIndex = this.answerChoiceArray[y][x].getSingleValue(); 
 			if (singleIndex != null) {
-				this.tryToApplyHypothesis(
-					new ChoiceEvent(x, y, singleIndex ,true),
-					this.methodsSetDeductions
-				);
+				this.tryToApplyHypothesis(new ChoiceEvent(x, y, singleIndex ,true));
 			}
 		}
 	}
 	this.islandList.forEach(island => {
 		if (island.number == island.accessibleSpaces.length) {
 			island.accessibleSpaces.forEach(coors => {
-				this.tryToApplyHypothesis(
-					new ChoiceEvent(coors.x, coors.y, NURIKABE_SEA, false),
-					this.methodsSetDeductions
-				);
+				this.tryToApplyHypothesis(new ChoiceEvent(coors.x, coors.y, NURIKABE_SEA, false));
 			});
 		}
 	});
@@ -196,19 +191,19 @@ SolverNurikabe.prototype.emitPassSpace = function(p_x, p_y) {
 	if (this.islandGrid.get(p_x, p_y) != null) {		
 		const ixi = this.answerChoiceArray[p_y][p_x].getOneLeft();
 		const generatedEvents = this.generateEventsIslandPass(ixi); 
-		this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, ixi); 
+		this.passEvents(generatedEvents, ixi); 
 	}
 }
 
 SolverNurikabe.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultiPass);
 }
 
 SolverNurikabe.prototype.makePurge = function() {
-	this.applyGlobalDeduction(banInaccessibleIslands(this), this.methodsSetDeductions, "Purge distant spaces");
+	this.applyGlobalDeduction(banInaccessibleIslandsClosure(this), this.methodsSetDeductions, "Purge distant spaces");
 }
 
-function banInaccessibleIslands(p_solver) {
+function banInaccessibleIslandsClosure(p_solver) {
 	return function() {		
 		var ok = true;
 		var found = false;
@@ -225,16 +220,14 @@ function banInaccessibleIslands(p_solver) {
 						spacesToDiscard.push({x : coors.x, y : coors.y});
 					}
 				});
-				spacesToDiscard.forEach(coors => {
-					state = p_solver.tryToApplyHypothesis(
-						new ChoiceEvent(coors.x, coors.y, island.index, false),
-						p_solver.methodsSetDeductions
-					);
+				for (var j = 0 ; j < spacesToDiscard.length ; j++) {
+					coors = spacesToDiscard[j];
+					state = p_solver.tryToApplyHypothesis(new ChoiceEvent(coors.x, coors.y, island.index, false));
 					ok &= (state != DEDUCTIONS_RESULT.FAILURE);
+					if (!ok) {
+						return GLOBAL_DEDUCTIONS_RESULT.FAILURE;
+					}
 					found |= (state == DEDUCTIONS_RESULT.SUCCESS);
-				});
-				if (!ok) {
-					return GLOBAL_DEDUCTIONS_RESULT.FAILURE;
 				}
 			}
 		// });
@@ -247,17 +240,6 @@ function canGoThereClosure(p_solver, p_islandIndex) {
 	return function(p_x, p_y) {
 		return p_solver.answerChoiceArray[p_y][p_x].getState(p_islandIndex) != SPACE_CHOICE.NO;
 	}
-}
-
-//--------------------------------
-
-// Central method
-
-SolverNurikabe.prototype.tryToPutNew = function (p_x, p_y, p_choice) {
-	this.tryToApplyHypothesis(
-		new ChoiceEvent(p_x, p_y, NURIKABE_SEA, p_choice),
-		this.methodsSetDeductions
-	);
 }
 
 //--------------------------------

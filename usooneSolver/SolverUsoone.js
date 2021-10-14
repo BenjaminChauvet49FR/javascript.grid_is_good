@@ -13,17 +13,16 @@ SolverUsoone.prototype.construct = function (p_wallArray, p_numberArray) {
 	this.generalConstruct();
     this.xLength = p_numberArray[0].length;
     this.yLength = p_numberArray.length;
-	this.makeItGeographical(this.xLength, this.yLength);
     
     var ix, iy;
 
-	this.methodsSetDeductions = new ApplyEventMethodGeographicalPack(
-		applyEventClosure(this),
-		deductionsClosure(this),
-		adjacencyClosure(this),
-		transformClosure(this),
-		undoEventClosure(this)
-	);
+	this.makeItGeographical(this.xLength, this.yLength, new ApplyEventMethodGeographicalPack(
+			applyEventClosure(this), 
+			deductionsClosure(this), 
+			adjacencyClosure(this), 
+			transformClosure(this), 
+			undoEventClosure(this)));
+	
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
 	this.methodsSetMultiPass = {
 		generatePassEventsMethod : generateEventsForNumbersSetsClosure(this),
@@ -83,7 +82,7 @@ SolverUsoone.prototype.construct = function (p_wallArray, p_numberArray) {
 			} 
 		});
 	});
-	
+	this.declarationsOpenAndClosed();
 }
 
 SolverUsoone.prototype.getAnswer = function (p_x, p_y) {
@@ -106,7 +105,7 @@ SolverUsoone.prototype.getTruth = function(p_x, p_y) {
 //--------------------------------
 
 SolverUsoone.prototype.emitHypothesis = function (p_x, p_y, p_symbol) {
-    this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol), this.methodsSetDeductions);
+    this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverUsoone.prototype.quickStart = function () {
@@ -116,16 +115,16 @@ SolverUsoone.prototype.quickStart = function () {
         if (numberSet.coors.length == 1) {
 			x = numberSet.coors[0].x; 
 			y = numberSet.coors[0].y;
-			this.tryToApplyHypothesis(new TruthEvent(x, y, USOONE.LIE), this.methodsSetDeductions);
+			this.tryToApplyHypothesis(new TruthEvent(x, y, USOONE.LIE));
         } else {
 			numberSet.coors.forEach(myCoors => {
 				x = myCoors.x; 
 				y = myCoors.y;
 				if (notEnoughSurroundingUndecidedToMeet(this.numberManagementArray[y][x])) {							
-					this.tryToApplyHypothesis(new TruthEvent(x, y, USOONE.LIE), this.methodsSetDeductions);
+					this.tryToApplyHypothesis(new TruthEvent(x, y, USOONE.LIE));
 				}
 				if (this.numberManagementArray[y][x].value == 0 && this.numberManagementArray[y][x].adjacentUndecideds == 0 && this.numberManagementArray[y][x].adjacentCloseds == 0) {
-					this.tryToApplyHypothesis(new TruthEvent(x, y, USOONE.TRUTH), this.methodsSetDeductions); // Puzzle 26 : a 0 is fully surrounded by numbered spaces and should then be labelled true for QS.
+					this.tryToApplyHypothesis(new TruthEvent(x, y, USOONE.TRUTH)); // Puzzle 26 : a 0 is fully surrounded by numbered spaces and should then be labelled true for QS.
 				}
 			});
 		}
@@ -137,12 +136,12 @@ SolverUsoone.prototype.emitPass = function(p_x, p_y) {
 	if (this.getNumber(p_x, p_y) != null) {
 		const index = this.numberManagementArray[p_y][p_x].index;
 		const generatedEvents = this.generateEventsForNumbersSets(index);
-		this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, index); 
+		this.passEvents(generatedEvents, index); 
 	}
 }
 
 SolverUsoone.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultiPass);
 }
 
 SolverUsoone.prototype.undo = function() {

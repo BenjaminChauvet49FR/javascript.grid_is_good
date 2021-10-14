@@ -26,8 +26,8 @@ function clickCornerAction(event, p_canvas, p_drawer, p_editorCore, p_xLength, p
 		const gridId = GRID_ID.KNOTS;
 		const x = indexCornerRD.x;
 		const y = indexCornerRD.y;
-		p_editorCore.set(gridId, x, y, p_editorCore.get(gridId, x, y) == null ? SYMBOL_ID.KNOT_HERE : null); //551551 ce qui sera à faire quand on sauvegardera !
-		return true;
+		p_editorCore.set(gridId, x, y, p_editorCore.get(gridId, x, y) == null ? SYMBOL_ID.KNOT_HERE : null);
+		return true; // Is everything okay ? I wrote : "ce qui sera à faire quand on sauvegardera !"
 	}
 	return false;
 }

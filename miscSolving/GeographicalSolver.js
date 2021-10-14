@@ -1,17 +1,253 @@
 // Note : right now this is a set of methods but later this may become a standing class.
 
-GeneralSolver.prototype.makeItGeographical = function(p_xLength, p_yLength) {
+// makeItGeographical must be placed AFTER declaring methodsSetDeductions.
+GeneralSolver.prototype.makeItGeographical = function(p_xLength, p_yLength, p_methodPack) {
+	this.checkFormerLimits = false;
 	this.xLength = p_xLength;
 	this.yLength = p_yLength;
-	this.atLeastOneOpen = false;
+	this.atLeastOneOpenTreated = false;
+	this.atLeastOneOpenAtSetup = false;
     this.adjacencyLimitGrid = createAdjacencyLimitGrid(this.xLength, this.yLength);
     this.adjacencyLimitSpacesList = [];
 	this.bannedSpacesList = [];
+	this.methodsSetDeductions = p_methodPack;
+	this.methodsSetDeductions.undoEventMethod = geographicalEnhancedUndoClosure(this, this.methodsSetDeductions.undoEventMethod);
+	shouldBeLoggedEvent = shouldBeLoggedEventEnhancedClosure(shouldBeLoggedEvent);
+	setupAdjacencyCheck(p_xLength, p_yLength, p_methodPack.adjacencyMethod);
 }
 
-// Mandatory for puzzle with banned spaces ! To be called on every banned space when setting up puzzle.
-GeneralSolver.prototype.addBannedSpace = function(p_x, p_y) {
-	this.bannedSpacesList.push({x : p_x, y : p_y});
+function geographicalEnhancedUndoClosure(p_solver, p_originalUndoMethod) {
+	return function(p_eventToUndo) {
+		if (p_eventToUndo.firstOpen) { 
+			p_solver.atLeastOneOpenTreated = false;
+		} else if (p_eventToUndo.adjacency) {
+			const aals = p_solver.adjacencyLimitSpacesList.pop(); 
+			p_solver.adjacencyLimitGrid[aals.y][aals.x] = aals.formerValue;
+		} else {
+			p_originalUndoMethod(p_eventToUndo);
+		}
+	}
+}
+
+function shouldBeLoggedEventEnhancedClosure(p_originalUndoMethod) {
+	return function(p_event, p_solver) {
+		if ((p_event.firstOpen) || (p_event.adjacency)) {
+			return false;
+		}
+		return p_originalUndoMethod(p_event, p_solver);
+	}
+}
+
+// Declare spaces open and closed for setup !!! Do not forget them, otherwise this can make the puzzle go nuts.
+GeneralSolver.prototype.declarationsOpenAndClosed = function() {
+	var atLeastOneOpen = false;
+	for (var y = 0 ; y < this.yLength ; y++) {
+		for (var x = 0 ; x < this.xLength ; x++) {
+			switch(this.methodsSetDeductions.adjacencyMethod(x, y)) {
+				case ADJACENCY.YES : atLeastOneOpen = true; break;
+				case ADJACENCY.NO : this.bannedSpacesList.push({x : x, y : y}); break;
+			}
+		}
+	}
+	if (atLeastOneOpen && this.bannedSpacesList.length > 0) {
+		this.atLeastOneOpenAtSetup = true; 
+	}
+}
+
+// Behaves like a filter, except it adds immediatly applied events
+GeneralSolver.prototype.geographicalDeductionsPseudoFilter = function(p_appliedEventsList, p_methodPack) {
+	if (this.atLeastOneOpenAtSetup) {
+		if (!this.atLeastOneOpenTreated) {
+			p_appliedEventsList.push(new FirstOpenEvent());
+			this.atLeastOneOpenTreated = true;
+			retrieveBackedClosedSpaces = true;
+		}		
+	}
+	
+	var listEventsToApply = [];
+	var alreadyGeographicallyCheckedEventsCount = 0 ;
+	var eventBeingChecked;
+	var isOpenEvent;
+	var retrieveBackedClosedSpaces = false;
+	var newClosedSpaces = [];
+	while(alreadyGeographicallyCheckedEventsCount < p_appliedEventsList.length) {
+		eventBeingChecked = p_appliedEventsList[alreadyGeographicallyCheckedEventsCount];
+		alreadyGeographicallyCheckedEventsCount++;
+		if (eventBeingChecked.opening) { // Note : unlike the previous systems (where geographical addings were made directly in the application) we check "opening" everytime. A slight waste of time... 					
+			isOpenEvent = eventBeingChecked.opening();
+			if (isOpenEvent == ADJACENCY.NO) {
+				newClosedSpaces.push({
+					x: eventBeingChecked.x(),
+					y: eventBeingChecked.y()
+				});
+			} else if (isOpenEvent == ADJACENCY.YES) {
+				//If we are putting the first open space, add a corresponding event into the list of applied events (it isn't "to apply" anymore)
+				if (!this.atLeastOneOpenTreated) {
+					p_appliedEventsList.push(new FirstOpenEvent());
+					this.atLeastOneOpenTreated = true;
+					retrieveBackedClosedSpaces = true;
+				}
+			}
+		}
+	}
+	if (retrieveBackedClosedSpaces) {
+		// The first open space has been added this time OR during the setup (ie this succession of events before a check verification) : add all spaces that were listed as banned + all spaces that were previously closed to the list.
+		this.bannedSpacesList.forEach(space => {
+			newClosedSpaces.push({
+				x: space.x,
+				y: space.y
+			});
+		});
+		this.happenedEventsSeries.forEach(eventSerie => {
+			eventSerie.list.forEach(solveEvent => {
+				if (solveEvent.opening && solveEvent.opening() == ADJACENCY.NO) {
+					newClosedSpaces.push({
+						x: solveEvent.x(),
+						y: solveEvent.y()
+					});
+				}
+			});
+		});
+	}
+	if (this.atLeastOneOpenTreated) {
+		//Geographical verification.
+		geoV = this.geographicalVerification(newClosedSpaces, false);
+		ok = (geoV.result != GEOGRAPHICAL_DEDUCTION.FAILURE);
+		if (ok) {
+			geoV.listGeographicalDeductionsToApply.forEach(geographicalDeduction =>
+				listEventsToApply.push(p_methodPack.retrieveGeographicalDeductionMethod(geographicalDeduction))
+			);
+			geoV.listGeographicalDeductionsApplied.forEach(geographicalDeduction =>
+				p_appliedEventsList.push(geographicalDeduction)
+			);
+		} else {
+			listEventsToApply = EVENT_RESULT.FAILURE;
+		}
+	}
+	return listEventsToApply;
+}
+
+GeneralSolver.prototype.setCheckFormerLimits = function(p_bool) {
+	this.checkFormerLimits = p_bool;
+}
+
+/**
+In entry : 
+p_listNewXs : a list of {x,y} items with the position of all "closed" spaces, 
+p_adjacencyMethod : a method that determines through (x,y) grid if a ... must be opened or not.
+In exit :
+listGeographicalDeductionsToApply : a list of GeographicalDeduction(x,y, OPEN|CLOSED) items
+listGeographicalDeductionsApplied : a list of {adjacency : true} items. Whenever it should be undone, the first element of adjacencyLimitSpacesList should be undone.
+*/
+GeneralSolver.prototype.geographicalVerification = function (p_listNewXs, p_manualDeductions) {
+    //autoLogGeographical("Perform geographicalVerification");
+	var formerLimits = [];
+	if (this.checkFormerLimits) {
+		formerLimits = this.adjacencyLimitSpacesList;  
+	}
+    const checking = adjacencyCheck(p_listNewXs, this.adjacencyLimitGrid, formerLimits); 
+	if (checking.success) {
+        var newListEvents = [];
+        var newListEventsApplied = [];
+        checking.newADJACENCY.forEach(space => {
+            newListEvents.push(new GeographicalDeduction(space.x, space.y, ADJACENCY.YES));
+        });
+        checking.newBARRIER.forEach(space => {
+            newListEvents.push(new GeographicalDeduction(space.x, space.y, ADJACENCY.NO));
+        });
+		if (!p_manualDeductions) {		
+			checking.newLimits.forEach(spaceLimit => {
+				//Store the ancient limit into the solved event (in case of undoing), then overwrites the limit at once and pushes it into
+				newListEventsApplied.push(new AdjacencyShiftEvent());
+				this.adjacencyLimitSpacesList.push({
+					x: spaceLimit.x,
+					y: spaceLimit.y,
+					formerValue: this.adjacencyLimitGrid[spaceLimit.y][spaceLimit.x].copy()
+				});
+				this.adjacencyLimitGrid[spaceLimit.y][spaceLimit.x] = spaceLimit.limit;
+			});
+		}
+		if (newListEvents.length || newListEventsApplied.length) {			
+			return {
+				result : GEOGRAPHICAL_DEDUCTION.SUCCESS,
+				listGeographicalDeductionsToApply : newListEvents,
+				listGeographicalDeductionsApplied : newListEventsApplied
+			} 
+		} else {
+			return {
+				result : GEOGRAPHICAL_DEDUCTION.HARMLESS,
+				listGeographicalDeductionsToApply : [],
+				listGeographicalDeductionsApplied : []
+			}
+		}
+    } else {
+        return {
+            result: GEOGRAPHICAL_DEDUCTION.FAILURE
+        };
+    }
+}
+
+function exploreFormerLimitsClosure(p_solver) {
+	return function() {		
+		if (p_solver.checkFormerLimits) {
+			return GLOBAL_DEDUCTIONS_RESULT.HARMLESS;
+		}
+		p_solver.checkFormerLimits = true;
+		
+		const geoV = p_solver.geographicalVerification([], true);
+		var ok = (geoV.result != GEOGRAPHICAL_DEDUCTION.FAILURE); // Should be true...
+		var listEventsToApply = [];
+		if (ok) {
+			geoV.listGeographicalDeductionsToApply.forEach(geographicalDeduction =>
+				listEventsToApply.push(p_solver.methodsSetDeductions.retrieveGeographicalDeductionMethod(geographicalDeduction))
+			);
+			geoV.listGeographicalDeductionsApplied.forEach(applied => 
+				alert("Comment est-ce possible ?")
+			);
+		}
+		var state;
+		var found = false;
+		for (var j = 0 ; j < listEventsToApply.length ; j++) {
+			event_ = listEventsToApply[j];
+			state = p_solver.tryToApplyHypothesis(event_);
+			ok &= (state != DEDUCTIONS_RESULT.FAILURE);
+			if (!ok) {
+				p_solver.checkFormerLimits = false;
+				return GLOBAL_DEDUCTIONS_RESULT.FAILURE;
+			}
+			found |= (state == DEDUCTIONS_RESULT.SUCCESS);
+		}
+		p_solver.checkFormerLimits = false;
+		return found ? GLOBAL_DEDUCTIONS_RESULT.SUCCESS : GLOBAL_DEDUCTIONS_RESULT.HARMLESS;
+	}
+}
+
+// -----------------------
+// Common input
+
+GeneralSolver.prototype.makeFormerLimitsExploration = function() {
+	this.applyGlobalDeduction(exploreFormerLimitsClosure(this), this.methodsSetDeductions, "Former limits check");
+}
+
+// -----------------------
+// Events
+
+function FirstOpenEvent() {
+	this.firstOpen = true;
+	this.outOfPass = true;
+}
+
+FirstOpenEvent.prototype.toLogString = function() {
+	return "<first opening declared>"
+}
+
+function AdjacencyShiftEvent() {
+	this.adjacency = true;
+	this.outOfPass = true;
+}
+
+AdjacencyShiftEvent.prototype.toLogString = function() {
+	return "<adjacency>"
 }
 
 // -----------------------

@@ -16,13 +16,13 @@ SolverTapa.prototype.construct = function(p_combinationArray) {
 	this.generalConstruct();
 	this.xLength = p_combinationArray[0].length;
 	this.yLength = p_combinationArray.length;
-	this.makeItGeographical(this.xLength, this.yLength);
-	this.methodsSetDeductions = new ApplyEventMethodGeographicalPack(
-			applyEventClosure(this), 
-			deductionsClosure(this), 
-			adjacencyClosure(this), 
-			transformClosure(this), 
-			undoEventClosure(this));
+	this.makeItGeographical(this.xLength, this.yLength, new ApplyEventMethodGeographicalPack( 
+		applyEventClosure(this),
+		deductionsClosure(this),
+		adjacencyClosure(this),
+		transformClosure(this),
+		undoEventClosure(this)
+	));
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterSpacesClosure(this)]);
 	this.methodsSetPass = {
 		comparisonMethod : comparison,
@@ -50,7 +50,6 @@ SolverTapa.prototype.construct = function(p_combinationArray) {
 		for(ix = 0;ix < this.xLength ; ix++) {
 			if (this.clueGrid.get(ix, iy) != null) {
 				this.answerArray[iy][ix] = ADJACENCY.NO;
-				this.addBannedSpace(ix, iy); // Do not forget this in geographical puzzle with initially banned spaces !
 				this.numericSpacesCoorsList.push({x : ix, y : iy});
 				this.existingNeighborsCoorsWithDiagonals(ix, iy).forEach(coors => {
 					const x = coors.x;
@@ -62,7 +61,7 @@ SolverTapa.prototype.construct = function(p_combinationArray) {
 			} 
 		}
 	}
-	
+	this.declarationsOpenAndClosed();
 }
 
 //--------------------------------
@@ -96,15 +95,12 @@ function testExistingCoordinate(coor, dir, xMax, yMax) {
 
 // Input methods
 SolverTapa.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(
-		new SpaceEvent(p_x, p_y, p_symbol),
-		this.methodsSetDeductions
-	);
+	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverTapa.prototype.emitPass = function(p_x, p_y) {
 	if (this.isNumeric(p_x, p_y)) {
-		this.passEvents(this.generateEventsForAroundSpacePass(p_x, p_y), this.methodsSetDeductions, this.methodsSetPass, {x : x, y : y});
+		this.passEvents(this.generateEventsForAroundSpacePass(p_x, p_y), {x : x, y : y});
 	}
 }
 
@@ -118,15 +114,13 @@ SolverTapa.prototype.quickStart = function() {
 	this.numericSpacesCoorsList.forEach(coors => {
 		eventsList = this.deductionsTapass(eventsList, coors.x, coors.y);
 	});
-	eventsList.forEach(event_ => {
-		this.tryToApplyHypothesis(event_, this.methodsSetDeductions);
-	});
+	eventsList.forEach(event_ => {this.tryToApplyHypothesis(event_);});
 	this.terminateQuickStart();
 }
 
 
 SolverTapa.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultiPass);
 }
 
 //--------------------------------

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+		<meta charset="utf-8"/>
 		<link rel="icon" type="image/png" href="../resources/star.png">
         <title>LITS solver !!!</title>
 		<link rel="stylesheet" type="text/css" href="../style.css">
@@ -11,27 +12,15 @@
 		<canvas id="canevas" width="800" height="500">
             Message pour les navigateurs ne supportant pas encore canvas.
         </canvas></br>
-		
-		Grille à charger : <input type="text" id="input_grid_name" value="30"></input> 
-		<input type="submit" id="submit_view_puzzle_list" value="Voir les puzzles LITS"></input></br>
-		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
-		
-		Démarrage rapide :
-		<input type="submit" id="submit_quickStart" value="Démarrage rapide"></input></br>
-		
-		Action : <span id="text_canvas_action"></span></br>
-		<input type="submit" id="submit_open_space" value="XXX"></input>
-		<input type="submit" id="submit_close_space" value="XXX"></input>
-		<input type="submit" id="submit_pass_region" value="XXX"></input>
-		<input type="submit" id="submit_pass_region_and_adjacency" value="XXX"></input></br>
-
-		Actions globales :</br>
-		<input type="submit" id="submit_multiPass" value="Multi passe"></input></br>		
-		<input type="submit" id="submit_undo" value="Annuler"></input></br>	
+				
+		<div id="div_puzzle_management"></div>		
+		<div id="div_quickStart"></div>		
+		<div id="div_canvas_buttons"></div>
+		<div id="div_global_actions"></div>
+		<div id="div_adjacency"></div>
+		<span id="span_resolution_state"></span></br>
 		
 		<script src="../Importation.js"></script>
-		<span id="span_resolution_state"></span></br>	
-		
 		<script>
 		"use strict";
 		window.onload = function() {
@@ -44,6 +33,7 @@
 			addScript("SolveEvent.js");
 			addScript("constantsLITS.js");
 			addScript("SolverLits.js");
+			addScript("SolverLits2.js");
 			startScriptLoading();
 		}		 
 		</script>

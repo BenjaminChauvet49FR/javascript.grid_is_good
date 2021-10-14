@@ -257,10 +257,7 @@ function monoArray(p_number, p_value) {
 // Input methods
 
 SolverSudoku.prototype.emitHypothesis = function(p_x, p_y, p_number) {
-	return this.tryToApplyHypothesis(
-		new SpaceAllowEvent(p_x, p_y, p_number, true),
-		this.methodsSetDeductions
-	)
+	return this.tryToApplyHypothesis(new SpaceAllowEvent(p_x, p_y, p_number, true));
 }
 
 SolverSudoku.prototype.undo = function() {
@@ -275,12 +272,12 @@ SolverSudoku.prototype.quickStart = function() {
 
 SolverSudoku.prototype.emitPassSelectedSpaces = function(p_coorsList) {
 	const eventsForPass = this.generateEventsForSpacesList(p_coorsList);
-	return this.passEvents(eventsForPass, this.methodsSetDeductions, this.methodsSetPass, {family : SUDOKU_PASS_CATEGORY.CUSTOM, numberSpaces : eventsForPass.length});
+	return this.passEvents(eventsForPass, {family : SUDOKU_PASS_CATEGORY.CUSTOM, numberSpaces : eventsForPass.length});
 }
 
 SolverSudoku.prototype.emitPassGrids = function(p_gridIndexes) {
 	const generatedEvents = this.generateEventsForGrids(p_gridIndexes);
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {family : SUDOKU_PASS_CATEGORY.GRIDS, gridIndexes : p_gridIndexes}); 
+	this.passEvents(generatedEvents, {family : SUDOKU_PASS_CATEGORY.GRIDS, gridIndexes : p_gridIndexes}); 
 }
 
 SolverSudoku.prototype.makeTotalPass = function() {
@@ -292,7 +289,7 @@ SolverSudoku.prototype.makeTotalPass = function() {
 			}
 		}
 	}
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {family : SUDOKU_PASS_CATEGORY.ALL}); 
+	this.passEvents(generatedEvents, {family : SUDOKU_PASS_CATEGORY.ALL}); 
 }
 
 //--------------------------------
@@ -605,9 +602,7 @@ SolverSudoku.prototype.performActualQuickStart = function () {
 			}
 		} 
 		
-		listSpaceEvents.forEach(event_ => {	
-			this.tryToApplyHypothesis(event_, this.methodsSetDeductions);
-		});
+		listSpaceEvents.forEach(event_ => {this.tryToApplyHypothesis(event_)});
 	});
 }
 

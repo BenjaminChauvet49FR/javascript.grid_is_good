@@ -24,13 +24,13 @@ SolverShimaguni.prototype.construct = function(p_wallArray, p_indicationsRegions
 	var ix,iy;
 	var lastRegionNumber = 0;
 	
-	this.methodSetDeductions = new ApplyEventMethodPack(
+	this.methodsSetDeductions = new ApplyEventMethodPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterClustersClosure(this)]);
-	this.methodSetPass = {comparisonMethod : compareSolveEvents, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterClustersClosure(this)]);
+	this.methodsSetPass = {comparisonMethod : compareSolveEvents, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
 	this.methodsSetMultiPass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
@@ -176,7 +176,7 @@ SolverShimaguni.prototype.getAnswer = function(p_x, p_y) {
 // Input
 
 SolverShimaguni.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	return this.tryToApplyHypothesis(SolveEventPosition(p_x, p_y, p_symbol), this.methodSetDeductions);
+	return this.tryToApplyHypothesis(SolveEventPosition(p_x, p_y, p_symbol));
 }
 
 SolverShimaguni.prototype.undo = function() {
@@ -207,15 +207,15 @@ SolverShimaguni.prototype.quickStart = function() {
 
 SolverShimaguni.prototype.emitPassRegion = function(p_indexRegion) {
 	generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEvents(generatedEvents, this.methodSetDeductions, this.methodSetPass, p_indexRegion); 
+	this.passEvents(generatedEvents, p_indexRegion); 
 }
 
 SolverShimaguni.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodSetDeductions, this.methodSetPass, this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultiPass);
 }
 
 SolverShimaguni.prototype.tryToBan = function(p_region, p_value) {
-	this.tryToApplyHypothesis(SolveEventValue(p_region, p_value), this.methodSetDeductions);
+	this.tryToApplyHypothesis(SolveEventValue(p_region, p_value));
 }
 
 //--------------------------------

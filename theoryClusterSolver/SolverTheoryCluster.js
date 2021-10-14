@@ -13,7 +13,13 @@ SolverTheoryCluster.prototype.construct = function (p_wallArray) {
     this.gridWall = WallGrid_data(p_wallArray);
     this.answerArray = [];
     this.bannedArray = [];
-    this.makeItGeographical(this.xLength, this.yLength);
+    this.makeItGeographical(this.xLength, this.yLength, new ApplyEventMethodGeographicalPack( 
+		applyEventClosure(this),
+		deductionsClosure(this),
+		adjacencyClosure(this),
+		transformClosure(this),
+		undoEventClosure(this)
+	));
 	
 	// Artifical deductions
 	this.artificialDeductionSpacesList = [];
@@ -33,13 +39,13 @@ SolverTheoryCluster.prototype.construct = function (p_wallArray) {
 			if (p_wallArray[iy][ix].state == WALLGRID.CLOSED) {
 				this.answerArray[iy].push(ADJACENCY.NO);
 				this.bannedArray[iy].push(true);
-				this.addBannedSpace(ix, iy);
 			} else {
 				this.answerArray[iy].push(ADJACENCY.UNDECIDED);
 				this.bannedArray[iy].push(false);
 			}
         }
     }
+	this.declarationsOpenAndClosed();
 }
 
 //--------------------------------
@@ -66,7 +72,7 @@ SolverTheoryCluster.prototype.getArtificialDeduction = function (p_x, p_y) {
 
 SolverTheoryCluster.prototype.emitHypothesis = function (p_x, p_y, p_symbol) {
     if (this.floatingGrid[p_y][p_x] == ADJACENCY.UNDECIDED) {
-		this.tryToPutNew(p_x, p_y, p_symbol);
+		this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 	};
 }
 
@@ -151,22 +157,6 @@ transformClosure = function (p_solver) {
 		return new SpaceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, p_geographicalDeduction.opening);
     }
 };
-
-//----------------
-// Main function
-
-SolverTheoryCluster.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	methodPack = new ApplyEventMethodGeographicalPack(
-		applyEventClosure(this),
-		deductionsClosure(this),
-		adjacencyClosure(this),
-		transformClosure(this),
-		undoEventClosure(this)
-	);
-	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
-	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol), methodPack);
-}
 
 //----------------
 // "Intelligence"

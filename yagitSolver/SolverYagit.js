@@ -226,13 +226,13 @@ SolverYagit.prototype.emitHypothesisDown = function(p_x, p_y, p_state) {
 
 SolverYagit.prototype.emitPassAroundSpace = function(p_x, p_y) {
 	const generatedEvents = this.generateEventsAroundSpacePass(p_x, p_y);
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {passCategory : PASS_CATEGORY.SPACE, x : p_x, y : p_y}); 
+	this.passEvents(generatedEvents, {passCategory : PASS_CATEGORY.SPACE, x : p_x, y : p_y}); 
 }
 
 SolverYagit.prototype.emitPassNodeRD = function(p_x, p_y) {
 	if (this.nodesOccupationRDArray[p_y][p_x] != null) {
 		const generatedEvents = this.generateEventsAroundNodePass(p_x, p_y);
-		this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {passCategory : PASS_CATEGORY.CORNER, x : p_x, y : p_y}); 
+		this.passEvents(generatedEvents, {passCategory : PASS_CATEGORY.CORNER, x : p_x, y : p_y}); 
 	}
 }
 
@@ -241,7 +241,7 @@ SolverYagit.prototype.undo = function(){
 }
 
 SolverYagit.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultiPass);
 }
 
 // In this puzzle, quickstart is vital for the separation of centers
@@ -249,7 +249,7 @@ SolverYagit.prototype.quickStart = function(p_x, p_y) {
 	this.initiateQuickStart("Yagit");
 	KnownOrientations.forEach(orientation => {
 		this.roundAndSquareFencesCheckers[orientation].list.forEach(index => {
-			this.tryToApplyHypothesis(new YagitFenceEvent(orientation, index, FENCE_STATE.CLOSED), this.methodsSetDeductions);
+			this.tryToApplyHypothesis(new YagitFenceEvent(orientation, index, FENCE_STATE.CLOSED));
 		});
 	});
 	this.terminateQuickStart();

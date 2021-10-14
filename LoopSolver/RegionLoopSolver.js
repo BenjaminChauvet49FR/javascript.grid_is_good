@@ -546,7 +546,7 @@ quickStartRegionLoopSolverClosure = function(p_solver, p_PSQuickStart) {
 			}
 		}
 		events.forEach(event_ => {
-			p_solver.tryToApplyHypothesis(event_, p_solver.methodSetDeductions);
+			p_solver.tryToApplyHypothesis(event_);
 		});
 		p_solver.terminateQuickStart();
 		if (p_PSQuickStart) {

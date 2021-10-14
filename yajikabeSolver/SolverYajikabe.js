@@ -16,13 +16,13 @@ SolverYajikabe.prototype.construct = function(p_combinationArray) {
 	this.generalConstruct();
 	this.xLength = p_combinationArray[0].length;
 	this.yLength = p_combinationArray.length;
-	this.makeItGeographical(this.xLength, this.yLength);
-	this.methodsSetDeductions = new ApplyEventMethodGeographicalPack(
-			applyEventClosure(this), 
-			deductionsClosure(this), 
-			adjacencyClosure(this), 
-			transformClosure(this), 
-			undoEventClosure(this));
+	this.makeItGeographical(this.xLength, this.yLength, new ApplyEventMethodGeographicalPack( 
+		applyEventClosure(this),
+		deductionsClosure(this),
+		adjacencyClosure(this),
+		transformClosure(this),
+		undoEventClosure(this)
+	));
 	this.methodsSetPass = {
 		comparisonMethod : comparison,
 		copyMethod : copying,
@@ -42,12 +42,11 @@ SolverYajikabe.prototype.construct = function(p_combinationArray) {
 	this.cluesSpacesList = [];
 	this.unionsStripesList = []; // TODO better names ?
 
-	// Initialize answerArray purified + geographical purification through "addBannedSpace"
+	// Initialize answerArray purified
 	for(iy = 0;iy < this.yLength ; iy++) {
 		this.answerArray.push([]);
 		for(ix = 0;ix < this.xLength ; ix++) {
 			if (this.clueGrid.get(ix, iy) != null) {
-				this.addBannedSpace(ix, iy);
 				this.answerArray[iy].push(ADJACENCY.NO);
 			} else {
 				this.answerArray[iy].push(ADJACENCY.UNDECIDED);
@@ -167,7 +166,7 @@ SolverYajikabe.prototype.construct = function(p_combinationArray) {
 			}
 		}
 	}
-	
+	this.declarationsOpenAndClosed();
 }
 
 //--------------------------------
@@ -210,7 +209,7 @@ SolverYajikabe.prototype.getNumber = function(p_x, p_y) {
 // Input methods
 SolverYajikabe.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
 	if (!this.isBanned(p_x, p_y)) {
-		this.tryToPutNew(p_x, p_y, p_symbol);
+		this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 	}
 }
 
@@ -230,7 +229,7 @@ SolverYajikabe.prototype.quickStart = function() {
 		}
 	});
 	eventList.forEach(event_ => {
-		this.tryToPutNew(event_.coorX, event_.coorY, event_.symbol);
+		this.tryToApplyHypothesis(event_);
 	});
 	this.terminateQuickStart();
 }
@@ -242,29 +241,16 @@ SolverYajikabe.prototype.passStripFromSpace = function(p_x, p_y) {
 		var generatedEvents;
 		if (unionIndex != null) {
 			generatedEvents = this.generateEventsForUnionStripPass(unionIndex);
-			this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {category : YAJIKABE_CATEGORY.UNION, index : unionIndex}); 
+			this.passEvents(generatedEvents, {category : YAJIKABE_CATEGORY.UNION, index : unionIndex}); 
 		} else {
 			generatedEvents = this.generateEventsForSingleStripPass(index);
-			this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {category : YAJIKABE_CATEGORY.STRIP, index : index}); 
+			this.passEvents(generatedEvents, {category : YAJIKABE_CATEGORY.STRIP, index : index}); 
 		}
 	}
 }
 
 SolverYajikabe.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
-}
-
-//--------------------------------
-
-// Central method
-
-SolverYajikabe.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
-	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.tryToApplyHypothesis(
-		new SpaceEvent(p_x, p_y, p_symbol),
-		this.methodsSetDeductions
-	);
+	this.multiPass(this.methodsSetMultiPass);
 }
 
 //--------------------------------

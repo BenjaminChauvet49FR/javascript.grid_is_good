@@ -70,7 +70,7 @@ SolverGappy.prototype.getAnswer = function(p_x, p_y){return this.answerArray[p_y
 // Input methods 
 
 SolverGappy.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol), this.methodsSetDeductions);
+	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverGappy.prototype.undo = function() {
@@ -79,16 +79,16 @@ SolverGappy.prototype.undo = function() {
 
 SolverGappy.prototype.emitPassRow = function(p_y) {
 	const generatedEvents = this.generateEventsForRowPass(p_y);
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {family : GAPPY_PASS_CATEGORY.ROW, index : p_y}); 
+	this.passEvents(generatedEvents, {family : GAPPY_PASS_CATEGORY.ROW, index : p_y}); 
 }
 
 SolverGappy.prototype.emitPassColumn = function(p_x) {
 	const generatedEvents = this.generateEventsForColumnPass(p_x);
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {family : GAPPY_PASS_CATEGORY.COLUMN, index : p_x}); 
+	this.passEvents(generatedEvents, {family : GAPPY_PASS_CATEGORY.COLUMN, index : p_x}); 
 }
 
 SolverGappy.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultiPass);
 }
 
 SolverGappy.prototype.quickStart = function() { 

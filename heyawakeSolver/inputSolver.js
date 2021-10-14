@@ -31,16 +31,20 @@ function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action){
 //--------------------------
 // Game action buttons
 
-quickStartAction = function(p_solver){
+quickStartAction = function(p_solver) {
 	p_solver.quickStart();
 }
 
-undoAction = function(p_solver){
+undoAction = function(p_solver) {
 	p_solver.undo();
 }
 
-multipassAction = function (p_solver){
+multipassAction = function (p_solver) {
 	p_solver.makeMultiPass();
+}
+
+formerLimitsExplorationAction = function(p_solver) {
+	p_solver.makeFormerLimitsExploration();
 }
 
 //--------------------------

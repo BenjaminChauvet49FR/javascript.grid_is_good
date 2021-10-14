@@ -186,7 +186,7 @@ quickStartClosure = function(p_solver) {
 			events = p_solver.alertClosedSpacesRegion(events, i);
 		}
 		events.forEach(event_ => {
-			p_solver.tryToApplyHypothesis(event_, p_solver.methodSetDeductions);
+			p_solver.tryToApplyHypothesis(event_);
 		});
 		p_solver.terminateQuickStart();
 	}

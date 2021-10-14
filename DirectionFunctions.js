@@ -76,3 +76,13 @@ existingRDNeighborsCoorsDirections = function(p_x, p_y, p_xLength, p_yLength) {
 	}
 	return answer;
 }
+
+// Now, only booleans
+function neighborExists(p_x, p_y, p_xLength, p_yLength, p_dir) {
+	switch (p_dir) {
+		case DIRECTION.LEFT : return p_x > 0;
+		case DIRECTION.UP : return p_y > 0;
+		case DIRECTION.RIGHT : return p_x <= p_xLength - 2;
+		case DIRECTION.DOWN : return p_y <= p_yLength - 2;
+	}
+}

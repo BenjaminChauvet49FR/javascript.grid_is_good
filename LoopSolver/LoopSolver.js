@@ -124,15 +124,16 @@ LoopSolver.prototype.loopSolverConstruct = function(p_array, p_puzzleSpecificMet
 	
 	this.setPuzzleSpecificMethods(p_puzzleSpecificMethodPack);
 	
-	this.methodSetDeductions = new ApplyEventMethodPack(
+	this.methodsSetDeductions = new ApplyEventMethodPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodSetDeductions.setOneAbortAndFilters(abortClosure(this), [testLoopsClosure(this), separateEndsClosure(this)]);
-	this.methodSetDeductions.addMoreFilters(this.PSFilters);
-	this.methodSetDeductions.addMoreAborts(this.PSAbortMethods);
-	this.methodSetPass = {comparisonMethod : comparisonLoopSolverEventsClosure(this.comparisonPS), copyMethod : this.copyingPS, argumentToLabelMethod : namingCategoryLoopClosure(this.namingCategoryPS)};
+	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [testLoopsClosure(this), separateEndsClosure(this)]);
+	this.methodsSetDeductions.addMoreFilters(this.PSFilters);
+	this.methodsSetDeductions.addMoreAborts(this.PSAbortMethods);
+	this.methodsSetDeductions.addCompoundEventMethod(compoundEventClosure(this)); // TODO Note : someday I'll want to make compound events in a sub problem (although this is whole "compound event" thing is more something for passes). I'll make the behaviour specific for sub solvers then.
+	this.methodsSetPass = {comparisonMethod : comparisonLoopSolverEventsClosure(this.comparisonPS), copyMethod : this.copyingPS, argumentToLabelMethod : namingCategoryLoopClosure(this.namingCategoryPS)};
 	this.methodSetMultiPass = {
 		generatePassEventsMethod : generateEventsForPassLoopClosure(this, this.generateEventsForPassPS),
 		orderPassArgumentsMethod : orderedListpassArgumentsClosure(this, this.orderedListPassArgumentsPS, this.multipassPessimismPS),
@@ -588,24 +589,34 @@ LoopSolver.prototype.maskChainsInformation = function() {
 // Central methods
 
 LoopSolver.prototype.tryToPutNewDown = function (p_x, p_y, p_state) {
-	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, DIRECTION.DOWN, p_state), this.methodSetDeductions);
+	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, DIRECTION.DOWN, p_state));
 }
 
 LoopSolver.prototype.tryToPutNewRight = function (p_x, p_y, p_state) {
-	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, DIRECTION.RIGHT, p_state), this.methodSetDeductions);
+	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, DIRECTION.RIGHT, p_state));
 }
 
 LoopSolver.prototype.tryToPutNewLink = function (p_x, p_y, p_dir, p_state) {
-	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, p_dir, p_state), this.methodSetDeductions);
+	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, p_dir, p_state));
 }
 
 LoopSolver.prototype.tryToPutNewSpace = function (p_x, p_y, p_state) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_state), this.methodSetDeductions);
+	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_state));
 }
 
 
 //--------------------------------
 // otherPSDeductions
+
+compoundEventClosure = function(p_solver) {
+	return function(p_eventList, p_compoundEventBeingApplied) {
+		//if (p_eventBeingApplied.kind == LOOP_EVENT.COMPOUND_LINK) { Note : may be subject to change
+			p_eventList.push(new LinkEvent(p_compoundEventBeingApplied.linkX, p_compoundEventBeingApplied.linkY, p_compoundEventBeingApplied.direction1, p_compoundEventBeingApplied.state));
+			p_eventList.push(new LinkEvent(p_compoundEventBeingApplied.linkX, p_compoundEventBeingApplied.linkY, p_compoundEventBeingApplied.direction2, p_compoundEventBeingApplied.state));
+		// } 	
+		return p_eventList;
+	}
+}
 
 // Note : all events always have validate coordinates, because it is the solver + the input's responsibility to check so. 
 deductionsClosure = function(p_solver) {
@@ -649,10 +660,6 @@ deductionsClosure = function(p_solver) {
 				p_eventList = p_solver.setEdgeClosedPSDeductions(p_eventList, p_eventBeingApplied);			
 			}
 			p_eventList = p_solver.deductionsSpaceAndSurrounding2v2Open(p_eventList, x, y);			
-		} else if (p_eventBeingApplied.kind == LOOP_EVENT.COMPOUND_LINK) {
-			p_eventList.push(new LinkEvent(p_eventBeingApplied.linkX, p_eventBeingApplied.linkY, p_eventBeingApplied.direction1, p_eventBeingApplied.state));
-			p_eventList.push(new LinkEvent(p_eventBeingApplied.linkX, p_eventBeingApplied.linkY, p_eventBeingApplied.direction2, p_eventBeingApplied.state));
-			return p_eventList;
 		} else {
 			p_eventList = p_solver.otherPSDeductions(p_eventList, p_eventBeingApplied);
 		}
@@ -872,7 +879,7 @@ LoopSolver.prototype.quickStart = function() {
 
 // Unitary pass. Uses methodSetMultiPass.generatePassEventsMethod because... it's commode ! 
 LoopSolver.prototype.passLoop = function(p_argumentPass) {	
-	this.passEvents(this.methodSetMultiPass.generatePassEventsMethod(p_argumentPass), this.methodSetDeductions, this.methodSetPass, p_argumentPass); 
+	this.passEvents(this.methodSetMultiPass.generatePassEventsMethod(p_argumentPass), p_argumentPass); 
 }
 
 /**
@@ -942,7 +949,7 @@ convertLoopEvent = function(p_event) {
 // Multipass
 
 LoopSolver.prototype.multipassLoop = function() {	
-	return this.multiPass(this.methodSetDeductions, this.methodSetPass, this.methodSetMultiPass);
+	return this.multiPass(this.methodSetMultiPass);
 }
 
 function orderedListpassArgumentsClosure(p_solver, p_orderedListPassArgumentsPSMethod, p_pessimistic) {

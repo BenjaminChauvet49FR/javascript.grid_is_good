@@ -43,3 +43,7 @@ ApplyEventMethodPack.prototype.addMoreAborts = function(p_abortMethods) {
 		this.abortMethods.push(method);
 	});
 }
+
+ApplyEventMethodPack.prototype.addCompoundEventMethod = function(p_compoundEventMethod) {
+	this.compoundEventMethod = p_compoundEventMethod;
+}

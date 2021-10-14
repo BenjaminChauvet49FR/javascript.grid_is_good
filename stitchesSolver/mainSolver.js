@@ -20,7 +20,7 @@ function main() {
 
 	//--------------------
 	//The main draw function (at start)
-	function drawCanvas(){
+	function drawCanvas() {
 		drawer.drawWallGrid(context, solver.gridWall, solver.xLength, solver.yLength); 
 		drawer.drawMarginLeftUpOne(context, solver.numbersMarginsLeft, solver.numbersMarginsUp);
 		drawInsideSpaces(context, drawer, colors, solver);
@@ -28,35 +28,20 @@ function main() {
 	}
 
 	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)},false);
-	setInterval(drawCanvas,30);
+	setInterval(drawCanvas, 30);
 	var fieldName = document.getElementById("input_grid_name");
-
+	
+	const defaultPuzzleValue = "30";
 	const puzzleTypeName = "Stitches";
-	putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList(puzzleTypeName)});
-	putActionElementClick("submit_load_grid",function(event){
-		loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value);
+	
+	buildPuzzleManagementMenu("div_puzzle_management", "input_grid_name", "submit_load_grid", puzzleTypeName, defaultPuzzleValue);
+	putActionElementClick("submit_load_grid", function(event) {
+		loadAction(canevas, drawer, solver, puzzleTypeName, document.getElementById("input_grid_name").value);
 		document.getElementById("span_bounds").innerHTML = solver.numberBounds;
 	});
-	putActionElementClick("submit_quickStart",function(event){quickStartAction(solver)});
-	putActionElementClick("submit_multiPass",function(event){multipassAction(solver)});
-	putActionElementClick("submit_undo",function(event){undoAction(solver)});
-
-	//------
-
-	var textActionSpace = document.getElementById("text_canvas_action_space");
-	var textActionLink = document.getElementById("text_canvas_action_link");
-	setMode(textActionSpace, actionsManager, ENTRY.SPACE, ACTION_PUT_STITCH);
-	setMode(textActionLink, actionsManager, ENTRY.WALLS, ACTION_BIND_STITCHES);
-	addEventListenerAndCaption("submit_fill_space", ENTRY.SPACE, ACTION_PUT_STITCH, textActionSpace);
-	addEventListenerAndCaption("submit_put_X", ENTRY.SPACE, ACTION_PUT_NO_FILL, textActionSpace);
-	addEventListenerAndCaption("submit_bind", ENTRY.WALLS, ACTION_BIND_STITCHES, textActionLink);
-	addEventListenerAndCaption("submit_not_bind", ENTRY.WALLS, ACTION_NOT_BIND_STITCHES, textActionLink);
-	addEventListenerAndCaption("submit_pass_border", ENTRY.WALLS, ACTION_PASS_BORDER, textActionLink);
-	addEventListenerAndCaption("submit_pass_row", ENTRY.SPACE, ACTION_PASS_ROW, textActionSpace);
-	addEventListenerAndCaption("submit_pass_column", ENTRY.SPACE, ACTION_PASS_COLUMN, textActionSpace);
-
-
-	function addEventListenerAndCaption(p_identifier, p_entry, p_action, p_textAction) { 
-		addEventListenerAndCaptionActionSubmit(actionsManager, p_textAction, p_identifier, p_entry, p_action);
-	}
+	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
+	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_PUT_STITCH, ACTION_PUT_NO_FILL, ACTION_PASS_ROW, ACTION_PASS_COLUMN]);
+	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "textid", ENTRY.WALLS, [ACTION_BIND_STITCHES, ACTION_NOT_BIND_STITCHES, ACTION_PASS_BORDER]);
+	buildActionsGlobal("div_global_actions", "textido", ["Multipasse", "Annuler"], 
+		[function(event){multipassAction(solver)}, function(event){undoAction(solver)}] );
 }

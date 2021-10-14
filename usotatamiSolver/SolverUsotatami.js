@@ -187,11 +187,11 @@ SolverUsotatami.prototype.undo = function(){
 
 SolverUsotatami.prototype.emitPassSpace = function(p_x, p_y) {
 	const generatedEvents = this.generateEventsPassNumericSpace(p_x, p_y);
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y}); 
+	this.passEvents(generatedEvents, {x : p_x, y : p_y}); 
 }
 
 SolverUsotatami.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultiPass);
 }
 
 // In this puzzle, quickstart is vital for the separation of numbers
@@ -212,9 +212,7 @@ SolverUsotatami.prototype.quickStart = function(p_x, p_y) {
 			// Claustrophobia test.
 			list = this.claustrophobiaDeductions(list, x, y);
 			// Applying 
-			list.forEach(_event => {
-				this.tryToApplyHypothesis(_event, this.methodsSetDeductions); // And not "applyFenceEvent"... 
-			});
+			list.forEach(_event => {this.tryToApplyHypothesis(_event); });
 		}
 	}
 	this.terminateQuickStart();

@@ -44,6 +44,24 @@ LinkEvent.prototype.dual = function () {
 	return new LinkEvent(this.linkX + DeltaX[this.direction], this.linkY + DeltaY[this.direction], OppositeDirection[this.direction], this.state);
 }
 
+// ---
+
+function CompoundLinkEvent(p_x, p_y, p_dir1, p_dir2, p_state) {
+	this.kind = LOOP_EVENT.COMPOUND_LINK;
+	this.state = p_state;
+	this.linkX = p_x;
+	this.linkY = p_y;
+	this.direction1 = p_dir1;
+	this.direction2 = p_dir2;
+	markCompoundEvent(this);
+}
+
+CompoundLinkEvent.prototype.toLogString = function() {
+	return "";
+}
+
+// ---
+
 shouldBeLoggedEvent = function(p_event) {
 	return (p_event.kind == LOOP_EVENT.LINK || shouldBeLoggedLoopSolverEvent(p_event));
 }

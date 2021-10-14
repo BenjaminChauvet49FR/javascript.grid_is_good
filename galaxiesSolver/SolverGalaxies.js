@@ -243,20 +243,20 @@ SolverGalaxies.prototype.emitHypothesisDown = function(p_x, p_y, p_symbol) {
 
 SolverGalaxies.prototype.emitPassRight = function(p_x, p_y) {
 	const generatedEvents = [this.generatePassEventsOneFence(p_x, p_y, DIRECTION.RIGHT)];
-	return this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y, direction : DIRECTION.RIGHT, categoryPass : GALAXIES_PASS_CATEGORY.UNIQUE}); 
+	return this.passEvents(generatedEvents, {x : p_x, y : p_y, direction : DIRECTION.RIGHT, categoryPass : GALAXIES_PASS_CATEGORY.UNIQUE}); 
 }
 
 SolverGalaxies.prototype.emitPassCenterForSpace = function(p_x, p_y) {
 	const index = this.centersInArray[p_y][p_x];
 	if (index != null) {
 		const generatedEvents = this.generatePassEventsCenterExpansion(index);
-		this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {categoryPass : GALAXIES_PASS_CATEGORY.AROUND_CENTER, index : index});
+		this.passEvents(generatedEvents, {categoryPass : GALAXIES_PASS_CATEGORY.AROUND_CENTER, index : index});
 	}
 }
 
 SolverGalaxies.prototype.emitPassDown = function(p_x, p_y) {
 	const generatedEvents = [this.generatePassEventsOneFence(p_x, p_y, DIRECTION.DOWN)];
-	return this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y, direction : DIRECTION.DOWN, categoryPass : GALAXIES_PASS_CATEGORY.UNIQUE}); 
+	return this.passEvents(generatedEvents, {x : p_x, y : p_y, direction : DIRECTION.DOWN, categoryPass : GALAXIES_PASS_CATEGORY.UNIQUE}); 
 }
 
 SolverGalaxies.prototype.undo = function(){
@@ -264,7 +264,7 @@ SolverGalaxies.prototype.undo = function(){
 }
 
 SolverGalaxies.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultiPass);
 }
 
 // In this puzzle, quickstart is vital for the separation of centers
@@ -290,7 +290,7 @@ SolverGalaxies.prototype.quickStart = function(p_x, p_y) {
 	}
 	// Also, close spaces near the edges that are symetrical to centers
 	listDeductions.forEach(event_ => {
-		this.tryToApplyHypothesis(event_, this.methodsSetDeductions);
+		this.tryToApplyHypothesis(event_);
 	});
 	this.terminateQuickStart();
 }
@@ -299,7 +299,7 @@ SolverGalaxies.prototype.quickStart = function(p_x, p_y) {
 
 // Central method
 SolverGalaxies.prototype.tryToPutNewFence = function(p_x, p_y, p_direction, p_state) {
-	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, p_direction, p_state), this.methodsSetDeductions);
+	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, p_direction, p_state));
 }
 
 //--------------------------------

@@ -27,18 +27,18 @@ function main() {
 	setInterval(drawCanvas, 30);
 	
 	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)}, false);
-	var fieldName = document.getElementById("input_grid_name");
-
+	
+	const defaultPuzzleValue = "1";
 	const puzzleTypeName = "Hakoiri";
-	putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList(puzzleTypeName)});
-	putActionElementClick("submit_load_grid", function(event){loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value)});
-	putActionElementClick("submit_quickStart", function(event){quickStartAction(solver)});
-	putActionElementClick("submit_multiPass", function(event){multipassAction(solver)});
-	putActionElementClick("submit_undo", function(event){undoAction(solver)});
-
-	//------
-
-	addEventsListenersAndCaptionsAndSetOne(actionsManager, 
-	"text_canvas_action", ["submit_open_space", "submit_close_space", "submit_put_round", "submit_put_square", "submit_put_triangle", "submit_pass_space"], 
-	ENTRY.SPACE, [ACTION_OPEN_SPACE, ACTION_CLOSE_SPACE, ACTION_PUT_ROUND, ACTION_PUT_SQUARE, ACTION_PUT_TRIANGLE, ACTION_PASS_SPACE]);
+	
+	buildPuzzleManagementMenu("div_puzzle_management", "input_grid_name", "submit_load_grid", puzzleTypeName, defaultPuzzleValue);
+	putActionElementClick("submit_load_grid", function(event) {
+		loadAction(canevas, drawer, solver, puzzleTypeName, document.getElementById("input_grid_name").value, {isCorral : true});
+		resetCheckboxAdjacency();
+	});
+	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
+	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_OPEN_SPACE, ACTION_CLOSE_SPACE, ACTION_PUT_ROUND, ACTION_PUT_SQUARE, ACTION_PUT_TRIANGLE, ACTION_PASS_SPACE]);
+	buildActionsGlobal("div_global_actions", "textido", ["Multipasse", "Annuler"], 
+		[function(event){multipassAction(solver)}, function(event){undoAction(solver)}] );
+	buildAdjacency("div_adjacency", solver, function(event){formerLimitsExplorationAction(solver)});
 }

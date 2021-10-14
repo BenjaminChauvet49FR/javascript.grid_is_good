@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+		<meta charset="utf-8"/>
 		<link rel="icon" type="image/png" href="../resources/star.png">
         <title>STICHES solver !!!</title>
 		<link rel="stylesheet" type="text/css" href="../style.css">
@@ -12,27 +13,11 @@
             Message pour les navigateurs ne supportant pas encore canvas.
         </canvas></br>
 		
-		Grille à charger : <input type="text" id="input_grid_name" value="30"></input> 
-		<input type="submit" id="submit_view_puzzle_list" value="Voir les puzzles Stitches"></input></br>
-		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
-		Liens par frontière : <span id="span_bounds" value="X"></span></br>
-		Démarrage rapide :
-		<input type="submit" id="submit_quickStart" value="Démarrage rapide"></input></br>
-		
-		Action case : <span id="text_canvas_action_space"></span></br>
-		Action mur : <span id="text_canvas_action_link"></span></br>
-		<input type="submit" id="submit_fill_space" value="XXX"></input>
-		<input type="submit" id="submit_put_X" value="XXX"></input>
-		<input type="submit" id="submit_bind" value="XXX"></input>
-		<input type="submit" id="submit_not_bind" value="XXX"></input></br>
-		<input type="submit" id="submit_pass_border" value="XXX"></input>
-		<input type="submit" id="submit_pass_row" value="XXX"></input>
-		<input type="submit" id="submit_pass_column" value="XXX"></input>
-
-		Multipasse :
-		<input type="submit" id="submit_multiPass" value="Multi passe"></input></br>
-		
-		<input type="submit" id="submit_undo" value="Annuler"></input></br>	
+		<div id="div_puzzle_management"></div>	
+		Liens par frontière : <span id="span_bounds" value="X"></span></br>				
+		<div id="div_quickStart"></div>		
+		<div id="div_canvas_buttons"></div>
+		<div id="div_global_actions"></div>
 		<span id="span_resolution_state"></span></br>	
 		
 		<script src="../Importation.js"></script>

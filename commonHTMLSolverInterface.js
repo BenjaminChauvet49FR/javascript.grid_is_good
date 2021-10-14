@@ -44,11 +44,33 @@ function buildPuzzleManagementMenu(p_idGlobal, p_idTextLoad, p_idButtonLoad, p_p
 /* Building HTML - Quickstart. Final look :
 <input type="submit" id="submit_quickStart" value="Démarrage rapide"></input></br>
 */
+
 function buildQuickStart(p_idGlobal, p_quickStartMethod) {
 	const mainDiv = document.getElementById(p_idGlobal);
 	mainDiv.appendChild(createSubmitItem("submit_quickStart", "Démarrage rapide"));
 	putActionElementClick("submit_quickStart", p_quickStartMethod);
 }
 
+/* Building HTML - specificities of adjacency puzzles. Final look : 
+Vérification anciennes limites géographiques : <input type="checkbox" id="checkbox_former_limits" value="false"></input> <input type="submit" id="manual_former_limits_check">Vérification manuelle anciennes listes géo.</input>
+*/
+// Meant to appear near global deductions !
+function buildAdjacency(p_idGlobal, p_solver, p_manualAction) {
+	const mainDiv = document.getElementById(p_idGlobal);
+	mainDiv.append(document.createTextNode("Vérification automatiques anciennes limites géo. : "));
+	const checkboxFL = document.createElement("input");
+	checkboxFL.setAttribute("type", "checkbox");
+	checkboxFL.setAttribute("id", "checkbox_former_limits");
+	checkboxFL.setAttribute("value", "false");
+	checkboxFL.addEventListener('click', function(event){
+		p_solver.setCheckFormerLimits(checkboxFL.checked);
+	});
+	mainDiv.appendChild(checkboxFL);
+	submitItem = createSubmitItem("manual_former_limits_check", "Vérification manuelle anciennes limites géo.");
+	submitItem.addEventListener('click', p_manualAction);
+	mainDiv.appendChild(submitItem);
+}
 
-
+function resetCheckboxAdjacency() {
+	document.getElementById("checkbox_former_limits").checked = false;
+}

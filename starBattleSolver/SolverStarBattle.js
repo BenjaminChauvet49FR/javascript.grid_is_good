@@ -120,7 +120,7 @@ SolverStarBattle.prototype.getFirstSpaceRegion = function(p_i){return this.space
 // Input methods 
 
 SolverStarBattle.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	this.tryToPutNew(p_x, p_y, p_symbol);
+	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverStarBattle.prototype.undo = function() {
@@ -129,21 +129,21 @@ SolverStarBattle.prototype.undo = function() {
 
 SolverStarBattle.prototype.emitPassRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {family : STAR_BATTLE_PASS_CATEGORY.REGION, index : p_indexRegion}); 
+	this.passEvents(generatedEvents, {family : STAR_BATTLE_PASS_CATEGORY.REGION, index : p_indexRegion}); 
 }
 
 SolverStarBattle.prototype.emitPassRow = function(p_y) {
 	const generatedEvents = this.generateEventsForRowPass(p_y);
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {family : STAR_BATTLE_PASS_CATEGORY.ROW, index : p_y}); 
+	this.passEvents(generatedEvents, {family : STAR_BATTLE_PASS_CATEGORY.ROW, index : p_y}); 
 }
 
 SolverStarBattle.prototype.emitPassColumn = function(p_x) {
 	const generatedEvents = this.generateEventsForColumnPass(p_x);
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {family : STAR_BATTLE_PASS_CATEGORY.COLUMN, index : p_x}); 
+	this.passEvents(generatedEvents, {family : STAR_BATTLE_PASS_CATEGORY.COLUMN, index : p_x}); 
 }
 
 SolverStarBattle.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultiPass);
 }
 
 // The quickstart is truly quick since it consists of filling 1-size regions with stars. 
@@ -151,7 +151,7 @@ SolverStarBattle.prototype.quickStart = function() {
 	this.initiateQuickStart();
 	this.spacesByRegion.forEach(sbr => {
 		if (sbr.length == 1) {			
-			this.tryToPutNew(sbr[0].x, sbr[0].y, STAR.YES);
+			this.tryToApplyHypothesis(new SpaceEvent(sbr[0].x, sbr[0].y, STAR.YES));
 		}
 	});
 	this.terminateQuickStart();
@@ -159,7 +159,7 @@ SolverStarBattle.prototype.quickStart = function() {
 
 SolverStarBattle.prototype.passSelectedSpaces = function(p_coorsList) {
 	const eventsForPass = this.generateEventsForSpacesList(p_coorsList);
-	return this.passEvents(eventsForPass, this.methodsSetDeductions, this.methodsSetPass, {family : STAR_BATTLE_PASS_CATEGORY.CUSTOM, numberSpaces : eventsForPass.length});
+	return this.passEvents(eventsForPass, {family : STAR_BATTLE_PASS_CATEGORY.CUSTOM, numberSpaces : eventsForPass.length});
 }
 
 //------------------
@@ -226,13 +226,6 @@ undoEventClosure = function(p_solver) {
 			p_solver.notPlacedYet.columns[x].Xs++;	
 		}
 	}
-}
-
-//--------------------------------
-
-// Central method
-SolverStarBattle.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol), this.methodsSetDeductions);
 }
 
 //--------------------------------

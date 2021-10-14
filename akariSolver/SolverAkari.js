@@ -23,13 +23,13 @@ SolverAkari.prototype.construct = function(p_numberSymbolArray) {
 	this.xLength = p_numberSymbolArray[0].length;
 	this.yLength = p_numberSymbolArray.length;
 	
-	this.methodSetDeductions = new ApplyEventMethodPack(
+	this.methodsSetDeductions = new ApplyEventMethodPack(
 		applyEventClosure(this),
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterClustersClosure(this)]);
-	this.methodSetPass = {comparisonMethod : compareSolveEvents, copyMethod : copying, argumentToLabelMethod : namingSetClosure(this)};
+	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterClustersClosure(this)]);
+	this.methodsSetPass = {comparisonMethod : compareSolveEvents, copyMethod : copying, argumentToLabelMethod : namingSetClosure(this)};
 	this.methodsSetMultiPass = {
 		generatePassEventsMethod : generateEventsForPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
@@ -241,7 +241,7 @@ SolverAkari.prototype.isLighted = function(p_x, p_y) {
 // Input
 
 SolverAkari.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	return this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol), this.methodSetDeductions);
+	return this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverAkari.prototype.undo = function() {
@@ -268,7 +268,7 @@ SolverAkari.prototype.quickStart = function() {
 		}
 	}
 	eventList.forEach(event_ => {
-		this.tryToApplyHypothesis(event_, this.methodSetDeductions);
+		this.tryToApplyHypothesis(event_);
 	});
 	this.terminateQuickStart();
 }
@@ -277,15 +277,15 @@ SolverAkari.prototype.passSpaceOrSetNumericSpaces = function(p_x, p_y) {
 	const spaceInfos = this.numericArray[p_y][p_x];
 	if (this.getNumericValueFromSpace(spaceInfos) != null) {
 		generatedEvents = this.generateAllEventsForSetsAroundNumericSpacesPass(this.numericArray[p_y][p_x].indexSetNumeric);
-		this.passEvents(generatedEvents, this.methodSetDeductions, this.methodSetPass, {passCategory : AKARI_PASS_CATEGORY.SET_NUMERIC, index : this.numericArray[p_y][p_x].indexSetNumeric});
+		this.passEvents(generatedEvents, {passCategory : AKARI_PASS_CATEGORY.SET_NUMERIC, index : this.numericArray[p_y][p_x].indexSetNumeric});
 	} else if (!this.numericArray[p_y][p_x].blocked) {
 		generatedEvents = [this.generateListEventsForOneSpace(p_x, p_y)];
-		this.passEvents(generatedEvents, this.methodSetDeductions, this.methodSetPass, {passCategory : AKARI_PASS_CATEGORY.SPACE, x : x, y : y});
+		this.passEvents(generatedEvents, {passCategory : AKARI_PASS_CATEGORY.SPACE, x : x, y : y});
 	}
 }
 
 SolverAkari.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodSetDeductions, this.methodSetPass, this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultiPass);
 }
 
 //--------------

@@ -740,7 +740,7 @@ EditorCore.prototype.countSpacesSelection = function() {
 	return answer;
 }
 
-EditorCore.prototype.moveCopySelection = function(p_deltaX, p_deltaY, p_move, p_transparencyNull) { // 551551 traquer ça 
+EditorCore.prototype.moveCopySelection = function(p_deltaX, p_deltaY, p_move, p_transparencyNull) { // Note : Is everything okay ? I wrote "traquer ça"
 	const progressX = p_deltaX >= 0 ? -1 : 1;
 	const startX = p_deltaX >= 0 ? this.getXLength()-1 : 0;
 	const overEndX = p_deltaX >= 0 ? -1 : this.getXLength();

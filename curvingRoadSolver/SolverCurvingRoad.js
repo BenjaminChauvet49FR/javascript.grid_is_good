@@ -20,7 +20,6 @@ SolverCurvingRoad.prototype.construct = function (p_symbolArray) {
 	this.generalConstruct();
     this.xLength = p_symbolArray[0].length;
     this.yLength = p_symbolArray.length;
-	this.makeItGeographical(this.xLength, this.yLength);
     this.answerArray = [];
     this.curvingLinkArray = [];
     this.curvingLinkList = [];
@@ -28,20 +27,18 @@ SolverCurvingRoad.prototype.construct = function (p_symbolArray) {
 
     var ix, iy;
 
-	this.methodsSetDeductions = new ApplyEventMethodGeographicalPack(
-		applyEventClosure(this),
-		deductionsClosure(this),
-		adjacencyClosure(this),
-		transformClosure(this),
-		undoEventClosure(this)
-	);
+	this.makeItGeographical(this.xLength, this.yLength, new ApplyEventMethodGeographicalPack(
+			applyEventClosure(this), 
+			deductionsClosure(this), 
+			adjacencyClosure(this), 
+			transformClosure(this), 
+			undoEventClosure(this)));
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
 	this.methodsSetMultiPass = {
 		generatePassEventsMethod : generateEventsForSpacePassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 	};
 	
-    // TODO need purification
     for (iy = 0; iy < this.yLength; iy++) {
         this.answerArray.push([]);
         this.curvingLinkArray.push([]);
@@ -75,7 +72,7 @@ SolverCurvingRoad.prototype.construct = function (p_symbolArray) {
             this.purgeRoadsFrom(ix, iy);
         }
     }
-
+	this.declarationsOpenAndClosed();
 }
 
 SolverCurvingRoad.prototype.traceRoadsFrom = function (p_x, p_y) {
@@ -341,7 +338,7 @@ SolverCurvingRoad.prototype.getPearl = function (p_x, p_y) {
 //--------------------------------
 
 SolverCurvingRoad.prototype.emitHypothesis = function (p_x, p_y, p_symbol) {
-    this.tryToPutNew(p_x, p_y, p_symbol);
+	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverCurvingRoad.prototype.quickStart = function () {
@@ -356,24 +353,15 @@ SolverCurvingRoad.prototype.quickStart = function () {
 
 SolverCurvingRoad.prototype.passSpace = function(p_x, p_y) {
 	const generatedEvents = this.generateEventsForSpacePass({x : p_x, y : p_y});
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y}); 
+	this.passEvents(generatedEvents, {x : p_x, y : p_y}); 
 }
 
 SolverCurvingRoad.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultiPass);
 }
 
 SolverCurvingRoad.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
-}
-
-//--------------------------------
-
-// Central method
-SolverCurvingRoad.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
-	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol), this.methodsSetDeductions);
 }
 
 //--------------------------------

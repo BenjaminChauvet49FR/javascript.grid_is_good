@@ -331,11 +331,11 @@ quickStartClosure = function(p_solver) {
 			if (region.forcedValue) {				
 				if (region.notPlacedStraightYet == 0) {
 					p_solver.deductionsFillingRegion([], region, TURNING.YES).forEach(event_ => {
-						p_solver.tryToApplyHypothesis(event_, p_solver.methodSetDeductions);
+						p_solver.tryToApplyHypothesis(event_);
 					});
 				} else if (region.notPlacedTurningYet == 0) {
 					p_solver.deductionsFillingRegion([], region, TURNING.NO).forEach(event_ => {
-						p_solver.tryToApplyHypothesis(event_, p_solver.methodSetDeductions);
+						p_solver.tryToApplyHypothesis(event_);
 					});
 				}
 			}

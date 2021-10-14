@@ -1,7 +1,7 @@
 // -------------------------
 // Create a submit item
 
-function createSubmitItem(p_stringId, p_captionId) {
+function createSubmitItem(p_stringId, p_captionId, p_solver) {
 	if (!p_captionId) {
 		p_captionId = "XXX";
 	}

@@ -105,7 +105,7 @@ SolverChocona.prototype.getRegion = function(p_x, p_y) {
 
 // Input methods
 SolverChocona.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	this.tryToPutNew(p_x, p_y, p_symbol);
+	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverChocona.prototype.undo = function() {
@@ -114,11 +114,11 @@ SolverChocona.prototype.undo = function() {
 
 SolverChocona.prototype.passRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, p_indexRegion); 
+	this.passEvents(generatedEvents, p_indexRegion); 
 }
 
 SolverChocona.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultiPass);
 }
 
 SolverChocona.prototype.quickStart = function() {
@@ -128,24 +128,8 @@ SolverChocona.prototype.quickStart = function() {
 		this.deductionsRegionIfFullNOs(quickStartList, ir);
 		this.deductionsRegionIfFullYESs(quickStartList, ir);
 	};
-	quickStartList.forEach(eventToApply => {
-		this.tryToPutNew(eventToApply.x, eventToApply.y, eventToApply.symbol);
-	});
+	quickStartList.forEach(eventToApply => {this.tryToApplyHypothesis(eventToApply);});
 	this.terminateQuickStart();
-}
-
-//--------------------------------
-
-// Central method
-SolverChocona.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
-	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	methodPack = new ApplyEventMethodPack(
-		applyEventClosure(this),
-		deductionsClosure(this),
-		undoEventClosure(this)
-	);
-	this.tryToApplyHypothesis( SpaceEvent(p_x, p_y, p_symbol), methodPack);
 }
 
 //--------------------------------
@@ -252,7 +236,7 @@ SolverChocona.prototype.deductionsFillingRegion = function(p_listEvents, p_regio
 			xa = alertSpace.x;
 			ya = alertSpace.y;
 			if (this.answerArray[ya][xa] == FILLING.UNDECIDED) {
-				p_listEvents.push(SpaceEvent(xa, ya, p_missingSymbol));
+				p_listEvents.push(new SpaceEvent(xa, ya, p_missingSymbol));
 				remaining--;
 				if (remaining == 0) {
 					break;
@@ -294,7 +278,7 @@ SolverChocona.prototype.deductionsLastUndecided2x2 = function(p_listEvents, p_x,
 		}
 		if (ok) {
 			if (result != FILLING.UNDECIDED) {
-				p_listEvents.push(SpaceEvent(p_x, p_y, result)); 
+				p_listEvents.push(new SpaceEvent(p_x, p_y, result)); 
 			}
 		} else {
 			p_listEvents.push({failure : true});
@@ -336,7 +320,7 @@ SolverChocona.prototype.generateEventsForRegionPass = function(p_indexRegion) {
 	var eventList = [];
 	this.regions[p_indexRegion].spaces.forEach(space => {
 		if (this.answerArray[space.y][space.x] == FILLING.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
-			eventList.push([SpaceEvent(space.x, space.y, FILLING.YES), SpaceEvent(space.x, space.y, FILLING.NO)]);
+			eventList.push([new SpaceEvent(space.x, space.y, FILLING.YES), new SpaceEvent(space.x, space.y, FILLING.NO)]);
 		}			 
 	});
 	return eventList;

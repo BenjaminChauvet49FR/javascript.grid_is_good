@@ -102,7 +102,7 @@ quickStartClosure = function(p_solver) {
 			}
 		});
 		eventsToApply.forEach(event_ => {
-			p_solver.tryToApplyHypothesis(event_, p_solver.methodSetDeductions);
+			p_solver.tryToApplyHypothesis(event_);
 		});
 		p_solver.terminateQuickStart();
 	}

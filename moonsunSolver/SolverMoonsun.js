@@ -249,9 +249,7 @@ quickStartClosure = function(p_solver) {
 				})
 			}
 		}
-		events.forEach(event_ => {
-			p_solver.tryToApplyHypothesis(event_, p_solver.methodSetDeductions);
-		});
+		events.forEach(event_ => {p_solver.tryToApplyHypothesis(event_);});
 		p_solver.terminateQuickStart();
 	}
 }

@@ -35,20 +35,18 @@ function main() {
 
 	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)},false);
 	setInterval(drawCanvas,30);
-	var fieldName = document.getElementById("input_grid_name");
-
-
-	const puzzleTypeName = "LITS";
-	putActionElementClick("submit_view_puzzle_list",function(event){viewPuzzleList(puzzleTypeName)});
-	putActionElementClick("submit_load_grid",function(event){loadAction(canevas, drawer, solver, puzzleTypeName, fieldName.value)});
-	putActionElementClick("submit_quickStart",function(event){quickStartAction(solver)});
-	putActionElementClick("submit_multiPass",function(event){multipassAction(solver)});
-	putActionElementClick("submit_undo",function(event){undoAction(solver)});
-
-	//------
 	
-	addEventsListenersAndCaptionsAndSetOne(actionsManager, 
-	"text_canvas_action", ["submit_open_space", "submit_close_space", "submit_pass_region", "submit_pass_region_and_adjacency"], 
-	ENTRY.SPACE, [ACTION_OPEN_SPACE, ACTION_CLOSE_SPACE, ACTION_PASS_REGION, ACTION_PASS_REGION_AND_ADJACENCY_SPACES]);
-
+	const defaultPuzzleValue = "30";
+	const puzzleTypeName = "LITS";
+	
+	buildPuzzleManagementMenu("div_puzzle_management", "input_grid_name", "submit_load_grid", puzzleTypeName, defaultPuzzleValue);
+	putActionElementClick("submit_load_grid", function(event) {
+		loadAction(canevas, drawer, solver, puzzleTypeName, document.getElementById("input_grid_name").value)
+		resetCheckboxAdjacency();
+	});
+	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
+	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_OPEN_SPACE, ACTION_CLOSE_SPACE, ACTION_PASS_REGION, ACTION_PASS_REGION_AND_ADJACENCY_SPACES]);
+	buildActionsGlobal("div_global_actions", "textido", ["Multipasse", "Annuler"], 
+		[function(event){multipassAction(solver)}, function(event){undoAction(solver)}] );
+	buildAdjacency("div_adjacency", solver, function(event){formerLimitsExplorationAction(solver)});
 }

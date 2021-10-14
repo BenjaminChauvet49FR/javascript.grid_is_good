@@ -127,7 +127,7 @@ SolverNorinori.prototype.getRegion = function(p_x, p_y) {
 Admits that this space could be filled or not...
 */
 SolverNorinori.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	this.tryToPutNew(p_x, p_y, p_symbol);
+	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 /**
@@ -154,11 +154,11 @@ SolverNorinori.prototype.quickStart = function() {
 
 SolverNorinori.prototype.emitPassRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, p_indexRegion, "Region " + p_indexRegion); 
+	this.passEvents(generatedEvents, p_indexRegion, "Region " + p_indexRegion); 
 }
 
 SolverNorinori.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetDeductions, this.methodsSetPass, this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultiPass);
 }
 
 namingCategoryClosure = function(p_solver) {
@@ -234,18 +234,6 @@ undoEventClosure = function(p_solver) {
 			});
 		}	
 	}
-}
-
-//--------------------------------
-
-// Central method
-SolverNorinori.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	methodPack = new ApplyEventMethodPack(
-		applyEventClosure(this),
-		deductionsClosure(this),
-		undoEventClosure(this)
-	);
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol), methodPack);
 }
 
 //--------------
