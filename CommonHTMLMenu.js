@@ -134,6 +134,7 @@ menuSolvers.push({
 	displayName : "Inclassables",
 	documentPage : "Solver",
 	typeList : [
+		{name : "shakashaka", displayName : "Shakashaka", hoverDescription : "Placer des triangles noirs pour que les surfaces blanches soient des rectangles"},
 		{name : "stitches", displayName : "Stitches", hoverDescription : "Points de couture entre régions"},
 		{name : "yagit", displayName : "Yagit", hoverDescription : "Séparer ronds et carrés avec des cloisons qui vont tout droit"}
 	]

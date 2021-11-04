@@ -67,7 +67,7 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			saveLoadModeId = PUZZLES_KIND.STAR_BATTLE; 
 			p_editorCore.maskAllGrids();
 			hasStars = true; break;
-		case 'Akari': case 'Koburin': case 'Shugaku':
+		case 'Akari': case 'Koburin': case 'Shakashaka': case 'Shugaku':
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.DIGITS_X_ONLY;
 			p_editorCore.setVisibleGrids([GRID_ID.DIGIT_X_SPACE]); break;

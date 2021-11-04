@@ -833,11 +833,6 @@ Drawer.prototype.drawRegionValues = function(p_context, p_functionRegion, p_numb
 // -----------------
 // Drawing one item per space
 
-Drawer.prototype.fillSpace = function(p_context, p_xSpace, p_ySpace, p_item) {
-	p_context.fillStyle = item.getColour();
-	p_context.fillRect(pixDrawX, pixDrawY, pixInnerSide, pixInnerSide);
-}
-
 Drawer.prototype.drawCrossX = function(p_context, p_xSpace, p_ySpace, p_item) {
 	this.drawCrossXInner(p_context, p_xSpace, p_ySpace, p_item, Math.floor(this.getPixInnerSide()/10));
 }
@@ -1014,6 +1009,25 @@ Drawer.prototype.getClickSpace = function (event, p_canvas, p_xLength, p_yLength
         x: indexX,
         y: indexY
     }
+}
+
+Drawer.prototype.getClickSpaceWithDirection = function (event, p_canvas, p_xLength, p_yLength) {
+    const pixXWithinGrid = this.getPixXWithinGrid(event, p_canvas);
+    const pixYWithinGrid = this.getPixYWithinGrid(event, p_canvas);
+	const indexX = Math.floor(pixXWithinGrid / this.pix.sideSpace);
+    const indexY = Math.floor(pixYWithinGrid / this.pix.sideSpace);
+    if (indexX < 0 || indexX >= p_xLength || indexY < 0 || indexY >= p_yLength) {
+        return null;
+    }
+	const pixXSpace = pixXWithinGrid % this.pix.sideSpace;
+	const pixYSpace = pixYWithinGrid % this.pix.sideSpace;
+	const aboveLUDiagonal = (pixXSpace >= pixYSpace);
+	const aboveLDDiagonal = ((this.pix.sideSpace - pixXSpace) >= pixYSpace);
+    return {
+        x: indexX,
+        y: indexY,
+		direction : (aboveLUDiagonal ? (aboveLDDiagonal ? DIRECTION.UP : DIRECTION.RIGHT) : (aboveLDDiagonal ? DIRECTION.LEFT : DIRECTION.DOWN))
+    };
 }
 
 Drawer.prototype.getClickKnotRD = function (event, p_canvas, p_xLength, p_yLength) {

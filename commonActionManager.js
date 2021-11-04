@@ -2,6 +2,8 @@ const ENTRY = {
 	SPACE:'1',
 	WALL_R:'2',
 	WALL_D:'3',
+	WALL_D:'3',
+	WALL_D:'3',
 	CORNER:'4'
 }
 
@@ -30,12 +32,14 @@ const ACTION_SEA_SPACE = {id:1, htmlCaption:"Placer une case de mer (case ouvert
 const ACTION_PUT_ROUND = {id:2, htmlCaption:"Placer un rond"};
 const ACTION_PUT_SQUARE = {id:3, htmlCaption:"Placer un carré"};
 const ACTION_PUT_TRIANGLE = {id:4, htmlCaption:"Placer un triangle"};
+const ACTION_PUT_BLACK_QUARTER_TRIANGLE = {id:1, htmlCaption:"Quart de case noir"};
 // Negative actions on space
 const ACTION_EXCLUDE_LOOP_SPACE = {id:21, htmlCaption : "Ecarter case de boucle"};
 const ACTION_PUT_NO_FILL = {id:21, htmlCaption:"Placer un X"};
 const ACTION_ISLAND_SPACE = {id:21, htmlCaption:"Placer une île (case fermée)"};
 const ACTION_CLOSE_SPACE = {id:21, htmlCaption:"Déclarer case fermée"};
 const ACTION_CLOSE_SPACE_FAKE = {id:21, htmlCaption:"Poser déduction case fermée"};
+const ACTION_PUT_WHITE_QUARTER_TRIANGLE = {id:21, htmlCaption:"Quart de case blanc"};
 // Somewhat neutral actions on space
 const ACTION_SELECTION_RECTANGLE = {id:41, htmlCaption : "Sélectionner cases en rectangle"};
 const ACTION_SELECTION_REGION = {id:42, htmlCaption : "Sélectionner région"};
@@ -143,11 +147,11 @@ function setMode(p_textElement, p_entriesManager, p_entry, p_value) {
 	switch(p_entry) {
 		case (ENTRY.SPACE) : p_entriesManager.clickSpace = p_value; break; 
 		case (ENTRY.CORNER) : p_entriesManager.clickCorner = p_value; break; 
-		case (ENTRY.WALL_R) : p_entriesManager.clickWallD = p_value; break; 
-		case (ENTRY.WALL_D) : p_entriesManager.clickWallR = p_value; break; 
+		case (ENTRY.WALL_R) : p_entriesManager.clickWallR = p_value; break; 
+		case (ENTRY.WALL_D) : p_entriesManager.clickWallD = p_value; break; 
 		case (ENTRY.WALLS) : 
 			p_entriesManager.clickWallD = p_value;
 			p_entriesManager.clickWallR = p_value;
-		break; 
+		break;		
 	}
 }
