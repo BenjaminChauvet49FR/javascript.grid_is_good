@@ -8,6 +8,10 @@ const NO_VALUE = null;
 SolverUsotatami.prototype = Object.create(GeneralSolver.prototype);
 SolverUsotatami.prototype.constructor = SolverUsotatami;
 
+function DummySolver() {	
+	return new SolverUsotatami([[null]]);
+}
+
 function SolverUsotatami(p_numberGrid) {
 	GeneralSolver.call(this);
 	this.construct(p_numberGrid);

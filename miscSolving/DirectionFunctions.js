@@ -24,6 +24,20 @@ GeneralSolver.prototype.distantNeighborExists = function(p_x, p_y, p_dist, p_dir
 	}
 }
 
+GeneralSolver.prototype.neighborHorizontalExists = function(p_x, p_dir) {
+	switch (p_dir) {
+		case DIRECTION.LEFT : return leftNeighborExists(p_x); break;
+		case DIRECTION.RIGHT : return rightNeighborExists(p_x, this.xLength); break;
+	}
+}
+
+GeneralSolver.prototype.neighborVerticalExists = function(p_y, p_dir) {
+	switch (p_dir) {
+		case DIRECTION.UP : return upNeighborExists(p_y); break;
+		case DIRECTION.DOWN : return downNeighborExists(p_y, this.yLength); break;
+	}
+}
+
 // ---------
 // Lists directions and/or coordinates around a space
 

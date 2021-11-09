@@ -4,7 +4,7 @@ function main() {
 	var colors = {}; // TODO manage this some day
 
 	var drawer = new Drawer();
-	solver = new SolverUsotatami([[null]]);
+	solver = DummySolver();
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
 	var actionsManager = {}; 

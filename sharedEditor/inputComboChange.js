@@ -44,17 +44,22 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.MASYU;
 			p_editorCore.setVisibleGrids([GRID_ID.PEARL]); break;
-		case 'Usotatami':
+		case 'Usotatami': case 'Rukkuea':
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.NUMBERS_ONLY;
-			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]); break;
+			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]); 
+			if (content == 'Rukkuea') {
+				inputOptions.forceMonoCharacter = true;
+				inputOptions.maxNumber = 5;
+			}
+			break;
 		case 'AYE-Heya': case 'Chocona': case 'CountryRoad': case 'Detour': case 'Heyawake': case 'Shimaguni':
 			saveLoadModeId = PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_REGION]); break;
 		case 'Hakoiri':
 			saveLoadModeId = PUZZLES_KIND.REGIONS_PLAYSTATION_SHAPES;
 			p_editorCore.setVisibleGrids([GRID_ID.PLAYSTATION_SHAPES]); break;
-		case 'Hakyuu': case 'Usoone':
+		case 'Hakyuu': case 'Usoone': 
 			saveLoadModeId = PUZZLES_KIND.REGIONS_NUMBERS;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]); 
 			if (content == 'Usoone') {

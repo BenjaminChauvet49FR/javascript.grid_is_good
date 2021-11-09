@@ -154,7 +154,7 @@ SolverNorinori.prototype.quickStart = function() {
 
 SolverNorinori.prototype.emitPassRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEvents(generatedEvents, p_indexRegion, "Region " + p_indexRegion); 
+	this.passEvents(generatedEvents, p_indexRegion); 
 }
 
 SolverNorinori.prototype.makeMultiPass = function() {

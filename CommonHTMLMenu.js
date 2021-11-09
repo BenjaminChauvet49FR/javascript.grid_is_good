@@ -46,6 +46,7 @@ menuSolvers.push({
 		{name : "chocona", displayName : "Chocona", hoverDescription : "Rectangles dans une grille en région"},
 		{name : "gappy", displayName : "Gappy", hoverDescription : "2 cases par ligne et colonne avec une séparation exacte, sans contact"},
 		{name : "norinori", displayName : "Norinori", hoverDescription : "Dominos, 2 cases par région"},
+		{name : "rukkuea", displayName : "Rukkuea", hoverDescription : "Carrés, ceux de même taille ne doivent pas être en vis-à-vis"},
 		{name : "shimaguni", displayName : "Shimaguni", hoverDescription : "Polyominos séparés dans les régions, 2 régions différentes admettant des polyominos de taille différente"},
 		{name : "starBattle", displayName : "Star battle", hoverDescription : "Etoiles dans chaque ligne, colonne et région, sans contact"},
 	]

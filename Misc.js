@@ -46,3 +46,24 @@ function numericSequenceArray(p_min, p_max, p_incr) {
 	}
 	return answer;
 }
+
+
+// -----------------------
+
+// Maths !
+
+function gcd(a, b) { // gcd(551 551)
+	if (a < b) {
+		return gcd_aux(a % b, a);
+	} else {
+		return gcd_aux(b, a % b);
+	}
+}
+
+function gcd_aux(a, b) {
+	if (b == 0) {
+		return a;
+	} else {
+		return gcd_aux(b, a % b);
+	}
+}

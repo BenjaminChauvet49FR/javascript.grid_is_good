@@ -50,6 +50,7 @@ const ACTION_PASS_SPACE = {id:101,htmlCaption:"Passer case"};
 const ACTION_PASS_GRIDS = {id:101, htmlCaption : "Passer grilles"}; // In sudoku
 const ACTION_PASS_ROW = {id:103, htmlCaption:"Passer ligne"};
 const ACTION_PASS_COLUMN = {id:104, htmlCaption:"Passer colonne"};
+const ACTION_PASS_ROW_COLUMN = {id:109, htmlCaption:"Passer ligne & colonne"};
 const ACTION_PASS_REGION_AND_ADJACENT_ONES = {id:105, htmlCaption:"Passer région + adjacentes"};
 const ACTION_PASS_REGION_AND_ADJACENCY_SPACES = {id:106, htmlCaption:"Passer région + cases adjacentes"};
 const ACTION_SMART_PASS_REGION = {id:107, htmlCaption : "Passer région intelligemment"};
