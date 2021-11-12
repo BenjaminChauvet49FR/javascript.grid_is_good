@@ -15,9 +15,6 @@ ViewEvent.prototype.copy = function() {
 	return new ViewEvent(this.x, this.y, this.direction, this.view);
 }
 
-ViewEvent.prototype.shouldBeLogged = function() {
-	return false;
-}
 
 function RangeEvent(p_x, p_y, p_direction, p_range) {
 	this.kind = RANGE_EVENT_KIND;
@@ -26,8 +23,6 @@ function RangeEvent(p_x, p_y, p_direction, p_range) {
 	this.x = p_x;
 	this.y = p_y;
 }
-
-
 
 RangeEvent.prototype.copy = function() {
 	return new RangeEvent(this.x, this.y, this.direction, this.range);

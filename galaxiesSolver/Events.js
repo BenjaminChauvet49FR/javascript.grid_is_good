@@ -21,6 +21,6 @@ ChoiceEvent.prototype.toLogString = function() {
 	return "["+ (this.choice ? "BO" : "BX") + " " + this.x+","+this.y + " "+ this.index + "]";
 }
 
-function shouldBeLogged(p_event) {
+function shouldBeLoggedEvent(p_event) {
 	return (p_event.kind != CHOICE_EVENT_KIND);
 }

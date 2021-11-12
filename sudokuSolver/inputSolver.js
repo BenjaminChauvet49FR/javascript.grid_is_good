@@ -22,9 +22,6 @@ function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action, p_se
 				}
 			}
 		break;
-		/*case ACTION_PASS_REGION.id:
-			p_solver.passRegion(p_solver.getRegionIndex(p_spaceIndexX,p_spaceIndexY));
-		break;*/
 		case ACTION_SELECTION_RECTANGLE.id : 
 			p_selectionSet.triggerSpace(p_spaceIndexX, p_spaceIndexY); 
 		break;
