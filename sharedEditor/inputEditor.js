@@ -87,6 +87,15 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			validityTokenMethod : validityTokenCharacterSelectionClosure(['B', 'W']),
 			parameters : {emptySpaceChar : " ", isMonoChar : true}
 		}
+	} else if (p_editorCore.isVisibleGrid(GRID_ID.OX)) {
+		return {
+			descriptionPrompt : "Entrer suite de X ou O (X|O)",
+			descriptionPromptMono : "Entrer X ou O (X|O)",
+			defaultToken : "X",
+			gridId : GRID_ID.OX,
+			validityTokenMethod : validityTokenCharacterSelectionClosure(['O', 'X']),
+			parameters : {emptySpaceChar : " ", isMonoChar : true}
+		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.PLAYSTATION_SHAPES)) {
 		return {
 			descriptionPrompt : "Entrer suite de formes (R|S|T)",
@@ -607,6 +616,8 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
             puzzleToSaveString = moonsunPuzzleToString(p_editorCore.getWallArray(), p_editorCore.getArray(GRID_ID.MOONSUN));
         } else if (p_saveLoadMode.id == PUZZLES_KIND.YAGIT.id) {
 			puzzleToSaveString = yagitPuzzleToString(p_editorCore.getArray(GRID_ID.YAGIT), p_editorCore.getArray(GRID_ID.KNOTS));
+		} else if (p_saveLoadMode.id == PUZZLES_KIND.XS_AND_ONE_O_PER_REGION.id) {
+			puzzleToSaveString = XsAndOneOPerRegionPuzzleToString(p_editorCore.getWallGrid(), p_editorCore.getArray(GRID_ID.OX));
 		} else {
 			puzzleToSaveString = wallsOnlyPuzzleToString(p_editorCore.getWallArray());
 		}
@@ -693,6 +704,11 @@ function getLoadedStuff(p_kindId, p_localStorageName, p_externalOptions) { // No
 			var loadedItem = stringToYagitPuzzle(localStorage.getItem(p_localStorageName));
 			loadedItem.desiredIDs = [GRID_ID.YAGIT, GRID_ID.KNOTS];
 			loadedItem.desiredArrays = [loadedItem.symbolArray, loadedItem.knotsArray];
+			return loadedItem; break;
+		case PUZZLES_KIND.XS_AND_ONE_O_PER_REGION.id :
+			var loadedItem = stringToXsAndOneOPerRegionPuzzle(localStorage.getItem(p_localStorageName));
+			loadedItem.desiredIDs = [GRID_ID.OX];
+			loadedItem.desiredArrays = [loadedItem.symbolArray];
 			return loadedItem; break;
 		default :
 			return stringToWallsOnlyPuzzle(localStorage.getItem(p_localStorageName));

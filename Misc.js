@@ -47,6 +47,22 @@ function numericSequenceArray(p_min, p_max, p_incr) {
 	return answer;
 }
 
+// Sorts a list (unless p_alreadySorted == true) and removes all duplicated elements
+function sortUnicityList(p_array, p_alreadySorted) {
+	if (!p_alreadySorted) {
+		myArray = p_array.slice();			
+		myArray.sort(function(a, b) {return a-b});
+	} else {
+		myArray = p_array;
+	}
+	var answer = [];
+	myArray.forEach(value => {
+		if (answer.length == 0 || (value != answer[answer.length-1])) {
+			answer.push(value);
+		}
+	});
+	return answer;
+}
 
 // -----------------------
 

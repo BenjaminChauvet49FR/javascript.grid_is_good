@@ -100,6 +100,10 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			p_editorCore.setMarginInfo(MARGIN_KIND.NUMBERS_LEFT_UP);
 			p_editorCore.setWallsOff();
 			break; 
+		case 'Putteria':
+			saveLoadModeId = PUZZLES_KIND.XS_AND_ONE_O_PER_REGION;
+			p_editorCore.setVisibleGrids([GRID_ID.OX]);
+			break;
 		case 'Sudoku':
 			saveLoadModeId = PUZZLES_KIND.SUDOKU;
 			const sudokuId = getSudokuIdFromLabel(p_fields.fieldSudoku.value);

@@ -38,13 +38,13 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	
 	// Which grids and margins are to be drawn ?
 	if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_REGION)) {
-		this.drawNumbersLittleInCorner(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_REGION));
+		this.drawStringsLittleInCorner(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_REGION));
 	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.DIGIT_X_SPACE)) {
-		this.drawNumbersGrid(p_context, p_editorCore.getGrid(GRID_ID.DIGIT_X_SPACE)); // TODO : add some actual crosses ? Letter X looks fine to me.
+		this.drawStringsGrid(p_context, p_editorCore.getGrid(GRID_ID.DIGIT_X_SPACE)); // TODO : add some actual crosses ? Letter X looks fine to me.
 	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_X_SPACE)) {
-		this.drawNumbersGrid(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_X_SPACE)); // See TODO above
+		this.drawStringsGrid(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_X_SPACE)); // See TODO above
 	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.PEARL)) {
 		this.drawPearlGrid(p_context, p_editorCore.getGrid(GRID_ID.PEARL));
@@ -68,10 +68,13 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 		this.drawKnotsInRD(p_context, p_editorCore.getGrid(GRID_ID.KNOTS));
 	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_SPACE)) {
-		this.drawNumbersGrid(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_SPACE));
+		this.drawStringsGrid(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_SPACE));
 	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.YAJILIN_LIKE)) {
 		this.drawCombinedArrowGridIndications(p_context, p_editorCore.getGrid(GRID_ID.YAJILIN_LIKE));
+	}
+	if (p_editorCore.isVisibleGrid(GRID_ID.OX)) {
+		this.drawStringsGrid(p_context, p_editorCore.getGrid(GRID_ID.OX));
 	}
 	if (p_editorCore.getMarginInfoId() == MARGIN_KIND.NUMBERS_LEFT_UP.id) {
 		this.drawMarginLeftUpOne(p_context, p_editorCore.margins[EDGES.LEFT], p_editorCore.margins[EDGES.UP]);
@@ -79,15 +82,15 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	this.drawWildCardGrid(p_context, p_editorCore.getWildCardGrid());
 }
 
-Drawer.prototype.drawNumbersLittleInCorner = function (p_context, p_numberGrid) {
-	this.drawOneNumberPerSpace(p_context, p_numberGrid, this.getPixInnerSide() / 2, {offX : 2, offY : 2}, {alignH : "left", alignV : "top"});
+Drawer.prototype.drawStringsLittleInCorner = function (p_context, p_numberGrid) {
+	this.drawOneStringPerSpace(p_context, p_numberGrid, this.getPixInnerSide() / 2, {offX : 2, offY : 2}, {alignH : "left", alignV : "top"});
 }
 
-Drawer.prototype.drawNumbersGrid = function (p_context, p_numberGrid) {
-	this.drawOneNumberPerSpace(p_context, p_numberGrid, this.getPixInnerSide() * 4 / 5, {offX : this.getPixInnerSide()/2, offY : this.getPixInnerSide()/2}, {alignH : "center", alignV : "middle"});
+Drawer.prototype.drawStringsGrid = function (p_context, p_numberGrid) {
+	this.drawOneStringPerSpace(p_context, p_numberGrid, this.getPixInnerSide() * 4 / 5, {offX : this.getPixInnerSide()/2, offY : this.getPixInnerSide()/2}, {alignH : "center", alignV : "middle"});
 }
 
-Drawer.prototype.drawOneNumberPerSpace = function (p_context, p_numberGrid, p_pixSize, p_pixInnerOffset, p_textAlign) {
+Drawer.prototype.drawOneStringPerSpace = function (p_context, p_numberGrid, p_pixSize, p_pixInnerOffset, p_textAlign) {
 	const yLength = p_numberGrid.getYLength();
 	if (yLength > 0) {
 		const xLength = p_numberGrid.getXLength();

@@ -17,6 +17,7 @@ const GRID_ID = {
 	MOONSUN: 'MS',
 	YAGIT: 'YG',
 	KNOTS: 'KNOTS',
+	OX: 'OX',
 	WILDCARD: 'WILD'
 }
 
@@ -48,7 +49,8 @@ const PUZZLES_KIND = {
 	MOONSUN : {id:14}, // 15
 	GRAND_TOUR : {id:99102},
 	SUDOKU : {id:1001},
-	YAGIT : {id:16}
+	YAGIT : {id:16},
+	XS_AND_ONE_O_PER_REGION : {id:17}
 }
 
 const MARGIN_KIND = {

@@ -10,7 +10,9 @@ const SYMBOL_ID = {
 	TRIANGLE: 'T',
 	MOON: 'M',
 	SUN: 'S',
-	KNOT_HERE: 'K'
+	KNOT_HERE: 'K',
+	O: 'O',
+	X: 'X'
 }
 
 const GALAXIES_POSITION = {
@@ -72,7 +74,6 @@ function symbolsArrayToString(p_symbolsArray, p_symbolsList) {
 }
 
 function stringToSymbolsArray(p_string, p_xLength, p_yLength, p_symbolsList) {
-	const tokensSymbols = p_string.split("#");
 	const answer = [];
 	for(var iy = 0 ; iy < p_yLength ; iy++) {
 		answer.push([]);
@@ -160,6 +161,31 @@ function stringToNumberArrayWithSomeSpacesIgnored(p_string, p_xLength, p_yLength
 		}
 	}
 	return answer;
+}
+
+// array of numbers / null corresponding to indications in region <=> string
+
+function indexRegionsToString(p_indexRegionsIndications) {
+	const streamRegion = new StreamEncodingSparseAny();
+	for(var i = 0 ; i < p_indexRegionsIndications.length ; i++) {
+		streamRegion.encode(p_indexRegionsIndications[i]);
+	}
+	return streamRegion.getString();
+}
+
+function stringToIndexRegions(p_string) { 
+	var indexRegions = [];
+	const streamRegIndic = new StreamDecodingSparseAny(p_string);
+	var decodedValue = streamRegIndic.decode();
+	var regionIndex = 0;
+	while (decodedValue != END_OF_DECODING_STREAM) {
+		if (decodedValue != null) {
+			indexRegions.push({index : regionIndex, value : decodedValue});
+		}
+		regionIndex++;
+		decodedValue = streamRegIndic.decode();
+	} 
+	return indexRegions;
 }
 
 // Returns a string where the first and 4th arrays are reversed, while the 2nd and 3rd arrays are straight, 
@@ -282,28 +308,13 @@ function regionsNumericIndicationsPuzzleToString(p_wallArray, p_numbersArray) {
 			}
 		}
 	}
-	const streamRegion = new StreamEncodingSparseAny();
-	for(var i = 0 ; i < regionsIndications.length ; i++) {
-		streamRegion.encode(regionsIndications[i]);
-	}
-	return dimensionsToString(p_wallArray) + " " + wallArrayToString64(p_wallArray) + " " + streamRegion.getString();
+	return dimensionsToString(p_wallArray) + " " + wallArrayToString64(p_wallArray) + " " + indexRegionsToString(regionsIndications);
 } //use example : regionsNumericIndicationsPuzzleToString(editorCore.wallGrid.array, editorCore.getGrid("NR").array)
 
 function stringToRegionsNumericIndicationsPuzzle(p_string) {
 	const tokens = p_string.split(" ");
 	const dims = stringToDimensions(tokens[0]);
-	var indexRegions = [];
-	const streamRegIndic = new StreamDecodingSparseAny(tokens[2]);
-	var decodedValue = streamRegIndic.decode();
-	var regionIndex = 0;
-	while (decodedValue != END_OF_DECODING_STREAM) {
-		if (decodedValue != null) {
-			indexRegions.push({index : regionIndex, value : decodedValue});
-		}
-		regionIndex++;
-		decodedValue = streamRegIndic.decode();
-	} 
-	return {wallArray : string64toWallArray(tokens[1], dims.xLength, dims.yLength), indications : indexRegions}; // "wallArray" is necessary for updating fields in the editor, we cannot just return an array.
+	return {wallArray : string64toWallArray(tokens[1], dims.xLength, dims.yLength), indications : stringToIndexRegions(tokens[2])}; // "wallArray" is necessary for updating fields in the editor, we cannot just return an array.
 
 } // Use example : stringToRegionsNumericIndicationsPuzzle("FF KqmqPUziHNhkBbwkl1ne463aQokwQkn10q6ckiQrjCQwIlgklnc5gQZcKdXHlzn7kmBL394 23-332--325_08_24-4_332--4_18--13")
 
@@ -618,4 +629,49 @@ function stringToYagitPuzzle(p_string) {
 		}
 	}
 	return {symbolArray : stringToBase2HalfFullArray(tokens[1], dims.xLength, dims.yLength, SYMBOL_ID.SQUARE, SYMBOL_ID.ROUND), knotsArray : knotsArray} 
+}
+
+// ----------------
+// XS, and one O per puzzle (position of the O in each region that contains one - oxArray should contain only one O per region)
+
+// Note : uses a wall grid, not a wall array !
+function XsAndOneOPerRegionPuzzleToString(p_wallGrid, p_oxArray) {
+	var regionArray = p_wallGrid.toRegionArray();
+	var spacesByRegion = listSpacesByRegion(regionArray);
+	var regionsIndications = []; // One per region
+	var x, y;
+	for (var ir = 0 ; ir < spacesByRegion.length ; ir++) {
+		is = 0;
+		spacesRegion = spacesByRegion[ir];
+		ok = false;
+		while(!ok && is < spacesRegion.length) {
+			x = spacesByRegion[ir][is].x;
+			y = spacesByRegion[ir][is].y;
+			if (p_oxArray[y][x] == SYMBOL_ID.O) {
+				regionsIndications.push(is);
+				ok = true;
+			}
+			is++;
+		}
+		if (!ok) {
+			regionsIndications.push(null);
+		}
+	}
+
+	return wallsOnlyPuzzleToString(p_wallGrid.array) + " " + symbolsArrayToString(p_oxArray, [SYMBOL_ID.X]) + " " + indexRegionsToString(regionsIndications);
+}
+
+function stringToXsAndOneOPerRegionPuzzle(p_string) {
+	const tokens = p_string.split(" ");
+	const dims = stringToDimensions(tokens[0]);
+	const wallArray = string64toWallArray(tokens[1], dims.xLength, dims.yLength);
+	var symbolArray = stringToSymbolsArray(tokens[2], dims.xLength, dims.yLength, SYMBOL_ID.X);
+	const indexRegions = stringToIndexRegions(tokens[3]);
+	const spacesByRegion = listSpacesByRegion(WallGrid_data(wallArray).toRegionArray());
+	var coors;
+	indexRegions.forEach(indexValue => {
+		coors = spacesByRegion[indexValue.index][indexValue.value];
+		symbolArray[coors.y][coors.x] = SYMBOL_ID.O;
+	});
+	return {wallArray : wallArray, symbolArray : symbolArray}; 
 }
