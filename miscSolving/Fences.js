@@ -1,6 +1,7 @@
 const FENCE_STATE = {OPEN : 2, CLOSED : 1, UNDECIDED : 0}
 const LabelFenceState = ["-", "C", "O"];
 const FENCE_EVENT_KIND = 'Fence'
+const OppositeFenceState = [0, 2, 1];
 
 function FenceEvent(p_x, p_y, p_direction, p_state) {
 	this.kind = FENCE_EVENT_KIND;
@@ -27,6 +28,12 @@ function standardFenceComparison(p_event1, p_event2) {
 // ==================================================================
 
 function FencesGrid(p_xLength, p_yLength) {
+	// Constants
+	this.DeltaXFromRDSpacePoint = [0, 0, 1, 0]; // Direction_0123 assumption !
+	this.DeltaYFromRDSpacePoint = [0, 0, 0, 1]; 
+	this.DirectionFenceFromRDSpacePoint = [DIRECTION.DOWN, DIRECTION.RIGHT, DIRECTION.DOWN, DIRECTION.RIGHT]; 
+	
+	// Specific to this object
 	this.xLength = p_xLength;
 	this.yLength = p_yLength;
 	this.fenceArray = [];
@@ -209,6 +216,157 @@ FencesGrid.prototype.avoidCrossBuildDeductions = function(p_eventList, p_x, p_y,
 		}
 	}
 	return p_eventList;
+}
+
+// From a fence, forces regionalism around points at the extremity of the fence (not at edges) so there cannot be 3 open fences and the 4th closed.
+// Note that it cannot guarantee that a fence between two spaces that belong to the same region, thanks to other fences that are open, is open. It will be the responsibility of the solver.
+FencesGrid.prototype.forceRegionalismDeductions = function(p_eventList, p_xSpace, p_ySpace, p_directionFence) {
+	var x1 = null;
+	var x2 = null;
+	var y1, y2;
+	
+	switch(p_directionFence) {
+		case DIRECTION.LEFT : case DIRECTION.RIGHT : // x1, y1 up the fence. x2, y2 down the fence.
+			const x = (p_directionFence == DIRECTION.LEFT ? p_xSpace-1 : p_xSpace);
+			if (p_ySpace > 0) {
+				x1 = x;
+				y1 = p_ySpace-1;
+			}
+			if (p_ySpace <= this.yLength-2) {
+				x2 = x;
+				y2 = p_ySpace;
+			}
+		break;
+		case DIRECTION.UP : case DIRECTION.DOWN :  // x1, y1 left the fence. x2, y2 right the fence.
+			const y = (p_directionFence == DIRECTION.UP ? p_ySpace-1 : p_ySpace);
+			if (p_xSpace > 0) {
+				x1 = p_xSpace-1;
+				y1 = y;
+			}
+			if (p_xSpace <= this.xLength-2) {
+				x2 = p_xSpace;
+				y2 = y;
+			}
+		break;
+	}
+	if (x1 != null) {		
+		p_eventList = this.forceRegionalismRDPointDeductions(p_eventList, x1, y1);
+	}
+	if (x2 != null) {		
+		p_eventList = this.forceRegionalismRDPointDeductions(p_eventList, x2, y2);
+	}
+	return p_eventList;
+}
+
+// Forces the creation of new fences events so that regions are created.
+// Preconditions : p_xRight, p_yDown is inside the grid.
+FencesGrid.prototype.forceRegionalismRDPointDeductions = function(p_eventList, p_xRight, p_yDown) {
+	const stateLeftPoint = this.getFenceDown(p_xRight, p_yDown);
+	const stateUpPoint = this.getFenceRight(p_xRight, p_yDown);
+	const stateRightPoint = this.getFenceDown(p_xRight + 1, p_yDown);
+	const stateDownPoint = this.getFenceRight(p_xRight, p_yDown + 1);
+	if (stateLeftPoint == FENCE_STATE.OPEN) {
+		if (stateRightPoint == FENCE_STATE.OPEN) {
+			if (stateUpPoint != FENCE_STATE.UNDECIDED) {
+				p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.DOWN, stateUpPoint));
+			}
+			if (stateDownPoint != FENCE_STATE.UNDECIDED) {
+				p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.UP, stateDownPoint));
+			}
+		} else if (stateRightPoint == FENCE_STATE.CLOSED) {
+			if (stateUpPoint == FENCE_STATE.OPEN) {
+				p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.DOWN, FENCE_STATE.CLOSED));
+			}
+			if (stateDownPoint == FENCE_STATE.OPEN) {
+				p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.UP, FENCE_STATE.CLOSED));
+			}
+		} else if (stateUpPoint == FENCE_STATE.OPEN) {
+			if (stateDownPoint != FENCE_STATE.UNDECIDED) {				
+				p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.RIGHT, stateDownPoint));
+			}
+		} else if (stateUpPoint == FENCE_STATE.CLOSED && stateDownPoint == FENCE_STATE.OPEN) {
+			p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.RIGHT, FENCE_STATE.CLOSED));
+		}
+	} else if (stateLeftPoint == FENCE_STATE.CLOSED) {
+		if (stateRightPoint == FENCE_STATE.OPEN) {
+			if (stateUpPoint == FENCE_STATE.OPEN) {
+				p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.DOWN, FENCE_STATE.CLOSED));
+			}
+			if (stateDownPoint == FENCE_STATE.OPEN) {
+				p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.UP, FENCE_STATE.CLOSED));
+			}
+		} else if (stateRightPoint == FENCE_STATE.CLOSED) {
+			
+		} else if ((stateUpPoint == FENCE_STATE.OPEN) && (stateDownPoint == FENCE_STATE.OPEN)) {
+			p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.RIGHT, FENCE_STATE.CLOSED));
+		}
+	} else { // left point fence is unknown, it may be decided only if 3 others are known 
+		if (stateUpPoint == FENCE_STATE.OPEN) {
+			if (stateDownPoint == FENCE_STATE.OPEN && stateRightPoint != FENCE_STATE.UNDECIDED) {
+				p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.LEFT, stateRightPoint));
+			} else if (stateDownPoint == FENCE_STATE.CLOSED && stateRightPoint == FENCE_STATE.OPEN) {
+				p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.LEFT, FENCE_STATE.CLOSED));
+			}
+		} else if (stateUpPoint == FENCE_STATE.CLOSED && stateRightPoint == FENCE_STATE.OPEN && stateDownPoint == FENCE_STATE.OPEN) {
+			p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.LEFT, FENCE_STATE.CLOSED));
+		}
+	}
+	return p_eventList;
+}
+
+FencesGrid.prototype.FenceEventFromPoint = function(p_xRight, p_yRight, p_direction, p_state) {
+	return new FenceEvent(p_xRight + this.DeltaXFromRDSpacePoint[p_direction], p_yRight + this.DeltaYFromRDSpacePoint[p_direction], this.DirectionFenceFromRDSpacePoint[p_direction], p_state);
+}	
+
+// ---------
+// About exploiting open fences
+
+// Affects checker so that all spaces in "needs clean spaces" + the clusters of open spaces accessible from them are added to the list of the checker (and its array as well) and only these spaces.
+// Note : Checker does NOT have to be cleared if we don't want job to be done on some space. However, this function needs to make sure that spaces are clean to the checker. 
+// After the function, the list of the checker may contain some spaces twice (risks of cleanOne). Hope it doesn't need to be run afterwards !
+FencesGrid.prototype.addAccessibleSpacesToSetSpaces = function(p_checker, p_spaces, p_needsCleanSpaces) {
+	var remainingSpaces = p_spaces;
+	var x,y;
+	if (p_needsCleanSpaces) {		
+		p_spaces.forEach(coors => { 
+			p_checker.cleanOne(coors.x, coors.y);
+		});
+	}
+	while (remainingSpaces.length > 0) { 
+		coors = remainingSpaces.pop();
+		x = coors.x;
+		y = coors.y;
+		if (p_checker.add(x, y)) {
+			existingNeighborsDirections(x, y, this.xLength, this.yLength).forEach(dir => {
+				if (this.getFence(x, y, dir) == FENCE_STATE.OPEN) {
+					remainingSpaces.push({x : x + DeltaX[dir], y : y + DeltaY[dir]});
+				}
+			});
+		}
+	};
+}
+
+// Gets unknown fences within and outside the checker selection
+FencesGrid.prototype.getUnknownFences = function(p_spacesChecker) {
+	var fencesList = [];
+	var x, y;
+	p_spacesChecker.list.forEach(coors => {
+		x = coors.x;
+		y = coors.y;
+		if (x <= this.xLength-2 && this.getFenceRight(x, y) == FENCE_STATE.UNDECIDED) {
+			fencesList.push({x : x, y : y, direction : DIRECTION.RIGHT});
+		}
+		if (y <= this.yLength-2 && this.getFenceDown(x, y) == FENCE_STATE.UNDECIDED) {
+			fencesList.push({x : x, y : y, direction : DIRECTION.DOWN});
+		}
+		if (x > 0 && !(p_spacesChecker.array[y][x-1]) && this.getFenceLeft(x, y) == FENCE_STATE.UNDECIDED) {
+			fencesList.push({x : x, y : y, direction : DIRECTION.LEFT});
+		}
+		if (y > 0 && !(p_spacesChecker.array[y-1][x]) && this.getFenceUp(x, y) == FENCE_STATE.UNDECIDED) {
+			fencesList.push({x : x, y : y, direction : DIRECTION.UP});
+		}
+	});
+	return fencesList;
 }
 
 // ---------

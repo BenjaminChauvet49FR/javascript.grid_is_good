@@ -1,2 +1,5 @@
+Big possible change : Notes that a big change is possible in the conception of the solver or a tool, and it was noticed when writing a new function
 Correct puzzle data assumption : Assumes that the data provided for the puzzle allow us to solve it, with a description of how it should be correct
 Directions 0123 assumption : Assumes that the array of known directions is [0, 1, 2, 3] and these are the values of respectively DIRECTION.LEFT, DIRECTION.UP, DIRECTION.RIGHT, DIRECTION.DOWN
+Sub-optimization : Thing that is not optimized.
+Undo in reverse order assumption : Assumes that any events are undone in reverse order they were applied. For code that is implicitely done in an undo context.

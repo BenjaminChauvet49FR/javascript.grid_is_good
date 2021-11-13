@@ -83,6 +83,14 @@ CheckCollectionDoubleEntryGeneric.prototype.cleanOne = function(p_x, p_y) {
 	this.array[p_y][p_x] = this.defaultValue;
 }
 
+// Make sure all coordinates in a list are unique.
+CheckCollectionDoubleEntryGeneric.prototype.purifyListForUnicity = function() {
+	this.list = sortUnicityList(this.list, 
+		function(coors1, coors2) {return coors1.x == coors2.x && coors1.y == coors2.y},
+		function(coors1, coors2) {var dy = coors1.y - coors2.y; if (dy != 0) {return dy} else { return coors1.x - coors2.x}}
+	);
+}
+
 // ------------------------
 // Same but with a 3rd dimension associated to directions. Uses {x, y, direction} items.
 

@@ -127,8 +127,9 @@ menuSolvers.push({
 	displayName : "Découpage en région",
 	documentPage : "Solver",
 	typeList : [
-		{name : "usotatami", displayName : "Usotatami", hoverDescription : "Bandes avec un nombre unique n'indiquant pas la longueur"},
-		{name : "galaxies", displayName : "Galaxies", hoverDescription : "Galaxies symétriques centralement sur un centre"}
+		{name : "fillomino", displayName : "Fillomino", hoverDescription : "Polyominos, ceux de même taille ne peuvent pas se toucher"},
+		{name : "galaxies", displayName : "Galaxies", hoverDescription : "Galaxies symétriques centralement sur un centre"},
+		{name : "usotatami", displayName : "Usotatami", hoverDescription : "Bandes avec un nombre unique n'indiquant pas la longueur"}
 	]
 });
 

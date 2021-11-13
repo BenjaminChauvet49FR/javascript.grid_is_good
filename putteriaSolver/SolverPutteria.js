@@ -123,7 +123,7 @@ SolverPutteria.prototype.construct = function(p_wallArray, p_symbolArray) {
 	this.regions.forEach(region => {
 		allUnsortedDifferentSizesList.push(region.size);
 	});
-	this.differentSizesList = sortUnicityList(allUnsortedDifferentSizesList, false);
+	this.differentSizesList = sortUnicityList(allUnsortedDifferentSizesList, function(a, b) {return a == b}, function(a, b) {return a-b});
 	this.regionsBySizes = [];
 	for (var i = 0 ; i < this.differentSizesList.length ; i++) {
 		this.regionsBySizes.push([]);

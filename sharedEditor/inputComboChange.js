@@ -44,7 +44,7 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.MASYU;
 			p_editorCore.setVisibleGrids([GRID_ID.PEARL]); break;
-		case 'Usotatami': case 'Rukkuea':
+		case 'Fillomino': case 'Rukkuea': case 'Usotatami':
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.NUMBERS_ONLY;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]); 
