@@ -1,0 +1,131 @@
+2021-02-04 (jeu) : je crois avoir fini le problème de LITS et de la mauvaise interprétation des grilles.
+2021-02-05 (ven) : Je crois avoir commencé le problème du multipass sur case d'un puzzle loop + pass généralisé d'une case.
+2021-02-06 (sam) : bossé sur les passes et multipasses de LoopSolver, de manière à ce que chaque case soit passée. Malheureusement, je me suis aperçu le 8 que le si le passe semblait bon, le multipasse ne faisait pas tout du premier coup. Il fallait plusieurs clics sur multipasse pour que le puzzle soit résolu.
++ bossé sur le Quickstart de Koburin + bossé sur la séparation et le log du Quickstart
+2021-02-07 (dim) : corrections des bugs de passe de Shimaguni. Désormais, les multipasses résolvent tous les puzzles.
+2021-02-08 (lun) : a constaté le bug de 2 jours plus tôt. Ai fait le travail sur les quickstart des loopSolvers + introduit celui de Koburin.
+Frayeur : en me faisant quelques multipass sur des puzzles en 67X d'Heyawake, j'ai vu que plusieurs laissaient d'assez grosses régions blanches après le premier Deductions + mutipass (notamment 672, 675 et 679) ; était-ce déjà comme ça avant ?
+2021-02-09 (mar) + 10 (mer) : Ajout des puzzles "hakyuu like" puis des modifications/retraits des noms de puzzles dans l'éditeurs.
+2021-02-11 (jeu) : Ajout d'un .gitignore, modification des noms d'objets chargés, épaisseurs variables des X et boucles, factorisation des méthodes de dessins
+2021-02-12 (ven) : Petits trucs, dessins, logs, re-dessins, démarrage solveur boucle à régions.
+2021-02-13 + 14 + 15 : Solveur boucle à régions. 13 - structure rapide et mise en place solveur théorique. 14 : affirmation des frontières. 15 : en écoutant le live de Greg Tabibian, fermeture des frontières tapées 2x + interdire d'entrer dans une région si on ne les a pas toutes parcourues
+16 : Corrections bugs LoopRegionSolver ; ouvrir une frontière doit fermer toutes les autres + quand on fait une boucle de région prématurée 2 régions opposées pouvaient se rencontrer (en écoutant le match Barça-PSG)
+17 : Ajout du solveur Country Road + terminé avec application du theoryLoopSolver à Entry Exit, bug laissé en place (Quickstart qui donne un truc faux sur puzzle 58)
+18 : Entry exit - bug de quickstart corrigé. Modification du log des grilles à indications de régions commencé mais pas terminé, je ferai ça demain (soirée Zelda 2)
+19 : Modification du log des grilles à indications de régions terminé, mise en place d'un script de conversions. Application à Heyawake.
+20 : Application du script dans l'ordre à Chocona, Shimaguni, et Country road. Et surtout, création de l'éditeur de Yajilin. Dans l'ordre : dessin des cases, sauvegarde, chargement. Seule l'édition a eu lieu puisque plusieurs choses ont été mises en place tels que le nouveau système de sauvegarde par cases directement inspiré du sauvegarde des journées précédentes. (+ j'écoute les Beatles et le rock de RTL) ; des choses qui pourront resservir pour de futurs types de puzzles.
+21 : Solveur Yajilin, youhou !!! Par contre comme j'avais trop mal au crâne j'ai juste fait la mise en place copiée sur Koburin + la mise en place des bandes
+22 : Solveur Yajilin suite ! Cette fois j'ai corrigé un léger bug de mise en place des bandes (les indications d'une bande prenaient en compte le nombre dans la flèche, pas le nombre de cases comme c'était intentionnel) + mise en place des bandes VERTICALES. Celles horizontales sont trop similaires, j'ai la flemme.
+Egalement, correction d'une affaire de pack methods pour les abortMethods : possibilité d'en mettre plusieurs + nommage des packs + possibilité pour les sous-classes du loopsolver d'ajouter de nouveaux filtres et abortMethods. (en parallèle de Yajilin)
+23 : Pause ! J'écris un mail à Otto mais je l'enverrai... plus tard...
+24 : Fin logique Yajilin + plusieurs trucs de dessin + bouts opposés distants d'une case sur LoopSolver
+25 : 21-22h sur la non résolution d'un bug des bouts opposés + mise en place (sans les déductions et avec applications sommaires) de Solveur Usotatami. 2h45 de taf relâché avec : la création d'une nouvelle méthode de dessin de fences, définition de fences, re-création d'un solveur et gestion des dessins, son de fond puis fatigue à gérer...
+26 (ven) : 19h30-20h30 bon début sur solveur Usotatami. Puis 21h-23h30 : tentative de gestion atomique des visions : c'est beaucoup trop compliqué ! Au moment de commencer l'annulation j'ai décidé de passer aux events. J'ai passé une soirée à programmer pour rien, voilà ce qui arrive quand on se lance tête baissée !
+27 (sam) : grosse avancée sur Usotatami solver.
+28 (dim) : Ajouté la gestion des ranges sur Usotatami solver. Je croyais que je ferais une méthode filtre pour les bandes qui peuvent se retrouver à contenir un nombre égal à leur taille mais j'ai fini par décider qu'un système de passe qui sera fait ultérieurement serait plus efficace.
+Egalement essayé de refondre le stockage local sans succès, puis modifié les "LOOP_DIRECTION" en "DIRECTION" plus neutre et déplacé des fichiers dans le nouveau dossier "miscSolving" apparu lors de la création d'Usotatami.
+2021-03-01 : Divers travaux simples sur le TODOs.
+2021-03-02 : Pause, je regarde sur Wakanim !
+2021-03-03 : Editeur : copier et décaler des cases. Puis ajout de cases en série sur l'éditeur de Yajilin.
+2021-03-04 : Editeur : finir ce que j'ai commencé la veille en généralisant "l'ajout de cases en série" + envoi du mail à Otto ! 
+2021-03-05 : Début du retour sur GeneralAdjacency
+2021-03-06 : GeneralAdjacency : correction du début qui résout le problème de Heyawake678 mais aussi plusieurs problèmes de LITS, quoique pas tous ! (et envoi d'une réponse à Otto) 
++ dans LITS, fermeture des clusters "non fermés en régions" de taille < 4, j'en ai mis du temps !
+2021-03-07 : Journée LITS ! (mais un TODO laissé : lorsqu'une région se voit affecter une forme, les cases adjacentes à des cases ouvertes qui ont cette forme ne sont pas fermées.
+2021-03-08 : Encodage en base 64 : fonctions de conversions caractères et entiers, streams d'encodage et de décodage simples.
+2021-03-09 : Encodage et décodage : création de stream d'encodage binaire avec blocs 7 (mais pas du décodeur) + création des streams d'encodage/décodage de valeurs pleines en base, de valeurs sparses, de binaire sparse ; application binaire plein et encodage blocs 7 dans le murage. Cependant, le blocs 7 binaire sera abandonné. Manque le binaire presque plein mais les bases pleines peuvent faire l'affaire... ou bien des combinaisons de binaire (sparse ou plein) et de base pleine
+Bref : installation des stream E/D de base pleine, de valeurs quelconques éparse et de binaires éparses. Les 2 derniers utilisent le stream "direct" que j'avais codé la veille et que j'ai un peu incrémenté avec la prise en compte de possibles valeurs avant de tomber sur un nombre.
+2021-03-10 : De 21hà minuit sur l'encodage et le décodage d'un ???. Au programme : erreur d'index consommé, erreur de décodeur utilisé (un base full au lieu d'un binaire sparse), et "spaceToChar" qui a transformé des cases bannies en X quand des 0 auraient fait l'affaire ! Et moi qui croyais que le décodage serait facile...
+Je n'ai pas adapté le décodage aux solveurs, pour l'instant il reste cloîtré à l'éditeur. Tout de même, j'ai été fier lorsque j'ai réussi à faire une transformation de masse des puzzles anciens de EntryExit, Norinori et LITS vers le nouveau format et vu qu'elle a marché. (Un peu étoffé la conversion de masse au passage)
+2021-03-11 : J'ai adapté le décodage aux solveurs (EntryExit, LITS, Norinori) et j'ai eu la flemme de faire autre chose
+2021-03-12 : J'ai fait SternenSchlacht
+2021-03-13 : J'ai fait avec les régions et avec les nombres uniqueent, je m'apprêtais à faire pour Masyu et pour Curving Road juste pour me rendre compte que mon encodage et mon décodage StreamEncodingSparseBinary s'embarassait avec des symboles "-", je devrai donc le refaire. Je prévois de supprimer totalement les symboles "-". (Mardi, j'avais fait le solveer StreamEncodingSparseBinary en dernier, juste après StreamEncodingSparseAny, qui utilisait des dashes qui EUX étaient utiles. Mercredi j'avais utilisé ces encodeurs et décodeurs pour les grilles murées... mais j'étais trop stone pour me rendre compte que je pouvais réduire le nombre de symbole. Il m'a fallu attendre samedi soir alors que j'étais sur le point de passer aux grilles Masyu et CurvingRoad où là un bon encodage SparseBinary est vitale.
+2021-03-14 : Repris du mieux que j'ai pu le binary sparse (avant de partir à mon après-midi parcours santé), avec des tests mais sans tout comprendre au sujet des 1 et des 0
+2021-03-15 : Ajouté une correction + ajouté le décodeur à CommonSaveAndLoad et début d'application à Masyu (mais pas de conversion de masse effectuée). De plus, transformation manuelle des grilles de Norinori et LITS qui avaint des cases bannies (il me semble qu'aucun de mes puzzles de CR, Chocona, Heyawake ou Shimaguni n'en avait. Si certains de CR (Country Road) en avaient... ben tant pis, une petite modification à la main (charger la grille dans l'éditeur et repositionner correctement les cases noires, puisque c'est le seul problème) ne fera pas de mal !
+2021-03-16 : Pas grand chose (Merci ZoomZike et Phoenix Wright Adieu ma volte face)
+2021-03-17 : Rien (Merci ZoomZike et Super metroid)
+2021-03-18 : Presque rien (merci ZoomZike et bugs)
+2021-03-19 : Presque rien (merci Koh Lanta + ZoomZike et bugs) mais conversion manuelle des puzzles "HakyuuHack"
+2021-03-20 : Rework et légère amélioration du prompt pour mettre des caractères dans l'éditeur (reconnaissance que les tokens sont des caractères. Enfin je crois.) + Modification du menu HTML + Mise en place du solveur Hakyuu et de la classe SpaceNumeric. (possibilité d'une seule occurence d'un numéro par région)
+2021-03-21 : Hakyuu : Avancée dans la stratégie + QS. Manque : lorsqu'il reste unique position possible pour un chiffre donné dans une region donné, il faudrait l'automatiser... ce que j'avais tenté de faire automatiquement la veille.
+2021-03-22 : Hakyuu : Gestion du SpaceSetNumeric.
+2021-03-23 : Editeur : ajout du stream "Numeric et symbols" dans le cadre de Shugaku + mise en place du solveur Shugaku
+2021-03-24 : Modification de grid + fusion de direction adjacence et direction classique + avancée solveur Shugaku (Difficultés pour le dessin, pour les méthodes de récupération des objets (j'ai voulu utiliser des couleurs directement et non des DrawableItem + quelques bugs de solveur dans le tas. Mais rien lié à une modification de trucs anciens heureusement.)
+2021-03-25 : Perdu du temps à ne pas me rendre compte que j'avais modifié les directions et j'aurais dû modifier les objets dans AdjacencyCheck. 
+2021-03-26 à 28 : Avancée Shugaku. Le 28, réorganisation des TODO. Merci Zoomzike de m'avoir distrait.
+Nuit du 28 au 29 jusqu'à 1h45 : commencé (mais coupé par intermittences) le rework de la sauvegarde.
+29 et 30 : je bosse en télétravail le soir
+2021-03-31 : sauvegarde jusqu'aux chiffres et symboles.
+2021-04-01 : Terminé le rework de la sauvegarde + nuit jusq'au 02 : quelques options ergonomiques de dessins.
+2021-04-02 : A donf sur l'éditeur jusqu'à avant Koh-Lanta.
+2021-04-03 : Avancée sur l'adjacence (déjà commencé la veille avec les blocs 2x2).
+2021-04-04 : Correction sauvegarde/chargement des grilles type Shugaku + constat sans correction du bug du solveur Koburin (2 cases bannies adjacentes incorrectement comptées) + rework classe de check adjacence
+2021-04-05 : Révision intelligence check adjacence
+2021-04-06 : Révision intelligence check adjacence 2
+2021-04-07 : Première tentative fouillis d'importation intelligente de fichiers, stoppé par le cross domain
+08 : Première tentative intelligente, avec l'aide de Papa
+09 : Elargissement
+10 : COnstatation du problème, il y a des fichiers qu'on est obligés de charger après les autres et cela ne se passe pas forcément bien. Il FAUDRA enchaîner les chargements en cascade.
+10 au 11 (nuit après la soirée de ouf) : mise en place de Yajikabe sans les indices de grille + recopie de 13 des 20 puzzles
+12 : Yajikabe, prise en compte des indices (recopie des puzzles 14 à 17)
+13 : prise en compte des des unions, passes, multipasse, peaufinage ! (et recopie des puzzles 18 à 20)
+14 : Suppression du nom automatique + correction coquilles déplacements + ajout de symboles en masse pour l'input (non terminé)
+15 : Fin ajout de symboles en masse pour l'input (déplacement code main => input & changement texte prompt) + quelques questions de style (arrachage de cheveux en CSS) + 
+début de fin des importations de fichiers + édition actionsManager + début mise en place DummySolver
+16 : osef
+17 : osef
+18 : Plusieurs modifications générales simples sur les solveurs dont le sacro-saint ajout de la direction sur LITS.
+Sinon j'ai complètement perdu le fichier Conventions . txt car ma vieille bécane s'est éteinte alors que je l'éditais. Grrr... heureusement il n'y avait pas encore grand chose.
+19 :
+20 : presque rien ! Matin et soir : j'ai apporté une correction (oui, même le matin !) sur l'importation, tentée sur EntryExit (qui est un solveur à région). Le soir, j'ai généralisé cette importation. J'en ai profité pour retirer le dernier "drawer", sur EntryExit justement. parasite d'un inputSolver.js. Et pour voir que ce jour là j'avais pas moins de 19 solveurs dont 3 théoriques.
+21 : Début à 23h, pris par un live de JSPC. Bon, squelette de solveur Akari. J'ai recopié Shimaguni alors que je comptais recopier Shugaku...
+22 : Déductions Akari sommaires (deux ampoules peuvent s'entre-éclairer et on ne gère pas l'adjacence des cases).
+23 : Déductions Akari + quickstart + filtres (oui, ce solveur a des filtres).
+24 : Passe Akari
+25 : Matin : multipasse + correction log
+Soir : Avancée relax (quoique) sur l'installation de marges dans les puzzles, jusqu'à la reconnaissance du clic et le set/get dans l'editeurcore (rien dans un solveur). Demain je vais essayer de faire la sauvegarde/chargement en éditeur et de l'adapter à un tout nouveau solveur.
+26 : Avancée de l'éditeur : ajout de l'input en chaîne (abstraction de l'input en chaîne déjà existant pour le rendre utilisable par les marges) + correction au passage de quelques bugs d'input et dessin (les xLength et les yLength lorsqu'on redémarrait/redimensionnait la grille)
+Je suis allé jusqu'à la sauvegarde et le chargement dans l'éditeur d'un puzzle "Stitches" !
+27 : Etablissement du solveur Stitches. Mise en place du dessin et du modèle (régions), mais pas d'interactions. (genre pas d'application, pas de clic... pourtant les fonctions pour gérer le clic, les évènements sont en place, hein !)
+28 : Poursuite, mise en place des inputs et d'une fonction de dessins pour les paths ! (en fait reprise d'une fonction de drawpath qui était commentée pendant looongtemps.)
+Cette fonction n'est pas encore complétée et peut être améliorée, mais le solveur commence à avoir de l'allure !
+29 : Repris le dessin de gridPath et pas mal avancé dans les déductions + posé le quickstart.
+30 : Fin des déductions + passe frontière. J'ai été perturbé par le mec de socializus qui m'appelait.
+1 mai : quasiment rien. Peut-être début nommage.
+2 mai : Matin : de 9h30 à 11h00 (à peu près) : re-gestion des inputs (création d'un objet et d'un fichier) + fin nommage passes + passe colonne + passe ligne + inputs + multipasse.
+Après midi et soir : bof, focus Norinori et un peu StarBattle...
+3 au 6 mai : commit de retravail des solveurs (surtout le 5 où j'ai tout renommé et passé les directions en nombres plutôt que lettres, gagnant un temps fou sur la résolution)
+Nuit 6 au 7 mai : début retour sur Shugakuet consorts...
+8 mai : Retour réussi sur Shugaku (maintenant les dominos doivent être adjacents à une case ouverte) (avant que je sorte l'après midi, ...) 
+9 mai : Retour pas tout à fait réussi sur des fonctions de régionalisation. Les puzzles à boucles à région ne fonctionnent plus !
+10 : Correction puzzles boucles à région. En fait le problème était plus profond ! (plus de détails dans le commit)
+11 : Démarrage de solveur Detour (matin et nuit)
+12 : Poursuite de solveur Detour (nuit uniquement). Pas de passe ! 
+Bug persistant pouvant conduire à des déductions erronnées dans le Quickstart.
+Nuit 13 au 14 : Correction bugs Detour et dernières déductions + création méthode "deductionsFillingSetSpaces" et application à d'autres solveurs (Star battle, stitches - est-ce une nécessité de modernisation ? En tout cas la méthode existe) + Dessins en coin en haut à droite (là aussi ce n'est pas nécessaire pour l'instant mais au moins ça permet une distinction avec la distinction avec le dessin classique de symboles)
+15 : Applications des transformations (rotations, miroirs et redimensionnements - peut-être le lendemain) aux marges
+16 (dim) : Transformations locales de grille + transparence des copies et déplacements
+17 : Pas grand chose, surtout le 18 : effaçage d'une case individuelle ou d'une sélection de cases ; affichage nombre d'étoiles
+18 : Début du passe tapa (entrecoupé, 3h speed)
+19 : fin passe tapa (entrecoupée aussi, 3h speed) + début dessin grille Tapa, mais pas de sauvegarde
+20 : enregistrement Tapa + mise en place solveur jusqu'à filter MAIS fâcheux bug (non-prise en compte des O déjà validés lorsque le tableau des chiffres dans la passe est à 0 : [0,1,0,0,1] -OOO-OXO était buggé
+21 : correction du bug de la veille + mise en place vraie passe
+22 : (en 30 min : mise en place multipass Tapa) + début Usoone
+23 (dim) : suite Usoone (évènements de vérité et mensonge mais sans déductions)
+24 (lun) : toutes déductions Usoone
+25 (mar) : fin Usoone (multipass) + prise en compte champs en vue de Gappy + sauvegarde et chargement éditeur Gappy + meilleure gestion grilles carrées
+26 (mer) : meilleure gestion éditeur + mise en place Gappy
+27 (jeu) : Multi passe Gappy + début amélioration multipasse Heyawake (régions tendues adjacentes)
+28 (ven) : Fin amélioration multipasse Heyawake
+29 (sam) : Le matin, sélection de cases pour le solveur Starbattle mais pas de passe. Le soir, mise en place de la passe.
+30 (dim) : Mise en place passe Shugaku, constatation bug au niveau de l'adjacence
+31 (lun) : rien
+1 juin (mar) : Pas grand chose, corrections bugs adjacence + fin passe Shugaku
+2 (mer) : Pas grand chose, mise en place vision pass sur StarBattle
+3 (jeu) : rien
+4 (ven) : Repris travail du mercredi pour généraliser au solveur et à tout type d'évènements
+5 (sam) : Ajout de l'édition et du dessin d'une grille de sudoku jusqu'à la sauvegarde dans l'éditeur. Changement de cap en cours de soirée : j'avais décidé que le sudoku serait un puzzle à part, jusqu'à ce que en voyant les complications que ça entraînerait dans l'EditorCore j'ai décidé d'en faire un puzzle comme les autres avec une 'transformation' lorsqu'on sélectionne sudoku dans l'éditeur.
+6 (dim) : Rien, trop crevé
+7 (lun) : Encore un changement de cap : la grille est dessinée comme une Wallgrid ! Ajout d'une 2nde combobox dans l'éditeur et enrichissement du 'modèle sudoku'. Ah et séparation de l'inputEditor pour l'inputEditor aussi. 
+Toujours rien pour le solveur mais il est quasiment près, je suis allé jusqu'à l'éditeur, sans sauvegarde. (Un seul mode : sudoku, qui a plein de sous-modes et utilise une grille à régions et cases numérotées, comme Hakyuu, mais régions verrouillées !)
+Nuit du 16 au 17 juin :  reprise solveur Sudoku avec les possibilités par ligne/colonne/région.

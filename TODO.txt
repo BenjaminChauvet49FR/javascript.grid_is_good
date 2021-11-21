@@ -1,0 +1,230 @@
+Trop gros trucs :
+-Utiliser "Mode strict". Guide : https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Strict_mode
+
+Gros trucs éditeur : 
+-Coloration des cases en noir (pour CastleWall et Str8ts entre autres)
+-Validité des valeurs : pour l'instant ça ne pose pas problème mais... si on a une grille numérique qui a des valeurs de min à max et qu'on switche (avec la combobox) sur un puzzle qui utilise les mêmes grilles mais des différents min' et max', faut-il conserver les valeurs de min et de max ou les effacer ? Un jour il faudra faire un filtre à la sauvegarde.
+	-Solution possible (mais un peu radicale) : tout effacer quand on passe d'un puzzle à l'autre.
+-Et on sait jamais, puzzle à informations pleines, si un jour je veux recopier Hitori ou un puzzle similaire...
+-Sauvegarde des wildcards ! (je préfère avoir un peu plus de recul, à la fois sur l'intérêt et la façon de procéder)
+-Petit manquement (bug dont je suis conscient car je l'ai laissé par flemme) : si on choisit un puzzle avec des chaînes puis on bascule sur curving road, on peut rentrer des données en chaîne à la Masyu. Sans grandes conséquences puisque les perles noires ne sont pas sauvées, mais...
+	-de manière générale, quand on change de puzzle avec un mode de case qui est masqué dans le nouveau puzzle... on peut toujours utiliser l'ancien mode de case. Sans conséquence la plupart du temps.
+
+Gros trucs affichage listes puzzles
+-Ajouter des commentaires dans le stockage local
+-Ajouter la taille des puzzles (créer méthode d'introspection)
+Sauvegarde :
+-Ajouter un "_" après les noms des puzzles dans le stockage local ? Dans ce cas, voir les noms de puzzles qui finissent déjà par un "_". (Sudoku9x9)
+
+Gros trucs éditeur sur solveurs théoriques :
+-Solveurs théoriques qui ne nécessitent pas de murs : tous sont stockés avec "Walls only" et sauvegardent donc les murs. De plus, on peut afficher des murs dans l'éditeur. Revoir ça !
+(Note : peut-être que les solveurs théoriques n'ont aucun intérêt : il suffit de créer un puzzle de Tapa / Heyawake / Corral (selon les besoins) vide et de créer les formes 
+
+Gros trucs chargement fichier :
+-Faire en sorte que si on tombe sur un "END_OF_DECODING_STREAM" dans un appel à decode() ça renvoie null sans qu'on ait à faire un test.
+-fonction decode : la renommer ou l'expliquer ?
+
+Gros trucs solveur général :
+-Changer (et archiver) les descriptions des actions
+-Retirer la dernière trace géographique du puzzle : le filtre géographique !
+
+Gros trucs modélisation :
+-Revoir nom fichier "SpaceNumeric"
+
+Gros trucs dessins :
+-Dessin Shugaku : revoir le code.
+-Dessin de carré : pixel en haut à gauche ! (cf. Shugaku)
+-Dessin d'indications (pour SternenSchlacht et Norinori) : à la limite, créer un commit pour les faire disparaître en les mettant dans un dossier gitignoré. (+ Shimaguni)
+-LITS : Dessin de symbole L, I, T, S (mode daltonien friendly)
+-Yagit, aussi
+-Pitons de murs alors qu'il y a des cases entièrement fermées
+
+Gros trucs gestionnaire d'actions :
+-Trouver un moyen pour que les actions se voient correctement attribuer un id unique ET faire du tri dans ces actions afin d'éviter d'en dupliquer
+
+-Idéés très utiles :
+-tester l'unicité de la solution pour pouvoir multipasser un nouveau puzzle et tester sans en afficher la solution (ce sera aussi utile pour la génération de puzzles)
+-vérificateur malhonnête (teste la conformité directement avec les outils du solveur)
+-vérificateur honnête (ne teste la conformité qu'avec les valeurs d'answerArray et les données de setup)
+
+Sera fait plus tard : 
+-Gérer les tailles de canevas, notamment afin de gérer les puzzles 45x31.
+-Faire des "drawing" plutôt que des appels à diverses fonctions draw, comme dans Usotatami (j'ai essayé pour Norinori mais "indications", j'ai fini par renoncer. Et puis le fait qu'on fasse appel à des éléments de l'HTML...)
+-Exporter les puzzles et également inspecter ceux actuels (noms + contenu) afin d'avoir accès à la taille
+-Ranger les puzzles par ordre alphabétique automatiquement
+-Faire un ramasseur de puzzles pour les stocker sur un fichier texte (deviendra bientôt urgent !)
+-Accélérations pour éviter les "Pages ne répondant plus" + timeout ou redraw...
+-Un détecteur de si la solution est bonne ou non (activable manuellement) - pourra servir lorsque je voudrai créer un puzzle de manière procédurale.
+-Faire en sorte que les scripts ne soient importés qu'une seule fois (exemple : les CheckCollection, que je n'ai finalement importés qu'une fois, mais j'ai songé à les utiliser dans l'adjacence.)
+
+Doutes sur l'intérêt : 
+-Editeur : Faire une version verticale ou en boîte du prompt
+-Editeur : Copies et déplacements des murs
+-Un log affichable humainement et recopiable plutôt que stocké dans la console
+-Editeur Galaxies : rendre la possibilité de faire une transformation globale (miroir / rotation) sur le puzzle.
+-faire un loggueur complet mais sans l'aspect géographique... ?
+-Shakashaka : déductions paresseuses qui lèguent tout à la passe.
+
+----
+Puzzles spécifiques :
+
+Akari : 
+-Terminer multipasse pour prendre en compte cases (nécessite d'ajouter puzzles supplémentaires)
+-Il y a un puzzle 50x50 et un 100x100, on se les fait ?
+-Optimisation multipasse ? Pourra être utile le jour où je ferai le 100x100.
+
+Curving Road :
+-Gérer direction ?
+
+Detour : 
+-drawIfNotFullyLinkedRegion largement optimisable (dans chaque case on fouille sa région au moment du DrawInsideSpaces.
+-Coloration des signes superflue si une case a deux chaînes.
+La passe fera le taf : Lorsqu'il ne reste plus qu'une case "tournante" à trouver mais que si deux cases sont reliées cela provoque un tournant sur les deux (idem lignes droites)
+-Multipasse qui ne résout pas le puzzle 39
+
+Galaxies : 
+-Puzzle 100 : si on fait plusieurs passes à la suite ça ne marche paaas ! Pourtant la multipasse est bonne. (J'ai essayé de revoir les évènements pour la poasse galaxie mais visiblement c'est pas ça)
+
+Hakyuu :
+-Bon, j'ai fait le QuickStart et c'est tout ! Ce puzzle se résout vraiment directement on dirait... (Pas l'ombre d'une passe, même avec le puzzle 300)
+
+Heyawake (AYE-Heya) :
+-AYE-Heya : puzzle dont le centre n'est pas contenu dans la région elle même à cause d'un trou (exemple : n° 130)
+-AYE-Heya, puzzle 80 : résolu par multi-passe mais j'ai dû forcer !
+-AYE-HEYA (gadget) : ne pas du tout parler des "cases d'une région", mais plutôt des "cases de la moitié de la région". Après ça va pas être facile à cause des getters qui utilisent .spaces ...
+-Heyawake : passe sur plusieurs régions consécutives de taille 1
+-Puzzle 402 sinon
+-Ca ne concerne que le AYE-heya 60 et c'est hautement improbable : des petits traits apparaissent dans certaines cases dessinées. Il ne s'agit que des cases qui ont une case rouge en haut à gauche d'elles-mêmes. Ca doit être lié (je conjecture) au dessin mappé, mais bon...
+
+Koburin : 
+-Les "cases bannies" sont nettoyées au mauvais endroit. En trouver un plus approprié.
+-Revoir le setup, un peu. (getNumber...) " // In this puzzle, banning has an impact on numbers spaces" était-ce bien nécessaire ?
+
+LITS : 
+-3 cases ouvertes dans une région : fermer les cases ne correspondant à aucune forme (non, la passe ne fera pas le taf ! On ne va pas perdre de temps à tester vainement chaque case inutile !)
+-Puzzles spécifiques : 
+	-La passe fera le taf : Si des hypothèses de forme ont été déduits sur certaine cases et ces hypothèses sont ensuite rendues impossibles par un pentamino de la même forme dans une région adjacente, les supprimer. 
+	-2 ou plus dans une région : déjà placer des L-I-T-S ? 
+-Non-résolution : Mettre une checkbox qui ne permet que le coloriage des pièces entièrement devinées
+	-Colorier plus clairement les cases non-ouvertes qui correspondent à une forme.
+-Dilemme du puzzle 29 : après déduction (mais pas passe), il y a plusieurs "groupes de 4 cases inconnues dans une même région" qui sont bons à fermer : les carrés 2x2 qui doivent toujours être fermés ET les groupes qui ont la même forme qu'une pièce adjacente. 
+On pourrait s'amuser à filtrer les régions de taille 4, mais est-ce un peu gadget ? 
+
+Moonsun : 
+J'ai inventé le mot anglais "Astre". 
+
+Shimaguni :
+-Modifier le QuickStart du solveur Shimaguni pour que les valeurs "adjacentes aux régions forcées" soient bannies dès le départ. (Peut-être est-ce déjà le cas, la flemme de vérifier, j'ai passé beaucoup de temps sur ce solveur.) (à ce titre, les régions de taille 1 peuvent être considérées comme à valeurs forcées. Enfin OSEF.)
+-Retravailler le code
+
+Shakashaka : 
+-dessin de quarts de triangles dont on voit les lignes diagonales transparaître... c'est très moche !
+
+Shugaku :
+-Accélerer passes en faisant une passe sur un domino ou sur une case numérique ? Passes à faire : Un domino, une case fermée avec une forme connue, une case fermée... voir même une case. Avantage : ça dévoile des cases ouvertes plus vite. Mais tous les problèmes et le problème de bug doivent être préalablement réglés !
+
+Star battle :
+-On peut sélectionner des cases pour faire une passe mais : 
+	-la passe doit être améliorée dans le log
+	-toujours pas de stricte résolution.
+
+Tapa : 
+-Dans "CommonHTMLMenu", changer le nom "Tapa" en "tapa". Nécessité peut-être de modifier les puzzles.
+(et aussi modifier l'éditeur)
+ 
+Usotatami : 
+-Bon j'ai sauvé un puzzle "Usotatami default" qui était bien évidemment faux ! Mais cela pose des questions sur la gestion de certains cas 'à priori impossibles' car le Quickstart provoque un bug (sûrement dû au fait qu'on a fait un cas non prévu, je suis pas sûr)
+-Deux boutons avec une étiquette "Ne rien faire" ? Vraiment ?
+
+Yagit : 
+-(je crois que c'est fait mais flemme de vérifier) : si la cloison entre deux noeuds peut être fermée mais cela provoquerait avec les ouvertures une incompatibilité de forme : fermer la cloison.
+-Indications pour daltoniens
+-Transformer les évènements de cases colorées en cases non-soumises aux passes, pour éviter d'avoir à vérifier la contenance d'une forme... 
+
+Yajilin :
+-Transformer la fonction de dessin de grille ET la grille en autre chose. (vaut aussi pour Yajikabe)
+-Ajouter plus d'évènements sur les "bandes paires".
+-La passe fera le taf : "Carrefour à 3 routes près des bords"
+
+Stitches :
+-Quels évènements logguer ?
+
+Sudokus :
+-Dessin du solveur "dummy"
+-Une multipasse
+-Modifier le main et le HTML pour les rendre plus passe-partout (le jour où j'aurai d'autres à variations)
+
+Kuromasu / Corral :
+-Déductions entre deux cases ouvertes liées
+-Doute sur l'intérêt : passe d'une case simple (après tout les cases qui ne sont pas dans un champ de range sont conditionnées par les autres cases. Du moins dans la variante Kuromasu, mais peut-être pas dans la Corral)
+-Appeler le puzzle "Kuromasu et variantes"
+-Optimisation sympa (ou pas) : déduire les cases 'fermées' libres sans passe sur le modèle de la boucle. C'est pour ça que j'ai déjà prévu les spaceCoorsDir de contact entre une case de cluster et une case fermée libre
+(est-ce que ça doit être le job de la passe ? La version Corral a un point commun avec LITS : les puzzles ont des formes très bizarres.)
+-Le puzzle 20 n'a pas des passes très évidentes. En même temps c'est le plus dur de la bande.
+-Intersection de deux évènements "min", mais là ça demande de redéfinir les intersections...
+-Ordonner les évènements correctement
+-IMPORTANT : revoir le filtre des cases à l'intérieur qui est bugué ! Meme le multipasse ne fait pas tout (mais ça c'est peut-être lié au nouveau AdjacencyChecker qui ne vérifie plus les anciennes limites. Enfin à voir...)
+
+Nurikabe :
+-Optimiser le fait qu'il ne reste qu'une case non explorée dans la recherche du cluster (2nd filtre)
+-Passes potentiellement trop longues, comme dans LITS (mais c'est lié aux déductions longues)
+-Passes incorrectes ? Essayer en supprimant les "cases inaccessibles". En fait le puzzle 818 peut etre réussi ou raté selon l'ordre des passes. 
+	-Et j'ai jamais réussi le puzzle 570.
+
+----
+
+Cluster manager :
+-Faire la méthode SpacesCluster renvoyant la liste des cases d'un cluster ?
+
+Adjacency check : 
+-En faire un objet ?
+-Faire appel aux checkCollections pour remplacer les fonctions ? (nécessite une réexamination complète de l'algo qui a été établi à un moment où les checkCollections n'existaient pas encore)
+
+----
+
+Gros trucs LoopSolver :
+-Créer affichage alternatif d'une grille à boucle (pour Slitherlink et cie)
+-(manquement) Terminer l'auto-non-bouclage (si on a une boucle unique dont les 2 bouts sont adjacents et qu'on ose pas la fermer, la fermer plus tard)
+-Bug de la "case coincée entre deux bouts opposés" + cas case ouverte
+-Solveur théorique : Faire un "ajout de déductions manuelles" similaire au solveur théorique des clusters
+-Faire utiliser la nouvelle méthode "DrawClosablePaths" par LoopSolver (ou à terme fusionner les 2) : chiche ou pas ?
+-Renommer "this.grid" et revoir "chains" (la liste des chaînes d'une case)
+
+
+Gros trucs RegionLoopSolver :
+-Passer des évènements en argument des fonctions atomiques pour les modifier : cela simplifiera les undos (vraiment nécessaire ?)
+-Optimisations possibles en considérant que les indices d'un évènement doivent être dans l'ordre croissant par exemple, ou bien avec les DoRLSClosure...
+-Autres optimisations possibles + risque de confusion edgesLinked / edgesClosed
+-(déductions) si une case est ouverte, n'a qu'une seule case adjacente dans la même région et n'est pas la seule case ouverte de la région : lier jusqu'à tomber sur "une case avec 3 voisins ou plus dans la région".
+
+Multi solveurs :
+-Annuler une unique passe / repérer un début de multi passe ?
+-Revoir la façon dont les booléens sont utilisés dans CheckCollection
+-Quickstart qui peut mal se passer (si les données du puzzle sont incorrectes)
+	-Quickstart qui mélange règles du jeu et déductions "une seule possibilité".
+-Hypothèse : mettre à part la première déduction (obtenue par hypothèse) dans un log ?
+-Si un puzzle en dépend d'un autre, gérer les inclusions différemment dans la page HTML. Exemple : Kuromasu dépend de Corral
+-LITS et Nurikabe : propagation des cases "accessibles à une distance maximale d'une case donnée" sans doute factorisable. Malheureusement vus les appels beaucoup trop nombreux à cette méthode à LITS je serais peut-être obligé de factoriser.
+(note : à l'heure où j'écris cette note de TODO je ne sais pas encore si je vais me tenir à un tableau de "ça rentre ça rentre pas")
+-Faire deux méthodes "toLogString" selon qu'on fasse un log rapide ou un log complet (vu que souvent dans les logs rapides on se contente de ne logger qu'un type d'évènement)
+-Inputs des solvers : bon, la gestion des différents clics sur canvas est un peu catastrophique, beaucoup de copier-coller
+-Solveur géographique et adjacence :
+	-Adjacence incorrecte ? Cf. cluster théorique quand on ferme une région puis pose un OPEN ensuite. A noter que ce n'est pas pareil si la frontière de la région fermée en question a une case bannie.
+	-Bouton de vérification manuelle des anciennes limites inactif/invisible lorsqu'on vérifie les limites automatiquement
+	-Trouver une solution pour les évènements appliqués du fait de la vérification géographique dans les déductions manuels plus pérenne que celle actuelle (dans geographicalVerification on distingue l'appel manuel des autres appels). On appelle geographicalVerification puis on trie les évènements dans la fonction geographicalDeductionsPseudoFilter
+	-geographicalDeductionsPseudoFilter qui d'ailleurs n'est pas un filtre à 100 %
+	-Mieux fabriquer la "liste des anciennes limites"
+-Span de statut résolution : séparation du solveur ? (car à l'heure actuelle c'est géré par le solveur)
+-Titres des HTML en français
+
+Convention :
+-Mettre un mot sur la convention "Les directions doivent être 1-2-3-4" adoptée sur de nombreux puzzles
+
+Généralisations à faire :
+-Uniformiser : p_listEvents, p_eventList ; 
+	-noms de méthodes commençant ou terminant par 'deductions'
+-Créer une meilleure fonction de log de coordonnées comme dans Shugaku. Qui sait elle pourra servir dans des "toLogString" aussi.
+-Logguer correctemnt les évènements au lieu d'avoir des '0' ou des '1' pas toujours explicites pour les choix
+	-Mettre à part les méthodes de log dans les fichiers d'events (plutôt que d'avoir tous les shouldBeLoggedEvent dans un même fichier) au nom de la séparation interface/intelligence !
+
+	
