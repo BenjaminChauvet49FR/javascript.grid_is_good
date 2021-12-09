@@ -12,7 +12,8 @@ function DummySolver() {
 }
 
 SolverCountryRoad.prototype.construct = function(p_wallArray, p_indications) {
-		
+	this.xLength = p_wallArray[0].length;
+	this.yLength = p_wallArray.length;
 	this.regionLoopSolverConstruct(p_wallArray, {
 		setSpaceLinkedPSDeductions : setSpaceLinkedDeductionsClosure(this),
 		setSpaceClosedPSDeductions : setSpaceClosedDeductionsClosure(this),
@@ -191,3 +192,8 @@ quickStartClosure = function(p_solver) {
 		p_solver.terminateQuickStart();
 	}
 }
+
+// -----------
+// Passing
+
+// Note : unlike Detour and Regionalin, this is a regional-loop puzzle. So loging on a region pass will cause to use the upper pass, missing the upper index. Too bad...

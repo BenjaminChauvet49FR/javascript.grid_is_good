@@ -40,11 +40,11 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 	}
 	this.setEdgeClosedPSAtomicUndos = p_packMethods.setEdgeClosedPSAtomicUndos;
 	if (!this.setEdgeClosedPSAtomicUndos) {
-		this.setEdgeClosedPSAtomicUndos = function(p_5args) {} ; // x, y, otherX, otherY
+		this.setEdgeClosedPSAtomicUndos = function(p_5args) {} ; // x, y, otherX, otherY, direction
 	}
 	this.setEdgeLinkedPSAtomicUndos = p_packMethods.setEdgeLinkedPSAtomicUndos;
 	if (!this.setEdgeLinkedPSAtomicUndos) {
-		this.setEdgeLinkedPSAtomicUndos = function(p_4args) {} ; // x, y, otherX, otherY
+		this.setEdgeLinkedPSAtomicUndos = function(p_5args) {} ; // x, y, otherX, otherY, direction
 	}
 	this.otherPSAtomicUndos = p_packMethods.otherPSAtomicUndos;
 	if (!this.otherPSAtomicUndos) {
@@ -117,10 +117,12 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 	}
 }
 
-LoopSolver.prototype.loopSolverConstruct = function(p_array, p_puzzleSpecificMethodPack) {
+/* High conventions : 
+-properties this.xLength and this.yLength must be defined in the solver before loopSolverConstruct is called no matter what
+-banned spaces and opened spaces at start (even from puzzle regions) must be handled by the solver (or by regional solver ?) ; using banSpace may help
+*/
+LoopSolver.prototype.loopSolverConstruct = function(p_puzzleSpecificMethodPack) {
 	this.generalConstruct();
-	this.xLength = p_array[0].length;
-    this.yLength = p_array.length;
 	
 	this.setPuzzleSpecificMethods(p_puzzleSpecificMethodPack);
 	
@@ -178,16 +180,6 @@ LoopSolver.prototype.loopSolverConstruct = function(p_array, p_puzzleSpecificMet
 		this.grid[y][0].closedEdges++;
 		this.grid[y][this.xLength-1].closedEdges++;
 	}	
-	if (!p_puzzleSpecificMethodPack.setEdgeClosedPSAtomicDos) { // This setup is performed before puzzle specific setup, but if puzzle has events for closed links or closed spaces, it should perform its own ban.
-		for (y = 0 ; y < this.yLength ; y++) {
-			for (x = 0 ; x < this.xLength ; x++) {
-				if (p_array[y][x].state == WALLGRID.CLOSED) {
-					this.banSpace(x, y);
-				}
-			}
-		}	
-	}
-	// Warning : if this puzzle has regular banned spaces, it is better to let the puzzle perform its own ban of spaces.
 	
 	// Ergonomic options
 	this.ergonomicOptions = {
@@ -210,7 +202,7 @@ LoopSolver.prototype.banSpace = function(p_x, p_y) {
 // -------------------
 // Getters (important)
 
-LoopSolver.prototype.getLinkSpace = function(p_x, p_y){
+LoopSolver.prototype.getLinkSpace = function(p_x, p_y) {
 	return this.grid[p_y][p_x].state;
 }
 
@@ -441,7 +433,7 @@ LoopSolver.prototype.undoLinkRight = function(p_x, p_y) {
 	this.cleanErgonomicOptions(); 
 	previousState = this.grid[p_y][p_x].linkRight;
 	this.grid[p_y][p_x].linkRight = LOOP_STATE.UNDECIDED;
-	this.undoTradeLinkedSpaces(p_x, p_y, p_x+1, p_y, previousState);
+	this.undoTradeLinkedSpaces(p_x, p_y, p_x+1, p_y, DIRECTION.RIGHT, previousState);
 }
 
 LoopSolver.prototype.undoLinkLeft = function(p_x, p_y) {
@@ -452,7 +444,7 @@ LoopSolver.prototype.undoLinkDown = function(p_x, p_y) {
 	this.cleanErgonomicOptions(); 
 	previousState = this.grid[p_y][p_x].linkDown;
 	this.grid[p_y][p_x].linkDown = LOOP_STATE.UNDECIDED;
-	this.undoTradeLinkedSpaces(p_x, p_y, p_x, p_y+1, previousState);
+	this.undoTradeLinkedSpaces(p_x, p_y, p_x, p_y+1, DIRECTION.DOWN, previousState);
 }
 
 LoopSolver.prototype.undoLinkUp = function(p_x, p_y) {
@@ -460,11 +452,11 @@ LoopSolver.prototype.undoLinkUp = function(p_x, p_y) {
 }
 
 // Undo everything between 2 orthogonally adjacent spaces (except for the linkDown, linkRight considerations, which are dependent on the methods.
-LoopSolver.prototype.undoTradeLinkedSpaces = function(p_x, p_y, p_x2, p_y2, p_previousState) {
+LoopSolver.prototype.undoTradeLinkedSpaces = function(p_x, p_y, p_x2, p_y2, p_direction, p_previousState) {
 	if (p_previousState == LOOP_STATE.CLOSED) {
 		this.grid[p_y][p_x].closedEdges--;
 		this.grid[p_y2][p_x2].closedEdges--;
-		this.setEdgeClosedPSAtomicUndos({x : p_x, y : p_y, otherX : p_x2, otherY : p_y2});
+		this.setEdgeClosedPSAtomicUndos({x : p_x, y : p_y, otherX : p_x2, otherY : p_y2, direction : p_direction});
 	} else {
 		this.endedChainCount++;
 		this.grid[p_y][p_x].chains.pop();
@@ -490,7 +482,7 @@ LoopSolver.prototype.undoTradeLinkedSpaces = function(p_x, p_y, p_x2, p_y2, p_pr
 			this.getSpace(thisOpposite).oppositeEnd = {x : p_x, y : p_y};
 			this.getSpace(otherOpposite).oppositeEnd = {x : p_x2, y : p_y2};
 		}
-		this.setEdgeLinkedPSAtomicUndos({x : p_x, y : p_y, otherX : p_x2, otherY : p_y2});
+		this.setEdgeLinkedPSAtomicUndos({x : p_x, y : p_y, otherX : p_x2, otherY : p_y2, direction : p_direction});
 	}	
 }
 
@@ -992,7 +984,7 @@ function namingCategoryLoopClosure(p_namingCategoryPSMethod) {
 	return function(p_passIndex) {
 		switch(p_passIndex.passCategory) {
 			case LOOP_PASS_CATEGORY.SPACE_STANDARD : 
-				return "Space " + p_passIndex.x + " " + p_passIndex.y;
+				return "Space " + p_passIndex.x + "," + p_passIndex.y;
 			break;
 			default : 
 				return p_namingCategoryPSMethod(p_passIndex);

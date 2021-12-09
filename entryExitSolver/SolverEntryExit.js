@@ -11,6 +11,8 @@ function DummySolver() {
 }
 
 SolverEntryExit.prototype.construct = function(p_wallArray) {
+	this.xLength = p_wallArray[0].length;
+	this.yLength = p_wallArray.length;
 	this.regionLoopSolverConstruct(p_wallArray, {		
 		PSQuickStart : quickStartClosure(this)
 	})

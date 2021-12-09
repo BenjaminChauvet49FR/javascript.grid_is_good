@@ -28,7 +28,10 @@ function DummySolver() {
 }
 
 SolverMasyu.prototype.construct = function(p_symbolGrid) {
-	this.loopSolverConstruct(generateWallArray(p_symbolGrid[0].length, p_symbolGrid.length), {
+	this.xLength = p_symbolGrid[0].length;
+	this.yLength = p_symbolGrid.length;
+	
+	this.loopSolverConstruct( {
 		setEdgeLinkedPSDeductions : setEdgeLinkedDeductionsClosure(this),
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
 		PSQuickStart : quickStartClosure(this),
@@ -356,12 +359,12 @@ function namingCategoryClosure(p_solver) {
 	return function (p_passIndex) {
 		const x = p_passIndex.x;
 		const y = p_passIndex.y;
-		var answer = "";
+		var answer = x + "," + y;
 		switch (p_solver.pearlArray[y][x]) {
-			case PEARL.WHITE : answer += "(white) "; break;
-			case PEARL.BLACK : answer += "(black) "; break;
+			case PEARL.WHITE : answer += " (white)"; break;
+			case PEARL.BLACK : answer += " (black)"; break;
 		}
-		return answer + x + "," + y;
+		return answer;
 	}
 }
 

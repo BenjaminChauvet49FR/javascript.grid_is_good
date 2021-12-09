@@ -350,7 +350,7 @@ function closureEventTruth (p_truth) { return function(p_x, p_y) { return new Tr
 function closureEventSpace (p_adjacency) { return function(p_x, p_y) { return new SpaceEvent(p_x, p_y, p_adjacency)}} ;
 
 SolverUsoone.prototype.deductionsFillingNumbersSet = function(p_listEventsToApply, p_numbersSet, p_value) {
-	return this.deductionsFillingSetSpace(p_listEventsToApply, p_numbersSet.coors, closureSpaceTruth(this), USOONE.UNDECIDED, closureEventTruth(p_value));
+	return this.fillingSetSpaceDeductions(p_listEventsToApply, p_numbersSet.coors, closureSpaceTruth(this), USOONE.UNDECIDED, closureEventTruth(p_value));
 }
 
 SolverUsoone.prototype.deductionsFillingSurroundingsUsoone = function(p_listEventsToApply, p_x, p_y, p_value) {

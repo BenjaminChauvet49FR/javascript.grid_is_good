@@ -23,7 +23,7 @@ function DummySolver() {
 SolverDetour.prototype.construct = function(p_wallArray, p_regionIndications) {
     this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
-	this.loopSolverConstruct(generateWallArray(this.xLength, this.yLength), 
+	this.loopSolverConstruct( 
 	{	
 		setEdgeLinkedPSDeductions : setEdgeLinkedDeductionsClosure(this),
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
@@ -37,15 +37,6 @@ SolverDetour.prototype.construct = function(p_wallArray, p_regionIndications) {
 		comparisonPS : comparisonDetourMethod,
 		multipassPessimismPS : true
 	});
-		
-	// Puzzle with ALL open spaces
-	this.signalAllOpenSpaces();
-	for (var iy = 0 ; iy < this.yLength ; iy++) {
-		for (var ix = 0 ; ix < this.xLength ; ix++) {
-			// TODO : banned spaces not taken into consideraiton
-			this.setLinkSpace(ix, iy, LOOP_STATE.LINKED); // Note : no automatic deductions for puzzles
-		}
-	}
 
 	this.gridWall = WallGrid_data(p_wallArray); 
 	this.regionArray = this.gridWall.toRegionArray();
@@ -70,6 +61,18 @@ SolverDetour.prototype.construct = function(p_wallArray, p_regionIndications) {
 		region.notPlacedStraightYet = region.size - indic.value;
 		region.expectedNumberOfTurningsInRegion = indic.value;
 	});
+	
+	// Puzzle with ALL open spaces AND since this is a wall grid puzzle, also purify out-of-region spaces
+	this.signalAllOpenSpaces();
+	for (var iy = 0 ; iy < this.yLength ; iy++) {
+		for (var ix = 0 ; ix < this.xLength ; ix++) {
+			if (p_wallArray[iy][ix].state == WALLGRID.CLOSED) {
+				this.banSpace(ix, iy);
+			} else {
+				this.setLinkSpace(ix, iy, LOOP_STATE.LINKED); // Note : no automatic deductions for open spaces (unlike closed ones where this is needed)
+			}
+		}
+	}
 }
 
 // -------------------
@@ -80,15 +83,11 @@ SolverDetour.prototype.expectedNumberInRegion = function(p_ir) {
 	return this.regions[p_ir].expectedNumberOfTurningsInRegion;
 }
 
-/*SolverDetour.prototype.spacesToBeFoundInRegionYet = function(p_x, p_y) {
-	return (this.getRegion(p_x, p_y).forcedValue && this.getRegion(p_x, p_y).notPlacedStraightYet > 0);
-}*/
-
 // Region to be completed yet
 SolverDetour.prototype.drawIfNotFullyLinkedRegion = function(p_x, p_y) { // TODO optimiazble
 	var is = 0;
-	const region = this.getRegion(p_x, p_y);
-	if (region.forcedValue) {
+	const region = this.getRegionSafe(p_x, p_y);
+	if (region != null && region.forcedValue) {
 		while(is < region.size) {
 			if (this.getLinkedEdges(region.spaces[is].x, region.spaces[is].y) != 2) {
 				return true;
@@ -112,6 +111,15 @@ SolverDetour.prototype.getRegion = function(p_x, p_y) {
 	return this.regions[this.regionArray[p_y][p_x]];
 }
 
+// For drawing only (unlike Regionalin this puzzle has no player-closed space)
+SolverDetour.prototype.getRegionSafe = function(p_x, p_y) {	
+	const ir = this.regionArray[p_y][p_x];
+	if (ir != WALLGRID.OUT_OF_REGIONS) {
+		return this.regions[ir];
+	}
+	return null;
+}
+
 // -------------------
 // Input methods
 
@@ -129,12 +137,15 @@ SolverDetour.prototype.emitHypothesisRight = function(p_x, p_y, p_state) {
 
 SolverDetour.prototype.emitPassRegionOrSpace = function(p_x, p_y) {
 	var passIndex;
-	if (this.getRegion(p_x, p_y).expectedNumberOfTurningsInRegion != NOT_FORCED) {		
-		passIndex = {passCategory : LOOP_PASS_CATEGORY.REGION_DETOUR, index : this.regionArray[p_y][p_x]};
-	} else {
-		passIndex = {passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
+	const index = this.regionArray[p_y][p_x];
+	if (index != WALLGRID.OUT_OF_REGIONS) {
+		if (this.getRegion(p_x, p_y).expectedNumberOfTurningsInRegion != NOT_FORCED) {		
+			passIndex = {passCategory : LOOP_PASS_CATEGORY.REGION_DETOUR, index : index};
+		} else {
+			passIndex = {passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
+		}
+		return this.passLoop(passIndex);
 	}
-	return this.passLoop(passIndex);
 }
 
 SolverDetour.prototype.makeMultipass = function() {
@@ -195,16 +206,16 @@ function setEdgeLinkedDeductionsClosure(p_solver) {
 		const y = p_eventBeingApplied.linkY;
 		const dir = p_eventBeingApplied.direction;
 		if (p_solver.getRegion(x, y).forcedValue) {			
-			p_eventList = p_solver.deductions2Links(p_eventList, x, y);
-			p_eventList = p_solver.deductions1OpenLinkState(p_eventList, x, y, OppositeDirection[dir]);
-			p_eventList = p_solver.deductionsLinkOpenIsClosedFacing(p_eventList, x, y, OppositeDirection[dir]);
+			p_eventList = p_solver.twoLinksDeductions(p_eventList, x, y);
+			p_eventList = p_solver.oneOpenLinkStateDeductions(p_eventList, x, y, OppositeDirection[dir]);
+			p_eventList = p_solver.linkOpenIsClosedFacingDeductions(p_eventList, x, y, OppositeDirection[dir]);
 		}
 		const dx = x + DeltaX[dir];
 		const dy = y + DeltaY[dir];
 		if (p_solver.getRegion(dx, dy).forcedValue) {			
-			p_eventList = p_solver.deductions2Links(p_eventList, dx, dy);
-			p_eventList = p_solver.deductions1OpenLinkState(p_eventList, dx, dy, dir);
-			p_eventList = p_solver.deductionsLinkOpenIsClosedFacing(p_eventList, dx, dy, dir);
+			p_eventList = p_solver.twoLinksDeductions(p_eventList, dx, dy);
+			p_eventList = p_solver.oneOpenLinkStateDeductions(p_eventList, dx, dy, dir);
+			p_eventList = p_solver.linkOpenIsClosedFacingDeductions(p_eventList, dx, dy, dir);
 		}
 		return p_eventList;
 	}
@@ -217,8 +228,8 @@ function setEdgeClosedDeductionsClosure(p_solver) {
 		const dir = p_eventBeingApplied.direction;
 		const dx = x + DeltaX[dir];
 		const dy = y + DeltaY[dir];
-		p_eventList = p_solver.deductions1ClosedLinkState(p_eventList, x, y, OppositeDirection[dir]);
-		p_eventList = p_solver.deductions1ClosedLinkState(p_eventList, dx, dy, dir);
+		p_eventList = p_solver.monoClosedLinkStateDeductions(p_eventList, x, y, OppositeDirection[dir]);
+		p_eventList = p_solver.monoClosedLinkStateDeductions(p_eventList, dx, dy, dir);
 		return p_eventList;
 	}
 }
@@ -230,7 +241,7 @@ function otherDeductionsClosure(p_solver) {
 		const region = p_solver.getRegion(x, y);
 		if (p_eventBeingApplied.turningState == TURNING.YES) { // Supposed to turn
 			if (region.forcedValue && region.notPlacedTurningYet == 0) {				
-				p_eventList = p_solver.deductionsFillingRegion(p_eventList, region, TURNING.NO);
+				p_eventList = p_solver.fillingRegionDeductions(p_eventList, region, TURNING.NO);
 			}
 			KnownDirections.forEach(dir => {
 				if (!p_solver.neighborExists(x, y, dir) || p_solver.getLink(x, y, dir) == LOOP_STATE.CLOSED) {
@@ -246,7 +257,7 @@ function otherDeductionsClosure(p_solver) {
 			});
 		} else { // Straight line
 			if (region.forcedValue && region.notPlacedStraightYet == 0) {				
-				p_eventList = p_solver.deductionsFillingRegion(p_eventList, region, TURNING.YES);
+				p_eventList = p_solver.fillingRegionDeductions(p_eventList, region, TURNING.YES);
 			}
 			KnownDirections.forEach(dir => {
 				if (!p_solver.neighborExists(x, y, dir) || p_solver.getLink(x, y, dir) == LOOP_STATE.CLOSED) {
@@ -266,7 +277,7 @@ function otherDeductionsClosure(p_solver) {
 }
 
 // Check if the space has 2 links and if so, performs deductions on turningArray
-SolverDetour.prototype.deductions2Links = function(p_eventList, p_x, p_y) {
+SolverDetour.prototype.twoLinksDeductions = function(p_eventList, p_x, p_y) {
 	if (this.getLinkedEdges(p_x, p_y) == 2) {
 		const dir1 = this.grid[p_y][p_x].chains[0];
 		const dir2 = this.grid[p_y][p_x].chains[1];
@@ -280,7 +291,7 @@ SolverDetour.prototype.deductions2Links = function(p_eventList, p_x, p_y) {
 }
 
 // When a link has been opened/closed at the direction OPPOSITE TO p_direction
-SolverDetour.prototype.deductions1OpenLinkState = function(p_eventList, p_x, p_y, p_direction) {
+SolverDetour.prototype.oneOpenLinkStateDeductions = function(p_eventList, p_x, p_y, p_direction) {
 	if (this.neighborExists(p_x, p_y, p_direction)) {
 		if (this.turningArray[p_y][p_x] == TURNING.YES) {
 			p_eventList.push(new LinkEvent(p_x, p_y, p_direction, LOOP_STATE.CLOSED));
@@ -292,7 +303,7 @@ SolverDetour.prototype.deductions1OpenLinkState = function(p_eventList, p_x, p_y
 	return p_eventList;
 }
 
-SolverDetour.prototype.deductions1ClosedLinkState = function(p_eventList, p_x, p_y, p_direction) {
+SolverDetour.prototype.monoClosedLinkStateDeductions = function(p_eventList, p_x, p_y, p_direction) {
 	if (this.neighborExists(p_x, p_y, p_direction)) {
 		if (this.turningArray[p_y][p_x] == TURNING.YES) {
 			p_eventList.push(new LinkEvent(p_x, p_y, p_direction, LOOP_STATE.LINKED));
@@ -305,7 +316,7 @@ SolverDetour.prototype.deductions1ClosedLinkState = function(p_eventList, p_x, p
 }
 
 // Edge is linked. Is facing direction closed ? If yes, space is turning !
-SolverDetour.prototype.deductionsLinkOpenIsClosedFacing = function(p_eventList, p_x, p_y, p_facingDirection) {
+SolverDetour.prototype.linkOpenIsClosedFacingDeductions = function(p_eventList, p_x, p_y, p_facingDirection) {
 	if (!this.neighborExists(p_x, p_y, p_facingDirection) || this.getLink(p_x, p_y, p_facingDirection) == LOOP_STATE.CLOSED) {
 		p_eventList.push(new TurnEvent(p_x, p_y, TURNING.YES));
 	}
@@ -315,8 +326,8 @@ SolverDetour.prototype.deductionsLinkOpenIsClosedFacing = function(p_eventList, 
 // Filling all undecided states in the region in turningArray.
 closureSpace = function(p_solver) {return function(x, y) { return p_solver.turningArray[y][x] }}
 closureEvent = function(p_value) {return function(x, y) { return new TurnEvent(x, y, p_value) }}
-SolverDetour.prototype.deductionsFillingRegion = function(p_eventList, p_region, p_stateToFill) {
-	return this.deductionsFillingSetSpace(p_eventList, p_region.spaces,
+SolverDetour.prototype.fillingRegionDeductions = function(p_eventList, p_region, p_stateToFill) {
+	return this.fillingSetSpaceDeductions(p_eventList, p_region.spaces,
 	closureSpace(this), TURNING.UNDECIDED,
 	closureEvent(p_stateToFill) );
 }
@@ -330,11 +341,11 @@ quickStartClosure = function(p_solver) {
 		p_solver.regions.forEach(region => {
 			if (region.forcedValue) {				
 				if (region.notPlacedStraightYet == 0) {
-					p_solver.deductionsFillingRegion([], region, TURNING.YES).forEach(event_ => {
+					p_solver.fillingRegionDeductions([], region, TURNING.YES).forEach(event_ => {
 						p_solver.tryToApplyHypothesis(event_);
 					});
 				} else if (region.notPlacedTurningYet == 0) {
-					p_solver.deductionsFillingRegion([], region, TURNING.NO).forEach(event_ => {
+					p_solver.fillingRegionDeductions([], region, TURNING.NO).forEach(event_ => {
 						p_solver.tryToApplyHypothesis(event_);
 					});
 				}
@@ -378,8 +389,9 @@ function startingOrderedListPassArgumentsDetourClosure(p_solver) {
 
 function namingCategoryClosure(p_solver) {
 	return function (p_passIndex) {
-		const regionSpace = p_solver.regions[p_passIndex.index].spaces[0];
-		return "Region " + p_passIndex.index + " (" + regionSpace.x + "," + regionSpace.y + ")";
+		const region = p_solver.regions[p_passIndex.index];
+		const regionSpace = region.spaces[0];
+		return "Region " + p_passIndex.index + " (" + regionSpace.x + "," + regionSpace.y + " ind."+ region.expectedNumberOfTurningsInRegion + ")";
 	}
 }
 

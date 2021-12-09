@@ -6,6 +6,7 @@ const SELECTED = {
 const WILD_CARD_CHARACTER = "*";
 
 function EditorCore(p_xLength, p_yLength, p_parameters) {
+	this.isDottedGrid = false;
     this.xLength = p_xLength;
 	this.yLength = p_yLength;
 	this.initializeGridData();
@@ -79,7 +80,6 @@ EditorCore.prototype.initializeGridData = function() {
 	this.reinitializeGridData();
 	this.inputNumber = 1; // input numbers and symbols are supposed to be defined at start but not modified when data are relaunched afterards
 	this.inputSymbol = null; // Note : No input symbol at start
-	this.possessWallGrid = true;
 }
 
 // NB : fonction de convénience. //TODO devrait être renommé "extra grid data" puisque ce sont des données indépendantes des grilles
@@ -146,8 +146,12 @@ EditorCore.prototype.addWalledGridForceSize = function(p_wallArray) {
 // ----------
 // Getters
 
-EditorCore.prototype.hasWallGrid = function () {
-    return this.possessWallGrid;
+EditorCore.prototype.hasVisibleEdges = function () {
+    return this.possessGridWithEdges;
+}
+
+EditorCore.prototype.setVisibleEdges = function (p_value) {
+    this.possessGridWithEdges = p_value;
 }
 
 EditorCore.prototype.getWallArray = function () {
@@ -903,6 +907,36 @@ EditorCore.prototype.conditionalEraseSpaceGalaxies = function(p_xCond, p_yCond, 
 	if (this.get(GRID_ID.GALAXIES, p_xCond, p_yCond) == p_posCond) {
 		this.set(GRID_ID.GALAXIES, p_xCond, p_yCond, null);
 	}
+}
+
+// -------------------------------------------
+// "links" subterfuge for EditorCore (it actually uses walls)
+EditorCore.prototype.setLinksOnly = function() {
+	this.isWithWalls = true;
+	this.possessGridWithEdges = false;
+}
+
+EditorCore.prototype.holdsLinks = function() {
+	return this.isWithWalls && !this.possessGridWithEdges;
+}
+
+EditorCore.prototype.getLinkR = function (p_x, p_y) { // Some copy-pastes that aren't seen from outside... ?
+	return this.getWallR(p_x, p_y);
+}
+EditorCore.prototype.getLinkD = function (p_x, p_y) {
+	return this.getWallD(p_x, p_y);
+}
+EditorCore.prototype.switchLinkR = function (p_x, p_y) {
+    this.wallGrid.switchWallR(p_x, p_y);
+}
+EditorCore.prototype.switchLinkD = function (p_x, p_y) {
+    this.wallGrid.switchWallD(p_x, p_y);
+}
+EditorCore.prototype.getWallArrayFromLinkArray = function(p_linkArray) { // Now THIS is subterfuge bureaucracy. Especially since this method body doesn't reference the editor...
+	return p_linkArray;
+}
+EditorCore.prototype.getLinkArray = function() {
+	return this.getWallArray();
 }
 
 // -------------------------------------------

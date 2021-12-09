@@ -5,7 +5,7 @@
 // p_methodValueSpace : method that from an (x, y) space returns a "value" that may be the undecided one. Usually a closure applied to a solver.
 // p_undecidedValue : "state that will be filled
 // p_methodEvent : method that from an (x, y) set returns an event with the "value to fill". 
-GeneralSolver.prototype.deductionsFillingSetSpace = function(p_eventList, p_coors, p_methodValueSpace, p_undecidedValue, p_methodEvent) {
+GeneralSolver.prototype.fillingSetSpaceDeductions = function(p_eventList, p_coors, p_methodValueSpace, p_undecidedValue, p_methodEvent) {
 	p_coors.forEach(coors => {
 		x = coors.x;
 		y = coors.y;

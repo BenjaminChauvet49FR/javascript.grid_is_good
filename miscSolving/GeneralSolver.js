@@ -63,6 +63,9 @@ GeneralSolver.prototype.generalConstruct = function() {
 	this.happenedEventsSeries = []; // List of (non-empty list of events). All events beyond the first must be logical deductions (logic of any kind, including geographic) of the first one.	
 	this.setStateHappening(OTHER_RESULTS.DEFAULT); // this.counterSameState = 0 an this.lastHappeningState = OTHER_RESULTS.DEFAULT
 	
+	// Note : this field is public in READING but not in WRITING !
+	this.quickStartDone = false; // Depending on the puzzle, it may be required to start with the quickstart before imputting anything on the canvas.
+	
 	// In the setup, defining methods in method packs (for deductions, pass, multipass) is actually the right thing to do.
 }
 
@@ -202,6 +205,9 @@ GeneralSolver.prototype.undoToLastHypothesis = function () {
 		} while(stillCancel && this.happenedEventsSeries.length > 0);
     }
 	this.setStateHappening(OTHER_RESULTS.CANCEL);
+	if (this.happenedEventsSeries.length == 0) {
+		this.quickStartDone = false;
+	}
 }
 
 /** 
@@ -467,6 +473,7 @@ GeneralSolver.prototype.initiateQuickStart = function(p_label) {
 	if (!p_label) {
 		p_label = "";
 	}
+	this.quickStartDone = true;
 	this.happenedEventsSeries.push({kind : SERIE_KIND.QUICKSTART , label : p_label, list : [] }); 
 	this.separatelyStackDeductions = false;
 }

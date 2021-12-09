@@ -1,18 +1,11 @@
 var solver;
 
 function main() {
-	var colors = {
-		closed_wall:'#222222',
-		open_wall:'#dddddd',
-		edge_walls:'#000000',
-		bannedSpace:'#666666',
+	const colors = {
 		noLink:'#aa0000',
 		noLinkWall:'#ff8800',
 		presentLink:'#cc00ff',
-		noLinkState:'#448844',
-		presentLinkState:'#ddeeff',
-		numberWrite:'#008800',
-		oppositeSpaceWrite:'#0000ff'
+		oppositeSpaceWrite:'#0000ff'		
 	}
 
 	var drawer = new Drawer(colors);

@@ -13,6 +13,17 @@ function clickCanvasAction(event, p_canvas, p_drawer, p_editorCore, p_modes) {
 		doneClicking = true;
 	} else if (p_editorCore.relevantCorners()) {
 		doneClicking = clickCornerAction(event, p_canvas, p_drawer, p_editorCore, p_xLength, p_yLength);
+	} else if (p_editorCore.holdsLinks()) {
+		var indexWallR = p_drawer.getClickEdgeR(event, p_canvas, p_xLength, p_yLength);
+		var indexWallD = p_drawer.getClickEdgeD(event, p_canvas, p_xLength, p_yLength);
+		if (indexWallR != null) {
+			p_editorCore.switchWallR(indexWallR.x, indexWallR.y);
+			doneClicking = true;
+		}
+		if (indexWallD != null) {
+			p_editorCore.switchWallD(indexWallD.x, indexWallD.y);
+			doneClicking = true;
+		}
 	} else if (p_editorCore.hasWalls() && !inputOptions.lockedWalls) {
 		var indexWallR = p_drawer.getClickWallR(event, p_canvas, p_xLength, p_yLength);
 		var indexWallD = p_drawer.getClickWallD(event, p_canvas, p_xLength, p_yLength);
@@ -53,11 +64,11 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.DIGIT_X_SPACE)) {
 		return {
-			descriptionPrompt : "Entrer des chiffres entre 0 et 4 ou X",
-			descriptionPromptMono : "Entrer un chiffre entre 0 et 4 ou X",
+			descriptionPrompt : "Entrer des chiffres entre 0 et " + inputOptions.maxNumber + " ou X",
+			descriptionPromptMono : "Entrer un chiffre entre 0 et " + inputOptions.maxNumber + " ou X",
 			defaultToken : "1",
 			gridId : GRID_ID.DIGIT_X_SPACE,
-			validityTokenMethod : validityNumberRangeOrSymbolClosure(0, 4, ["X"]),
+			validityTokenMethod : validityNumberRangeOrSymbolClosure(0, inputOptions.maxNumber, ["X"]),
 			parameters : {emptySpaceChar : " ", isMonoChar : true, isNumeric : false}
 		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_X_SPACE)) {
@@ -618,6 +629,8 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
 			puzzleToSaveString = yagitPuzzleToString(p_editorCore.getArray(GRID_ID.YAGIT), p_editorCore.getArray(GRID_ID.KNOTS));
 		} else if (p_saveLoadMode.id == PUZZLES_KIND.XS_AND_ONE_O_PER_REGION.id) {
 			puzzleToSaveString = XsAndOneOPerRegionPuzzleToString(p_editorCore.getWallGrid(), p_editorCore.getArray(GRID_ID.OX));
+		} else if (p_saveLoadMode.id == PUZZLES_KIND.LINKS_ONLY.id) {
+			puzzleToSaveString = linksOnlyPuzzleToString(p_editorCore.getLinkArray()); // Note : may be a subterfuge if wallsGrid = linksGrid but that's life...
 		} else {
 			puzzleToSaveString = wallsOnlyPuzzleToString(p_editorCore.getWallArray());
 		}
@@ -710,6 +723,8 @@ function getLoadedStuff(p_kindId, p_localStorageName, p_externalOptions) { // No
 			loadedItem.desiredIDs = [GRID_ID.OX];
 			loadedItem.desiredArrays = [loadedItem.symbolArray];
 			return loadedItem; break;
+		case PUZZLES_KIND.LINKS_ONLY.id :
+			return stringToLinksOnlyPuzzle(localStorage.getItem(p_localStorageName)); // Contains "linkArray"
 		default :
 			return stringToWallsOnlyPuzzle(localStorage.getItem(p_localStorageName));
 	} 
@@ -728,7 +743,9 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_puzzleName, p_d
 			var wallArray = loadedStuff.wallArray;
 			if (!wallArray) {
 				// Note : all we want is a wallArray with a number of spaces in x and y, should it be empty !
-				if (loadedStuff.desiredArrays && loadedStuff.desiredArrays.length > 0) {					
+				if (loadedStuff.linkArray) {
+					wallArray = p_editorCore.getWallArrayFromLinkArray(loadedStuff.linkArray);
+				} else if (loadedStuff.desiredArrays && loadedStuff.desiredArrays.length > 0) {					
 					wallArray = generateWallArray(loadedStuff.desiredArrays[0][0].length, loadedStuff.desiredArrays[0].length); 
 				} else {
 					wallArray = generateWallArray(loadedStuff.marginLeft.length, loadedStuff.marginUp.length);
@@ -819,7 +836,8 @@ p_editorCore : the Global item the canvas should be adapted to
  */
 function adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore) {
     p_drawer.adaptCanvasDimensions(p_canvas, {
-        xLength : p_editorCore.getXLength(),
+		isDotted : !p_editorCore.hasVisibleEdges(),
+        xLength : p_editorCore.getXLength(), // WARNING : case of dots puzzles (Slitherlink) : getXLength and getYLength mean the number of meshes !
         yLength : p_editorCore.getYLength(),
 		margin : new MarginInfo(p_editorCore.getMarginLeftLength(), p_editorCore.getMarginUpLength(), p_editorCore.getMarginRightLength(), p_editorCore.getMarginDownLength())
     });

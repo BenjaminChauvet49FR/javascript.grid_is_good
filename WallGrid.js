@@ -1,6 +1,6 @@
 // Constants for walls and spaces
 const UNCHARTED = -1; // Only used in this file and therefore not bound to "WALLGRID"
-const WALLGRID = {OPEN : 0, CLOSED : 1, OUT_OF_REGIONS : -2} 
+const WALLGRID = {OPEN : 0, CLOSED : 1, OUT_OF_REGIONS : -2}
 
 function switchedState(p_state) {
     return 1 - p_state;

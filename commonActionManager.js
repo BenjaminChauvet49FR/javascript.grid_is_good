@@ -1,10 +1,9 @@
 const ENTRY = {
 	SPACE:'1',
-	WALL_R:'2',
-	WALL_D:'3',
-	WALL_D:'3',
-	WALL_D:'3',
-	CORNER:'4'
+	WALLS:'2',
+	CORNER:'3',
+	NET_EDGE:'4',
+	NET_NODE:'5'
 }
 
 // These items are used in 'main' but also in 'input' where the value is checked, which is why this file is not named (yet) commonHTMLActionManager.
@@ -63,6 +62,7 @@ const ACTION_PASS_STRIP_OR_SPACE = {id:109, htmlCaption : "Passer bande ou case"
 const ACTION_PASS_AROUND_KNOT = {id:109, htmlCaption : "Passer autour noeud"};
 const ACTION_PASS_NUMBERS_SET = {id:101, htmlCaption : "Passer ensemble de cases"};
 const ACTION_PASS_GALAXY_DELIMITATION = {id:101, htmlCaption : "Passer autour centre galaxie"};
+const ACTION_PASS_MESH = {id:102, htmlCaption : "Passer autour maille"};
 
 // Positive actions on walls/fence
 const ACTION_LINK_SPACES = {id:51, htmlCaption:"Lier cases"};
@@ -149,11 +149,14 @@ function setMode(p_textElement, p_entriesManager, p_entry, p_value) {
 	switch(p_entry) {
 		case (ENTRY.SPACE) : p_entriesManager.clickSpace = p_value; break; 
 		case (ENTRY.CORNER) : p_entriesManager.clickCorner = p_value; break; 
-		case (ENTRY.WALL_R) : p_entriesManager.clickWallR = p_value; break; 
-		case (ENTRY.WALL_D) : p_entriesManager.clickWallD = p_value; break; 
 		case (ENTRY.WALLS) : 
 			p_entriesManager.clickWallD = p_value;
 			p_entriesManager.clickWallR = p_value;
-		break;		
+		break;
+		case (ENTRY.NET_NODE) : p_entriesManager.clickDot = p_value; break;
+		case (ENTRY.NET_EDGE) : 
+			p_entriesManager.clickEdgeD = p_value; 
+			p_entriesManager.clickEdgeR = p_value; 
+		break;
 	}
 }

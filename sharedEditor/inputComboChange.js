@@ -18,6 +18,7 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 	p_editorCore.setMarginInfo(MARGIN_KIND.NONE);
 	p_editorCore.resetMargins();
 	p_editorCore.maskAllGrids(); 
+	p_editorCore.setVisibleEdges(true);
 	var hasStars = false;
 	var hasBounds = false;
 	var forcedSizePuzzle = false;
@@ -44,7 +45,7 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.MASYU;
 			p_editorCore.setVisibleGrids([GRID_ID.PEARL]); break;
-		case 'Fillomino': case 'Rukkuea': case 'Usotatami':
+		case 'Fillomino': case 'Rukkuea': case 'SlitherLink': case 'Usotatami':
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.NUMBERS_ONLY;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_SPACE]); 
@@ -52,8 +53,13 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 				inputOptions.forceMonoCharacter = true;
 				inputOptions.maxNumber = 5;
 			}
+			if (content == 'SlitherLink') {
+				inputOptions.forceMonoCharacter = true;
+				inputOptions.maxNumber = 4; // "4" would mean a loop reduced to a square, but so be it 
+				p_editorCore.setVisibleEdges(false);
+			}
 			break;
-		case 'AYE-Heya': case 'Chocona': case 'CountryRoad': case 'Detour': case 'Heyawake': case 'Shimaguni':
+		case 'AYE-Heya': case 'Chocona': case 'CountryRoad': case 'Detour': case 'Heyawake': case 'Regionalin': case 'Shimaguni':
 			saveLoadModeId = PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_REGION]); break;
 		case 'Hakoiri':
@@ -72,9 +78,10 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			saveLoadModeId = PUZZLES_KIND.STAR_BATTLE; 
 			p_editorCore.maskAllGrids();
 			hasStars = true; break;
-		case 'Akari': case 'Koburin': case 'Shakashaka': case 'Shugaku':
+		case 'Akari': case 'Koburin': case 'Linesweeper': case 'Shakashaka': case 'Shugaku':
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.DIGITS_X_ONLY;
+			inputOptions.maxNumber = (content == 'Linesweeper' ? 8 : 4);
 			p_editorCore.setVisibleGrids([GRID_ID.DIGIT_X_SPACE]); break;
 		case 'CanalView': case 'Corral': case 'Kuromasu': case 'Nurikabe':
 			p_editorCore.setWallsOff();
@@ -130,7 +137,11 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			p_editorCore.setVisibleGrids([GRID_ID.YAGIT, GRID_ID.KNOTS]); 
 			p_editorCore.setWallsOff(); break;
 			break; 	
-		default: // norinori, lits, entryExit... no numbers, only regions
+		case 'GrandTour':
+			usesChains = false;
+			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY;
+			p_editorCore.setLinksOnly();
+		default: // norinori, lits, entryExit... no numbers, only regions. 
 			usesChains = false;
 			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY;
 			break; 
@@ -139,7 +150,7 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 		p_editorCore.setVisibleWildcardGrid();
 	}
 	copySaveModeInto(saveLoadModeId, p_saveLoadMode);
-	this.adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
+	adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
 	
 	const squarePuzzle = correspondsToSquarePuzzle(saveLoadModeId); 
 	maskElementConditional(p_fields.spanXYSeparated, squarePuzzle || forcedSizePuzzle);
@@ -148,6 +159,7 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 	maskElementConditional(p_fields.spanSelectSudoku, saveLoadModeId != PUZZLES_KIND.SUDOKU);
 	maskElementConditional(p_fields.submitResizeGrid, forcedSizePuzzle);
 	maskElementConditional(p_fields.spanBounds, !hasBounds);
+	maskElementConditional(p_fields.spanMesh, p_editorCore.hasVisibleEdges() || p_editorCore.holdsLinks());
 	maskElementConditional(p_buttons.stateSpace, !p_editorCore.hasWalls());
 	maskElementConditional(p_buttons.wallsAroundSelection, !p_editorCore.hasWalls());
 	maskElementConditional(p_buttons.symbolPrompt, !usesChains);

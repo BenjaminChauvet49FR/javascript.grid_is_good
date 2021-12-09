@@ -6,3 +6,4 @@ AAABackupModels/**
 **/gitignored
 **_session.xml
 Caract*
+sessions/**

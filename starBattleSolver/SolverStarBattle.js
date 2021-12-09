@@ -263,7 +263,7 @@ deductionsClosure = function (p_solver) {
 				p_listEventsToApply = p_solver.deductionsFillingRow(p_listEventsToApply, y, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.NO));
 			}
 			if (p_solver.notPlacedYet.regions[r].Os == 0) {
-				p_listEventsToApply = p_solver.deductionsFillingSetSpace(p_listEventsToApply, p_solver.spacesByRegion[r], closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.NO));
+				p_listEventsToApply = p_solver.fillingSetSpaceDeductions(p_listEventsToApply, p_solver.spacesByRegion[r], closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.NO));
 			}
 		}
 		if (symbol == STAR.NO) {
@@ -274,7 +274,7 @@ deductionsClosure = function (p_solver) {
 				p_listEventsToApply = p_solver.deductionsFillingRow(p_listEventsToApply, y, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.YES));
 			}
 			if (p_solver.notPlacedYet.regions[r].Xs == 0) {
-				p_listEventsToApply = p_solver.deductionsFillingSetSpace(p_listEventsToApply, p_solver.spacesByRegion[r], closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.YES));
+				p_listEventsToApply = p_solver.fillingSetSpaceDeductions(p_listEventsToApply, p_solver.spacesByRegion[r], closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.YES));
 			}
 		}
 		return p_listEventsToApply;

@@ -36,16 +36,19 @@
 				<option>Heyawake</option>
 				<option>Koburin</option>
 				<option>Kuromasu</option>
+				<option>Linesweeper</option>
 				<option>LITS</option>
 				<option>Masyu</option>
 				<option>Moonsun</option>
 				<option>Norinori</option>
 				<option>Nurikabe</option>
 				<option>Putteria</option>
+				<option>Regionalin</option>
 				<option>Rukkuea</option>
 				<option>Shakashaka</option>
 				<option>Shimaguni</option>
 				<option>Shugaku</option>
+				<option>SlitherLink</option>
 				<option>SternenSchlacht</option>
 				<option>Stitches</option>
 				<option>Tapa</option>
@@ -68,6 +71,7 @@
 			<input type="submit" id="submit_rename_puzzle" value="Renommer puzzle"></input>
 			<input type="submit" id="submit_view_puzzle_list" value="Voir numéros puzzle du type"></input></br>		
 			<span id="span_xy_separated">
+			<span id="span_mesh">(nombre de mailles) </span> 
 			Largeur : <input type="number" id="input_number_xLength" value="10"></input>
 			Hauteur : <input type="number" id="input_number_yLength" value="10"></input></span> 
 			<span id="span_xy_bound">Côté : <input type="number" id="input_number_xyLength" value="10"></input></span>
@@ -107,6 +111,7 @@
 		<script src="../MiscBridgeSolveEdit/TapaCombinations.js"></script>
 		<script src="../MiscBridgeSolveEdit/SudokuModels.js"></script>
 		<script src="../WallGrid.js"></script>
+		<script src="../LinkGrid.js"></script> <!-- Must be loaded after wall grid, or else !--> 
 		<script src="../Grid.js"></script>
 		<script src="../Margin.js"></script>
 		<script src="../Drawer.js"></script>

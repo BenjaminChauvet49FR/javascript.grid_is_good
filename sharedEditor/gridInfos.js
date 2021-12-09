@@ -47,10 +47,10 @@ const PUZZLES_KIND = {
 	REGIONS_PLAYSTATION_SHAPES : {id:12},
 	GALAXIES : {id:13},
 	MOONSUN : {id:14}, // 15
-	GRAND_TOUR : {id:99102},
 	SUDOKU : {id:1001},
 	YAGIT : {id:16},
-	XS_AND_ONE_O_PER_REGION : {id:17}
+	XS_AND_ONE_O_PER_REGION : {id:17},
+	LINKS_ONLY : {id:8},
 }
 
 const MARGIN_KIND = {

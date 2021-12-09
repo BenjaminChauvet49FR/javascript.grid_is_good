@@ -12,7 +12,7 @@ SolverYajilin.prototype.constructor = SolverYajilin;
 SolverYajilin.prototype.construct = function(p_valueGrid) {
     this.xLength = p_valueGrid[0].length;
 	this.yLength = p_valueGrid.length;
-	this.loopSolverConstruct(generateWallArray(this.xLength, this.yLength), 
+	this.loopSolverConstruct( 
 	{	setSpaceLinkedPSAtomicDos : setSpaceLinkedPSAtomicDosClosure(this),
 		setSpaceClosedPSAtomicDos : setSpaceClosedPSAtomicDosClosure(this),
 		setSpaceLinkedPSAtomicUndos : setSpaceLinkedPSAtomicUndosClosure(this),
@@ -218,7 +218,7 @@ SolverYajilin.prototype.passSpace = function(p_x, p_y) {
 			if (this.cluesList[value].union != null) {
 				passIndex = {passCategory : LOOP_PASS_CATEGORY.YAJI_UNION, index : value};
 			} else {			
-				passIndex = {passCategory : LOOP_PASS_CATEGORY.YAJI_STRIP,  index : value};
+				passIndex = {passCategory : LOOP_PASS_CATEGORY.YAJI_STRIP, index : value};
 			}
 		}
 	}
@@ -287,9 +287,9 @@ function setSpaceClosedPSDeductionsClosure(p_solver) {
 				return p_listEvents;
 			}
 		}
-		KnownDirections.forEach(dir => {
-			if (p_solver.neighborExists(x, y, dir) && !p_solver.isBanned(x+DeltaX[dir], y+DeltaY[dir])) {
-				p_listEvents.push(new SpaceEvent(x+DeltaX[dir], y+DeltaY[dir], LOOP_STATE.LINKED));
+		p_solver.existingNeighborsCoors(x, y).forEach(coors => {
+			if (!p_solver.isBanned(coors.x, coors.y)) {
+				p_listEvents.push(new SpaceEvent(coors.x, coors.y, LOOP_STATE.LINKED));
 			}
 		});
 		return p_listEvents;
@@ -319,8 +319,8 @@ function setEdgeClosedDeductionsClosure(p_solver) {
 		const dir = p_eventToApply.direction;
 		const dx = p_eventToApply.linkX + DeltaX[dir];
 		const dy = p_eventToApply.linkY + DeltaY[dir];
-		p_listEvents = p_solver.tryAndCloseBeforeAndAfter2Closed(p_listEvents, x, y);
-		p_listEvents = p_solver.tryAndCloseBeforeAndAfter2Closed(p_listEvents, dx, dy);
+		p_listEvents = p_solver.tryAndCloseBeforeAndAfter2ClosedDeductions(p_listEvents, x, y);
+		p_listEvents = p_solver.tryAndCloseBeforeAndAfter2ClosedDeductions(p_listEvents, dx, dy);
 		return p_listEvents;
 	}
 }
@@ -328,7 +328,7 @@ function setEdgeClosedDeductionsClosure(p_solver) {
 /**
 Smartness of Yajilin / Koburin ! Tests if (p_x, p_y) space has exactly 2 closed neighbors : since 2 adjacent spaces cannot be closed and a loop is required to cross, the undecided spaces around must be open in any case.
 */
-SolverYajilin.prototype.tryAndCloseBeforeAndAfter2Closed = function(p_listEvents, p_x, p_y) {
+SolverYajilin.prototype.tryAndCloseBeforeAndAfter2ClosedDeductions = function(p_listEvents, p_x, p_y) {
 	KnownDirections.forEach(dir => {
 		if (this.getClosedEdges(p_x, p_y) == 2) {
 			if (this.neighborExists(p_x, p_y, dir) && this.getLink(p_x, p_y, dir) != LOOP_STATE.CLOSED) {
@@ -356,7 +356,7 @@ function filterStripsClosure(p_solver) {
 		var x, y;
 		var xOrYSpacesToCloseInOdd, xOrYSpacesToCloseInEven, currentChainLength, numberClosableSpaces;
 		for (var iCheck = 0 ; iCheck < p_solver.stripesToCheckList.length ; iCheck++) { 
-			listEvents = p_solver.testStrip(listEvents, p_solver.cluesList[p_solver.stripesToCheckList[iCheck]]);
+			listEvents = p_solver.testStripDeductions(listEvents, p_solver.cluesList[p_solver.stripesToCheckList[iCheck]]);
 			if (listEvents == EVENT_RESULT.FAILURE) {
 				return EVENT_RESULT.FAILURE;
 			}
@@ -366,13 +366,13 @@ function filterStripsClosure(p_solver) {
 	}
 }
 
-SolverYajilin.prototype.testStrip = function(p_listEvents, p_strip) {
+SolverYajilin.prototype.testStripDeductions = function(p_listEvents, p_strip) {
 	const direction = p_strip.direction;
 	if (direction == DIRECTION.UP || direction == DIRECTION.DOWN) {
 		if (p_strip.notClosedYet == 0) {
-			this.fillVerticalStripWithEvents(p_listEvents, p_strip, LOOP_STATE.LINKED);
+			this.fillVerticalStripDeductions(p_listEvents, p_strip, LOOP_STATE.LINKED);
 		} else if (p_strip.notLinkedYet == 0) {
-			this.fillVerticalStripWithEvents(p_listEvents, p_strip, LOOP_STATE.CLOSED);
+			this.fillVerticalStripDeductions(p_listEvents, p_strip, LOOP_STATE.CLOSED);
 		} else {
 			x = p_strip.x;
 			y = p_strip.yMin;
@@ -404,9 +404,9 @@ SolverYajilin.prototype.testStrip = function(p_listEvents, p_strip) {
 	} 
 	if (direction == DIRECTION.LEFT || direction == DIRECTION.RIGHT) { //Copied onto vertical !
 		if (p_strip.notClosedYet == 0) {
-			this.fillHorizontalStripWithEvents(p_listEvents, p_strip, LOOP_STATE.LINKED);
+			this.fillHorizontalStripDeductions(p_listEvents, p_strip, LOOP_STATE.LINKED);
 		} else if (p_strip.notLinkedYet == 0) {
-			this.fillHorizontalStripWithEvents(p_listEvents, p_strip, LOOP_STATE.CLOSED);
+			this.fillHorizontalStripDeductions(p_listEvents, p_strip, LOOP_STATE.CLOSED);
 		} else {
 			x = p_strip.xMin;
 			y = p_strip.y;
@@ -442,7 +442,7 @@ SolverYajilin.prototype.testStrip = function(p_listEvents, p_strip) {
 /**
 notClosedYet / notLinkedYet is at 0 in a strip, fill the events. One method per orientation.
 */
-SolverYajilin.prototype.fillVerticalStripWithEvents = function(p_listEvents, p_strip, p_state) {
+SolverYajilin.prototype.fillVerticalStripDeductions = function(p_listEvents, p_strip, p_state) {
 	const x = p_strip.x;
 	for (var y = p_strip.yMin ; y <= p_strip.yMax ; y++) {
 		if (this.getLinkSpace(x, y) == LOOP_STATE.UNDECIDED) {
@@ -452,7 +452,7 @@ SolverYajilin.prototype.fillVerticalStripWithEvents = function(p_listEvents, p_s
 	return p_listEvents;
 }
 
-SolverYajilin.prototype.fillHorizontalStripWithEvents = function(p_listEvents, p_strip, p_state) {
+SolverYajilin.prototype.fillHorizontalStripDeductions = function(p_listEvents, p_strip, p_state) {
 	const y = p_strip.y;
 	for (x = p_strip.xMin ; x <= p_strip.xMax ; x++) {
 		if (this.getLinkSpace(x, y) == LOOP_STATE.UNDECIDED) {
@@ -516,13 +516,13 @@ quickStartClosure = function(p_solver) {
 		p_solver.initiateQuickStart("Yajilin");
 		var list = [];
 		p_solver.cluesList.forEach(strip => {
-			list = p_solver.testStrip(list, strip);
+			list = p_solver.testStripDeductions(list, strip);
 		});
 		for (var y = 0 ; y < p_solver.yLength ; y++) {
 			for (var x = 0 ; x < p_solver.xLength ; x++) {
 				// Smartness of Yajilin
 				if (!p_solver.isBanned(x, y)) {
-					list = p_solver.tryAndCloseBeforeAndAfter2Closed(list, x, y);
+					list = p_solver.tryAndCloseBeforeAndAfter2ClosedDeductions(list, x, y);
 				}
 			}
 		}

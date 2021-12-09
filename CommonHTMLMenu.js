@@ -107,8 +107,12 @@ menuSolvers.push({
 	documentPage : "Solver",
 	typeList : [
 		{name : "detour", displayName : "Detour", hoverDescription : "Combien de tournants par région ?"},
+		{name : "grandTour", displayName : "Grand Tour", hoverDescription : "Tous les noeuds doivent être traversés, certains liens sont imposés"},
 		{name : "koburin", displayName : "Koburin", hoverDescription : "Indications d'adjacence, sans contact orthogonal fermé non-banni"},
+		{name : "linesweeper", displayName : "Linesweeper", hoverDescription : "Indications d'adjacence ortho-diagonale comme au Minesweeper"},
 		{name : "masyu", displayName : "Masyu", hoverDescription : "Perles blanches et noires à traverser"},
+		{name : "regionalin", displayName : "Regionalin", hoverDescription : "Indications par région, sans contact orthogonal fermé non-banni. Aussi appelé Regional Yajilin (mais n'a pas de flèches)"},
+		{name : "slitherlink", displayName : "Slitherlink", hoverDescription : "Combien d'arêtes traversées autour d'une maille ?"},
 		{name : "yajilin", displayName : "Yajilin", hoverDescription : "Indications flécho-numériques, sans contact orthogonal fermé non-banni"}
 	]
 });

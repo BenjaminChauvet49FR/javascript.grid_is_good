@@ -14,9 +14,8 @@ function DummySolver() {
 }
 
 SolverMoonsun.prototype.construct = function(p_wallArray, p_symbolsArray) {
-	
-	this.gridAstres = Grid_data(p_symbolsArray);
-		
+	this.xLength = p_wallArray[0].length;
+	this.yLength = p_wallArray.length;		
 	this.regionLoopSolverConstruct(p_wallArray, {
 		otherPSAtomicDos : otherAtomicDosClosure(this),
 		otherPSAtomicUndos : otherAtomicUndosClosure(this),
@@ -28,6 +27,7 @@ SolverMoonsun.prototype.construct = function(p_wallArray, p_symbolsArray) {
 		comparisonPS : comparisonMoonsunEventsClosure(this)
 	});
 
+	this.gridAstres = Grid_data(p_symbolsArray);
 	// Affecting regions
 	this.regions.forEach(region => {
 		region.astre = ASTRE.UNDECIDED;

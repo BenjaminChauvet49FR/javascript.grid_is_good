@@ -19,7 +19,7 @@ SpaceEvent.prototype.copy = function() {
 }
 
 SpaceEvent.prototype.toLogString = function(){	
-	return "["+LoopStateLabel[this.state]+" "+this.x+","+this.y+"]";
+	return "[S"+LoopStateLabel[this.state]+" "+this.x+","+this.y+"]";
 }
 
 function LinkEvent(p_x, p_y, p_direction, p_state) {
@@ -37,7 +37,7 @@ LinkEvent.prototype.copy = function() {
 }
 
 LinkEvent.prototype.toLogString = function(){	
-	return "["+"L"+LoopStateLabel[this.state]+" "+this.linkX+","+this.linkY+" "+this.direction+"]";
+	return "[L"+LoopStateLabel[this.state]+" "+this.linkX+","+this.linkY+" "+LabelDirection[this.direction]+"]";
 }
 
 LinkEvent.prototype.dual = function () {

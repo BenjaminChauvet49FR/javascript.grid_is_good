@@ -675,3 +675,16 @@ function stringToXsAndOneOPerRegionPuzzle(p_string) {
 	});
 	return {wallArray : wallArray, symbolArray : symbolArray}; 
 }
+
+
+// ----------------
+
+// Links to walls subterfuge !
+function linksOnlyPuzzleToString(p_linksArray) { 
+	return wallsOnlyPuzzleToString(p_linksArray);
+}
+
+function stringToLinksOnlyPuzzle(p_string) {
+	const answer = stringToWallsOnlyPuzzle(p_string);
+	return {linkArray : answer.wallArray}; // Subterfuge bureaucracy !
+}

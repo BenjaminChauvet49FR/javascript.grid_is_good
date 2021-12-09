@@ -14,27 +14,40 @@ Draw the grid on-screen on p_context, with p_editorCore informations, with this.
 Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	const xLength = p_editorCore.getXLength();
 	const yLength = p_editorCore.getYLength();
-	if (p_editorCore.hasWallGrid()) {
+	if (p_editorCore.hasVisibleEdges()) {
 		if (p_editorCore.hasWalls()) {
 			this.drawWallGrid(p_context, p_editorCore.wallGrid, xLength, yLength);
 		} else {
 			this.drawEmptyGrid(p_context, xLength, yLength);
 		}
-		// Selection
-		for (var iy = 0; iy < yLength; iy++) {
-			for (var ix = 0; ix < xLength; ix++) {
-				if (p_editorCore.getSelection(ix, iy) == SELECTED.YES) {
-					p_context.fillStyle = this.editorColorSet.selectedSpace;
-					p_context.fillRect(this.getPixInnerXLeft(ix), this.getPixInnerYUp(iy), this.getPixInnerSide(), this.getPixInnerSide());
-				}
-			}
-		}
-		const sc = p_editorCore.getSelectedSpaceForRectangle();
-		if (sc != null) {
-			p_context.fillStyle = this.editorColorSet.selectedCornerSpace;
-			p_context.fillRect(this.getPixInnerXLeft(sc.x), this.getPixInnerYUp(sc.y), this.getPixInnerSide(), this.getPixInnerSide());
+	} else {
+		if (p_editorCore.holdsLinks()) {
+			this.drawDotsGrid(p_context, xLength, yLength, 
+			function(x, y) {return p_editorCore.getLinkR(x, y) == LINKGRID.NOT_LINKED ? "#dddddd" : "#000000"},
+			function(x, y) {return p_editorCore.getLinkD(x, y) == LINKGRID.NOT_LINKED ? "#dddddd" : "#000000"},
+			function(x, y) {return "#888888"},
+			function() {return DOTS_SIZE.MEDIUM});
+		} else {			
+			this.drawDotsGridSimple(p_context, xLength+1, yLength+1, '#000000');
 		}
 	}
+
+	// Selection
+	for (var iy = 0; iy < yLength; iy++) {
+		for (var ix = 0; ix < xLength; ix++) {
+			if (p_editorCore.getSelection(ix, iy) == SELECTED.YES) {
+				p_context.fillStyle = this.editorColorSet.selectedSpace;
+				p_context.fillRect(this.getPixInnerXLeft(ix), this.getPixInnerYUp(iy), this.getPixInnerSide(), this.getPixInnerSide());
+			}
+		}
+	}
+	const sc = p_editorCore.getSelectedSpaceForRectangle();
+	if (sc != null) {
+		p_context.fillStyle = this.editorColorSet.selectedCornerSpace;
+		p_context.fillRect(this.getPixInnerXLeft(sc.x), this.getPixInnerYUp(sc.y), this.getPixInnerSide(), this.getPixInnerSide());
+	}
+
+
 	
 	// Which grids and margins are to be drawn ?
 	if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_REGION)) {

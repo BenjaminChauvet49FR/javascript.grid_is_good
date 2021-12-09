@@ -1,17 +1,12 @@
 var solver;
 function main() {
-	var colours={
-		closed_wall : '#222222',
-		open_wall : '#dddddd',
-		edge_walls : '#000000',
-		bannedSpace : '#666666',
-		openSquare : '#00ffcc',
-		closedSquare : '#cc0022',
+	const colours = {
 		noLink : '#aa0000',
 		noLinkWall:'#ff8800',
 		presentLink : '#cc00ff',
 		noLinkState : '#448844',
 		presentLinkState : '#bbffdd',
+		
 		sunOut : "#888800",
 		sunIn : "#ffff88",
 		moonOut : "#222222",

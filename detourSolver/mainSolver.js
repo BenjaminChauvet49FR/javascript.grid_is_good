@@ -1,20 +1,16 @@
 var solver;
 function main() {
-	var colors = {
-		closed_wall : '#222222',
-		open_wall : '#dddddd',
-		edge_walls : '#000000',
-		bannedSpace : '#666666',
+	const colours = {
 		noLink : '#aa0000',
+		noLinkWall:'#ff8800',		
 		presentLink : '#cc00ff',
 		numberWrite : '#008800',
-		noLinkWall : '#ff8800',
 		turningSign : '#88ff88',
 		straightSign : '#8888ff',
 		writeRegionNumber : '#000044'
 	}
 
-	var drawer = new Drawer(colors);
+	var drawer = new Drawer(colours);
 	solver = DummySolver();
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
@@ -27,7 +23,7 @@ function main() {
 	//The main draw function (at start)
 	function drawCanvas() {
 		drawer.drawWallGrid(context, solver.gridWall, solver.xLength, solver.yLength);
-		drawInsideSpaces(context, drawer, colors, solver);
+		drawInsideSpaces(context, drawer, colours, solver);
 		// Note : no drawing of non-clue banned spaces
 		solver.callStateForItem(spanState);
 	}

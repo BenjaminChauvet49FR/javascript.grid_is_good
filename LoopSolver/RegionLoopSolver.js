@@ -60,7 +60,7 @@ RegionLoopSolver.prototype.regionLoopSolverConstruct = function(p_wallArray, p_p
 	if (!p_packMethods.generateEventsForPassPS) {p_packMethods.generateEventsForPassPS = function() { return []}}
 	
 	// Transmit the pack method to above 
-	this.loopSolverConstruct(p_wallArray, {
+	this.loopSolverConstruct( {
 		setSpaceClosedPSAtomicDos : setSpaceClosedPSAtomicDoRLSClosure(this, p_packMethods.setSpaceClosedPSAtomicDos),
 		setSpaceLinkedPSAtomicDos : p_packMethods.setSpaceLinkedPSAtomicDos,
 		setEdgeClosedPSAtomicDos : setEdgeClosedAtomicDoRLSClosure(this),

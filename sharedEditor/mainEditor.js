@@ -44,6 +44,7 @@ const fieldsDefiningPuzzle = {
 	spanXYBound : document.getElementById("span_xy_bound"),
 	spanSelectSudoku : document.getElementById("span_select_sudoku"),
 	spanStars : document.getElementById("span_stars"),
+	spanMesh : document.getElementById("span_mesh"),
 	spanBounds : document.getElementById("span_bounds"),
 	submitResizeGrid : document.getElementById("submit_resize_grid")
 }

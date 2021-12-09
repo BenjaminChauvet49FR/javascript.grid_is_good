@@ -151,7 +151,7 @@ pillarToColorFenceClosure = function(p_solver, p_fenceMethodRight, p_fenceMethod
 }
 
 Drawer.prototype.drawWallGrid = function (p_context, p_wallGrid, p_xLength, p_yLength) {
-	this.drawGridPuzzle(p_context, p_xLength, p_yLength, 
+	this.drawEdgesGrid(p_context, p_xLength, p_yLength, 
 	wallRightToColorClosure(this, p_wallGrid), wallDownToColorClosure(this, p_wallGrid), 
 	pillarToColorClosure(this, p_wallGrid), spaceToColorClosure(this, p_wallGrid))
 }
@@ -167,12 +167,12 @@ Drawer.prototype.drawFenceArrayGhostPillars = function (p_context, p_xLength, p_
 
 
 Drawer.prototype.drawFenceArrayPrivate = function (p_context, p_xLength, p_yLength, p_fenceMethodRight, p_fenceMethodDown, p_pillarsUnknownOverOpen) {
-	this.drawGridPuzzle(p_context, p_xLength, p_yLength, 
+	this.drawEdgesGrid(p_context, p_xLength, p_yLength, 
 	fenceRightToColorClosure(this, p_fenceMethodRight), fenceDownToColorClosure(this, p_fenceMethodDown), 
 	pillarToColorFenceClosure(this, p_fenceMethodRight, p_fenceMethodDown, p_pillarsUnknownOverOpen), null);
 }
 
-Drawer.prototype.drawGridPuzzle = function (p_context, p_xLength, p_yLength, p_colorMethodRight, p_colorMethodDown, p_colorMethodPillar, p_colorMethodSpace) {
+Drawer.prototype.drawEdgesGrid = function (p_context, p_xLength, p_yLength, p_colorMethodRight, p_colorMethodDown, p_colorMethodPillar, p_colorMethodSpace) {
 	var ix,
     iy,
     indexRegion;
@@ -372,6 +372,79 @@ Drawer.prototype.drawQuadrillageGrid = function (p_context, p_xLength, p_yLength
     p_context.fillRect(pixXStart, pixYStart, this.pix.borderSpace, pixTotalHeight);
     p_context.fillRect(pixXStart, pixY, pixTotalWidth, this.pix.borderSpace);
     p_context.fillRect(pixX, pixYStart, this.pix.borderSpace, pixTotalHeight);
+}
+
+//--------------------
+// Drawing a dotted grid
+
+const DOTS_SIZE = {
+	MEDIUM : '1',
+	LARGE : '2',
+	NONE : '3'
+}
+
+Drawer.prototype.drawDotsGridSimple = function(p_context, p_xDotsNumber, p_yDotsNumber, p_defaultColour) {
+	this.drawDotsGrid(p_context, p_xDotsNumber, p_yDotsNumber, function() {return p_defaultColour}, function() {return DOTS_SIZE.MEDIUM},
+	
+	function(){return p_defaultColour}, 
+	function(){return p_defaultColour});
+}
+
+Drawer.prototype.drawDotsGrid = function(p_context, p_xDotsNumber, p_yDotsNumber, p_linkRightColourMethod, p_linkDownColourMethod, p_dotsColorMethod, p_dotsSizeMethod) {
+	clearDrawing(p_context);
+    		
+	//Links
+    const pixStartXVert = this.pix.marginGrid.left - this.pix.borderSpace/2;
+    const pixStartXHoriz = this.pix.marginGrid.left;
+    var pixDrawXHoriz = pixStartXHoriz;
+    var pixDrawYHoriz = this.pix.marginGrid.up - this.pix.borderSpace/2;
+    var pixDrawXVert = pixStartXVert;
+    var pixDrawYVert = this.pix.marginGrid.up;
+    var innerSpaceNotColored;
+	var filling;
+    const pixLength = this.pix.sideSpace - this.pix.borderSpace + 2; // Extra pixels should be masked by dots
+    const pixThickness = this.pix.borderSpace;
+
+    for (iy = 0; iy < p_yDotsNumber; iy++) {
+        for (ix = 0; ix < p_xDotsNumber; ix++) {
+            //Draw down wall
+            if (iy <= p_yDotsNumber - 2) {
+                p_context.fillStyle = p_linkDownColourMethod(ix, iy);
+                p_context.fillRect(pixDrawXVert, pixDrawYVert, pixThickness, pixLength);
+            }
+            //Draw right wall
+            if (ix <= p_xDotsNumber - 2) {
+                p_context.fillStyle = p_linkRightColourMethod(ix, iy);
+                p_context.fillRect(pixDrawXHoriz, pixDrawYHoriz, pixLength, pixThickness);
+            }
+            pixDrawXHoriz += this.pix.sideSpace;
+            pixDrawXVert += this.pix.sideSpace;
+        }
+        pixDrawYHoriz += this.pix.sideSpace;
+        pixDrawYVert += this.pix.sideSpace;
+        pixDrawXHoriz = pixStartXHoriz;
+        pixDrawXVert = pixStartXVert;
+    }
+	
+	// Dots
+	const pixStartXCenter = this.pix.marginGrid.left;
+	var pixDrawXCenter = pixStartXCenter;
+	var pixDrawYCenter = this.pix.marginGrid.up; 
+	var pixDotRadius;
+
+    for (iy = 0; iy < p_yDotsNumber; iy++) {
+		pixDrawXCenter = pixStartXCenter;
+        for (ix = 0; ix < p_xDotsNumber; ix++) {
+			pixDotRadius = this.pix.borderSpace;
+			p_context.beginPath();
+			//p_context.lineWidth = 1;
+			p_context.ellipse(pixDrawXCenter, pixDrawYCenter, pixDotRadius, pixDotRadius, 0, 0, 2 * Math.PI);
+			p_context.fillStyle = p_dotsColorMethod(ix, iy); 
+			p_context.fill();
+			pixDrawXCenter+= this.pix.sideSpace;
+		}
+		pixDrawYCenter+= this.pix.sideSpace;
+	}
 }
 
 // -----------------
@@ -639,6 +712,24 @@ Drawer.prototype.drawNumbersInsideStandard = function(p_context, p_function, p_x
 				p_context.fillStyle = supposedValue.writeColour;
 				p_context.fillText(supposedValue.value, this.getPixCenterX(ix), this.getPixWriteCenterY(iy));
 			} 
+		}
+	}
+}
+
+// p_method : method (x, y) that returns an integer, {draw : true} or null.
+Drawer.prototype.drawFixedNumbersOrX = function(p_context, p_method, p_xLength, p_yLength, p_colourNumbers, p_colourX) {
+	var fixedSpace;
+	p_context.fillStyle = p_colourNumbers;
+	setupFont(p_context, this.getPixInnerSide(), "Arial");
+	alignFontCenter(p_context);
+	for(var iy = 0; iy < p_yLength ; iy++) {
+		for(var ix = 0; ix < p_xLength ; ix++) {
+			fixedSpace = p_method(ix, iy);
+			if (fixedSpace == "X") {
+				this.drawCrossX(p_context, ix, iy, new DrawableX(p_colourX));
+			} else if (fixedSpace != null) {
+				p_context.fillText(fixedSpace, this.getPixCenterX(ix), this.getPixCenterY(iy));
+			}
 		}
 	}
 }
@@ -1125,6 +1216,74 @@ Drawer.prototype.getClickAroundWallD = function (event, p_canvas, p_xLength, p_y
     return null;
 }
 
+// Edges ! (partly copy-pasted on space above) 
+Drawer.prototype.getClickEdgeR = function (event, p_canvas, p_xDotsNumber, p_yDotsNumber) {
+	const pixX = this.getPixXWithinGrid(event, p_canvas);
+	const pixY = this.getPixYWithinGrid(event, p_canvas);
+	const pixYModulo = (pixY + this.pix.borderClickDetection) % this.pix.sideSpace;
+	if (pixYModulo < 2 * this.pix.borderClickDetection) {
+		const answer = {
+			x: Math.floor(pixX / this.pix.sideSpace),
+			y: Math.floor((pixY + this.pix.borderClickDetection) / this.pix.sideSpace)
+		};
+		if ((answer.x < p_xDotsNumber) && (answer.x >= 0) && (answer.y <= p_yDotsNumber) && (answer.y >= 0)) {
+			return answer;
+		}
+	}
+    return null;
+}
+
+Drawer.prototype.getClickEdgeD = function (event, p_canvas, p_xDotsNumber, p_yDotsNumber) {
+	const pixX = this.getPixXWithinGrid(event, p_canvas);
+	const pixY = this.getPixYWithinGrid(event, p_canvas);
+	const pixXModulo = (pixX + this.pix.borderClickDetection) % this.pix.sideSpace;
+	if (pixXModulo < 2 * this.pix.borderClickDetection) {
+		const answer = {
+			x: Math.floor((pixX + this.pix.borderClickDetection) / this.pix.sideSpace),
+			y: Math.floor(pixY / this.pix.sideSpace)
+		};
+		if ((answer.y < p_yDotsNumber) && (answer.y >= 0) && (answer.x <= p_xDotsNumber) && (answer.x >= 0)) {
+			return answer;
+		}
+	}
+    return null;
+}
+
+Drawer.prototype.getClickEdgeD = function (event, p_canvas, p_xDotsNumber, p_yDotsNumber) {
+	const pixX = this.getPixXWithinGrid(event, p_canvas);
+	const pixY = this.getPixYWithinGrid(event, p_canvas);
+	const pixXModulo = (pixX + this.pix.borderClickDetection) % this.pix.sideSpace;
+	if (pixXModulo < 2 * this.pix.borderClickDetection) {
+		const answer = {
+			x: Math.floor((pixX + this.pix.borderClickDetection) / this.pix.sideSpace),
+			y: Math.floor(pixY / this.pix.sideSpace)
+		};
+		if ((answer.y < p_yDotsNumber) && (answer.y >= 0) && (answer.x <= p_xDotsNumber) && (answer.x >= 0)) {
+			return answer;
+		}
+	}
+    return null;
+}
+
+// Copied on getClickKnotRD
+Drawer.prototype.getClickNode = function (event, p_canvas, p_xDotsNumber, p_yDotsNumber) {
+	const pixX = this.getPixXWithinGrid(event, p_canvas);
+	const pixY = this.getPixYWithinGrid(event, p_canvas);
+	const pixXModulo = (pixX + this.pix.borderClickDetection) % this.pix.sideSpace;
+	const pixYModulo = (pixY + this.pix.borderClickDetection) % this.pix.sideSpace;
+	if ((pixXModulo < 2 * this.pix.borderClickDetection) &&  (pixYModulo < 2 * this.pix.borderClickDetection)) {
+		const answer = {
+			x: Math.floor((pixX + this.pix.borderClickDetection) / this.pix.sideSpace),
+			y: Math.floor((pixY + this.pix.borderClickDetection) / this.pix.sideSpace)
+		};
+		if ((answer.x < (p_xDotsNumber)) && (answer.x >= 0) && (answer.y < p_yDotsNumber) && (answer.y >= 0)) {
+			return answer;
+		}
+	}
+    return null;
+}
+
+
 Drawer.prototype.getClickMargin = function (event, p_canvas, p_xLength, p_yLength, p_marginLeftLength, p_marginUpLength, p_marginRightLength, p_marginDownLength) {
 	const pixX = this.getPixXWithinCanvas(event, p_canvas);
 	const pixY = this.getPixYWithinCanvas(event, p_canvas);
@@ -1201,23 +1360,44 @@ Drawer.prototype.adaptCanvasDimensions = function (p_canvas, p_parameters) {
 	const pixMinSpace = 16;
     const pixXCanvasSize = 800; //TODO peut changer
     const pixYCanvasSize = 512; //TODO peut changer
-    var totalXLength = p_parameters.xLength ? p_parameters.xLength : p_parameters.xyLength;
-    var totalYLength = p_parameters.yLength ? p_parameters.yLength : p_parameters.xyLength;
+    const centralXLength = p_parameters.xLength ? p_parameters.xLength : p_parameters.xyLength;
+    const centralYLength = p_parameters.yLength ? p_parameters.yLength : p_parameters.xyLength;
+	var leftXLength = 0;
+	var upYLength = 0;
+	var rightXLength = 0;
+	var downYLength = 0;
     if (p_parameters.margin) {
-        if (p_parameters.margin.leftLength) { totalXLength += p_parameters.margin.leftLength; }
-        if (p_parameters.margin.upLength) { totalYLength += p_parameters.margin.upLength; }
-        if (p_parameters.margin.rightLength) { totalXLength += p_parameters.margin.rightLength; }
-        if (p_parameters.margin.downLength) { totalYLength += p_parameters.margin.downLength; }
+        if (p_parameters.margin.leftLength) { 
+			leftXLength += p_parameters.margin.leftLength; 
+		}
+        if (p_parameters.margin.upLength) { 
+			upYLength += p_parameters.margin.upLength; 
+		}
+        if (p_parameters.margin.rightLength) { 
+			rightXLength += p_parameters.margin.rightLength; 
+		}
+        if (p_parameters.margin.downLength) { 
+			downYLength += p_parameters.margin.downLength; 
+		}
     }
+	if (p_parameters.isDotted) { // Note : so far, nothing is done between margins and dotted grids !
+		leftXLength += 1/2;
+		upYLength += 1/2;
+		rightXLength += 1/2;
+		downYLength += 1/2;
+	}
+
+    const totalXLength = leftXLength + centralXLength + rightXLength;
+    const totalYLength = upYLength + centralYLength + downYLength;
+	
     this.pix.sideSpace = Math.max(pixMinSpace, Math.min(pixMaxSpace, Math.min(Math.floor(pixXCanvasSize / totalXLength), Math.floor(pixYCanvasSize / totalYLength))));
     this.pix.borderSpace = Math.max(1, Math.floor(this.pix.sideSpace / 10));
 	this.pix.borderClickDetection = this.pix.borderSpace * 2;
-	if (p_parameters.margin) {
-		this.pix.marginGrid.left = this.pix.sideSpace * p_parameters.margin.leftLength; // Possibility to add "extra pixels", who knows... (in that case they must be subtracted from pixXCanvasSize / Y)
-		this.pix.marginGrid.up = this.pix.sideSpace * p_parameters.margin.upLength;
-		this.pix.marginGrid.right = this.pix.sideSpace * p_parameters.margin.rightLength;
-		this.pix.marginGrid.down = this.pix.sideSpace * p_parameters.margin.downLength;
-    }	
+	this.pix.marginGrid.left = this.pix.sideSpace * leftXLength; // Possibility to add "extra pixels", who knows... (in that case they must be subtracted from pixXCanvasSize / Y)
+	this.pix.marginGrid.up = this.pix.sideSpace * upYLength;
+	this.pix.marginGrid.right = this.pix.sideSpace * rightXLength;
+	this.pix.marginGrid.down = this.pix.sideSpace * downYLength;
+	
     p_canvas.width = totalXLength * this.pix.sideSpace;
     p_canvas.height = totalYLength * this.pix.sideSpace;
 }
