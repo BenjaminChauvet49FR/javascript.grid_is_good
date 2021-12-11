@@ -211,12 +211,12 @@ SolverYajilin.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 SolverYajilin.prototype.passSpace = function(p_x, p_y) {
 	var passIndex;
 	if (!this.isBanned(p_x, p_y)) {		
-		passIndex = {passCategory : LOOP_PASS_CATEGORY.STANDARD_SPACE, x : p_x, y : p_y};
+		passIndex = {passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
 	} else {
 		var value = this.stripesArray[p_y][p_x];
 		if (value != null) {
 			if (this.cluesList[value].union != null) {
-				passIndex = {passCategory : LOOP_PASS_CATEGORY.YAJI_UNION, index : value};
+				passIndex = {passCategory : LOOP_PASS_CATEGORY.YAJI_UNION, index : this.cluesList[value].union};
 			} else {			
 				passIndex = {passCategory : LOOP_PASS_CATEGORY.YAJI_STRIP, index : value};
 			}
@@ -541,7 +541,7 @@ generateEventsForStripesAndUnionsClosure = function (p_solver) {
 		if (p_indexFamily.passCategory == LOOP_PASS_CATEGORY.YAJI_STRIP) {
 			return p_solver.generateEventsForSingleStripPass(p_indexFamily.index);
 		} else {
-			return  p_solver.generateEventsForUnionStripPass(p_indexFamily.index); 
+			return p_solver.generateEventsForUnionStripPass(p_indexFamily.index); 
 		}
 	}
 }
