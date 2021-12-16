@@ -42,7 +42,7 @@ function main() {
 	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
 	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_EXCLUDE_LOOP_SPACE, ACTION_INCLUDE_LOOP_SPACE, ACTION_PASS_STRIP_OR_SPACE, ACTION_NOTHING]);
 	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "textid", ENTRY.WALLS, [ACTION_LINK_SPACES, ACTION_CLOSE_LINKS, ACTION_NOTHING]);
-	buildActionsGlobal("div_global_actions", "textido", ["Multipasse", "Annuler"], 
-		[function(event){multipassAction(solver)}, function(event){undoAction(solver)}] );
+	buildActionsGlobal("div_global_actions", "textido", ["Multipasse", "Résolution", "Annuler"], 
+		[function(event){multipassAction(solver)}, function(event){solveAction(solver)}, function(event){undoAction(solver)}] );
 	initializeItemsLoopInfos("div_common_loop_display", solver);	
 }

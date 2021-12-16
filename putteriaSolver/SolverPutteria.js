@@ -27,6 +27,10 @@ SolverPutteria.prototype.construct = function(p_wallArray, p_symbolArray) {
 		generatePassEventsMethod : generateEventsChoicesPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 	};
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
 
 	this.gridWall = WallGrid_data(p_wallArray); 
 	this.regionArray = this.gridWall.toRegionArray();
@@ -171,36 +175,8 @@ SolverPutteria.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverPutteria.prototype.quickStart = function() {
-	this.initiateQuickStart();
-	var qsEvents = [];
-	this.regions.forEach(region => {
-		if (region.size == 1) { // 1-sized regions (don't forget them)
-			qsEvents.push(new SpaceEvent(region.spaces[0].x, region.spaces[0].y, FILLING.YES));
-		} else if (region.hasANumber) {
-			// Completion & adjacency
-			region.spaces.forEach(coors => {
-				xx = coors.x;
-				yy = coors.y;
-				if (this.answerArray[yy][xx] != FILLING.YES) { // Supposes that there is no more than one number per region at setup
-					qsEvents.push(new SpaceEvent(xx, yy, FILLING.NO));
-				} else {
-					this.existingNeighborsCoors(xx, yy).forEach(coors2 => {
-						qsEvents.push(new SpaceEvent(coors2.x, coors2.y, FILLING.NO));
-					});
-					qsEvents = this.columnSameSizesFillingNoDeductions(qsEvents, xx, yy);
-					qsEvents = this.rowSameSizesFillingNoDeductions(qsEvents, xx, yy);
-				}
-			});
-		} else {
-			// Only possibilities are in a row or a column
-			qsEvents = this.checkXRegionsDeductions(qsEvents, region); 
-		}
-	});
-	qsEvents.forEach(event_ => {
-		this.tryToApplyHypothesis(event_);
-	});
-	this.terminateQuickStart();
+SolverPutteria.prototype.makeQuickStart = function() {
+	this.quickStart();
 }
 
 SolverPutteria.prototype.emitPassAllRegionsSize = function(p_x, p_y) {
@@ -252,6 +228,39 @@ function undoEventClosure(p_solver) {
 		if (symbol == FILLING.YES) {
 			p_solver.getRegion(x, y).hasANumber = false;
 		}
+	}
+}
+
+//--------------------------------
+// Quickstart !
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Putteria"}];
+		p_solver.regions.forEach(region => {
+			if (region.size == 1) { // 1-sized regions (don't forget them)
+				listQSEvts.push(new SpaceEvent(region.spaces[0].x, region.spaces[0].y, FILLING.YES));
+			} else if (region.hasANumber) {
+				// Completion & adjacency
+				region.spaces.forEach(coors => {
+					xx = coors.x;
+					yy = coors.y;
+					if (p_solver.answerArray[yy][xx] != FILLING.YES) { // Supposes that there is no more than one number per region at setup
+						listQSEvts.push(new SpaceEvent(xx, yy, FILLING.NO));
+					} else {
+						p_solver.existingNeighborsCoors(xx, yy).forEach(coors2 => {
+							listQSEvts.push(new SpaceEvent(coors2.x, coors2.y, FILLING.NO));
+						});
+						listQSEvts = p_solver.columnSameSizesFillingNoDeductions(listQSEvts, xx, yy);
+						listQSEvts = p_solver.rowSameSizesFillingNoDeductions(listQSEvts, xx, yy);
+					}
+				});
+			} else {
+				// Only possibilities are in a row or a column
+				listQSEvts = p_solver.checkXRegionsDeductions(listQSEvts, region); 
+			}
+		});
+		return listQSEvts;
 	}
 }
 

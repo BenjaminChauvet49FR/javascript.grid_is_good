@@ -34,7 +34,7 @@ SolverLinesweeper.prototype.construct = function(p_numberGrid) {
 		setSpaceClosedPSAtomicUndos : setSpaceClosedPSAtomicUndosClosure(this),
 		setSpaceLinkedPSDeductions : setSpaceLinkedPSDeductionsClosure(this),
 		setSpaceClosedPSDeductions : setSpaceClosedPSDeductionsClosure(this),
-		PSQuickStart : quickStartClosure(this),
+		quickStartEventsPS : quickStartEventsClosure(this),
 		generateEventsForPassPS : generateEventsForSpaceClosureLinesweeper(this),
 		orderedListPassArgumentsPS : startingOrderedListPassArgumentsLinesweeperClosure(this),
 		namingCategoryPS : namingCategoryClosure(this),
@@ -233,17 +233,13 @@ SolverLinesweeper.prototype.testNumericSpaceDeductions = function(p_listEvents, 
 // -------------------
 // Quickstart
 
-quickStartClosure = function(p_solver) {
-	return function() { 
-		p_solver.initiateQuickStart("Linesweeper");
-		var list = [];
+quickStartEventsClosure = function(p_solver) {
+	return function(p_QSeventsList) {
+		p_QSeventsList.push({quickStartLabel : "Linesweeper"});
 		p_solver.numericCoordinatesList.forEach(space => {
-			 list = p_solver.testNumericSpaceDeductions(list, space.x, space.y); 
+			 p_QSeventsList = p_solver.testNumericSpaceDeductions(p_QSeventsList, space.x, space.y); 
 		});
-		list.forEach(p_event => {
-			p_solver.tryToPutNewSpace(p_event.x, p_event.y, p_event.state);
-		});
-		p_solver.terminateQuickStart();
+		return p_QSeventsList;
 	}
 }
 

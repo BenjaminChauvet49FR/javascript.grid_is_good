@@ -27,7 +27,7 @@ SolverRegionalin.prototype.construct = function(p_wallArray, p_regionIndications
 		setSpaceClosedPSAtomicDos : setSpaceClosedPSAtomicDosClosure(this),
 		setSpaceLinkedPSAtomicUndos : setSpaceLinkedPSAtomicUndosClosure(this),
 		setSpaceClosedPSAtomicUndos : setSpaceClosedPSAtomicUndosClosure(this),
-		PSQuickStart : quickStartClosure(this),
+		quickStartEventsPS : quickStartEventsClosure(this),
 		generateEventsForPassPS : generateEventsForSpaceClosure(this),
 		orderedListPassArgumentsPS : startingOrderedListPassArgumentsRegionalinClosure(this),
 		namingCategoryPS : namingCategoryClosure(this),
@@ -36,6 +36,8 @@ SolverRegionalin.prototype.construct = function(p_wallArray, p_regionIndications
 			return true;
 		}
 	});
+	
+	this.setResolution.searchSolutionMethod = loopNaiveSearchClosure(this);
 
 	this.gridWall = WallGrid_data(p_wallArray); 
 	this.regionArray = this.gridWall.toRegionArray();
@@ -240,36 +242,33 @@ SolverRegionalin.prototype.fillingRegionDeductions = function(p_eventsList, p_re
 // -------------------
 // Quickstart
 
-quickStartClosure = function(p_solver) {
-	return function() { 
-		p_solver.initiateQuickStart("Regionalin");
+quickStartEventsClosure = function(p_solver) {
+	return function(p_QSeventsList) {
+		p_QSeventsList.push({quickStartLabel : "Regionalin"});
 		p_solver.regions.forEach(region => {
 			if (region.number != NOT_FORCED) {				
 				if (region.notClosedYet == 0) {
 					p_solver.fillingRegionDeductions([], region, LOOP_STATE.LINKED).forEach(event_ => { 
-						p_solver.tryToApplyHypothesis(event_);
+						p_QSeventsList.push(event_);
 					}); 
 				} else if (region.notLinkedYet == 0) {
 					p_solver.fillingRegionDeductions([], region, LOOP_STATE.CLOSED).forEach(event_ => {
-						p_solver.tryToApplyHypothesis(event_);
+						p_QSeventsList.push(event_);
 					});
 				}
 			}
-		});
+		}); 
 		
 		// Smartness
-		var list = [];
 		for (var y = 0 ; y < p_solver.yLength ; y++) {
 			for (var x = 0 ; x < p_solver.xLength ; x++) {
 				if (!p_solver.isBanned(x, y)) {
-					list = p_solver.tryAndCloseBeforeAndAfter2ClosedDeductions(list, x, y);
+					p_QSeventsList = p_solver.tryAndCloseBeforeAndAfter2ClosedDeductions(p_QSeventsList, x, y);
 				}
 			}
 		}
-		list.forEach(p_event => {
-			p_solver.tryToPutNewSpace(p_event.x, p_event.y, p_event.state);
-		});
-		p_solver.terminateQuickStart();
+		
+		return p_QSeventsList;
 	}
 }
 

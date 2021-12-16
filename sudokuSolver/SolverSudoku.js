@@ -39,7 +39,11 @@ SolverSudoku.prototype.construct = function(p_sudokuMode, p_numberArray) {
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
 	};*/
-
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
+	
 	this.answerArray = [];
 	for (var y = 0 ; y < this.yLength ; y++) {
 		this.answerArray.push([]);
@@ -264,10 +268,8 @@ SolverSudoku.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverSudoku.prototype.quickStart = function() {
-	this.initiateQuickStart();
-	this.performActualQuickStart();
-	this.terminateQuickStart();
+SolverSudoku.prototype.makeQuickStart = function() {
+	this.quickStart();
 }
 
 SolverSudoku.prototype.emitPassSelectedSpaces = function(p_coorsList) {
@@ -569,41 +571,42 @@ SolverSudoku.prototype.gridIndexesToString = function(p_gridIndexes) {
 }
 
 //--------------------------------
-// Quickstart
+// Quickstart !
 
-SolverSudoku.prototype.performActualQuickStart = function () {
-	var justOne;
-	var listSpaceEvents;
-	for (var y = 0 ; y < this.yLength ; y++) {
-		for (var x = 0 ; x < this.xLength ; x++) {
-			// One number possible in a space
-			if (!this.isBlocked(x, y) && !this.answerArray[y][x].fixedValue) {
-				justOne = this.answerArray[y][x].getOneLeft();
-				if (justOne) {
-					this.emitHypothesis(x, y, justOne, true);
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var justOne;
+		var listQSEvts = [{quickStartLabel : "Sudoku"}];
+
+		for (var y = 0 ; y < p_solver.yLength ; y++) {
+			for (var x = 0 ; x < p_solver.xLength ; x++) {
+				// One number possible in a space
+				if (!p_solver.isBlocked(x, y) && !p_solver.answerArray[y][x].fixedValue) {
+					justOne = p_solver.answerArray[y][x].getOneLeft();
+					if (justOne) {
+						listQSEvts.push(new SpaceAllowEvent(x, y, justOne, true));
+					}
 				}
 			}
 		}
-	}
-	
-	this.grids.forEach(grid => {
-		listSpaceEvents = [];
-		for (var number = this.minNumber ; number < this.maxNumber ; number++) {
-			for (var yg = 0 ; yg < this.gridLength ; yg++) {
-				listSpaceEvents = this.alertOneLeftInRow(listSpaceEvents, grid, yg, number);
-			}
-			for (var xg = 0 ; xg < this.gridLength ; xg++) {
-				listSpaceEvents = this.alertOneLeftInColumn(listSpaceEvents, grid, xg, number);
-			}
-			for (var yr = 0 ; yr < this.gridLength ; yr += this.rowBlockHeight) {
-				for (var xr = 0 ; xr < this.gridLength ; xr += this.columnBlockWidth) {
-					listSpaceEvents = this.alertOneLeftInRegion(listSpaceEvents, grid, xr, yr, number);
-				}
-			}
-		} 
 		
-		listSpaceEvents.forEach(event_ => {this.tryToApplyHypothesis(event_)});
-	});
+		p_solver.grids.forEach(grid => {
+			for (var number = p_solver.minNumber ; number < p_solver.maxNumber ; number++) {
+				for (var yg = 0 ; yg < p_solver.gridLength ; yg++) {
+					listQSEvts = p_solver.alertOneLeftInRow(listQSEvts, grid, yg, number);
+				}
+				for (var xg = 0 ; xg < p_solver.gridLength ; xg++) {
+					listQSEvts = p_solver.alertOneLeftInColumn(listQSEvts, grid, xg, number);
+				}
+				for (var yr = 0 ; yr < p_solver.gridLength ; yr += p_solver.rowBlockHeight) {
+					for (var xr = 0 ; xr < p_solver.gridLength ; xr += p_solver.columnBlockWidth) {
+						listQSEvts = p_solver.alertOneLeftInRegion(listQSEvts, grid, xr, yr, number);
+					}
+				}
+			} 
+		});	
+		return listQSEvts;
+	}
 }
 
 //--------------------------------

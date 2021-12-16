@@ -25,7 +25,7 @@ SolverKoburin.prototype.construct = function(p_numberGrid) {
 		setSpaceLinkedPSDeductions : setSpaceLinkedPSDeductionsClosure(this),
 		setSpaceClosedPSDeductions : setSpaceClosedPSDeductionsClosure(this),
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
-		PSQuickStart : quickStartClosure(this),
+		quickStartEventsPS : quickStartEventsClosure(this),
 		generateEventsForPassPS : generateEventsForSpaceClosureKoburin(this),
 		orderedListPassArgumentsPS : startingOrderedListPassArgumentsKoburinClosure(this),
 		namingCategoryPS : namingCategoryClosure(this),
@@ -248,25 +248,21 @@ SolverKoburin.prototype.tryAndCloseBeforeAndAfter2ClosedDeductions = function(p_
 // -------------------
 // Quickstart
 
-quickStartClosure = function(p_solver) {
-	return function() { 
-		p_solver.initiateQuickStart("Koburin");
-		var list = [];
+quickStartEventsClosure = function(p_solver) {
+	return function(p_QSeventsList) {
+		p_QSeventsList.push({quickStartLabel : "Koburin"});
 		p_solver.numericCoordinatesList.forEach(space => {
-			 list = p_solver.testNumericSpaceDeductions(list, space.x, space.y);
+			 p_QSeventsList = p_solver.testNumericSpaceDeductions(p_QSeventsList, space.x, space.y);
 		});
 		for (var y = 0 ; y < p_solver.yLength ; y++) {
 			for (var x = 0 ; x < p_solver.xLength ; x++) {
 				// Smartness of Koburin C/C from Yajilin
 				if (!p_solver.isBanned(x, y)) {
-					list = p_solver.tryAndCloseBeforeAndAfter2ClosedDeductions(list, x, y);
+					p_QSeventsList = p_solver.tryAndCloseBeforeAndAfter2ClosedDeductions(p_QSeventsList, x, y);
 				}
 			}
 		}
-		list.forEach(p_event => {
-			p_solver.tryToPutNewSpace(p_event.x, p_event.y, p_event.state);
-		});
-		p_solver.terminateQuickStart();
+		return p_QSeventsList;
 	}
 }
 

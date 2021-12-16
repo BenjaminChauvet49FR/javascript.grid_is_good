@@ -23,7 +23,7 @@ SolverMoonsun.prototype.construct = function(p_wallArray, p_symbolsArray) {
 		setSpaceLinkedPSDeductions : setSpaceLinkedDeductionsClosure(this),
 		setBorderLinkedPSDeductions : setBorderLinkedDeductionsClosure(this),
 		otherPSDeductions : otherDeductionsClosure(this),
-		PSQuickStart : quickStartClosure(this),
+		quickStartEventsPS : quickStartEventsClosure(this),
 		comparisonPS : comparisonMoonsunEventsClosure(this)
 	});
 
@@ -216,15 +216,14 @@ otherDeductionsClosure = function(p_solver) {
 // -----------
 // Quickstart
 
-quickStartClosure = function(p_solver) {
-	return function() {
-		p_solver.initiateQuickStart("Moonsun");
-		var events = [];
+quickStartEventsClosure = function(p_solver) {
+	return function(p_QSeventsList) {
+		p_QSeventsList.push({quickStartLabel : "Moonsun"});
 		for (var i = 0 ; i < p_solver.regions.length ; i++) {
 			if (p_solver.regions[i].sunCoors.length == 0) {
-				events.push(new AstreEvent(i, ASTRE.MOON));
-			} else	if (p_solver.regions[i].moonCoors.length == 0) {
-				events.push(new AstreEvent(i, ASTRE.SUN));
+				p_QSeventsList.push(new AstreEvent(i, ASTRE.MOON));
+			} else if (p_solver.regions[i].moonCoors.length == 0) {
+				p_QSeventsList.push(new AstreEvent(i, ASTRE.SUN));
 			}
 		}
 		var x, y, astre1, astre2, wall;
@@ -241,16 +240,15 @@ quickStartClosure = function(p_solver) {
 								wall = p_solver.gridWall.getWall(x, y, dir);
 								if ((astre1 == astre2) == (wall == WALLGRID.CLOSED)) { 
 									// Same astres but different regions OR different astres but same regions
-									events.push(new LinkEvent(x, y, dir, LOOP_STATE.CLOSED));
+									p_QSeventsList.push(new LinkEvent(x, y, dir, LOOP_STATE.CLOSED));
 								} 
 							}
 						}
 					}
 				})
 			}
-		}
-		events.forEach(event_ => {p_solver.tryToApplyHypothesis(event_);});
-		p_solver.terminateQuickStart();
+		}		
+		return p_QSeventsList;
 	}
 }
 

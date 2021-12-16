@@ -22,6 +22,11 @@ const DEDUCTIONS_RESULT = {
 	FAILURE : 12
 }
 
+const QUICKSTART_RESULT = { // Don't give it the same values as DEDUCTIONS_RESULT. Some tried, they had trouble. 
+	SUCCESS : 16,
+    FAILURE : 17,
+}
+
 const PASS_RESULT = {
 	SUCCESS : 23,
 	FAILURE : 21,
@@ -49,6 +54,14 @@ const SERIE_KIND = {
 
 function FailureEvent() {
 	this.failure = true;
+}
+
+const RESOLUTION_RESULT = { 
+	MULTIPLE : 54,
+	NOT_FOUND : 55,
+	SUCCESS : 53,
+	FAILURE : 51,
+	SEARCHING : 52
 }
 
 
@@ -466,24 +479,44 @@ function isGlobalDeduction(p_eventsSerie) {
 
 /**
 As-is, quickstart events are totaly managed by solvers that call deductions methods.
-initiateQuickStart and terminateQuickStart should be called respectively when entering and leaving a quickstart method so all the applied events are concatenated into a single serie that will be logged as "Quick start".
+this.quickstart is enough, just provide an event list method so all the applied events are concatenated into a single serie that will be logged as "Quick start".
 */
 
-GeneralSolver.prototype.initiateQuickStart = function(p_label) {
-	if (!p_label) {
-		p_label = "";
+GeneralSolver.prototype.quickStart = function() {
+	var ok = true;
+	this.separatelyStackDeductions = false;	
+	var happening;
+	const eventList = this.setResolution.quickStartEventsMethod();
+	this.happenedEventsSeries = [{kind : SERIE_KIND.QUICKSTART, label : null, list : [] }];
+	for (var i = 0 ; i < eventList.length ; i++) {
+		if (eventList[i].quickStartLabel) {
+			if (this.happenedEventsSeries[this.happenedEventsSeries.length-1].list.length == 0) {
+				this.happenedEventsSeries.pop();
+			}			
+			this.happenedEventsSeries.push({kind : SERIE_KIND.QUICKSTART , label : eventList[i].quickStartLabel, list : [] });	
+		} else {			
+			happening = this.tryToApplyHypothesis(eventList[i]);
+			if (happening == DEDUCTIONS_RESULT.FAILURE) {
+				ok = false;
+				break;
+			}				
+		}
 	}
-	this.quickStartDone = true;
-	this.happenedEventsSeries.push({kind : SERIE_KIND.QUICKSTART , label : p_label, list : [] }); 
-	this.separatelyStackDeductions = false;
-}
-
-GeneralSolver.prototype.terminateQuickStart = function() {
 	if (this.happenedEventsSeries[this.happenedEventsSeries.length-1].list.length == 0) {
 		this.happenedEventsSeries.pop();
 	}
 	this.separatelyStackDeductions = true;
-	this.setStateHappening(OTHER_RESULTS.QUICKSTART);
+	if (ok) {
+		this.quickStartDone = true;
+		this.setStateHappening(QUICKSTART_RESULT.SUCCESS);
+	} else {
+		var noooList;
+		while (this.happenedEventsSeries.length > 0) {
+			noooList = this.happenedEventsSeries.pop();
+			// this.undoEventList(noooList.list, this.methodsSetDeductions.undoEventMethod); Actually, seeing where something went wrong is a good idea. Don't undo stuff !
+		}
+		this.setStateHappening(QUICKSTART_RESULT.FAILURE);
+	}
 }
 
 
@@ -573,4 +606,68 @@ GeneralSolver.prototype.happenedEventsLog = function(p_options) {
 
 shouldBeLoggedEvent = function(p_event) {
 	return true;
+}
+
+
+
+
+
+
+// --------------------------------
+// Resolution
+
+// Fun note : "isSolved" method is not standard, but rather fully managed by each solver.
+
+// Note : generic method that leaves big freedom to the solver such as how many steps required.
+// Methods needed : quickStartMethod to perform quickStart(s), and searchSolutionMethod
+GeneralSolver.prototype.resolve = function(p_value) {
+	if (!this.quickStartDone) {
+		this.quickStart(); 
+	}
+	answer = this.setResolution.searchSolutionMethod();
+	this.setStateHappening(answer);
+}
+
+// Count all the last events down to the most recent hypothese
+GeneralSolver.prototype.numberOfRelevantDeductionsSinceLastHypothesis = function(p_relevancyMethod) { 
+	var sum = 0;
+	var listEvents;
+	var index = this.happenedEventsSeries.length;
+	do {
+		index--;
+		if (!p_relevancyMethod) {			
+			sum += this.happenedEventsSeries[index].list.length;
+		} else {
+			this.happenedEventsSeries[index].list.forEach(event_ => {
+				if (p_relevancyMethod(event_)) {
+					sum++;
+				}
+			});
+		}
+	} while (this.happenedEventsSeries[index].kind != SERIE_KIND.HYPOTHESIS);
+	return sum;
+}
+
+// Kinda like pass. Except we are doing ever more stuff because we are looking for one solution of the puzzle.
+GeneralSolver.prototype.tryAllPossibilities = function(p_eventChoice)  {	
+	const previousLength = this.happenedEventsSeries.length;
+	var ok, j;
+	for (var i = 0 ; i < p_eventChoice.length ; i++) {
+		ok = true;
+		j = 0;
+		while (ok && j < p_eventChoice[i].length) {
+			ok = (this.tryToApplyHypothesis(p_eventChoice[i][j]) != DEDUCTIONS_RESULT.FAILURE);
+			j++;
+		}
+		if (ok) {
+			const attemptAnswer = this.setResolution.searchSolutionMethod();
+			if (attemptAnswer == RESOLUTION_RESULT.SUCCESS) {
+				return RESOLUTION_RESULT.SUCCESS;
+			}
+		}
+		while (this.happenedEventsSeries.length > previousLength) {				
+			this.undoToLastHypothesis();
+		}
+	}
+	return RESOLUTION_RESULT.FAILURE;
 }

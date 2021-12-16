@@ -29,7 +29,11 @@ SolverShugaku.prototype.construct = function(p_numberSymbolsArray) {
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterDominosClosure(this)]);
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
 	this.methodsSetMultipass = {generatePassEventsMethod : generateEventsForSpacePassClosure(this), orderPassArgumentsMethod : orderedListPassArgumentsClosure(this), passTodoMethod : multipassDefineTodoClosure(this)};
-
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
+	
 	this.answerArray = [];	
 	
 	this.squareCountingArray = []; // Empty spaces : contain coordinates of adjacent numeric spaces (if 3,3 is empty and 3,2 and 4,3 are numeric, the list is [{3,2},{4,3}]
@@ -158,28 +162,8 @@ SolverShugaku.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverShugaku.prototype.quickStart = function() { 
-	this.initiateQuickStart();
-	listEvents = [];
-	this.numericSpaceList.forEach(coorSpace => {
-		x = coorSpace.x;
-		y = coorSpace.y;
-		if (this.squareCountingArray[y][x].notNoSquaresYet == 0) {
-			this.existingNeighborsCoorsDirections(x, y).forEach(neighborCoors => {
-				if (!this.isBanned(neighborCoors.x, neighborCoors.y)) {
-					listEvents.push(new SpaceEvent(neighborCoors.x, neighborCoors.y, SPACE_SHUGAKU.SQUARE, true));
-				}
-			});
-		} else if (this.squareCountingArray[y][x].notSquaresYet == 0) {
-			this.existingNeighborsCoorsDirections(x, y).forEach(neighborCoors => {
-				if (!this.isBanned(neighborCoors.x, neighborCoors.y)) {
-					listEvents.push(new SpaceEvent(neighborCoors.x, neighborCoors.y, SPACE_SHUGAKU.SQUARE, false));
-				}
-			});
-		}
-	});
-	listEvents.forEach(event_ => {this.tryToApplyHypothesis(event_);});
-	this.terminateQuickStart();
+SolverShugaku.prototype.makeQuickStart = function() { 
+	this.quickStart();
 }
 
 SolverShugaku.prototype.emitHypothesisSpace = function(p_x, p_y, p_value, p_ok) {
@@ -332,8 +316,34 @@ adjacencyClosure = function (p_solver) {
     }
 }
 
-//--------------------------------
+//-------------------------------- 
+// Quickstart !
 
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Shugaku"}];
+		p_solver.numericSpaceList.forEach(coorSpace => {
+			x = coorSpace.x;
+			y = coorSpace.y;
+			if (p_solver.squareCountingArray[y][x].notNoSquaresYet == 0) {
+				p_solver.existingNeighborsCoorsDirections(x, y).forEach(neighborCoors => {
+					if (!p_solver.isBanned(neighborCoors.x, neighborCoors.y)) {
+						listQSEvts.push(new SpaceEvent(neighborCoors.x, neighborCoors.y, SPACE_SHUGAKU.SQUARE, true));
+					}
+				});
+			} else if (p_solver.squareCountingArray[y][x].notSquaresYet == 0) {
+				p_solver.existingNeighborsCoorsDirections(x, y).forEach(neighborCoors => {
+					if (!p_solver.isBanned(neighborCoors.x, neighborCoors.y)) {
+						listQSEvts.push(new SpaceEvent(neighborCoors.x, neighborCoors.y, SPACE_SHUGAKU.SQUARE, false));
+					}
+				});
+			}
+		});
+		return listQSEvts;
+	}
+}
+
+//--------------------------------
 // Intelligence
 
 // Deductions closure. Where intelligence begins !

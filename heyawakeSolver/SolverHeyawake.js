@@ -40,6 +40,11 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications, p_isAy
 			undoEventClosure(this)));
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterCentralStripesClosure(this)]);
 	
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
+	
 	this.isAyeHeya = p_isAyeHeya;
 
 	this.gridWall = WallGrid_data(p_wallArray); 
@@ -253,45 +258,15 @@ SolverHeyawake.prototype.modifyVerticalStrip = function(p_index, p_symbol, p_mod
 
 // Input methods
 SolverHeyawake.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	this.tryToPutNew(p_x, p_y, p_symbol);
+	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverHeyawake.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverHeyawake.prototype.quickStart = function() {
-	this.initiateQuickStart();
-	this.regions.forEach(region => {
-		if (region.size == 1 && region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 1) {
-			this.tryToPutNew(region.spaces[0].x, region.spaces[0].y, ADJACENCY.NO);
-		};
-		if (region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 0) {
-			region.spaces.forEach(space => {
-				this.tryToPutNew(space.x, space.y, ADJACENCY.YES);
-			});
-		}
-		// Quickly place in centers of region (smartness)
-		if (this.isAyeHeya) {
-			const integerX = (region.centerX == Math.floor(region.centerX));
-			const integerY = (region.centerY == Math.floor(region.centerY));
-			if (region.expectedNumberOfClosedsInRegion != NOT_FORCED && integerX && integerY && this.regionArray[region.centerY][region.centerX] == region.index) {
-				this.tryToPutNew(region.centerX, region.centerY, (region.expectedNumberOfClosedsInRegion % 2 == 0) ? ADJACENCY.YES : ADJACENCY.NO);
-			}
-			if (integerX) {
-				if (!integerY) {
-					if (this.regionArray[region.centerY - 0.5][region.centerX] == region.index) {						
-						this.tryToPutNew(region.centerX, region.centerY - 0.5, ADJACENCY.YES);
-					}
-				}
-			} else if (integerY) {
-				if (this.regionArray[region.centerY][region.centerX - 0.5] == region.index) {
-					this.tryToPutNew(region.centerX - 0.5, region.centerY, ADJACENCY.YES);
-				}
-			}
-		}
-	});
-	this.terminateQuickStart();
+SolverHeyawake.prototype.makeQuickStart = function() {
+	this.quickStart();
 }
 
 SolverHeyawake.prototype.emitPassRegion = function(p_indexRegion) {
@@ -316,16 +291,8 @@ SolverHeyawake.prototype.smartPassRegion = function(p_indexRegion) {
 }
 
 //--------------------------------
-
-// Central method
-
-SolverHeyawake.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
-}
-
-//--------------------------------
-
 // Doing and undoing
+
 SolverHeyawake.prototype.putNew = function(p_x, p_y, p_symbol) {
 	if (this.answerArray[p_y][p_x] == p_symbol) {
 		return EVENT_RESULT.HARMLESS;
@@ -395,6 +362,7 @@ undoEventClosure = function(p_solver) {
 	}
 }
 
+
 //--------------------------------
 // Exchanges solver and geographical
 
@@ -411,6 +379,47 @@ adjacencyClosure = function (p_solver) {
     return function (p_x, p_y) {
         return p_solver.answerArray[p_y][p_x];
     }
+}
+
+//--------------------------------
+// Quickstart !
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : (p_solver.isAyeHeya ? "AYE-Heya" : "Heyawake")}]
+		
+		p_solver.regions.forEach(region => {
+			if (region.size == 1 && region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 1) {
+				listQSEvts.push(new SpaceEvent(region.spaces[0].x, region.spaces[0].y, ADJACENCY.NO));
+			};
+			if (region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 0) {
+				region.spaces.forEach(space => {
+					listQSEvts.push(new SpaceEvent(region.spaces[0].x, region.spaces[0].y, ADJACENCY.YES));
+				});
+			}
+			// Quickly place in centers of region (smartness)
+			if (p_solver.isAyeHeya) {
+				const integerX = (region.centerX == Math.floor(region.centerX));
+				const integerY = (region.centerY == Math.floor(region.centerY));
+				if (region.expectedNumberOfClosedsInRegion != NOT_FORCED && integerX && integerY && p_solver.regionArray[region.centerY][region.centerX] == region.index) {
+					listQSEvts.push(new SpaceEvent(region.centerX, region.centerY, (region.expectedNumberOfClosedsInRegion % 2 == 0) ? ADJACENCY.YES : ADJACENCY.NO));
+				}
+				if (integerX) {
+					if (!integerY) {
+						if (p_solver.regionArray[region.centerY - 0.5][region.centerX] == region.index) {						
+							listQSEvts.push(new SpaceEvent(region.centerX, region.centerY - 0.5, ADJACENCY.YES));
+						}
+					}
+				} else if (integerY) {
+					if (p_solver.regionArray[region.centerY][region.centerX - 0.5] == region.index) {
+						listQSEvts.push(new SpaceEvent(region.centerX - 0.5, region.centerY, ADJACENCY.YES));
+					}
+				}
+			}
+			
+		});
+		return listQSEvts;
+	}
 }
 
 //--------------------------------

@@ -71,7 +71,7 @@ function clickCornerAction(p_solver, p_cornerRDX, p_cornerRDY, p_action) {
 // Game action buttons
 
 quickStartAction = function(p_solver) {
-	p_solver.quickStart();
+	p_solver.makeQuickStart();
 }
 
 undoAction = function(p_solver) {

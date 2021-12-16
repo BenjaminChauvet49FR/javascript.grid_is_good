@@ -41,7 +41,7 @@ function catchMouse(event, p_canvas, p_drawer, p_solver, p_mousePositionItem) {
 // Game action buttons
 
 quickStartAction = function(p_solver) {
-	p_solver.quickStart();
+	p_solver.makeQuickStart();
 }
 
 undoAction = function(p_solver) {

@@ -33,6 +33,10 @@ SolverYajikabe.prototype.construct = function(p_combinationArray) {
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 		//skipPassMethod : skipPassClosure(this)
 	};
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
 
 	this.answerArray = [];
 	this.clueGrid = Grid_data(p_combinationArray);
@@ -217,21 +221,8 @@ SolverYajikabe.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverYajikabe.prototype.quickStart = function() {
-	this.initiateQuickStart();
-	var eventList = [];
-	this.cluesSpacesList.forEach(clue => {
-		if (clue.notPlacedClosedsYet == 0) {
-			eventList = this.fillWithBlanks(eventList, clue, ADJACENCY.YES);
-		}
-		if (clue.notPlacedOpensYet == 0) {
-			eventList = this.fillWithBlanks(eventList, clue, ADJACENCY.NO);
-		}
-	});
-	eventList.forEach(event_ => {
-		this.tryToApplyHypothesis(event_);
-	});
-	this.terminateQuickStart();
+SolverYajikabe.prototype.makeQuickStart = function() {
+	this.quickStart();
 }
 
 SolverYajikabe.prototype.passStripFromSpace = function(p_x, p_y) {
@@ -304,7 +295,6 @@ undoEventClosure = function(p_solver) {
 }
 
 //--------------------------------
-
 // Exchanges solver and geographical
 
 /**
@@ -322,8 +312,27 @@ adjacencyClosure = function (p_solver) {
     }
 }
 
+//-------------------------------- 
+// Quickstart
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Yajikabe"}];
+		p_solver.cluesSpacesList.forEach(clue => {
+			if (clue.notPlacedClosedsYet == 0) {
+				listQSEvts = p_solver.fillWithBlanks(listQSEvts, clue, ADJACENCY.YES);
+			}
+			if (clue.notPlacedOpensYet == 0) {
+				listQSEvts = p_solver.fillWithBlanks(listQSEvts, clue, ADJACENCY.NO);
+			}
+		});
+		return listQSEvts;
+	}
+}
+
 //--------------------------------
 // Intelligence
+
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
 		const x = p_eventBeingApplied.x();

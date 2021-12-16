@@ -2,6 +2,7 @@ GeneralSolver.prototype.callStateForItem = function(p_item) {
 	const colorSuccess = "#008800";
 	const colorFailure = "#880000";
 	const colorNeutral = "#000000";
+	const colorKindaFailure = "#880066";
 	const defaultString = "-";
 	if (this.stateChangedSinceLastRefresh) {
 		this.stateChangedSinceLastRefresh = false;
@@ -55,13 +56,34 @@ GeneralSolver.prototype.callStateForItem = function(p_item) {
 				p_item.innerHTML = "Echec de la multipasse"; 
 				p_item.style.color = colorFailure;
 			break;
+			case RESOLUTION_RESULT.MULTIPLE : 
+				p_item.innerHTML = "Solutions multiples"; // Note : to be used soon
+				p_item.style.color = colorKindaFailure;
+			break;
+			case RESOLUTION_RESULT.NOT_FOUND : 
+				p_item.innerHTML = "Abandon de la recherche"; // Note : to be used soon
+				p_item.style.color = colorKindaFailure;
+			break;
+			case RESOLUTION_RESULT.SUCCESS : 
+				p_item.innerHTML = "Puzzle résolu"; 
+				p_item.style.color = colorSuccess;
+			break;
+			case RESOLUTION_RESULT.FAILURE : 
+				p_item.innerHTML = "Echec de la résolution"; 
+				p_item.style.color = colorFailure;
+			break;
+			case QUICKSTART_RESULT.SUCCESS : 
+				p_item.innerHTML = "Démarrage rapide"; 
+				p_item.style.color = colorSuccess;
+			break;
+			case QUICKSTART_RESULT.FAILURE : 
+				p_item.innerHTML = "Ce puzzle ne peut être résolu ! (échec du démarrage rapide)"; 
+				p_item.style.color = colorFailure;
+			break;
+			
 			case OTHER_RESULTS.CANCEL : 
 				p_item.innerHTML = "Annulation"; 
 				p_item.style.color = colorNeutral;
-			break;
-			case OTHER_RESULTS.QUICKSTART : 
-				p_item.innerHTML = "Démarrage rapide"; 
-				p_item.style.color = colorSuccess;
 			break;
 			default :
 				p_item.innerHTML = defaultString; 
@@ -70,7 +92,7 @@ GeneralSolver.prototype.callStateForItem = function(p_item) {
 		}
 		// How to handle a new value
 		if (p_item.innerHTML != defaultString && formerValue.startsWith(p_item.innerHTML)) {
-			this.counterSameState += 1;
+			this.counterSameState ++;
 			p_item.innerHTML += " (" + (this.counterSameState + 1) + ")";
 		} else {
 			this.counterSameState = 0;

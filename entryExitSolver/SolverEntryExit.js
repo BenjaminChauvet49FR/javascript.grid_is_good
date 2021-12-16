@@ -14,7 +14,7 @@ SolverEntryExit.prototype.construct = function(p_wallArray) {
 	this.xLength = p_wallArray[0].length;
 	this.yLength = p_wallArray.length;
 	this.regionLoopSolverConstruct(p_wallArray, {		
-		PSQuickStart : quickStartClosure(this)
+		quickStartEventsPS : quickStartEventsClosure(this)
 	})
 	
 	var region, ir;
@@ -91,22 +91,17 @@ SolverEntryExit.prototype.makeMultipass = function() {
 // -------------------
 // Quickstart
 
-quickStartClosure = function(p_solver) {
-	return function() { 
-		p_solver.initiateQuickStart("Entry exit");
-		var eventsToApply = [];
-		var ir;
+quickStartEventsClosure = function(p_solver) {
+	return function(p_QSeventsList) {
+		p_QSeventsList.push({quickStartLabel : "Entry exit"});
 		p_solver.regions.forEach(region => {
 			if (region.endSpaces.length == 2) {
-				eventsToApply = p_solver.buildPatrioticBorderNoEnds(eventsToApply, region);
+				p_QSeventsList = p_solver.buildPatrioticBorderNoEnds(p_QSeventsList, region);
 			} else if (region.endSpaces.length == 1) {
-				eventsToApply = p_solver.buildPatrioticBorderParity(eventsToApply, region);
+				p_QSeventsList = p_solver.buildPatrioticBorderParity(p_QSeventsList, region);
 			}
 		});
-		eventsToApply.forEach(event_ => {
-			p_solver.tryToApplyHypothesis(event_);
-		});
-		p_solver.terminateQuickStart();
+		return p_QSeventsList;
 	}
 }
 

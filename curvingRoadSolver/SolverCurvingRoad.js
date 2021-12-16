@@ -38,6 +38,10 @@ SolverCurvingRoad.prototype.construct = function (p_symbolArray) {
 		generatePassEventsMethod : generateEventsForSpacePassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 	};
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
 	
     for (iy = 0; iy < this.yLength; iy++) {
         this.answerArray.push([]);
@@ -336,19 +340,14 @@ SolverCurvingRoad.prototype.getPearl = function (p_x, p_y) {
 }
 
 //--------------------------------
+// Input methods
 
 SolverCurvingRoad.prototype.emitHypothesis = function (p_x, p_y, p_symbol) {
 	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
-SolverCurvingRoad.prototype.quickStart = function () {
-	this.initiateQuickStart();
-    this.curvingLinkList.forEach(curvingLink => {
-        if (curvingLink.valid && (curvingLink.point != null)) {
-            this.emitHypothesis(curvingLink.point.x, curvingLink.point.y, ADJACENCY.NO);
-        }
-    });
-	this.terminateQuickStart();
+SolverCurvingRoad.prototype.makeQuickStart = function () {
+	this.quickStart();
 }
 
 SolverCurvingRoad.prototype.passSpace = function(p_x, p_y) {
@@ -422,8 +421,25 @@ transformClosure = function (p_solver) {
     }
 };
 
+
 //--------------------------------
-// Intelligence
+// Quickstart !
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Curving road"}];		
+		p_solver.curvingLinkList.forEach(curvingLink => {
+			if (curvingLink.valid && (curvingLink.point != null)) {
+				listQSEvts.push(new SpaceEvent(curvingLink.point.x, curvingLink.point.y, ADJACENCY.NO));
+			}
+		});
+		return listQSEvts;
+	}
+}
+
+//--------------------------------
+// Deductions
+
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
 		x = p_eventBeingApplied.x();

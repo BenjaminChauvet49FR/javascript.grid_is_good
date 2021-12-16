@@ -36,6 +36,10 @@ SolverShimaguni.prototype.construct = function(p_wallArray, p_indicationsRegions
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 		//skipPassMethod : skipPassClosure(this)
 	};
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}	
 	
 	this.answerArray = generateValueArray(this.xLength, this.yLength, FILLING.UNDECIDED);
 	this.clusterArray = generateValueArray(this.xLength, this.yLength, 0);
@@ -45,7 +49,7 @@ SolverShimaguni.prototype.construct = function(p_wallArray, p_indicationsRegions
 	// Blantly initialize data of regions
 	this.regions = [];
 	this.contactTriangle = [];
-	for(var i = 0 ; i < this.regionsNumber ; i++) {
+	for(var i = 0 ; i < this.regionsNumber ; i++) { // Note : no indexes....
 		this.regions.push({
 			spaces : spacesByRegion[i],
 			YES : 0,
@@ -61,7 +65,7 @@ SolverShimaguni.prototype.construct = function(p_wallArray, p_indicationsRegions
 			clusters : [],
 			indexClusterWithFill : CLUSTER_WITH_FILL.NOT_FOUND,
 		});
-		this.contactTriangle.push([]); //(Le triangle doit être ainsi : [], [10], [20,21], [30,31,32] ...)
+		this.contactTriangle.push([]); //(Triangle must be : [], [10], [20,21], [30,31,32] ...)
 		if (i > 1) {
 			this.contactTriangle.push([]);	
 			for(var j=0 ; j<i ; j++) {
@@ -175,47 +179,37 @@ SolverShimaguni.prototype.getAnswer = function(p_x, p_y) {
 //--------------
 // Input
 
+SolverShimaguni.prototype.makeQuickStart = function() {
+	this.quickStart();
+}
+
 SolverShimaguni.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	return this.tryToApplyHypothesis(SolveEventPosition(p_x, p_y, p_symbol));
+	if (this.quickStartDone) {		
+		return this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
+	}
 }
 
 SolverShimaguni.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverShimaguni.prototype.quickStart = function() {
-	var space;
-	this.initiateQuickStart();
-	//First, ban all values adjacent to regions with forced values (or ones of size 1, it works as well).
-	this.regions.forEach(region => {
-		if (region.forcedVal > 0) {
-			region.contact.forEach(irc => this.tryToBan(irc, region.forcedVal));
-		}
-		if (region.size == 1) {
-			region.contact.forEach(irc => this.tryToBan(irc, 1));
-		}
-	});
-	this.regions.forEach(region => {
-		if((region.size == region.forcedVal) || (region.size == 1)) {
-			region.spaces.forEach(space =>
-				{this.emitHypothesis(space.x,space.y,FILLING.YES)}
-			);
-		}
-	});
-	this.terminateQuickStart();
-}
-
 SolverShimaguni.prototype.emitPassRegion = function(p_indexRegion) {
-	generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEvents(generatedEvents, p_indexRegion); 
+	if (this.quickStartDone) {		
+		generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
+		this.passEvents(generatedEvents, p_indexRegion); 
+	}
 }
 
 SolverShimaguni.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultiPass);
+	if (this.quickStartDone) {		
+		this.multiPass(this.methodsSetMultiPass);
+	}
 }
 
 SolverShimaguni.prototype.tryToBan = function(p_region, p_value) {
-	this.tryToApplyHypothesis(SolveEventValue(p_region, p_value));
+	if (this.quickStartDone) {		
+		this.tryToApplyHypothesis(new NumberBanEvent(p_region, p_value));
+	}
 }
 
 //--------------------------------
@@ -253,9 +247,9 @@ SolverShimaguni.prototype.putNew = function(p_x, p_y, p_symbol) {
 }
 
 
-SolverShimaguni.prototype.banValue = function(p_indexRegion,p_value){
+SolverShimaguni.prototype.banValue = function(p_indexRegion, p_value){
 	var region = this.regions[p_indexRegion];
-	if (region.spaces.length < p_value || !this.isPossibleValue(p_indexRegion,p_value)){
+	if (region.spaces.length < p_value || !this.isPossibleValue(p_indexRegion, p_value)) {
 		return EVENT_RESULT.HARMLESS;
 	}
 	if (region.forcedValue == p_value){
@@ -274,7 +268,7 @@ SolverShimaguni.prototype.banValue = function(p_indexRegion,p_value){
 			newMin++;
 		} while(!this.isPossibleValue(p_indexRegion,newMin));
 	}
-	if (p_value == region.maxVal){
+	if (p_value == region.maxVal) {
 		do {
 			newMax--;
 		} while(!this.isPossibleValue(p_indexRegion,newMax));
@@ -288,15 +282,15 @@ SolverShimaguni.prototype.banValue = function(p_indexRegion,p_value){
 undoEventClosure = function(p_solver) {
 	return function(p_eventToUndo) {
 		if (p_eventToUndo.kind == KIND.SYMBOL) {
-			p_solver.undoSymbolEvent(p_eventToUndo);
+			p_solver.undoSpaceEvent(p_eventToUndo);
 		}
 		else{
-			p_solver.undoValueEvent(p_eventToUndo);
+			p_solver.undoNumberBanEvent(p_eventToUndo);
 		}
 	}
 }
 
-SolverShimaguni.prototype.undoSymbolEvent = function(p_event) {
+SolverShimaguni.prototype.undoSpaceEvent = function(p_event) {
 	const region = this.regions[this.regionArray[p_event.y][p_event.x]];
 	region.freshClusters = false;
 	this.answerArray[p_event.y][p_event.x] = FILLING.UNDECIDED;
@@ -310,7 +304,7 @@ SolverShimaguni.prototype.undoSymbolEvent = function(p_event) {
 	}
 }
 
-SolverShimaguni.prototype.undoValueEvent = function(p_event) {
+SolverShimaguni.prototype.undoNumberBanEvent = function(p_event) {
 	const region = this.regions[p_event.indexRegion];
 	this.setPossibleValueTrue(p_event.indexRegion,p_event.valueToBan);
 	if (p_event.valueToBan < region.minVal) {
@@ -318,6 +312,33 @@ SolverShimaguni.prototype.undoValueEvent = function(p_event) {
 	}
 	if (p_event.valueToBan > region.maxVal) {
 		region.maxVal = p_event.valueToBan;
+	}
+}
+
+//--------------------------------
+// Quickstart !
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Shimaguni"}];
+		var region;
+		for (var irc = 0 ; irc < p_solver.regions.length ; irc++) {
+			region = p_solver.regions[irc];
+			if (region.forcedVal > 0) {
+				listQSEvts.push(new NumberBanEvent(irc, region.forcedVal)); 
+			}
+			if (region.size == 1) {
+				listQSEvts.push(new NumberBanEvent(irc, 1));
+			}
+		};
+		p_solver.regions.forEach(region => {
+			if((region.size == region.forcedVal) || (region.size == 1)) {
+				region.spaces.forEach(space =>
+					{listQSEvts.push(new SpaceEvent(space.x, space.y, FILLING.YES))}
+				);
+			}
+		});		
+		return listQSEvts;	
 	}
 }
 
@@ -337,15 +358,15 @@ deductionsClosure = function (p_solver) {
 				tryToAddArrayListData(p_solver.introducedOsByRegion,ir,{x:x,y:y});
 				p_solver.existingNeighborsCoorsDirections(x, y).forEach(coors => {
 					if (p_solver.getRegionIndex(coors.x, coors.y) != ir) {
-						p_listEventsToApply.push(SolveEventPosition(coors.x, coors.y, FILLING.NO));
+						p_listEventsToApply.push(new SpaceEvent(coors.x, coors.y, FILLING.NO));
 					}
 				});
 				if ((region.YES == p_solver.forcedValue(ir)) || (region.YES == region.maxVal)) {
 					region.spaces.forEach(space=>{
 						if(p_solver.answerArray[space.y][space.x] ==  FILLING.UNDECIDED) {
-							p_listEventsToApply.push(SolveEventPosition(space.x,space.y,FILLING.NO));
+							p_listEventsToApply.push(new SpaceEvent(space.x,space.y,FILLING.NO));
 					}});
-					region.contact.forEach(irc => p_listEventsToApply.push(SolveEventValue(irc,region.YES)));
+					region.contact.forEach(irc => p_listEventsToApply.push(new NumberBanEvent(irc,region.YES)));
 				}
 			}
 			if (symbol == FILLING.NO) {
@@ -391,7 +412,7 @@ filterClustersClosure = function(p_solver) {
 					for(var ic = 0;ic < region.clusters.length; ic++){
 						if (ic != region.indexClusterWithFill){
 							region.clusters[ic].forEach(
-								space => {eventsToApply.push(SolveEventPosition(space.x,space.y,FILLING.NO))}
+								space => {eventsToApply.push(new SpaceEvent(space.x,space.y,FILLING.NO))}
 							);
 						}
 					}
@@ -402,7 +423,7 @@ filterClustersClosure = function(p_solver) {
 			var maxClusterSize = 0;
 			region.clusters.forEach(listCluster => {
 				if (listCluster.length < region.minVal){
-					listCluster.forEach(space => {eventsToApply.push(SolveEventPosition(space.x,space.y,FILLING.NO))});
+					listCluster.forEach(space => {eventsToApply.push(new SpaceEvent(space.x,space.y,FILLING.NO))});
 				}
 				if (listCluster.length > maxClusterSize){
 					maxClusterSize = listCluster.length;
@@ -410,7 +431,7 @@ filterClustersClosure = function(p_solver) {
 			});
 			//Events to ban values between the actual max and the (max size of cluster + 1)
 			for(var value = maxClusterSize+1 ; value <= region.maxVal ; value++){
-				eventsToApply.push(SolveEventValue(ir, value));
+				eventsToApply.push(new NumberBanEvent(ir, value));
 			}
 		});
 		
@@ -435,14 +456,14 @@ filterClustersClosure = function(p_solver) {
 				for(var ic = 0;ic < region.clusters.length; ic++){
 					if (ic != clusterBelong){
 						region.clusters[ic].forEach(
-							space => {eventsToApply.push(SolveEventPosition(space.x,space.y,FILLING.NO))}
+							space => {eventsToApply.push(new SpaceEvent(space.x,space.y,FILLING.NO))}
 						);
 					}
 				}
 			}
 			//Events to ban values between the min and the (number of Os - 1)
 			for(var value = region.minVal;value < region.YES;value++) {
-				eventsToApply.push(SolveEventValue(ir, value));
+				eventsToApply.push(new NumberBanEvent(ir, value));
 			}
 		});
 		
@@ -460,7 +481,7 @@ filterClustersClosure = function(p_solver) {
 			} // So... let's update !
 			region.clusters.forEach(listCluster => {
 				if (listCluster.length < region.minVal) {
-					listCluster.forEach(space => {eventsToApply.push(SolveEventPosition(space.x,space.y,FILLING.NO))});
+					listCluster.forEach(space => {eventsToApply.push(new SpaceEvent(space.x,space.y,FILLING.NO))});
 				}
 			});	
 			//Peculiar case : no X has been added recently (so no too small clusters detected to ban) yet we have to fill a region with Os since we have that many spaces left.
@@ -499,7 +520,7 @@ SolverShimaguni.prototype.fillRegionWith = function(p_eventsToApply, p_indexRegi
 	var region = this.regions[p_indexRegion];
 	region.spaces.forEach(space => {
 		if (this.answerArray[space.y][space.x] == FILLING.UNDECIDED){
-			p_eventsToApply.push(SolveEventPosition(space.x, space.y, p_symbol));
+			p_eventsToApply.push(new SpaceEvent(space.x, space.y, p_symbol));
 		}
 	});
 	return p_eventsToApply;
@@ -507,7 +528,7 @@ SolverShimaguni.prototype.fillRegionWith = function(p_eventsToApply, p_indexRegi
 
 SolverShimaguni.prototype.banAllAdjacentsFromRegion = function(p_eventsToApply, p_indexRegion, p_valueToBan){
 	this.regions[p_indexRegion].contact.forEach(irc => {
-		p_eventsToApply.push(SolveEventValue(irc,p_valueToBan));
+		p_eventsToApply.push(new NumberBanEvent(irc,p_valueToBan));
 	});
 	return p_eventsToApply;
 }
@@ -610,7 +631,7 @@ SolverShimaguni.prototype.generateEventsForRegionPass = function(p_indexRegion) 
 	var eventList = [];
 	this.regions[p_indexRegion].spaces.forEach(space => {
 		if (this.answerArray[space.y][space.x] == FILLING.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
-			eventList.push([SolveEventPosition(space.x, space.y, FILLING.YES), SolveEventPosition(space.x, space.y, FILLING.NO)]);
+			eventList.push([new SpaceEvent(space.x, space.y, FILLING.YES), new SpaceEvent(space.x, space.y, FILLING.NO)]);
 		}			 
 	});
 	return eventList;

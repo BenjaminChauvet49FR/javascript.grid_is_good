@@ -36,12 +36,12 @@ function main() {
 	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
 	buildInputCanvas("div_canvas_buttons", actionsManager, "noeud", "texti", ENTRY.NET_NODE, [ACTION_NOTHING, ACTION_PASS_SPACE]);
 	buildInputCanvas("div_canvas_buttons", actionsManager, "lien", "textid", ENTRY.NET_EDGE, [ACTION_LINK_SPACES, ACTION_CLOSE_LINKS, ACTION_NOTHING]);
-	buildActionsGlobal("div_global_actions", "textido", ["Multipasse", "Annuler"], 
-		[function(event){multipassAction(solver)}, function(event){undoAction(solver)}] );
+	buildActionsGlobal("div_global_actions", "textido", ["Multipasse", "Résolution", "Annuler"], 
+		[function(event){multipassAction(solver)}, function(event){solveAction(solver)}, function(event){undoAction(solver)}] );
 	initializeItemsLoopInfos("div_common_loop_display", solver);
 }
 
-quickStartClosure = function(p_solver) {
+quickStartEventsClosure = function(p_solver) {
 	return function() {
 		p_solver.initiateQuickStart("Grand Tour");
 

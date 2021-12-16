@@ -75,7 +75,7 @@ function clickMeshAction(p_solver, p_x, p_y, p_action) {
 // Game action buttons
 
 quickStartAction = function(p_solver){
-	p_solver.quickStart();
+	p_solver.makeQuickStart();
 }
 
 multipassAction = function(p_solver){
@@ -84,6 +84,10 @@ multipassAction = function(p_solver){
 
 undoAction = function(p_solver,p_textArea){
 	p_solver.undo();
+}
+
+solveAction = function (p_solver) {
+	p_solver.resolve();
 }
 
 //--------------------------

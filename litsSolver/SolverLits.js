@@ -32,6 +32,10 @@ SolverLITS.prototype.construct = function(p_wallArray) {
 	};
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterClosureNewlyOpen(this), filterClosureNewlyClosed(this)]);
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying}; // Warning : the argumentToLabelMethod is defined right before the pass in this solver
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
 
 	this.gridWall = WallGrid_data(p_wallArray); 
 	this.regionArray = this.gridWall.toRegionArray();
@@ -131,8 +135,8 @@ SolverLITS.prototype.getFirstSpaceRegion = function(p_i) {
 }
 
 //--------------------------------
-
 // Input methods
+
 SolverLITS.prototype.emitHypothesis = function(p_x, p_y, p_symbol){
 	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 }
@@ -141,16 +145,8 @@ SolverLITS.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverLITS.prototype.quickStart = function() { 
-	this.initiateQuickStart();
-	this.regions.forEach(region => {
-		if (region.size == 4) {
-			for (var i = 0; i <= 3 ; i++) {
-				this.tryToApplyHypothesis(new SpaceEvent(region.spaces[i].x, region.spaces[i].y, ADJACENCY.YES));
-			}
-		};
-	});
-	this.terminateQuickStart();
+SolverLITS.prototype.makeQuickStart = function() { 
+	this.quickStart();
 }
 
 SolverLITS.prototype.passRegionAndAdjacentSpaces = function(p_indexRegion) {
@@ -188,8 +184,8 @@ namingRegionClosureAdj = function(p_solver) {
 
 
 //--------------------------------
-
 // Doing and undoing
+
 applyEventClosure = function(p_solver) {
 	return function(p_eventToApply) {
 		if (p_eventToApply.kind == KIND_EVENT.SHAPE) {
@@ -293,7 +289,6 @@ undoEventClosure = function(p_solver) {
 }
 
 //--------------------------------
-
 // Exchanges solver and geographical
 
 /**
@@ -312,8 +307,23 @@ adjacencyClosure = function (p_solver) {
 }
 
 //--------------------------------
+// Quickstart !
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "LITS"}]
+		p_solver.regions.forEach(region => {
+			if (region.size == 4) {
+				for (var i = 0; i <= 3 ; i++) {
+					listQSEvts.push(new SpaceEvent(region.spaces[i].x, region.spaces[i].y, ADJACENCY.YES));
+				}
+			};
+		});
+		return listQSEvts;
+	}
+}
 
-// Intelligence
+//--------------------------------
+// Deductions
 
 // Deductions closure. Where intelligence begins !
 deductionsClosure = function (p_solver) {

@@ -27,7 +27,10 @@ SolverHakyuu.prototype.construct = function(p_wallArray, p_numberArray) {
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
 	};*/
-
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
 	this.gridWall = WallGrid_data(p_wallArray); 
 	this.regionArray = this.gridWall.toRegionArray();
 	this.regions = [];
@@ -160,19 +163,11 @@ SolverHakyuu.prototype.getRegionIndex = function(p_x, p_y) {
 
 // Input methods
 SolverHakyuu.prototype.emitHypothesis = function(p_x, p_y, p_number){
-	return this.tryToPutNew(p_x, p_y, p_number);
+	this.tryToApplyHypothesis(new SpaceAllowEvent(p_x, p_y, p_number, true));
 }
 
 SolverHakyuu.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
-}
-
-SolverHakyuu.prototype.quickStart = function() {
-	this.initiateQuickStart();
-	this.regions.forEach(region => {
-		// TODO
-	});
-	this.terminateQuickStart();
 }
 
 SolverHakyuu.prototype.passRegion = function(p_indexRegion) {
@@ -184,13 +179,8 @@ SolverHakyuu.prototype.makeMultiPass = function() {
 	//this.multiPass(this.methodsSetMultiPass);
 }
 
-//--------------------------------
-// Central method
-
-SolverHakyuu.prototype.tryToPutNew = function (p_x, p_y, p_number) {
-	// If we directly passed methods and not closures, we would be stuck because "this" would refer to the Window object which of course doesn't define the properties we want, e.g. the properties of the solvers.
-	// All the methods pass the solver as a parameter because they can't be prototyped by it (problem of "undefined" things). 
-	this.tryToApplyHypothesis(new SpaceAllowEvent(p_x, p_y, p_number, true));
+SolverHakyuu.prototype.makeQuickStart = function () {
+	this.quickStart();
 }
 
 //--------------------------------
@@ -323,27 +313,26 @@ SolverHakyuu.prototype.alertOneLeftInRegion = function(p_eventList, p_region, p_
 //--------------------------------
 // Quickstart
 
-SolverHakyuu.prototype.quickStart = function () {
-	this.initiateQuickStart();
-	var justOne;
-	for (var y = 0 ; y < this.yLength ; y++) {
-		for (var x = 0 ; x < this.xLength ; x++) {
-			if (!this.numbersArray[y][x].fixedValue) {
-				justOne = this.numbersArray[y][x].getOneLeft();
-				if (justOne) {
-					this.emitHypothesis(x, y, justOne, true);
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Hakyuu"}];
+		var justOne;
+		for (var y = 0 ; y < p_solver.yLength ; y++) {
+			for (var x = 0 ; x < p_solver.xLength ; x++) {
+				if (!p_solver.numbersArray[y][x].fixedValue) {
+					justOne = p_solver.numbersArray[y][x].getOneLeft();
+					if (justOne) {
+						listQSEvts.push(new SpaceAllowEvent(x, y, justOne, true));
+					}
 				}
 			}
 		}
+		p_solver.regions.forEach(region => {
+			for (var nb = 1; nb <= region.size ; nb++) {
+				listQSEvts = p_solver.alertOneLeftInRegion(listQSEvts, region, nb);
+			}
+		});
+		return listQSEvts;
 	}
-	listEvents = [];
-	this.regions.forEach(region => {
-		for (var nb = 1; nb <= region.size ; nb++) {
-			listEvents = this.alertOneLeftInRegion(listEvents, region, nb);
-		}
-	});
-	listEvents.forEach(event_ => {
-		this.emitHypothesis(event_.x, event_.y, event_.number, event_.choice);
-	});
-	this.terminateQuickStart();
 }
+

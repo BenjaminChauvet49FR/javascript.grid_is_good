@@ -20,7 +20,7 @@ SolverYajilin.prototype.construct = function(p_valueGrid) {
 		setSpaceLinkedPSDeductions : setSpaceLinkedPSDeductionsClosure(this),
 		setSpaceClosedPSDeductions : setSpaceClosedPSDeductionsClosure(this),
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
-		PSQuickStart : quickStartClosure(this),
+		quickStartEventsPS : quickStartEventsClosure(this),
 		PSFilters : [filterStripsClosure(this)],
 		PSAbortMethods : [abortYajilinClosure(this)],
 		
@@ -31,6 +31,7 @@ SolverYajilin.prototype.construct = function(p_valueGrid) {
 	});
 	this.declareClosedSpacesActing();
 	this.clueGrid = Grid_data(p_valueGrid);
+	this.setResolution.searchSolutionMethod = loopNaiveSearchClosure(this);
 	
 	// What follows in the setup is copied onto Yajikabe (created after Yajilin but it handles unions)
 	this.stripesArray = []; 
@@ -231,6 +232,9 @@ SolverYajilin.prototype.makeMultipass = function() {
 	this.multipassLoop();
 }
 
+solveAction = function (p_solver) {
+	p_solver.resolve();
+}
 
 // -------------------
 // Atomic closures 
@@ -511,25 +515,21 @@ abortYajilinClosure = function(p_solver) {
 // -------------------
 // Quickstart
 
-quickStartClosure = function(p_solver) {
-	return function() { 
-		p_solver.initiateQuickStart("Yajilin");
-		var list = [];
+quickStartEventsClosure = function(p_solver) {
+	return function(p_QSeventsList) { 
+		p_QSeventsList.push({quickStartLabel : "Yajilin"});
 		p_solver.cluesList.forEach(strip => {
-			list = p_solver.testStripDeductions(list, strip);
+			p_QSeventsList = p_solver.testStripDeductions(p_QSeventsList, strip);
 		});
 		for (var y = 0 ; y < p_solver.yLength ; y++) {
 			for (var x = 0 ; x < p_solver.xLength ; x++) {
 				// Smartness of Yajilin
 				if (!p_solver.isBanned(x, y)) {
-					list = p_solver.tryAndCloseBeforeAndAfter2ClosedDeductions(list, x, y);
+					p_QSeventsList = p_solver.tryAndCloseBeforeAndAfter2ClosedDeductions(p_QSeventsList, x, y);
 				}
 			}
 		}
-		list.forEach(p_event => {
-			p_solver.tryToPutNewSpace(p_event.x, p_event.y, p_event.state);
-		});
-		p_solver.terminateQuickStart();
+		return p_QSeventsList;
 	}
 }
 

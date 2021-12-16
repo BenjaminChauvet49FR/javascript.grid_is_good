@@ -33,7 +33,11 @@ SolverTapa.prototype.construct = function(p_combinationArray) {
 		generatePassEventsMethod : generateEventsForAroundSpacePassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 		//skipPassMethod : skipPassClosure(this)
-	};
+	};	
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
 
 	this.checkerNewSpaces = new CheckCollectionDoubleEntry(this.xLength, this.yLength);
 
@@ -108,23 +112,15 @@ SolverTapa.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverTapa.prototype.quickStart = function() {
-	this.initiateQuickStart();
-	var eventsList = [];
-	this.numericSpacesCoorsList.forEach(coors => {
-		eventsList = this.deductionsTapass(eventsList, coors.x, coors.y);
-	});
-	eventsList.forEach(event_ => {this.tryToApplyHypothesis(event_);});
-	this.terminateQuickStart();
+SolverTapa.prototype.makeQuickStart = function() {
+	this.quickStart();
 }
-
 
 SolverTapa.prototype.makeMultiPass = function() {	
 	this.multiPass(this.methodsSetMultiPass);
 }
 
 //--------------------------------
-
 // Doing, undoing and transforming
 
 // Offensive programming : the coordinates are assumed to be in limits
@@ -155,7 +151,6 @@ undoEventClosure = function(p_solver) {
 }
 
 //--------------------------------
-
 // Exchanges solver and geographical
 
 /**
@@ -174,7 +169,21 @@ adjacencyClosure = function (p_solver) {
 }
 
 //--------------------------------
+// Quickstart !
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Tapa"}];
+		p_solver.numericSpacesCoorsList.forEach(coors => {
+			listQSEvts = p_solver.deductionsTapass(listQSEvts, coors.x, coors.y);
+		});
+		return listQSEvts;
+	}
+}
+
+//--------------------------------
 // Intelligence
+
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
 		const x = p_eventBeingApplied.x();

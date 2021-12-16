@@ -36,7 +36,11 @@ SolverStitches.prototype.construct = function(p_wallArray, p_marginLeftArray, p_
 		//skipPassMethod : skipPassClosure(this)
 	};
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
-
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
+	
 	this.gridWall = WallGrid_data(p_wallArray);
 	this.borderLists = [];
 	this.regionArray = this.gridWall.toRegionArray();
@@ -161,52 +165,8 @@ SolverStitches.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverStitches.prototype.quickStart = function() { 
-	this.initiateQuickStart();
-	var eventList = [];
-	for (var ri1 = 0 ; ri1 < this.regionsNumber ; ri1 ++) {
-		for (var ri2 = 0 ; ri2 < ri1; ri2 ++) {
-			if (this.getBorder(ri1, ri2) != null) {				
-				eventList = this.eventsMayFindBreachInBorder(eventList, ri1, ri2);
-			}
-		}
-	}
-	for (var x = 0 ; x < this.xLength ; x++) {
-		if (this.columnsInfos[x].notPlacedYet == 0) {					
-			eventList = this.eventsFillColumn(eventList, x, SPACE_STATE.EMPTY);
-		}
-		if (this.columnsInfos[x].notEmptiedYet == 0) {					
-			eventList = this.eventsFillColumn(eventList, x, SPACE_STATE.BUTTON);
-		}
-	}
-	for (var y = 0 ; y < this.yLength ; y++) {
-		if (this.rowsInfos[y].notPlacedYet == 0) {					
-			eventList = this.eventsFillRow(eventList, y, SPACE_STATE.EMPTY);
-		}
-		if (this.rowsInfos[y].notEmptiedYet == 0) {					
-			eventList = this.eventsFillRow(eventList, y, SPACE_STATE.BUTTON);
-		}
-	}
-	// Check all spaces out (it's not intelligence, is it ?)
-	var innerSpace;
-	for (var y = 0 ; y < this.yLength ; y++) {
-		for (var x = 0 ; x < this.xLength ; x++) {
-			innerSpace = true;
-			KnownDirections.forEach(dir => {
-				if (this.neighborExists(x, y, dir) && (this.regionArray[y][x] != this.regionArray[y + DeltaY[dir]][x + DeltaX[dir]])) {	// Note : not totally smart + doesn't take banned spaces into account
-					innerSpace = false; 
-				}
-			});
-			if (innerSpace) {
-				eventList.push(new SpaceEvent(x, y, SPACE_STATE.EMPTY));
-			}
-		}
-	}
-	
-	eventList.forEach(event_ => {
-		this.tryToApplyHypothesis(event_, this.methodsSetDeductions);
-	});
-	this.terminateQuickStart();
+SolverStitches.prototype.makeQuickStart = function() { 
+	this.quickStart();
 }
 
 SolverStitches.prototype.emitPassBorderRight = function(p_x, p_y) {
@@ -321,8 +281,52 @@ undoEventClosure = function(p_solver) {
 }
 
 //--------------------------------
+// Quickstart !
 
-// Who needs central methods ?
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Stitches"}];
+		for (var ri1 = 0 ; ri1 < p_solver.regionsNumber ; ri1 ++) {
+			for (var ri2 = 0 ; ri2 < ri1; ri2 ++) {
+				if (p_solver.getBorder(ri1, ri2) != null) {				
+					listQSEvts = p_solver.eventsMayFindBreachInBorder(listQSEvts, ri1, ri2);
+				}
+			}
+		}
+		for (var x = 0 ; x < p_solver.xLength ; x++) {
+			if (p_solver.columnsInfos[x].notPlacedYet == 0) {					
+				listQSEvts = p_solver.eventsFillColumn(listQSEvts, x, SPACE_STATE.EMPTY);
+			}
+			if (p_solver.columnsInfos[x].notEmptiedYet == 0) {					
+				listQSEvts = p_solver.eventsFillColumn(listQSEvts, x, SPACE_STATE.BUTTON);
+			}
+		}
+		for (var y = 0 ; y < p_solver.yLength ; y++) {
+			if (p_solver.rowsInfos[y].notPlacedYet == 0) {					
+				listQSEvts = p_solver.eventsFillRow(listQSEvts, y, SPACE_STATE.EMPTY);
+			}
+			if (p_solver.rowsInfos[y].notEmptiedYet == 0) {					
+				listQSEvts = p_solver.eventsFillRow(listQSEvts, y, SPACE_STATE.BUTTON);
+			}
+		}
+		// Check all spaces out (it's not intelligence, is it ?)
+		var innerSpace;
+		for (var y = 0 ; y < p_solver.yLength ; y++) {
+			for (var x = 0 ; x < p_solver.xLength ; x++) {
+				innerSpace = true;
+				KnownDirections.forEach(dir => {
+					if (p_solver.neighborExists(x, y, dir) && (p_solver.regionArray[y][x] != p_solver.regionArray[y + DeltaY[dir]][x + DeltaX[dir]])) {	// Note : not totally smart + doesn't take banned spaces into account
+						innerSpace = false; 
+					}
+				});
+				if (innerSpace) {
+					listQSEvts.push(new SpaceEvent(x, y, SPACE_STATE.EMPTY));
+				}
+			}
+		}
+		return listQSEvts;
+	}
+}
 
 //--------------------------------
 

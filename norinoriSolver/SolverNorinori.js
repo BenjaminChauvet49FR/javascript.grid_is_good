@@ -37,7 +37,10 @@ SolverNorinori.prototype.construct = function(p_wallArray) {
 		skipPassMethod : skipPassClosure(this)
 	};
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
-
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
 }
 
 /**
@@ -140,16 +143,8 @@ SolverNorinori.prototype.undo = function(){
 /**
 Rushes the spaces with 2 regions by filling them with O (actually, fills one space and the next one follows)
 */
-SolverNorinori.prototype.quickStart = function() {
-	var space;
-	this.initiateQuickStart();
-	for(var i=0 ; i < this.spacesByRegion.length ; i++){
-		if(this.spacesByRegion[i].length == 2){
-			space = this.spacesByRegion[i][0];
-			this.emitHypothesis(space.x, space.y, FILLING.YES);
-		}
-	}
-	this.terminateQuickStart();
+SolverNorinori.prototype.makeQuickStart = function() {
+	this.quickStart();
 }
 
 SolverNorinori.prototype.emitPassRegion = function(p_indexRegion) {
@@ -233,6 +228,23 @@ undoEventClosure = function(p_solver) {
 				p_solver.neighborsArray[coorsDir.y][coorsDir.x].undecided++;
 			});
 		}	
+	}
+}
+
+//--------------------------------
+// Quickstart !
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Norinori"}];
+		var space;
+		for(var i=0 ; i < p_solver.spacesByRegion.length ; i++) {
+			if(p_solver.spacesByRegion[i].length == 2) {
+				space = p_solver.spacesByRegion[i][0];
+				listQSEvts.push(new SpaceEvent(space.x, space.y, FILLING.YES));
+			}
+		}
+		return listQSEvts;
 	}
 }
 

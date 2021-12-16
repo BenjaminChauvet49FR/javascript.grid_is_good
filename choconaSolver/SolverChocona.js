@@ -75,6 +75,10 @@ SolverChocona.prototype.construct = function(p_wallArray, p_indications) {
 		}
 	}
 	
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
 	//Note : grid not purified.
 }
 
@@ -121,15 +125,8 @@ SolverChocona.prototype.makeMultiPass = function() {
 	this.multiPass(this.methodsSetMultiPass);
 }
 
-SolverChocona.prototype.quickStart = function() {
-	this.initiateQuickStart();
-	var quickStartList = [];
-	for (ir = 0; ir < this.regions.length ; ir ++) {
-		this.deductionsRegionIfFullNOs(quickStartList, ir);
-		this.deductionsRegionIfFullYESs(quickStartList, ir);
-	};
-	quickStartList.forEach(eventToApply => {this.tryToApplyHypothesis(eventToApply);});
-	this.terminateQuickStart();
+SolverChocona.prototype.makeQuickStart = function() {
+	this.quickStart();
 }
 
 //--------------------------------
@@ -188,6 +185,20 @@ undoEventClosure = function(p_solver) {
 
 function isSpaceEvent(p_event) {
 	return p_event.symbol;
+}
+
+//--------------------------------
+// Quickstart !
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Chocona"}];
+		for (ir = 0; ir < p_solver.regions.length ; ir ++) {
+			p_solver.deductionsRegionIfFullNOs(listQSEvts, ir);
+			p_solver.deductionsRegionIfFullYESs(listQSEvts, ir);
+		};
+		return listQSEvts;
+	}
 }
 
 //--------------------------------

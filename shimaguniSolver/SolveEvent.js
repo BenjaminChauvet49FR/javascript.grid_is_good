@@ -7,13 +7,13 @@ const KIND = {
 	VALUE : 2
 }
 
-function SolveEventPosition(p_x, p_y, p_symbol) {
+function SpaceEvent(p_x, p_y, p_symbol) {
 	var solve = new SolveEvent();
 	solve.setupSymbol(p_x,p_y,p_symbol);
 	return solve;
 }
 
-function SolveEventValue(p_index, p_val) {
+function NumberBanEvent(p_index, p_val) {
 	var solve = new SolveEvent();
 	solve.setupValue(p_index,p_val);
 	return solve;

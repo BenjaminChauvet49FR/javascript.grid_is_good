@@ -37,6 +37,10 @@ SolverKuromasu.prototype.construct = function(p_numbersXArray, p_isCorral) {
 
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filtersUpdateMinsFromNewlyOpenSpaces(this), filtersMinMaxClosure(this), filterCorralClosure(this)]);
 	// Note : may be optimized with adding the last filter depending on this.isCorral
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
 
 	this.answerArray = generateValueArray(this.xLength, this.yLength, ADJACENCY.UNDECIDED);
 	this.closedAdjacentOutsideArray = generateValueArray(this.xLength, this.yLength, false);
@@ -158,33 +162,15 @@ SolverKuromasu.prototype.getRangedSpace = function(p_index) {
 
 // Input methods
 SolverKuromasu.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	this.tryToPutNew(p_x, p_y, p_symbol);
+	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverKuromasu.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverKuromasu.prototype.quickStart = function() {
-	this.initiateQuickStart();
-	var space;
-	var listEvents;
-	// TODO more can be done
-	
-	// For each ranged space, apply a min ranged event equal to the space itself (it should add a good part, if not all, of ranged spaces into the filters)
-	this.rangedSpacesCoors.forEach(coors => {
-		space = this.numericArray[coors.y][coors.x];
-		KnownDirections.forEach(dir => {
-			this.tryToApplyHypothesis(new MinRangeEvent(coors.x, coors.y, dir, space.number));
-		});
-	});
-	// Mins and maxes
-	var listEvents;
-	for (var i = 0 ; i < this.rangedSpacesCoors.length ; i++) {
-		listEvents = this.deductionsSumsMinMax([], this.rangedSpacesCoors[i].x, this.rangedSpacesCoors[i].y);
-		listEvents.forEach(event_ => {this.tryToApplyHypothesis(event_) } );
-	}
-	this.terminateQuickStart();
+SolverKuromasu.prototype.makeQuickStart = function() {
+	this.quickStart();
 }
 
 SolverKuromasu.prototype.emitPassSpace = function(p_x, p_y) {
@@ -200,14 +186,6 @@ SolverKuromasu.prototype.emitPassSpace = function(p_x, p_y) {
 
 SolverKuromasu.prototype.makeMultiPass = function() {
 	this.multiPass(this.methodsSetMultiPass);
-}
-
-//--------------------------------
-
-// Central method
-
-SolverKuromasu.prototype.tryToPutNew = function (p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 //--------------------------------
@@ -346,6 +324,30 @@ adjacencyClosure = function (p_solver) {
         return p_solver.answerArray[p_y][p_x];
     }
 }
+
+//--------------------------------
+// Quickstart !
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : (p_solver.isCorral ? "Corral" : "Kuromasu")}]
+		var space;
+		// TODO more can be done
+		
+		// For each ranged space, apply a min ranged event equal to the space itself (it should add a good part, if not all, of ranged spaces into the filters)
+		p_solver.rangedSpacesCoors.forEach(coors => {
+			space = p_solver.numericArray[coors.y][coors.x];
+			KnownDirections.forEach(dir => {
+				listQSEvts.push(new MaxRangeEvent(coors.x, coors.y, dir, space.number));
+			});
+		});
+		// Mins and maxes
+		for (var i = 0 ; i < p_solver.rangedSpacesCoors.length ; i++) {
+			listQSEvts = p_solver.deductionsSumsMinMax(listQSEvts, p_solver.rangedSpacesCoors[i].x, p_solver.rangedSpacesCoors[i].y);
+		}
+		return listQSEvts;
+	}
+} 
 
 //--------------------------------
 // Deductions

@@ -42,6 +42,11 @@ SolverUsotatami.prototype.construct = function(p_numberGrid) {
 		//skipPassMethod : skipPassClosure(this)
 	};
 	
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
+	
 	this.indicArray = []; // Spaces without number : ; with a number : {expansions left / up / right / down}
 	this.numberSpacesList = []; // For filters on numbers
 	this.numberSpacesToCheckList = []; // For filters on numbers
@@ -178,11 +183,11 @@ SolverUsotatami.prototype.setRange = function(p_x, p_y, p_dir, p_value) {
 // Input methods
 
 SolverUsotatami.prototype.emitHypothesisRight = function(p_x, p_y, p_symbol) {
-	this.tryToPutNew(p_x, p_y, DIRECTION.RIGHT, p_symbol);
+	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, DIRECTION.RIGHT, p_state));
 }
 
 SolverUsotatami.prototype.emitHypothesisDown = function(p_x, p_y, p_symbol) {
-	this.tryToPutNew(p_x, p_y, DIRECTION.DOWN, p_symbol);
+	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, DIRECTION.DOWN, p_state));
 }
 
 SolverUsotatami.prototype.undo = function(){
@@ -199,34 +204,14 @@ SolverUsotatami.prototype.makeMultiPass = function() {
 }
 
 // In this puzzle, quickstart is vital for the separation of numbers
-SolverUsotatami.prototype.quickStart = function(p_x, p_y) {
-	this.initiateQuickStart("Usotatami");
-	var list = [];
-	for (var y = 0 ; y < this.yLength ; y++) {
-		for (var x = 0 ; x < this.xLength ; x++) {
-			list = [];
-			// Separation of numbers
-			if (this.getNumber(x, y) != null) {
-				[DIRECTION.RIGHT, DIRECTION.DOWN].forEach(dir => {
-					if (this.neighborExists(x, y, dir) && (this.getNumber(x+DeltaX[dir], y+DeltaY[dir]) != null)) {
-						list.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED));
-					}
-				});
-			}
-			// Claustrophobia test.
-			list = this.claustrophobiaDeductions(list, x, y);
-			// Applying 
-			list.forEach(_event => {this.tryToApplyHypothesis(_event); });
-		}
-	}
-	this.terminateQuickStart();
+SolverUsotatami.prototype.makeQuickStart = function(p_x, p_y) {
+	this.quickStart();
 }
 
 //--------------------------------
 
 // Central method
 SolverUsotatami.prototype.tryToPutNew = function(p_x, p_y, p_direction, p_state) {
-	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, p_direction, p_state), this.methodsSetDeductions);
 }
 
 //--------------------------------
@@ -312,6 +297,30 @@ SolverUsotatami.prototype.undoViewEvent = function(p_x, p_y, p_dir) {
 
 SolverUsotatami.prototype.undoRangeEvent = function(p_x, p_y, p_dir) {
 	this.setRange(p_x, p_y, p_dir, UNKNOWN_RANGE);
+}
+
+//-------------------------------- 
+// Quickstart
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Usotatami"}];
+		for (var y = 0 ; y < p_solver.yLength ; y++) {
+			for (var x = 0 ; x < p_solver.xLength ; x++) {
+				// Separation of numbers
+				if (p_solver.getNumber(x, y) != null) {
+					[DIRECTION.RIGHT, DIRECTION.DOWN].forEach(dir => {
+						if (p_solver.neighborExists(x, y, dir) && (p_solver.getNumber(x+DeltaX[dir], y+DeltaY[dir]) != null)) {
+							listQSEvts.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED));
+						}
+					});
+				}
+				// Claustrophobia test.
+				listQSEvts = p_solver.claustrophobiaDeductions(listQSEvts, x, y);
+			}
+		}
+		return listQSEvts;
+	}
 }
 
 //--------------------------------

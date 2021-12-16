@@ -80,7 +80,7 @@ function clickMarginAction(p_solver, p_edge, p_index) {
 // Game action buttons
 
 quickStartAction = function(p_solver) {
-	p_solver.quickStart();
+	p_solver.makeQuickStart();
 }
 
 undoAction = function(p_solver) {

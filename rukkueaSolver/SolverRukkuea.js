@@ -26,6 +26,11 @@ SolverRukkuea.prototype.construct = function(p_numbersArray) {
 		generatePassEventsMethod : generatePassEventsClosure(this), 
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this), 
 		passTodoMethod : multipassDefineTodoClosure(this)};
+		
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}	
 
 	this.xLength = p_numbersArray[0].length;
 	this.yLength = p_numbersArray.length;
@@ -107,48 +112,11 @@ SolverRukkuea.prototype.passSelectedSpaces = function(p_coorsList) {
 	return this.passEvents(eventsForPass, {isCustom : true, numberSpaces : eventsForPass.length});
 }
 
-SolverRukkuea.prototype.quickStart = function() {
-	this.initiateQuickStart();
-	var quickStartList = [];
-	var x, y;
-	this.numberedSpacesCoors.forEach(coors => {
-		x = coors.x;
-		y = coors.y;
-		quickStartList = this.checkZeroNosDeductions(quickStartList, x, y);
-		quickStartList = this.checkZeroYesDeductions(quickStartList, x, y);
-		if (this.numericArray[y][x].value == 2) {
-			quickStartList.push(new SpaceEvent(x, y, FILLING.NO));
-		}
-		if (this.numericArray[y][x].value == 4) {
-			quickStartList.push(new SpaceEvent(x, y, FILLING.YES));
-		}
-	});
-	for (x = 0 ; x < this.xLength ; x++) {
-		if (this.numericArray[0][x].value == 3) {
-			quickStartList.push(new SpaceEvent(x, 0, FILLING.YES)); // Note : xLength and yLength >= 2
-			quickStartList.push(new SpaceEvent(x, 1, FILLING.YES));
-		}
-		if (this.numericArray[this.yLength-1][x].value == 3) {
-			quickStartList.push(new SpaceEvent(x, this.yLength-1, FILLING.YES));
-			quickStartList.push(new SpaceEvent(x, this.yLength-2, FILLING.YES));
-		}
-	}
-	for (y = 0 ; y < this.yLength ; y++) {
-		if (this.numericArray[y][0].value == 3) {
-			quickStartList.push(new SpaceEvent(0, y, FILLING.YES));
-			quickStartList.push(new SpaceEvent(1, y, FILLING.YES));
-		}
-		if (this.numericArray[y][this.xLength-1].value == 3) {
-			quickStartList.push(new SpaceEvent(this.xLength-1, y, FILLING.YES));
-			quickStartList.push(new SpaceEvent(this.xLength-2, y, FILLING.YES));
-		}
-	}
-	quickStartList.forEach(eventToApply => {this.tryToApplyHypothesis(eventToApply);});
-	this.terminateQuickStart();
+SolverRukkuea.prototype.makeQuickStart = function() {
+	this.quickStart();
 }
 
 //--------------------------------
-
 // Doing and undoing
 
 applyEventClosure = function(p_solver) {
@@ -249,6 +217,49 @@ undoEventClosure = function(p_solver) {
 
 function isSpaceEvent(p_event) {
 	return p_event.symbol;
+}
+
+//--------------------------------
+// Quickstart !
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Rukkuea"}];
+		var x, y;
+		p_solver.numberedSpacesCoors.forEach(coors => {
+			x = coors.x;
+			y = coors.y;
+			listQSEvts = p_solver.checkZeroNosDeductions(listQSEvts, x, y);
+			listQSEvts = p_solver.checkZeroYesDeductions(listQSEvts, x, y);
+			if (p_solver.numericArray[y][x].value == 2) {
+				listQSEvts.push(new SpaceEvent(x, y, FILLING.NO));
+			}
+			if (p_solver.numericArray[y][x].value == 4) {
+				listQSEvts.push(new SpaceEvent(x, y, FILLING.YES));
+			}
+		});
+		for (x = 0 ; x < p_solver.xLength ; x++) {
+			if (p_solver.numericArray[0][x].value == 3) {
+				listQSEvts.push(new SpaceEvent(x, 0, FILLING.YES)); // Note : xLength and yLength >= 2
+				listQSEvts.push(new SpaceEvent(x, 1, FILLING.YES));
+			}
+			if (p_solver.numericArray[p_solver.yLength-1][x].value == 3) {
+				listQSEvts.push(new SpaceEvent(x, p_solver.yLength-1, FILLING.YES));
+				listQSEvts.push(new SpaceEvent(x, p_solver.yLength-2, FILLING.YES));
+			}
+		}
+		for (y = 0 ; y < p_solver.yLength ; y++) {
+			if (p_solver.numericArray[y][0].value == 3) {
+				listQSEvts.push(new SpaceEvent(0, y, FILLING.YES));
+				listQSEvts.push(new SpaceEvent(1, y, FILLING.YES));
+			}
+			if (p_solver.numericArray[y][p_solver.xLength-1].value == 3) {
+				listQSEvts.push(new SpaceEvent(p_solver.xLength-1, y, FILLING.YES));
+				listQSEvts.push(new SpaceEvent(p_solver.xLength-2, y, FILLING.YES));
+			}
+		}
+		return listQSEvts;
+	}
 }
 
 //--------------------------------

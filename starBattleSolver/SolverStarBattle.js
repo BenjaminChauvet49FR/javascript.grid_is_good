@@ -58,6 +58,11 @@ SolverStarBattle.prototype.construct = function(p_wallArray, p_starNumber) {
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
 	};
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this),
+		searchSolutionMethod : searchClosure(this),
+	}
+	
 	
 	this.buildPossibilities(p_starNumber); //notPlacedYet
 	this.buildAnswerArray(); //answerArray
@@ -147,19 +152,17 @@ SolverStarBattle.prototype.makeMultiPass = function() {
 }
 
 // The quickstart is truly quick since it consists of filling 1-size regions with stars. 
-SolverStarBattle.prototype.quickStart = function() { 
-	this.initiateQuickStart();
-	this.spacesByRegion.forEach(sbr => {
-		if (sbr.length == 1) {			
-			this.tryToApplyHypothesis(new SpaceEvent(sbr[0].x, sbr[0].y, STAR.YES));
-		}
-	});
-	this.terminateQuickStart();
+SolverStarBattle.prototype.makeQuickStart = function() { 
+	this.quickStart();
 }
 
 SolverStarBattle.prototype.passSelectedSpaces = function(p_coorsList) {
 	const eventsForPass = this.generateEventsForSpacesList(p_coorsList);
 	return this.passEvents(eventsForPass, {family : STAR_BATTLE_PASS_CATEGORY.CUSTOM, numberSpaces : eventsForPass.length});
+}
+
+SolverStarBattle.prototype.makeResolution = function() { 
+	this.resolve();
 }
 
 //------------------
@@ -405,13 +408,133 @@ namingCategoryClosure = function(p_solver) {
 }
 
 //--------------
+// Quickstart and resolution
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var answer = [{quickStartLabel : "Star battle"}];
+		p_solver.spacesByRegion.forEach(sbr => {
+			if (sbr.length == 1) {			
+				answer.push(new SpaceEvent(sbr[0].x, sbr[0].y, STAR.YES));
+			}
+		});
+		return answer;
+	}
+}
+
+SolverStarBattle.prototype.isSolved = function() {
+	for (var y = 0 ; y < this.yLength ; y++) {
+		if (this.notPlacedYet.columns[y].Os != 0) {
+			return false;
+		}
+	}
+	return true;
+}
+
+function searchClosure(p_solver) {
+	return function() {
+		var mp = p_solver.multiPass(p_solver.methodsSetMultiPass);
+		if (mp == MULTIPASS_RESULT.FAILURE) {
+			return RESOLUTION_RESULT.FAILURE;
+		}			
+		if (p_solver.isSolved()) {		
+			return RESOLUTION_RESULT.SUCCESS;
+		}		
+	
+		// Find index with the most solutions
+		var indexesForSolution = [];
+		var nbDeductions;
+		for (solveX = 0 ; solveX < p_solver.xLength ; solveX++) { // x and y are somehow modified by tryToApplyHypothesis...
+			for (solveY = 0 ; solveY < p_solver.yLength ; solveY++) {
+				if (p_solver.answerArray[solveY][solveX] == STAR.UNDECIDED) {
+					p_solver.tryToApplyHypothesis(new SpaceEvent(solveX, solveY, STAR.YES)); 
+					nbDeductions = p_solver.numberOfRelevantDeductionsSinceLastHypothesis();
+					indexesForSolution.push({x : solveX, y : solveY, nbd : nbDeductions});
+					p_solver.undoToLastHypothesis();				
+				}
+			}
+		}
+		indexesForSolution.sort(function(index1, index2) {return commonComparison([index2.nbd, index1.y, index1.x], [index1.nbd, index2.y, index2.x])});
+		
+		// And this is where things go crazy...
+		
+		// Sort elements.
+		// If we find things worth deducing, deduce them.
+		// Otherwise...
+		
+		var indexForSolution; // Analogic index ! 
+		var bestIndex = null;
+
+		var answerForSolution;
+		var nbRelevants;
+		var tryAgain;
+		
+		var newPlannedForcedEvents = [];
+		const symbols = [STAR.YES, STAR.NO];
+		var satisfied = false;
+		
+		const maxIndexTolerated = Math.min(40, indexesForSolution.length);// Index numeric !
+		var is = 0;
+		while (!satisfied) {
+			indexForSolution = indexesForSolution[is];
+			for (var j = 0 ; j < 2 ; j++) {
+				const symbol = symbols[j];				
+				p_solver.tryToApplyHypothesis(new SpaceEvent(indexForSolution.x, indexForSolution.y, symbol)); // Should not fail because stuff above didn't detect it. (but may still be wrong)
+				var mp = p_solver.multiPass(p_solver.methodsSetMultiPass);
+				if (p_solver.isSolved()) {	// Stuff was enough to solve puzzle
+					return RESOLUTION_RESULT.SUCCESS;
+				} else if (mp != MULTIPASS_RESULT.FAILURE) {
+					if (newPlannedForcedEvents.length == 0) {
+						nbRelevants = p_solver.numberOfRelevantDeductionsSinceLastHypothesis();
+						if (bestIndex == null || (bestIndex.nbRel < nbRelevants)) {
+							bestIndex = {x : indexForSolution.x, y : indexForSolution.y, nbRel : nbRelevants, symbol : symbol};
+						}
+					}
+					p_solver.undoToLastHypothesis(); 
+				} else { // Failed multipass
+					p_solver.undoToLastHypothesis();
+					newPlannedForcedEvents.push(new SpaceEvent(indexForSolution.x, indexForSolution.y, oppositeSymbol(symbol)));
+				}
+			}
+			satisfied = (newPlannedForcedEvents.length > indexesForSolution.length/4 || (bestIndex != null && bestIndex.nbRel > indexesForSolution.length/4) || (is == maxIndexTolerated));
+			is++;
+		}
+		
+		// We got new deductions. Let's apply them and retry.
+		if (newPlannedForcedEvents.length > 0) {
+			var tryOne;
+			for (var i = 0 ; i < newPlannedForcedEvents.length ; i++) {
+				tryOne = p_solver.tryToApplyHypothesis(newPlannedForcedEvents[i]);
+				if (tryOne == DEDUCTIONS_RESULT.FAILURE) {
+					return RESOLUTION_RESULT.FAILURE;
+				}
+			}
+			return searchClosure(p_solver)();
+		}
+		
+		// We could NOT be satisfied and got no new deductions ? Well... recursion time !
+		return p_solver.tryAllPossibilities([
+			[new SpaceEvent(bestIndex.x, bestIndex.y, bestIndex.symbol)],
+			[new SpaceEvent(bestIndex.x, bestIndex.y, oppositeSymbol(bestIndex.symbol))]
+		]);
+	}
+}
+
+function oppositeSymbol(p_symbol) {
+	if (p_symbol == STAR.YES) 
+		return STAR.NO;
+	else
+		return STAR.YES;
+}
+
+//--------------
 // It's "to string" time !
 
-function answerArrayToString(p_grid){
-	for(yi=0;yi<p_grid.length;yi++){
+function answerArrayToString(p_grid) {
+	for(yi = 0;yi < p_grid.length ; yi++) {
 		row = "";
-		for(xi=0;xi<p_grid.length;xi++){
-			row+=p_grid[yi][xi];
+		for(xi=0 ; xi < p_grid.length ; xi++) {
+			row += p_grid[yi][xi];
 		}
 		console.log(row);
 	}

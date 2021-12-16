@@ -41,6 +41,10 @@ SolverFillomino.prototype.construct = function(p_numberArray) {
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 		//skipPassMethod : skipPassClosure(this)
 	}; */
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
 	
 	this.fixedNumbersArray = [];
 	var x, y;
@@ -108,32 +112,8 @@ SolverFillomino.prototype.makeMultiPass = function() {
 }
 
 // In this puzzle, quickstart is vital for the separation of numbers
-SolverFillomino.prototype.quickStart = function(p_x, p_y) {
-	this.initiateQuickStart("SolverFillomino");
-	var x, y, number;
-	var qsEvents = [];
-	for (y = 0 ; y < this.yLength ; y++) {
-		for (x = 0 ; x < this.xLength ; x++) {
-			number = this.answerNumbersArray[y][x];
-			if (number != UNDECIDED_NUMBER) {
-				if (x > 0 && this.answerNumbersArray[y][x-1] != UNDECIDED_NUMBER) {
-					qsEvents.push(new FenceEvent(x, y, DIRECTION.LEFT, number == this.answerNumbersArray[y][x-1] ? FENCE_STATE.OPEN : FENCE_STATE.CLOSED));
-				}
-				if (y > 0  && this.answerNumbersArray[y-1][x] != UNDECIDED_NUMBER) {
-					qsEvents.push(new FenceEvent(x, y, DIRECTION.UP, number == this.answerNumbersArray[y-1][x] ? FENCE_STATE.OPEN : FENCE_STATE.CLOSED));
-				}
-				if (number == 1) {
-					this.existingNeighborsDirections(x, y).forEach(dir => {
-						qsEvents.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED));
-					});
-				}
-			}
-		}
-	}
-	qsEvents.forEach(qsEvent => {
-		this.tryToApplyHypothesis(qsEvent);
-	});
-	this.terminateQuickStart();
+SolverFillomino.prototype.makeQuickStart = function(p_x, p_y) {
+	this.quickStart();
 }
 
 //--------------------------------
@@ -193,6 +173,35 @@ SolverFillomino.prototype.undoFenceEvent = function(p_x, p_y, p_dir, p_state) {
 
 SolverFillomino.prototype.undoNumberEvent = function(p_x, p_y, p_number) {
 	this.answerNumbersArray[p_y][p_x] = UNDECIDED_NUMBER;
+}
+
+//-------------------------------- 
+// Quickstart
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Fillomino"}];
+		var x, y, number;
+		for (y = 0 ; y < p_solver.yLength ; y++) {
+			for (x = 0 ; x < p_solver.xLength ; x++) {
+				number = p_solver.answerNumbersArray[y][x];
+				if (number != UNDECIDED_NUMBER) {
+					if (x > 0 && p_solver.answerNumbersArray[y][x-1] != UNDECIDED_NUMBER) {
+						listQSEvts.push(new FenceEvent(x, y, DIRECTION.LEFT, number == p_solver.answerNumbersArray[y][x-1] ? FENCE_STATE.OPEN : FENCE_STATE.CLOSED));
+					}
+					if (y > 0  && p_solver.answerNumbersArray[y-1][x] != UNDECIDED_NUMBER) {
+						listQSEvts.push(new FenceEvent(x, y, DIRECTION.UP, number == p_solver.answerNumbersArray[y-1][x] ? FENCE_STATE.OPEN : FENCE_STATE.CLOSED));
+					}
+					if (number == 1) {
+						p_solver.existingNeighborsDirections(x, y).forEach(dir => {
+							listQSEvts.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED));
+						});
+					}
+				}
+			}
+		}
+		return listQSEvts;
+	}
 }
 
 //--------------------------------

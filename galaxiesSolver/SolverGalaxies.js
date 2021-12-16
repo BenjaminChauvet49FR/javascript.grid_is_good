@@ -49,7 +49,12 @@ SolverGalaxies.prototype.construct = function(p_symbolArray) {
 		generatePassEventsMethod : generateEventsForPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 		//skipPassMethod : skipPassClosure(this)
-	};
+	};	
+	
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
 	
 	// Offensive : all (galaxy) centers are well-positioned ! 
 	var iCent = 0;
@@ -234,11 +239,11 @@ SolverGalaxies.prototype.commonPossibilities = function(p_x, p_y, p_dx, p_dy) {
 // Input methods
 
 SolverGalaxies.prototype.emitHypothesisRight = function(p_x, p_y, p_symbol) {
-	this.tryToPutNewFence(p_x, p_y, DIRECTION.RIGHT, p_symbol);
+	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, DIRECTION.RIGHT, p_state));
 }
 
 SolverGalaxies.prototype.emitHypothesisDown = function(p_x, p_y, p_symbol) {
-	this.tryToPutNewFence(p_x, p_y, DIRECTION.DOWN, p_symbol);
+	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, DIRECTION.DOWN, p_state));
 }
 
 SolverGalaxies.prototype.emitPassRight = function(p_x, p_y) {
@@ -268,38 +273,8 @@ SolverGalaxies.prototype.makeMultiPass = function() {
 }
 
 // In this puzzle, quickstart is vital for the separation of centers
-SolverGalaxies.prototype.quickStart = function(p_x, p_y) {
-	this.initiateQuickStart("Galaxies");
-	var listDeductions = [];
-	var singleIndex;
-	for (var y = 0 ; y < this.yLength ; y++) {
-		for (var x = 0 ; x < this.xLength ; x++) {
-			// A space has only one possible index ? Define that space.
-			singleIndex = this.choiceGalaxyArray[y][x].getSingleValue(); 
-			if (singleIndex != null) {
-				listDeductions.push(new ChoiceEvent(x, y, singleIndex ,true));
-			}
-			// Two indexes are incompatible ? 
-			if (y <= this.yLength - 2) {
-				listDeductions = this.noCompatibleIndexDeductions(listDeductions, x, y, x, y+1, DIRECTION.DOWN);
-			}
-			if (x <= this.xLength - 2) {
-				listDeductions = this.noCompatibleIndexDeductions(listDeductions, x, y, x+1, y, DIRECTION.RIGHT);				
-			}
-		}
-	}
-	// Also, close spaces near the edges that are symetrical to centers
-	listDeductions.forEach(event_ => {
-		this.tryToApplyHypothesis(event_);
-	});
-	this.terminateQuickStart();
-}
-
-//--------------------------------
-
-// Central method
-SolverGalaxies.prototype.tryToPutNewFence = function(p_x, p_y, p_direction, p_state) {
-	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, p_direction, p_state));
+SolverGalaxies.prototype.makeQuickStart = function(p_x, p_y) {
+	this.quickStart();
 }
 
 //--------------------------------
@@ -367,6 +342,32 @@ SolverGalaxies.prototype.undoChoiceEvent = function(p_x, p_y, p_index, p_choice)
 		this.choiceGalaxyArray[p_y][p_x].unchoose(p_index);
 	} else {		
 		this.choiceGalaxyArray[p_y][p_x].unban(p_index);
+	}
+}
+
+//-------------------------------- 
+// Quickstart
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Galaxies"}];
+		for (var y = 0 ; y < p_solver.yLength ; y++) {
+			for (var x = 0 ; x < p_solver.xLength ; x++) {
+				// A space has only one possible index ? Define that space.
+				singleIndex = p_solver.choiceGalaxyArray[y][x].getSingleValue(); 
+				if (singleIndex != null) {
+					listQSEvts.push(new ChoiceEvent(x, y, singleIndex ,true));
+				}
+				// Two indexes are incompatible ? 
+				if (y <= p_solver.yLength - 2) {
+					listQSEvts = p_solver.noCompatibleIndexDeductions(listQSEvts, x, y, x, y+1, DIRECTION.DOWN);
+				}
+				if (x <= p_solver.xLength - 2) {
+					listQSEvts = p_solver.noCompatibleIndexDeductions(listQSEvts, x, y, x+1, y, DIRECTION.RIGHT);				
+				}
+			}
+		}
+		return listQSEvts;
 	}
 }
 

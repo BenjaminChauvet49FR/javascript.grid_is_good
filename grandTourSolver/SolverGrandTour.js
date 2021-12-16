@@ -27,12 +27,13 @@ SolverGrandTour.prototype.construct = function(p_linkArray) {
 	this.loopSolverConstruct( 
 	{	
 		multipassPessimismPS : true,
-		PSQuickStart : quickStartClosure(this) // Note : well, this is the first puzzles with preset fences... not handled in main solver !
+		quickStartEventsPS : quickStartEventsClosure(this) // Note : well, this is the first puzzles with preset fences... not handled in main solver !
 	});
 	this.linksArrayBlockedR = generateValueArray(this.xLength-1, this.yLength, false);
 	this.linksArrayBlockedD = generateValueArray(this.xLength, this.yLength-1, false);
 	this.linksListBlockedR = [];
 	this.linksListBlockedD = [];
+	this.setResolution.searchSolutionMethod = loopNaiveSearchClosure(this);
 	
 	this.signalAllOpenSpaces(); // Puzzle with ALL open spaces
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
@@ -94,15 +95,22 @@ SolverGrandTour.prototype.makeMultipass = function() {
 	}
 }
 
-quickStartClosure = function(p_solver) { // If no quickstart, these links don't exist ! Hence the locks on input methods provided by quickStartDone (btw mind the noun).
-	return function() { 
-		p_solver.initiateQuickStart("GrandTour");
-		p_solver.linksListBlockedR.forEach(coorsLink =>{
-			p_solver.tryToPutNewLink(coorsLink.x, coorsLink.y, DIRECTION.RIGHT, LOOP_STATE.LINKED);
+SolverGrandTour.prototype.makeResolution = function() { 
+	this.resolve();
+}
+
+// -------------------
+// Quick start !
+
+quickStartEventsClosure = function(p_solver) { // If no quickstart, these links don't exist ! Hence the locks on input methods provided by quickStartDone (btw mind the noun).
+	return function(p_QSeventsList) { 
+		p_QSeventsList.push({quickStartLabel : "Grand Tour"});
+		p_solver.linksListBlockedR.forEach(coorsLink => {
+			p_QSeventsList.push(new LinkEvent(coorsLink.x, coorsLink.y, DIRECTION.RIGHT, LOOP_STATE.LINKED));
 		});
 		p_solver.linksListBlockedD.forEach(coorsLink =>{
-			p_solver.tryToPutNewLink(coorsLink.x, coorsLink.y, DIRECTION.DOWN, LOOP_STATE.LINKED);
+			p_QSeventsList.push(new LinkEvent(coorsLink.x, coorsLink.y, DIRECTION.DOWN, LOOP_STATE.LINKED));
 		});
-		p_solver.terminateQuickStart();
+		return p_QSeventsList;
 	}
 }

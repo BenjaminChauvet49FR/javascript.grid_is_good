@@ -58,6 +58,11 @@ SolverGappy.prototype.construct = function(p_marginLeft, p_marginUp) {
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
 	};
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
+	
 	this.answerArray = generateValueArray(this.xyLength, this.xyLength, STAR.UNDECIDED);
 }
 
@@ -91,10 +96,8 @@ SolverGappy.prototype.makeMultiPass = function() {
 	this.multiPass(this.methodsSetMultiPass);
 }
 
-SolverGappy.prototype.quickStart = function() { 
-	this.initiateQuickStart();
-	// First puzzle ever without a quickstart ? (after Star battle that eventually got one
-	this.terminateQuickStart();
+SolverGappy.prototype.makeQuickStart = function() { 
+	this.quickStart();
 }
 
 namingCategoryClosure = function(p_solver) {
@@ -158,6 +161,15 @@ undoEventClosure = function(p_solver) {
 			p_solver.notPlacedYetRows[y].Xs++;
 			p_solver.notPlacedYetColumns[x].Xs++;
 		}
+	}
+}
+
+//--------------------------------
+// Quickstart !
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		return [{quickStartLabel : "Directly go through multipass ;)"}];
 	}
 }
 

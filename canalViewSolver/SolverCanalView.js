@@ -31,6 +31,10 @@ SolverCanalView.prototype.construct = function(p_numericXArray) {
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		//skipPassMethod : skipPassClosure(this)
 	};
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filtersUpdateMinsFromNewlyOpenSpacesClosure(this), filtersMinMaxClosure(this)]);
 
 
@@ -182,16 +186,8 @@ SolverCanalView.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverCanalView.prototype.quickStart = function() {
-	this.initiateQuickStart();
-	// Mins and maxes
-	var eventList;
-	for (var i = 0 ; i < this.rangedSpacesCoors.length ; i++) {
-		eventList = this.deductionsSumsMinMax([], this.rangedSpacesCoors[i].x, this.rangedSpacesCoors[i].y);
-		eventList.forEach(event_ => {this.tryToApplyHypothesis(event_) } );
-	}
-
-	this.terminateQuickStart();
+SolverCanalView.prototype.makeQuickStart = function() {
+	this.quickStart();
 }
 
 SolverCanalView.prototype.emitPassSpace = function(p_x, p_y) {
@@ -298,8 +294,20 @@ undoEventClosure = function(p_solver) {
 	}
 }
 
-//--------------------------------
+//-------------------------------- 
+// Quickstart
 
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Canal view"}];
+		for (var i = 0 ; i < p_solver.rangedSpacesCoors.length ; i++) {
+			listQSEvts = p_solver.deductionsSumsMinMax(listQSEvts, p_solver.rangedSpacesCoors[i].x, p_solver.rangedSpacesCoors[i].y);
+		}
+		return listQSEvts;
+	}
+}
+
+//--------------------------------
 // Exchanges solver and geographical
 
 /**

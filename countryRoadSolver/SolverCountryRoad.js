@@ -21,7 +21,7 @@ SolverCountryRoad.prototype.construct = function(p_wallArray, p_indications) {
 		setSpaceLinkedPSAtomicDos : setSpaceLinkedDosClosure(this),
 		setSpaceClosedPSAtomicUndos : setSpaceClosedUndosClosure(this),
 		setSpaceLinkedPSAtomicUndos : setSpaceLinkedUndosClosure(this),
-		PSQuickStart : quickStartClosure(this)
+		quickStartEventsPS : quickStartEventsClosure(this)
 	});
 	
 	this.declareClosedSpacesActing(); 
@@ -179,17 +179,13 @@ SolverCountryRoad.prototype.alertClosedSpacesRegion = function(p_listEvents, p_i
 // -----------
 // Quickstart
 
-quickStartClosure = function(p_solver) {
-	return function() {
-		p_solver.initiateQuickStart("Country road");
-		var events = [];
-		for (var i = 0; i < p_solver.regions.length ; i++) {
-			events = p_solver.alertClosedSpacesRegion(events, i);
+quickStartEventsClosure = function(p_solver) {
+	return function(p_QSeventsList) {
+		p_QSeventsList.push({quickStartLabel : "Country road"});
+		for (var i = 0 ; i < p_solver.regions.length ; i++) {
+			p_QSeventsList = p_solver.alertClosedSpacesRegion(p_QSeventsList, i);
 		}
-		events.forEach(event_ => {
-			p_solver.tryToApplyHypothesis(event_);
-		});
-		p_solver.terminateQuickStart();
+		return p_QSeventsList;
 	}
 }
 

@@ -32,7 +32,7 @@ function clickSpace(p_solver, p_spaceIndexX, p_spaceIndexY, p_action, p_selectio
 // Game action buttons
 
 quickStartAction = function(p_solver,p_textArea){
-	p_solver.quickStart();
+	p_solver.makeQuickStart();
 }
 
 undoAction = function(p_solver,p_textArea){

@@ -3,6 +3,7 @@
 
 const LOOP_STATE = {LINKED : 2, CLOSED : 1, UNDECIDED : 0};
 const LoopStateLabel = ["-", "X", "O"];
+const OppositeLoopState = [0, 2, 1];
 const LOOP_EVENT = {LINK : "L", STATE : "S", COMPOUND_LINK : "CL"}
 
 // ----------------------------------------

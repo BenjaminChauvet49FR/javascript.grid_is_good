@@ -59,6 +59,10 @@ RegionLoopSolver.prototype.regionLoopSolverConstruct = function(p_wallArray, p_p
 	if (!p_packMethods.orderedListPassArgumentsPS) {p_packMethods.orderedListPassArgumentsPS = function() { return []}}
 	if (!p_packMethods.generateEventsForPassPS) {p_packMethods.generateEventsForPassPS = function() { return []}}
 	
+	// Other
+	if (!p_packMethods.quickStartEventsPS) {
+		p_packMethods.quickStartEventsPS = function(p_list) {return p_list};
+	}
 	// Transmit the pack method to above 
 	this.loopSolverConstruct( {
 		setSpaceClosedPSAtomicDos : setSpaceClosedPSAtomicDoRLSClosure(this, p_packMethods.setSpaceClosedPSAtomicDos),
@@ -75,14 +79,15 @@ RegionLoopSolver.prototype.regionLoopSolverConstruct = function(p_wallArray, p_p
 		setSpaceLinkedPSDeductions : p_packMethods.setSpaceLinkedPSDeductions,
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsRLSClosure(this, p_packMethods.setEdgeClosedPSDeductions),
 		setEdgeLinkedPSDeductions : setEdgeLinkedDeductionsRLSClosure(this, p_packMethods.setEdgeLinkedPSDeductions),
-		otherPSDeductions : otherDeductionsRLSClosure(this, p_packMethods.setBorderLinkedPSDeductions, p_packMethods.setBorderClosedPSDeductions, p_packMethods.otherPSDeductions), // "setBorder" methods arguments : p_eventList, index1, index2
-		PSQuickStart : quickStartRegionLoopSolverClosure(this, p_packMethods.PSQuickStart),
+		otherPSDeductions : otherDeductionsRLSClosure(this, p_packMethods.setBorderLinkedPSDeductions, p_packMethods.setBorderClosedPSDeductions, p_packMethods.otherPSDeductions), // "setBorder" methods arguments : p_eventList, index1, index2		
 		// Pass related. Note that not all the methods '"pass and multipass related" in LoopSolver' have been used.
 		multipassPessimismPS : false, 
 		comparisonPS : comparisonRegionLoopSolverEventsClosure(p_packMethods.comparisonPS),
 		generateEventsForPassPS : generateEventsForPassRegionLoopClosure(this, p_packMethods.generateEventsForPassPS),
 		orderedListPassArgumentsPS : orderedListPassArgumentsRegionLoopClosure(this, p_packMethods.orderedListPassArgumentsPS),
-		namingCategoryPS : namingCategoryRegionLoopClosure(this, p_packMethods.namingCategoryPS)
+		namingCategoryPS : namingCategoryRegionLoopClosure(this, p_packMethods.namingCategoryPS),
+		// Other related
+		quickStartEventsPS : quickStartEventsRegionLoopSolverClosure(this, p_packMethods.quickStartEventsPS)
 	}); 
 	this.gridWall = WallGrid_data(p_wallArray);
 	this.borders = []; // Triangular array of borders
@@ -534,24 +539,20 @@ RegionLoopSolver.prototype.deductionsAlertClosedBorder = function(p_eventList, p
 // ---------------------------
 // Quick start
 
-quickStartRegionLoopSolverClosure = function(p_solver, p_PSQuickStart) {
-	return function() {
-		p_solver.initiateQuickStart("Region loop");
-		var events = [];
+quickStartEventsRegionLoopSolverClosure = function(p_solver, p_PSQuickStartEvents) {
+	return function(p_QSeventsList) {
+		p_QSeventsList.push({quickStartLabel : "Region loop"});
 		for (var i = 0; i < p_solver.regions.length ; i++) {
-			events = p_solver.deductionsAlertClosedBorder(events, p_solver.regions[i]);
+			p_QSeventsList = p_solver.deductionsAlertClosedBorder(p_QSeventsList, p_solver.regions[i]);
 			if (p_solver.regions[i].size == 1) { // "Each region must be crossed exactly once"
 				const space = p_solver.regions[i].spaces[0];
-				events.push(new SpaceEvent(space.x, space.y, LOOP_STATE.LINKED));
+				p_QSeventsList.push(new SpaceEvent(space.x, space.y, LOOP_STATE.LINKED));
 			}
 		}
-		events.forEach(event_ => {
-			p_solver.tryToApplyHypothesis(event_);
-		});
-		p_solver.terminateQuickStart();
-		if (p_PSQuickStart) {
-			p_PSQuickStart();			
+		if (p_PSQuickStartEvents) {
+			p_QSeventsList = p_PSQuickStartEvents(p_QSeventsList);			
 		}
+		return p_QSeventsList;
 	}
 }
 

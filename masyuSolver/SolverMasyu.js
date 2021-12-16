@@ -34,7 +34,7 @@ SolverMasyu.prototype.construct = function(p_symbolGrid) {
 	this.loopSolverConstruct( {
 		setEdgeLinkedPSDeductions : setEdgeLinkedDeductionsClosure(this),
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
-		PSQuickStart : quickStartClosure(this),
+		quickStartEventsPS : quickStartEventsClosure(this),
 		generateEventsForPassPS : generateEventsForSpaceClosure(this),
 		orderedListPassArgumentsPS : startingOrderedListPassArgumentsMasyuClosure(this),
 		namingCategoryPS : namingCategoryClosure(this),
@@ -104,42 +104,45 @@ SolverMasyu.prototype.emitPassSpace = function(p_x, p_y) {
 	return this.passLoop(passIndex);
 }
 
-quickStartClosure = function(p_solver) {
-	return function() { //Warning : this quickstart assumes that the puzzle does not have white pearls in corners
-		p_solver.initiateQuickStart("Masyu");
-		for (var x = 0; x < p_solver.xLength; x++) {
+// Correct puzzle data assumption : no white pearl should be found in a corner
+quickStartEventsClosure = function(p_solver) {
+	return function() { 
+		const xMax = p_solver.xLength;
+		const yMax = p_solver.yLength;
+		var answer = [{quickStartLabel : "Masyu"}];
+		for (var x = 0; x < xMax; x++) {
 			if (p_solver.pearlArray[0][x] == PEARL.WHITE && (x != 0)) {
-				p_solver.tryToPutNewRight(x-1, 0, LOOP_STATE.LINKED);
+				answer.push(new LinkEvent(x, 0, DIRECTION.LEFT, LOOP_STATE.LINKED));
 			} else if (p_solver.pearlArray[0][x] == PEARL.BLACK) {
-				p_solver.tryToPutNewDown(x, 0, LOOP_STATE.LINKED);  
+				answer.push(new LinkEvent(x, 0, DIRECTION.DOWN, LOOP_STATE.LINKED));
 			} else if (p_solver.pearlArray[1][x] == PEARL.BLACK) {
-				p_solver.tryToPutNewDown(x, 1, LOOP_STATE.LINKED);  
+				answer.push(new LinkEvent(x, 1, DIRECTION.DOWN, LOOP_STATE.LINKED));
 			}
-			if (p_solver.pearlArray[p_solver.yLength-1][x] == PEARL.WHITE && (x != 0)) {
-				p_solver.tryToPutNewRight(x-1, p_solver.yLength-1, LOOP_STATE.LINKED);
-			} else if (p_solver.pearlArray[p_solver.yLength-1][x] == PEARL.BLACK) {
-				p_solver.tryToPutNewDown(x, p_solver.yLength-2, LOOP_STATE.LINKED);  
-			} else if (p_solver.pearlArray[p_solver.yLength-2][x] == PEARL.BLACK) {
-				p_solver.tryToPutNewDown(x, p_solver.yLength-3, LOOP_STATE.LINKED);  
+			if (p_solver.pearlArray[yMax-1][x] == PEARL.WHITE && (x != 0)) {
+				answer.push(new LinkEvent(x, yMax-1, DIRECTION.LEFT, LOOP_STATE.LINKED));
+			} else if (p_solver.pearlArray[yMax-1][x] == PEARL.BLACK) {                  
+				answer.push(new LinkEvent(x, yMax-1, DIRECTION.UP, LOOP_STATE.LINKED));
+			} else if (p_solver.pearlArray[yMax-2][x] == PEARL.BLACK) {                  
+				answer.push(new LinkEvent(x, yMax-2, DIRECTION.UP, LOOP_STATE.LINKED));
 			}
 		}
-		for (var y = 0 ; y < p_solver.yLength; y++) {
+		for (var y = 0 ; y < yMax; y++) {
 			if (p_solver.pearlArray[y][0] == PEARL.WHITE && (y != 0)) {
-				p_solver.tryToPutNewDown(0, y-1, LOOP_STATE.LINKED);
+				answer.push(new LinkEvent(0, y, DIRECTION.UP, LOOP_STATE.LINKED));
 			} else if (p_solver.pearlArray[y][0] == PEARL.BLACK) {
-				p_solver.tryToPutNewRight(0, y, LOOP_STATE.LINKED);  
+				answer.push(new LinkEvent(0, y, DIRECTION.RIGHT, LOOP_STATE.LINKED));  
 			} else if (p_solver.pearlArray[y][1] == PEARL.BLACK) {
-				p_solver.tryToPutNewRight(1, y, LOOP_STATE.LINKED);  
+				answer.push(new LinkEvent(1, y, DIRECTION.RIGHT, LOOP_STATE.LINKED));  
 			}
-			if (p_solver.pearlArray[y][p_solver.xLength-1] == PEARL.WHITE && (y != 0)) {
-				p_solver.tryToPutNewDown(p_solver.xLength-1, y-1, LOOP_STATE.LINKED);
-			} else if (p_solver.pearlArray[y][p_solver.xLength-1] == PEARL.BLACK) {
-				p_solver.tryToPutNewRight(p_solver.xLength-2, y, LOOP_STATE.LINKED);  
-			} else if (p_solver.pearlArray[y][p_solver.xLength-2] == PEARL.BLACK) {
-				p_solver.tryToPutNewRight(p_solver.xLength-3, y, LOOP_STATE.LINKED);  
+			if (p_solver.pearlArray[y][xMax-1] == PEARL.WHITE && (y != 0)) {
+				answer.push(new LinkEvent(xMax-1, y, DIRECTION.UP, LOOP_STATE.LINKED));
+			} else if (p_solver.pearlArray[y][xMax-1] == PEARL.BLACK) {
+				answer.push(new LinkEvent(xMax-2, y, DIRECTION.LEFT, LOOP_STATE.LINKED));  
+			} else if (p_solver.pearlArray[y][xMax-2] == PEARL.BLACK) {
+				answer.push(new LinkEvent(xMax-3, y, DIRECTION.LEFT, LOOP_STATE.LINKED)); 
 			}
 		}
-		p_solver.terminateQuickStart();
+		return answer;
 	}
 }
 

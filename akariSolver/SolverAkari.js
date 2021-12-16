@@ -35,6 +35,10 @@ SolverAkari.prototype.construct = function(p_numberSymbolArray) {
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
 	};
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
 	
 	this.checkerOneLighterLeft = new CheckCollectionDoubleEntry(this.xLength, this.yLength);
 	this.checkerSpacesAroundNumeric = new CheckCollectionDoubleEntry(this.xLength, this.yLength);
@@ -248,29 +252,8 @@ SolverAkari.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverAkari.prototype.quickStart = function() {
-	var space;
-	this.initiateQuickStart();
-	// TODO : a list of numeric spaces
-	var eventList = [];
-	var spaceInfos;
-	for (var iy = 0 ; iy < this.yLength ; iy++) {
-		for (var ix = 0 ; ix < this.xLength ; ix++) {
-			spaceInfos = this.numericArray[iy][ix];
-			if (this.getNumericValueFromSpace(spaceInfos) != null) {
-				if (spaceInfos.notPlacedBulbsYet == 0) {
-					eventList = this.surroundNumericSpace(eventList, ix, iy, FILLING.NO);
-				}
-				if (spaceInfos.notPlacedEmptiesYet == 0) {
-					eventList = this.surroundNumericSpace(eventList, ix, iy, FILLING.YES);
-				}
-			}							
-		}
-	}
-	eventList.forEach(event_ => {
-		this.tryToApplyHypothesis(event_);
-	});
-	this.terminateQuickStart();
+SolverAkari.prototype.makeQuickStart = function() {
+	this.quickStart();
 }
 
 SolverAkari.prototype.passSpaceOrSetNumericSpaces = function(p_x, p_y) {
@@ -287,9 +270,6 @@ SolverAkari.prototype.passSpaceOrSetNumericSpaces = function(p_x, p_y) {
 SolverAkari.prototype.makeMultiPass = function() {
 	this.multiPass(this.methodsSetMultiPass);
 }
-
-//--------------
-// No "central method tryToPutNew" this time ! Not needed.
 
 //--------------------------------
 // Doing and undoing
@@ -406,6 +386,31 @@ SolverAkari.prototype.undoSymbolEvent = function(p_event) {
 	this.answerArray[p_event.y][p_event.x] = FILLING.UNDECIDED;
 }
 
+//-------------------------------- 
+// Quickstart
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Akari"}];
+		var space;
+		// TODO : a list of numeric spaces
+		var spaceInfos;
+		for (var iy = 0 ; iy < p_solver.yLength ; iy++) {
+			for (var ix = 0 ; ix < p_solver.xLength ; ix++) {
+				spaceInfos = p_solver.numericArray[iy][ix];
+				if (p_solver.getNumericValueFromSpace(spaceInfos) != null) {
+					if (spaceInfos.notPlacedBulbsYet == 0) {
+						listQSEvts = p_solver.surroundNumericSpace(listQSEvts, ix, iy, FILLING.NO);
+					}
+					if (spaceInfos.notPlacedEmptiesYet == 0) {
+						listQSEvts = p_solver.surroundNumericSpace(listQSEvts, ix, iy, FILLING.YES);
+					}
+				}							
+			}
+		}
+		return listQSEvts;
+	}
+}
 
 //-------------------------------- 
 // Deductions

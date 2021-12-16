@@ -50,6 +50,11 @@ SolverYagit.prototype.construct = function(p_symbolArray, p_knotsArray) {
 		//skipPassMethod : skipPassClosure(this)
 	};
 	
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
+	
 	this.xLength = p_symbolArray[0].length;
 	this.yLength = p_symbolArray.length;
 	this.answerFenceGrid = new FencesGrid(this.xLength, this.yLength); // The answer fence grid
@@ -245,24 +250,15 @@ SolverYagit.prototype.makeMultiPass = function() {
 }
 
 // In this puzzle, quickstart is vital for the separation of centers
-SolverYagit.prototype.quickStart = function(p_x, p_y) {
-	this.initiateQuickStart("Yagit");
-	KnownOrientations.forEach(orientation => {
-		this.roundAndSquareFencesCheckers[orientation].list.forEach(index => {
-			this.tryToApplyHypothesis(new YagitFenceEvent(orientation, index, FENCE_STATE.CLOSED));
-		});
-	});
-	this.terminateQuickStart();
+SolverYagit.prototype.makeQuickStart = function(p_x, p_y) {
+	this.quickStart();
 }
 
-//--------------------------------
-
-// Central method
 SolverYagit.prototype.tryToPutNewFence = function(p_x, p_y, p_directionFromSpace, p_state) {
 	this.tryToApplyHypothesis(new YagitFenceEvent(OrthogonalOrientationDirection[p_directionFromSpace], 
 	this.getIndexFence(p_x, p_y, p_directionFromSpace), 
 	p_state), 
-	this.methodsSetDeductions);
+	this.methodsSetDeductions); // Unlike other solvers, this one is quite needed
 }
 
 //--------------------------------
@@ -506,6 +502,21 @@ SolverYagit.prototype.undoNodeBounds = function(p_node) {
 		if (p_node.chains.length == 0) { p_node.oppositeEnd = null; } 
 		const oppo = p_node.oppositeEnd;
 		if (oppo != null && oppo != NODE_END) {this.getNodeFromIndex(oppo).oppositeEnd = p_node.index; }
+	}
+}
+
+//-------------------------------- 
+// Quickstart
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Yagit"}];
+		KnownOrientations.forEach(orientation => {
+			p_solver.roundAndSquareFencesCheckers[orientation].list.forEach(index => {
+				listQSEvts.push(new YagitFenceEvent(orientation, index, FENCE_STATE.CLOSED));
+			});
+		});
+		return listQSEvts;
 	}
 }
 

@@ -28,6 +28,10 @@ SolverUsoone.prototype.construct = function (p_wallArray, p_numberArray) {
 		generatePassEventsMethod : generateEventsForNumbersSetsClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 	};
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
 	this.gridWall = WallGrid_data(p_wallArray); 
 	const regionArray = this.gridWall.toRegionArray(); // Unlike in most region-divided puzzles, no need to save region array.
 	this.numbersSetsNumber = numberOfRegions(regionArray);
@@ -108,28 +112,8 @@ SolverUsoone.prototype.emitHypothesis = function (p_x, p_y, p_symbol) {
     this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
-SolverUsoone.prototype.quickStart = function () {
-	this.initiateQuickStart();
-	var x, y, numberMgmt;
-    this.numbersSets.forEach(numberSet => {
-        if (numberSet.coors.length == 1) {
-			x = numberSet.coors[0].x; 
-			y = numberSet.coors[0].y;
-			this.tryToApplyHypothesis(new TruthEvent(x, y, USOONE.LIE));
-        } else {
-			numberSet.coors.forEach(myCoors => {
-				x = myCoors.x; 
-				y = myCoors.y;
-				if (notEnoughSurroundingUndecidedToMeet(this.numberManagementArray[y][x])) {							
-					this.tryToApplyHypothesis(new TruthEvent(x, y, USOONE.LIE));
-				}
-				if (this.numberManagementArray[y][x].value == 0 && this.numberManagementArray[y][x].adjacentUndecideds == 0 && this.numberManagementArray[y][x].adjacentCloseds == 0) {
-					this.tryToApplyHypothesis(new TruthEvent(x, y, USOONE.TRUTH)); // Puzzle 26 : a 0 is fully surrounded by numbered spaces and should then be labelled true for QS.
-				}
-			});
-		}
-    });
-	this.terminateQuickStart();
+SolverUsoone.prototype.makeQuickStart = function () {
+	this.quickStart();
 }
 
 SolverUsoone.prototype.emitPass = function(p_x, p_y) {
@@ -248,7 +232,36 @@ transformClosure = function (p_solver) {
 };
 
 //--------------------------------
-// Intelligence
+// Quickstart !
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Usoone"}]
+		p_solver.numbersSets.forEach(numberSet => {
+			if (numberSet.coors.length == 1) {
+				x = numberSet.coors[0].x; 
+				y = numberSet.coors[0].y;
+				listQSEvts.push(new TruthEvent(x, y, USOONE.LIE));
+			} else {
+				numberSet.coors.forEach(myCoors => {
+					x = myCoors.x; 
+					y = myCoors.y;
+					if (notEnoughSurroundingUndecidedToMeet(p_solver.numberManagementArray[y][x])) {							
+						listQSEvts.push(new TruthEvent(x, y, USOONE.LIE));
+					}
+					if (p_solver.numberManagementArray[y][x].value == 0 && p_solver.numberManagementArray[y][x].adjacentUndecideds == 0 && p_solver.numberManagementArray[y][x].adjacentCloseds == 0) {
+						listQSEvts.push(new TruthEvent(x, y, USOONE.TRUTH)); // Puzzle 26 : a 0 is fully surrounded by numbered spaces and should then be labelled true for QS.
+					}
+				});
+			}
+		});
+		return listQSEvts;
+	}
+}
+
+//--------------------------------
+// Deductions
+
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
 		var x, y, symbol, xx, yy; // Well, I forgot these once so other values of x and y seemed to be taken

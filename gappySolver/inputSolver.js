@@ -56,7 +56,7 @@ multipassAction = function (p_solver) {
 }
 
 quickStartAction = function (p_solver) {
-	p_solver.quickStart();
+	p_solver.makeQuickStart();
 }
 
 solveAction = function (p_solver) {

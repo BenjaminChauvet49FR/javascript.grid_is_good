@@ -29,6 +29,10 @@ SolverHakoiri.prototype.construct = function(p_wallArray, p_symbolsArray) {
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)//,
 		//skipPassMethod : skipPassClosure(this)
 	};
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
 
 	this.answerArray = [];		
 	this.numericSpaceList = []; // For quickstart
@@ -170,36 +174,13 @@ SolverHakoiri.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverHakoiri.prototype.quickStart = function() { 
-	this.initiateQuickStart();
-	for (var y = 0 ; y < this.yLength ; y++) {
-		for (var x = 0 ; x < this.xLength ; x++) {
-			// One number possible in a space
-			if (!this.answerArray[y][x].blocked) {
-				justOne = this.answerArray[y][x].getOneLeft();
-				if (justOne != null) {
-					this.emitHypothesisSpace(x, y, justOne, true);
-				}
-			}
-		}
-	}
-	
-	listSpaceAllowEvents = [];
-	this.regions.forEach(region => {
-		Object.keys(SPACE_HAKOIRI).forEach(symbol => {		
-			listSpaceAllowEvents = this.alertOneLeftInRegion(listSpaceAllowEvents, region, SPACE_HAKOIRI[symbol]);
-		});
-	});
-
-	listSpaceAllowEvents.forEach(event_ => {
-		this.tryToPutNew(event_);
-	});
-	this.terminateQuickStart();
+SolverHakoiri.prototype.makeQuickStart = function() {
+	this.quickStart();
 }
 
 SolverHakoiri.prototype.emitHypothesisSpace = function(p_x, p_y, p_value, p_ok) {
 	if (!this.answerArray[p_y][p_x].blocked) {
-		this.tryToPutNew(new SpaceAllowEvent(p_x, p_y, p_value, p_ok));
+		this.tryToApplyHypothesis(new SpaceAllowEvent(p_x, p_y, p_value, p_ok));
 	}
 }
 
@@ -276,10 +257,31 @@ undoEventClosure = function(p_solver) {
 }
 
 //--------------------------------
+// Quickstart !
 
-// Central method
-SolverHakoiri.prototype.tryToPutNew = function (p_event) {
-	this.tryToApplyHypothesis(p_event);
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Hakoiri"}];
+
+		for (var y = 0 ; y < p_solver.yLength ; y++) {
+			for (var x = 0 ; x < p_solver.xLength ; x++) {
+				// One number possible in a space
+				if (!p_solver.answerArray[y][x].blocked) {
+					justOne = p_solver.answerArray[y][x].getOneLeft();
+					if (justOne != null) {
+						listQSEvts.push(new SpaceAllowEvent(x, y, justOne, true));
+					}
+				}
+			}
+		}
+		
+		p_solver.regions.forEach(region => {
+			Object.keys(SPACE_HAKOIRI).forEach(symbol => {		
+				listQSEvts = p_solver.alertOneLeftInRegionDeductions(listQSEvts, region, SPACE_HAKOIRI[symbol]);
+			});
+		});
+		return listQSEvts;
+	}
 }
 
 //--------------------------------
@@ -357,13 +359,13 @@ deductionsClosure = function (p_solver) {
 				p_listEventsToApply.push(new SpaceAllowEvent(x, y, last, true));
 			}
 			// Only one possible place in this region ?
-			p_solver.alertOneLeftInRegion(p_listEventsToApply, region, symbol);
+			p_solver.alertOneLeftInRegionDeductions(p_listEventsToApply, region, symbol);
 		}
 		return p_listEventsToApply;
 	}
 }
 
-SolverHakoiri.prototype.alertOneLeftInRegion = function(p_eventList, p_region, p_symbol) {
+SolverHakoiri.prototype.alertOneLeftInRegionDeductions = function(p_eventList, p_region, p_symbol) {
 	if ((p_region.possibilities.getNotBannedYet(p_symbol) == 0) && (p_region.possibilities.getNotPlacedYet(p_symbol) > 0)) {
 		var spaceCount = 0;
 		p_region.spaces.forEach(coors => {

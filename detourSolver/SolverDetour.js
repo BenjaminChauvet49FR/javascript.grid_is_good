@@ -30,7 +30,7 @@ SolverDetour.prototype.construct = function(p_wallArray, p_regionIndications) {
 		otherPSAtomicUndos : otherAtomicUndosClosure(this),
 		otherPSAtomicDos : otherAtomicDosClosure(this),
 		otherPSDeductions : otherDeductionsClosure(this),
-		PSQuickStart : quickStartClosure(this),
+		quickStartEventsPS : quickStartEventsClosure(this),
 		generateEventsForPassPS : generateEventsForSpaceClosure(this),
 		orderedListPassArgumentsPS : startingOrderedListPassArgumentsDetourClosure(this),
 		namingCategoryPS : namingCategoryClosure(this),
@@ -335,23 +335,23 @@ SolverDetour.prototype.fillingRegionDeductions = function(p_eventList, p_region,
 // -------------------
 // Quickstart
 
-quickStartClosure = function(p_solver) {
-	return function() { 
-		p_solver.initiateQuickStart("Detour");
+quickStartEventsClosure = function(p_solver) {
+	return function(p_QSeventsList) {
+		p_QSeventsList.push({quickStartLabel : "Detour"});
 		p_solver.regions.forEach(region => {
 			if (region.forcedValue) {				
 				if (region.notPlacedStraightYet == 0) {
 					p_solver.fillingRegionDeductions([], region, TURNING.YES).forEach(event_ => {
-						p_solver.tryToApplyHypothesis(event_);
+						p_QSeventsList.push(event_);
 					});
 				} else if (region.notPlacedTurningYet == 0) {
 					p_solver.fillingRegionDeductions([], region, TURNING.NO).forEach(event_ => {
-						p_solver.tryToApplyHypothesis(event_);
+						p_QSeventsList.push(event_);
 					});
 				}
 			}
-		});
-		p_solver.terminateQuickStart();
+		});	
+		return p_QSeventsList;
 	}
 }
 

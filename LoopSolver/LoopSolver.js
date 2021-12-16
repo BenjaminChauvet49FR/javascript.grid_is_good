@@ -78,12 +78,11 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 	// otherPSDeductions(2)
 	
 	// QS & filters :
-	
-	this.PSQuickStart = p_packMethods.PSQuickStart;
-	if (!this.PSQuickStart) {
-		this.PSQuickStart = function() {}
+	this.quickStartEventsPS = p_packMethods.quickStartEventsPS;
+	if (!this.quickStartEventsPS) {
+		this.quickStartEventsPS = function(p_events) {return p_events}
 	}
-	
+
 	this.PSFilters = p_packMethods.PSFilters;
 	if (!this.PSFilters) {
 		this.PSFilters = [];
@@ -141,6 +140,9 @@ LoopSolver.prototype.loopSolverConstruct = function(p_puzzleSpecificMethodPack) 
 		orderPassArgumentsMethod : orderedListpassArgumentsClosure(this, this.orderedListPassArgumentsPS, this.multipassPessimismPS),
 		passTodoMethod : passDefineTodoClosure(this)
 	};
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsLoopClosure(this) // Note : should you name it "quickStartEventsClosure" and name a closure in a lower-level solver the "quickStartEventsClosure" the same, the definition of the solver will be taken over this one, this
+	}
 	
 	
 	
@@ -846,24 +848,31 @@ separateEndsClosure = function(p_solver) { //TODO well, this function is called 
 // --------------------------
 // Quick start
 
-LoopSolver.prototype.quickStart = function() {
-	this.initiateQuickStart("Standard loop");
-	for (var y = 0 ; y < this.yLength ; y++) {
-		for (var x = 0 ; x < this.xLength ; x++) {
-			if (this.getLinkSpace(x, y) == LOOP_STATE.LINKED && this.getClosedEdges(x, y) == 2) {
-				KnownDirections.forEach(dir => {
-					if (this.neighborExists(x, y, dir) && this.getLinkSpace(x, y) == LOOP_STATE.LINKED) {
-						this.tryToPutNewLink(x, y, dir, LOOP_STATE.LINKED);
-					}
-				});
+LoopSolver.prototype.makeQuickStart = function() {
+	this.quickStart(); 
+}
+
+function quickStartEventsLoopClosure(p_solver) {
+	return function () {
+		var answer = [{quickStartLabel : "Standard loop"}];
+		for (var y = 0 ; y < p_solver.yLength ; y++) {
+			for (var x = 0 ; x < p_solver.xLength ; x++) {
+				if (p_solver.getLinkSpace(x, y) == LOOP_STATE.LINKED && p_solver.getClosedEdges(x, y) == 2) {
+					p_solver.existingNeighborsDirections(x, y).forEach(dir => {
+						if (p_solver.getLink(x, y, dir) != LOOP_STATE.CLOSED) {
+							answer.push(new LinkEvent(x, y, dir, LOOP_STATE.LINKED));
+						} 
+						// No more fail in quick start tolerated ! (and directions must exist)
+					});
+				}
+				if (p_solver.getClosedEdges(x, y) > 2) {
+					answer.push(new SpaceEvent(x, y, LOOP_STATE.CLOSED));
+				}
 			}
-			if (this.getClosedEdges(x, y) > 2) {
-				this.tryToPutNewSpace(x, y, LOOP_STATE.CLOSED);
-			}
-		}
-	}
-	this.terminateQuickStart();
-	this.PSQuickStart();
+		} 
+		answer = p_solver.quickStartEventsPS(answer);
+		return answer;
+	}		
 }
 
 // --------------------------
@@ -1017,6 +1026,74 @@ LoopSolver.prototype.lazyStandardSpacepassArgumentsClosure = function() {
 		}
 	} 
 	return answer;
+}
+
+// ----------------
+// Resolution
+
+LoopSolver.prototype.isSolvedStandard = function() {
+	for (var iy = 0 ; iy <= this.yLength-2 ; iy++) {
+		for (var ix = 0 ; ix <= this.xLength-2 ; ix++) {
+			if (this.getLinkRight(ix, iy) == LOOP_STATE.UNDECIDED) {
+				return false;
+			}
+			if (this.getLinkDown(ix, iy) == LOOP_STATE.UNDECIDED) {
+				return false;
+			}
+		}
+		if (this.getLinkDown(this.xLength-1, iy) == LOOP_STATE.UNDECIDED) {
+			return false;
+		}
+	}
+	for (var ix = 0 ; ix <= this.xLength-2 ; ix++) {
+		if (this.getLinkRight(ix, this.yLength-1) == LOOP_STATE.UNDECIDED) {
+			return false;
+		}
+	}	
+	return true;
+}
+
+loopNaiveSearchClosure = function(p_solver) {
+	return function() {
+		var mp = p_solver.multipassLoop();
+		if (mp == MULTIPASS_RESULT.FAILURE) {
+			return RESOLUTION_RESULT.FAILURE;
+		}			
+		if (p_solver.isSolvedStandard()) {		
+			return RESOLUTION_RESULT.SUCCESS;
+		}		
+		var evt;
+		// Find event with the most solutions
+		var indexesForSolution = [];
+		var bestIndex = {nbDeductions : 0};
+		var nbDeductions;
+		for (var solveY = 0 ; solveY < p_solver.yLength ; solveY++) {
+			for (var solveX = 0 ; solveX < p_solver.xLength ; solveX++) {			
+				if (solveX <= p_solver.xLength-2 && p_solver.getLinkRight(solveX, solveY) == LOOP_STATE.UNDECIDED) {
+					evt = new LinkEvent(solveX, solveY, DIRECTION.RIGHT, LOOP_STATE.LINKED);
+					p_solver.tryToApplyHypothesis(evt); 
+					nbDeductions = p_solver.numberOfRelevantDeductionsSinceLastHypothesis();
+					if (nbDeductions > bestIndex.nbDeductions) {						
+						bestIndex = {evt : evt.copy(), nbDeductions : nbDeductions};
+					}
+					p_solver.undoToLastHypothesis();				
+				}
+				if (solveY <= p_solver.yLength-2 && p_solver.getLinkDown(solveX, solveY) == LOOP_STATE.UNDECIDED) {
+					evt = new LinkEvent(solveX, solveY, DIRECTION.DOWN, LOOP_STATE.LINKED);
+					p_solver.tryToApplyHypothesis(evt); 
+					nbDeductions = p_solver.numberOfRelevantDeductionsSinceLastHypothesis();
+					if (nbDeductions > bestIndex.nbDeductions) {						
+						bestIndex = {evt : evt.copy(), nbDeductions : nbDeductions};
+					}
+					p_solver.undoToLastHypothesis();				
+				}
+			}
+		}
+		
+		// Let's go
+		return p_solver.tryAllPossibilities([[bestIndex.evt], 
+			[new LinkEvent(bestIndex.evt.linkX, bestIndex.evt.linkY, bestIndex.evt.direction, OppositeLoopState[bestIndex.evt.state]) ]]);
+	}
 }
 
 // ----------------

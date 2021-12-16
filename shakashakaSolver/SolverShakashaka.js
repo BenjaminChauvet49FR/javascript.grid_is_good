@@ -45,9 +45,13 @@ SolverShakashaka.prototype.construct = function(p_numberSymbolArray) {
 	this.methodsSetMultiPass = {
 		generatePassEventsMethod : generateEventsForSpacePassClosure(this), 
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this), 
-		passTodoMethod : multipassDefineTodoClosure(this)};
+		passTodoMethod : multipassDefineTodoClosure(this)
+	};
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
 
-	
 	this.answerArray = [];
 	this.numericArray = [];
 	this.setsAroundNumericSpaces = [];
@@ -127,52 +131,8 @@ SolverShakashaka.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverShakashaka.prototype.quickStart = function() {
-	var space;
-	this.initiateQuickStart();
-	var eventList = [];
-	var spaceInfos;
-	for (var iy = 0 ; iy < this.yLength ; iy++) {
-		for (var ix = 0 ; ix < this.xLength ; ix++) {
-			if (this.isBlockedSpace(ix, iy)) {
-				// Triangles opposite to walls
-				this.existingNeighborsCoorsDirections(ix, iy).forEach(coorsDir => {
-					if (!this.isBlockedSpace(coorsDir.x, coorsDir.y)) {						
-						eventList.push(new TriangleEvent(coorsDir.x, coorsDir.y, coorsDir.direction, SHAKASHAKA.WHITE));
-					}
-				});
-				// Numeric space
-				if (this.numericArray[iy][ix].value != NOT_FORCED) {
-					if (this.numericArray[iy][ix].notPlacedWhitesYet == 0) {
-						eventList = this.aroundSpaceNumericDeductions(eventList, ix, iy, SHAKASHAKA.BLACK);
-					}
-					if (this.numericArray[iy][ix].notPlacedBlacksYet == 0) {
-						eventList = this.aroundSpaceNumericDeductions(eventList, ix, iy, SHAKASHAKA.WHITE);
-					}
-				}
-			}				
-		}
-	}
-	for (var iy = 0 ; iy < this.yLength ; iy++) {
-		if (!this.isBlockedSpace(0, iy)) {
-			eventList.push(new TriangleEvent(0, iy, DIRECTION.RIGHT, SHAKASHAKA.WHITE));
-		} 
-		if (!this.isBlockedSpace(this.xLength-1, iy)) {
-			eventList.push(new TriangleEvent(this.xLength-1, iy, DIRECTION.LEFT, SHAKASHAKA.WHITE));			
-		}
-	}
-	for (var ix = 0 ; ix < this.xLength ; ix++) {
-		if (!this.isBlockedSpace(ix, 0)) {
-			eventList.push(new TriangleEvent(ix, 0, DIRECTION.DOWN, SHAKASHAKA.WHITE));
-		} 
-		if (!this.isBlockedSpace(ix, this.yLength-1)) {
-			eventList.push(new TriangleEvent(ix, this.yLength-1, DIRECTION.UP, SHAKASHAKA.WHITE));			
-		}
-	}
-	eventList.forEach(event_ => {
-		this.tryToApplyHypothesis(event_);
-	});
-	this.terminateQuickStart();
+SolverShakashaka.prototype.makeQuickStart = function() {
+	this.quickStart();
 }
 
 SolverShakashaka.prototype.emitPassSpace = function(p_x, p_y) {
@@ -189,9 +149,6 @@ SolverShakashaka.prototype.emitPassSpace = function(p_x, p_y) {
 SolverShakashaka.prototype.makeMultiPass = function() {
 	this.multiPass(this.methodsSetMultiPass);
 }
-
-//--------------
-// No "central method tryToPutNew" this time ! Not needed.
 
 //--------------------------------
 // Doing and undoing
@@ -259,6 +216,56 @@ SolverShakashaka.prototype.undoSymbolEvent = function(p_event) {
 		}
 	} else {
 		this.straightnessArray[p_event.y][p_event.x] = false;
+	}
+}
+
+
+//-------------------------------- 
+// Quickstart
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Shakashaka"}];
+		var space;
+		var spaceInfos;
+		for (var iy = 0 ; iy < p_solver.yLength ; iy++) {
+			for (var ix = 0 ; ix < p_solver.xLength ; ix++) {
+				if (p_solver.isBlockedSpace(ix, iy)) {
+					// Triangles opposite to walls
+					p_solver.existingNeighborsCoorsDirections(ix, iy).forEach(coorsDir => {
+						if (!p_solver.isBlockedSpace(coorsDir.x, coorsDir.y)) {						
+							listQSEvts.push(new TriangleEvent(coorsDir.x, coorsDir.y, coorsDir.direction, SHAKASHAKA.WHITE));
+						}
+					});
+					// Numeric space
+					if (p_solver.numericArray[iy][ix].value != NOT_FORCED) {
+						if (p_solver.numericArray[iy][ix].notPlacedWhitesYet == 0) {
+							listQSEvts = p_solver.aroundSpaceNumericDeductions(listQSEvts, ix, iy, SHAKASHAKA.BLACK);
+						}
+						if (p_solver.numericArray[iy][ix].notPlacedBlacksYet == 0) {
+							listQSEvts = p_solver.aroundSpaceNumericDeductions(listQSEvts, ix, iy, SHAKASHAKA.WHITE);
+						}
+					}
+				}				
+			}
+		}
+		for (var iy = 0 ; iy < p_solver.yLength ; iy++) {
+			if (!p_solver.isBlockedSpace(0, iy)) {
+				listQSEvts.push(new TriangleEvent(0, iy, DIRECTION.RIGHT, SHAKASHAKA.WHITE));
+			} 
+			if (!p_solver.isBlockedSpace(p_solver.xLength-1, iy)) {
+				listQSEvts.push(new TriangleEvent(p_solver.xLength-1, iy, DIRECTION.LEFT, SHAKASHAKA.WHITE));			
+			}
+		}
+		for (var ix = 0 ; ix < p_solver.xLength ; ix++) {
+			if (!p_solver.isBlockedSpace(ix, 0)) {
+				listQSEvts.push(new TriangleEvent(ix, 0, DIRECTION.DOWN, SHAKASHAKA.WHITE));
+			} 
+			if (!p_solver.isBlockedSpace(ix, p_solver.yLength-1)) {
+				listQSEvts.push(new TriangleEvent(ix, p_solver.yLength-1, DIRECTION.UP, SHAKASHAKA.WHITE));			
+			}
+		}
+		return listQSEvts;
 	}
 }
 

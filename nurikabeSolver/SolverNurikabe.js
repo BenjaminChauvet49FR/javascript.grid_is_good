@@ -31,6 +31,10 @@ SolverNurikabe.prototype.construct = function(p_numericXArray) {
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
 	this.methodsSetMultiPass = {generatePassEventsMethod : generateEventsForSpacePassClosure(this), orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 	skipPassMethod : skipPassClosure(this) };
+	this.setResolution = {
+		quickStartEventsMethod : quickStartEventsClosure(this)
+		//searchSolutionMethod : searchClosure(this)
+	}
 
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterBorderingNewlyExpandedIslandClosure(this), filterAffectedIslandSpacesClosure(this)]);
 	
@@ -131,8 +135,8 @@ function leastAccessibleSpacesFirstClosure(p_solver) {
 }
 
 //--------------------------------
+// Getters (drawer and intelligence)
 
-// Misc. methods
 SolverNurikabe.prototype.getAnswer = function(p_x, p_y) {
 	if (this.getNumber(p_x, p_y) != null) {
 		return NURIKABE_LAND;
@@ -148,6 +152,12 @@ SolverNurikabe.prototype.getNumber = function(p_x, p_y) {
 	return this.islandGrid.get(p_x, p_y);
 }
 
+function canGoThereClosure(p_solver, p_islandIndex) {
+	return function(p_x, p_y) {
+		return p_solver.answerChoiceArray[p_y][p_x].getState(p_islandIndex) != SPACE_CHOICE.NO;
+	}
+}
+
 //--------------------------------
 
 // Input methods
@@ -161,30 +171,8 @@ SolverNurikabe.prototype.undo = function() {
 	this.undoToLastHypothesis(undoEventClosure(this));
 }
 
-SolverNurikabe.prototype.quickStart = function() {
-	this.initiateQuickStart();
-	var listDeductions = [];
-	
-	// Necessity (spaces adjacent to 2 or more islands OR to a 1-sized island that wouldn't have expanded)
-	// It declares all islands are non-sea spaces
-	// It surrounders by sea islands of size 1
-	// Smartness : if the number of accessible spaces equals the capacity of the island, declare them islands
-	for (var y = 0 ; y < this.yLength ; y++) {
-		for (var x = 0 ; x < this.xLength ; x++) {
-			singleIndex = this.answerChoiceArray[y][x].getSingleValue(); 
-			if (singleIndex != null) {
-				this.tryToApplyHypothesis(new ChoiceEvent(x, y, singleIndex ,true));
-			}
-		}
-	}
-	this.islandList.forEach(island => {
-		if (island.number == island.accessibleSpaces.length) {
-			island.accessibleSpaces.forEach(coors => {
-				this.tryToApplyHypothesis(new ChoiceEvent(coors.x, coors.y, NURIKABE_SEA, false));
-			});
-		}
-	});
-	this.terminateQuickStart();
+SolverNurikabe.prototype.makeQuickStart = function() {
+	this.quickStart();
 }
 
 SolverNurikabe.prototype.emitPassSpace = function(p_x, p_y) {
@@ -203,47 +191,7 @@ SolverNurikabe.prototype.makePurge = function() {
 	this.applyGlobalDeduction(banInaccessibleIslandsClosure(this), this.methodsSetDeductions, "Purge distant spaces");
 }
 
-function banInaccessibleIslandsClosure(p_solver) {
-	return function() {		
-		var ok = true;
-		var found = false;
-		var island;
-		//p_solver.islandList.forEach(island => {
-		for (i = 0 ; i < p_solver.islandListSortedIndexes.length ; i++) {
-			island = p_solver.islandList[p_solver.islandListSortedIndexes[i]];
-			p_solver.spacesAccessiblesInRangeFromSetSpaces(island.spacesIncluded, island.notIncludedYet, p_solver.volcanicChecker, canGoThereClosure(p_solver, island.index));
-			var spacesToDiscard = [];
-			if (!found || (island.notExcludedYet + island.notIncludedYet < 15)) {
-				island.accessibleSpaces.forEach(coors => {
-					if (!p_solver.volcanicChecker.array[coors.y][coors.x] && 
-						p_solver.answerChoiceArray[coors.y][coors.x].getState(island.index) != SPACE_CHOICE.YES) { // the checker does not pass spaces of the island at true... ?
-						spacesToDiscard.push({x : coors.x, y : coors.y});
-					}
-				});
-				for (var j = 0 ; j < spacesToDiscard.length ; j++) {
-					coors = spacesToDiscard[j];
-					state = p_solver.tryToApplyHypothesis(new ChoiceEvent(coors.x, coors.y, island.index, false));
-					ok &= (state != DEDUCTIONS_RESULT.FAILURE);
-					if (!ok) {
-						return GLOBAL_DEDUCTIONS_RESULT.FAILURE;
-					}
-					found |= (state == DEDUCTIONS_RESULT.SUCCESS);
-				}
-			}
-		// });
-		}
-		return (found ? GLOBAL_DEDUCTIONS_RESULT.SUCCESS : GLOBAL_DEDUCTIONS_RESULT.HARMLESS);
-	}
-}
-
-function canGoThereClosure(p_solver, p_islandIndex) {
-	return function(p_x, p_y) {
-		return p_solver.answerChoiceArray[p_y][p_x].getState(p_islandIndex) != SPACE_CHOICE.NO;
-	}
-}
-
 //--------------------------------
-
 // Doing, undoing and transforming
 
 // Offensive programming : the coordinates are assumed to be in limits
@@ -326,7 +274,6 @@ undoEventClosure = function(p_solver) {
 }
 
 //--------------------------------
-
 // Exchanges solver and geographical
 
 /**
@@ -348,8 +295,39 @@ adjacencyClosure = function (p_solver) {
     }
 }
 
+//-------------------------------- 
+// Quickstart !
+
+quickStartEventsClosure = function(p_solver) {
+	return function() {
+		var listQSEvts = [{quickStartLabel : "Nurikabe"}];
+		
+		// Necessity (spaces adjacent to 2 or more islands OR to a 1-sized island that wouldn't have expanded)
+		// It declares all islands are non-sea spaces
+		// It surrounders by sea islands of size 1
+		// Smartness : if the number of accessible spaces equals the capacity of the island, declare them islands
+		for (var y = 0 ; y < p_solver.yLength ; y++) {
+			for (var x = 0 ; x < p_solver.xLength ; x++) {
+				singleIndex = p_solver.answerChoiceArray[y][x].getSingleValue(); 
+				if (singleIndex != null) {
+					listQSEvts.push(new ChoiceEvent(x, y, singleIndex ,true));
+				}
+			}
+		}
+		p_solver.islandList.forEach(island => {
+			if (island.number == island.accessibleSpaces.length) {
+				island.accessibleSpaces.forEach(coors => {
+					listQSEvts.push(new ChoiceEvent(coors.x, coors.y, NURIKABE_SEA, false));
+				});
+			}
+		});
+		return listQSEvts;
+	}
+}
+
 //--------------------------------
-// Intelligence
+// Deductions, filters and global
+
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
 		const x = p_eventBeingApplied.coorX;
@@ -562,8 +540,41 @@ abortClosure = function(p_solver) {
 }
 
 
+function banInaccessibleIslandsClosure(p_solver) {
+	return function() {		
+		var ok = true;
+		var found = false;
+		var island;
+		//p_solver.islandList.forEach(island => {
+		for (i = 0 ; i < p_solver.islandListSortedIndexes.length ; i++) {
+			island = p_solver.islandList[p_solver.islandListSortedIndexes[i]];
+			p_solver.spacesAccessiblesInRangeFromSetSpaces(island.spacesIncluded, island.notIncludedYet, p_solver.volcanicChecker, canGoThereClosure(p_solver, island.index));
+			var spacesToDiscard = [];
+			if (!found || (island.notExcludedYet + island.notIncludedYet < 15)) {
+				island.accessibleSpaces.forEach(coors => {
+					if (!p_solver.volcanicChecker.array[coors.y][coors.x] && 
+						p_solver.answerChoiceArray[coors.y][coors.x].getState(island.index) != SPACE_CHOICE.YES) { // the checker does not pass spaces of the island at true... ?
+						spacesToDiscard.push({x : coors.x, y : coors.y});
+					}
+				});
+				for (var j = 0 ; j < spacesToDiscard.length ; j++) {
+					coors = spacesToDiscard[j];
+					state = p_solver.tryToApplyHypothesis(new ChoiceEvent(coors.x, coors.y, island.index, false));
+					ok &= (state != DEDUCTIONS_RESULT.FAILURE);
+					if (!ok) {
+						return GLOBAL_DEDUCTIONS_RESULT.FAILURE;
+					}
+					found |= (state == DEDUCTIONS_RESULT.SUCCESS);
+				}
+			}
+		// });
+		}
+		return (found ? GLOBAL_DEDUCTIONS_RESULT.SUCCESS : GLOBAL_DEDUCTIONS_RESULT.HARMLESS);
+	}
+}
+
 // --------------------
-// Passing
+// Passing and multipassing
 
 generateEventsForSpacePassClosure = function(p_solver) {
 	return function(p_indexIsland) {

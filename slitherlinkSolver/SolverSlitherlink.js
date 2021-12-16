@@ -24,7 +24,7 @@ SolverSlitherlink.prototype.construct = function(p_numberMeshGrid) {
 		setEdgeClosedPSAtomicUndos : setEdgeClosedPSAtomicUndosClosure(this),
 		setEdgeLinkedPSDeductions : setEdgeLinkedDeductionsClosure(this),
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
-		PSQuickStart : quickStartClosure(this),
+		quickStartEventsPS : quickStartEventsClosure(this),
 		generateEventsForPassPS : generateEventsForSpaceClosureSlitherlink(this),
 		orderedListPassArgumentsPS : startingOrderedListPassArgumentsSlitherlink(this),
 		namingCategoryPS : namingCategoryClosure(this),
@@ -33,6 +33,7 @@ SolverSlitherlink.prototype.construct = function(p_numberMeshGrid) {
 			return true;
 		}
 	});
+	this.setResolution.searchSolutionMethod = loopNaiveSearchClosure(this);
 
 	this.numericMeshArray = [];
 	this.numericMeshCoordinatesListAndPassArguments = []; // List of coordinates of numeric spaces
@@ -123,6 +124,10 @@ SolverSlitherlink.prototype.emitPassNode = function(p_x, p_y) {
 
 SolverSlitherlink.prototype.makeMultipass = function() {
 	this.multipassLoop();
+}
+
+SolverSlitherlink.prototype.makeResolution = function() { 
+	this.resolve();
 }
 
 // -------------------
@@ -224,18 +229,14 @@ SolverSlitherlink.prototype.pushIfUndecided = function(p_eventsList, p_x, p_y, p
 // -------------------
 // Quickstart
 
-quickStartClosure = function(p_solver) {
-	return function() { 
-		p_solver.initiateQuickStart("Slitherlink");
-		var eventsList = [];
+quickStartEventsClosure = function(p_solver) {
+	return function(p_QSeventsList) { 
+		p_QSeventsList.push({quickStartLabel : "Slitherlink"});
 		p_solver.numericMeshCoordinatesListAndPassArguments.forEach(coors => {
-			eventsList = p_solver.testLinkAllAroundDeductions(eventsList, coors.x, coors.y);
-			eventsList = p_solver.testCloseAllAroundDeductions(eventsList, coors.x, coors.y);
+			p_QSeventsList = p_solver.testLinkAllAroundDeductions(p_QSeventsList, coors.x, coors.y);
+			p_QSeventsList = p_solver.testCloseAllAroundDeductions(p_QSeventsList, coors.x, coors.y);
 		});
-		eventsList.forEach(p_event => {
-			p_solver.tryToPutNewLink(p_event.linkX, p_event.linkY, p_event.direction, p_event.state);
-		});
-		p_solver.terminateQuickStart();
+		return p_QSeventsList;
 	}
 }
 
