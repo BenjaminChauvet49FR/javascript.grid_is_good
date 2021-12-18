@@ -53,7 +53,7 @@ SolverStarBattle.prototype.construct = function(p_wallArray, p_starNumber) {
 		undoEventClosure(this)
 	);
 	this.methodsSetPass = {comparisonMethod : comparing, copyMethod : copying,  argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForRLCPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
@@ -148,7 +148,7 @@ SolverStarBattle.prototype.emitPassColumn = function(p_x) {
 }
 
 SolverStarBattle.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 // The quickstart is truly quick since it consists of filling 1-size regions with stars. 
@@ -433,7 +433,7 @@ SolverStarBattle.prototype.isSolved = function() {
 
 function searchClosure(p_solver) {
 	return function() {
-		var mp = p_solver.multiPass(p_solver.methodsSetMultiPass);
+		var mp = p_solver.multiPass(p_solver.methodsSetMultipass);
 		if (mp == MULTIPASS_RESULT.FAILURE) {
 			return RESOLUTION_RESULT.FAILURE;
 		}			
@@ -480,7 +480,7 @@ function searchClosure(p_solver) {
 			for (var j = 0 ; j < 2 ; j++) {
 				const symbol = symbols[j];				
 				p_solver.tryToApplyHypothesis(new SpaceEvent(indexForSolution.x, indexForSolution.y, symbol)); // Should not fail because stuff above didn't detect it. (but may still be wrong)
-				var mp = p_solver.multiPass(p_solver.methodsSetMultiPass);
+				var mp = p_solver.multiPass(p_solver.methodsSetMultipass);
 				if (p_solver.isSolved()) {	// Stuff was enough to solve puzzle
 					return RESOLUTION_RESULT.SUCCESS;
 				} else if (mp != MULTIPASS_RESULT.FAILURE) {
@@ -514,8 +514,8 @@ function searchClosure(p_solver) {
 		
 		// We could NOT be satisfied and got no new deductions ? Well... recursion time !
 		return p_solver.tryAllPossibilities([
-			[new SpaceEvent(bestIndex.x, bestIndex.y, bestIndex.symbol)],
-			[new SpaceEvent(bestIndex.x, bestIndex.y, oppositeSymbol(bestIndex.symbol))]
+			new SpaceEvent(bestIndex.x, bestIndex.y, bestIndex.symbol),
+			new SpaceEvent(bestIndex.x, bestIndex.y, oppositeSymbol(bestIndex.symbol))
 		]);
 	}
 }

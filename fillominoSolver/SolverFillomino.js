@@ -36,7 +36,7 @@ SolverFillomino.prototype.construct = function(p_numberArray) {
 		argumentToLabelMethod : namingCategoryClosure(this)
 	};
 	
-	/*this.methodsSetMultiPass = {
+	/*this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 		//skipPassMethod : skipPassClosure(this)
@@ -108,7 +108,7 @@ SolverFillomino.prototype.emitPassSpace = function(p_x, p_y, p_number) {
 }
 
 SolverFillomino.prototype.makeMultiPass = function() {	
-	//this.multiPass(this.methodsSetMultiPass);
+	//this.multiPass(this.methodsSetMultipass);
 }
 
 // In this puzzle, quickstart is vital for the separation of numbers

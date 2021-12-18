@@ -36,7 +36,7 @@ SolverUsotatami.prototype.construct = function(p_numberGrid) {
 		argumentToLabelMethod : namingCategoryClosure(this)
 	};
 	
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 		//skipPassMethod : skipPassClosure(this)
@@ -200,7 +200,7 @@ SolverUsotatami.prototype.emitPassSpace = function(p_x, p_y) {
 }
 
 SolverUsotatami.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 // In this puzzle, quickstart is vital for the separation of numbers

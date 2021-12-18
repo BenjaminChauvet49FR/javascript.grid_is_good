@@ -29,11 +29,11 @@ SolverNurikabe.prototype.construct = function(p_numericXArray) {
 		undoEventClosure(this)
 	));
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsSetMultiPass = {generatePassEventsMethod : generateEventsForSpacePassClosure(this), orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
+	this.methodsSetMultipass = {generatePassEventsMethod : generateEventsForSpacePassClosure(this), orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 	skipPassMethod : skipPassClosure(this) };
 	this.setResolution = {
-		quickStartEventsMethod : quickStartEventsClosure(this)
-		//searchSolutionMethod : searchClosure(this)
+		quickStartEventsMethod : quickStartEventsClosure(this),
+		searchSolutionMethod : searchClosure(this)
 	}
 
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterBorderingNewlyExpandedIslandClosure(this), filterAffectedIslandSpacesClosure(this)]);
@@ -184,11 +184,15 @@ SolverNurikabe.prototype.emitPassSpace = function(p_x, p_y) {
 }
 
 SolverNurikabe.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 SolverNurikabe.prototype.makePurge = function() {
 	this.applyGlobalDeduction(banInaccessibleIslandsClosure(this), this.methodsSetDeductions, "Purge distant spaces");
+}
+
+SolverNurikabe.prototype.makeResolution = function() { 
+	this.resolve();
 }
 
 //--------------------------------
@@ -596,7 +600,7 @@ SolverNurikabe.prototype.generateEventsIslandPass = function(p_indexIsland) {
 	});
 	// Number of "not excluded yet" minus number of unreachable spaces too big in comparison to island-related unknown spaces ? Only test the latter ones !
 	const aroundSpaces = this.clusterManager.unknownAroundSpacesClusterSpace(island.capitalX, island.capitalY);
-	if (aroundSpaces < island.notExcludedYet - answer.length) {
+	if (aroundSpaces.length < island.notExcludedYet - answer.length) {
 		aroundSpaces.forEach(coors => {
 			if (this.answerChoiceArray[coors.y][coors.x].getState(p_indexIsland) == SPACE_CHOICE.UNDECIDED) {			
 				answer.push(eventsForOneSpacePass(coors.x, coors.y, p_indexIsland));
@@ -675,3 +679,58 @@ skipPassClosure = function(p_solver) {
 		return p_solver.incertainity(p_solver.islandList[p_index]) > p_solver.arbitrarySkipPassThreshold; // Arbitrary... or not ?
 	}
 }
+
+// --------------------
+// Resolution
+
+SolverNurikabe.prototype.isSolved = function() {
+	for (var i = 0 ; i < this.islandList.length ; i++) { // High convention : Big possible change that someday there are 'X's instead of numbers in Nurikabe... but I didn't meet a single one in a Nurikabe puzzle yet.
+		if (this.islandList[i].notIncludedYet != 0) {
+			return false;
+		}
+	};
+	return true; 
+}
+
+function searchClosure(p_solver) {
+	return function() {
+		var gd = p_solver.applyGlobalDeduction(banInaccessibleIslandsClosure(p_solver), p_solver.methodsSetDeductions, "Purge distant spaces");
+		if (gd == GLOBAL_DEDUCTIONS_RESULT.FAILURE) {
+			return RESOLUTION_RESULT.FAILURE;
+		}	
+		var mp = p_solver.multiPass(p_solver.methodsSetMultipass);
+		if (mp == MULTIPASS_RESULT.FAILURE) {
+			return RESOLUTION_RESULT.FAILURE;
+		}			
+		if (p_solver.isSolved()) {		
+			return RESOLUTION_RESULT.SUCCESS;
+		}		
+		
+		// Find index with the most solutions
+		var bestIndex = {nbD : -1};
+		var nbDeductions;
+		var event_;
+		var solveResultEvt;
+		for (solveX = 0 ; solveX < p_solver.xLength ; solveX++) { // x and y are somehow modified by tryToApplyHypothesis...
+			for (solveY = 0 ; solveY < p_solver.yLength ; solveY++) {
+				if (p_solver.answerChoiceArray[solveY][solveX].getState(NURIKABE_SEA) == SPACE_CHOICE.UNDECIDED) {
+					[true, false].forEach(value => {
+						event_ = new ChoiceEvent(solveX, solveY, NURIKABE_SEA, value);
+						solveResultEvt = p_solver.tryToApplyHypothesis(event_); 
+						if (solveResultEvt == DEDUCTIONS_RESULT.SUCCESS) {
+							nbDeductions = p_solver.numberOfRelevantDeductionsSinceLastHypothesis();
+							if (bestIndex.nbD < nbDeductions) {
+								bestIndex = {nbD : nbDeductions , evt : event_.copy()}
+							}
+							p_solver.undoToLastHypothesis();
+						}
+					});	
+				}
+			}
+		}
+		
+		// Naive recursion !
+		return p_solver.tryAllPossibilities([bestIndex.evt, new ChoiceEvent(bestIndex.evt.coorX, bestIndex.evt.coorY, NURIKABE_SEA, !bestIndex.evt.choice)]);
+	}
+}
+

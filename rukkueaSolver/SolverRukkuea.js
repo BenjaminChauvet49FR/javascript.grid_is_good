@@ -22,7 +22,7 @@ SolverRukkuea.prototype.construct = function(p_numbersArray) {
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [lookForSquareClosure(this)]);
 
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generatePassEventsClosure(this), 
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this), 
 		passTodoMethod : multipassDefineTodoClosure(this)};
@@ -99,7 +99,7 @@ SolverRukkuea.prototype.emitPassRowColumn = function(p_x, p_y) {
 }
 
 SolverRukkuea.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 SolverRukkuea.prototype.makeTotalPass = function() {	

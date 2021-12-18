@@ -27,7 +27,7 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications, p_isAy
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
 		argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
@@ -41,8 +41,8 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications, p_isAy
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterCentralStripesClosure(this)]);
 	
 	this.setResolution = {
-		quickStartEventsMethod : quickStartEventsClosure(this)
-		//searchSolutionMethod : searchClosure(this)
+		quickStartEventsMethod : quickStartEventsClosure(this),
+		searchSolutionMethod : searchClosure(this)
 	}
 	
 	this.isAyeHeya = p_isAyeHeya;
@@ -110,7 +110,7 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications, p_isAy
 		if (region.notPlacedYet != null) {
 			region.notPlacedYet.OPENs = region.size-region.notPlacedYet.CLOSEDs;
 		} else {
-			region.notDecidedYet = region.size; // Alternative to regions that are not forced, for multipass purposes.
+			region.notDecidedYet = region.size; // Alternative to regions that are not forced, for multipass and solvers purposes.
 		}
 	}
 	
@@ -255,8 +255,8 @@ SolverHeyawake.prototype.modifyVerticalStrip = function(p_index, p_symbol, p_mod
 }
 
 //--------------------------------
-
 // Input methods
+
 SolverHeyawake.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
 	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
 }
@@ -280,7 +280,7 @@ SolverHeyawake.prototype.emitSmartPassRegion = function(p_indexRegion) {
 }
 
 SolverHeyawake.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 SolverHeyawake.prototype.smartPassRegion = function(p_indexRegion) {
@@ -288,6 +288,10 @@ SolverHeyawake.prototype.smartPassRegion = function(p_indexRegion) {
 	const generatedEvents = this.generateEventsForRegionSmartPass(indexes);
 	const indexGroup = {category : HEYAWAKE_PASS_CATEGORY.BLOCK_REGION, value : indexes};
 	this.passEvents(generatedEvents, indexGroup);
+}
+
+SolverHeyawake.prototype.makeResolution = function() { 
+	this.resolve();
 }
 
 //--------------------------------
@@ -714,5 +718,58 @@ SolverHeyawake.prototype.incertainity = function(p_index) { // Can go below 0. T
 skipPassClosure = function(p_solver) {
 	return function (p_index) {
 		return p_solver.incertainity(p_index) > 500; // Arbitrary value
+	}
+}
+
+// --------------------
+// Resolution
+
+SolverHeyawake.prototype.isSolved = function() {
+	// Quick check
+	for (var i = 0 ; i < this.regions.length ; i++) {
+		if ((this.regions[i].notDecidedYet && this.regions[i].notDecidedYet > 0) ||
+			(this.regions[i].notPlacedYet && this.regions[i].notPlacedYet.CLOSEDs > 0)) {
+			return false;
+		} 
+	};
+	return true;
+}
+
+function searchClosure(p_solver) { //Exactly identical to Yajikabe. But will I have the same success with a naive deduction ? (puzzle 402... IT WORKED ! (anyway it was only the 402))
+	return function() {
+		var mp = p_solver.multiPass(p_solver.methodsSetMultipass);
+		if (mp == MULTIPASS_RESULT.FAILURE) {
+			return RESOLUTION_RESULT.FAILURE;
+		}			
+		if (p_solver.isSolved()) {		
+			return RESOLUTION_RESULT.SUCCESS;
+		}		
+		
+		// Find index with the most solutions
+		var bestIndex = {nbD : -1};
+		var nbDeductions;
+		var event_;
+		var solveResultEvt;
+		for (solveX = 0 ; solveX < p_solver.xLength ; solveX++) { // x and y are somehow modified by tryToApplyHypothesis...
+			for (solveY = 0 ; solveY < p_solver.yLength ; solveY++) {
+				if (p_solver.answerArray[solveY][solveX] == ADJACENCY.UNDECIDED) {
+					[ADJACENCY.YES, ADJACENCY.NO].forEach(value => {
+						event_ = new SpaceEvent(solveX, solveY, value);
+						solveResultEvt = p_solver.tryToApplyHypothesis(event_); 
+						if (solveResultEvt == DEDUCTIONS_RESULT.SUCCESS) {
+							nbDeductions = p_solver.numberOfRelevantDeductionsSinceLastHypothesis();
+							if (bestIndex.nbD < nbDeductions) {
+								bestIndex = {nbD : nbDeductions , evt : event_.copy()}
+							}
+							p_solver.undoToLastHypothesis();
+						}
+					});	
+				}
+			}
+		}
+		
+		// Naive recursion !
+		return p_solver.tryAllPossibilities([bestIndex.evt, new SpaceEvent(bestIndex.evt.coorX, bestIndex.evt.coorY, ADJACENCY.YES),
+		bestIndex.evt, new SpaceEvent(bestIndex.evt.coorX, bestIndex.evt.coorY, ADJACENCY.NO)]);
 	}
 }

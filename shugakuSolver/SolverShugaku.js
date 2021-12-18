@@ -30,8 +30,8 @@ SolverShugaku.prototype.construct = function(p_numberSymbolsArray) {
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
 	this.methodsSetMultipass = {generatePassEventsMethod : generateEventsForSpacePassClosure(this), orderPassArgumentsMethod : orderedListPassArgumentsClosure(this), passTodoMethod : multipassDefineTodoClosure(this)};
 	this.setResolution = {
-		quickStartEventsMethod : quickStartEventsClosure(this)
-		//searchSolutionMethod : searchClosure(this)
+		quickStartEventsMethod : quickStartEventsClosure(this),
+		searchSolutionMethod : searchClosure(this)
 	}
 	
 	this.answerArray = [];	
@@ -168,7 +168,7 @@ SolverShugaku.prototype.makeQuickStart = function() {
 
 SolverShugaku.prototype.emitHypothesisSpace = function(p_x, p_y, p_value, p_ok) {
 	if (!this.answerArray[p_y][p_x].block) {
-		this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_value, p_ok));
+		this.tryToApplyHypothesis(new ChoiceEvent(p_x, p_y, p_value, p_ok));
 	}
 }
 
@@ -187,6 +187,10 @@ SolverShugaku.prototype.emitPassSpace = function(p_x, p_y) {
 
 SolverShugaku.prototype.makeMultiPass = function() {
 	return this.multiPass(this.methodsSetMultipass);
+}
+
+SolverShugaku.prototype.makeResolution = function() { 
+	this.resolve();
 }
 
 //--------------------------------
@@ -299,7 +303,7 @@ Transforms a geographical deduction (see dedicated class GeographicalDeduction) 
 */
 transformClosure = function (p_solver) {
     return function (p_geographicalDeduction) {
-		return new SpaceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, SPACE_SHUGAKU.OPEN, p_geographicalDeduction.opening == ADJACENCY.YES);
+		return new ChoiceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, SPACE_SHUGAKU.OPEN, p_geographicalDeduction.opening == ADJACENCY.YES);
     } 
 };
 
@@ -328,13 +332,13 @@ quickStartEventsClosure = function(p_solver) {
 			if (p_solver.squareCountingArray[y][x].notNoSquaresYet == 0) {
 				p_solver.existingNeighborsCoorsDirections(x, y).forEach(neighborCoors => {
 					if (!p_solver.isBanned(neighborCoors.x, neighborCoors.y)) {
-						listQSEvts.push(new SpaceEvent(neighborCoors.x, neighborCoors.y, SPACE_SHUGAKU.SQUARE, true));
+						listQSEvts.push(new ChoiceEvent(neighborCoors.x, neighborCoors.y, SPACE_SHUGAKU.SQUARE, true));
 					}
 				});
 			} else if (p_solver.squareCountingArray[y][x].notSquaresYet == 0) {
 				p_solver.existingNeighborsCoorsDirections(x, y).forEach(neighborCoors => {
 					if (!p_solver.isBanned(neighborCoors.x, neighborCoors.y)) {
-						listQSEvts.push(new SpaceEvent(neighborCoors.x, neighborCoors.y, SPACE_SHUGAKU.SQUARE, false));
+						listQSEvts.push(new ChoiceEvent(neighborCoors.x, neighborCoors.y, SPACE_SHUGAKU.SQUARE, false));
 					}
 				});
 			}
@@ -449,11 +453,11 @@ deductionsClosure = function (p_solver) {
 				
 				// Vertical one ? Place a square and a round now !
 				if (dir == DIRECTION.UP) {
-					p_listEventsToApply.push(new SpaceEvent(x, dy, SPACE_SHUGAKU.ROUND, true));
-					p_listEventsToApply.push(new SpaceEvent(x, y, SPACE_SHUGAKU.SQUARE, true));
+					p_listEventsToApply.push(new ChoiceEvent(x, dy, SPACE_SHUGAKU.ROUND, true));
+					p_listEventsToApply.push(new ChoiceEvent(x, y, SPACE_SHUGAKU.SQUARE, true));
 				} else if (dir == DIRECTION.DOWN) {
-					p_listEventsToApply.push(new SpaceEvent(x, y, SPACE_SHUGAKU.ROUND, true));
-					p_listEventsToApply.push(new SpaceEvent(x, dy, SPACE_SHUGAKU.SQUARE, true));
+					p_listEventsToApply.push(new ChoiceEvent(x, y, SPACE_SHUGAKU.ROUND, true));
+					p_listEventsToApply.push(new ChoiceEvent(x, dy, SPACE_SHUGAKU.SQUARE, true));
 				}
 				// Horizontal one ? 
 				if (dir == DIRECTION.LEFT) {
@@ -475,10 +479,10 @@ deductionsClosure = function (p_solver) {
 				}
 				// All 4 fences are closed ? Open the space !
 				if (p_solver.edgesArray[y][x].closedEdges == 4) {
-					p_listEventsToApply.push(new SpaceEvent(x, y, SPACE_SHUGAKU.OPEN, true));
+					p_listEventsToApply.push(new ChoiceEvent(x, y, SPACE_SHUGAKU.OPEN, true));
 				}
 				if (p_solver.edgesArray[dy][dx].closedEdges == 4) {
-					p_listEventsToApply.push(new SpaceEvent(dx, dy, SPACE_SHUGAKU.OPEN, true));
+					p_listEventsToApply.push(new ChoiceEvent(dx, dy, SPACE_SHUGAKU.OPEN, true));
 				}
 			}
 			
@@ -490,7 +494,7 @@ deductionsClosure = function (p_solver) {
 SolverShugaku.prototype.deductionDominoFormations = function(p_listEventsToApply, p_x, p_y, p_thisSymbol, p_otherSymbol) {
 	this.existingNeighborsCoorsDirections(p_x, p_y).forEach(coorsDir => {
 		if (this.fencesGrid.getFence(p_x, p_y, coorsDir.direction) == FENCE_STATE.OPEN) { // Open fence, create two symbols for a domino
-			p_listEventsToApply.push(new SpaceEvent(coorsDir.x, coorsDir.y, p_otherSymbol, true));
+			p_listEventsToApply.push(new ChoiceEvent(coorsDir.x, coorsDir.y, p_otherSymbol, true));
 		}
 		if (!this.isBanned(coorsDir.x, coorsDir.y) && this.answerArray[coorsDir.y][coorsDir.x].getValue() == p_thisSymbol) { // Separate identical symbols
 			p_listEventsToApply.push(new FenceShugakuEvent(p_x, p_y, coorsDir.direction, FENCE_STATE.CLOSED));
@@ -501,37 +505,37 @@ SolverShugaku.prototype.deductionDominoFormations = function(p_listEventsToApply
 
 // TODO trouver de meilleurs noms
 deductionsDiscardChoices = function(p_listEventsToApply, p_x, p_y, p_choice1, p_choice2) {
-	p_listEventsToApply.push(new SpaceEvent(p_x, p_y, p_choice1, false));
-	p_listEventsToApply.push(new SpaceEvent(p_x, p_y, p_choice2, false));
+	p_listEventsToApply.push(new ChoiceEvent(p_x, p_y, p_choice1, false));
+	p_listEventsToApply.push(new ChoiceEvent(p_x, p_y, p_choice2, false));
 	return p_listEventsToApply;
 }
 
 SolverShugaku.prototype.deductionsChooseOneEventLeft = function(p_listEventsToApply, p_x, p_y, p_choice1, p_choice2) {
 	if (this.answerArray[p_y][p_x].getState(p_choice1) == SPACE_CHOICE.NO) {
-		p_listEventsToApply.push(new SpaceEvent(p_x, p_y, p_choice2, true));
+		p_listEventsToApply.push(new ChoiceEvent(p_x, p_y, p_choice2, true));
 	}
 	if (this.answerArray[p_y][p_x].getState(p_choice2) == SPACE_CHOICE.NO) {
-		p_listEventsToApply.push(new SpaceEvent(p_x, p_y, p_choice1, true));
+		p_listEventsToApply.push(new ChoiceEvent(p_x, p_y, p_choice1, true));
 	}
 	return p_listEventsToApply;
 }
 
 function deductionsCloseSpace(p_listEventsToApply, p_x, p_y) {
-	p_listEventsToApply.push(new SpaceEvent(p_x, p_y, SPACE_SHUGAKU.OPEN,false));
+	p_listEventsToApply.push(new ChoiceEvent(p_x, p_y, SPACE_SHUGAKU.OPEN,false));
 	return p_listEventsToApply;
 }
 
 // p_x, p_y = space on the left
 SolverShugaku.prototype.deductionsCompleteHorizontalDomino = function(p_listEventsToApply, p_x, p_y) {
 	if (this.answerArray[p_y][p_x].getState(SPACE_SHUGAKU.ROUND) == SPACE_CHOICE.YES) {
-		p_listEventsToApply.push(new SpaceEvent(p_x + 1, p_y, SPACE_SHUGAKU.SQUARE, true));
+		p_listEventsToApply.push(new ChoiceEvent(p_x + 1, p_y, SPACE_SHUGAKU.SQUARE, true));
 	} else if (this.answerArray[p_y][p_x].getState(SPACE_SHUGAKU.SQUARE) == SPACE_CHOICE.YES) {
-		p_listEventsToApply.push(new SpaceEvent(p_x + 1, p_y, SPACE_SHUGAKU.ROUND, true));
+		p_listEventsToApply.push(new ChoiceEvent(p_x + 1, p_y, SPACE_SHUGAKU.ROUND, true));
 	}
 	if (this.answerArray[p_y][p_x + 1].getState(SPACE_SHUGAKU.ROUND) == SPACE_CHOICE.YES) {
-		p_listEventsToApply.push(new SpaceEvent(p_x, p_y, SPACE_SHUGAKU.SQUARE, true));
+		p_listEventsToApply.push(new ChoiceEvent(p_x, p_y, SPACE_SHUGAKU.SQUARE, true));
 	} else if (this.answerArray[p_y][p_x + 1].getState(SPACE_SHUGAKU.SQUARE) == SPACE_CHOICE.YES) {
-		p_listEventsToApply.push(new SpaceEvent(p_x, p_y, SPACE_SHUGAKU.ROUND, true));
+		p_listEventsToApply.push(new ChoiceEvent(p_x, p_y, SPACE_SHUGAKU.ROUND, true));
 	}
 	return p_listEventsToApply;
 }
@@ -554,7 +558,7 @@ SolverShugaku.prototype.deductionsFillAroundWithNOSquares = function(p_listEvent
 SolverShugaku.prototype.deductionsTryAndFillSquaresOrNot = function(p_listEventsToApply, p_x, p_y, p_shouldBeSquare) {
 	this.existingNeighborsCoorsDirections(p_x, p_y).forEach(coors => {
 		if (!this.isBanned(coors.x, coors.y) && this.answerArray[coors.y][coors.x].getState(SPACE_SHUGAKU.SQUARE) == SPACE_CHOICE.UNDECIDED) {
-			p_listEventsToApply.push(new SpaceEvent(coors.x, coors.y, SPACE_SHUGAKU.SQUARE, p_shouldBeSquare)); 
+			p_listEventsToApply.push(new ChoiceEvent(coors.x, coors.y, SPACE_SHUGAKU.SQUARE, p_shouldBeSquare)); 
 		}
 	});
 	return p_listEventsToApply;
@@ -618,7 +622,7 @@ function filterDominosClosure(p_solver) { // Look for dominos that have been for
 						}
 						if (xToOpen != null) {
 							autoLogFilter("Waaay ok");
-							listEvents.push(new SpaceEvent(xToOpen, yToOpen, SPACE_SHUGAKU.OPEN, true));
+							listEvents.push(new ChoiceEvent(xToOpen, yToOpen, SPACE_SHUGAKU.OPEN, true));
 						}
 						if (!SAHD1.foundAtLeastOne && !SAHD2.foundAtLeastOne) {
 							listEvents = EVENT_RESULT.FAILURE;
@@ -673,10 +677,9 @@ generateEventsForSpacePassClosure = function(p_solver) {
 }
 
 SolverShugaku.prototype.generateEventsForSpacePass = function(p_space) {
-	//return [[new SpaceEvent(p_space.x, p_space.y, SPACE_SHUGAKU.OPEN, true), new SpaceEvent(p_space.x, p_space.y, SPACE_SHUGAKU.OPEN, false)]];
-	return [[new SpaceEvent(p_space.x, p_space.y, SPACE_SHUGAKU.OPEN, true), 
-	new SpaceEvent(p_space.x, p_space.y, SPACE_SHUGAKU.SQUARE, true),
-	new SpaceEvent(p_space.x, p_space.y, SPACE_SHUGAKU.ROUND, true)]];
+	return [[new ChoiceEvent(p_space.x, p_space.y, SPACE_SHUGAKU.OPEN, true), 
+	new ChoiceEvent(p_space.x, p_space.y, SPACE_SHUGAKU.SQUARE, true),
+	new ChoiceEvent(p_space.x, p_space.y, SPACE_SHUGAKU.ROUND, true)]];
 }
 
 namingCategoryClosure = function(p_solver) {
@@ -690,8 +693,8 @@ copying = function(p_event) {
 }
 
 comparison = function(p_event1, p_event2) {
-	const k1 = isSpaceEvent(p_event1) ? 0 : 1;
-	const k2 = isSpaceEvent(p_event2) ? 0 : 1;
+	const k1 = isChoiceEvent(p_event1) ? 0 : 1;
+	const k2 = isChoiceEvent(p_event2) ? 0 : 1;
 	return commonComparisonMultiKinds([0, 1], 
 		[
 		[p_event1.coorY, p_event1.coorX, p_event1.symbol, p_event1.choice], [p_event2.coorY, p_event2.coorX, p_event2.symbol, p_event2.choice],
@@ -720,3 +723,61 @@ multipassDefineTodoClosure = function(p_solver) {
 			spaceInArray.getState(SPACE_SHUGAKU.ROUND) == SPACE_CHOICE.UNDECIDED);
 	}
 }
+
+// --------------------
+// Resolution
+
+SolverShugaku.prototype.isSolved = function() {
+	for (var x = 0; x < this.xLength ; x++) {
+		for (var y = 0; y < this.yLength ; y++) {
+			if (!this.answerArray[y][x].block && this.answerArray[y][x].getValue() == null) {
+				return false;
+			}
+		}
+	}
+	return true; 
+}
+
+function searchClosure(p_solver) {  
+	return function() {
+		var mp = p_solver.multiPass(p_solver.methodsSetMultipass);
+		if (mp == MULTIPASS_RESULT.FAILURE) {
+			return RESOLUTION_RESULT.FAILURE;
+		}			
+		if (p_solver.isSolved()) {		
+			return RESOLUTION_RESULT.SUCCESS;
+		}		
+
+		// Warning : not checked yet !
+		// Find index with the most solutions
+		var bestIndex = {nbD : -1};
+		var nbDeductions;
+		var event_;
+		var result;
+		for (solveX = 0 ; solveX < p_solver.xLength ; solveX++) { // x and y are somehow modified by tryToApplyHypothesis...
+			for (solveY = 0 ; solveY < p_solver.yLength ; solveY++) {
+				if (!p_solver.answerArray[solveY][solveX].block && p_solver.answerArray[solveY][solveX].getValue() == null) {
+					[SPACE_SHUGAKU.OPEN, SPACE_SHUGAKU.SQUARE, SPACE_SHUGAKU.ROUND].forEach(value => {
+						event_ = new ChoiceEvent(solveX, solveY, value, true);
+						result = p_solver.tryToApplyHypothesis(event_); 
+						if (result != DEDUCTIONS_RESULT.FAILURE) {							
+							nbDeductions = p_solver.numberOfRelevantDeductionsSinceLastHypothesis();
+							if (bestIndex.nbD < nbDeductions) {
+								bestIndex = {nbD : nbDeductions , x : event_.coorX, y : event_.coorY}
+							}
+							p_solver.undoToLastHypothesis();
+						}
+					});	
+				}
+			}
+		}
+		
+		// Naive, because we can with Shugaku !
+		return p_solver.tryAllPossibilities(
+			[new ChoiceEvent(bestIndex.x, bestIndex.y, SPACE_SHUGAKU.OPEN, true), 
+			new ChoiceEvent(bestIndex.x, bestIndex.y, SPACE_SHUGAKU.SQUARE, true),
+			new ChoiceEvent(bestIndex.x, bestIndex.y, SPACE_SHUGAKU.ROUND, true)]
+		);
+	}
+}
+

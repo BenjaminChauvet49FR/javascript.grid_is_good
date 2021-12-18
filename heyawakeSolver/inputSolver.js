@@ -43,8 +43,8 @@ multipassAction = function (p_solver) {
 	p_solver.makeMultiPass();
 }
 
-formerLimitsExplorationAction = function(p_solver) {
-	p_solver.makeFormerLimitsExploration();
+solveAction = function (p_solver) {
+	p_solver.makeResolution();
 }
 
 //--------------------------
@@ -58,4 +58,3 @@ loadPuzzle = function(p_canvas, p_drawer, p_solver, p_loadedString, p_extraInfos
 	p_solver.construct(loadedItem.wallArray, loadedItem.indications, p_extraInfos.isAyeHeya);
 	p_drawer.adaptCanvasDimensions(p_canvas,{xLength : p_solver.xLength, yLength : p_solver.yLength});
 }
-

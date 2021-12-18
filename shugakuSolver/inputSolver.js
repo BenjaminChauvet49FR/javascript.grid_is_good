@@ -82,12 +82,8 @@ multipassAction = function (p_solver) {
 	p_solver.makeMultiPass(); // note : "make" in order to differ from "multiPass" which is reserved to general solver
 }
 
-/*solveAction = function (p_solver,p_textArea) {
-	p_solver.generalSolve();
-}*/
-
-formerLimitsExplorationAction = function(p_solver) {
-	p_solver.makeFormerLimitsExploration();
+solveAction = function (p_solver) {
+	p_solver.makeResolution();
 }
 
 //--------------------------

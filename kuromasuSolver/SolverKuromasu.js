@@ -23,7 +23,7 @@ SolverKuromasu.prototype.construct = function(p_numbersXArray, p_isCorral) {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
 		argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForSpacePassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		//skipPassMethod : skipPassClosure(this)
@@ -185,7 +185,7 @@ SolverKuromasu.prototype.emitPassSpace = function(p_x, p_y) {
 }
 
 SolverKuromasu.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 //--------------------------------

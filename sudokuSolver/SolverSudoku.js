@@ -34,7 +34,7 @@ SolverSudoku.prototype.construct = function(p_sudokuMode, p_numberArray) {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
 		argumentToLabelMethod : namingCategoryClosure(this)};
-	/*this.methodsSetMultiPass = {
+	/*this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)

@@ -91,19 +91,32 @@ ClusterManager.prototype.ban = function(p_x, p_y) {
 	this.patchworkArray[p_y][p_x] = CLUSTER_BANNED;
 }
 
-function invalidateUnknownSpacesAroundData(p_patchworkPiece) {
+/*function invalidateUnknownSpacesAroundData(p_patchworkPiece) {
 	p_patchworkPiece.unknownAroundSpaces = [];
-	p_patchworkPiece.firstIndexUncheckedAggregatedSpaces = 0;
+	p_patchworkPiece.firstIndexUncheckedAggregatedSpaces = 0; 
+}*/
+
+ClusterManager.prototype.invalidateUnknownSpacesAroundData = function(p_index) { // Inspirated by a similar mistake of recursion and actual indexes I also met in checkAdjacency.
+	this.invalidateUnknownSpacesAroundData_aux(this.actualIndex(p_index));
+}
+
+ClusterManager.prototype.invalidateUnknownSpacesAroundData_aux = function(p_index) {
+	const patchworkPiece = this.patchworkList[p_index];
+	patchworkPiece.unknownAroundSpaces = [];
+	patchworkPiece.firstIndexUncheckedAggregatedSpaces = 0;
+	patchworkPiece.indexRecipient.forEach(indexRec => {
+		this.invalidateUnknownSpacesAroundData_aux(indexRec);
+	});
 }
 
 ClusterManager.prototype.undo = function(p_x, p_y) { // Must be performed in order reverse as do
 	const formerPI = this.patchworkArray[p_y][p_x];
 	this.patchworkArray[p_y][p_x] = CLUSTER_UNDECIDED;
 
-	if (formerPI >= 0) { // It was a former space from clustr
+	if (formerPI >= 0) { // It was a former space from cluster
 	
 		// Invalidate informations relative to adjacent spaces of this cluster (note : this considers that the cluster doesn't come alone)
-		invalidateUnknownSpacesAroundData(this.patchworkList[formerPI]);
+		this.invalidateUnknownSpacesAroundData(formerPI); //Note : this method used not to be in prototype and used  to invalidate data for this cluster piece only. Could lead to quite disastrous results !
 		
 		// Detach clusters if it was the bond between clusters / destroy clusters if it was the only of its space
 		this.patchworkList[formerPI].spaces.pop();
@@ -115,7 +128,8 @@ ClusterManager.prototype.undo = function(p_x, p_y) { // Must be performed in ord
 				this.patchworkList[exNi].boundIndex = exNi;
 				var formerBound = this.patchworkList[formerPI].indexRecipient.pop();
 				// Also, invalidate data, because you never know
-				invalidateUnknownSpacesAroundData(this.patchworkList[formerBound]);
+					//invalidateUnknownSpacesAroundData(this.patchworkList[formerBound]); BIG ERROR ! During a pass, a datum wasn't invalidated on correct time !
+				// I should have been way more radical with invalidation. (
 			});
 			this.boundsArray[p_y][p_x] = null;
 		}
@@ -125,7 +139,8 @@ ClusterManager.prototype.undo = function(p_x, p_y) { // Must be performed in ord
 		existingNeighborsCoors(p_x, p_y, this.xLength, this.yLength).forEach(coors => {
 			aroundPI = this.patchworkArray[coors.y][coors.x];
 			if (aroundPI >= 0) {				
-				invalidateUnknownSpacesAroundData(this.patchworkList[aroundPI]);
+				//invalidateUnknownSpacesAroundData(this.patchworkList[aroundPI]);
+				this.invalidateUnknownSpacesAroundData(aroundPI);
 			}
 		});
 	}

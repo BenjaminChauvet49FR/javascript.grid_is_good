@@ -24,7 +24,7 @@ SolverHakoiri.prototype.construct = function(p_wallArray, p_symbolsArray) {
 		undoEventClosure(this)
 	));
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)//,
 		//skipPassMethod : skipPassClosure(this)
@@ -193,7 +193,7 @@ SolverHakoiri.prototype.emitPassRegion = function(p_x, p_y) {
 }
 
 SolverHakoiri.prototype.makeMultiPass = function() {
-	return this.multiPass(this.methodsSetMultiPass);
+	return this.multiPass(this.methodsSetMultipass);
 }
 
 //--------------------------------

@@ -25,7 +25,7 @@ SolverLITS.prototype.construct = function(p_wallArray) {
 		transformClosure(this),
 		undoEventClosure(this)
 	));
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
@@ -167,7 +167,7 @@ SolverLITS.prototype.passRegion = function(p_indexRegion) {
 
 SolverLITS.prototype.makeMultiPass = function() {
 	this.methodsSetPass.argumentToLabelMethod = namingRegionClosure(this);
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 namingRegionClosure = function(p_solver) {

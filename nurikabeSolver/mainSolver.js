@@ -30,12 +30,11 @@ function main() {
 	buildPuzzleManagementMenu("div_puzzle_management", "input_grid_name", "submit_load_grid", puzzleTypeName, defaultPuzzleValue);
 	putActionElementClick("submit_load_grid", function(event) {
 		loadAction(canevas, drawer, solver, puzzleTypeName, document.getElementById("input_grid_name").value)
-		resetCheckboxAdjacency();
 	});
 	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
 	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_ISLAND_SPACE, ACTION_SEA_SPACE, ACTION_PASS_SPACE]);
-	buildActionsGlobal("div_global_actions", "textido", ["Purge", "Multipasse", "Annuler"], 
-		[function(event){purgeAction(solver)}, function(event){multipassAction(solver)}, function(event){undoAction(solver)}] );
-	buildAdjacency("div_adjacency", solver, function(event){formerLimitsExplorationAction(solver)});
+	buildActionsGlobal("div_global_actions", "textido", ["Purge", "Multipasse", "Résolution", "Annuler"], 
+		[function(event){purgeAction(solver)}, function(event){multipassAction(solver)},
+		function(event){solveAction(solver)} , function(event){undoAction(solver)}] );
 
 }

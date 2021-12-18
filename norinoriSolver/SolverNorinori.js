@@ -31,7 +31,7 @@ SolverNorinori.prototype.construct = function(p_wallArray) {
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
@@ -153,7 +153,7 @@ SolverNorinori.prototype.emitPassRegion = function(p_indexRegion) {
 }
 
 SolverNorinori.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 namingCategoryClosure = function(p_solver) {

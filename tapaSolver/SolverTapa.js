@@ -29,7 +29,7 @@ SolverTapa.prototype.construct = function(p_combinationArray) {
 		copyMethod : copying,
 		argumentToLabelMethod : namingCategoryClosure(this)
 		};
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForAroundSpacePassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 		//skipPassMethod : skipPassClosure(this)
@@ -117,7 +117,7 @@ SolverTapa.prototype.makeQuickStart = function() {
 }
 
 SolverTapa.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 //--------------------------------

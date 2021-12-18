@@ -23,7 +23,7 @@ SolverPutteria.prototype.construct = function(p_wallArray, p_symbolArray) {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
 		argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsChoicesPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 	};
@@ -186,7 +186,7 @@ SolverPutteria.prototype.emitPassAllRegionsSize = function(p_x, p_y) {
 }
 
 SolverPutteria.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 //--------------------------------

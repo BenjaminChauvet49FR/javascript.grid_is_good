@@ -7,26 +7,26 @@ const SPACE_SHUGAKU = { // From 0 to N for compatibility with SpaceNumeric
 
 const LabelShugaku = ['O', 'R', 'S'];
 
-function isSpaceEvent(p_event) {
+function isChoiceEvent(p_event) {
 	return p_event.symbol || (p_event.symbol == 0);
 }
 
-function SpaceEvent(p_x, p_y, p_symbol, p_choice) {
+function ChoiceEvent(p_x, p_y, p_symbol, p_choice) {
 	this.symbol = p_symbol;
 	this.coorX = p_x;
 	this.coorY = p_y;
 	this.choice = p_choice;
 }
 
-SpaceEvent.prototype.toLogString = function() {	
+ChoiceEvent.prototype.toLogString = function() {	
 	return "["+ LabelShugaku[this.symbol] + (this.choice ? "Y" : "N") + " " + this.coorX + "," + this.coorY + "]";
 }
 
-SpaceEvent.prototype.copy = function() {
-	return new SpaceEvent(this.coorX, this.coorY, this.symbol, this.choice);
+ChoiceEvent.prototype.copy = function() {
+	return new ChoiceEvent(this.coorX, this.coorY, this.symbol, this.choice);
 }
 
-SpaceEvent.prototype.opening = function() {
+ChoiceEvent.prototype.opening = function() {
 	if (this.symbol == SPACE_SHUGAKU.OPEN) {
 		return (this.choice ? ADJACENCY.YES : ADJACENCY.NO);
 	} else {
@@ -34,11 +34,11 @@ SpaceEvent.prototype.opening = function() {
 	}
 }
 
-SpaceEvent.prototype.x = function() {
+ChoiceEvent.prototype.x = function() {
 	return this.coorX;
 }
 
-SpaceEvent.prototype.y = function() {
+ChoiceEvent.prototype.y = function() {
 	return this.coorY;
 }
 
@@ -64,5 +64,5 @@ FenceShugakuEvent.prototype.copy = function() {
 // ---
 
 shouldBeLoggedEvent = function(p_event) {
-	return (isSpaceEvent(p_event) && p_event.choice);
+	return (isChoiceEvent(p_event) && p_event.choice);
 }

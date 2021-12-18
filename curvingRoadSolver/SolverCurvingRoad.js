@@ -34,7 +34,7 @@ SolverCurvingRoad.prototype.construct = function (p_symbolArray) {
 			transformClosure(this), 
 			undoEventClosure(this)));
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForSpacePassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 	};
@@ -356,7 +356,7 @@ SolverCurvingRoad.prototype.passSpace = function(p_x, p_y) {
 }
 
 SolverCurvingRoad.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 SolverCurvingRoad.prototype.undo = function() {

@@ -24,7 +24,7 @@ SolverUsoone.prototype.construct = function (p_wallArray, p_numberArray) {
 			undoEventClosure(this)));
 	
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForNumbersSetsClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 	};
@@ -125,7 +125,7 @@ SolverUsoone.prototype.emitPass = function(p_x, p_y) {
 }
 
 SolverUsoone.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 SolverUsoone.prototype.undo = function() {

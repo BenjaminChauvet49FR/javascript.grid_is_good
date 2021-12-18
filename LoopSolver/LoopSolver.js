@@ -1090,9 +1090,9 @@ loopNaiveSearchClosure = function(p_solver) {
 			}
 		}
 		
-		// Let's go
-		return p_solver.tryAllPossibilities([[bestIndex.evt], 
-			[new LinkEvent(bestIndex.evt.linkX, bestIndex.evt.linkY, bestIndex.evt.direction, OppositeLoopState[bestIndex.evt.state]) ]]);
+		// Let's go !
+		return p_solver.tryAllPossibilities([bestIndex.evt, 
+			new LinkEvent(bestIndex.evt.linkX, bestIndex.evt.linkY, bestIndex.evt.direction, OppositeLoopState[bestIndex.evt.state]) ]);
 	}
 }
 

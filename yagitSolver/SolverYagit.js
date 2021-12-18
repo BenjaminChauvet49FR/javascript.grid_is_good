@@ -44,7 +44,7 @@ SolverYagit.prototype.construct = function(p_symbolArray, p_knotsArray) {
 		argumentToLabelMethod : namingCategoryClosure(this)
 	};
 	
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 		//skipPassMethod : skipPassClosure(this)
@@ -246,7 +246,7 @@ SolverYagit.prototype.undo = function(){
 }
 
 SolverYagit.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 // In this puzzle, quickstart is vital for the separation of centers

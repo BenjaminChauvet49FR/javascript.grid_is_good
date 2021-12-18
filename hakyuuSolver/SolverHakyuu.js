@@ -22,7 +22,7 @@ SolverHakyuu.prototype.construct = function(p_wallArray, p_numberArray) {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
 		argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
@@ -176,7 +176,7 @@ SolverHakyuu.prototype.passRegion = function(p_indexRegion) {
 }
 
 SolverHakyuu.prototype.makeMultiPass = function() {
-	//this.multiPass(this.methodsSetMultiPass);
+	//this.multiPass(this.methodsSetMultipass);
 }
 
 SolverHakyuu.prototype.makeQuickStart = function () {

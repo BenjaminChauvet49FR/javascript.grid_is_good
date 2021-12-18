@@ -18,13 +18,14 @@ const GEOGRAPHICAL_DEDUCTION = {
 }
 
 const DEDUCTIONS_RESULT = {
-	SUCCESS : 11,
-	FAILURE : 12
+	SUCCESS : 13,
+	FAILURE : 11,
+	HARMLESS : 12
 }
 
 const QUICKSTART_RESULT = { // Don't give it the same values as DEDUCTIONS_RESULT. Some tried, they had trouble. 
 	SUCCESS : 16,
-    FAILURE : 17,
+    FAILURE : 17
 }
 
 const PASS_RESULT = {
@@ -651,14 +652,9 @@ GeneralSolver.prototype.numberOfRelevantDeductionsSinceLastHypothesis = function
 // Kinda like pass. Except we are doing ever more stuff because we are looking for one solution of the puzzle.
 GeneralSolver.prototype.tryAllPossibilities = function(p_eventChoice)  {	
 	const previousLength = this.happenedEventsSeries.length;
-	var ok, j;
+	var ok = true;
 	for (var i = 0 ; i < p_eventChoice.length ; i++) {
-		ok = true;
-		j = 0;
-		while (ok && j < p_eventChoice[i].length) {
-			ok = (this.tryToApplyHypothesis(p_eventChoice[i][j]) != DEDUCTIONS_RESULT.FAILURE);
-			j++;
-		}
+		ok = (this.tryToApplyHypothesis(p_eventChoice[i]) != DEDUCTIONS_RESULT.FAILURE);
 		if (ok) {
 			const attemptAnswer = this.setResolution.searchSolutionMethod();
 			if (attemptAnswer == RESOLUTION_RESULT.SUCCESS) {

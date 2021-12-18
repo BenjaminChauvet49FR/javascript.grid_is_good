@@ -28,14 +28,14 @@ SolverYajikabe.prototype.construct = function(p_combinationArray) {
 		copyMethod : copying,
 		argumentToLabelMethod : namingCategoryClosure(this)
 		};
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForStripesAndUnionsClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 		//skipPassMethod : skipPassClosure(this)
 	};
 	this.setResolution = {
-		quickStartEventsMethod : quickStartEventsClosure(this)
-		//searchSolutionMethod : searchClosure(this)
+		quickStartEventsMethod : quickStartEventsClosure(this),
+		searchSolutionMethod : searchClosure(this)
 	}
 
 	this.answerArray = [];
@@ -189,6 +189,10 @@ SolverYajikabe.prototype.isNumeric = function(p_x, p_y) {
 	return (num != null && num.charAt(0) != "X");
 }
 
+SolverYajikabe.prototype.makeResolution = function() { 
+	this.resolve();
+}
+
 // -------------------------------
 
 // Warning : values in hard. Duplicated in Yajilin.
@@ -241,7 +245,7 @@ SolverYajikabe.prototype.passStripFromSpace = function(p_x, p_y) {
 }
 
 SolverYajikabe.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 //--------------------------------
@@ -487,8 +491,62 @@ namingCategoryClosure = function(p_solver) {
 	}
 }
 
-/*skipPassClosure = function(p_solver) {
-	return function (p_indexRegion) {
-		return p_solver.incertainity(p_indexRegion) > 500; // Arbitrary value
+// --------------------
+// Resolution
+
+SolverYajikabe.prototype.isSolved = function() {
+	// Quick check
+	for (var i = 0 ; i < this.cluesSpacesList.length ; i++) {
+		if (this.cluesSpacesList[i].notPlacedClosedsYet != 0) {
+			return false;
+		}
+	};
+	// Complete check
+	for (var y = 0 ; y < this.yLength ; y++) { 
+		for (var x = 0 ; x < this.xLength ; x++) {
+			if (this.answerArray[y][x] == ADJACENCY.UNDECIDED) {
+				return false;
+			}
+		}
+	}	
+	return true;
+}
+
+function searchClosure(p_solver) {
+	return function() {
+		var mp = p_solver.multiPass(p_solver.methodsSetMultipass);
+		if (mp == MULTIPASS_RESULT.FAILURE) {
+			return RESOLUTION_RESULT.FAILURE;
+		}			
+		if (p_solver.isSolved()) {		
+			return RESOLUTION_RESULT.SUCCESS;
+		}		
+		
+		// Find index with the most solutions
+		var bestIndex = {nbD : -1};
+		var nbDeductions;
+		var event_;
+		var solveResultEvt;
+		for (solveX = 0 ; solveX < p_solver.xLength ; solveX++) { // x and y are somehow modified by tryToApplyHypothesis...
+			for (solveY = 0 ; solveY < p_solver.yLength ; solveY++) {
+				if (p_solver.answerArray[solveY][solveX] == ADJACENCY.UNDECIDED) {
+					[ADJACENCY.YES, ADJACENCY.NO].forEach(value => {
+						event_ = new SpaceEvent(solveX, solveY, value);
+						solveResultEvt = p_solver.tryToApplyHypothesis(event_); 
+						if (solveResultEvt == DEDUCTIONS_RESULT.SUCCESS) {
+							nbDeductions = p_solver.numberOfRelevantDeductionsSinceLastHypothesis();
+							if (bestIndex.nbD < nbDeductions) {
+								bestIndex = {nbD : nbDeductions , evt : event_.copy()}
+							}
+							p_solver.undoToLastHypothesis();
+						}
+					});	
+				}
+			}
+		}
+		
+		// Naive recursion !
+		return p_solver.tryAllPossibilities([bestIndex.evt, new SpaceEvent(bestIndex.evt.coorX, bestIndex.evt.coorY, ADJACENCY.YES),
+		bestIndex.evt, new SpaceEvent(bestIndex.evt.coorX, bestIndex.evt.coorY, ADJACENCY.NO)]);
 	}
-}*/
+}

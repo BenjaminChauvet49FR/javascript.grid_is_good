@@ -26,7 +26,7 @@ SolverCanalView.prototype.construct = function(p_numericXArray) {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
 		argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForSpacePassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		//skipPassMethod : skipPassClosure(this)
@@ -202,7 +202,7 @@ SolverCanalView.prototype.emitPassSpace = function(p_x, p_y) {
 }
 
 SolverCanalView.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 //--------------------------------

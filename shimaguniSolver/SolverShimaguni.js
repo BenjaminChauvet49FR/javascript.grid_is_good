@@ -31,7 +31,7 @@ SolverShimaguni.prototype.construct = function(p_wallArray, p_indicationsRegions
 	);
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterClustersClosure(this)]);
 	this.methodsSetPass = {comparisonMethod : compareSolveEvents, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 		//skipPassMethod : skipPassClosure(this)
@@ -202,7 +202,7 @@ SolverShimaguni.prototype.emitPassRegion = function(p_indexRegion) {
 
 SolverShimaguni.prototype.makeMultiPass = function() {
 	if (this.quickStartDone) {		
-		this.multiPass(this.methodsSetMultiPass);
+		this.multiPass(this.methodsSetMultipass);
 	}
 }
 

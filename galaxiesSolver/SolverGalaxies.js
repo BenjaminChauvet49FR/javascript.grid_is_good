@@ -45,7 +45,7 @@ SolverGalaxies.prototype.construct = function(p_symbolArray) {
 		argumentToLabelMethod : namingCategoryClosure(this)
 	};
 	
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 		//skipPassMethod : skipPassClosure(this)
@@ -269,7 +269,7 @@ SolverGalaxies.prototype.undo = function(){
 }
 
 SolverGalaxies.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 // In this puzzle, quickstart is vital for the separation of centers

@@ -53,7 +53,7 @@ SolverGappy.prototype.construct = function(p_marginLeft, p_marginUp) {
 		undoEventClosure(this)
 	);
 	this.methodsSetPass = {comparisonMethod : comparing, copyMethod : copying,  argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForRCPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
@@ -93,7 +93,7 @@ SolverGappy.prototype.emitPassColumn = function(p_x) {
 }
 
 SolverGappy.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 SolverGappy.prototype.makeQuickStart = function() { 

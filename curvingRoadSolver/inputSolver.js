@@ -40,14 +40,6 @@ multipassAction = function (p_solver){
 	p_solver.makeMultiPass();
 }
 
-formerLimitsExplorationAction = function(p_solver) {
-	p_solver.makeFormerLimitsExploration();
-}
-
-/*solveAction = function (p_solver,p_textArea){
-	p_solver.generalSolve();
-}*/
-
 //--------------------------
 
 /** 

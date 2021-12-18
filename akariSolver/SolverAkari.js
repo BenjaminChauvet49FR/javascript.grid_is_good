@@ -30,7 +30,7 @@ SolverAkari.prototype.construct = function(p_numberSymbolArray) {
 	);
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterClustersClosure(this)]);
 	this.methodsSetPass = {comparisonMethod : compareSolveEvents, copyMethod : copying, argumentToLabelMethod : namingSetClosure(this)};
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
@@ -268,7 +268,7 @@ SolverAkari.prototype.passSpaceOrSetNumericSpaces = function(p_x, p_y) {
 }
 
 SolverAkari.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 //--------------------------------

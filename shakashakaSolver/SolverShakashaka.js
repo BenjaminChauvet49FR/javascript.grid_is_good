@@ -42,7 +42,7 @@ SolverShakashaka.prototype.construct = function(p_numberSymbolArray) {
 		undoEventClosure(this)
 	);
 	this.methodsSetPass = {comparisonMethod : compareSolveEvents, copyMethod : copying, argumentToLabelMethod : namingSetClosure(this)};
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForSpacePassClosure(this), 
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this), 
 		passTodoMethod : multipassDefineTodoClosure(this)
@@ -147,7 +147,7 @@ SolverShakashaka.prototype.emitPassSpace = function(p_x, p_y) {
 }
 
 SolverShakashaka.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 //--------------------------------

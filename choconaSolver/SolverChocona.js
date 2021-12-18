@@ -22,7 +22,7 @@ SolverChocona.prototype.construct = function(p_wallArray, p_indications) {
 		undoEventClosure(this)
 	);
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
@@ -122,7 +122,7 @@ SolverChocona.prototype.passRegion = function(p_indexRegion) {
 }
 
 SolverChocona.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 SolverChocona.prototype.makeQuickStart = function() {

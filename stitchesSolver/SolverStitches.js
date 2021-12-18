@@ -30,7 +30,7 @@ SolverStitches.prototype.construct = function(p_wallArray, p_marginLeftArray, p_
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodsSetMultiPass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 		//skipPassMethod : skipPassClosure(this)
@@ -195,7 +195,7 @@ SolverStitches.prototype.emitPassColumn = function(p_x) {
 }
 
 SolverStitches.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultiPass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 //--------------------------------
