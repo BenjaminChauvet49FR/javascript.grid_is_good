@@ -43,9 +43,9 @@ function main() {
 		loadAction(canevas, drawer, solver, puzzleTypeName, document.getElementById("input_grid_name").value)
 	});
 	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
-	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_EXCLUDE_LOOP_SPACE, ACTION_INCLUDE_LOOP_SPACE, ACTION_PASS_REGION, ACTION_NOTHING]);
-	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "textid", ENTRY.WALLS, [ACTION_LINK_SPACES, ACTION_CLOSE_LINKS, ACTION_NOTHING]);
-	buildActionsGlobal("div_global_actions", "textido", ["Multipasse", "Annuler"], 
+	buildInputCanvas("div_canvas_buttons", actionsManager, "case", ENTRY.SPACE, [ACTION_EXCLUDE_LOOP_SPACE, ACTION_INCLUDE_LOOP_SPACE, ACTION_PASS_REGION, ACTION_NOTHING]);
+	buildInputCanvas("div_canvas2_buttons", actionsManager, "case", ENTRY.WALLS, [ACTION_LINK_SPACES, ACTION_CLOSE_LINKS, ACTION_NOTHING]);
+	buildActionsGlobal("div_global_actions", ["Multipasse", "Annuler"], 
 		[function(event){multipassAction(solver)}, function(event){undoAction(solver)}] );
 	initializeItemsLoopInfos("div_common_loop_display", solver);	
 }

@@ -1,3 +1,5 @@
+//Really generic, no editor/solver thoughts behind this one.
+
 // -------------------------
 // Create a submit item
 

@@ -35,8 +35,8 @@ function main() {
 		loadAction(canevas, drawer, solver, puzzleTypeName, document.getElementById("input_grid_name").value)
 	});
 	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
-	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_OPEN_SPACE, ACTION_CLOSE_SPACE, ACTION_OPEN_SPACE_FAKE, ACTION_CLOSE_SPACE_FAKE]);
-	buildActionsGlobal("div_global_actions", "textido", ["Effacer déductions artificielles", "Annuler"], 
+	buildInputCanvas("div_canvas_buttons", actionsManager, "case", ENTRY.SPACE, [ACTION_OPEN_SPACE, ACTION_CLOSE_SPACE, ACTION_OPEN_SPACE_FAKE, ACTION_CLOSE_SPACE_FAKE]);
+	buildActionsGlobal("div_global_actions", ["Effacer déductions artificielles", "Annuler"], 
 		[function(event){discardDeductionsAction(solver)}, function(event){undoAction(solver)}] );
 
 	/*const puzzleTypeName = "TheoryCluster";

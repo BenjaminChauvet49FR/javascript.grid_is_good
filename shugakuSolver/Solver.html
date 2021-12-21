@@ -14,10 +14,17 @@
         </canvas></br>
 		
 		<div id="div_puzzle_management"></div>	
-		<div id="div_quickStart"></div>		
-		<div id="div_canvas_buttons"></div>
-		<div id="div_global_actions"></div>
-		<span id="span_resolution_state"></span></br>	
+		<div id="div_main_buttons"></div>
+		<div id="div_solving">
+			<div id="div_solving_canvas_buttons"></div>
+			<div id="div_solving_canvas2_buttons"></div>
+			<div id="div_solving_global_actions"></div>
+			<span id="span_resolution_state"></span>	
+		</div>
+		<div id="div_purifying">
+			<div id="div_cleaning_canvas_buttons"></div>
+			<div id="div_cleaning_global_actions"></div>
+		</div>
 		
 		<script src="../Importation.js"></script>
 		<script>
@@ -32,6 +39,7 @@
 			addScriptConstants();
 			addScriptsAdjacency();
 			addScriptNonBinarySpaces();
+			addScriptsPurificator();
 			addScript("SolveEvent.js");
 			addScript("SolverShugaku.js");
 			startScriptLoading();

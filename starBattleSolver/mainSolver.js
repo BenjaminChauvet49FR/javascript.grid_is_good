@@ -41,8 +41,8 @@ function main() {
 		document.getElementById("span_stars").innerHTML = solver.numberStars;
 	});
 	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
-	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_PUT_STAR, ACTION_PUT_NO_FILL, ACTION_PASS_REGION, ACTION_PASS_ROW, ACTION_PASS_COLUMN, ACTION_SELECTION_RECTANGLE, ACTION_SELECTION_REGION]);
-	buildActionsGlobal("div_global_actions", "textido", ["Multipasse", "Résolution", "Passer sélection", "Déselectionner", "Annuler"], 
+	buildInputCanvas("div_canvas_buttons", actionsManager, "case", ENTRY.SPACE, [ACTION_PUT_STAR, ACTION_PUT_NO_FILL, ACTION_PASS_REGION, ACTION_PASS_ROW, ACTION_PASS_COLUMN, ACTION_SELECTION_RECTANGLE, ACTION_SELECTION_REGION]);
+	buildActionsGlobal("div_global_actions", ["Multipasse", "Résolution", "Passer sélection", "Déselectionner", "Annuler"], 
 		[function(event){multipassAction(solver)}, function(event){solveAction(solver)}, function(event){selectionPassAction(solver, selectedSpacesGrid)}, 
 		function(event){unselectAction(solver, selectedSpacesGrid)}, function(event){undoAction(solver)}] );
 }

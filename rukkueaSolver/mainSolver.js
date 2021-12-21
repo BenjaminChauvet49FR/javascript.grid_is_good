@@ -37,8 +37,8 @@ function main() {
 		selectedSpacesGrid.restartSelectedSpaces(solver.xLength, solver.yLength);
 	});
 	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
-	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_FILL_SPACE, ACTION_PUT_NO_FILL, ACTION_PASS_ROW_COLUMN, ACTION_SELECTION_RECTANGLE]);
-	buildActionsGlobal("div_global_actions", "textido", ["Multipasse", "Passe totale", "Passer sélection", "Déselectionner", "Annuler"], 
+	buildInputCanvas("div_canvas_buttons", actionsManager, "case", ENTRY.SPACE, [ACTION_FILL_SPACE, ACTION_PUT_NO_FILL, ACTION_PASS_ROW_COLUMN, ACTION_SELECTION_RECTANGLE]);
+	buildActionsGlobal("div_global_actions", ["Multipasse", "Passe totale", "Passer sélection", "Déselectionner", "Annuler"], 
 		[function(event){multipassAction(solver)}, function(event){totalpassAction(solver)},
 		function(event){selectionPassAction(solver, selectedSpacesGrid)}, 
 		function(event){unselectAction(solver, selectedSpacesGrid)}, 

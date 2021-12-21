@@ -40,8 +40,8 @@ function main() {
 		document.getElementById("span_bounds").innerHTML = solver.numberBounds;
 	});
 	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
-	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_PUT_STITCH, ACTION_PUT_NO_FILL, ACTION_PASS_ROW, ACTION_PASS_COLUMN]);
-	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "textid", ENTRY.WALLS, [ACTION_BIND_STITCHES, ACTION_NOT_BIND_STITCHES, ACTION_PASS_BORDER]);
-	buildActionsGlobal("div_global_actions", "textido", ["Multipasse", "Annuler"], 
+	buildInputCanvas("div_canvas_buttons", actionsManager, "case", ENTRY.SPACE, [ACTION_PUT_STITCH, ACTION_PUT_NO_FILL, ACTION_PASS_ROW, ACTION_PASS_COLUMN]);
+	buildInputCanvas("div_canvas2_buttons", actionsManager, "case", ENTRY.WALLS, [ACTION_BIND_STITCHES, ACTION_NOT_BIND_STITCHES, ACTION_PASS_BORDER]);
+	buildActionsGlobal("div_global_actions", ["Multipasse", "Annuler"], 
 		[function(event){multipassAction(solver)}, function(event){undoAction(solver)}] );
 }

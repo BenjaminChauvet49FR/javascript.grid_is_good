@@ -32,8 +32,8 @@ function main() {
 		loadAction(canevas, drawer, solver, puzzleTypeName, document.getElementById("input_grid_name").value)
 	});
 	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
-	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_ISLAND_SPACE, ACTION_SEA_SPACE, ACTION_PASS_SPACE]);
-	buildActionsGlobal("div_global_actions", "textido", ["Purge", "Multipasse", "Résolution", "Annuler"], 
+	buildInputCanvas("div_canvas_buttons", actionsManager, "case", ENTRY.SPACE, [ACTION_ISLAND_SPACE, ACTION_SEA_SPACE, ACTION_PASS_SPACE]);
+	buildActionsGlobal("div_global_actions", ["Purge", "Multipasse", "Résolution", "Annuler"], 
 		[function(event){purgeAction(solver)}, function(event){multipassAction(solver)},
 		function(event){solveAction(solver)} , function(event){undoAction(solver)}] );
 

@@ -1,7 +1,7 @@
 /**
 Draws what's inside spaces 
 */
-function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver, p_selectionSet) {
+function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver, p_purificator, p_selectionSet) {
 	const bgSelectionItems = [DrawableColor(p_colourSet.selectedSpace), DrawableColor(p_colourSet.selectedCornerSpace)];
 	bgSelectionSelection = function(x, y) {
 		if (p_solver.getGridIndexes(x, y).length == 0) {
@@ -16,6 +16,19 @@ function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver, p_selectio
 	}
 	p_drawer.drawSpaceContents(p_context, bgSelectionItems, bgSelectionSelection, p_solver.xLength, p_solver.yLength);
 	p_drawer.drawNumbersInsideStandard(p_context, drawNumberClosure(p_solver, p_colourSet), p_solver.xLength, p_solver.yLength);
+	
+	if (p_purificator.isActive) {
+		// Purify mode
+		var itemsPur = [DrawableColor(p_colourSet.purification)]; 
+		function selectionSolverAndPurificator(x, y) {
+			switch(p_purificator.getPurificatorSpaceIfDifferent(x, y)) {
+				case null : return 0; // Remember : 'null' is when the new value is null !
+				default : return -1; // The value EQUAL_TO_SOLVER.
+			}
+		}
+		p_drawer.drawSpaceContents(p_context, itemsPur, selectionSolverAndPurificator, p_solver.xLength, p_solver.yLength);		
+	}
+	
 }
 
 drawNumberClosure = function(p_solver, p_colourSet) {

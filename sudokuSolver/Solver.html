@@ -19,11 +19,16 @@
 		Type de puzzle :  <select id="select_puzzle_type">
 		</select>
 		<input type="submit" id="submit_load_grid" value="Charger"></input></br>
-		
-		<div id="div_quickStart"></div>		
-		<div id="div_canvas_buttons"></div>
-		<div id="div_global_actions"></div>
-		<span id="span_resolution_state"></span></br>
+		<div id="div_main_buttons"></div>
+		<div id="div_solving">
+			<div id="div_solving_canvas_buttons"></div>
+			<div id="div_solving_global_actions"></div>
+			<span id="span_resolution_state"></span>	
+		</div>
+		<div id="div_purifying">
+			<div id="div_cleaning_canvas_buttons"></div>
+			<div id="div_cleaning_global_actions"></div>
+		</div>
 		
 		<script src="../Importation.js"></script>
 		<script>
@@ -34,6 +39,7 @@
 			addScriptsGeneric();
 			addScriptsLocal();
 			addScriptConstants();
+			addScriptsPurificator();
 			addScriptNonBinarySpaces();
 			addScriptInputSpacesSelection();
 			addScript("SolveEvent.js");

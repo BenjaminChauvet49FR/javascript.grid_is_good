@@ -35,8 +35,8 @@ function main() {
 	buildPuzzleManagementMenu("div_puzzle_management", "input_grid_name", "submit_load_grid", puzzleTypeName, defaultPuzzleValue);
 	putActionElementClick("submit_load_grid", function(event){loadAction(canevas, drawer, solver, puzzleTypeName, document.getElementById("input_grid_name").value)});
 	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
-	buildInputCanvas("div_canvas_buttons", actionsManager, "cloison", "textidw", ENTRY.WALLS, [ACTION_CLOSE_FENCE, ACTION_OPEN_FENCE, ACTION_NOTHING]);
-	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "textids", ENTRY.SPACE, [ACTION_NOTHING, ACTION_PASS_AROUND_SPACE]);
-	buildInputCanvas("div_canvas_buttons", actionsManager, "noeud", "textidc", ENTRY.CORNER, [ACTION_NOTHING, ACTION_PASS_AROUND_KNOT]);
-	buildActionsGlobal("div_global_actions", "textido", ["Multipasse", "Annuler"], [function(event){multipassAction(solver)}, function(event){undoAction(solver)}] );
+	buildInputCanvas("div_canvas_buttons", actionsManager, "cloison", ENTRY.WALLS, [ACTION_CLOSE_FENCE, ACTION_OPEN_FENCE, ACTION_NOTHING]);
+	buildInputCanvas("div_canvas2_buttons", actionsManager, "case", ENTRY.SPACE, [ACTION_NOTHING, ACTION_PASS_AROUND_SPACE]);
+	buildInputCanvas("div_canvas3_buttons", actionsManager, "noeud", ENTRY.CORNER, [ACTION_NOTHING, ACTION_PASS_AROUND_KNOT]);
+	buildActionsGlobal("div_global_actions", ["Multipasse", "Annuler"], [function(event){multipassAction(solver)}, function(event){undoAction(solver)}] );
 }

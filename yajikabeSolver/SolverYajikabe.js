@@ -222,7 +222,11 @@ SolverYajikabe.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
 }
 
 SolverYajikabe.prototype.undo = function() {
-	this.undoToLastHypothesis(undoEventClosure(this));
+	if (this.automaticMode) {	
+		this.undoToLastHypothesis(undoEventClosure(this));
+	} else {
+		this.undoManual(undoEventClosure(this));		
+	}
 }
 
 SolverYajikabe.prototype.makeQuickStart = function() {

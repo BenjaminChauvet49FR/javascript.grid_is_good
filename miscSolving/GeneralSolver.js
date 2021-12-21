@@ -81,6 +81,11 @@ GeneralSolver.prototype.generalConstruct = function() {
 	this.quickStartDone = false; // Depending on the puzzle, it may be required to start with the quickstart before imputting anything on the canvas.
 	
 	// In the setup, defining methods in method packs (for deductions, pass, multipass) is actually the right thing to do.
+	
+	// Needs to be overwritten !
+	this.automaticMode = true; // Note : will be built over
+	this.manualEventsList = [];
+
 }
 
 // ----------------
@@ -666,4 +671,32 @@ GeneralSolver.prototype.tryAllPossibilities = function(p_eventChoice)  {
 		}
 	}
 	return RESOLUTION_RESULT.FAILURE;
+}
+
+// --------------------------------
+// Manual part
+// (much simpler than automatic)
+
+GeneralSolver.prototype.setAutomaticMode = function(p_isAuto) {
+	this.automaticMode = p_isAuto;
+}
+
+GeneralSolver.prototype.isAutomaticMode = function() {
+	return this.automaticMode;
+}
+
+GeneralSolver.prototype.tryToApplyHypothesisManual = function(p_event) {
+	const appliedResult = this.methodsSetDeductionsManual.applyEventMethod(p_event); 
+	if (appliedResult == EVENT_RESULT.SUCCESS) {
+		this.manualEventsList.push(p_event); 
+		if ((this.manualEventsList.length >= 2) && this.methodsSetDeductionsManual.areOppositeEventsMethod(p_event, this.manualEventsList[this.manualEventsList.length - 2])) {
+			this.manualEventsList.pop();
+			this.manualEventsList.pop(); // Remove from the list two consecutive events that cancel each other
+		}
+	}
+}
+
+GeneralSolver.prototype.undoManual = function() {
+	const eventToUndo = this.manualEventsList.pop();
+	this.methodsSetDeductionsManual.undoEventMethod(eventToUndo);
 }

@@ -32,7 +32,7 @@ function main() {
 		loadAction(canevas, drawer, solver, puzzleTypeName, document.getElementById("input_grid_name").value)
 	});
 	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
-	buildInputCanvas("div_canvas_buttons", actionsManager, "case", "texti", ENTRY.SPACE, [ACTION_PUT_STAR, ACTION_PUT_NO_FILL, ACTION_PASS_ROW, ACTION_PASS_COLUMN]);
-	buildActionsGlobal("div_global_actions", "textido", ["Multipasse", "Résolution", "Annuler"], 
+	buildInputCanvas("div_canvas_buttons", actionsManager, "case", ENTRY.SPACE, [ACTION_PUT_STAR, ACTION_PUT_NO_FILL, ACTION_PASS_ROW, ACTION_PASS_COLUMN]);
+	buildActionsGlobal("div_global_actions", ["Multipasse", "Résolution", "Annuler"], 
 		[function(event){multipassAction(solver)}, function(event){solveAction(solver)}, function(event){undoAction(solver)}] );
 }

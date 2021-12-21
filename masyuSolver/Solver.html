@@ -13,12 +13,18 @@
         </canvas></br>
 		
 		<div id="div_puzzle_management"></div>		
-		<div id="div_quickStart"></div>		
-		<div id="div_canvas_buttons"></div>
-		<div id="div_global_actions"></div>
-		<span id="span_resolution_state"></span></br>	
-		<div id="div_common_loop_display"></div>
-				
+		<div id="div_main_buttons"></div>
+		<div id="div_solving">
+			<div id="div_solving_canvas_buttons"></div>
+			<div id="div_solving_canvas2_buttons"></div>
+			<div id="div_solving_global_actions"></div>
+			<span id="span_resolution_state"></span>
+			<div id="div_common_loop_display"></div>	<!-- Who thought making a single <div .../> tag would prevent the div_solving from closing ? This is what prevented all subsequent buttons to close. -->
+		</div>
+		<div id="div_purifying">
+			<div id="div_cleaning_canvas_buttons"></div>
+			<div id="div_cleaning_global_actions"></div>
+		</div> 		
 		<script src="../Importation.js"></script>
 		<script>
 		"use strict";
@@ -28,6 +34,7 @@
 			addScriptsGeneric();
 			addScriptsLocal();
 			addScriptsLoop();
+			addScriptsPurificator();
 			addScript("SolverMasyu.js");
 			startScriptLoading();
 		}		 

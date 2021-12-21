@@ -1,7 +1,7 @@
 /**
 Draws what's inside spaces 
 */
-function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver) {	
+function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver, p_purificator) {	
 	p_drawer.drawFenceArray(p_context, p_solver.xLength, p_solver.yLength, getFenceRightDominoDrawingClosure(p_solver), getFenceDownDominoDrawingClosure(p_solver)); 
 	p_drawer.drawFixedNumbersOrX(p_context, drawNumberOrXClosure(p_solver), p_solver.xLength, p_solver.yLength, p_colourSet.numberWrite, p_colourSet.numberWrite);
 	
@@ -11,6 +11,18 @@ function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver) {
 	shapes = [DrawableCircle(p_colourSet.shape, "#ffffff"), DrawableSquare(p_colourSet.shape, "#ffffff")];
 	p_drawer.drawSpaceContents(p_context, shapes, getShapeClosure(p_solver), p_solver.xLength, p_solver.yLength);
 	p_drawer.drawPolyomino4x5TiledMap(p_context, document.getElementById("img_map"), 16, selectionOpening, 1, p_solver.xLength, p_solver.yLength);
+	
+	if (p_purificator.isActive) {
+		// Purify mode
+		var itemsPur = [DrawableX(p_colourSet.purification)]; 
+		function selectionSolverAndPurificator(x, y) {
+			switch(p_purificator.getPurificatorSpaceIfDifferent(x, y)) {
+				case "X" : return 0; 
+				default : return -1; // Remember : in purificator, this cannot go null in this puzzle ! (otherwise this would be another puzzle)
+			}
+		}
+		p_drawer.drawSpaceContents(p_context, itemsPur, selectionSolverAndPurificator, p_solver.xLength, p_solver.yLength);		
+	}
 }
 
 function getShapeClosure(p_solver) {

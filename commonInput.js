@@ -61,12 +61,37 @@ function viewPuzzleList(p_puzzleName) {
 /** 
 Loads a walled grid from local storage and its region grid (cf. super-function), updates intelligence, updates canvas
 */
-loadAction = function(p_canvas, p_drawer, p_solver, p_puzzleName, p_name, p_extraProperties) { // Extra properties : properties for the puzzle not saved in the 'value' string.
-	const localStorageName = getLocalStorageName(p_puzzleName, p_name);
+loadAction = function(p_canvas, p_drawer, p_solver, p_puzzleTypeName, p_dataName, p_extraProperties) { // Extra properties : properties for the puzzle not saved in the 'value' string.
+	const localStorageName = getLocalStorageName(p_puzzleTypeName, p_dataName);
 	const loadedString = localStorage.getItem(localStorageName);
 	if (loadedString) {
-		loadPuzzle(p_canvas, p_drawer, p_solver, loadedString, p_extraProperties); // Constraint !!! Each puzzle must have a method with such a name !
+		loadPuzzle(p_canvas, p_drawer, p_solver, loadedString, p_extraProperties); // Naming constraint !!! Each puzzle that uses "input" should use this method.
 	} else {
         alert("Le stockage local n'a pas de propriété nommée '" + localStorageName + "'.");
     }
+}
+
+// Revolution ! Should be changed for all puzzles ! And the one above should be removed.
+loadActionCOMPLETE = function(p_canvas, p_drawer, p_gameItems, p_puzzleTypeName, p_dataName, p_extraProperties) { 
+	const localStorageName = getLocalStorageName(p_puzzleTypeName, p_dataName);
+	const loadedString = localStorage.getItem(localStorageName);
+	if (loadedString) {
+		loadPuzzleCOMPLETE(p_canvas, p_drawer, p_gameItems, loadedString, p_extraProperties); // Naming constraint !!! Each puzzle that uses "input" and has purificators should use this method.
+	} else {
+        alert("Le stockage local n'a pas de propriété nommée '" + localStorageName + "'.");
+    }
+}
+
+savePurifiedAction = function(p_purificator, p_puzzleTypeName, p_dataName, p_extraProperties) {
+	const savePureSuffix = "_pure";
+	const localStorageName = getLocalStorageName(p_puzzleTypeName, p_dataName) + (p_dataName.endsWith(savePureSuffix) ? "" : savePureSuffix);
+	var letsSave = true;
+	if (localStorage.hasOwnProperty(localStorageName)) {
+		if (!confirm("Le stockage local a déjà une propriété nommée '" + localStorageName + "'. L'écraser ?")) {
+            letsSave = false;
+        }
+	}
+	if (letsSave) {
+		localStorage.setItem(localStorageName, purifiedPuzzleToString(p_purificator, p_extraProperties)); // Naming constraint !!! Each puzzle that uses "input" and has purificators should use this method.
+	}
 }

@@ -50,7 +50,7 @@ solveAction = function (p_solver,p_textArea){
 Transforms a loaded string into the appropriate item (see common save and load), updates intelligence, updates canvas.
 Called from outside !
 */
-loadPuzzle = function(p_canvas, p_drawer, p_solver, p_loadedString) {
+loadPuzzle = function(p_canvas, p_drawer, p_gameItems, p_loadedString) {
 	const loadedItem = stringToNumbersSymbolsPuzzle(p_loadedString, ["X"]);
 	p_solver.construct(loadedItem.numbersSymbolsArray);
 	p_drawer.adaptCanvasDimensions(p_canvas, {xLength : p_solver.xLength , yLength : p_solver.yLength});

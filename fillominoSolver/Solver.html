@@ -15,6 +15,7 @@
 		<div id="div_puzzle_management"></div>		
 		<div id="div_quickStart"></div>		
 		<div id="div_canvas_buttons"></div>
+		<div id="div_canvas2_buttons"></div>
 		<div id="div_global_actions"></div>
 		<span id="span_resolution_state"></span></br>	
 		
@@ -22,7 +23,7 @@
 		<script>
 		"use strict";
 		window.onload = function() {
-			addMisc();
+			addScriptMisc();
 			addScriptsSolving();
 			addScriptCheckCollection();
 			addScriptsDirections();
@@ -32,7 +33,7 @@
 			addScriptConstants();
 			addScript("Events.js");
 			addScript("SolverFillomino.js");
-			addClusterFencesManagement();
+			addScriptClusterFencesManagement();
 			startScriptLoading();
 		}		 
 		</script>

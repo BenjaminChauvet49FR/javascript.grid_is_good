@@ -3,3 +3,6 @@ Correct puzzle data assumption : Assumes that the data provided for the puzzle a
 Directions 0123 assumption : Assumes that the array of known directions is [0, 1, 2, 3] and these are the values of respectively DIRECTION.LEFT, DIRECTION.UP, DIRECTION.RIGHT, DIRECTION.DOWN
 Sub-optimization : Thing that is not optimized.
 Undo in reverse order assumption : Assumes that any events are undone in reverse order they were applied. For code that is implicitely done in an undo context.
+Naming constraint : a method with the exact name must (or at least should) be defined
+"Revolution !" : a method that should eventually be replaced.
+High warning : when misused, bad things can happen. 

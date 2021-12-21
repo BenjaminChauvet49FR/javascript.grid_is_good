@@ -37,10 +37,10 @@ function main() {
 		loadAction(canevas, drawer, solver, puzzleTypeName, document.getElementById("input_grid_name").value)
 	});
 	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
-	buildInputCanvas("div_canvas_buttons", actionsManager, "noeud", "textid1", ENTRY.NET_NODE, [ACTION_EXCLUDE_LOOP_SPACE, ACTION_INCLUDE_LOOP_SPACE, ACTION_PASS_SPACE, ACTION_NOTHING]);
-	buildInputCanvas("div_canvas_buttons", actionsManager, "lien", "textid2", ENTRY.NET_EDGE, [ACTION_LINK_SPACES, ACTION_CLOSE_LINKS, ACTION_NOTHING]);
-	buildInputCanvas("div_canvas_buttons", actionsManager, "maille", "textid3", ENTRY.SPACE, [ACTION_NOTHING, ACTION_PASS_MESH]);
-	buildActionsGlobal("div_global_actions", "textid4", ["Multipasse", "Résolution", "Annuler"], 
+	buildInputCanvas("div_canvas_buttons", actionsManager, "noeud", ENTRY.NET_NODE, [ACTION_EXCLUDE_LOOP_SPACE, ACTION_INCLUDE_LOOP_SPACE, ACTION_PASS_SPACE, ACTION_NOTHING]);
+	buildInputCanvas("div_canvas2_buttons", actionsManager, "lien", ENTRY.NET_EDGE, [ACTION_LINK_SPACES, ACTION_CLOSE_LINKS, ACTION_NOTHING]);
+	buildInputCanvas("div_canvas3_buttons", actionsManager, "maille", ENTRY.SPACE, [ACTION_NOTHING, ACTION_PASS_MESH]);
+	buildActionsGlobal("div_global_actions", ["Multipasse", "Résolution", "Annuler"], 
 		[function(event){multipassAction(solver)}, function(event){solveAction(solver)}, function(event){undoAction(solver)}] );
 	initializeItemsLoopInfos("div_common_loop_display", solver);	
 }
