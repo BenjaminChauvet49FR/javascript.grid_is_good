@@ -27,10 +27,10 @@ SolverMoonsun.prototype.construct = function(p_wallArray, p_symbolsArray) {
 		comparisonPS : comparisonMoonsunEventsClosure(this)
 	});
 
-	this.gridAstres = Grid_data(p_symbolsArray);
+	this.gridLuminaries = Grid_data(p_symbolsArray);
 	// Affecting regions
 	this.regions.forEach(region => {
-		region.astre = ASTRE.UNDECIDED;
+		region.luminary = LUMINARY.UNDECIDED;
 		region.moonCoors = [];
 		region.sunCoors = [];
 	});
@@ -50,31 +50,31 @@ SolverMoonsun.prototype.construct = function(p_wallArray, p_symbolsArray) {
 // -------------------
 // Getters
 
-SolverMoonsun.prototype.getAstre = function(p_index) {
-	return this.regions[p_index].astre;
+SolverMoonsun.prototype.getLuminary = function(p_index) {
+	return this.regions[p_index].luminary;
 }
 
-SolverMoonsun.prototype.getAstreSpace = function(p_x, p_y) {
-	switch(this.gridAstres.get(p_x, p_y)) {
-		case SYMBOL_ID.MOON : return ASTRE.MOON; break;
-		case SYMBOL_ID.SUN : return ASTRE.SUN; break;
-		default : return ASTRE.UNDECIDED; break;
+SolverMoonsun.prototype.getLuminarySpace = function(p_x, p_y) {
+	switch(this.gridLuminaries.get(p_x, p_y)) {
+		case SYMBOL_ID.MOON : return LUMINARY.MOON; break;
+		case SYMBOL_ID.SUN : return LUMINARY.SUN; break;
+		default : return LUMINARY.UNDECIDED; break;
 	}
 }
 
-SolverMoonsun.prototype.getOppositeAstreSpace = function(p_x, p_y) {
-	switch(this.gridAstres.get(p_x, p_y)) {
-		case SYMBOL_ID.MOON : return ASTRE.SUN; break;
-		case SYMBOL_ID.SUN : return ASTRE.MOON; break;
-		default : return ASTRE.UNDECIDED; break;
+SolverMoonsun.prototype.getOppositeLuminarySpace = function(p_x, p_y) {
+	switch(this.gridLuminaries.get(p_x, p_y)) {
+		case SYMBOL_ID.MOON : return LUMINARY.SUN; break;
+		case SYMBOL_ID.SUN : return LUMINARY.MOON; break;
+		default : return LUMINARY.UNDECIDED; break;
 	}
 }
 
-function oppositeAstre(p_astre) {
-	switch (p_astre) {
-		case ASTRE.SUN : return ASTRE.MOON; break;
-		case ASTRE.MOON : return ASTRE.SUN; break;
-		default : return ASTRE.UNDECIDED; break;
+function oppositeLuminary(p_luminary) {
+	switch (p_luminary) {
+		case LUMINARY.SUN : return LUMINARY.MOON; break;
+		case LUMINARY.MOON : return LUMINARY.SUN; break;
+		default : return LUMINARY.UNDECIDED; break;
 	}
 }
 
@@ -111,24 +111,24 @@ SolverMoonsun.prototype.makeMultipass = function() {
 // -------------------
 // Doing & undoing
 
-// Only other events are AstreEvents
+// Only other events are LuminaryEvents
 function otherAtomicDosClosure(p_solver) {
 	return function(p_event) {
-		const newAstre = p_event.astre;
-		const oldAstre = p_solver.regions[p_event.index].astre;
-		if (oldAstre == newAstre) {
+		const newLuminary = p_event.luminary;
+		const oldLuminary = p_solver.regions[p_event.index].luminary;
+		if (oldLuminary == newLuminary) {
 			return EVENT_RESULT.HARMLESS;
-		} else if (oldAstre != ASTRE.UNDECIDED) {
+		} else if (oldLuminary != LUMINARY.UNDECIDED) {
 			return EVENT_RESULT.FAILURE;
 		}
-		p_solver.regions[p_event.index].astre = newAstre;
+		p_solver.regions[p_event.index].luminary = newLuminary;
 		return EVENT_RESULT.SUCCESS;
 	}
 }
 
 function otherAtomicUndosClosure(p_solver) {
 	return function(p_event) {
-		p_solver.regions[p_event.index].astre = ASTRE.UNDECIDED;
+		p_solver.regions[p_event.index].luminary = LUMINARY.UNDECIDED;
 	}
 }
 
@@ -140,9 +140,9 @@ setSpaceLinkedDeductionsClosure = function(p_solver) {
 		// If space is moon / sun : set region to moon / sun
 		const x = p_eventBeingApplied.x;
 		const y = p_eventBeingApplied.y;
-		const astre = p_solver.getAstreSpace(x, y);
-		if (astre != ASTRE.UNDECIDED) {
-			p_listEvents.push(new AstreEvent(p_solver.regionArray[y][x], astre));
+		const luminary = p_solver.getLuminarySpace(x, y);
+		if (luminary != LUMINARY.UNDECIDED) {
+			p_listEvents.push(new LuminaryEvent(p_solver.regionArray[y][x], luminary));
 		}
 		return p_listEvents;
 	}	
@@ -153,9 +153,9 @@ setSpaceClosedDeductionsClosure = function(p_solver) {
 		// If space is moon / sun : set region to sun / moon
 		const x = p_eventBeingApplied.x;
 		const y = p_eventBeingApplied.y;
-		const astre = p_solver.getAstreSpace(x, y);
-		if (astre != ASTRE.UNDECIDED) {
-			p_listEvents.push(new AstreEvent(p_solver.regionArray[y][x], oppositeAstre(astre)));
+		const luminary = p_solver.getLuminarySpace(x, y);
+		if (luminary != LUMINARY.UNDECIDED) {
+			p_listEvents.push(new LuminaryEvent(p_solver.regionArray[y][x], oppositeLuminary(luminary)));
 		}
 		return p_listEvents;
 	}
@@ -163,26 +163,26 @@ setSpaceClosedDeductionsClosure = function(p_solver) {
 
 setBorderLinkedDeductionsClosure = function(p_solver) {
 	return function(p_listEvents, p_index1, p_index2) {
-		switch (p_solver.getAstre(p_index1)) {
-			case ASTRE.MOON : p_listEvents.push(new AstreEvent(p_index2, ASTRE.SUN)); break;
-			case ASTRE.SUN : p_listEvents.push(new AstreEvent(p_index2, ASTRE.MOON)); break;
+		switch (p_solver.getLuminary(p_index1)) {
+			case LUMINARY.MOON : p_listEvents.push(new LuminaryEvent(p_index2, LUMINARY.SUN)); break;
+			case LUMINARY.SUN : p_listEvents.push(new LuminaryEvent(p_index2, LUMINARY.MOON)); break;
 		}
-		switch (p_solver.getAstre(p_index2)) {
-			case ASTRE.MOON : p_listEvents.push(new AstreEvent(p_index1, ASTRE.SUN)); break;
-			case ASTRE.SUN : p_listEvents.push(new AstreEvent(p_index1, ASTRE.MOON)); break;
+		switch (p_solver.getLuminary(p_index2)) {
+			case LUMINARY.MOON : p_listEvents.push(new LuminaryEvent(p_index1, LUMINARY.SUN)); break;
+			case LUMINARY.SUN : p_listEvents.push(new LuminaryEvent(p_index1, LUMINARY.MOON)); break;
 		}
 		return p_listEvents;
 	}	
 }
 
 otherDeductionsClosure = function(p_solver) {
-	// Must be an astre event
+	// Must be a luminary event
 	return function(p_listEvents, p_eventBeingApplied) {
 		const region = p_solver.regions[p_eventBeingApplied.index];
-		myAstre = p_eventBeingApplied.astre;
-		otherAstre = oppositeAstre(myAstre);
-		moonState = (myAstre == ASTRE.MOON ? LOOP_STATE.LINKED : LOOP_STATE.CLOSED);
-		sunState = (myAstre == ASTRE.SUN ? LOOP_STATE.LINKED : LOOP_STATE.CLOSED);
+		myLuminary = p_eventBeingApplied.luminary;
+		otherLuminary = oppositeLuminary(myLuminary);
+		moonState = (myLuminary == LUMINARY.MOON ? LOOP_STATE.LINKED : LOOP_STATE.CLOSED);
+		sunState = (myLuminary == LUMINARY.SUN ? LOOP_STATE.LINKED : LOOP_STATE.CLOSED);
 		region.moonCoors.forEach(coors => {
 			p_listEvents.push(new SpaceEvent(coors.x, coors.y, moonState));
 		});
@@ -193,18 +193,18 @@ otherDeductionsClosure = function(p_solver) {
 		region.neighboringRegions.forEach(neighborIndex => {
 			borderState = p_solver.getBorder(p_eventBeingApplied.index, neighborIndex).state;
 			if (borderState == BORDER_STATE.LINKED) {
-				p_listEvents.push(new AstreEvent(neighborIndex, otherAstre));
+				p_listEvents.push(new LuminaryEvent(neighborIndex, otherLuminary));
 			} 
-			if (p_solver.getAstre(neighborIndex) == myAstre) {
+			if (p_solver.getLuminary(neighborIndex) == myLuminary) {
 				p_listEvents.push(new RegionJunctionEvent(neighborIndex, p_eventBeingApplied.index, BORDER_STATE.CLOSED));
 			}
 		});
-		// For each region space, for each direction adjacent, check if it has the same astre as the region. If yes, place a wall between them.
+		// For each region space, for each direction adjacent, check if it has the same luminary as the region. If yes, place a wall between them.
 		region.spaces.forEach(coors => {
 			x = coors.x;
 			y = coors.y;
 			p_solver.otherRegionsDirectionsArray[y][x].forEach(dir => {
-				if (p_solver.getAstreSpace(x + DeltaX[dir], y + DeltaY[dir]) == myAstre) {
+				if (p_solver.getLuminarySpace(x + DeltaX[dir], y + DeltaY[dir]) == myLuminary) {
 					p_listEvents.push(new LinkEvent(x, y, dir, LOOP_STATE.CLOSED));
 				}
 			});
@@ -221,25 +221,25 @@ quickStartEventsClosure = function(p_solver) {
 		p_QSeventsList.push({quickStartLabel : "Moonsun"});
 		for (var i = 0 ; i < p_solver.regions.length ; i++) {
 			if (p_solver.regions[i].sunCoors.length == 0) {
-				p_QSeventsList.push(new AstreEvent(i, ASTRE.MOON));
+				p_QSeventsList.push(new LuminaryEvent(i, LUMINARY.MOON));
 			} else if (p_solver.regions[i].moonCoors.length == 0) {
-				p_QSeventsList.push(new AstreEvent(i, ASTRE.SUN));
+				p_QSeventsList.push(new LuminaryEvent(i, LUMINARY.SUN));
 			}
 		}
-		var x, y, astre1, astre2, wall;
-		// Close links between spaces (with different astres and within the same region) OR (with same astres and within different regions)
+		var x, y, luminary1, luminary2, wall;
+		// Close links between spaces (with different luminaries and within the same region) OR (with same luminaries and within different regions)
 		// Note : doesn't take banned spaces into account !
 		for (var y = 0 ; y < p_solver.yLength ; y++) {
 			for (var x = 0 ; x < p_solver.xLength ; x++) {
 				[DIRECTION.RIGHT, DIRECTION.DOWN].forEach(dir => {
 					if (p_solver.neighborExists(x, y, dir)) {
-						astre1 = p_solver.gridAstres.get(x, y);
-						if (astre1 != null) {
-							astre2 = p_solver.gridAstres.get(x + DeltaX[dir], y + DeltaY[dir]);
-							if (astre2 != null) {
+						luminary1 = p_solver.gridLuminaries.get(x, y);
+						if (luminary1 != null) {
+							luminary2 = p_solver.gridLuminaries.get(x + DeltaX[dir], y + DeltaY[dir]);
+							if (luminary2 != null) {
 								wall = p_solver.gridWall.getWall(x, y, dir);
-								if ((astre1 == astre2) == (wall == WALLGRID.CLOSED)) { 
-									// Same astres but different regions OR different astres but same regions
+								if ((luminary1 == luminary2) == (wall == WALLGRID.CLOSED)) { 
+									// Same luminaries but different regions OR different luminaries but same regions
 									p_QSeventsList.push(new LinkEvent(x, y, dir, LOOP_STATE.CLOSED));
 								} 
 							}
@@ -257,7 +257,7 @@ quickStartEventsClosure = function(p_solver) {
 
 comparisonMoonsunEventsClosure = function(p_methodPS) {
 	return function(p_event1, p_event2) {
-		// If it's not an already treated event then it's an astre event
-		return commonComparison([p_event1.index, p_event1.astre], [p_event2.index, p_event2.astre]);
+		// If it's not an already treated event then it's a luminary event
+		return commonComparison([p_event1.index, p_event1.luminary], [p_event2.index, p_event2.luminary]);
 	}
 }

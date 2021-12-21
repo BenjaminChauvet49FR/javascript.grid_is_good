@@ -146,7 +146,7 @@ LoopSolver.prototype.loopSolverConstruct = function(p_puzzleSpecificMethodPack) 
 	
 	
 	
-    this.grid = [];
+    this.linksArray = [];
     this.bannedSpacesGrid = [];
 	this.checkNewEnds = {
 		array : [],
@@ -156,17 +156,17 @@ LoopSolver.prototype.loopSolverConstruct = function(p_puzzleSpecificMethodPack) 
 	this.loopMade = 0;
 	var x,y;
 	for (y = 0; y < this.yLength ; y++) {
-		this.grid.push([]);
+		this.linksArray.push([]);
 		this.bannedSpacesGrid.push([]);
 		this.checkNewEnds.array.push([]);
 		for (x = 0 ; x < this.xLength ; x++) {
-			this.grid[y].push({
+			this.linksArray[y].push({
 				state : LOOP_STATE.UNDECIDED,
 				oppositeEnd : {},
 				closedEdges : 0,
 				linkRight : LOOP_STATE.UNDECIDED,
 				linkDown : LOOP_STATE.UNDECIDED,
-				chains : []
+				linkedDirections : []
 			});
 			this.bannedSpacesGrid[y].push(false);
 			this.checkNewEnds.array[y].push(false);
@@ -175,12 +175,12 @@ LoopSolver.prototype.loopSolverConstruct = function(p_puzzleSpecificMethodPack) 
 	
 	// Purification 
 	for (x = 0 ; x < this.xLength ; x++) {
-		this.grid[0][x].closedEdges++;
-		this.grid[this.yLength-1][x].closedEdges++;
+		this.linksArray[0][x].closedEdges++;
+		this.linksArray[this.yLength-1][x].closedEdges++;
 	}
 	for (y = 0 ; y < this.yLength ; y++) {
-		this.grid[y][0].closedEdges++;
-		this.grid[y][this.xLength-1].closedEdges++;
+		this.linksArray[y][0].closedEdges++;
+		this.linksArray[y][this.xLength-1].closedEdges++;
 	}	
 	
 	// Ergonomic options
@@ -205,11 +205,11 @@ LoopSolver.prototype.banSpace = function(p_x, p_y) {
 // Getters (important)
 
 LoopSolver.prototype.getLinkSpace = function(p_x, p_y) {
-	return this.grid[p_y][p_x].state;
+	return this.linksArray[p_y][p_x].state;
 }
 
 LoopSolver.prototype.getLinkRight = function(p_x, p_y) {
-	return this.grid[p_y][p_x].linkRight;
+	return this.linksArray[p_y][p_x].linkRight;
 }
 
 LoopSolver.prototype.getLinkLeft = function(p_x, p_y) {
@@ -217,7 +217,7 @@ LoopSolver.prototype.getLinkLeft = function(p_x, p_y) {
 }
 
 LoopSolver.prototype.getLinkDown = function(p_x, p_y) {
-	return this.grid[p_y][p_x].linkDown;
+	return this.linksArray[p_y][p_x].linkDown;
 }
 
 LoopSolver.prototype.getLinkUp = function(p_x, p_y) {
@@ -234,23 +234,39 @@ LoopSolver.prototype.getLink = function(p_x, p_y, p_dir) {
 }
 
 LoopSolver.prototype.getLinkedEdges = function(p_x, p_y){
-	return this.grid[p_y][p_x].chains.length;
+	return this.linksArray[p_y][p_x].linkedDirections.length;
 }
 
 LoopSolver.prototype.getClosedEdges = function(p_x, p_y){
-	return this.grid[p_y][p_x].closedEdges;
+	return this.linksArray[p_y][p_x].closedEdges;
 }
 
 LoopSolver.prototype.getOppositeEnd = function(p_x, p_y) {
-	return this.grid[p_y][p_x].oppositeEnd;
+	return this.linksArray[p_y][p_x].oppositeEnd;
 }
 
 LoopSolver.prototype.getSpace = function(p_space) {
-	return this.grid[p_space.y][p_space.x];
+	return this.linksArray[p_space.y][p_space.x];
 }
 
 LoopSolver.prototype.isBanned = function(p_x, p_y){
 	return this.bannedSpacesGrid[p_y][p_x];
+}
+
+LoopSolver.prototype.isLinkLeftAccessible = function(p_x, p_y) {
+	return (p_x > 0 && this.getLinkLeft(p_x, p_y) != LOOP_STATE.CLOSED);
+}
+
+LoopSolver.prototype.isLinkUpAccessible = function(p_x, p_y) {
+	return (p_y > 0 && this.getLinkUp(p_x, p_y) != LOOP_STATE.CLOSED);	
+}
+
+LoopSolver.prototype.isLinkRightAccessible = function(p_x, p_y) {
+	return (p_x < this.xLength-2 && this.getLinkRight(p_x, p_y) != LOOP_STATE.CLOSED);
+}
+
+LoopSolver.prototype.isLinkDownAccessible = function(p_x, p_y) {
+	return (p_y < this.yLength-2 && this.getLinkDown(p_x, p_y) != LOOP_STATE.CLOSED);
 }
 
 // Appearance getters
@@ -302,16 +318,16 @@ LoopSolver.prototype.cleanErgonomicOptions = function() {
 */
 LoopSolver.prototype.colorChain = function (p_x, p_y, p_number) {
 	this.colorChainsGrid[p_y][p_x] = p_number;
-	var dir = this.grid[p_y][p_x].chains[0];
+	var dir = this.linksArray[p_y][p_x].linkedDirections[0];
 	var newDir;
 	var x = p_x + DeltaX[dir];
 	var y = p_y + DeltaY[dir];
 	counter = 0;
 	while (this.getLinkedEdges(x, y) == 2 && counter < 500) {
 		this.colorChainsGrid[y][x] = p_number;
-		newDir = this.grid[y][x].chains[0];
+		newDir = this.linksArray[y][x].linkedDirections[0];
 		if (newDir == OppositeDirection[dir]) {
-			dir = this.grid[y][x].chains[1];
+			dir = this.linksArray[y][x].linkedDirections[1];
 		} else {
 			dir = newDir;
 		}
@@ -331,13 +347,13 @@ LoopSolver.prototype.colorChain = function (p_x, p_y, p_number) {
 // Warning : offensive programmation, no boundary check !
 LoopSolver.prototype.setLinkRight = function(p_x, p_y, p_state) {
 	this.cleanErgonomicOptions(); 
-	const state = this.grid[p_y][p_x].linkRight;
+	const state = this.linksArray[p_y][p_x].linkRight;
 	if (state == p_state) {
 		return EVENT_RESULT.HARMLESS;
 	} else if (state != LOOP_STATE.UNDECIDED || (p_state == LOOP_STATE.LINKED && (this.getLinkedEdges(p_x, p_y) == 2 || this.getLinkedEdges(p_x+1, p_y) == 2))) {
 		return EVENT_RESULT.FAILURE;
 	} else {
-		this.grid[p_y][p_x].linkRight = p_state;
+		this.linksArray[p_y][p_x].linkRight = p_state;
 		this.tradeLinkedSpaces(p_x, p_y, p_x+1, p_y, p_state, DIRECTION.RIGHT, DIRECTION.LEFT);
 		return EVENT_RESULT.SUCCESS;
 	}
@@ -349,13 +365,13 @@ LoopSolver.prototype.setLinkLeft = function(p_x, p_y, p_state) {
 
 LoopSolver.prototype.setLinkDown = function(p_x, p_y, p_state) { 
 	this.cleanErgonomicOptions(); 
-	const state = this.grid[p_y][p_x].linkDown;
+	const state = this.linksArray[p_y][p_x].linkDown;
 	if (state == p_state) {
 		return EVENT_RESULT.HARMLESS;
 	} else if (state != LOOP_STATE.UNDECIDED || (p_state == LOOP_STATE.LINKED && (this.getLinkedEdges(p_x, p_y) == 2 || this.getLinkedEdges(p_x, p_y+1) == 2))) {
 		return EVENT_RESULT.FAILURE;
 	} else {
-		this.grid[p_y][p_x].linkDown = p_state;
+		this.linksArray[p_y][p_x].linkDown = p_state;
 		this.tradeLinkedSpaces(p_x, p_y, p_x, p_y+1, p_state, DIRECTION.DOWN, DIRECTION.UP);
 		return EVENT_RESULT.SUCCESS;
 	}
@@ -376,13 +392,13 @@ LoopSolver.prototype.setLink = function(p_x, p_y, p_direction, p_state) {
 
 LoopSolver.prototype.setLinkSpace = function(p_x, p_y, p_state) {
 	this.cleanErgonomicOptions(); 
-	const state = this.grid[p_y][p_x].state;
+	const state = this.linksArray[p_y][p_x].state;
 	if (state == p_state) {
 		return EVENT_RESULT.HARMLESS;
 	} else if (state != LOOP_STATE.UNDECIDED) {
 		return EVENT_RESULT.FAILURE;
 	} else {
-		this.grid[p_y][p_x].state = p_state;
+		this.linksArray[p_y][p_x].state = p_state;
 		if (p_state == LOOP_STATE.LINKED) {
 			this.endedChainCount++;
 			this.setSpaceLinkedPSAtomicDos({x : p_x, y : p_y});
@@ -395,25 +411,25 @@ LoopSolver.prototype.setLinkSpace = function(p_x, p_y, p_state) {
 
 LoopSolver.prototype.tradeLinkedSpaces = function(p_x, p_y, p_x2, p_y2, p_state, p_direction1to2, p_direction2to1) {
 	if (p_state == LOOP_STATE.CLOSED) {
-		this.grid[p_y][p_x].closedEdges++;
-		this.grid[p_y2][p_x2].closedEdges++;
+		this.linksArray[p_y][p_x].closedEdges++;
+		this.linksArray[p_y2][p_x2].closedEdges++;
 		this.setEdgeClosedPSAtomicDos({x : p_x, y : p_y, otherX : p_x2, otherY : p_y2, direction : p_direction1to2});
 	} else {	
-		this.grid[p_y][p_x].chains.push(p_direction1to2); 
-		this.grid[p_y2][p_x2].chains.push(p_direction2to1); 
+		this.linksArray[p_y][p_x].linkedDirections.push(p_direction1to2); 
+		this.linksArray[p_y2][p_x2].linkedDirections.push(p_direction2to1); 
 		this.endedChainCount--;
 		const thisChainParts = this.getLinkedEdges(p_x, p_y); //1 or 2
 		const otherChainParts = this.getLinkedEdges(p_x2, p_y2);
 		if (thisChainParts == 1 && otherChainParts == 1) {
-			this.grid[p_y][p_x].oppositeEnd = {x : p_x2, y : p_y2};
-			this.grid[p_y2][p_x2].oppositeEnd = {x : p_x, y : p_y};
+			this.linksArray[p_y][p_x].oppositeEnd = {x : p_x2, y : p_y2};
+			this.linksArray[p_y2][p_x2].oppositeEnd = {x : p_x, y : p_y};
 		} else if (thisChainParts == 1 && otherChainParts == 2) {
 			const extendedOpposite = copySpace(this.getOppositeEnd(p_x2, p_y2));
-			this.grid[p_y][p_x].oppositeEnd = extendedOpposite;
+			this.linksArray[p_y][p_x].oppositeEnd = extendedOpposite;
 			this.getSpace(extendedOpposite).oppositeEnd = {x : p_x, y : p_y};
 		} else if (thisChainParts == 2 && otherChainParts == 1) {
 			const extendedOpposite = copySpace(this.getOppositeEnd(p_x, p_y));
-			this.grid[p_y2][p_x2].oppositeEnd = extendedOpposite;
+			this.linksArray[p_y2][p_x2].oppositeEnd = extendedOpposite;
 			this.getSpace(extendedOpposite).oppositeEnd = {x : p_x2, y : p_y2};
 		} else {
 			const thisOpposite = this.getOppositeEnd(p_x, p_y);
@@ -422,8 +438,8 @@ LoopSolver.prototype.tradeLinkedSpaces = function(p_x, p_y, p_x2, p_y2, p_state,
 				this.loopMade++; // TODO maybe this can be sped up : if we have 2 loops or more, it should be aborted !
 			}
 			// TODO it is time to detect when more than one loop is made in one go !
-			this.grid[otherOpposite.y][otherOpposite.x].oppositeEnd = copySpace(thisOpposite);
-			this.grid[thisOpposite.y][thisOpposite.x].oppositeEnd = copySpace(otherOpposite);
+			this.linksArray[otherOpposite.y][otherOpposite.x].oppositeEnd = copySpace(thisOpposite);
+			this.linksArray[thisOpposite.y][thisOpposite.x].oppositeEnd = copySpace(otherOpposite);
 		}
 		const end1 = {x : -1, y : -1};
 		const end2 = {x : -1, y : -1};
@@ -433,8 +449,8 @@ LoopSolver.prototype.tradeLinkedSpaces = function(p_x, p_y, p_x2, p_y2, p_state,
 
 LoopSolver.prototype.undoLinkRight = function(p_x, p_y) {
 	this.cleanErgonomicOptions(); 
-	previousState = this.grid[p_y][p_x].linkRight;
-	this.grid[p_y][p_x].linkRight = LOOP_STATE.UNDECIDED;
+	previousState = this.linksArray[p_y][p_x].linkRight;
+	this.linksArray[p_y][p_x].linkRight = LOOP_STATE.UNDECIDED;
 	this.undoTradeLinkedSpaces(p_x, p_y, p_x+1, p_y, DIRECTION.RIGHT, previousState);
 }
 
@@ -444,8 +460,8 @@ LoopSolver.prototype.undoLinkLeft = function(p_x, p_y) {
 
 LoopSolver.prototype.undoLinkDown = function(p_x, p_y) {
 	this.cleanErgonomicOptions(); 
-	previousState = this.grid[p_y][p_x].linkDown;
-	this.grid[p_y][p_x].linkDown = LOOP_STATE.UNDECIDED;
+	previousState = this.linksArray[p_y][p_x].linkDown;
+	this.linksArray[p_y][p_x].linkDown = LOOP_STATE.UNDECIDED;
 	this.undoTradeLinkedSpaces(p_x, p_y, p_x, p_y+1, DIRECTION.DOWN, previousState);
 }
 
@@ -456,31 +472,31 @@ LoopSolver.prototype.undoLinkUp = function(p_x, p_y) {
 // Undo everything between 2 orthogonally adjacent spaces (except for the linkDown, linkRight considerations, which are dependent on the methods.
 LoopSolver.prototype.undoTradeLinkedSpaces = function(p_x, p_y, p_x2, p_y2, p_direction, p_previousState) {
 	if (p_previousState == LOOP_STATE.CLOSED) {
-		this.grid[p_y][p_x].closedEdges--;
-		this.grid[p_y2][p_x2].closedEdges--;
+		this.linksArray[p_y][p_x].closedEdges--;
+		this.linksArray[p_y2][p_x2].closedEdges--;
 		this.setEdgeClosedPSAtomicUndos({x : p_x, y : p_y, otherX : p_x2, otherY : p_y2, direction : p_direction});
 	} else {
 		this.endedChainCount++;
-		this.grid[p_y][p_x].chains.pop();
-		this.grid[p_y2][p_x2].chains.pop();
-		const actualThisEnd = copySpace(this.grid[p_y][p_x].oppositeEnd); // The actual end of the other chain right now
-		const actualOtherEnd = copySpace(this.grid[p_y2][p_x2].oppositeEnd); // The actual end of this chain
+		this.linksArray[p_y][p_x].linkedDirections.pop();
+		this.linksArray[p_y2][p_x2].linkedDirections.pop();
+		const actualThisEnd = copySpace(this.linksArray[p_y][p_x].oppositeEnd); // The actual end of the other chain right now
+		const actualOtherEnd = copySpace(this.linksArray[p_y2][p_x2].oppositeEnd); // The actual end of this chain
 		const thisChainParts = this.getLinkedEdges(p_x, p_y);
 		const otherChainParts = this.getLinkedEdges(p_x2, p_y2);	
 		if ((thisChainParts == 0) && (otherChainParts == 0)) {
-			this.grid[p_y][p_x].oppositeEnd = {};
-			this.grid[p_y2][p_x2].oppositeEnd = {};
+			this.linksArray[p_y][p_x].oppositeEnd = {};
+			this.linksArray[p_y2][p_x2].oppositeEnd = {};
 		} else if (thisChainParts == 1 && otherChainParts == 0) { // Either this space or the other space had no links. In the first case, the other space was added last (and is unpiled first)
-			const remainingEnd = this.grid[p_y][p_x].oppositeEnd;
+			const remainingEnd = this.linksArray[p_y][p_x].oppositeEnd;
 			this.getSpace(remainingEnd).oppositeEnd = {x : p_x, y : p_y};
-			this.grid[p_y2][p_x2].oppositeEnd = {};
+			this.linksArray[p_y2][p_x2].oppositeEnd = {};
 		} else if (thisChainParts == 0 && otherChainParts == 1) {
-			const remainingEnd = this.grid[p_y2][p_x2].oppositeEnd;
+			const remainingEnd = this.linksArray[p_y2][p_x2].oppositeEnd;
 			this.getSpace(remainingEnd).oppositeEnd = {x : p_x2, y : p_y2};
-			this.grid[p_y][p_x].oppositeEnd = {};
+			this.linksArray[p_y][p_x].oppositeEnd = {};
 		} else { // Both spaces were linked
-			const thisOpposite = this.grid[p_y][p_x].oppositeEnd;
-			const otherOpposite = this.grid[p_y2][p_x2].oppositeEnd;
+			const thisOpposite = this.linksArray[p_y][p_x].oppositeEnd;
+			const otherOpposite = this.linksArray[p_y2][p_x2].oppositeEnd;
 			this.getSpace(thisOpposite).oppositeEnd = {x : p_x, y : p_y};
 			this.getSpace(otherOpposite).oppositeEnd = {x : p_x2, y : p_y2};
 		}
@@ -490,13 +506,13 @@ LoopSolver.prototype.undoTradeLinkedSpaces = function(p_x, p_y, p_x2, p_y2, p_di
 
 LoopSolver.prototype.undoLinkSpace = function(p_x, p_y) {
 	this.cleanErgonomicOptions(); 
-	if (this.grid[p_y][p_x].state == LOOP_STATE.LINKED) {
+	if (this.linksArray[p_y][p_x].state == LOOP_STATE.LINKED) {
 		this.endedChainCount--;
 		this.setSpaceLinkedPSAtomicUndos({x : p_x, y : p_y});
 	} else {
 		this.setSpaceClosedPSAtomicUndos({x : p_x, y : p_y});
 	}
-	this.grid[p_y][p_x].state = LOOP_STATE.UNDECIDED;
+	this.linksArray[p_y][p_x].state = LOOP_STATE.UNDECIDED;
 }
 
 applyEventClosure = function(p_solver) {
@@ -711,9 +727,10 @@ LoopSolver.prototype.deductions2v2OpenSpace = function(p_eventList, p_x, p_y) {
 	return p_eventList;
 }
 
-// Tests if 2 spaces that are known to be both ends of the same chain are 1) adjacent and not directly linked together 2) separated by one space. 
-LoopSolver.prototype.testEndsClosingLoop = function (p_eventList, p_endSpace1, p_endSpace2) {
-	const direction1 = this.getSpace(p_endSpace1).chains[0];
+// Tests if 2 spaces that are known to be both ends of the same chain are 1) adjacent and not directly linked together 2) separated by one space.
+// Additionally, this is not the only chain. 
+LoopSolver.prototype.testEndsClosingLoopNotOneChain = function (p_eventList, p_endSpace1, p_endSpace2) {
+	const direction1 = this.getSpace(p_endSpace1).linkedDirections[0];
 	const x1 = p_endSpace1.x;
 	const y1 = p_endSpace1.y;
 	const x2 = p_endSpace2.x;
@@ -740,12 +757,36 @@ LoopSolver.prototype.testEndsClosingLoop = function (p_eventList, p_endSpace1, p
 	const xMax = Math.max(x1, x2);
 	const yMin = Math.min(y1, y2);
 	const yMax = Math.max(y1, y2);
-	/*if (((xMax - xMin) == 2) && (yMax == yMin) && (this.getClosedEdges(xMin+1, yMin) == 2)) {
-		p_eventList.push(new SpaceEvent(xMin+1, yMin, LOOP_STATE.CLOSED));
+	var closedEdgesBetween, spaceStateBetween, xMid, yMid, dirToLink;
+	if (((xMax - xMin) == 2) && (yMax == yMin)) {
+		xMid = xMin+1;
+		yMid = yMin;
+		closedEdgesBetween = this.getClosedEdges(xMid, yMid);
+		spaceStateBetween = this.getLinkSpace(xMid, yMid);
+		//if (closedEdgesBetween == 2 && spaceStateBetween == LOOP_STATE.UNDECIDED) { 	// OK, wrong line. 
+		// Puzzle 209 Countryroad : There were indeed two closed links in 7,7 (vertical way even if we are in the horizontal way) and the space was unknown, 7,6 and 7,8 were opposite, the deductions were applied... but both closed directions were UP and RIGHT, and not LEFT and RIGHT as intended !
+		if (closedEdgesBetween == 2 && spaceStateBetween == LOOP_STATE.UNDECIDED && !this.isLinkDownAccessible(xMid, yMid) && !this.isLinkUpAccessible(xMid, yMid)) { 	
+			p_eventList.push(new SpaceEvent(xMid, yMid, LOOP_STATE.CLOSED));
+		}
+		if (closedEdgesBetween == 1 && spaceStateBetween == LOOP_STATE.LINKED) {
+			dirToLink = (this.isLinkDownAccessible(xMid, yMid) ? DIRECTION.DOWN : DIRECTION.UP);
+			p_eventList.push(new LinkEvent(xMid, yMid, dirToLink, LOOP_STATE.LINKED));
+		}
 	}
-	if (((yMax - yMin) == 2) && (xMax == xMin) && (this.getClosedEdges(xMin, yMin+1) == 2)) {
-		p_eventList.push(new SpaceEvent(xMin, yMin+1, LOOP_STATE.CLOSED));
-	}*/ // TODO bug to correct (cf. Yajilin puzzles 378, 430, 460) + add case where the state in between is opened and has one closed wall... but it requires the number of chains to be >2 !
+	if (((yMax - yMin) == 2) && (xMax == xMin)) {
+		xMid = xMin;
+		yMid = yMin+1;
+		closedEdgesBetween = this.getClosedEdges(xMid, yMid);
+		spaceStateBetween = this.getLinkSpace(xMid, yMid);
+		if (closedEdgesBetween == 2 && spaceStateBetween == LOOP_STATE.UNDECIDED && !this.isLinkLeftAccessible(xMid, yMid) && !this.isLinkRightAccessible(xMid, yMid)) {
+			p_eventList.push(new SpaceEvent(xMid, yMid, LOOP_STATE.CLOSED));
+		}
+		if (closedEdgesBetween == 1 && spaceStateBetween == LOOP_STATE.LINKED) {
+			dirToLink = (this.isLinkRightAccessible(xMid, yMid) ? DIRECTION.RIGHT : DIRECTION.LEFT);
+			p_eventList.push(new LinkEvent(xMid, yMid, dirToLink, LOOP_STATE.LINKED));
+		}
+	} 
+	
 	if (((xMax - xMin) == 1) && ((yMax - yMin) == 1)) {
 		const isDiagLUtoRD = (xMax == x1) ? (yMax == y1) : (yMax == y2); // Boolean to check whether both linked spaces are in a diagonal left-up to right-down
 		if (isDiagLUtoRD) {
@@ -804,7 +845,7 @@ testLoopsClosure = function(p_solver) {
 				var x, y;
 				for (y = 0 ; y < p_solver.yLength ; y++) {
 					for (x = 0 ; x < p_solver.xLength ; x++) {
-						if (p_solver.grid[y][x].state == LOOP_STATE.UNDECIDED) {
+						if (p_solver.linksArray[y][x].state == LOOP_STATE.UNDECIDED) {
 							answer.push(new SpaceEvent(x, y, LOOP_STATE.CLOSED));
 						}
 					}
@@ -830,7 +871,7 @@ separateEndsClosure = function(p_solver) { //TODO well, this function is called 
 				if ((opposite.x || opposite.x == 0) && p_solver.getLinkedEdges(opposite.x, opposite.y) == 1) {
 					opposite2 = p_solver.getOppositeEnd(opposite.x, opposite.y);	
 					if (p_solver.getLinkedEdges(opposite2.x, opposite2.y) == 1) {
-						eventList = p_solver.testEndsClosingLoop(eventList, opposite2, opposite);						
+						eventList = p_solver.testEndsClosingLoopNotOneChain(eventList, opposite2, opposite);						
 					}
 				}
 				index++;
@@ -960,7 +1001,7 @@ function orderedListpassArgumentsClosure(p_solver, p_orderedListPassArgumentsPSM
 		if (p_pessimistic) {			
 			for (var y = 0 ; y < p_solver.yLength ; y++) {
 				for (var x = 0 ; x < p_solver.xLength ; x++) {
-					//if (p_solver.grid[y][x].state != CLOSED && p_solver.grid[y][x].chains.length != 2) {
+					//if (p_solver.linksArray[y][x].state != CLOSED && p_solver.linksArray[y][x].linkedDirections.length != 2) {
 					passIndex = {x : x, y : y, passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD}
 					if (p_solver.passDefineTodoLoop(passIndex)) {
 						answer.push(passIndex);
@@ -1012,7 +1053,7 @@ LoopSolver.prototype.passDefineTodoLoop = function(p_passIndex) {
 	if (p_passIndex.passCategory == LOOP_PASS_CATEGORY.SPACE_STANDARD) {
 		const x = p_passIndex.x;
 		const y = p_passIndex.y;
-		return (this.grid[y][x].state != LOOP_STATE.CLOSED && this.grid[y][x].chains.length != 2);
+		return (this.linksArray[y][x].state != LOOP_STATE.CLOSED && this.linksArray[y][x].linkedDirections.length != 2);
 	} else {
 		return this.passDefineTodoPSMethod(p_passIndex);
 	}
@@ -1111,7 +1152,7 @@ LoopSolver.prototype.logOppositeEnd = function(p_xStart = 0, p_yStart = 0, p_xEn
 	}
 	for (var iy = p_yStart; iy < p_yEnd ; iy++) {
 		for (var ix = p_xStart; ix < p_xEnd ; ix++) {
-			oppositeEndSpace = this.grid[iy][ix].oppositeEnd;
+			oppositeEndSpace = this.linksArray[iy][ix].oppositeEnd;
 			if (oppositeEndSpace.x || oppositeEndSpace.x == 0) {
 				if (this.getLinkedEdges(ix, iy) == 1) {
 					stringSep="*";

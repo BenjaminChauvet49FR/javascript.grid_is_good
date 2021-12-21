@@ -513,15 +513,7 @@ copying = function(p_event) {
 	return p_event.copy();
 }
 
-convertLinkEvent = function(p_event) {
-	if (isLinkEvent(p_event)) {
-		const dir = p_event.direction;
-		if (dir == DIRECTION.LEFT || dir == DIRECTION.UP) {			
-			return new LinkEvent(p_event.linkX + DeltaX[dir], p_event.linkY + DeltaY[dir], OppositeDirection[dir], p_event.state);
-		}
-	}		
-	return p_event;
-}
+
 
 namingCategoryClosure = function(p_solver) {
 	return function(p_passIndex) {
@@ -538,11 +530,12 @@ namingCategoryClosure = function(p_solver) {
 comparison = function(p_event1, p_event2) {
 	const cEvent1 = convertLinkEvent(p_event1);
 	const cEvent2 = convertLinkEvent(p_event2); 
-	
-	const k1 = (isLinkEvent(cEvent1) ? 0 : 1);
-	const k2 = (isLinkEvent(cEvent2) ? 0 : 1);
-	return commonComparisonMultiKinds([k1, k2], 
-		[[cEvent1.y, cEvent1.x, cEvent1.state], [cEvent2.y, cEvent2.x, cEvent2.state], [cEvent1.linkX, cEvent1.linkY, cEvent1.direction], [cEvent2.linkX, cEvent2.linkY, cEvent2.direction]], k1, k2);
+	const k1 = (isLinkEvent(cEvent1) ? 1 : 0);
+	const k2 = (isLinkEvent(cEvent2) ? 1 : 0);
+	return commonComparisonMultiKinds([0, 1], 
+		[[cEvent1.y, cEvent1.x, cEvent1.symbol], [cEvent2.y, cEvent2.x, cEvent2.symbol], 
+		[cEvent1.linkY, cEvent1.linkX, cEvent1.direction, cEvent1.state], [cEvent2.linkY, cEvent2.linkX, cEvent2.direction, cEvent2.state]], 
+		k1, k2);
 }
 
 // Not so ordered... but puzzles are still simple so far !

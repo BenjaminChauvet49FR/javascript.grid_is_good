@@ -47,22 +47,24 @@ drawNumberClosure = function(p_solver, p_colourSet) {
 }
 
 Drawer.prototype.drawSudokuFrames = function(p_context, p_solver, p_mouseCoorsItem) {
-	var grid, colour;
-	const basicColour = "#ff8800";
-	const colours = ["#ff0000", "#00ccff", "#8800ff", "#00aa00", "#0000ff"];
-	for (var i = 0 ; i < p_solver.grids.length ; i++) {
-		grid = p_solver.grids[i];
-		colour = colours[i % colours.length];
-		this.drawCornersFrame(context, grid.xOrigin, grid.yOrigin, p_solver.gridLength, p_solver.gridLength, colour, false, true);
-	}
-	if (p_mouseCoorsItem.item != null) {
-		const x = p_mouseCoorsItem.item.x;
-		const y = p_mouseCoorsItem.item.y;
-		if (x >= 0 && x < p_solver.xLength && y >= 0 && y < p_solver.yLength) {
-			p_solver.getGridIndexes(x, y).forEach(index => {
-				grid = p_solver.grids[index];
-				this.drawCornersFrame(context, grid.xOrigin, grid.yOrigin, p_solver.gridLength, p_solver.gridLength, basicColour, true, false);
-			});
+	if (p_solver.grids.length > 1) {
+		var grid, colour;
+		const basicColour = "#ff8800";
+		const colours = ["#ff0000", "#00ccff", "#8800ff", "#00aa00", "#0000ff"];
+		for (var i = 0 ; i < p_solver.grids.length ; i++) {
+			grid = p_solver.grids[i];
+			colour = colours[i % colours.length];
+			this.drawCornersFrame(context, grid.xOrigin, grid.yOrigin, p_solver.gridLength, p_solver.gridLength, colour, false, true);
+		}
+		if (p_mouseCoorsItem.item != null) {
+			const x = p_mouseCoorsItem.item.x;
+			const y = p_mouseCoorsItem.item.y;
+			if (x >= 0 && x < p_solver.xLength && y >= 0 && y < p_solver.yLength) {
+				p_solver.getGridIndexes(x, y).forEach(index => {
+					grid = p_solver.grids[index];
+					this.drawCornersFrame(context, grid.xOrigin, grid.yOrigin, p_solver.gridLength, p_solver.gridLength, basicColour, true, false);
+				});
+			}
 		}
 	}
 }

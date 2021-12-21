@@ -90,8 +90,8 @@ InputSpacesSelection.prototype.cancelCornerSelection = function() {
 
 InputSpacesSelection.prototype.getSelectedSpacesList = function() {
 	var answer = [];
-	for (var iy = 0 ; iy < this.xLength ; iy++) {
-		for (var ix = 0 ; ix < this.yLength ; ix++) {
+	for (var iy = 0 ; iy < this.yLength ; iy++) {
+		for (var ix = 0 ; ix < this.xLength ; ix++) {
 			if (this.array[iy][ix] != SPACE_SELECTION_INPUT.NOT_SELECTED) {
 				answer.push({x : ix, y : iy});
 			}

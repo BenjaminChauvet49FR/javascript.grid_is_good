@@ -132,8 +132,8 @@ Drawer.prototype.drawPearlGrid = function (p_context, p_pearlGrid) {
 	this.drawDiscGrid(p_context, p_pearlGrid, [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK], [colourSet.pearlOut, colourSet.pearlOut], [colourSet.pearlWhite, colourSet.pearlBlack]);
 }
 
-Drawer.prototype.drawMoonsunGrid = function (p_context, p_astresGrid) {
-	this.drawDiscGrid(p_context, p_astresGrid, [SYMBOL_ID.SUN, SYMBOL_ID.MOON], [colourSet.sunOut, colourSet.moonOut], [colourSet.sunIn, colourSet.moonIn]);
+Drawer.prototype.drawMoonsunGrid = function (p_context, p_luminariesGrid) {
+	this.drawDiscGrid(p_context, p_luminariesGrid, [SYMBOL_ID.SUN, SYMBOL_ID.MOON], [colourSet.sunOut, colourSet.moonOut], [colourSet.sunIn, colourSet.moonIn]);
 }
 
 Drawer.prototype.drawPlaystationShapeGrid = function (p_context, p_shapeGrid) {

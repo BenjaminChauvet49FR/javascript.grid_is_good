@@ -279,8 +279,8 @@ function otherDeductionsClosure(p_solver) {
 // Check if the space has 2 links and if so, performs deductions on turningArray
 SolverDetour.prototype.twoLinksDeductions = function(p_eventList, p_x, p_y) {
 	if (this.getLinkedEdges(p_x, p_y) == 2) {
-		const dir1 = this.grid[p_y][p_x].chains[0];
-		const dir2 = this.grid[p_y][p_x].chains[1];
+		const dir1 = this.linksArray[p_y][p_x].linkedDirections[0];
+		const dir2 = this.linksArray[p_y][p_x].linkedDirections[1];
 		if (dir1 == OppositeDirection[dir2]) {
 			p_eventList.push(new TurnEvent(p_x, p_y, TURNING.NO));
 		} else {

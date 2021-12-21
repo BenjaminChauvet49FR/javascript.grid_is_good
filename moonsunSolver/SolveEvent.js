@@ -1,25 +1,25 @@
-const ASTRE_KIND = "A" 
+const LUMINARY_KIND = "Lu" 
 
-const ASTRE = {
+const LUMINARY = {
 	MOON : 1,
 	SUN : 2,
 	UNDECIDED : 0
 }
 
-function AstreEvent(p_indexRegion, p_astre) {
-	this.kind = ASTRE_KIND;
+function LuminaryEvent(p_indexRegion, p_luminary) {
+	this.kind = LUMINARY_KIND;
 	this.index = p_indexRegion;
-	this.astre = p_astre;
+	this.luminary = p_luminary;
 }
 
-AstreEvent.prototype.copy = function() {
-	return new AstreEvent(this.index, this.astre);
+LuminaryEvent.prototype.copy = function() {
+	return new LuminaryEvent(this.index, this.luminary);
 }
 
-AstreEvent.prototype.toLogString = function() {
-	return "(MS reg. " + this.index + " " + (this.astre == ASTRE.MOON ? "M" : "S") + ")";
+LuminaryEvent.prototype.toLogString = function() {
+	return "(MS reg. " + this.index + " " + (this.luminary == LUMINARY.MOON ? "M" : "S") + ")";
 }
 
 shouldBeLoggedLoopSolverEvent = function(p_event) {
-	return p_event.kind == ASTRE_KIND;
+	return p_event.kind == LUMINARY_KIND;
 }

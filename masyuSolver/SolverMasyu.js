@@ -42,7 +42,7 @@ SolverMasyu.prototype.construct = function(p_symbolGrid) {
 		passDefineTodoPSMethod : function(p_categoryPass) {
 			const x = p_categoryPass.x;
 			const y = p_categoryPass.y;
-			return (this.grid[y][x].state != LOOP_STATE.CLOSED && this.grid[y][x].chains.length != 2);
+			return (this.linksArray[y][x].state != LOOP_STATE.CLOSED && this.linksArray[y][x].linkedDirections.length != 2);
 		}
 		
 	}); // this.xLength and yLength defined in the upper solver

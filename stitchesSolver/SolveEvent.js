@@ -32,6 +32,16 @@ function LinkEvent(p_x, p_y, p_direction, p_state) { // LinkEvent and not BindEv
 	this.linkY = p_y;
 }
 
+convertLinkEvent = function(p_event) {
+	if (isLinkEvent(p_event)) {
+		const dir = p_event.direction;
+		if (dir == DIRECTION.LEFT || dir == DIRECTION.UP) {			
+			return new LinkEvent(p_event.linkX + DeltaX[dir], p_event.linkY + DeltaY[dir], OppositeDirection[dir], p_event.state);
+		}
+	}		
+	return p_event;
+}
+
 LinkEvent.prototype.copy = function() {
 	return new LinkEvent(this.linkX, this.linkY, this.direction, this.state);
 }

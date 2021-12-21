@@ -80,6 +80,7 @@ EditorCore.prototype.initializeGridData = function() {
 	this.reinitializeGridData();
 	this.inputNumber = 1; // input numbers and symbols are supposed to be defined at start but not modified when data are relaunched afterards
 	this.inputSymbol = null; // Note : No input symbol at start
+	this.selectionData = {list : []}; // Note : if not initialized, bad surprises ahead !
 }
 
 // NB : fonction de convénience. //TODO devrait être renommé "extra grid data" puisque ce sont des données indépendantes des grilles

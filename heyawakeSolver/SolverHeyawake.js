@@ -398,7 +398,7 @@ quickStartEventsClosure = function(p_solver) {
 			};
 			if (region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 0) {
 				region.spaces.forEach(space => {
-					listQSEvts.push(new SpaceEvent(region.spaces[0].x, region.spaces[0].y, ADJACENCY.YES));
+					listQSEvts.push(new SpaceEvent(space.x, space.y, ADJACENCY.YES));
 				});
 			}
 			// Quickly place in centers of region (smartness)

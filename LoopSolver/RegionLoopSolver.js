@@ -594,7 +594,7 @@ RegionLoopSolver.prototype.generateEventsForRegionPassStandard = function(p_inde
 	return answer;
 }
 
-// Rememver : the function inside CLSEC (see LoopSolver) is called only if p_event1.kind == p_event2.kind
+// Remember : the function inside CLSEC (see LoopSolver) is called only if p_event1.kind == p_event2.kind
 comparisonRegionLoopSolverEventsClosure = function(p_methodPS) {
 	return comparisonLoopSolverEventsClosure(
 		function(p_event1, p_event2) {
