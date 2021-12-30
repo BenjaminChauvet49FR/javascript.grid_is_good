@@ -222,7 +222,7 @@ SolverLITS.prototype.shapeFrom3Open = function(p_eventsList, p_x, p_y, p_ir, p_i
 	if (p_eventsList.length == startingEventsLength + 1) {
 		// Only one event ! That means only one possibility of 4th open space ! 
 		const onlyShapeEvent = p_eventsList[p_eventsList.length-1];
-		p_eventsList.push(new SpaceEvent(onlyShapeEvent.coorX, onlyShapeEvent.coorY, ADJACENCY.YES));
+		p_eventsList.push(new SpaceEvent(onlyShapeEvent.x, onlyShapeEvent.y, ADJACENCY.YES));
 	} else if (noLFound && noIFound && noTFound) { //If only one shape is possible, place it in all 3 open spaces. If no shape is possible, failure.
 		if (noSFound) {
 			return EVENT_RESULT.FAILURE;

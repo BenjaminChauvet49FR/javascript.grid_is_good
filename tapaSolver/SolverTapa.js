@@ -138,14 +138,14 @@ SolverTapa.prototype.putNew = function(p_x,p_y,p_symbol) {
 
 applyEventClosure = function(p_solver) {
 	return function(eventToApply) {
-		return p_solver.putNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
+		return p_solver.putNew(eventToApply.x, eventToApply.y, eventToApply.symbol);
 	}
 }
 
 undoEventClosure = function(p_solver) {
 	return function(eventToApply) {
-		const x = eventToApply.x(); 
-		const y = eventToApply.y();
+		const x = eventToApply.x; 
+		const y = eventToApply.y;
 		p_solver.answerArray[y][x] = ADJACENCY.UNDECIDED;
 	}
 }
@@ -186,8 +186,8 @@ quickStartEventsClosure = function(p_solver) {
 
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
-		const x = p_eventBeingApplied.x();
-		const y = p_eventBeingApplied.y();
+		const x = p_eventBeingApplied.x;
+		const y = p_eventBeingApplied.y;
 		const symbol = p_eventBeingApplied.symbol;
 		if (symbol == ADJACENCY.YES) {
 			p_listEventsToApply = p_solver.alert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
@@ -322,13 +322,11 @@ SolverTapa.prototype.deductionsTapass = function(p_listEvents, p_x, p_y) {
 	} else if (tapassReturn != EVENT_RESULT.HARMLESS) {
 		for (var i = 0 ; i < tapaCoors.length ; i++) {
 			x = tapaCoors[i].x;
-			y = tapaCoors[i].y;
-			if (this.answerArray[y][x] == TAPASS.UNDECIDED) {				
-				switch(tapassReturn[i]) {
-					case TAPASS.YES : p_listEvents.push(new SpaceEvent(x, y, ADJACENCY.YES)); break;
-					case TAPASS.NO : p_listEvents.push(new SpaceEvent(x, y, ADJACENCY.NO)); break;
-					default : break;
-				}
+			y = tapaCoors[i].y;			
+			switch(tapassReturn[i]) {
+				case TAPASS.YES : p_listEvents.push(new SpaceEvent(x, y, ADJACENCY.YES)); break;
+				case TAPASS.NO : p_listEvents.push(new SpaceEvent(x, y, ADJACENCY.NO)); break;
+				default : break;
 			}
 		}
 	}
@@ -357,8 +355,8 @@ copying = function(p_event) {
 }
 
 comparison = function(p_event1, p_event2) {
-		return commonComparison([[p_event1.coorY, p_event1.coorX, p_event1.symbol],
-	[p_event2.coorY, p_event2.coorX, p_event2.symbol]]);
+		return commonComparison([[p_event1.y, p_event1.x, p_event1.symbol],
+	[p_event2.y, p_event2.x, p_event2.symbol]]);
 }
 
 

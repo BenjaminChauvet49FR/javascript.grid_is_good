@@ -94,6 +94,14 @@ menuSolvers.push({
 });
 
 menuSolvers.push({
+	displayName : "Binaires non-assumés avec adjacence ",
+	documentPage : "Solver",
+	typeList : [
+		{name : "sukoro", displayName : "Sukoro", hoverDescription : "Nombre = nombre de voisins. Pas deux nombres identiques orthogonaement adjacents."}
+	]
+});
+
+menuSolvers.push({
 	displayName : "Multiples avec adjacence",
 	documentPage : "Solver",
 	typeList : [

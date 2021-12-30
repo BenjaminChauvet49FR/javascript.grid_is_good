@@ -635,13 +635,14 @@ GeneralSolver.prototype.resolve = function(p_value) {
 }
 
 // Count all the last events down to the most recent hypothese
+// Note : the serie must contain at least one hypothesis, which means it cannot be tested on harmless deductions (that don't add an hypothesis serie)
 GeneralSolver.prototype.numberOfRelevantDeductionsSinceLastHypothesis = function(p_relevancyMethod) { 
 	var sum = 0;
 	var listEvents;
 	var index = this.happenedEventsSeries.length;
 	do {
 		index--;
-		if (!p_relevancyMethod) {			
+		if (!p_relevancyMethod) {		
 			sum += this.happenedEventsSeries[index].list.length;
 		} else {
 			this.happenedEventsSeries[index].list.forEach(event_ => {

@@ -1,7 +1,7 @@
 const ADJACENCY = {
     YES : 2,
-    NO : 1,
-    UNDECIDED : 0
+    NO : 0,
+    UNDECIDED : 1
 };
 const LabelAdjacency = ['-', 'X', 'O'];
 

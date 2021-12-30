@@ -177,7 +177,7 @@ SolverUsoone.prototype.putTruth = function(p_x, p_y, p_truth) {
 applyEventClosure = function(p_solver) {
 	return function(eventToApply) {
 		if (isSpaceEvent(eventToApply)) {			
-			return p_solver.putNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
+			return p_solver.putNew(eventToApply.x, eventToApply.y, eventToApply.symbol);
 		} else {
 			return p_solver.putTruth(eventToApply.x, eventToApply.y, eventToApply.truth);
 		}
@@ -187,8 +187,8 @@ applyEventClosure = function(p_solver) {
 undoEventClosure = function(p_solver) {
 	return function (p_eventToApply) {
 		if (isSpaceEvent(p_eventToApply)) {
-			const x = p_eventToApply.x(); // x() and not x !
-			const y = p_eventToApply.y();
+			const x = p_eventToApply.x;
+			const y = p_eventToApply.y;
 			const symbol = p_eventToApply.symbol;
 			p_solver.answerArray[y][x] = ADJACENCY.UNDECIDED;
 			if (symbol == ADJACENCY.NO) {
@@ -266,8 +266,8 @@ deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
 		var x, y, symbol, xx, yy; // Well, I forgot these once so other values of x and y seemed to be taken
 		if (isSpaceEvent(p_eventBeingApplied)) {
-			x = p_eventBeingApplied.x();
-			y = p_eventBeingApplied.y();
+			x = p_eventBeingApplied.x;
+			y = p_eventBeingApplied.y;
 			symbol = p_eventBeingApplied.symbol;
 			// Deduction time !
 			if (symbol == ADJACENCY.NO) { // Closed space
@@ -410,7 +410,7 @@ comparison = function(p_event1, p_event2) {
 	const kind1 = (isSpaceEvent(p_event1) ? 1 : 0);
 	const kind2 = (isSpaceEvent(p_event2) ? 1 : 0);
 	return commonComparisonMultiKinds([0, 1], 
-	[[p_event1.y, p_event1.x, p_event1.truth], [p_event2.y, p_event2.x, p_event2.truth], [p_event1.coorY, p_event1.coorX, p_event1.symbol], [p_event2.coorY, p_event2.coorX, p_event2.symbol]], 
+	[[p_event1.y, p_event1.x, p_event1.truth], [p_event2.y, p_event2.x, p_event2.truth], [p_event1.y, p_event1.x, p_event1.symbol], [p_event2.y, p_event2.x, p_event2.symbol]], 
 	kind1, kind2);
 }
 

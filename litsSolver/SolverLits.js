@@ -195,7 +195,7 @@ applyEventClosure = function(p_solver) {
 			return p_solver.putShapeRegion(p_eventToApply.region, p_eventToApply.shape);
 		}
 		if (p_eventToApply.kind == KIND_EVENT.SPACE) {
-			return p_solver.putNew(p_eventToApply.x(), p_eventToApply.y(), p_eventToApply.symbol);
+			return p_solver.putNew(p_eventToApply.x, p_eventToApply.y, p_eventToApply.symbol);
 		} 
 		return p_solver.banShapeRegion(p_eventToApply.region, p_eventToApply.shape);
 	}
@@ -220,8 +220,8 @@ SolverLITS.prototype.putNew = function(p_x,p_y,p_symbol){
 }
 
 SolverLITS.prototype.putShape = function(p_eventToApply) {
-	const y = p_eventToApply.y();
-	const x = p_eventToApply.x(); 
+	const y = p_eventToApply.y;
+	const x = p_eventToApply.x; 
 	const shape = p_eventToApply.shape;
 	
 	if ((this.answerArray[y][x] == ADJACENCY.NO) || (this.shapeArray[y][x] == shape)) { // this.answerArray added after.
@@ -266,8 +266,8 @@ SolverLITS.prototype.banShapeRegion = function(p_regionIndex, p_shape) {
 undoEventClosure = function(p_solver) {
 	return function(p_eventToUndo) {
 		if (p_eventToUndo.kind == KIND_EVENT.SPACE) {
-			const x = p_eventToUndo.x(); //Décidément il y en a eu à faire, des changements de x en x() depuis qu'on a mis en commun les solvers de puzzles d'adjacences
-			const y = p_eventToUndo.y();
+			const x = p_eventToUndo.x;
+			const y = p_eventToUndo.y;
 			const symbol = p_eventToUndo.symbol;
 			p_solver.answerArray[y][x] = ADJACENCY.UNDECIDED;
 			var ir = p_solver.regionArray[y][x];
@@ -280,8 +280,8 @@ undoEventClosure = function(p_solver) {
 		} else if (p_eventToUndo.kind == KIND_EVENT.SHAPE_REGION) {
 			p_solver.regions[p_eventToUndo.region].shape = LITS.UNDECIDED;
 		} else if (p_eventToUndo.kind == KIND_EVENT.SHAPE) {
-			p_solver.getRegion(p_eventToUndo.x(), p_eventToUndo.y()).shapesSpaces[p_eventToUndo.shape].pop();
-			p_solver.shapeArray[p_eventToUndo.y()][p_eventToUndo.x()] = LITS.UNDECIDED;
+			p_solver.getRegion(p_eventToUndo.x, p_eventToUndo.y).shapesSpaces[p_eventToUndo.shape].pop();
+			p_solver.shapeArray[p_eventToUndo.y][p_eventToUndo.x] = LITS.UNDECIDED;
 		} else {
 			p_solver.regions[p_eventToUndo.region].shapesBanned[p_eventToUndo.shape] = false;
 		}
@@ -356,8 +356,8 @@ deductionsClosure = function (p_solver) {
 				});
 			});
 		} else if (p_eventBeingApplied.kind == KIND_EVENT.SPACE) {
-			const x = p_eventBeingApplied.x();
-			const y = p_eventBeingApplied.y();
+			const x = p_eventBeingApplied.x;
+			const y = p_eventBeingApplied.y;
 			const ir = p_solver.regionArray[y][x];
 			const region = p_solver.regions[ir];
 			symbol = p_eventBeingApplied.symbol;
@@ -405,8 +405,8 @@ deductionsClosure = function (p_solver) {
 				});
 			}
 		} else if (p_eventBeingApplied.kind == KIND_EVENT.SHAPE) {
-			const x = p_eventBeingApplied.x();
-			const y = p_eventBeingApplied.y();
+			const x = p_eventBeingApplied.x;
+			const y = p_eventBeingApplied.y;
 			const ir = p_solver.regionArray[y][x];
 			shape = p_eventBeingApplied.shape;
 			// Shape banned in this region ? Close the space !
@@ -679,8 +679,8 @@ copying = function(p_event) {
 comparison = function(p_event1, p_event2) {
 	return commonComparisonMultiKinds([KIND_EVENT.SHAPE_REGION, KIND_EVENT.SPACE, KIND_EVENT.SHAPE, KIND_EVENT.BAN_SHAPE_REGION], 
 	[[p_event1.region, p_event1.shape], [p_event2.region, p_event2.shape], 
-	[p_event1.coorY, p_event1.coorX, p_event1.symbol], [p_event2.coorY, p_event2.coorX, p_event2.symbol], 
-	[p_event1.coorY, p_event1.coorX, p_event1.shape], [p_event2.coorY, p_event2.coorX, p_event2.shape],
+	[p_event1.y, p_event1.x, p_event1.symbol], [p_event2.y, p_event2.x, p_event2.symbol], 
+	[p_event1.y, p_event1.x, p_event1.shape], [p_event2.y, p_event2.x, p_event2.shape],
 	[p_event1.region, p_event1.shape], [p_event2.region, p_event2.shape]], p_event1.kind, p_event2.kind);
 }
 

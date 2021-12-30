@@ -201,8 +201,8 @@ SolverNurikabe.prototype.makeResolution = function() {
 // Offensive programming : the coordinates are assumed to be in limits
 applyEventClosure = function(p_solver) {
 	return function(p_eventToApply) {
-		const x = p_eventToApply.coorX;
-		const y = p_eventToApply.coorY;
+		const x = p_eventToApply.x;
+		const y = p_eventToApply.y;
 		const index = p_eventToApply.index;
 		const choice = p_eventToApply.choice;
 		
@@ -253,8 +253,8 @@ applyEventClosure = function(p_solver) {
 
 undoEventClosure = function(p_solver) {
 	return function(p_eventToUndo) {
-		const x = p_eventToUndo.coorX;
-		const y = p_eventToUndo.coorY;
+		const x = p_eventToUndo.x;
+		const y = p_eventToUndo.y;
 		const index = p_eventToUndo.index;
 		
 		if (index == NURIKABE_SEA) {
@@ -334,8 +334,8 @@ quickStartEventsClosure = function(p_solver) {
 
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
-		const x = p_eventBeingApplied.coorX;
-		const y = p_eventBeingApplied.coorY;
+		const x = p_eventBeingApplied.x;
+		const y = p_eventBeingApplied.y;
 		const index = p_eventBeingApplied.index;
 		const choice = p_eventBeingApplied.choice;
 		if (index == NURIKABE_SEA) {
@@ -632,7 +632,7 @@ copying = function(p_event) {
 }
 
 comparison = function(p_event1, p_event2) {
-	return commonComparison([[p_event1.coorY, p_event1.coorX, p_event1.index, p_event1.choice], [p_event2.coorY, p_event2.coorX, p_event2.index, p_event2.choice]]);
+	return commonComparison([[p_event1.y, p_event1.x, p_event1.index, p_event1.choice], [p_event2.y, p_event2.x, p_event2.index, p_event2.choice]]);
 }
 
 namingCategoryClosure = function(p_solver) {
@@ -730,7 +730,7 @@ function searchClosure(p_solver) {
 		}
 		
 		// Naive recursion !
-		return p_solver.tryAllPossibilities([bestIndex.evt, new ChoiceEvent(bestIndex.evt.coorX, bestIndex.evt.coorY, NURIKABE_SEA, !bestIndex.evt.choice)]);
+		return p_solver.tryAllPossibilities([bestIndex.evt, new ChoiceEvent(bestIndex.evt.x, bestIndex.evt.y, NURIKABE_SEA, !bestIndex.evt.choice)]);
 	}
 }
 

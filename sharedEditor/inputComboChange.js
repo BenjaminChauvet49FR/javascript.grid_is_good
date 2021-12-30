@@ -78,10 +78,13 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			saveLoadModeId = PUZZLES_KIND.STAR_BATTLE; 
 			p_editorCore.maskAllGrids();
 			hasStars = true; break;
-		case 'Akari': case 'Koburin': case 'Linesweeper': case 'Shakashaka': case 'Shugaku':
+		case 'Akari': case 'Koburin': case 'Linesweeper': case 'Shakashaka': case 'Shugaku': case 'Sukoro':
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.DIGITS_X_ONLY;
 			inputOptions.maxNumber = (content == 'Linesweeper' ? 8 : 4);
+			if (content == 'Sukoro') {
+				inputOptions.minNumber = 1;
+			}
 			p_editorCore.setVisibleGrids([GRID_ID.DIGIT_X_SPACE]); break;
 		case 'CanalView': case 'Corral': case 'Kuromasu': case 'Nurikabe':
 			p_editorCore.setWallsOff();

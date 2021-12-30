@@ -267,7 +267,7 @@ SolverKuromasu.prototype.applyClosedAdjacentOutsideArray = function(p_x, p_y) {
 applyEventClosure = function(p_solver) {
 	return function(eventToApply) {
 		switch (eventToApply.kind) {	
-			case KIND_EVENT.SPACE :	return p_solver.applyFillSpace(eventToApply.x(), eventToApply.y(), eventToApply.symbol); break;
+			case KIND_EVENT.SPACE :	return p_solver.applyFillSpace(eventToApply.x, eventToApply.y, eventToApply.symbol); break;
 			case KIND_EVENT.RANGE_MIN : return p_solver.applyRangeMin(eventToApply.x, eventToApply.y, eventToApply.direction, eventToApply.min); break;
 			case KIND_EVENT.RANGE_MAX : return p_solver.applyRangeMax(eventToApply.x, eventToApply.y, eventToApply.direction, eventToApply.max); break;
 			case KIND_EVENT.BIND : return p_solver.applyBindSpaces(eventToApply.x, eventToApply.y, eventToApply.direction); break;
@@ -281,8 +281,8 @@ undoEventClosure = function(p_solver) {
 		var x, y, index, symbol, numericSpace;
 		switch(eventToApply.kind) {
 			case KIND_EVENT.SPACE : 
-				x = eventToApply.x(); 
-				y = eventToApply.y();
+				x = eventToApply.x; 
+				y = eventToApply.y;
 				symbol = eventToApply.symbol;
 				p_solver.answerArray[y][x] = ADJACENCY.UNDECIDED; 
 			break;
@@ -356,8 +356,8 @@ deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
 		const kind = p_eventBeingApplied.kind;
 		if (kind == KIND_EVENT.SPACE) {
-			var x = p_eventBeingApplied.x();
-			var y = p_eventBeingApplied.y();
+			var x = p_eventBeingApplied.x;
+			var y = p_eventBeingApplied.y;
 			symbol = p_eventBeingApplied.symbol;
 
 			if (symbol == ADJACENCY.NO) {
@@ -759,7 +759,7 @@ comparison = function(p_event1, p_event2) {
 	const k2 = p_event2.kind;
 	return commonComparisonMultiKinds([KIND_EVENT.SPACE, KIND_EVENT.RANGE_MIN, KIND_EVENT.RANGE_MAX, KIND_EVENT.BIND, KIND_EVENT.CLOSED_ADJACENT_OUTSIDE], 
 		[
-		[p_event1.coorY, p_event1.coorX, p_event1.symbol], [p_event2.coorY, p_event2.coorX, p_event2.symbol],
+		[p_event1.y, p_event1.x, p_event1.symbol], [p_event2.y, p_event2.x, p_event2.symbol],
 		[p_event1.y, p_event1.x, p_event1.direction, p_event1.min], [p_event2.y, p_event2.x, p_event2.direction, p_event2.min],
 		[p_event1.y, p_event1.x, p_event1.direction, p_event1.max], [p_event2.y, p_event2.x, p_event2.direction, p_event2.max],
 		[p_event1.y, p_event1.x, p_event1.direction], [p_event2.y, p_event2.x, p_event2.direction],

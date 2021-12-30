@@ -280,14 +280,14 @@ SolverYajikabe.prototype.putNew = function(p_x,p_y,p_symbol) {
 
 applyEventClosure = function(p_solver) {
 	return function(eventToApply) {
-		return p_solver.putNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
+		return p_solver.putNew(eventToApply.x, eventToApply.y, eventToApply.symbol);
 	}
 }
 
 undoEventClosure = function(p_solver) {
 	return function(eventToApply) {
-		const x = eventToApply.x(); //Décidément il y en a eu à faire, des changements de x en x() depuis qu'on a mis en commun les solvers de puzzles d'adjacences
-		const y = eventToApply.y();
+		const x = eventToApply.x;
+		const y = eventToApply.y;
 		const symbol = eventToApply.symbol;
 		if (symbol == ADJACENCY.YES) {
 			p_solver.stripesArray[y][x].forEach(index => {
@@ -343,8 +343,8 @@ quickStartEventsClosure = function(p_solver) {
 
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
-		const x = p_eventBeingApplied.x();
-		const y = p_eventBeingApplied.y();
+		const x = p_eventBeingApplied.x;
+		const y = p_eventBeingApplied.y;
 		const symbol = p_eventBeingApplied.symbol;
 		if (symbol == ADJACENCY.YES) {
 			p_listEventsToApply = p_solver.alert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
@@ -438,8 +438,8 @@ copying = function(p_event) {
 }
 
 comparison = function(p_event1, p_event2) {
-	return commonComparison([[p_event1.coorY, p_event1.coorX, p_event1.symbol],
-		[p_event2.coorY, p_event2.coorX, p_event2.symbol]]);
+	return commonComparison([[p_event1.y, p_event1.x, p_event1.symbol],
+		[p_event2.y, p_event2.x, p_event2.symbol]]);
 }
 
 // -----
@@ -550,7 +550,7 @@ function searchClosure(p_solver) {
 		}
 		
 		// Naive recursion !
-		return p_solver.tryAllPossibilities([bestIndex.evt, new SpaceEvent(bestIndex.evt.coorX, bestIndex.evt.coorY, ADJACENCY.YES),
-		bestIndex.evt, new SpaceEvent(bestIndex.evt.coorX, bestIndex.evt.coorY, ADJACENCY.NO)]);
+		return p_solver.tryAllPossibilities([bestIndex.evt, new SpaceEvent(bestIndex.evt.x, bestIndex.evt.y, ADJACENCY.YES),
+		bestIndex.evt, new SpaceEvent(bestIndex.evt.x, bestIndex.evt.y, ADJACENCY.NO)]);
 	}
 }

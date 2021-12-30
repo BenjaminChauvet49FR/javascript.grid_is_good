@@ -9,16 +9,16 @@ const KIND_EVENT = {
 function SpaceEvent(p_x, p_y, p_symbol) {
 	this.kind = KIND_EVENT.SPACE;
 	this.symbol = p_symbol;
-	this.coorX = p_x;
-	this.coorY = p_y;
+	this.x = p_x;
+	this.y = p_y;
 }
 
-SpaceEvent.prototype.x = function() {
-	return this.coorX;
+SpaceEvent.prototype.coordinateX = function() {
+	return this.x;
 }
 
-SpaceEvent.prototype.y = function() {
-	return this.coorY;
+SpaceEvent.prototype.coordinateY = function() {
+	return this.y;
 }
 
 SpaceEvent.prototype.opening = function() {
@@ -26,7 +26,7 @@ SpaceEvent.prototype.opening = function() {
 }
 
 SpaceEvent.prototype.copy = function() {
-	return new SpaceEvent(this.coorX, this.coorY, this.symbol);
+	return new SpaceEvent(this.x, this.y, this.symbol);
 }
 
 function MinRangeEvent(p_x, p_y, p_direction, p_value) {
@@ -94,7 +94,7 @@ ClosedAdjacentOutsideEvent.prototype.opening = function() {
 // Interface
 
 SpaceEvent.prototype.toLogString = function() {	
-	return "["+LabelAdjacency[this.symbol]+" "+this.coorX+","+this.coorY+"]";
+	return "["+LabelAdjacency[this.symbol]+" "+this.x+","+this.y+"]";
 }
 
 MinRangeEvent.prototype.toLogString = function() {

@@ -13,17 +13,17 @@ function isChoiceEvent(p_event) {
 
 function ChoiceEvent(p_x, p_y, p_symbol, p_choice) {
 	this.symbol = p_symbol;
-	this.coorX = p_x;
-	this.coorY = p_y;
+	this.x = p_x;
+	this.y = p_y;
 	this.choice = p_choice;
 }
 
 ChoiceEvent.prototype.toLogString = function() {	
-	return "["+ LabelShugaku[this.symbol] + (this.choice ? "Y" : "N") + " " + this.coorX + "," + this.coorY + "]";
+	return "["+ LabelShugaku[this.symbol] + (this.choice ? "Y" : "N") + " " + this.x + "," + this.y + "]";
 }
 
 ChoiceEvent.prototype.copy = function() {
-	return new ChoiceEvent(this.coorX, this.coorY, this.symbol, this.choice);
+	return new ChoiceEvent(this.x, this.y, this.symbol, this.choice);
 }
 
 ChoiceEvent.prototype.opening = function() {
@@ -34,12 +34,12 @@ ChoiceEvent.prototype.opening = function() {
 	}
 }
 
-ChoiceEvent.prototype.x = function() {
-	return this.coorX;
+ChoiceEvent.prototype.coordinateX = function() {
+	return this.x;
 }
 
-ChoiceEvent.prototype.y = function() {
-	return this.coorY;
+ChoiceEvent.prototype.coordinateY = function() {
+	return this.y;
 }
 
 // -----------

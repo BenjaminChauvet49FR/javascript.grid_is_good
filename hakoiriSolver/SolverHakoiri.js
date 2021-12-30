@@ -202,7 +202,7 @@ SolverHakoiri.prototype.makeMultiPass = function() {
 // Offensiveness : x and y valid, space not banned.
 applyEventClosure = function(p_solver) {
 	return function(p_eventToApply) {
-		return p_solver.putNewInSpace(p_eventToApply.coorX, p_eventToApply.coorY, p_eventToApply.symbol, p_eventToApply.choice);
+		return p_solver.putNewInSpace(p_eventToApply.x, p_eventToApply.y, p_eventToApply.symbol, p_eventToApply.choice);
 	}
 }
 
@@ -242,8 +242,8 @@ SolverHakoiri.prototype.putNewInSpace = function(p_x, p_y, p_symbol, p_choice) {
 undoEventClosure = function(p_solver) {
 	return function(p_eventToUndo) {
 		//  Set UNDECIDED
-		const x = p_eventToUndo.coorX;
-		const y = p_eventToUndo.coorY;
+		const x = p_eventToUndo.x;
+		const y = p_eventToUndo.y;
 		const symbol = p_eventToUndo.symbol;
 		const region = p_solver.regions[p_solver.regionArray[y][x]];
 		if (p_eventToUndo.choice) {
@@ -320,8 +320,8 @@ adjacencyClosure = function (p_solver) {
 // Deductions closure. Where intelligence begins !
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {			
-		const x = p_eventBeingApplied.coorX;
-		const y = p_eventBeingApplied.coorY;
+		const x = p_eventBeingApplied.x;
+		const y = p_eventBeingApplied.y;
 		const symbol = p_eventBeingApplied.symbol;
 		const region = p_solver.regions[p_solver.regionArray[y][x]];
 		if (p_eventBeingApplied.choice) {
@@ -419,7 +419,7 @@ copying = function(p_event) {
 
 comparison = function(p_event1, p_event2) {
 	return commonComparison( 
-		[[p_event1.coorY, p_event1.coorX, p_event1.symbol, p_event1.choice], [p_event2.coorY, p_event2.coorX, p_event2.symbol, p_event2.choice]]);
+		[[p_event1.y, p_event1.x, p_event1.symbol, p_event1.choice], [p_event2.y, p_event2.x, p_event2.symbol, p_event2.choice]]);
 }
 
 orderedListPassArgumentsClosure = function(p_solver) {

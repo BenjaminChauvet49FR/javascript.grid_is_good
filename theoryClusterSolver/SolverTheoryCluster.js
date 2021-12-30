@@ -113,7 +113,7 @@ Closure for when we have to apply an event
 */
 applyEventClosure = function(p_solver) {
 	return function(eventToApply) {
-		return p_solver.putNew(eventToApply.myX, eventToApply.myY, eventToApply.symbol);
+		return p_solver.putNew(eventToApply.x, eventToApply.y, eventToApply.symbol);
 	}
 }
 
@@ -122,7 +122,7 @@ Closure for when we have to undo an event (symetrical to applyEvent)
 */
 undoEventClosure = function(p_solver) {
 	return function(eventToApply) {
-		p_solver.answerArray[eventToApply.myY][eventToApply.myX] = ADJACENCY.UNDECIDED;
+		p_solver.answerArray[eventToApply.y][eventToApply.x] = ADJACENCY.UNDECIDED;
 	}
 }
 
@@ -166,9 +166,9 @@ Adds events that should be added to the p_listEventsToApply (they will be applie
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
 		if (p_eventBeingApplied.p_symbol == ADJACENCY.YES) {
-			console.log("Perform artificial deductions for 'open' space at " + p_eventBeingApplied.myX + " " + p_eventBeingApplied.myY);
+			console.log("Perform artificial deductions for 'open' space at " + p_eventBeingApplied.x + " " + p_eventBeingApplied.y);
 		} else if (p_eventBeingApplied.p_symbol == ADJACENCY.NO) {
-			console.log("Perform artificial deductions for 'closed' space at " + p_eventBeingApplied.myX + " " + p_eventBeingApplied.myY);
+			console.log("Perform artificial deductions for 'closed' space at " + p_eventBeingApplied.x + " " + p_eventBeingApplied.y);
 		}
 		p_listEventsToApply = p_solver.artificialDeductionsList(p_listEventsToApply);
 		return p_listEventsToApply; // never forget to return the list that was passed in argument (returning "p_solver.artificialDeductionSpacesList()" after having made it an argument-less function returns nothing past the 1st applied event otherwise ;) )

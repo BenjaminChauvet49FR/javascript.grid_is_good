@@ -48,13 +48,16 @@ GeneralSolver.prototype.declarationsOpenAndClosed = function() {
 			}
 		}
 	}
-	if (atLeastOneOpen && this.bannedSpacesList.length > 0) {
-		this.atLeastOneOpenAtSetup = true; 
+	if (atLeastOneOpen) {
+		this.atLeastOneOpenAtSetup = true;
 	}
+	
 }
 
 // Behaves like a filter, except it adds immediatly applied events
 GeneralSolver.prototype.geographicalDeductionsPseudoFilter = function(p_appliedEventsList, p_methodPack) {
+	var retrieveBackedClosedSpaces = false;
+	
 	if (this.atLeastOneOpenAtSetup) {
 		if (!this.atLeastOneOpenTreated) {
 			p_appliedEventsList.push(new FirstOpenEvent());
@@ -67,7 +70,6 @@ GeneralSolver.prototype.geographicalDeductionsPseudoFilter = function(p_appliedE
 	var alreadyGeographicallyCheckedEventsCount = 0 ;
 	var eventBeingChecked;
 	var isOpenEvent;
-	var retrieveBackedClosedSpaces = false;
 	var newClosedSpaces = [];
 	while(alreadyGeographicallyCheckedEventsCount < p_appliedEventsList.length) {
 		eventBeingChecked = p_appliedEventsList[alreadyGeographicallyCheckedEventsCount];
@@ -76,8 +78,8 @@ GeneralSolver.prototype.geographicalDeductionsPseudoFilter = function(p_appliedE
 			isOpenEvent = eventBeingChecked.opening();
 			if (isOpenEvent == ADJACENCY.NO) {
 				newClosedSpaces.push({
-					x: eventBeingChecked.x(),
-					y: eventBeingChecked.y()
+					x: eventBeingChecked.coordinateX(),
+					y: eventBeingChecked.coordinateY()
 				});
 			} else if (isOpenEvent == ADJACENCY.YES) {
 				//If we are putting the first open space, add a corresponding event into the list of applied events (it isn't "to apply" anymore)
@@ -101,8 +103,8 @@ GeneralSolver.prototype.geographicalDeductionsPseudoFilter = function(p_appliedE
 			eventSerie.list.forEach(solveEvent => {
 				if (solveEvent.opening && solveEvent.opening() == ADJACENCY.NO) {
 					newClosedSpaces.push({
-						x: solveEvent.x(),
-						y: solveEvent.y()
+						x: solveEvent.coordinateX(),
+						y: solveEvent.coordinateY()
 					});
 				}
 			});

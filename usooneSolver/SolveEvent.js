@@ -37,16 +37,16 @@ function isSpaceEvent(p_event) {
 function SpaceEvent(p_x, p_y, p_symbol) {
 	this.kind = USOONE_EVENT.SPACE;
 	this.symbol = p_symbol;
-	this.coorX = p_x;
-	this.coorY = p_y;
+	this.x = p_x;
+	this.y = p_y;
 }
 
-SpaceEvent.prototype.x = function() {
-	return this.coorX;
+SpaceEvent.prototype.coordinateX = function() {
+	return this.x;
 }
 
-SpaceEvent.prototype.y = function() {
-	return this.coorY;
+SpaceEvent.prototype.coordinateY = function() {
+	return this.y;
 }
 
 SpaceEvent.prototype.opening = function() {
@@ -54,9 +54,9 @@ SpaceEvent.prototype.opening = function() {
 }
 
 SpaceEvent.prototype.toLogString = function() {	
-	return standardAdjacencyEventString(this.coorX, this.coorY, this.symbol, "S");
+	return standardAdjacencyEventString(this.x, this.y, this.symbol, "S");
 }
 
 SpaceEvent.prototype.copy = function() {
-	return new SpaceEvent(this.coorX, this.coorY, this.symbol);
+	return new SpaceEvent(this.x, this.y, this.symbol);
 }

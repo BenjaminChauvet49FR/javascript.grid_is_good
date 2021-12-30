@@ -83,14 +83,13 @@ SolverCurvingRoad.prototype.traceRoadsFrom = function (p_x, p_y) {
     var bottomRow = (p_y == this.yLength - 1);
     var rightColumn = (p_x == this.xLength - 1);
     var leftColumn = (p_x == 0);
-    var lastX,
-    lastY;
+    var lastX, lastY;
     var x,
     y;
     var shouldMoveOn;
     var shouldTrace;
-    //TODO je m'en fiche, il y a beaucoup de redondances, mais on ne vérifie pas si un lien est contenu dans un autre !
-    //answerArray should have been updated by now ; anyway, open in answerArray refers to "white" spaces.
+    //Note : no link should be contained in anoteher by now
+
     if (!rightColumn) {
         lastX = p_x; //Right only
         do {
@@ -386,14 +385,14 @@ SolverCurvingRoad.prototype.putNew = function (p_x, p_y, p_symbol) {
 
 applyEventClosure = function(p_solver) {
 	return function(eventToApply) {
-		return p_solver.putNew(eventToApply.x(), eventToApply.y(), eventToApply.symbol);
+		return p_solver.putNew(eventToApply.x, eventToApply.y, eventToApply.symbol);
 	}
 }
 
 undoEventClosure = function(p_solver) {
 	return function (p_eventToApply) {
-		const x = p_eventToApply.x(); // Si on oublie de changer le  en x() par erreurs on peut avoir un message très funky dans la console. Et avec un "cannot read ... of undefined."
-		const y = p_eventToApply.y();
+		const x = p_eventToApply.x;
+		const y = p_eventToApply.y;
 		const symbol = p_eventToApply.symbol;
 		p_solver.answerArray[y][x] = ADJACENCY.UNDECIDED;
 		p_solver.curvingLinkArray[y][x].forEach(
@@ -442,8 +441,8 @@ quickStartEventsClosure = function(p_solver) {
 
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
-		x = p_eventBeingApplied.x();
-		y = p_eventBeingApplied.y();
+		x = p_eventBeingApplied.x;
+		y = p_eventBeingApplied.y;
 		if (p_eventBeingApplied.symbol == ADJACENCY.NO) {
 			p_solver.existingNeighborsCoorsDirections(x, y).forEach(coorsDir => {				
 				p_listEventsToApply.push(new SpaceEvent(coorsDir.x, coorsDir.y, ADJACENCY.YES));

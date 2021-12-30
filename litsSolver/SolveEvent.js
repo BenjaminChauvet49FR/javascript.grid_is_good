@@ -8,44 +8,44 @@ const KIND_EVENT = {
 function SpaceEvent(p_x, p_y, p_symbol) {
 	this.kind = KIND_EVENT.SPACE;
 	this.symbol = p_symbol;
-	this.coorX = p_x;
-	this.coorY = p_y;
+	this.x = p_x;
+	this.y = p_y;
 }
 
 SpaceEvent.prototype.toLogString = function() {	
-	return "["+this.symbol+" "+this.coorX+","+this.coorY+"]";
+	return "["+this.symbol+" "+this.x+","+this.y+"]";
 }
 
 SpaceEvent.prototype.copy = function() {
-	return new SpaceEvent(this.coorX, this.coorY, this.symbol);
+	return new SpaceEvent(this.x, this.y, this.symbol);
 }
 
 SpaceEvent.prototype.opening = function() {
 	return this.symbol;
 }
 
-SpaceEvent.prototype.x = function() {
-	return this.coorX;
+SpaceEvent.prototype.coordinateX = function() {
+	return this.x;
 }
 
-SpaceEvent.prototype.y = function() {
-	return this.coorY;
+SpaceEvent.prototype.coordinateY = function() {
+	return this.y;
 }
 
 // -----------
 function ShapeEvent(p_x, p_y, p_shape) { // Item indépendant de SpaceEvent, mais qui nécessite le constructeur new...
 	this.kind = KIND_EVENT.SHAPE;
 	this.shape = p_shape;
-	this.coorX = p_x;
-	this.coorY = p_y;
+	this.x = p_x;
+	this.y = p_y;
 }
 
 ShapeEvent.prototype.copy = function() {
-	return new ShapeEvent(this.coorX, this.coorY, this.shape);
+	return new ShapeEvent(this.x, this.y, this.shape);
 }
 
 ShapeEvent.prototype.toLogString = function() {	
-	return "[S"+this.shape+" "+this.coorX+","+this.coorY+"]";
+	return "[S"+this.shape+" "+this.x+","+this.y+"]";
 }
 
 ShapeEvent.prototype.evolveIntoSpaceEvent = function() {
@@ -54,12 +54,12 @@ ShapeEvent.prototype.evolveIntoSpaceEvent = function() {
 }
 
 // Methods necessary for transforming
-ShapeEvent.prototype.x = function() {
-	return this.coorX;
+ShapeEvent.prototype.coordinateX = function() {
+	return this.x;
 }
 
-ShapeEvent.prototype.y = function() {
-	return this.coorY;
+ShapeEvent.prototype.coordinateY = function() {
+	return this.y;
 }
 
 ShapeEvent.prototype.opening = function() {

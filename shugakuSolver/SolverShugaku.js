@@ -172,14 +172,6 @@ SolverShugaku.prototype.emitHypothesisSpace = function(p_x, p_y, p_value, p_ok) 
 	}
 }
 
-SolverShugaku.prototype.emitHypothesisRight = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new FenceShugakuEvent(p_x, p_y, DIRECTION.RIGHT, p_symbol));
-}
-
-SolverShugaku.prototype.emitHypothesisDown = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new FenceShugakuEvent(p_x, p_y, DIRECTION.DOWN, p_symbol));
-}
-
 SolverShugaku.prototype.emitPassSpace = function(p_x, p_y) {
 	const generatedEvents = this.generateEventsForSpacePass({x : p_x, y : p_y});
 	this.passEvents(generatedEvents, {x : p_x, y : p_y}); 
@@ -218,7 +210,7 @@ applyEventClosure = function(p_solver) {
 			p_solver.fencesGrid.setFence(x, y, dir, state);
 			return EVENT_RESULT.SUCCESS;
 		} else {
-			return p_solver.putNewInSpace(p_eventToApply.coorX, p_eventToApply.coorY, p_eventToApply.symbol, p_eventToApply.choice);
+			return p_solver.putNewInSpace(p_eventToApply.x, p_eventToApply.y, p_eventToApply.symbol, p_eventToApply.choice);
 		}
 	}
 }
@@ -263,8 +255,8 @@ SolverShugaku.prototype.putNewInSpace = function(p_x, p_y, p_symbol, p_choice) {
 undoEventClosure = function(p_solver) {
 	return function(p_eventToUndo) {
 		if (p_eventToUndo.kind != FENCE_EVENT_KIND) {
-			const x = p_eventToUndo.coorX;
-			const y = p_eventToUndo.coorY;
+			const x = p_eventToUndo.x;
+			const y = p_eventToUndo.y;
 			const wasSquare = p_eventToUndo.symbol == SPACE_SHUGAKU.SQUARE;
 			if (p_eventToUndo.choice) {
 				p_solver.answerArray[y][x].unchoose(p_eventToUndo.symbol); 
@@ -356,8 +348,8 @@ deductionsClosure = function (p_solver) {
 		if (p_eventBeingApplied.kind != FENCE_EVENT_KIND) {
 			// TODO : if two identical shapes are adjacent from each other, close the fence between them.
 			
-			const x = p_eventBeingApplied.coorX;
-			const y = p_eventBeingApplied.coorY;
+			const x = p_eventBeingApplied.x;
+			const y = p_eventBeingApplied.y;
 			const choice = p_eventBeingApplied.choice;
 			const symbol = p_eventBeingApplied.symbol;
 			if (symbol == SPACE_SHUGAKU.OPEN) {
@@ -697,7 +689,7 @@ comparison = function(p_event1, p_event2) {
 	const k2 = isChoiceEvent(p_event2) ? 0 : 1;
 	return commonComparisonMultiKinds([0, 1], 
 		[
-		[p_event1.coorY, p_event1.coorX, p_event1.symbol, p_event1.choice], [p_event2.coorY, p_event2.coorX, p_event2.symbol, p_event2.choice],
+		[p_event1.y, p_event1.x, p_event1.symbol, p_event1.choice], [p_event2.y, p_event2.x, p_event2.symbol, p_event2.choice],
 		[p_event1.fenceY, p_event1.fenceX, p_event1.direction, p_event1.state], [p_event2.fenceY, p_event2.fenceX, p_event2.direction, p_event2.state]
 		], k1, k2);
 }
@@ -763,7 +755,7 @@ function searchClosure(p_solver) {
 						if (result != DEDUCTIONS_RESULT.FAILURE) {							
 							nbDeductions = p_solver.numberOfRelevantDeductionsSinceLastHypothesis();
 							if (bestIndex.nbD < nbDeductions) {
-								bestIndex = {nbD : nbDeductions , x : event_.coorX, y : event_.coorY}
+								bestIndex = {nbD : nbDeductions , x : event_.x, y : event_.y}
 							}
 							p_solver.undoToLastHypothesis();
 						}

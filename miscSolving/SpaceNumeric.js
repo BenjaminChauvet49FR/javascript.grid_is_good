@@ -64,6 +64,10 @@ SpaceChoice.prototype.getState = function(p_number) {
 	return this.possibilities[this.selectPrivateIndex(p_number)];
 }
 
+SpaceChoice.prototype.noAvailableValue = function() {
+	return this.numberPossibilities <= 0;
+}
+
 SpaceNumeric.prototype.getMin = function() {
 	return this.offset;
 }

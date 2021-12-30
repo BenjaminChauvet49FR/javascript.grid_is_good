@@ -1,25 +1,25 @@
 function SpaceEvent(p_x, p_y, p_symbol) {
 	this.symbol = p_symbol;
-	this.coorX = p_x;
-	this.coorY = p_y;
+	this.x = p_x;
+	this.y = p_y;
 }
 
 SpaceEvent.prototype.toLogString = function() {	
-	return "["+this.symbol+" "+this.coorX+","+this.coorY+"]";
+	return "["+this.symbol+" "+this.x+","+this.y+"]";
 }
 
 SpaceEvent.prototype.copy = function(){
-	return new SpaceEvent(this.coorX, this.coorY, this.symbol);
+	return new SpaceEvent(this.x, this.y, this.symbol);
 }
 
 SpaceEvent.prototype.opening = function() {
 	return this.symbol;
 }
 
-SpaceEvent.prototype.x = function() {
-	return this.coorX;
+SpaceEvent.prototype.coordinateX = function() {
+	return this.x;
 }
 
-SpaceEvent.prototype.y = function() {
-	return this.coorY;
+SpaceEvent.prototype.coordinateY = function() {
+	return this.y;
 }
