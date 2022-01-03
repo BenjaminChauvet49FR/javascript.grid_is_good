@@ -468,18 +468,6 @@ GeneralSolver.prototype.multiPass = function(p_passTools) {
 	return answer;
 }
 
-function isPassSerie (p_eventsSerie) {
-	return p_eventsSerie.kind == SERIE_KIND.PASS;
-}
-
-function isQuickStart(p_eventsSerie) {
-	return p_eventsSerie.kind == SERIE_KIND.QUICKSTART;
-}
-
-function isGlobalDeduction(p_eventsSerie) {
-	return p_eventsSerie.kind == SERIE_KIND.GLOBAL_DEDUCTION;
-}
-
 // --------------------------------
 // Quickstart
 
@@ -515,6 +503,7 @@ GeneralSolver.prototype.quickStart = function() {
 	if (ok) {
 		this.quickStartDone = true;
 		this.setStateHappening(QUICKSTART_RESULT.SUCCESS);
+		return QUICKSTART_RESULT.SUCCESS;
 	} else {
 		var noooList;
 		while (this.happenedEventsSeries.length > 0) {
@@ -522,6 +511,7 @@ GeneralSolver.prototype.quickStart = function() {
 			// this.undoEventList(noooList.list, this.methodsSetDeductions.undoEventMethod); Actually, seeing where something went wrong is a good idea. Don't undo stuff !
 		}
 		this.setStateHappening(QUICKSTART_RESULT.FAILURE);
+		return QUICKSTART_RESULT.FAILURE;
 	}
 }
 
@@ -617,22 +607,8 @@ shouldBeLoggedEvent = function(p_event) {
 
 
 
-
-
 // --------------------------------
-// Resolution
-
-// Fun note : "isSolved" method is not standard, but rather fully managed by each solver.
-
-// Note : generic method that leaves big freedom to the solver such as how many steps required.
-// Methods needed : quickStartMethod to perform quickStart(s), and searchSolutionMethod
-GeneralSolver.prototype.resolve = function(p_value) {
-	if (!this.quickStartDone) {
-		this.quickStart(); 
-	}
-	answer = this.setResolution.searchSolutionMethod();
-	this.setStateHappening(answer);
-}
+// Hypothesis and series handling (for resolution among others)
 
 // Count all the last events down to the most recent hypothese
 // Note : the serie must contain at least one hypothesis, which means it cannot be tested on harmless deductions (that don't add an hypothesis serie)
@@ -655,23 +631,108 @@ GeneralSolver.prototype.numberOfRelevantDeductionsSinceLastHypothesis = function
 	return sum;
 }
 
+GeneralSolver.prototype.isHypothese = function(p_serie) {
+	return (p_serie.kind == SERIE_KIND.HYPOTHESIS);
+}
+
+GeneralSolver.prototype.getHypothese = function(p_serie) {
+	return (p_serie.list[0]);
+}
+
+function isPassSerie (p_eventsSerie) {
+	return p_eventsSerie.kind == SERIE_KIND.PASS;
+}
+
+function isQuickStart(p_eventsSerie) {
+	return p_eventsSerie.kind == SERIE_KIND.QUICKSTART;
+}
+
+function isGlobalDeduction(p_eventsSerie) {
+	return p_eventsSerie.kind == SERIE_KIND.GLOBAL_DEDUCTION;
+}
+
+// --------------------------------
+// Resolution
+
+const EXAMPLE_SPECIAL_OPTIONS_RESOLVE = {retainOneSolution : false}
+
+// Fun note : "isSolved" method is not standard, but rather fully managed by each solver.
+// Methods needed : quickStartMethod to perform quickStart(s), and searchSolutionMethod
+// Note : this method works with tryAllPossibilities in order to find two solutions at most. It doesn't look for more. 
+GeneralSolver.prototype.resolve = function(p_specialOptions) {
+	if (p_specialOptions && p_specialOptions.retainOneSolution == false) {
+		this.retainOneSolution = false;
+	} else {
+		this.retainOneSolution = true;
+	}
+	if (!this.quickStartDone) {
+		const qsState = this.quickStart();
+		if (qsState == QUICKSTART_RESULT.FAILURE) {
+			return RESOLUTION_RESULT.FAILURE;
+		}
+	}
+	this.solutionsFoundCount = 0;
+	this.indexFirstUndecidedHypothesis = -1;
+	this.notTriedEventsSolution = [];
+	this.hypothesesToSolution = [];
+	this.atLeastOneSolution = false; // Bool for when searching two solutions at most.
+	var solutionRes = this.setResolution.searchSolutionMethod();
+	if (this.hypothesesToSolution.length != 0 && !this.setResolution.isSolvedMethod()) {
+		while (this.happenedEventsSeries.length > 0) {				
+			this.undoToLastHypothesis();
+		}
+		this.quickStart();
+		for (var k = 0 ; k < this.hypothesesToSolution.length ; k++) {
+			this.tryToApplyHypothesis(this.hypothesesToSolution[k]);
+		}
+		this.setResolution.searchSolutionMethod();
+	}
+	this.setStateHappening(solutionRes);
+	return solutionRes;
+}
+
 // Kinda like pass. Except we are doing ever more stuff because we are looking for one solution of the puzzle.
+// We are also noting all the possibilites that have not been tried at the first divergence point of the solution. 
 GeneralSolver.prototype.tryAllPossibilities = function(p_eventChoice)  {	
-	const previousLength = this.happenedEventsSeries.length;
+	const lengthBeforeHypothesis = this.happenedEventsSeries.length; 
 	var ok = true;
 	for (var i = 0 ; i < p_eventChoice.length ; i++) {
 		ok = (this.tryToApplyHypothesis(p_eventChoice[i]) != DEDUCTIONS_RESULT.FAILURE);
 		if (ok) {
-			const attemptAnswer = this.setResolution.searchSolutionMethod();
+			const attemptAnswer = this.setResolution.searchSolutionMethod(); // Only recursive call !
 			if (attemptAnswer == RESOLUTION_RESULT.SUCCESS) {
-				return RESOLUTION_RESULT.SUCCESS;
+				this.solutionsFoundCount++;
+				if (this.solutionsFoundCount == 1 && this.retainOneSolution) {
+					this.copyFirstSolution();
+				}
+				if (this.solutionsFoundCount == 2) {
+					return RESOLUTION_RESULT.MULTIPLE;
+				}
+				
+			} else if (attemptAnswer == RESOLUTION_RESULT.MULTIPLE) {
+				return RESOLUTION_RESULT.MULTIPLE;
+			}
+			while (this.happenedEventsSeries.length > lengthBeforeHypothesis) {				
+				this.undoToLastHypothesis();
 			}
 		}
-		while (this.happenedEventsSeries.length > previousLength) {				
-			this.undoToLastHypothesis();
-		}
+	} // To for loop
+	if (this.solutionsFoundCount == 1) {
+		return RESOLUTION_RESULT.SUCCESS;
+	}
+	if (this.solutionsFoundCount == 2) {
+		return RESOLUTION_RESULT.MULTIPLE;
 	}
 	return RESOLUTION_RESULT.FAILURE;
+}
+
+GeneralSolver.prototype.copyFirstSolution = function() {
+	for (var k = 0 ; k < this.happenedEventsSeries.length ; k++) {
+		if (this.isHypothese(this.happenedEventsSeries[k])) {
+			this.hypothesesToSolution.push(
+				this.methodsSetPass.copyMethod(this.getHypothese(this.happenedEventsSeries[k]))); 
+		}
+	}
 }
 
 // --------------------------------

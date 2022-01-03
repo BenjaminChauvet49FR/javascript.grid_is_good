@@ -76,7 +76,9 @@ loadActionCOMPLETE = function(p_canvas, p_drawer, p_gameItems, p_puzzleTypeName,
 	const localStorageName = getLocalStorageName(p_puzzleTypeName, p_dataName);
 	const loadedString = localStorage.getItem(localStorageName);
 	if (loadedString) {
-		loadPuzzleCOMPLETE(p_canvas, p_drawer, p_gameItems, loadedString, p_extraProperties); // Naming constraint !!! Each puzzle that uses "input" and has purificators should use this method.
+		if (confirm("Charger le puzzle '" + localStorageName + "' ?")) {			
+			loadPuzzleCOMPLETE(p_canvas, p_drawer, p_gameItems, loadedString, p_extraProperties); // Naming constraint !!! Each puzzle that uses "input" and has purificators should use this method.
+		}
 	} else {
         alert("Le stockage local n'a pas de propriété nommée '" + localStorageName + "'.");
     }

@@ -31,7 +31,8 @@ SolverShugaku.prototype.construct = function(p_numberSymbolsArray) {
 	this.methodsSetMultipass = {generatePassEventsMethod : generateEventsForSpacePassClosure(this), orderPassArgumentsMethod : orderedListPassArgumentsClosure(this), passTodoMethod : multipassDefineTodoClosure(this)};
 	this.setResolution = {
 		quickStartEventsMethod : quickStartEventsClosure(this),
-		searchSolutionMethod : searchClosure(this)
+		searchSolutionMethod : searchClosure(this),
+		isSolvedMethod : isSolvedClosure(this)
 	}
 	
 	this.answerArray = [];	
@@ -172,6 +173,14 @@ SolverShugaku.prototype.emitHypothesisSpace = function(p_x, p_y, p_value, p_ok) 
 	}
 }
 
+SolverShugaku.prototype.emitHypothesisRight = function(p_x, p_y, p_symbol) {
+	this.tryToApplyHypothesis(new FenceShugakuEvent(p_x, p_y, DIRECTION.RIGHT, p_symbol));
+}
+
+SolverShugaku.prototype.emitHypothesisDown = function(p_x, p_y, p_symbol) {
+	this.tryToApplyHypothesis(new FenceShugakuEvent(p_x, p_y, DIRECTION.DOWN, p_symbol));
+}
+
 SolverShugaku.prototype.emitPassSpace = function(p_x, p_y) {
 	const generatedEvents = this.generateEventsForSpacePass({x : p_x, y : p_y});
 	this.passEvents(generatedEvents, {x : p_x, y : p_y}); 
@@ -249,6 +258,7 @@ SolverShugaku.prototype.putNewInSpace = function(p_x, p_y, p_symbol, p_choice) {
 			});
 		}
 	}
+	
 	return EVENT_RESULT.SUCCESS;
 }
 
@@ -730,6 +740,12 @@ SolverShugaku.prototype.isSolved = function() {
 	return true; 
 }
 
+function isSolvedClosure(p_solver) {
+	return function() {
+		return p_solver.isSolved();
+	}
+}
+
 function searchClosure(p_solver) {  
 	return function() {
 		var mp = p_solver.multiPass(p_solver.methodsSetMultipass);
@@ -755,7 +771,7 @@ function searchClosure(p_solver) {
 						if (result != DEDUCTIONS_RESULT.FAILURE) {							
 							nbDeductions = p_solver.numberOfRelevantDeductionsSinceLastHypothesis();
 							if (bestIndex.nbD < nbDeductions) {
-								bestIndex = {nbD : nbDeductions , x : event_.x, y : event_.y}
+								bestIndex = {nbD : nbDeductions, x : event_.x, y : event_.y}
 							}
 							p_solver.undoToLastHypothesis();
 						}

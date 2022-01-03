@@ -141,7 +141,8 @@ LoopSolver.prototype.loopSolverConstruct = function(p_puzzleSpecificMethodPack) 
 		passTodoMethod : passDefineTodoClosure(this)
 	};
 	this.setResolution = {
-		quickStartEventsMethod : quickStartEventsLoopClosure(this) // Note : should you name it "quickStartEventsClosure" and name a closure in a lower-level solver the "quickStartEventsClosure" the same, the definition of the solver will be taken over this one, this
+		quickStartEventsMethod : quickStartEventsLoopClosure(this), // Note : should you name it "quickStartEventsClosure" and name a closure in a lower-level solver the "quickStartEventsClosure" the same, the definition of the solver will be taken over this one, this
+		isSolvedMethod : isSolvedClosure(this)
 	}
 	
 	
@@ -1092,6 +1093,12 @@ LoopSolver.prototype.isSolvedStandard = function() {
 		}
 	}	
 	return true;
+}
+
+function isSolvedClosure(p_solver) {
+	return function() {
+		return p_solver.isSolvedStandard();
+	}
 }
 
 loopNaiveSearchClosure = function(p_solver) {

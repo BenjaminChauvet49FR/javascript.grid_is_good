@@ -61,6 +61,7 @@ SolverStarBattle.prototype.construct = function(p_wallArray, p_starNumber) {
 	this.setResolution = {
 		quickStartEventsMethod : quickStartEventsClosure(this),
 		searchSolutionMethod : searchClosure(this),
+		isSolvedMethod : isSolvedClosure(this)
 	}
 	
 	
@@ -429,6 +430,12 @@ SolverStarBattle.prototype.isSolved = function() {
 		}
 	}
 	return true;
+}
+
+function isSolvedClosure(p_solver) {
+	return function() {
+		return p_solver.isSolved();
+	}
 }
 
 function searchClosure(p_solver) {

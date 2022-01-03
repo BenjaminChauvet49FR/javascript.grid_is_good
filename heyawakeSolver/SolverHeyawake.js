@@ -42,7 +42,8 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications, p_isAy
 	
 	this.setResolution = {
 		quickStartEventsMethod : quickStartEventsClosure(this),
-		searchSolutionMethod : searchClosure(this)
+		searchSolutionMethod : searchClosure(this),
+		isSolvedMethod : isSolvedClosure(this)
 	}
 	
 	this.isAyeHeya = p_isAyeHeya;
@@ -735,6 +736,12 @@ SolverHeyawake.prototype.isSolved = function() {
 	return true;
 }
 
+function isSolvedClosure(p_solver) {
+	return function() {
+		return p_solver.isSolved();
+	}
+}
+
 function searchClosure(p_solver) { //Exactly identical to Yajikabe. But will I have the same success with a naive deduction ? (puzzle 402... IT WORKED ! (anyway it was only the 402))
 	return function() {
 		var mp = p_solver.multiPass(p_solver.methodsSetMultipass);
@@ -769,7 +776,6 @@ function searchClosure(p_solver) { //Exactly identical to Yajikabe. But will I h
 		}
 		
 		// Naive recursion !
-		return p_solver.tryAllPossibilities([bestIndex.evt, new SpaceEvent(bestIndex.evt.x, bestIndex.evt.y, ADJACENCY.YES),
-		bestIndex.evt, new SpaceEvent(bestIndex.evt.x, bestIndex.evt.y, ADJACENCY.NO)]);
+		return p_solver.tryAllPossibilities([new SpaceEvent(bestIndex.evt.x, bestIndex.evt.y, ADJACENCY.YES), new SpaceEvent(bestIndex.evt.x, bestIndex.evt.y, ADJACENCY.NO)]);
 	}
 }

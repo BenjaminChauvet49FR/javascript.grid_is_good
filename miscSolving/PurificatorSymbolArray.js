@@ -77,15 +77,15 @@ PurificatorSymbolArray.prototype.construct = function(p_symbolArray) { // Only c
 // Doing and undoing
 
 purifyClosure = function(p_purificator) {
-	return function(p_index) {
-		if (p_index.sign == -1) {			
-			if (p_purificator.items[p_index.index].level > 0) { 
-				p_purificator.items[p_index.index].level--;
+	return function(p_actionId) {
+		if (p_actionId.sign == -1) {			
+			if (p_purificator.items[p_actionId.index].level > 0) { 
+				p_purificator.items[p_actionId.index].level--;
 				return ACTION_PURIFICATION.SUCCESS;
 			}
 		} else {
-			if (p_purificator.items[p_index.index].level < p_purificator.items[p_index.index].maxLevel) {
-				p_purificator.items[p_index.index].level++;
+			if (p_purificator.items[p_actionId.index].level < p_purificator.items[p_actionId.index].maxLevel) {
+				p_purificator.items[p_actionId.index].level++;
 				return ACTION_PURIFICATION.SUCCESS;
 			}
 		}
@@ -94,8 +94,8 @@ purifyClosure = function(p_purificator) {
 }
 
 undoPurifyClosure = function(p_purificator) {
-	return function(p_index) {
-		p_purificator.items[p_index.index].level -= p_index.sign;
+	return function(p_actionId) {
+		p_purificator.items[p_actionId.index].level -= p_actionId.sign;
 	}
 }
 
@@ -154,6 +154,23 @@ PurificatorSymbolArray.prototype.undo = function() {
 	this.undoPurification();
 }
 
+// p_loadingFromPurificatorMethod : method that takes a symbol array (returned from this purificator) and extra data.
+PurificatorSymbolArray.prototype.findMinimalPuzzlesSymbolArray = function(p_solver, p_loadingFromPurificatorMethod, p_symbolArray, p_extraLoadData) {
+	var indexes = [];
+	for (var i = 0 ; i < this.items.length; i++) {
+		if (this.items[i].level > 0) {			
+			indexes.push({index : i, sign : -1});
+		}
+	}
+	this.findMinimalPuzzles(indexes, p_solver, closureFromSymbolArrayPurificatorToPuzzle(this, p_loadingFromPurificatorMethod, p_symbolArray, p_extraLoadData));
+}
+// Method and closure are bound, in fact...
+function closureFromSymbolArrayPurificatorToPuzzle(p_purificatorSymbolArray, p_loadingFromPurificatorMethod, p_symbolArray, p_extraLoadData) {
+	return function(p_solver) {		
+		p_loadingFromPurificatorMethod(p_purificatorSymbolArray.alterateData(p_symbolArray), p_extraLoadData);
+	}
+}
+
 // ---------------
 // Getter
 
@@ -185,4 +202,11 @@ PurificatorSymbolArray.prototype.getPurificatorSpaceIfDifferent = function(p_x, 
 
 function DummyPurificatorSudoku() {
 	return new PurificatorSymbolArray(generateSymbolArray(9, 9));
+}
+
+// -------------
+// Interfacing
+
+PurificatorSymbolArray.prototype.toLogMinimalSetString = function(p_clueId) { 
+	return (this.items[p_clueId.index].x + "," + this.items[p_clueId.index].y);
 }

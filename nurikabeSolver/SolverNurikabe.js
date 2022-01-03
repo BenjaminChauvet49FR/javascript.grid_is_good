@@ -33,7 +33,8 @@ SolverNurikabe.prototype.construct = function(p_numericXArray) {
 	skipPassMethod : skipPassClosure(this) };
 	this.setResolution = {
 		quickStartEventsMethod : quickStartEventsClosure(this),
-		searchSolutionMethod : searchClosure(this)
+		searchSolutionMethod : searchClosure(this),
+		isSolvedMethod : isSolvedClosure(this)
 	}
 
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterBorderingNewlyExpandedIslandClosure(this), filterAffectedIslandSpacesClosure(this)]);
@@ -690,6 +691,12 @@ SolverNurikabe.prototype.isSolved = function() {
 		}
 	};
 	return true; 
+}
+
+function isSolvedClosure(p_solver) {
+	return function() {
+		return p_solver.isSolved();
+	}
 }
 
 function searchClosure(p_solver) {

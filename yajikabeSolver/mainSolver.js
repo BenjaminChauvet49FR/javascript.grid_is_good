@@ -55,9 +55,10 @@ function main() {
 	
 	// Purificator mode
 	buildInputCanvas("div_cleaning_canvas_buttons", actionsManagerSet.getActionsManager(1), "case", ENTRY.SPACE, [ACTION_PURIFY_SPACE, ACTION_UNPURIFY_SPACE]);
-	buildActionsGlobal("div_cleaning_global_actions", ["Annuler", "Sauver"], 
+	buildActionsGlobal("div_cleaning_global_actions", ["Annuler", "Sauver", "Recherche des puzzles minimaux"], 
 		[function(event){undoPurificationAction(purificator)}, 
-		 function(event){savePurifiedAction(purificator, puzzleTypeName, document.getElementById("input_grid_name").value)}]
+		 function(event){savePurifiedAction(purificator, puzzleTypeName, document.getElementById("input_grid_name").value)},
+		 function(event){findMinimalPuzzles(purificator, solver)}]
 	);
 	
 	// Manual mode

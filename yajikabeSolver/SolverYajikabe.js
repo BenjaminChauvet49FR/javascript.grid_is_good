@@ -35,7 +35,8 @@ SolverYajikabe.prototype.construct = function(p_combinationArray) {
 	};
 	this.setResolution = {
 		quickStartEventsMethod : quickStartEventsClosure(this),
-		searchSolutionMethod : searchClosure(this)
+		searchSolutionMethod : searchClosure(this),
+		isSolvedMethod : isSolvedClosure(this)
 	}
 
 	this.answerArray = [];
@@ -514,6 +515,12 @@ SolverYajikabe.prototype.isSolved = function() {
 		}
 	}	
 	return true;
+}
+
+function isSolvedClosure(p_solver) {
+	return function() {
+		return p_solver.isSolved();
+	}
 }
 
 function searchClosure(p_solver) {

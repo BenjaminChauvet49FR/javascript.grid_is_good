@@ -119,6 +119,11 @@ undoPurificationAction = function(p_purificator) {
 	p_purificator.undo();
 }
 
+findMinimalPuzzles = function(p_purificator, p_solver) {
+	p_purificator.findMinimalPuzzlesSymbolArray(p_solver, 
+		function(p_symbolArrayFromPur, p_extradata) {p_solver.construct(p_symbolArrayFromPur)}, 
+		p_purificator.recreateNewData(), {});
+}
 
 //--------------------------
 
