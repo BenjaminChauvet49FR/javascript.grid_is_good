@@ -6,7 +6,6 @@ function main() {
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
 	var actionsManager = {}; 
-	var drawIndications;
 
 	var colours = {
 		cross : '#880044', 

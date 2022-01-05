@@ -50,6 +50,10 @@ solveAction = function (p_solver) {
 	p_solver.makeResolution();
 }
 
+formerLimitsExplorationAction = function(p_solver) {
+ 	p_solver.makeFormerLimitsExploration();
+}
+
 //--------------------------
 
 /** 

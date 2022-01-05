@@ -71,8 +71,6 @@ SolverHeyawake.prototype.construct = function(p_wallArray, p_indications, p_isAy
 			expectedNumberOfClosedsInRegion : NOT_FORCED,
 			notPlacedYet : null,
 			size : spacesByRegion[ir].length
-			//horizontalInnerStripesIndexes : [],
-			//verticalInnerStripesIndexes : [] 
 		});
 		if (this.isAyeHeya) {
 			var halfList = [];

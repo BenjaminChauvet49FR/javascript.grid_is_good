@@ -14,6 +14,9 @@ function createReferenceElement(p_path, p_displayedText, p_hoverText) {
 
 function addMenuPart(p_divElement, p_menuPart) {
 	addText(p_divElement, p_menuPart.displayName+" : ");
+	p_menuPart.typeList.sort(function(a, b) {
+		return (b.displayName > a.displayName ? -1 : (a.displayName > b.displayName ? 1 : 0));
+	});
 	p_menuPart.typeList.forEach( type => {
 		p_divElement.appendChild(createReferenceElement(getHTMLpath(p_menuPart.documentPage, type.name), type.displayName, type.hoverDescription));
 		addText(p_divElement, " ");		

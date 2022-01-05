@@ -81,6 +81,12 @@ solveAction = function (p_solver) {
 	p_solver.makeResolution();
 }
 
+//
+
+formerLimitsExplorationAction = function(p_solver) {
+ 	p_solver.makeFormerLimitsExploration();
+}
+
 // 
 
 undoPurificationAction = function(p_purificator) {

@@ -99,3 +99,49 @@ GeneralSolver.prototype.callStateForItem = function(p_item) {
 		}
 	}
 }
+
+// --------------------------------
+// Manual logs
+
+GeneralSolver.prototype.happenedEventsLogQuick = function() {
+	return this.happenedEventsLog({quick : true});
+}
+
+GeneralSolver.prototype.happenedEventsLogComplete = function() {
+	return this.happenedEventsLog({complete : true});
+}
+
+GeneralSolver.prototype.happenedEventsLog = function(p_options) {
+	answer = "";
+	const displayQuick = (p_options && p_options.quick);
+	const displayComplete = (p_options && p_options.complete);
+	this.happenedEventsSeries.forEach(eventSerie => {
+		if (eventSerie.kind == SERIE_KIND.PASS) {
+			answer += "Pass - " + eventSerie.label + " ";
+		} else if (eventSerie.kind == SERIE_KIND.GLOBAL_DEDUCTION) {
+			answer += "Global deduction - " + eventSerie.label + " ";
+		} else if (eventSerie.kind == SERIE_KIND.QUICKSTART) {
+			answer += "Quickstart - " + (
+			(eventSerie.label && eventSerie.label != null && eventSerie.label != "") ? (eventSerie.label + " ") : "" );
+		} else {
+			answer += "Hypothesis - " + (displayQuick ? eventSerie.list[0] : "");
+		} 
+		if (!displayQuick) {
+			for (var i = 0 ; i < eventSerie.list.length ; i++) {
+				event_ = eventSerie.list[i];
+				if (displayComplete || (eventSerie.kind == SERIE_KIND.HYPOTHESIS && i == 0) || shouldBeLoggedEvent(event_)) { // Note : shouldBeLoggedEvent is a reserved name now !						
+					answer += event_.toLogString(this) + " ";
+				}
+			}
+		}
+		if (answer.charAt(answer.length - 2) == '-' && answer.charAt(answer.length - 1) == ' ') { // Scrap superfluous characters
+			answer = answer.substring(0, answer.length-2);
+		}
+		answer += "\n";
+	});
+	console.log(answer); // If 'answer' is simply returned, hitting solver.happenedEventsLog() or its quick variation will keep the literal \n.
+}
+
+shouldBeLoggedEvent = function(p_event) {
+	return true;
+}

@@ -44,6 +44,10 @@ multipassAction = function (p_solver){
 	p_solver.generalSolve();
 }*/
 
+formerLimitsExplorationAction = function(p_solver) {
+ 	p_solver.makeFormerLimitsExploration();
+}
+
 //--------------------------
 
 /** 

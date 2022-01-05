@@ -50,7 +50,7 @@ multipassAction = function (p_solver) {
 }
 
 formerLimitsExplorationAction = function(p_solver) {
-	p_solver.makeFormerLimitsExploration();
+ 	p_solver.makeFormerLimitsExploration();
 }
 
 //--------------------------

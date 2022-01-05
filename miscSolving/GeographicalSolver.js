@@ -121,7 +121,7 @@ GeneralSolver.prototype.geographicalDeductionsPseudoFilter = function(p_appliedE
 			geoV.listGeographicalDeductionsApplied.forEach(geographicalDeduction =>
 				p_appliedEventsList.push(geographicalDeduction)
 			);
-			if (geoV.listGeographicalDeductionsToApply.length == 0) { // If not for 'deductions applied' we would miss some deductions in a step with new limits and without new open spaces (Shugaku 59 manual solving)...
+			if (geoV.listGeographicalDeductionsToApply.length == 0 && this.checkFormerLimits) { // If not for 'deductions applied' we would miss some deductions in a step with new limits and without new open spaces (Shugaku 59 manual solving)...
 				listEventsToApply = this.formerLimitsCheckPseudoFilter(p_appliedEventsList, p_methodPack);
 			}
 		} else {
@@ -163,7 +163,7 @@ In exit :
 listGeographicalDeductionsToApply : a list of GeographicalDeduction(x,y, OPEN|CLOSED) items
 listGeographicalDeductionsApplied : a list of {adjacency : true} items. Whenever it should be undone, the first element of adjacencyLimitSpacesList should be undone.
 */
-GeneralSolver.prototype.geographicalVerification = function (p_listNewXs, p_formerLimits) {
+GeneralSolver.prototype.geographicalVerification = function (p_listNewXs, p_formerLimits, p_manual) {
     //autoLogGeographical("Perform geographicalVerification");
     const checking = adjacencyCheck(p_listNewXs, this.adjacencyLimitGrid, p_formerLimits); 
 	if (checking.success) {
@@ -175,16 +175,18 @@ GeneralSolver.prototype.geographicalVerification = function (p_listNewXs, p_form
         checking.newBARRIER.forEach(space => {
             newListEvents.push(new GeographicalDeduction(space.x, space.y, ADJACENCY.NO));
         });
-		checking.newLimits.forEach(spaceLimit => {
-			//Store the ancient limit into the solved event (in case of undoing), then overwrites the limit at once and pushes it into
-			newListEventsApplied.push(new AdjacencyShiftEvent());
-			this.adjacencyLimitSpacesList.push({
-				x: spaceLimit.x,
-				y: spaceLimit.y,
-				formerValue: this.adjacencyLimitGrid[spaceLimit.y][spaceLimit.x].copy()
+		if (!p_manual) { // Limits not updated in case of manual check, since this is the only case where this is not in a deduction. Quite rare, however.
+			checking.newLimits.forEach(spaceLimit => {
+				//Store the ancient limit into the solved event (in case of undoing), then overwrites the limit at once and pushes it into
+				newListEventsApplied.push(new AdjacencyShiftEvent());
+				this.adjacencyLimitSpacesList.push({
+					x: spaceLimit.x,
+					y: spaceLimit.y,
+					formerValue: this.adjacencyLimitGrid[spaceLimit.y][spaceLimit.x].copy()
+				});
+				this.adjacencyLimitGrid[spaceLimit.y][spaceLimit.x] = spaceLimit.limit;
 			});
-			this.adjacencyLimitGrid[spaceLimit.y][spaceLimit.x] = spaceLimit.limit;
-		});
+		}
 		if (newListEvents.length || newListEventsApplied.length) {			
 			return {
 				result : GEOGRAPHICAL_DEDUCTION.SUCCESS,
@@ -205,18 +207,20 @@ GeneralSolver.prototype.geographicalVerification = function (p_listNewXs, p_form
     }
 }
 
+// Note : ideally, this.checkFormerLimits is true
 function exploreFormerLimitsClosure(p_solver) {
 	return function() {				
-		const geoV = p_solver.geographicalVerification([], this.adjacencyLimitSpacesList);
+		const geoV = p_solver.geographicalVerification([], p_solver.adjacencyLimitSpacesList, true);
 		var ok = (geoV.result != GEOGRAPHICAL_DEDUCTION.FAILURE); // Should be true...
 		var listEventsToApply = [];
 		if (ok) {
 			geoV.listGeographicalDeductionsToApply.forEach(geographicalDeduction =>
 				listEventsToApply.push(p_solver.methodsSetDeductions.retrieveGeographicalDeductionMethod(geographicalDeduction))
 			);
-			geoV.listGeographicalDeductionsApplied.forEach(applied => 
-				alert("Comment est-ce possible ?")
-			);
+			/*geoV.listGeographicalDeductionsApplied.forEach(geographicalDeduction => 
+				// Note : according to logs, it may happen
+				p_appliedEventsList.push(geographicalDeduction);
+			); */
 		}
 		var state;
 		var found = false;
@@ -233,11 +237,17 @@ function exploreFormerLimitsClosure(p_solver) {
 	}
 }
 
+GeneralSolver.prototype.setCheckFormerLimits = function(p_bool) {
+	this.checkFormerLimits = p_bool;
+}
+
 // -----------------------
 // Common input
 
 GeneralSolver.prototype.makeFormerLimitsExploration = function() {
+	this.checkFormerLimits = true;
 	this.applyGlobalDeduction(exploreFormerLimitsClosure(this), this.methodsSetDeductions, "Former limits check");
+	this.checkFormerLimits = false;
 }
 
 // -----------------------
@@ -319,7 +329,7 @@ isOccupiedClosure = function(p_methodOpening) {
 // ---------------
 // GeographicalDeduction - the object utilised by the adjacency checker.
 
-function GeographicalDeduction(p_x, p_y, p_opening) {
+function GeographicalDeduction(p_x, p_y, p_opening) { 
 	this.opening = p_opening;
 	this.x = p_x;
 	this.y = p_y;

@@ -37,6 +37,7 @@ function main() {
 	buildPuzzleManagementMenu("div_puzzle_management", "input_grid_name", "submit_load_grid", puzzleTypeName, defaultPuzzleValue);
 	putActionElementClick("submit_load_grid", function(event) {
 		loadActionCOMPLETE(canevas, drawer, {solver : solver, purificator : purificator}, puzzleTypeName, document.getElementById("input_grid_name").value);
+		resetCheckboxAdjacency(solver);
 	});
 
 	// A synthetizing game menu
@@ -59,5 +60,6 @@ function main() {
 		[function(event){undoPurificationAction(purificator)}, 
 		 function(event){savePurifiedAction(purificator, puzzleName(), document.getElementById("input_grid_name").value, {sudokuMode : getSudokuIdFromLabel(fieldMode.value)})}]
 	);
+	buildAdjacency("div_adjacency", solver, function(event){formerLimitsExplorationAction(solver)});		
 
 }

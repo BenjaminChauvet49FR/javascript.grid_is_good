@@ -128,3 +128,30 @@ function stuffWhenClickingClosure(p_methodOther, p_mainDivIDs, p_entriesManagers
 		p_entriesManagersSet.switchActionsManager(p_index);
 	}
 }
+
+// ----------------------
+// Geographical reference or not to former limits
+
+/* Building HTML - specificities of adjacency puzzles. Final look : 
+Vérification anciennes limites géographiques : <input type="checkbox" id="checkbox_former_limits" value="false"></input> <input type="submit" id="manual_former_limits_check">Vérification manuelle anciennes listes géo.</input>
+*/
+// Meant to appear near global deductions !
+function buildAdjacency(p_idGlobal, p_solver, p_manualAction) {
+	const mainDiv = document.getElementById(p_idGlobal);
+	mainDiv.append(document.createTextNode("Vérification automatiques anciennes limites géo. : "));
+	const checkboxFL = document.createElement("input");
+	checkboxFL.setAttribute("type", "checkbox");
+	checkboxFL.setAttribute("id", "checkbox_former_limits");
+	checkboxFL.setAttribute("value", "false");
+	checkboxFL.addEventListener('click', function(event) {
+		p_solver.setCheckFormerLimits(checkboxFL.checked);
+	});
+	mainDiv.appendChild(checkboxFL);
+	submitItem = createSubmitItem("manual_former_limits_check", "Vérification manuelle anciennes limites géo.");
+	submitItem.addEventListener('click', p_manualAction);
+	mainDiv.appendChild(submitItem);
+}
+
+function resetCheckboxAdjacency(p_solver) { 
+	p_solver.setCheckFormerLimits(document.getElementById("checkbox_former_limits").checked);
+}

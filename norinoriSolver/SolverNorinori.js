@@ -178,8 +178,7 @@ FAILURE : there is a different symbol in that space. We have done a wrong hypoth
 This is also used at grid start in order to put Xs in banned spaces, hence the check in the NO part.
 */
 SolverNorinori.prototype.putNew = function(p_x,p_y,p_symbol){
-	if ((p_x < 0) || (p_x >= this.xLength) || (p_y < 0) || (p_y >= this.yLength) || 
-	(this.answerArray[p_y][p_x] == p_symbol)){
+	if (this.answerArray[p_y][p_x] == p_symbol) {
 		return EVENT_RESULT.HARMLESS;
 	}
 	autoLogTryToPutNewGold("Putting into grid : "+p_x+" "+p_y+" "+p_symbol);
@@ -277,7 +276,7 @@ deductionsClosure = function (p_solver) {
 			}
 		}
 		
-		if (symbol == FILLING.YES){
+		if (symbol == FILLING.YES) {
 			//Alert on formed domino (down & up)
 			//If not, if neighbors are undecided and now have exactly 2 Os neighbors (reminder : they are added one by one)
 			//If this space has exactly one undecided neighbor and no O : add an O here.
@@ -291,13 +290,13 @@ deductionsClosure = function (p_solver) {
 				if(p_solver.answerArray[dy][dx] == FILLING.YES){
 					switch(coorsDir.direction) {
 						case(DIRECTION.UP) :
-							p_listEventsToApply = pushEventsDominoMadeVertical(p_listEventsToApply, x, y-1);break;
+							p_listEventsToApply = p_solver.pushEventsDominoMadeVerticalDeductions(p_listEventsToApply, x, y-1);break;
 						case(DIRECTION.RIGHT) :
-							p_listEventsToApply = pushEventsDominoMadeHorizontal(p_listEventsToApply, x, y);break;
+							p_listEventsToApply = p_solver.pushEventsDominoMadeHorizontalDeductions(p_listEventsToApply, x, y);break;
 						case(DIRECTION.DOWN) :
-							p_listEventsToApply = pushEventsDominoMadeVertical(p_listEventsToApply, x, y);break;
+							p_listEventsToApply = p_solver.pushEventsDominoMadeVerticalDeductions(p_listEventsToApply, x, y);break;
 						case(DIRECTION.LEFT) :
-							p_listEventsToApply = pushEventsDominoMadeHorizontal(p_listEventsToApply, x-1, y);break;
+							p_listEventsToApply = p_solver.pushEventsDominoMadeHorizontalDeductions(p_listEventsToApply, x-1, y);break;
 					}
 				} else if (p_solver.neighborsArray[dy][dx].Os == 2) {
 					p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(dx, dy, FILLING.NO)));
@@ -328,7 +327,7 @@ deductionsClosure = function (p_solver) {
 					}
 				}
 			}
-			p_listEventsToApply = p_solver.deductionsIfAloneAndCornered(p_listEventsToApply, x, y);
+			p_listEventsToApply = p_solver.ifAloneAndCorneredDeductions(p_listEventsToApply, x, y);
 		}
 		if (symbol == FILLING.NO) {
 			var alterX; 
@@ -343,18 +342,18 @@ deductionsClosure = function (p_solver) {
 				const dy = coorsDir.y;
 				const dir = coorsDir.direction;
 				if ((p_solver.neighborsArray[dy][dx].undecided == 0) &&
-					(p_solver.neighborsArray[dy][dx].Os == 0)){
+					(p_solver.neighborsArray[dy][dx].Os == 0)) {
 					p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(dx, dy, FILLING.NO)));
 				}
 				if (p_solver.isNotQualifiablePostPutX(dx,dy)){
 					p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(dx, dy, FILLING.NO)));
 				}
 				if ((p_solver.answerArray[dy][dx] == FILLING.YES) && (p_solver.distantNeighborExists(dx, dy, 2, dir))){
-					p_listEventsToApply = p_solver.deductionsIfAloneAndCornered(p_listEventsToApply, dx, dy);
+					p_listEventsToApply = p_solver.ifAloneAndCorneredDeductions(p_listEventsToApply, dx, dy);
 				}
-				if (p_solver.readyToBeCompletedDomino(dx, dy)){
+				if (p_solver.readyToBeCompletedDomino(dx, dy)) {
 					KnownDirections.forEach(direction2 => {
-						if(direction2 != OppositeDirection[dir]){
+						if(direction2 != OppositeDirection[dir]) {
 							if (p_solver.neighborExists(dx, dy, direction2) &&
 								p_solver.answerArray[dy + DeltaY[direction2]][dx + DeltaX[direction2]] == FILLING.UNDECIDED) {
 									p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(dx + DeltaX[direction2], dy + DeltaY[direction2], FILLING.YES)));	
@@ -371,13 +370,21 @@ deductionsClosure = function (p_solver) {
 /**
 Pushes six events corresponding to the surroundings of an horizontal domino given the left space
 */
-function pushEventsDominoMadeHorizontal(p_eventsToAdd, p_xLeft, p_yLeft) {
-	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xLeft+2, p_yLeft, FILLING.NO)));
-	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xLeft-1, p_yLeft, FILLING.NO)));
-	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xLeft, p_yLeft-1, FILLING.NO)));
-	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xLeft, p_yLeft+1, FILLING.NO)));
-	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xLeft+1, p_yLeft-1, FILLING.NO)));
-	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xLeft+1, p_yLeft+1, FILLING.NO)));
+SolverNorinori.prototype.pushEventsDominoMadeHorizontalDeductions = function(p_eventsToAdd, p_xLeft, p_yLeft) {
+	if (this.distantNeighborExists(p_xLeft, p_yLeft, 2, DIRECTION.RIGHT)) {		
+		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xLeft+2, p_yLeft, FILLING.NO)));
+	}
+	if (this.neighborExists(p_xLeft, p_yLeft, DIRECTION.LEFT)) {		
+		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xLeft-1, p_yLeft, FILLING.NO)));
+	}
+	if (this.neighborExists(p_xLeft, p_yLeft, DIRECTION.UP)) {		
+		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xLeft, p_yLeft-1, FILLING.NO)));
+		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xLeft+1, p_yLeft-1, FILLING.NO)));
+	}
+	if (this.neighborExists(p_xLeft, p_yLeft, DIRECTION.DOWN)) {		
+		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xLeft, p_yLeft+1, FILLING.NO)));
+		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xLeft+1, p_yLeft+1, FILLING.NO)));
+	}
 	return p_eventsToAdd;
 }
 
@@ -385,13 +392,21 @@ function pushEventsDominoMadeHorizontal(p_eventsToAdd, p_xLeft, p_yLeft) {
 /**
 Pushes six events corresponding to the surroundings of a vertical domino given the up space
 */
-function pushEventsDominoMadeVertical(p_eventsToAdd, p_xUp, p_yUp) {
-	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xUp, p_yUp+2, FILLING.NO)));
-	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xUp, p_yUp-1, FILLING.NO)));
-	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xUp-1, p_yUp+1, FILLING.NO)));
-	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xUp+1, p_yUp+1, FILLING.NO)));
-	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xUp-1, p_yUp, FILLING.NO)));
-	p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xUp+1, p_yUp, FILLING.NO)));
+SolverNorinori.prototype.pushEventsDominoMadeVerticalDeductions = function(p_eventsToAdd, p_xUp, p_yUp) {
+	if (this.distantNeighborExists(p_xUp, p_yUp, 2, DIRECTION.DOWN)) {	
+		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xUp, p_yUp+2, FILLING.NO)));
+	}
+	if (this.neighborExists(p_xUp, p_yUp, DIRECTION.UP)) {
+		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xUp, p_yUp-1, FILLING.NO)));
+	}
+	if (this.neighborExists(p_xUp, p_yUp, DIRECTION.LEFT)) {
+		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xUp-1, p_yUp+1, FILLING.NO)));
+		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xUp-1, p_yUp, FILLING.NO)));
+	}
+	if (this.neighborExists(p_xUp, p_yUp, DIRECTION.RIGHT)) {
+		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xUp+1, p_yUp+1, FILLING.NO)));
+		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xUp+1, p_yUp, FILLING.NO)));
+	}
 	return p_eventsToAdd;
 }
 
@@ -427,7 +442,7 @@ SolverNorinori.prototype.directionFillingNo = function(p_x, p_y, p_dir) {
 Tests if an O in a space is alone and "cornered" (for all four corners)
 The (p_x,p_y) space must contain an O.
 */
-SolverNorinori.prototype.deductionsIfAloneAndCornered = function(p_eventsToAdd, p_x, p_y) {
+SolverNorinori.prototype.ifAloneAndCorneredDeductions = function(p_eventsToAdd, p_x, p_y) {
 	if (this.neighborsArray[p_y][p_x].Os == 1) {
 		return p_eventsToAdd;
 	}

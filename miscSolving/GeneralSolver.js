@@ -65,7 +65,6 @@ const RESOLUTION_RESULT = {
 	SEARCHING : 52
 }
 
-
 // ----------------
 // Initialisation
 
@@ -82,36 +81,39 @@ GeneralSolver.prototype.generalConstruct = function() {
 	
 	// In the setup, defining methods in method packs (for deductions, pass, multipass) is actually the right thing to do.
 	
-	// Needs to be overwritten !
-	this.automaticMode = true; // Note : will be built over
+	// Manual part ! Needs to be overwritten by solver.
+	this.automaticMode = true;
 	this.manualEventsList = [];
 
+	// Note : a puzzle should also contain the following method sets :
+	// -methodsSetDeductions, which is described in the tryToApplyHypothesis.
 }
 
 // ----------------
 // Deductions, geographical verification, undoing
 
-/** TODO : REWRITE THIS LOG ! (Historical...)
-	Generic method for any solver that includes a global adjacency check
-	
-	p_startingEvent : PRE (puzzle-related event, described below ; it must have a set of methods) that can lead to consequences
-	
-	p_methodPack : object that must contain the following methods (may be closures) :
-	applyEventMethod : method that states how to apply the PRE (e.g. fill a space in a grid and modify numbers in the cluster). 
-	If the PRE has several potential forms, this method must give the behaviour for each form. Must return EVENT_RESULT.FAILURE, EVENT_RESULT.SUCCESS or EVENT_RESULT.HARMLESS
-	deductionsMethod : method that updates the list of events to apply as deductions to the one being applied. Must return the list of PREs potentially updated with new PRE's.
-	undoEventMethod : method to undo a PRE.
-	
-	If the puzzle is geographical (one unique cluster), the following methods must be added : 
-	adjacencyMethod : method that takes (x,y) and must return whether the space (x,y) must be considered open. The limitation of one global cluster makes sense here.
-	retrieveGeographicalDeductionMethod : transforms the GeographicalDeduction (see corresponding class) into a PRE.
+/** 
 
-	Also, a few optionnal methods :
-	abortMethod : method so the puzzle solver is authorized to do vital stuff such as cleaning environment when a mistake is made. (If no aborting, this method isn't automatically called)
-	filters : list of methods that must each take no argument and return either a PRE list (that may be empty) or EVENT_RESULT.FAILURE if something went wrong. 
+	Generic method for any solver that applies an event if possible and logically deduces other event. Events are cancelled if an impossible event happens.
+	p_startingEvent : PRE (puzzle-related event, described below ; it must have a set of methods) that can lead to consequences
+
+	this.methodsSetDeductions must be defined and contain some of the following methods :
+	-always necessary :
+	- applyEventMethod : a method that states how to apply the PRE (e.g. fill a space in a grid and modify numbers in the cluster). 
+	- deductionsMethod : method that updates the list of events to apply as deductions to the one being applied. Must return the list of PREs potentially updated with new PRE's.
+	- undoEventMethod : method to undo a PRE.
+	
+	-necessary if the puzzle is geographical :
+	- adjacencyMethod : method that takes (x,y) and must return whether the space (x,y) must be considered open. The limitation of one global cluster makes sense here.
+	- retrieveGeographicalDeductionMethod : transforms the GeographicalDeduction (see corresponding class) into a PRE.
+
+	-optionnal :
+	- abortMethod : method so the puzzle solver is authorized to do vital stuff such as cleaning environment when a mistake is made. (If no aborting, this method isn't automatically called)
+	- filters : list of methods that must each take no argument and return either a PRE list (that may be empty) or EVENT_RESULT.FAILURE if something went wrong. 
 	These methods should allow to add new events that cannot/ should not be deducted by the application of a single PRE.
 	Order of filters matter for optimisation since as soon as the application of a filter returns a non-empty list, the chain breaks and returns to individual event applications (or aborts)
-	Warning : methods should be provided, not expressions of methods ! Also, don't forget the keyword "return" in both the closure and the method.
+	- compoundEventMethod : rarer ; only used for dealing with compound events. Not all puzzles use this. It should return a list of events (compound or not) 
+	Warning : methods should be provided (for this.applyEventMethod), not calls of methods ! Closures will likely be necessary since the solver will have to be called and (this.applyEventMethod cannot simply be "this.putIntoSpace", rather a closure applied with the solver itself) . Also, don't forget the keyword "return" in both the closure and the method.
 */
 GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent) {
 	var listEventsToApply = [p_startingEvent]; //List of the "events" type used by the solver. 
@@ -174,7 +176,7 @@ GeneralSolver.prototype.tryToApplyHypothesis = function (p_startingEvent) {
 			ok = (listEventsToApply != EVENT_RESULT.FAILURE);
 		}
     }
-    if (!ok) {
+    if (!ok) { 
 		if (this.methodsSetDeductions.abortMethods) {
 			this.methodsSetDeductions.abortMethods.forEach( abortMethod => {
 				abortMethod();
@@ -241,12 +243,20 @@ markCompoundEvent = function(p_event) {
 // ----------------
 // Pass and multipass
 
-/** TODO : REWRITE THIS LOG ! (Historical...)
-Passes a list of covering events (for instance, if a region contains spaces "1 2 3 4" and we want to apply a pass on it, it should have the following events :
+/**Passes a list of covering events (for instance, if a region contains spaces "1 2 3 4" and we want to apply a pass on it, it should have the following events :
  [[(open space 1),(close space 1)], [(open space 2),(close space 2)], [(open space 3),(close space 3)], [(open space 4),(close space 4)]]) 
  // p_methodSet : must contain applyEventMethod, deductionMethod, adjacencyClosureMethod, transformMethod, extras (or not)
  // p_eventsTools : must contain comparisonMethod, copyMethod, optionally argumentToLabelMethod
-
+ An event is 'in pass' if it is destined to be in the resulting list. By default, an event is in pass, to make it not in pass just add a property "outOfPass = true".
+ Events in the "list list" don't have to be in pass themselves. 
+ 
+ this.methodsSetPass must be defined and contain some of the following methods :
+ - p_eventsTools.comparisonMethod : compares in pass events (needs to compare any pair of in pass event)
+ - p_eventsTools.copyMethod : copies in pass events (needs to copy any in pass event)
+  
+ -Optionnal :
+ - argumentToLabelMethod : method that transforms a pass argument to a label
+ 
 */
 GeneralSolver.prototype.passEvents = function (p_listListCoveringEvent, p_passArgument) {
 	var listExtractedEvents = this.passEventsAnnex(p_listListCoveringEvent, 0);
@@ -339,7 +349,7 @@ function intersect(p_eventsListOld, p_eventsListNew, p_eventsTools) {
 	}
 }
 
-// Exclude methods that shouldn't be applied for sort and intersection. (such as events for the solver)
+// Exclude methods that shouldn't be applied for sort and intersection. (such as events for geographical solver, or min and max in ranged puzzles)
 // These events don't need to be compared or copied.
 // Let's not forget that the purpose of a pass is to deduct a serie of events that are common among the possible combinations of events and then to apply these events. The "unapplicable for pass" events will be applied anyway. 
 function filterUnsortableEvents(p_list) {
@@ -393,13 +403,12 @@ function commonComparison(p_twoArrays, p_arraysTwo) {
 
 /** TODO : REWRITE THIS LOG ! (Historical...)
 Performs a multipass
-p_passTools must contain the following methods :
+p_passTools must contain the following methods (unlike deduction and mono-passing, it isn't bound to the puzzle) :
 - generatePassEventsMethod : method that turns a pass argument into a list of "list of covering events" usable by the passing method)
 - orderPassArgumentsMethod : method that reorders the argument list, taking no argument and returning a list of pass arguments, each of which should be passed to p_generatePassEventsMethod)
 May be used only once at start or several times, depending on passTodoMethod
 - skipPassMethod (optional) : method that takes a pass argument and that determinates whether the set of possibilites designated by the pass argument is too big to be passed or not. The set of possibilities will have to be tested anyways if no other set has been tested so far in this cycle of multipasses.)
 - passTodoMethod (optional) : if defined, the orderedListPassArguments will be used only once by orderPassArgumentsMethod, and then reskipped. Useful when there are lots of items to pass and there is no point to sort them or recreate a list. Typically when passing all spaces or all fences in relevant solvers.
-p_methodSet, p_eventsTools : same arguments as in the pass method.
 */
 GeneralSolver.prototype.multiPass = function(p_passTools) {  
 	var oneMoreLoop;
@@ -550,64 +559,6 @@ GeneralSolver.prototype.applyGlobalDeduction = function(p_doStuffMethod, p_metho
 }
 
 // --------------------------------
-// For input (see GeneralSolverInterface)
-
-// Always call this method when changing the 'state' that is to be displayed by the viewer !
-GeneralSolver.prototype.setStateHappening = function(p_value) {
-	this.lastHappeningState = p_value;
-	this.stateChangedSinceLastRefresh = true;
-}
-
-// --------------------------------
-// Manual logs
-
-GeneralSolver.prototype.happenedEventsLogQuick = function() {
-	return this.happenedEventsLog({quick : true});
-}
-
-GeneralSolver.prototype.happenedEventsLogComplete = function() {
-	return this.happenedEventsLog({complete : true});
-}
-
-GeneralSolver.prototype.happenedEventsLog = function(p_options) {
-	answer = "";
-	const displayQuick = (p_options && p_options.quick);
-	const displayComplete = (p_options && p_options.complete);
-	this.happenedEventsSeries.forEach(eventSerie => {
-		if (eventSerie.kind == SERIE_KIND.PASS) {
-			answer += "Pass - " + eventSerie.label + " ";
-		} else if (eventSerie.kind == SERIE_KIND.GLOBAL_DEDUCTION) {
-			answer += "Global deduction - " + eventSerie.label + " ";
-		} else if (eventSerie.kind == SERIE_KIND.QUICKSTART) {
-			answer += "Quickstart - " + (
-			(eventSerie.label && eventSerie.label != null && eventSerie.label != "") ? (eventSerie.label + " ") : "" );
-		} else {
-			answer += "Hypothesis - " + (displayQuick ? eventSerie.list[0] : "");
-		} 
-		if (!displayQuick) {
-			for (var i = 0 ; i < eventSerie.list.length ; i++) {
-				event_ = eventSerie.list[i];
-				if (displayComplete || (eventSerie.kind == SERIE_KIND.HYPOTHESIS && i == 0) || shouldBeLoggedEvent(event_)) { // Note : shouldBeLoggedEvent is a reserved name now !						
-					answer += event_.toLogString(this) + " ";
-				}
-			}
-		}
-		if (answer.charAt(answer.length - 2) == '-' && answer.charAt(answer.length - 1) == ' ') { // Scrap superfluous characters
-			answer = answer.substring(0, answer.length-2);
-		}
-		answer += "\n";
-	});
-	console.log(answer); // If 'answer' is simply returned, hitting solver.happenedEventsLog() or its quick variation will keep the literal \n.
-}
-
-shouldBeLoggedEvent = function(p_event) {
-	return true;
-}
-
-
-
-
-// --------------------------------
 // Hypothesis and series handling (for resolution among others)
 
 // Count all the last events down to the most recent hypothese
@@ -733,6 +684,15 @@ GeneralSolver.prototype.copyFirstSolution = function() {
 				this.methodsSetPass.copyMethod(this.getHypothese(this.happenedEventsSeries[k]))); 
 		}
 	}
+}
+
+// --------------------------------
+// Ergonomic
+
+// Always call this method when changing the 'state' that is to be displayed by the viewer !
+GeneralSolver.prototype.setStateHappening = function(p_value) {
+	this.lastHappeningState = p_value;
+	this.stateChangedSinceLastRefresh = true;
 }
 
 // --------------------------------

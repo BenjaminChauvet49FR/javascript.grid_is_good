@@ -46,6 +46,7 @@ function main() {
 	buildPuzzleManagementMenu("div_puzzle_management", "input_grid_name", "submit_load_grid", puzzleTypeName, defaultPuzzleValue);
 	putActionElementClick("submit_load_grid", function(event) {
 		loadActionCOMPLETE(canevas, drawer, {solver : solver, purificator : purificator}, puzzleTypeName, document.getElementById("input_grid_name").value);
+		resetCheckboxAdjacency(solver);
 	});
 		
 	// A synthetizing game menu
@@ -62,6 +63,7 @@ function main() {
 	buildInputCanvas("div_solving_canvas2_buttons", actionsManagerSet.getActionsManager(0), "cloison", ENTRY.WALLS, [ACTION_OPEN_FENCE, ACTION_CLOSE_FENCE, ACTION_NOTHING]);
 	buildActionsGlobal("div_solving_global_actions", ["Démarrage rapide", "Multipasse", "Résolution", "Annuler"], 
 		[function(event){quickStartAction(solver)}, function(event){multipassAction(solver)}, function(event){solveAction(solver)}, function(event){undoAction(solver)}] );
+	buildAdjacency("div_adjacency", solver, function(event){formerLimitsExplorationAction(solver)});
 	
 	// Purificator mode
 	buildInputCanvas("div_cleaning_canvas_buttons", actionsManagerSet.getActionsManager(1), "case", ENTRY.SPACE, [ACTION_PURIFY_SPACE, ACTION_UNPURIFY_SPACE]);

@@ -137,9 +137,9 @@ quickStartEventsClosure = function(p_solver) {
 			if (p_solver.pearlArray[y][xMax-1] == PEARL.WHITE && (y != 0)) {
 				answer.push(new LinkEvent(xMax-1, y, DIRECTION.UP, LOOP_STATE.LINKED));
 			} else if (p_solver.pearlArray[y][xMax-1] == PEARL.BLACK) {
-				answer.push(new LinkEvent(xMax-2, y, DIRECTION.LEFT, LOOP_STATE.LINKED));  
+				answer.push(new LinkEvent(xMax-1, y, DIRECTION.LEFT, LOOP_STATE.LINKED));  
 			} else if (p_solver.pearlArray[y][xMax-2] == PEARL.BLACK) {
-				answer.push(new LinkEvent(xMax-3, y, DIRECTION.LEFT, LOOP_STATE.LINKED)); 
+				answer.push(new LinkEvent(xMax-2, y, DIRECTION.LEFT, LOOP_STATE.LINKED)); 
 			}
 		}
 		return answer;

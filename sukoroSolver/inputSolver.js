@@ -72,6 +72,12 @@ undoAction = function(p_solver) {
 	p_solver.undo();
 }
 
+//
+
+formerLimitsExplorationAction = function(p_solver) {
+ 	p_solver.makeFormerLimitsExploration();
+}
+
 // 
 
 undoPurificationAction = function(p_purificator) {
