@@ -16,7 +16,7 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
 				if (p_solver.areActiveClosedSpaces()) {
 					p_context.fillStyle = p_colorSet.noLinkState;
 					p_context.fillRect(pixInnerLeft, pixInnerUp, this.getPixInnerSide(), this.getPixInnerSide());
-				} else {
+				} else if (p_solver.areXsAutomaticallyDrawed()) {
 					this.drawCrossX(p_context, ix, iy, {color : p_colorSet.noLinkState});
 				}
             } else if (!p_solver.areAllOpenSpaces() && p_solver.getLinkSpace(ix, iy) == LOOP_STATE.LINKED) {
@@ -33,7 +33,7 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
             if (iy < ( p_solver.yLength-1)) {
 				if (p_solver.getLinkDown(ix, iy) == LOOP_STATE.LINKED) {
 					if (p_solver.getColorChains(ix, iy) != null) {
-						p_context.fillStyle = rainbowRoads[p_solver.getColorChains(ix, iy) % rainbowRoads.length];
+						p_context.fillStyle = COLOURS.LOOP_RAINBOW_ROADS[p_solver.getColorChains(ix, iy) % COLOURS.LOOP_RAINBOW_ROADS.length];
 					} else {
 						p_context.fillStyle = p_colorSet.presentLink;
 					}
@@ -51,7 +51,7 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
             if (ix < (p_solver.xLength-1)) {
 				if (p_solver.getLinkRight(ix, iy) == LOOP_STATE.LINKED) {
 					if (p_solver.getColorChains(ix, iy) != null) {
-						p_context.fillStyle = rainbowRoads[p_solver.getColorChains(ix, iy) % rainbowRoads.length];
+						p_context.fillStyle = COLOURS.LOOP_RAINBOW_ROADS[p_solver.getColorChains(ix, iy) % COLOURS.LOOP_RAINBOW_ROADS.length];
 					} else {
 						p_context.fillStyle = p_colorSet.presentLink;
 					}
@@ -73,11 +73,11 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
     }
 	if (p_solver.ergonomicOptions.displayOppositeEnds) {
 		const fontSize = this.pix.sideSpace / 3;
-		setupFont(p_context, fontSize, "Arial");
+		setupFont(p_context, fontSize, FONTS.ARIAL);
 		alignFontCenter(p_context);
 		p_context.fillStyle = p_colorSet.oppositeSpaceWrite;
 		if (!p_colorSet.oppositeSpaceWrite) {
-			p_context.fillStyle = "#000000";
+			p_context.fillStyle = COLOURS.LOOP_ERGONOMIC_OPPOSITE_END;
 		}
 		var pixLeft,pixUp;
 		var textToWrite;
@@ -93,18 +93,3 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_colorSet, p
 		}
 	}
 }
-
-rainbowRoads = [
-"#ff0000",
-"#00ff00",
-"#0000ff",
-"#ffff00",
-"#ff00ff",
-"#00ffff",
-"#ff0080",
-"#80ff00",
-"#0080ff",
-"#ff8000",
-"#00ff80",
-"#8000ff"
-]

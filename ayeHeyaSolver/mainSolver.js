@@ -8,10 +8,10 @@ function main() {
 	var actionsManager = {}; 
 
 	var colors = {
-		openSquare : '#00ffcc',
-		closedSquare : '#cc0022',
-		standardWrite : '#000000',
-		reflectWrite : '#ffff88'
+		openSpace : COLOURS.OPEN_SPREAD,
+		closedSpace : COLOURS.CLOSED_SPREAD,
+		standardWrite : COLOURS.STANDARD_NOT_CLOSED_WRITE,
+		reflectWrite : COLOURS.STANDARD_CLOSED_WRITE
 	}
 
 	//--------------------

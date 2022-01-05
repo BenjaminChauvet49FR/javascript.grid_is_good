@@ -43,14 +43,14 @@ SolverNurikabe.prototype.construct = function(p_numericXArray) {
 	this.islandGrid = Grid_data(p_numericXArray);
 	this.clusterManager = new ClusterManager(this.xLength, this.yLength);
 	this.islandList = [];
+	this.numericSpacesList = []; // public for drawing.
 	//this.inclusionArray = generateValueArray(this.xLength, this.yLength, NURIKABE_UNINCLUDED);
 	this.accessibleIslandsArray = generateFunctionValueArray(this.xLength, this.yLength, function(p_x, p_y) {return [NURIKABE_SEA];});
 	
 	var ix,iy;
 	// Initialize answerArray purified
-	for(iy = 0;iy < this.yLength ; iy++) {
-		//this.answerArray.push([]);
-		for(ix = 0;ix < this.xLength ; ix++) {
+	for(iy = 0 ; iy < this.yLength ; iy++) {
+		for(ix = 0 ; ix < this.xLength ; ix++) {
 			if (this.islandGrid.get(ix, iy) != null) {
 				//this.answerArray[iy].push(ADJACENCY.NO);
 				this.clusterManager.add(ix, iy);
@@ -66,6 +66,7 @@ SolverNurikabe.prototype.construct = function(p_numericXArray) {
 					accessibleSpaces : [],
 					spacesIncluded : []
 				}); 
+				this.numericSpacesList.push({x : ix, y : iy});
 			} else {
 				// Nothing now
 			}

@@ -45,6 +45,7 @@ SolverMoonsun.prototype.construct = function(p_wallArray, p_symbolsArray) {
 		}
 	}
 	
+	this.desactivateXsDrawing(); // Another "ergonomicOptions." possibility so that the drawer draws Xs itself, above moons and suns.
 }
 
 // -------------------

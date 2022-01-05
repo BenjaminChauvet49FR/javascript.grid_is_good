@@ -11,6 +11,7 @@ function yagitGetFenceDownClosure(p_solver) {
 }
 
 
+
 function drawing(p_context, p_drawer, p_colourSet, p_solver, p_extra) {
 	function getAreaIndex(p_x, p_y) {
 		switch (p_solver.getArea(p_x, p_y)) {
@@ -20,9 +21,23 @@ function drawing(p_context, p_drawer, p_colourSet, p_solver, p_extra) {
 		}
 	}
 	
-	const background = [DrawableColor(p_colourSet.circleArea), DrawableColor(p_colourSet.squareArea), DrawableColor("#ff8888")];
+	function getAreaIndexCBF(p_x, p_y) {
+		if (p_solver.yagitShapesGrid.get(p_x, p_y) == null) {			
+			switch (p_solver.getArea(p_x, p_y)) {
+				case YAGIT_SHAPE.ROUND : return 0; break;
+				case YAGIT_SHAPE.SQUARE : return 1; break;
+			}
+		}
+		return -1;
+	}
+	
+	const background = [DrawableColor(p_colourSet.circleArea), DrawableColor(p_colourSet.squareArea), DrawableColor(p_colourSet.deadEndArea)];
 	p_drawer.drawFenceArrayGhostPillars(p_context, p_solver.xLength, p_solver.yLength, yagitGetFenceRightClosure(p_solver), yagitGetFenceDownClosure(p_solver)); 	
-	p_drawer.drawSpaceContents(p_context, background, getAreaIndex, p_solver.xLength, p_solver.yLength);
+	p_drawer.drawSpaceContents2Dimensions(p_context, background, getAreaIndex, p_solver.xLength, p_solver.yLength);
+	if (p_extra.checkBoxColourblindFriendly.checked) {
+		const spacesFG = [DrawableLittleCircleUpperRight(p_colourSet.colourBlind), DrawableLittleSquareUpperRight(p_colourSet.colourBlind)];
+		p_drawer.drawSpaceContentsUpperRightCorner(p_context, spacesFG, getAreaIndexCBF, p_solver.xLength, p_solver.yLength);
+	}
 	p_drawer.drawYagitGrid(p_context, p_solver.yagitShapesGrid);
-	p_drawer.drawKnotsInRD(p_context, p_solver.yagitKnotsGrid);
+	p_drawer.drawKnotsInRD(p_context, p_solver.yagitKnotsGrid, COLOURS.KNOT_INNER, COLOURS.KNOT_BORDER);
 }

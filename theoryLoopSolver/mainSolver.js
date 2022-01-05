@@ -2,17 +2,17 @@ var solver ;
 
 function main() {
 	var colors= {
-		closed_wall:'#222222',
-		open_wall:'#dddddd',
-		edge_walls:'#000000',
-		bannedSpace:'#666666',
-		openSquare:'#00ffcc',
-		closedSquare:'#cc0022',
-		noLink:'#aa0000',
-		noLinkWall:'#ff8800',
-		presentLink:'#cc00ff',
-		noLinkState:'#448844',
-		presentLinkState:'#bbffdd'
+		closed_wall : COLOURS.CLOSED_WALL,
+		open_wall : COLOURS.OPEN_WALL,
+		edge_walls : COLOURS.EDGE_WALL,
+		bannedSpace : COLOURS.BANNED_SPACE,
+		openSpace : COLOURS.OPEN_WILD,
+		closedSpace : COLOURS.CLOSED_WILD,
+		noLink : COLOURS.NO_LINK,
+		noLinkWall : COLOURS.NO_LINK_WALL,
+		presentLink : COLOURS.LINK,
+		noLinkState : COLOURS.NO_LINK_SPACE,
+		presentLinkState:COLOURS.LINK_SPACE
 	}
 
 	var drawer = new Drawer(colors);

@@ -9,14 +9,14 @@ function main() {
 	var spanState = document.getElementById("span_resolution_state");
 
 	var colors = {
-		emptySquare : "#8888cc"
+		emptySpace : COLOURS.X_LIGHT
 	}
 
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
 		drawer.drawEmptyGrid(context, solver.xyLength, solver.xyLength); 
-		drawer.drawMarginLeftUpOne(context, solver.numbersMarginsLeft, solver.numbersMarginsUp);
+		drawer.drawMarginLeftUpOne(context, solver.numbersMarginsLeft, solver.numbersMarginsUp, FONTS.ARIAL);
 		drawInsideSpaces(context, drawer, colors, solver);
 		solver.callStateForItem(spanState);
 	}

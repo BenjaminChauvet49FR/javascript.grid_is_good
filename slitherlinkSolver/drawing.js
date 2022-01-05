@@ -10,8 +10,8 @@ function draw(p_context, p_drawer, p_colourSet, p_solver) {
 				default : return p_colourSet.undecidedLink; break;
 			}
 		}, 
-		function() {return DOTS_SIZE.MEDIUM})
-	p_drawer.drawNumbersInsideStandard(p_context, drawNumberClosure(p_solver, p_colourSet), p_solver.xLength-1, p_solver.yLength-1);
+		function() {return DOTS_SIZE.MEDIUM});
+	p_drawer.drawNumbersInsideStandardCoorsList(p_context, drawNumberClosure(p_solver, p_colourSet), p_solver.numericMeshCoordinatesList, FONTS.ARIAL);
 }
 
 drawNumberClosure = function(p_solver, p_colourSet) {

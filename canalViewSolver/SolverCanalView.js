@@ -55,7 +55,7 @@ SolverCanalView.prototype.construct = function(p_numericXArray) {
 	}
 
 	this.numericArray = [];
-	this.rangedSpacesCoors =  [];
+	this.rangedSpacesCoors = []; // Made public for drawing
 	
 	// Fully initialize numeric array & manage maxes in rows
 	var ix, iy;

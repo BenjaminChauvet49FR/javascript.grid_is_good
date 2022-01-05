@@ -24,9 +24,9 @@ function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver) {
 			return null;
 		} else {
 			const space = p_solver.getSpaceCoordinates(p_index, 0);
-			return new DrawRegionArgument(space.x, space.y, forcedValue, p_colourSet.writeRegionNumber) ;
+			return new DrawRegionArgument(space.x, space.y, forcedValue, p_colourSet.standardWrite) ;
 		}
 	}
 
-	p_drawer.drawRegionValues(p_context, selectionRegion, p_solver.regions.length, "Arial");
+	p_drawer.drawRegionIndications(p_context, selectionRegion, p_solver.regions.length, FONTS.ARIAL);
 }

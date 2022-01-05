@@ -45,6 +45,7 @@ SolverAkari.prototype.construct = function(p_numberSymbolArray) {
 	
 	this.answerArray = [];
 	this.numericArray = [];
+	this.numericSpacesList = []; // Public for drawing
 	this.setsAroundNumericSpaces = [];
 	var symbolOrNumber, number;
 	
@@ -59,6 +60,7 @@ SolverAkari.prototype.construct = function(p_numberSymbolArray) {
 				if (symbolOrNumber == "X") {
 					this.numericArray[iy].push({blocked : true, value : NOT_FORCED});
 				} else {
+					this.numericSpacesList.push({x : ix, y : iy});
 					number = parseInt(symbolOrNumber, 10);
 					this.numericArray[iy].push({blocked : true, value : number, notPlacedBulbsYet : number, notPlacedEmptiesYet : 4 - number, indexSetNumeric : -1}); // indexSetNumeric : for pass.
 				}

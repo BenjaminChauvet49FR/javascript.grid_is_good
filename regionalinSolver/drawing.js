@@ -9,10 +9,10 @@ function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver) {
 			return null;
 		} else {
 			const space = p_solver.getSpaceCoordinates(p_index, 0); 
-			const colour = (p_solver.getLinkSpace(space.x, space.y) == LOOP_STATE.CLOSED) ? p_colourSet.writeRegionNumberContrast : p_colourSet.writeRegionNumber
+			const colour = (p_solver.getLinkSpace(space.x, space.y) == LOOP_STATE.CLOSED) ? p_colours.reflectWrite : p_colours.standardWrite
 			return new DrawRegionArgument(space.x, space.y, forcedValue, colour) ;
 		}
 	}
 
-	p_drawer.drawRegionValues(p_context, selectionRegion, p_solver.regions.length, "Arial");
+	p_drawer.drawRegionIndications(p_context, selectionRegion, p_solver.regions.length, FONTS.ARIAL);
 }

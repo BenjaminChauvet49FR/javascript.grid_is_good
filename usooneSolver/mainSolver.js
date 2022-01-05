@@ -9,12 +9,11 @@ function main() {
 	var spanState = document.getElementById("span_resolution_state");
 
 	var colors = {
-		openSquare : '#00ffcc',
-		closedSquare : '#cc0022',
+		openSpace : COLOURS.OPEN_SPREAD,
+		closedSpace : COLOURS.CLOSED_SPREAD,
 		truth : '#88dd88',
 		lie : '#cc8800',
-		standardWrite : '#000000',
-		reflectWrite : "#ffff88",
+		numberWrite : '#000000'
 	}
 
 	//--------------------

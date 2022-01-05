@@ -1,13 +1,13 @@
 var solver;
 function main() {
 	const colours = {
-		noLink : '#aa0000',
-		noLinkWall:'#ff8800',		
-		presentLink : '#cc00ff',
+		noLink : COLOURS.NO_LINK,
+		noLinkWall : COLOURS.NO_LINK_WALL,		
+		presentLink : COLOURS.LINK,
 		numberWrite : '#008800',
 		turningSign : '#88ff88',
 		straightSign : '#8888ff',
-		writeRegionNumber : '#000044'
+		standardWrite : '#000044'
 	}
 
 	var drawer = new Drawer(colours);

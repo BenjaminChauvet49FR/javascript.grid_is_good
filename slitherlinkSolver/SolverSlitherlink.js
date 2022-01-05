@@ -36,7 +36,8 @@ SolverSlitherlink.prototype.construct = function(p_numberMeshGrid) {
 	this.setResolution.searchSolutionMethod = loopNaiveSearchClosure(this);
 
 	this.numericMeshArray = [];
-	this.numericMeshCoordinatesListAndPassArguments = []; // List of coordinates of numeric spaces
+	this.numericMeshCoordinatesListAndPassArguments = [];
+	this.numericMeshCoordinatesList = []; // List of coordinates of numeric spaces. Public.
 	var value;
 	for (var iy = 0 ; iy <= this.yLength-2 ; iy++) {
 		this.numericMeshArray.push([]);
@@ -44,6 +45,7 @@ SolverSlitherlink.prototype.construct = function(p_numberMeshGrid) {
 			value = p_numberMeshGrid[iy][ix];
 			if (value != null) {
 				this.numericMeshCoordinatesListAndPassArguments.push({passCategory : LOOP_PASS_CATEGORY.MESH, x : ix, y : iy});
+				this.numericMeshCoordinatesList.push({x : ix, y : iy});
 				this.numericMeshArray[iy].push({number : value, notLinkedCirclingEdgesYet : value, notClosedCirclingEdgesYet : 4 - value});
             } else {
 				this.numericMeshArray[iy].push({number : null});
@@ -88,8 +90,6 @@ SolverSlitherlink.prototype.conditionalNumberedMesh = function(p_answerCoorsList
 	}
 	return p_answerCoorsList;
 }
-
-
 
 // -------------------
 // Input methods

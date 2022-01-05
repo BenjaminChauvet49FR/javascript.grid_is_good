@@ -8,12 +8,12 @@ function main() {
 	var drawIndications;
 
 	var colors= {
-		openSquare : '#00ffcc',
-		closedSquare : '#cc0022',
+		openSpace : COLOURS.OPEN_WILD,
+		closedSpace : COLOURS.CLOSED_WILD,
 		insideIndicationsOnWhite : '#008800',
 		insideIndicationsOnFilled : '#00ff00',
-		standardWrite : '#000000',
-		reflectWrite : "#ffff88",
+		standardWrite : COLOURS.STANDARD_NOT_CLOSED_WRITE,
+		reflectWrite : COLOURS.STANDARD_CLOSED_WRITE
 	}
 
 	//--------------------

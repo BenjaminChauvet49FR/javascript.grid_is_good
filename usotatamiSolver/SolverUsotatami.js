@@ -48,7 +48,7 @@ SolverUsotatami.prototype.construct = function(p_numberGrid) {
 	}
 	
 	this.indicArray = []; // Spaces without number : ; with a number : {expansions left / up / right / down}
-	this.numberSpacesList = []; // For filters on numbers
+	this.numberSpacesList = []; // For filters on numbers ; also public for drawing
 	this.numberSpacesToCheckList = []; // For filters on numbers
 	for (var y = 0; y < this.yLength; y++) {
 		this.indicArray.push([]);

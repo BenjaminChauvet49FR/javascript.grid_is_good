@@ -2,7 +2,7 @@
 Draws what's inside spaces 
 */
 function drawInsideSpaces(p_context,p_drawer,p_color,p_solver) {
-	var items = [DrawableColor(p_color.openSquare),DrawableX(p_color.closedSquare), DrawableColor("#ffee88"), DrawableColor("#8800ff")];
+	var items = [DrawableColor(p_color.openSpace),DrawableX(p_color.closedSpace), DrawableColor('#ffee88'), DrawableColor('#8800ff')];
 	function selection(x, y) {
 		if(p_solver.getAnswer(x, y) == ADJACENCY.YES) {
 			return 0;
@@ -21,7 +21,7 @@ function drawInsideSpaces(p_context,p_drawer,p_color,p_solver) {
 		}
 		return -1;
 	}
-	p_drawer.drawSpaceContents(p_context,items,selection,p_solver.xLength,p_solver.yLength);
+	p_drawer.drawSpaceContents2Dimensions(p_context,items,selection,p_solver.xLength,p_solver.yLength);
 	p_drawer.drawPolyomino4x5TiledMap(p_context,document.getElementById("img_map"),16,selection2,0,p_solver.xLength,p_solver.yLength);
 }
 

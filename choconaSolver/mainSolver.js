@@ -9,11 +9,10 @@ function main() {
 	var spanState = document.getElementById("span_resolution_state");
 
 	var colors = {
-		openSquare : '#00ffcc',
 		chocolateSquare : '#ffcccc',
-		lackingSquare : '#bbbbbb',
-		insideIndicationsOnWhite : '#008800',
-		insideIndicationsOnFilled : '#0000ff',
+		lackingSquare : COLOURS.X_LIGHT,
+		standardWrite : '#000000',
+		reflectWrite : '#ffff88'
 	}
 
 	//--------------------

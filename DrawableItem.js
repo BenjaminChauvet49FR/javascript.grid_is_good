@@ -9,7 +9,8 @@ const KIND_DRAWABLE_ITEM = {
 	SQUARE : 5,
 	TRIANGLE : 6,
 	CIRCLE_UPPER_RIGHT : 101,
-	PLUS_UPPER_RIGHT : 102
+	PLUS_UPPER_RIGHT : 102,
+	SQUARE_UPPER_RIGHT : 103
 }
 
 /*
@@ -78,6 +79,13 @@ function DrawableLittleCircleUpperRight(p_color) {
 function DrawableLittlePlusUpperRight(p_color) { 
 	var item = new DrawableItem();
 	item.kind = KIND_DRAWABLE_ITEM.PLUS_UPPER_RIGHT;
+	item.color = p_color;
+	return item;
+}
+
+function DrawableLittleSquareUpperRight(p_color) { 
+	var item = new DrawableItem();
+	item.kind = KIND_DRAWABLE_ITEM.SQUARE_UPPER_RIGHT;
 	item.color = p_color;
 	return item;
 }

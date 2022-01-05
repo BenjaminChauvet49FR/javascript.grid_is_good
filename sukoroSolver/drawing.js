@@ -2,26 +2,36 @@
 Draws what's inside spaces 
 */
 function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver, p_purificator) {
-	function selectionOpening(p_x, p_y) {
+	function selectionSpace(p_x, p_y) {
+		// Note : no space background before quick start because of the design of the solver !
+		
 		const opening = p_solver.methodsSetDeductions.adjacencyMethod(p_x, p_y);
 	    if (opening == ADJACENCY.YES) {
-			return 0;
+			if (p_solver.isBlocked(p_x, p_y)) {
+				return 0;
+			} else {				
+				return 1;
+			}
 		} 
 		if (opening == ADJACENCY.NO) {
 			if (p_solver.isXSurroundedByNonX(p_x, p_y)) {
-				return 2;				
+				return 3;				
 			} else {				
-				return 1;
+				return 2;
 			}
 		}
 		return -1;
 	}
 	
-	const colours = [DrawableColor(p_colourSet.openSquare), DrawableX(p_colourSet.closedNearX), DrawableX(p_colourSet.closedFarX)];
+	function selectionOpening(p_x, p_y) {
+		return p_solver.methodsSetDeductions.adjacencyMethod(p_x, p_y) == ADJACENCY.YES ? 0 : -1;
+	}
 	
-	p_drawer.drawSpaceContents(p_context, colours, selectionOpening, p_solver.xLength, p_solver.yLength);
+	const colours = [DrawableColor(p_colourSet.openSpaceFixed), DrawableColor(p_colourSet.openSpaceNotFixed), DrawableX(p_colourSet.closedNearX), DrawableX(p_colourSet.closedFarX)];
+	
+	p_drawer.drawSpaceContents2Dimensions(p_context, colours, selectionSpace, p_solver.xLength, p_solver.yLength);
 	p_drawer.drawPolyomino4x5TiledMap(p_context, document.getElementById("img_map"), 16, selectionOpening, 0, p_solver.xLength, p_solver.yLength);
-	p_drawer.drawNumbersInsideStandard(p_context, drawNumberClosure(p_solver, p_colourSet), p_solver.xLength, p_solver.yLength);
+	p_drawer.drawNumbersInsideStandard2Dimensions(p_context, drawNumberClosure(p_solver, p_colourSet), FONTS.ARIAL, p_solver.xLength, p_solver.yLength);
 	
 	if (p_purificator.isActive) {
 		// Purify mode
@@ -32,7 +42,7 @@ function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver, p_purifica
 				default : return -1; // The value EQUAL_TO_SOLVER.
 			}
 		}
-		p_drawer.drawSpaceContents(p_context, itemsPur, selectionSolverAndPurificator, p_solver.xLength, p_solver.yLength);		
+		p_drawer.drawSpaceContentsCoorsList(p_context, itemsPur, selectionSolverAndPurificator, p_purificator.items);		
 	}
 	
 }

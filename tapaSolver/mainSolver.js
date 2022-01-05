@@ -8,8 +8,8 @@ function main() {
 	var actionsManager = {}; 
 
 	var colors = {
-		openSquare : '#00ccff',
-		closedSquare : '#cc0022',
+		openSpace : COLOURS.OPEN_KABE,
+		closedSpace : COLOURS.CLOSED_WILD
 	}
 
 	//--------------------

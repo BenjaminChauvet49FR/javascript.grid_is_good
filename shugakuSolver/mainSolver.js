@@ -13,11 +13,12 @@ function main() {
 	var actionsManagerSet = new ActionsManagersSet(2, 0); 
 
 	var colors = {
-		openSquare : '#ccffff',
-		closedSquare : '#88ff88',
+		openSpace : COLOURS.OPEN_KABE_LIGHT,
+		closedSpace : '#88ff88',
 		numberWrite : '#440088',
-		shape : '#004488',
-		purification : "#ffaaaa"
+		shapeOuter : '#004488',
+		shapeInner : '#ffffff',
+		purification : COLOURS.PURIFICATION_SYMBOL_GRID
 	}
 
 	const coloursFence = {

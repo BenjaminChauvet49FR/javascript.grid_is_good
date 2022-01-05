@@ -12,11 +12,11 @@ function main() {
 	var mouseCoorsItem = {item : null};
 	var selectedSpacesGrid = new InputSpacesSelection(solver.xLength, solver.yLength);
 	var colourSet = {
-		numberWriteFixed : '#880044',
-		numberWriteNotFixed : '#440088',
-		selectedSpace : '#bbffcc',
-		selectedCornerSpace : '#bbccff',
-		purification : "#ffaaaa"
+		numberWriteFixed : COLOURS.FIXED_NUMBER,
+		numberWriteNotFixed : COLOURS.NOT_FIXED_NUMBER,
+		selectedSpace : COLOURS.SELECTED_SPACE,
+		selectedCornerSpace : COLOURS.SELECTED_CORNER_SPACE,
+		purification : COLOURS.PURIFICATION_SYMBOL_GRID
 	}
 
 	//--------------------

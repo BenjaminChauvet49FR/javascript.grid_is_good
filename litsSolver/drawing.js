@@ -1,19 +1,20 @@
 /**
 Draws what's inside spaces 
 */
-function drawInsideSpaces(p_context, p_drawer, p_color, p_solver) {
-	var items = [DrawableColor(p_color.openSquare),
-				DrawableX(p_color.closedSquare),
-				DrawableColor(p_color.LSquare), 
-				DrawableColor(p_color.ISquare), 
-				DrawableColor(p_color.TSquare), 
-				DrawableColor(p_color.SSquare),
-				DrawableColor(p_color.LSquareLight),
-				DrawableColor(p_color.ISquareLight),
-				DrawableColor(p_color.TSquareLight),
-				DrawableColor(p_color.SSquareLight)];
-				
-	function selectionShape(x,y){
+function drawInsideSpaces(p_context, p_drawer, p_colour, p_solver, p_colourblindFriendly) {
+	const items = [DrawableColor(p_colour.openSpace),
+				DrawableX(p_colour.closedSpace),
+				DrawableColor(p_colour.LSpace), 
+				DrawableColor(p_colour.ISpace), 
+				DrawableColor(p_colour.TSpace), 
+				DrawableColor(p_colour.SSpace),
+				DrawableColor(p_colour.LSpaceLight),
+				DrawableColor(p_colour.ISpaceLight),
+				DrawableColor(p_colour.TSpaceLight),
+				DrawableColor(p_colour.SSpaceLight)];
+	const letters = [null, null, null, null, null, null, "L", "I", "T", "S"];
+	
+	function selectionShape(x,y) {
 		if(p_solver.getAnswer(x,y) != ADJACENCY.NO) {
 			const opening = (p_solver.getAnswer(x,y) == ADJACENCY.YES);
 			switch (p_solver.getShape(x, y)) {
@@ -37,7 +38,10 @@ function drawInsideSpaces(p_context, p_drawer, p_color, p_solver) {
 		return -1;
 	}
 	
-	p_drawer.drawSpaceContents(p_context, items, selectionShape, p_solver.xLength, p_solver.yLength);
+	p_drawer.drawSpaceContents2Dimensions(p_context, items, selectionShape, p_solver.xLength, p_solver.yLength);
+	if (p_colourblindFriendly) {		
+		p_drawer.drawTextUpperRightCorner(p_context, letters, p_colour.colourblindWrite, selectionShape, p_solver.xLength, p_solver.yLength, FONTS.ARIAL);
+	}
 	p_drawer.drawPolyomino4x5TiledMap(p_context, document.getElementById("img_map"), 16, selectionOpening, 0, p_solver.xLength, p_solver.yLength);
 }
 

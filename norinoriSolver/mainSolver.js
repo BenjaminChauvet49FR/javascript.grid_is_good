@@ -7,11 +7,9 @@ function main() {
 	var actionsManager = {}; 
 	var drawIndications;
 
-	var colors={
-		filledSquare : '#000088',
-		emptySquare : '#aaaaaa',
-		insideIndicationsOnWhite : '#008800',
-		insideIndicationsOnFilled : '#00ff00',
+	var colors = {
+		filledSpace : COLOURS.FILLING,
+		emptySpace : COLOURS.X_LIGHT
 	}
 	
 	var spanState = document.getElementById("span_resolution_state");

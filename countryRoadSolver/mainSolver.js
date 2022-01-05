@@ -1,14 +1,14 @@
 var solver;
 function main() {
 	const colours = {
-		noLink : '#aa0000',
-		noLinkWall:'#ff8800',
-		presentLink : '#cc00ff',
-		noLinkState : '#448844',
-		presentLinkState : '#bbffdd',
+		noLink : COLOURS.NO_LINK,
+		noLinkWall : COLOURS.NO_LINK_WALL,
+		presentLink : COLOURS.LINK,
+		noLinkState : COLOURS.NO_LINK_SPACE,
+		presentLinkState : COLOURS.LINK_SPACE,
 		
-		writeRegionNumber:'#440044',
-		writeRegionNumberContrast:'#ccff00' 
+		standardWrite : COLOURS.LOOP_STANDARD_NOT_CLOSED_WRITE,
+		reflectWrite : COLOURS.LOOP_STANDARD_CLOSED_WRITE
 	}
 
 	var drawer = new Drawer(colours);

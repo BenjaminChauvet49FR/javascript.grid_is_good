@@ -47,7 +47,7 @@ SolverUsoone.prototype.construct = function (p_wallArray, p_numberArray) {
 	// The classic "array that contains either numbers or list of adjacent coordinates with numbers". 
 	// Also, sets up the sets of numbers that are in the same region (which is the only utility of regions in Usoone to be fair)
 	this.numberManagementArray = [];
-	this.numberCoorsList = [];
+	this.numberCoorsList = []; // Public for drawing
 	this.answerArray = generateValueArray(this.xLength, this.yLength, ADJACENCY.UNDECIDED);
 	for (iy = 0 ; iy < this.yLength ; iy++) {
 		this.numberManagementArray.push([]);

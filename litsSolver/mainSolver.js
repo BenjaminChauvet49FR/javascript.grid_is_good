@@ -8,28 +8,29 @@ function main() {
 	var actionsManager = {}; 
 	var drawIndications;
 
-	var colors = {
-		openSquare : '#00ffcc',
-		closedSquare : '#cc0022',
-		LSquare : '#ffcccc',
-		ISquare : '#ffcc88',
-		TSquare : '#ccffcc',
-		SSquare : '#ccccff',
-		LSquareLight : '#ffe5e5',
-		ISquareLight : '#ffe5c0',
-		TSquareLight : '#e5ffe5',
-		SSquareLight : '#e5e5ff',
+	var colours = {
+		openSpace : COLOURS.OPEN_WILD,
+		closedSpace : COLOURS.CLOSED_WILD,
+		LSpace : '#ffcccc',
+		ISpace : '#ffcc88',
+		TSpace : '#ccffcc',
+		SSpace : '#ccccff',
+		LSpaceLight : '#ffe5e5',
+		ISpaceLight : '#ffe5c0',
+		TSpaceLight : '#e5ffe5',
+		SSpaceLight : '#e5e5ff',
 		insideIndicationsOnWhite : '#008800',
 		insideIndicationsOnFilled : '#00ff00',
-		standardWrite : '#000000',
-		reflectWrite : "#ffff88",
+		colourblindWrite : '#000000'	
 	}
+
+	const checkBoxColourblindFriendly = document.getElementById("checkbox_colourblind_friendly");
 
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
 		drawer.drawWallGrid(context, solver.gridWall, solver.xLength, solver.yLength); 
-		drawInsideSpaces(context, drawer, colors, solver);
+		drawInsideSpaces(context, drawer, colours, solver, checkBoxColourblindFriendly.checked);
 		solver.callStateForItem(spanState);
 	}
 

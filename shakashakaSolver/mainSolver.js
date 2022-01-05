@@ -10,10 +10,10 @@ function main() {
 	var drawIndications;
 
 	var colors = {
-		whiteTriangle : "#cceeff",
-		blackTriangle : "#000000",
-		bannedSpace : "#000044",
-		numberWrite : "#ffff88",
+		whiteTriangle : '#cceeff',
+		blackTriangle : '#000000',
+		bannedSpace : '#000044',
+		numberWrite : '#ffff88',
 	}
 
 	//--------------------

@@ -49,18 +49,18 @@ SolverMasyu.prototype.construct = function(p_symbolGrid) {
 	// comparisonLoopEvents and copyLoopSolverEventMethod defined in LoopSolver
 	//this.setMultipass = {numberPSCategories : 2, PSCategoryMethod : multiPassMasyuCategoryClosure(this), generatePassEventsMethod : generateEventsForSpaceClosure(this)} RELIQUAT
 	this.pearlArray = [];
-	this.pearlSpaceList = [];
+	this.pearlSpacesList = [];
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
 		this.pearlArray.push([]);
 		for (var ix = 0 ; ix < this.xLength ; ix++) {
 			if (p_symbolGrid[iy][ix] == SYMBOL_ID.WHITE) {
                 this.pearlArray[iy].push(PEARL.WHITE);
 				this.setLinkSpace(ix, iy, LOOP_STATE.LINKED);
-				this.pearlSpaceList.push({x : ix, y : iy});
+				this.pearlSpacesList.push({x : ix, y : iy});
             } else if (p_symbolGrid[iy][ix] == SYMBOL_ID.BLACK) {
                 this.pearlArray[iy].push(PEARL.BLACK);
 				this.setLinkSpace(ix, iy, LOOP_STATE.LINKED);
-				this.pearlSpaceList.push({x : ix, y : iy});
+				this.pearlSpacesList.push({x : ix, y : iy});
             } else {
                 this.pearlArray[iy].push(null);
             }
@@ -373,7 +373,7 @@ function namingCategoryClosure(p_solver) {
 
 function startingOrderedListPassArgumentsMasyuClosure(p_solver) {
 	return function() {
-		return p_solver.pearlSpaceList;
+		return p_solver.pearlSpacesList;
 	}
 }
 

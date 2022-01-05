@@ -1,11 +1,13 @@
 const colourSet = { 
-	sunOut : "#888800",
-	sunIn : "#ffff88",
-	moonOut : "#222222",
-	moonIn : "#aa88cc",
-	pearlOut : "#000000",
-	pearlWhite : "#ffffff",
-	pearlBlack : "#000044"
+	sunOut : COLOURS.SUN_OUT,
+	sunIn : COLOURS.SUN_IN,
+	moonOut : COLOURS.MOON_OUT,
+	moonIn : COLOURS.MOON_IN,
+	pearlOut : COLOURS.PEARL_OUT,
+	pearlWhite : COLOURS.WHITE_PEARL_IN,
+	pearlBlack : COLOURS.BLACK_PEARL_IN,
+	selectedSpace : COLOURS.SELECTED_SPACE,
+	selectedCornerSpace : COLOURS.SELECTED_CORNER_SPACE
 }
 
 /**
@@ -23,12 +25,12 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	} else {
 		if (p_editorCore.holdsLinks()) {
 			this.drawDotsGrid(p_context, xLength, yLength, 
-			function(x, y) {return p_editorCore.getLinkR(x, y) == LINKGRID.NOT_LINKED ? "#dddddd" : "#000000"},
-			function(x, y) {return p_editorCore.getLinkD(x, y) == LINKGRID.NOT_LINKED ? "#dddddd" : "#000000"},
+			function(x, y) {return p_editorCore.getLinkR(x, y) == LINKGRID.NOT_LINKED ? COLOURS.OPEN_WALL : COLOURS.CLOSED_WALL},
+			function(x, y) {return p_editorCore.getLinkD(x, y) == LINKGRID.NOT_LINKED ? COLOURS.OPEN_WALL : COLOURS.CLOSED_WALL},
 			function(x, y) {return "#888888"},
 			function() {return DOTS_SIZE.MEDIUM});
 		} else {			
-			this.drawDotsGridSimple(p_context, xLength+1, yLength+1, '#000000');
+			this.drawDotsGridSimple(p_context, xLength+1, yLength+1, COLOURS.OPEN_LINK_DOTS);
 		}
 	}
 
@@ -36,14 +38,14 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	for (var iy = 0; iy < yLength; iy++) {
 		for (var ix = 0; ix < xLength; ix++) {
 			if (p_editorCore.getSelection(ix, iy) == SELECTED.YES) {
-				p_context.fillStyle = this.editorColorSet.selectedSpace;
+				p_context.fillStyle = colourSet.selectedSpace;
 				p_context.fillRect(this.getPixInnerXLeft(ix), this.getPixInnerYUp(iy), this.getPixInnerSide(), this.getPixInnerSide());
 			}
 		}
 	}
 	const sc = p_editorCore.getSelectedSpaceForRectangle();
 	if (sc != null) {
-		p_context.fillStyle = this.editorColorSet.selectedCornerSpace;
+		p_context.fillStyle = colourSet.selectedCornerSpace;
 		p_context.fillRect(this.getPixInnerXLeft(sc.x), this.getPixInnerYUp(sc.y), this.getPixInnerSide(), this.getPixInnerSide());
 	}
 
@@ -78,7 +80,7 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 		this.drawGalaxiesGrid(p_context, p_editorCore.getGrid(GRID_ID.GALAXIES));
 	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.KNOTS)) {
-		this.drawKnotsInRD(p_context, p_editorCore.getGrid(GRID_ID.KNOTS));
+		this.drawKnotsInRD(p_context, p_editorCore.getGrid(GRID_ID.KNOTS), COLOURS.KNOT_INNER, COLOURS.KNOT_BORDER);
 	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_SPACE)) {
 		this.drawStringsGrid(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_SPACE));
@@ -90,7 +92,7 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 		this.drawStringsGrid(p_context, p_editorCore.getGrid(GRID_ID.OX));
 	}
 	if (p_editorCore.getMarginInfoId() == MARGIN_KIND.NUMBERS_LEFT_UP.id) {
-		this.drawMarginLeftUpOne(p_context, p_editorCore.margins[EDGES.LEFT], p_editorCore.margins[EDGES.UP]);
+		this.drawMarginLeftUpOne(p_context, p_editorCore.margins[EDGES.LEFT], p_editorCore.margins[EDGES.UP], FONTS.ARIAL);
 	}
 	this.drawWildCardGrid(p_context, p_editorCore.getWildCardGrid());
 }
@@ -110,7 +112,7 @@ Drawer.prototype.drawOneStringPerSpace = function (p_context, p_numberGrid, p_pi
 		p_context.textAlign = p_textAlign.alignH;
 		p_context.textBaseline = p_textAlign.alignV;
 		p_context.font = p_pixSize + "px Arial";
-		p_context.fillStyle = "#000000";
+		p_context.fillStyle = COLOURS.EDITOR_TEXT_WRITING;
 		p_context.mix_blend_mode = "exclusion";
 		var ix,
 		iy,
@@ -147,15 +149,15 @@ Drawer.prototype.drawPlaystationShapeGrid = function (p_context, p_shapeGrid) {
 		}
 		return -1;
 	}
-	const shapes = [DrawableCircle("#000000", "#ff0000"), DrawableSquare("#000000", "#008800"), DrawableTriangle("#000000", "#4400ff")];
-	this.drawSpaceContents(p_context, shapes, getShape, p_shapeGrid.getXLength(), p_shapeGrid.getYLength()); 
+	const shapes = [DrawableCircle(COLOURS.HAKOIRI_EDGE, COLOURS.HAKOIRI_ROUND), DrawableSquare(COLOURS.HAKOIRI_EDGE, COLOURS.HAKOIRI_SQUARE), DrawableTriangle(COLOURS.HAKOIRI_EDGE, COLOURS.HAKOIRI_TRIANGLE)];
+	this.drawSpaceContents2Dimensions(p_context, shapes, getShape, p_shapeGrid.getXLength(), p_shapeGrid.getYLength()); 
 }
 
 Drawer.prototype.drawWildCardGrid = function(p_context, p_withWildCardsGrid) {
 	const yLength = p_withWildCardsGrid.getYLength();
 	if (yLength > 0) {
 		const xLength = p_withWildCardsGrid.getXLength();
-		setupFont(p_context, this.getPixInnerSide() * 4/5, "Arial", "#000000");
+		setupFont(p_context, this.getPixInnerSide() * 4/5, FONTS.ARIAL, COLOURS.WILD_CARD_WRITING);
 		alignFontCenter(p_context);
 		p_context.mix_blend_mode = "exclusion";
 		var ix, iy; 

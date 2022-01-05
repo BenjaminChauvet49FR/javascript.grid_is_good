@@ -1,10 +1,10 @@
 var solver;
 function main() {
 	var colors = {
-		openLink:'#000000',
-		openNode:'#440022',
-		undecidedLink:'#dddddd',
-		closedLink:'#eeeeff',
+		openLink : COLOURS.OPEN_LINK_DOTS,
+		openNode : COLOURS.OPEN_NODE_DOTS,
+		undecidedLink : COLOURS.UNDECIDED_LINK_DOTS,
+		closedLink : COLOURS.CLOSED_LINK_DOTS,
 		
 		numberWrite:'#220044'
 	}
@@ -12,6 +12,7 @@ function main() {
 	var drawer = new Drawer(colors);
 	solver = DummySolver();
 	var canevas = document.getElementById("canevas");
+	drawer.adaptCanvasDimensions(canevas, {isDotted : true, xLength : solver.xLength, yLength : solver.yLength}); // Note : required here because of "isDotted".
 	var spanState = document.getElementById("span_resolution_state");
 	var	context = canevas.getContext("2d");
 	var actionsManager = {}; 

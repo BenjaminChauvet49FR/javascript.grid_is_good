@@ -1,6 +1,6 @@
 function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver) {
 	
-	var items = [DrawableColor(p_colourSet.openSquare), DrawableColor(p_colourSet.closedSquare)];
+	var items = [DrawableColor(p_colourSet.openSpace), DrawableColor(p_colourSet.closedSpace)];
 	function selection(x, y) {
 		if(p_solver.getAnswer(x, y) == ADJACENCY.YES) {
 			return 0;
@@ -10,9 +10,9 @@ function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver) {
 		return -1;
 	}
 	
-	p_drawer.drawSpaceContents(p_context, items, selection, p_solver.xLength, p_solver.yLength);
+	p_drawer.drawSpaceContents2Dimensions(p_context, items, selection, p_solver.xLength, p_solver.yLength);
 	p_drawer.drawPolyomino4x5TiledMap(p_context, document.getElementById("img_map"), 16, selection, 0, p_solver.xLength, p_solver.yLength);
-	p_drawer.drawNumbersInsideStandard(p_context, drawNumberClosure(p_solver, p_colourSet), p_solver.xLength, p_solver.yLength);
+	p_drawer.drawNumbersInsideStandardCoorsList(p_context, drawNumberClosure(p_solver, p_colourSet), p_solver.rangedSpacesCoors, FONTS.ARIAL); 
 }
 
 drawNumberClosure = function(p_solver, p_colourSet) {

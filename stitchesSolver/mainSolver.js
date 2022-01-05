@@ -13,16 +13,15 @@ function main() {
 		openStitchIn : '#44008f',
 		marginWrite : '#000044',
 		bind : '#008844',
-		isolate : '#880000',
 		isolateRegion : '#ff0000',
-		closedSpace : '#cc0022'
+		closedSpace : COLOURS.CLOSED_WILD
 	}
 
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
 		drawer.drawWallGrid(context, solver.gridWall, solver.xLength, solver.yLength); 
-		drawer.drawMarginLeftUpOne(context, solver.numbersMarginsLeft, solver.numbersMarginsUp);
+		drawer.drawMarginLeftUpOne(context, solver.numbersMarginsLeft, solver.numbersMarginsUp, FONTS.ARIAL);
 		drawInsideSpaces(context, drawer, colors, solver);
 		solver.callStateForItem(spanState);
 	}

@@ -8,10 +8,10 @@ function main() {
 	var actionsManager = {}; 
 	var drawIndications;
 
-	var colors = {
-		cross : '#880044',
-		standardWrite : '#000000',
-		reflectWrite : "#ffff88",
+	var colours = {
+		cross : '#880044', 
+		standardWrite : '#000000', 
+		reflectWrite : '#ffff88',
 	}
 	
 	var spanState = document.getElementById("span_resolution_state");
@@ -20,7 +20,7 @@ function main() {
 	//The main draw function (at start)
 	function drawCanvas() {
 		drawer.drawWallGrid(context,solver.gridWall, solver.xLength, solver.yLength); 
-		drawInsideSpaces(context, drawer, colors, solver);
+		drawInsideSpaces(context, drawer, colours, solver);
 		solver.callStateForItem(spanState);
 	}
 	setInterval(drawCanvas, 30);

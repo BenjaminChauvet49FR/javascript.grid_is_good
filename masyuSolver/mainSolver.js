@@ -2,15 +2,16 @@ var solver;
 var purificator;
 function main() {
 	const colors = {
-		noLink:'#aa0000',
-		presentLink:'#cc00ff',
-		noLinkState:'#448844',
-		presentLinkState:'#ddeeff',
-		oppositeSpaceWrite:'#0000ff',
+		noLink : COLOURS.NO_LINK,
+		presentLink : COLOURS.LINK,
+		noLinkState : COLOURS.NO_LINK_SPACE,
+		presentLinkState : COLOURS.LINK_SPACE,
+		oppositeSpaceWrite : COLOURS.LOOP_ERGONOMIC_OPPOSITE_END,
 		
-		circleOut:'#000000',
-		circleIn:'#000044',
-		purification:'#ffaaaa'
+		circleOut : COLOURS.PEARL_OUT,
+		circleBlackIn : COLOURS.BLACK_PEARL_IN,
+		circleWhiteIn : COLOURS.WHITE_PEARL_IN,
+		purification : COLOURS.PURIFICATION_SYMBOL_GRID
 	}
 
 	var drawer = new Drawer(colors);

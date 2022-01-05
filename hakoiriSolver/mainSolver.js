@@ -10,11 +10,12 @@ function main() {
 	var spanState = document.getElementById("span_resolution_state");
 
 	var colors = {
-		circle : '#ff0000',
-		square : '#00cc00',
-		triangle : '#4400ff',
-		edge : '#220044',
-		openSquare : '#00ccff'
+		circle : COLOURS.HAKOIRI_ROUND,
+		square : COLOURS.HAKOIRI_SQUARE,
+		triangle : COLOURS.HAKOIRI_TRIANGLE,
+		edge : COLOURS.HAKOIRI_EDGE,
+		openFixedSpace : COLOURS.OPEN_KABE,
+		openFoundSpace : COLOURS.OPEN_KABE_LIGHT,
 	}
 	
 	//--------------------

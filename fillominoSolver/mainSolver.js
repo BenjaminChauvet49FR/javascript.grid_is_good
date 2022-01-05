@@ -2,8 +2,8 @@ var solver;
 
 function main() {
 	var colours = {
-		fixedNumber : '#880044',
-		notFixedNumber : '#440088'
+		fixedNumber : COLOURS.FIXED_NUMBER,
+		notFixedNumber : COLOURS.NOT_FIXED_NUMBER
 	}; // Note : see Usotatami to see why fences colours aren't handled there.
 	
 

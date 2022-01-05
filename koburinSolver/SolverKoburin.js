@@ -45,7 +45,9 @@ SolverKoburin.prototype.construct = function(p_numberGrid) {
 	}
 	
 	var numberXNull;
-	this.numericCoordinatesList = []; // List of coordinates of numeric spaces
+	this.numericCoordinatesList = []; // List of coordinates of numeric spaces ; also public for drawing
+	// Big warning : somehow modified in multipass by adding args events, which forced me to revise 
+	this.xCoordinatesList = []; // public for drawing
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
 		this.numericArray.push([]);
 		for (var ix = 0 ; ix < this.xLength ; ix++) {
@@ -53,6 +55,7 @@ SolverKoburin.prototype.construct = function(p_numberGrid) {
 			if (numberXNull != null) {
 				if (isNaN(numberXNull)) {
 					this.numericArray[iy].push({number : NOT_FORCED});
+					this.xCoordinatesList.push({x : ix, y : iy});
 				} else {
 					this.numericCoordinatesList.push({x : ix, y : iy});
 					// Number of "notLinkedYet" restarted to avoid interferences with "this.banSpace"

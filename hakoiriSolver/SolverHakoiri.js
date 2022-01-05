@@ -163,10 +163,6 @@ SolverHakoiri.prototype.isOpenNotBannedDraw = function(p_x, p_y) {
 	return (this.answerArray[p_y][p_x].blocked || this.answerArray[p_y][p_x].getState(SPACE_HAKOIRI.EMPTY) == SPACE_CHOICE.NO);
 }
 
-SolverHakoiri.prototype.isClosedNotBannedDraw = function(p_x, p_y) {
-	return (!this.answerArray[p_y][p_x].blocked && this.answerArray[p_y][p_x].getState(SPACE_HAKOIRI.EMPTY) == SPACE_CHOICE.YES);
-}
-
 //--------------------------------
 // Input methods
 

@@ -1,6 +1,6 @@
 function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver, p_purificator) {
 	p_drawer.drawSolverLinkInsideSpaces(p_context, p_coloursSet, p_solver); 
-	function getPearl (x, y) {
+	function getPearl (x, y) { 
 		if (p_solver.getPearl(x, y) == PEARL.WHITE) {
 			return 0;
 		} else if (p_solver.getPearl(x, y) == PEARL.BLACK) {
@@ -8,10 +8,11 @@ function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver, p_purific
 		}
 		return -1;
 	}
-	p_drawer.drawSpaceContents(p_context, 
-	[DrawableCircle(p_coloursSet.circleOut, "#ffffff"), 
-	DrawableCircle(p_coloursSet.circleOut, p_coloursSet.circleIn)], 
-	getPearl, p_solver.xLength, p_solver.yLength); 
+	p_drawer.drawSpaceContentsCoorsList(p_context, 
+	[DrawableCircle(p_coloursSet.circleOut, p_coloursSet.circleWhiteIn), 
+	DrawableCircle(p_coloursSet.circleOut, p_coloursSet.circleBlackIn)], 
+	getPearl, p_solver.pearlSpacesList);  // Note : no thickness taken into account
+	
 	
 	if (p_purificator.isActive) {
 		// Purify mode
@@ -22,6 +23,6 @@ function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver, p_purific
 				default : return -1; // The value EQUAL_TO_SOLVER.
 			}
 		}
-		p_drawer.drawSpaceContents(p_context, itemsPur, selectionSolverAndPurificator, p_solver.xLength, p_solver.yLength);		
+		p_drawer.drawSpaceContentsCoorsList(p_context, itemsPur, selectionSolverAndPurificator, p_purificator.items);	
 	}
 }

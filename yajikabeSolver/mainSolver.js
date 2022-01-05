@@ -11,9 +11,9 @@ function main() {
 	var actionsManagerSet = new ActionsManagersSet(3, 0); // 3 as the number of required actions managers set (equal to the number of sub menus)
 
 	var colours = {
-		openSquare : '#00ccff',
-		closedSquare : '#cc0022',
-		purification : "#ffaaaa"
+		openSpace : COLOURS.OPEN_KABE,
+		closedSpace : COLOURS.CLOSED_WILD,
+		purification : COLOURS.PURIFICATION_SYMBOL_GRID
 	}
 
 	//--------------------

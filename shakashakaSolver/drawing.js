@@ -2,7 +2,7 @@
 // To be done : Draw actual "half triangles" rather than quarters of them !
 function drawInsideSpacesAutonomous(p_context, p_drawer, p_colourSet, p_solver) {
 	const pixInnerSide = p_drawer.getPixInnerSide();
-	setupFont(p_context, pixInnerSide*4/5, "Arial");
+	setupFont(p_context, pixInnerSide*4/5, FONTS.ARIAL);
 	var x, y, hasOne;
 	var pixXL, pixXR, pixYU, pixYD, pixXCenter, pixYCenter;
 	p_context.textAlign = "center"; // Credits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/textAlign

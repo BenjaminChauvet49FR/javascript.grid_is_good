@@ -9,13 +9,10 @@ function main() {
 	var spanState = document.getElementById("span_resolution_state");
 
 	var colors = {
-		circleIn:'#ffe100',
-		circleOut:'#300000',
-		bannedSpace:'#666666',
-		openSquare:'#00ffcc',
-		closedSquare:'#cc0022',
-		standardWrite:'#000000',
-		reflectWrite:"#ffff88",
+		circleIn : '#ffe100',
+		circleOut : '#300000',
+		openSpace : COLOURS.OPEN_SPREAD,
+		closedSpace : COLOURS.CLOSED_SPREAD
 	}
 
 	//--------------------

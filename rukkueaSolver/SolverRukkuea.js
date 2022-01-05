@@ -40,7 +40,7 @@ SolverRukkuea.prototype.construct = function(p_numbersArray) {
 	this.viewArray = generateFunctionValueArray(this.xLength, this.yLength, function(){ return [null, null, null, null]}); // Supposes that all four directions are 1, 2, 3, 4
 	// Definition and setup 
 	this.numericArray = [];
-	this.numberedSpacesCoors = [];
+	this.numberedSpacesCoors = []; // Public for drawing
 	for (y = 0 ; y < this.yLength ; y++) { 
 		this.numericArray.push([]);
 		for (x = 0 ; x < this.xLength ; x++) {

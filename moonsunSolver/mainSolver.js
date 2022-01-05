@@ -1,16 +1,16 @@
 var solver;
 function main() {
 	const colours = {
-		noLink : '#aa0000',
-		noLinkWall:'#ff8800',
-		presentLink : '#cc00ff',
-		noLinkState : '#448844',
-		presentLinkState : '#bbffdd',
+		noLink : COLOURS.NO_LINK,
+		noLinkWall : COLOURS.NO_LINK_WALL,
+		presentLink : COLOURS.LINK,
+		noLinkState : COLOURS.NO_LINK_SPACE,
+		presentLinkState : COLOURS.LINK_SPACE,
 		
-		sunOut : "#888800",
-		sunIn : "#ffff88",
-		moonOut : "#222222",
-		moonIn : "#aa88cc"
+		sunOut : COLOURS.SUN_OUT,
+		sunIn : COLOURS.SUN_IN,
+		moonOut : COLOURS.MOON_OUT,
+		moonIn : COLOURS.MOON_IN
 	}
 
 	var drawer = new Drawer(colours);

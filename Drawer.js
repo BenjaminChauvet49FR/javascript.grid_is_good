@@ -6,7 +6,7 @@ const DRAW_PATH = {
 }
 
 // Classes
-function alternateClosedPathDraw(p_wallGrid, p_colour) {
+function AlternateClosedPathDraw(p_wallGrid, p_colour) {
 	this.wallGrid = p_wallGrid;
 	this.colourRegionBorders = p_colour;
 }
@@ -25,40 +25,36 @@ function Drawer() {
             down: 0
         }
     }
-
-	this.colors = {
-		combinedArrowRingIndications : '#440000',
-		tapaIndications : '#000044',
-		marginText : '#440000'
-	}
-	this.wallColorSet = {
-		closed_wall: '#222222',
-		open_wall: '#dddddd',
-		edge_walls: '#000000',
-		bannedSpace: '#666666'
+	
+	// Colour : common part
+	this.wallColorSet = { 
+		closed_wall : COLOURS.CLOSED_WALL,
+		open_wall : COLOURS.OPEN_WALL,
+		edge_walls : COLOURS.EDGE_WALL,
+		bannedSpace : COLOURS.BANNED_SPACE
 	}
 	this.fenceColourSet = {
-		closed_fence: '#222222',
-		undecided_fence: '#cccccc',
-		open_fence: '#eeeeff'
+		closed_fence : COLOURS.CLOSED_FENCE,
+		undecided_fence : COLOURS.UNDECIDED_FENCE,
+		open_fence : COLOURS.OPEN_FENCE
 	}
-	this.editorColorSet = { // No "setter function" for this
-		selectedSpace: '#bbffcc',
-		selectedCornerSpace : '#bbccff'
+	
+	// Specific puzzle part
+	this.coloursFontsSpecificGrids = {
+		combinedArrowRingIndications : '#440000',
+		tapaIndications : '#000044',
+		tapaFont : FONTS.ARIAL,
+		marginText : '#440000'
 	}
 	this.galaxiesColourSet = {
 		inner : '#ffffdd',
 		border : '#440000'
 	}
-	this.knotsColourSet = {
-		inner : '#002288',
-		border : '#000044'
-	}
 	this.yagitColourSet = {
-		roundBorder : "#000088",
-		roundInner : "#8844ff",
-		squareBorder : "#008800",
-		squareInner : "#00cc44"
+		roundBorder : '#000088',
+		roundInner : '#8844ff',
+		squareBorder : '#008800',
+		squareInner : '#00cc44'
 	}
 }
 
@@ -457,53 +453,64 @@ Draws the main content of a space into a grid.
 p_drawableItems : array of items to draw.
 p_function : function to return the index.
  */
-Drawer.prototype.drawSpaceContents = function (p_context, p_drawableItems, p_function, p_xLength, p_yLength) {
-    const pixStartX = this.getPixInnerXLeft(0);
+Drawer.prototype.drawSpaceContents2Dimensions = function (p_context, p_drawableItems, p_function, p_xLength, p_yLength) { 
     const pixInnerSide = this.getPixInnerSide();
-    var pixDrawX = pixStartX;
-    var pixDrawY = this.getPixInnerYUp(0);
     var item;
-    var ix,
-    iy,
-    indexItem;
+    var ix, iy, indexItem;
     for (iy = 0; iy < p_yLength; iy++) {
         for (ix = 0; ix < p_xLength; ix++) {
             indexItem = p_function(ix, iy);
             if (indexItem >= 0 && indexItem < p_drawableItems.length) {
                 item = p_drawableItems[indexItem];
-                if (item.kind == KIND_DRAWABLE_ITEM.IMAGE) {
-                    p_context.drawImage(item.picture, item.x1, item.y1, item.x2, item.y2, pixDrawX, pixDrawY, pixInnerSide, pixInnerSide);
-                } else if (item.kind == KIND_DRAWABLE_ITEM.COLOR) {
-                    p_context.fillStyle = item.getColour();
-                    p_context.fillRect(pixDrawX, pixDrawY, pixInnerSide, pixInnerSide);
-                } else if (item.kind == KIND_DRAWABLE_ITEM.CIRCLE) {
-					p_context.beginPath();
-					p_context.lineWidth = (item.thickness || item.thickness == 0) ? item.thickness : Math.max(1, this.getPixInnerSide()*1/16);
-					const radius = this.getPixInnerSide()*1/3;
-					p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
-					if (item.colorInner && item.colorInner != null) { // Note : "p_context.fillStyle = X" seems not to change p_context.fillStyle when X is null.
-						p_context.fillStyle = item.colorInner; //An item property was taken rather than a method. I think this is better this way.
-						p_context.fill();
-					}
-					if (item.colorBorder && item.colorBorder != null) {
-						p_context.strokeStyle = item.colorBorder;
-						p_context.stroke();
-					}
-				} else if (item.kind == KIND_DRAWABLE_ITEM.X) {
-					this.drawCrossX(p_context, ix, iy, item);
-				} else if (item.kind == KIND_DRAWABLE_ITEM.LITTLE_X) {
-					this.drawCrossLittleX(p_context, ix, iy, item);
-				} else if (item.kind == KIND_DRAWABLE_ITEM.SQUARE) {
-					this.drawSquare(p_context, ix, iy, item);
-				} else if (item.kind == KIND_DRAWABLE_ITEM.TRIANGLE) {
-					this.drawTriangle(p_context, ix, iy, item);
-				} 
+                this.drawSpaceContent(p_context, ix, iy, item, pixInnerSide); 
             }
-            pixDrawX += this.pix.sideSpace;
         }
-        pixDrawY += this.pix.sideSpace;
-        pixDrawX = pixStartX;
     }
+}
+
+Drawer.prototype.drawSpaceContentsCoorsList = function (p_context, p_drawableItems, p_function, p_coorsList) { 
+    const pixInnerSide = this.getPixInnerSide();
+    var item;
+    var ix, iy, indexItem;
+	p_coorsList.forEach(coors => {
+		ix = coors.x;
+		iy = coors.y;
+		indexItem = p_function(ix, iy);
+		if (indexItem >= 0 && indexItem < p_drawableItems.length) {
+			item = p_drawableItems[indexItem];
+			this.drawSpaceContent(p_context, ix, iy, item, pixInnerSide); 
+		}
+	});
+}
+
+Drawer.prototype.drawSpaceContent = function(p_context, p_ix, p_iy, p_item, p_pixInnerSide) {
+	if (p_item.kind == KIND_DRAWABLE_ITEM.IMAGE) {
+		p_context.drawImage(p_item.picture, p_item.x1, p_item.y1, p_item.x2, p_item.y2, this.getPixInnerXLeft(p_ix), this.getPixInnerYUp(p_iy), p_pixInnerSide, p_pixInnerSide);
+	} else if (p_item.kind == KIND_DRAWABLE_ITEM.COLOR) {
+		p_context.fillStyle = p_item.getColour();
+		p_context.fillRect(this.getPixInnerXLeft(p_ix), this.getPixInnerYUp(p_iy), p_pixInnerSide, p_pixInnerSide);
+	} else if (p_item.kind == KIND_DRAWABLE_ITEM.CIRCLE) {
+		p_context.beginPath();
+		p_context.lineWidth = (p_item.thickness || p_item.thickness == 0) ? p_item.thickness : Math.max(1, this.getPixInnerSide()*1/16);
+		const radius = this.getPixInnerSide()*1/3;
+		p_context.ellipse(this.getPixCenterX(p_ix), this.getPixCenterY(p_iy), radius, radius, 0, 0, 2 * Math.PI);
+		if (p_item.colorInner && p_item.colorInner != null) { // Note : "p_context.fillStyle = X" seems not to change p_context.fillStyle when X is null.
+			p_context.fillStyle = p_item.colorInner; //An p_item property was taken rather than a method. I think this is better this way.
+			p_context.fill();
+		}
+		if (p_item.colorBorder && p_item.colorBorder != null) {
+			p_context.strokeStyle = p_item.colorBorder;
+			p_context.stroke();
+		}
+	} else if (p_item.kind == KIND_DRAWABLE_ITEM.X) {
+		this.drawCrossX(p_context, p_ix, p_iy, p_item);
+	} else if (p_item.kind == KIND_DRAWABLE_ITEM.LITTLE_X) {
+		this.drawCrossLittleX(p_context, p_ix, p_iy, p_item);
+	} else if (p_item.kind == KIND_DRAWABLE_ITEM.SQUARE) {
+		this.drawSquare(p_context, p_ix, p_iy, p_item);
+	} else if (p_item.kind == KIND_DRAWABLE_ITEM.TRIANGLE) {
+		this.drawTriangle(p_context, p_ix, p_iy, p_item);
+	}
 }
 
 Drawer.prototype.drawSpaceContentsUpperRightCorner = function(p_context, p_drawableItems, p_function, p_xLength, p_yLength) {
@@ -516,9 +523,34 @@ Drawer.prototype.drawSpaceContentsUpperRightCorner = function(p_context, p_drawa
 					this.drawLittleRoundUpperRight(p_context, ix, iy, item);
 				} else if (item.kind == KIND_DRAWABLE_ITEM.PLUS_UPPER_RIGHT) {
 					this.drawLittlePlusUpperRight(p_context, ix, iy, item);
+				} else if (item.kind == KIND_DRAWABLE_ITEM.SQUARE_UPPER_RIGHT) {
+					this.drawLittleSquareUpperRight(p_context, ix, iy, item);
 				}
 			}
 		}
+	}
+}
+
+// Draws a text in the right corner of all spaces.
+// Note : mono-colour for now !
+Drawer.prototype.drawTextUpperRightCorner = function(p_context, p_drawableText, p_colour, p_function, p_xLength, p_yLength, p_font) {  
+	var textElt, indexItem;
+	setupFont(p_context, this.getPixInnerSide()/2, p_font);
+	alignFontCenter(p_context);
+	p_context.fillStyle = p_colour;
+	const pixStartX = this.getPixCenterX(0) + this.getPixInnerSide()/3;
+	var pixX;
+	var pixY = this.getPixCenterY(0) - this.getPixInnerSide()/6;
+	for (var iy = 0; iy < p_yLength; iy++) {
+		pixX = pixStartX;
+		for (var  ix = 0; ix < p_xLength; ix++) {
+			indexItem = p_function(ix, iy);
+			if (indexItem >= 0 && indexItem < p_drawableText.length && p_drawableText[indexItem] != null) {
+				p_context.fillText(p_drawableText[indexItem], pixX, pixY);
+			}
+			pixX += this.pix.sideSpace;
+		}
+		pixY += this.pix.sideSpace;
 	}
 }
 
@@ -541,22 +573,6 @@ Drawer.prototype.drawPolyomino4x5TiledMap = function (p_context, p_map, p_pixMap
     const yBlockUp = 0;
     const xBlockRight = 3;
     const yBlockDown = 3;
-
-    function xLeftContinue(p_continue) {
-        return p_continue ? 2 : 0;
-    }
-
-    function yUpContinue(p_continue) {
-        return p_continue ? 2 : 0;
-    }
-
-    function xRightContinue(p_continue) {
-        return p_continue ? 1 : 3;
-    }
-
-    function yDownContinue(p_continue) {
-        return p_continue ? 1 : 3;
-    }
 
     function drawQuarter(x, y) {
         p_context.drawImage(p_map, coordinateXInMap * p_pixMapSide, coordinateYInMap * p_pixMapSide, p_pixMapSide, p_pixMapSide,
@@ -620,15 +636,68 @@ Drawer.prototype.drawPolyomino4x5TiledMap = function (p_context, p_map, p_pixMap
 
 }
 
-// Combined arrow = Yajilin-like. This method is a better deal than reusing drawSpaceContents since it doesn't draw spaces.
+function DrawSpaceValue(p_value, p_colour) {
+	this.value = p_value;
+	this.writeColour = p_colour;
+}
+
+Drawer.prototype.drawNumbersInsideStandardCoorsList = function(p_context, p_function, p_coordinates, p_font) {
+	setupFont(p_context, this.getPixInnerSide(), p_font);
+	alignFontCenter(p_context);
+	p_coordinates.forEach(coors => {		
+		supposedValue = p_function(coors.x, coors.y);
+		if (supposedValue != null) {
+			p_context.fillStyle = supposedValue.writeColour;
+			p_context.fillText(supposedValue.value, this.getPixCenterX(coors.x), this.getPixWriteCenterY(coors.y));
+		} 
+	});
+}
+
+Drawer.prototype.drawNumbersInsideStandard2Dimensions = function(p_context, p_function, p_font, p_xLength, p_yLength) {
+	setupFont(p_context, this.getPixInnerSide(), p_font);
+	alignFontCenter(p_context);
+	for(var iy = 0 ; iy < p_yLength ; iy++) {
+		for(var ix = 0 ; ix < p_xLength ; ix++) {
+			supposedValue = p_function(ix, iy);
+			if (supposedValue != null) {
+				p_context.fillStyle = supposedValue.writeColour;
+				p_context.fillText(supposedValue.value, this.getPixCenterX(ix), this.getPixWriteCenterY(iy));
+			} 
+		}
+	}
+}
+
+// p_method : method (x, y) that returns an integer, {draw : true} or null.
+Drawer.prototype.drawFixedNumbersOrX = function(p_context, p_method, p_coorsList, p_coorsXList, p_colourNumbers, p_colourX, p_font) {
+	p_context.fillStyle = p_colourNumbers;
+	setupFont(p_context, this.getPixInnerSide(), p_font);
+	alignFontCenter(p_context);
+	var method;
+	p_coorsList.forEach(coors => {
+		method = p_method(coors.x, coors.y);
+		if (method != null) {			
+			p_context.fillText(method, this.getPixCenterX(coors.x), this.getPixCenterY(coors.y));
+		}
+	});
+	p_coorsXList.forEach(coors => {
+		if (p_method(coors.x, coors.y) == "X") {			
+			this.drawCrossX(p_context, coors.x, coors.y, new DrawableX(p_colourX));
+		}
+	});
+}
+
+// -------------------------------
+// Draw grid contents used both in editor and solvers, that are specific
+
+// Combined arrow = Yajilin-like. This method is a better deal than reusing a drawSpaceContents method since it doesn't draw spaces.
 Drawer.prototype.drawCombinedArrowGridIndications = function (p_context, p_combinedArrowGrid) {
 	const yLength = p_combinedArrowGrid.getYLength();
 	if (yLength > 0) {
 		const xLength = p_combinedArrowGrid.getXLength();
 		var ix, iy, clue, isX; 
 		const pixBack = this.getPixInnerSide()/4
-		p_context.fillStyle = this.colors.combinedArrowRingIndications; 
-		p_context.strokeStyle = this.colors.combinedArrowRingIndications; 
+		p_context.fillStyle = this.coloursFontsSpecificGrids.combinedArrowRingIndications; 
+		p_context.strokeStyle = this.coloursFontsSpecificGrids.combinedArrowRingIndications; 
 		p_context.textAlign = "center"; // Credits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/textAlign
 		p_context.textBaseline = "middle"; // Credits : https://stackoverflow.com/questions/39294065/vertical-alignment-of-canvas-text https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/textBaseline
 		var pixX1, pixY1, pixX2, pixY2, pixX3, pixY3, pixTextX, pixTextY;
@@ -697,43 +766,6 @@ Drawer.prototype.drawCombinedArrowGridIndications = function (p_context, p_combi
 	}
 }
 
-function DrawSpaceValue(p_value, p_colour) {
-	this.value = p_value;
-	this.writeColour = p_colour;
-}
-
-Drawer.prototype.drawNumbersInsideStandard = function(p_context, p_function, p_xLength, p_yLength) {
-	setupFont(p_context, this.getPixInnerSide(), "Arial");
-	alignFontCenter(p_context);
-	for(var iy = 0 ; iy < p_yLength ; iy++) {
-		for(var ix = 0 ; ix < p_xLength ; ix++) {
-			supposedValue = p_function(ix, iy);
-			if (supposedValue != null) {
-				p_context.fillStyle = supposedValue.writeColour;
-				p_context.fillText(supposedValue.value, this.getPixCenterX(ix), this.getPixWriteCenterY(iy));
-			} 
-		}
-	}
-}
-
-// p_method : method (x, y) that returns an integer, {draw : true} or null.
-Drawer.prototype.drawFixedNumbersOrX = function(p_context, p_method, p_xLength, p_yLength, p_colourNumbers, p_colourX) {
-	var fixedSpace;
-	p_context.fillStyle = p_colourNumbers;
-	setupFont(p_context, this.getPixInnerSide(), "Arial");
-	alignFontCenter(p_context);
-	for(var iy = 0; iy < p_yLength ; iy++) {
-		for(var ix = 0; ix < p_xLength ; ix++) {
-			fixedSpace = p_method(ix, iy);
-			if (fixedSpace == "X") {
-				this.drawCrossX(p_context, ix, iy, new DrawableX(p_colourX));
-			} else if (fixedSpace != null) {
-				p_context.fillText(fixedSpace, this.getPixCenterX(ix), this.getPixCenterY(iy));
-			}
-		}
-	}
-}
-
 // For Yagit. There is a puzzle with Yagit-related shapes added while solving (like Hakoiri has shapes added in solving but as I write this it's direcly handled by Hakoiri drawer), but I'll probably add a function variant of this method then.
 Drawer.prototype.drawYagitGrid = function (p_context, p_shapeGrid) {
 	function getShape (x, y) {
@@ -745,16 +777,14 @@ Drawer.prototype.drawYagitGrid = function (p_context, p_shapeGrid) {
 		return -1;
 	}
 	const shapes = [DrawableCircle(this.yagitColourSet.roundBorder, this.yagitColourSet.roundInner), DrawableSquare(this.yagitColourSet.squareBorder, this.yagitColourSet.squareInner)];
-	this.drawSpaceContents(p_context, shapes, getShape, p_shapeGrid.getXLength(), p_shapeGrid.getYLength()); 
+	this.drawSpaceContents2Dimensions(p_context, shapes, getShape, p_shapeGrid.getXLength(), p_shapeGrid.getYLength()); 
 }
 
-// -------------------------------
-// Draw grid contents used both in editor and solvers
-Drawer.prototype.drawKnotsInRD = function(p_context, p_knotsGrid) {
+Drawer.prototype.drawKnotsInRD = function(p_context, p_knotsGrid, p_colourInner, p_colourBorder) {
 	const yLength = p_knotsGrid.getYLength();	
 	const xLength = p_knotsGrid.getXLength();
-	p_context.fillStyle = this.knotsColourSet.inner;
-	p_context.strokeStyle = this.knotsColourSet.border;
+	p_context.fillStyle = p_colourInner;
+	p_context.strokeStyle = p_colourBorder;
 	const radius = this.pix.sideSpace / 7;
 	for(var iy = 0 ; iy < yLength ; iy++) {
 		for(var ix = 0 ; ix < xLength ; ix++) {
@@ -768,8 +798,6 @@ Drawer.prototype.drawKnotsInRD = function(p_context, p_knotsGrid) {
 	}
 }
 
-// Draw specific grid contents, used both in editor and solvers
-
 // Tapa
 Drawer.prototype.drawTapaGrid = function (p_context, p_tapaGrid) {
 	const yLength = p_tapaGrid.getYLength();
@@ -778,30 +806,30 @@ Drawer.prototype.drawTapaGrid = function (p_context, p_tapaGrid) {
 		var ix, iy, tapaClue;
 		const pixDeltaInnerX = 1/5*this.getPixInnerSide();
 		const pixDeltaInnerY = 1/4*this.getPixInnerSide();
-		p_context.fillStyle = this.colors.tapaIndications;
+		p_context.fillStyle = this.coloursFontsSpecificGrids.tapaIndications;
 		alignFontCenter(p_context);
-		p_context.fillStyle = "#000000";
+		p_context.fillStyle = '#000000';
 		for (iy = 0; iy < yLength; iy++) {
 			for (ix = 0; ix < xLength; ix++) {
 				tapaClue = p_tapaGrid.get(ix, iy);
 				if (tapaClue != null) {
 					if (tapaClue.length == 1) {
-						setupFont(p_context, this.getPixInnerSide()*4/5, "Arial");
+						setupFont(p_context, this.getPixInnerSide()*4/5, this.coloursFontsSpecificGrids.tapaFont);
 						pixArray = [{pixX : this.getPixCenterX(ix), pixY : this.getPixCenterY(iy)}];
 					}
 					if (tapaClue.length == 2) {
-						setupFont(p_context, this.getPixInnerSide()*1/2, "Arial");
+						setupFont(p_context, this.getPixInnerSide()*1/2, this.coloursFontsSpecificGrids.tapaFont);
 						pixArray = [{pixX : this.getPixCenterX(ix)-pixDeltaInnerX, pixY : this.getPixCenterY(iy)},
 									{pixX : this.getPixCenterX(ix)+pixDeltaInnerX, pixY : this.getPixCenterY(iy)}];
 					}
 					if (tapaClue.length == 3) {
-						setupFont(p_context, this.getPixInnerSide()*2/5, "Arial");
+						setupFont(p_context, this.getPixInnerSide()*2/5, this.coloursFontsSpecificGrids.tapaFont);
 						pixArray = [{pixX : this.getPixCenterX(ix), pixY : this.getPixCenterY(iy)-pixDeltaInnerY},
 									{pixX : this.getPixCenterX(ix)-pixDeltaInnerX, pixY : this.getPixCenterY(iy)+pixDeltaInnerY},
 									{pixX : this.getPixCenterX(ix)+pixDeltaInnerX, pixY : this.getPixCenterY(iy)+pixDeltaInnerY}];
 					}
 					if (tapaClue.length == 4) {
-						setupFont(p_context, this.getPixInnerSide()*2/5, "Arial");
+						setupFont(p_context, this.getPixInnerSide()*2/5, this.coloursFontsSpecificGrids.tapaFont);
 						pixArray = [{pixX : this.getPixCenterX(ix)-pixDeltaInnerX, pixY : this.getPixCenterY(iy)-pixDeltaInnerY},
 									{pixX : this.getPixCenterX(ix)+pixDeltaInnerX, pixY : this.getPixCenterY(iy)-pixDeltaInnerY},
 									{pixX : this.getPixCenterX(ix)-pixDeltaInnerX, pixY : this.getPixCenterY(iy)+pixDeltaInnerY},
@@ -900,18 +928,18 @@ function DrawRegionArgument(p_x, p_y, p_value, p_colour) {
 }
 
 /**
-Draws values in (presumably) first spaces of region in the same grid as where drawSpaceContents is used.
-p_functionRegion : function that transforms an integer in 0 .. p_numberRegions-1 into an item containing properties {x, y, value, color}, or null
+Draws values in appropriate spaces of region (usually the first) in the same grid as where drawSpaceContents variants are used. (coordinates and 2-dimensions)
+p_functionRegionIndicationColour : function that transforms an integer in 0 .. p_numberRegions-1 into an item containing properties {x, y, value, color}, or null ; this way, several colours may be used depending on the context.
 p_numberRegions : number of regions
-p_police : police in which values are drawn.
+p_font : font in which values are drawn.
 */ 
-Drawer.prototype.drawRegionValues = function(p_context, p_functionRegion, p_numberRegions, p_police) {
+Drawer.prototype.drawRegionIndications = function(p_context, p_functionRegionIndicationColour, p_numberRegions, p_font) {
 	var pixLeft, pixDown;
 	var valueToDraw;
-	setupFont(p_context, this.getPixInnerSide() / 2, "Arial");
+	setupFont(p_context, this.getPixInnerSide() / 2, p_font);
 	alignFontLeft(p_context);
 	for(var i=0 ; i < p_numberRegions ; i++) {
-		valueToDraw = p_functionRegion(i);
+		valueToDraw = p_functionRegionIndicationColour(i);
 		if (valueToDraw && valueToDraw != null) {
 			pixLeft = this.getPixInnerXLeft(valueToDraw.x) + this.getPixInnerSide()*1/5; // TODO, soon it may have to be pushed more on the edges for loop puzzles (wait, only Country road is concerned)
 			pixUp = this.getPixInnerYUp(valueToDraw.y) + this.getPixInnerSide()*1/5;
@@ -1015,12 +1043,25 @@ Drawer.prototype.drawLittlePlusUpperRight = function(p_context, p_xSpace, p_ySpa
 	p_context.stroke();
 }
 
+Drawer.prototype.drawLittleSquareUpperRight = function(p_context, p_xSpace, p_ySpace, p_item) {
+	p_context.beginPath();
+	const radius = this.pix.sideSpace / 6;
+	const pixXCenter = this.getPixXRight(p_xSpace) - 1 - radius;
+	const pixYCenter = this.getPixYUp(p_ySpace) + 1 + radius;
+	p_context.moveTo(pixXCenter - radius, pixYCenter - radius);
+	p_context.lineTo(pixXCenter - radius, pixYCenter + radius);
+	p_context.lineTo(pixXCenter + radius, pixYCenter + radius);
+	p_context.lineTo(pixXCenter + radius, pixYCenter - radius);
+	p_context.lineTo(pixXCenter - radius, pixYCenter - radius);
+	p_context.stroke();
+}
+
 // ------------------
 // Drawing margins
 
 // Draw margins with one info left and one up.
-Drawer.prototype.drawMarginLeftUpOne = function(p_context, p_arrayMarginLeft, p_arrayMarginUp) {
-	setupFont(p_context, this.getPixInnerSide(), "Arial", this.colors.marginText);	
+Drawer.prototype.drawMarginLeftUpOne = function(p_context, p_arrayMarginLeft, p_arrayMarginUp, p_font) {
+	setupFont(p_context, this.getPixInnerSide(), p_font, this.coloursFontsSpecificGrids.marginText);
 	alignFontCenter(p_context);
 	var x = this.pix.marginGrid.left + this.pix.sideSpace/2;
 	const pixYStartUp = this.pix.marginGrid.up - this.pix.sideSpace/2;
@@ -1391,7 +1432,16 @@ Drawer.prototype.adaptCanvasDimensions = function (p_canvas, p_parameters) {
     const totalYLength = upYLength + centralYLength + downYLength;
 	
     this.pix.sideSpace = Math.max(pixMinSpace, Math.min(pixMaxSpace, Math.min(Math.floor(pixXCanvasSize / totalXLength), Math.floor(pixYCanvasSize / totalYLength))));
+	var recupPix = false;
+	if (this.pix.sideSpace % 2 == 1) {
+		this.pix.sideSpace++;
+		recupPix = true;
+	}
+	// Note : size in pixels must be even to avoid nasty surprises with 4x5-tiled sizes and odd-sizes (especially since they are 16-pix long, a 16x16 square on a source becomes a (odd)x(odd) on canvas... ).
     this.pix.borderSpace = Math.max(1, Math.floor(this.pix.sideSpace / 10));
+	if (recupPix && this.pix.borderSpace > 1) {
+		this.pix.borderSpace--;
+	}
 	this.pix.borderClickDetection = this.pix.borderSpace * 2;
 	this.pix.marginGrid.left = this.pix.sideSpace * leftXLength; // Possibility to add "extra pixels", who knows... (in that case they must be subtracted from pixXCanvasSize / Y)
 	this.pix.marginGrid.up = this.pix.sideSpace * upYLength;
@@ -1435,7 +1485,7 @@ Drawer.prototype.wallToColor = function (p_wallType) {
         return (this.wallColorSet.closed_wall);
         break;
     }
-    return "#ffffff";
+    return '#ffffff';
 }
 
 // With fences

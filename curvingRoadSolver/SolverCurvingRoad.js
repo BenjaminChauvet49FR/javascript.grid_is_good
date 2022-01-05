@@ -24,6 +24,7 @@ SolverCurvingRoad.prototype.construct = function (p_symbolArray) {
     this.curvingLinkArray = [];
     this.curvingLinkList = [];
     this.pearlArray = [];
+	this.pearlSpacesList = [];
 
     var ix, iy;
 
@@ -52,6 +53,7 @@ SolverCurvingRoad.prototype.construct = function (p_symbolArray) {
             if (p_symbolArray[iy][ix] == SYMBOL_ID.WHITE) {
                 this.answerArray[iy].push(ADJACENCY.YES);
                 this.pearlArray[iy].push(true);
+				this.pearlSpacesList.push({x : ix, y : iy});
             } else {
                 this.answerArray[iy].push(ADJACENCY.UNDECIDED);
                 this.pearlArray[iy].push(false);

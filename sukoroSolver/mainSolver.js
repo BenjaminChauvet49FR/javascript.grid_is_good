@@ -10,12 +10,13 @@ function main() {
 	purificator = DummyPurificatorSymbolArray(); 
 	purificator.configure({isBlockedDegradable : true});
 	var colourSet = {
-		numberWriteFixed : '#880044',
-		numberWriteNotFixed : '#440088',
-		openSquare : '#99ccff',
+		numberWriteFixed : COLOURS.FIXED_NUMBER,
+		numberWriteNotFixed : COLOURS.NOT_FIXED_NUMBER,
+		openSpaceFixed : COLOURS.OPEN_WILD,
+		openSpaceNotFixed : COLOURS.OPEN_WILD_LIGHT,
 		closedNearX : '#440000',
 		closedFarX : '#cc88ff',
-		purification : "#ffaaaa"
+		purification : COLOURS.PURIFICATION_SYMBOL_GRID
 	}
 
 	//--------------------

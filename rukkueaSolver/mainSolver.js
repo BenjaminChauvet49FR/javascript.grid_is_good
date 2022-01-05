@@ -10,11 +10,11 @@ function main() {
 	var selectedSpacesGrid = new InputSpacesSelection(solver.xLength, solver.yLength);
 
 	var colors = {
-		filledSquare : '#4400ff',
-		lackingSquare : '#bbbbbb', 
-		writing : '#000000',
-		selectedSpace : '#bbffcc',
-		selectedCornerSpace : '#bbccff'
+		filledSpace : '#4400ff',
+		emptySpace : COLOURS.X_LIGHT, 
+		numberWrite : COLOURS.WRITE_WITHIN_FIELD,
+		selectedSpace : COLOURS.SELECTED_SPACE,
+		selectedCornerSpace : COLOURS.SELECTED_CORNER_SPACE
 	}
 
 	//--------------------

@@ -38,7 +38,7 @@ addScriptsSolving = addScriptsClosure(["../miscSolving/GeneralSolver.js", "../mi
 addScriptsDirections = addScriptsClosure(["../Directions.js", "../DirectionFunctions.js", "../miscSolving/DirectionFunctions.js"]);
 addScriptsGeneric = addScriptsClosure(["../WallGrid.js", "../Grid.js", "../LinkGrid.js",
 "../commonSaveAndLoad.js", "../commonEncodingDecoding.js",
-"../DrawableItem.js", "../Drawer.js",
+"../ColourBank.js", "../DrawableItem.js", "../Drawer.js",
 "../commonInput.js", "../commonCanvasActions.js", "../commonHTMLSolverInterface.js", "../commonHTMLItemGenerations.js", "../ActionsManagersSet.js",
 "../CommonHTMLMenu.js",
 "../Logs.js"]);

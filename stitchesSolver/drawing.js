@@ -20,7 +20,7 @@ function drawInsideSpaces(p_context, p_drawer, p_colorSet, p_solver) {
 		}
 	}
 	
-	p_drawer.drawClosablePaths(p_context, linksRight, linksDown, p_solver.xLength, p_solver.yLength, p_colorSet.bind, p_colorSet.isolate, new alternateClosedPathDraw(p_solver.gridWall, p_colorSet.isolateRegion)); 
+	p_drawer.drawClosablePaths(p_context, linksRight, linksDown, p_solver.xLength, p_solver.yLength, p_colorSet.bind, null, new AlternateClosedPathDraw(p_solver.gridWall, p_colorSet.isolateRegion)); 
 	
 	function getStitch (p_x, p_y) {
 		const state = p_solver.getSpace(p_x, p_y);
@@ -31,6 +31,6 @@ function drawInsideSpaces(p_context, p_drawer, p_colorSet, p_solver) {
 		} 
 		return -1;
 	}
-	p_drawer.drawSpaceContents(p_context, [DrawableCircle(p_colorSet.openStitchOut, p_colorSet.openStitchIn), DrawableX(p_colorSet.closedSpace)], getStitch, p_solver.xLength, p_solver.yLength); 
+	p_drawer.drawSpaceContents2Dimensions(p_context, [DrawableCircle(p_colorSet.openStitchOut, p_colorSet.openStitchIn), DrawableX(p_colorSet.closedSpace)], getStitch, p_solver.xLength, p_solver.yLength); 
 }
 

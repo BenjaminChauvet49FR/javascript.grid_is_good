@@ -7,8 +7,8 @@ var actionsManager = {};
 function main() {
 	solver = DummySolver();
 	var colourSet = {
-		fixedColour : '#880044',
-		notFixedColour : '#440088'
+		fixedColour : COLOURS.FIXED_NUMBER,
+		notFixedColour : COLOURS.NOT_FIXED_NUMBER
 	}
 	
 	var spanState = document.getElementById("span_resolution_state");

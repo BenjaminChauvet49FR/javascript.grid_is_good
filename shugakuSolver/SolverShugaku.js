@@ -41,8 +41,8 @@ SolverShugaku.prototype.construct = function(p_numberSymbolsArray) {
 	//Numeric spaces : number of adjacent spaces with squares and not placed yet squares // X spaces : empty
 	
 	this.edgesArray = []; // Quickly know about the open/closed edges
-	this.numericSpaceList = []; // For quickstart
-	
+	this.numericCoordinatesList = []; // For quickstart ; also public for drawing
+	this.xCoordinatesList = []; 
 	var symbolOrNumber;
 	for (var y = 0; y < this.yLength ; y++) {
 		this.answerArray.push([]);
@@ -55,10 +55,11 @@ SolverShugaku.prototype.construct = function(p_numberSymbolsArray) {
 				if (symbolOrNumber == "X") { // Totally blocking space
 					this.answerArray[y].push({block : true, value : SPACE_CROSS});
 					this.squareCountingArray[y].push(null);
+					this.xCoordinatesList.push({x : x, y : y});
 				} else { // Numeric spaces
 					this.answerArray[y].push({block : true, value : parseInt(symbolOrNumber, 10)});
 					this.squareCountingArray[y].push({notSquaresYet : parseInt(symbolOrNumber, 10), notNoSquaresYet : 4 - parseInt(symbolOrNumber, 10)});
-					this.numericSpaceList.push({x : x, y : y});
+					this.numericCoordinatesList.push({x : x, y : y});
 				}
 			} else {
 				this.answerArray[y].push(new SpaceNumeric(0, 2));
@@ -328,7 +329,7 @@ adjacencyClosure = function (p_solver) {
 quickStartEventsClosure = function(p_solver) {
 	return function() {
 		var listQSEvts = [{quickStartLabel : "Shugaku"}];
-		p_solver.numericSpaceList.forEach(coorSpace => {
+		p_solver.numericCoordinatesList.forEach(coorSpace => {
 			x = coorSpace.x;
 			y = coorSpace.y;
 			if (p_solver.squareCountingArray[y][x].notNoSquaresYet == 0) {

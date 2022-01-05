@@ -14,8 +14,8 @@ function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver, p_purifica
 		}
 		return -1;
 	}
-	p_drawer.drawSpaceContents(p_context, bgSelectionItems, bgSelectionSelection, p_solver.xLength, p_solver.yLength);
-	p_drawer.drawNumbersInsideStandard(p_context, drawNumberClosure(p_solver, p_colourSet), p_solver.xLength, p_solver.yLength);
+	p_drawer.drawSpaceContents2Dimensions(p_context, bgSelectionItems, bgSelectionSelection, p_solver.xLength, p_solver.yLength);
+	p_drawer.drawNumbersInsideStandard2Dimensions(p_context, drawNumberClosure(p_solver, p_colourSet), FONTS.ARIAL, p_solver.xLength, p_solver.yLength);
 	
 	if (p_purificator.isActive) {
 		// Purify mode
@@ -26,7 +26,7 @@ function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver, p_purifica
 				default : return -1; // The value EQUAL_TO_SOLVER.
 			}
 		}
-		p_drawer.drawSpaceContents(p_context, itemsPur, selectionSolverAndPurificator, p_solver.xLength, p_solver.yLength);		
+		p_drawer.drawSpaceContentsCoorsList(p_context, itemsPur, selectionSolverAndPurificator, p_purificator.items);		
 	}
 	
 }
@@ -49,8 +49,8 @@ drawNumberClosure = function(p_solver, p_colourSet) {
 Drawer.prototype.drawSudokuFrames = function(p_context, p_solver, p_mouseCoorsItem) {
 	if (p_solver.grids.length > 1) {
 		var grid, colour;
-		const basicColour = "#ff8800";
-		const colours = ["#ff0000", "#00ccff", "#8800ff", "#00aa00", "#0000ff"];
+		const basicColour = COLOURS.SUDOKU_FRAME_ACTIVE;
+		const colours = COLOURS.SUDOKU_FRAMES_RAINBOW;
 		for (var i = 0 ; i < p_solver.grids.length ; i++) {
 			grid = p_solver.grids[i];
 			colour = colours[i % colours.length];

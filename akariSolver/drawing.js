@@ -39,7 +39,7 @@ function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver) {
 	
 	const spacesBG = [DrawableColor(p_colourSet.wallSpace), DrawableColor(p_colourSet.litSpace)];
 	const shapesFG = [DrawableCircle(p_colourSet.line, p_colourSet.lightbulb), DrawableLittleX(p_colourSet.line)];
-	p_drawer.drawSpaceContents(p_context, spacesBG, getSpaceBackground, p_solver.xLength, p_solver.yLength);
-	p_drawer.drawSpaceContents(p_context, shapesFG, getEmptySpaceElement, p_solver.xLength, p_solver.yLength);
-	p_drawer.drawNumbersInsideStandard(p_context, drawNumberClosure(p_solver, p_colourSet), p_solver.xLength, p_solver.yLength);	
+	p_drawer.drawSpaceContents2Dimensions(p_context, spacesBG, getSpaceBackground, p_solver.xLength, p_solver.yLength);
+	p_drawer.drawSpaceContents2Dimensions(p_context, shapesFG, getEmptySpaceElement, p_solver.xLength, p_solver.yLength);
+	p_drawer.drawNumbersInsideStandardCoorsList(p_context, drawNumberClosure(p_solver, p_colourSet), p_solver.numericSpacesList, FONTS.ARIAL);
 }

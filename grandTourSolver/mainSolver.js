@@ -1,10 +1,10 @@
 var solver;
 function main() {
 	const colours = {
-		openLink:'#000000',
-		undecidedLink:'#dddddd',
-		blockedLink:'#cc0088',
-		closedLink:'#eeeeff'
+		openLink : COLOURS.OPEN_LINK_DOTS,
+		undecidedLink : COLOURS.UNDECIDED_LINK_DOTS,
+		blockedLink : COLOURS.FIXED_LINK_DOTS,
+		closedLink : COLOURS.CLOSED_LINK_DOTS
 	}
 
 	var drawer = new Drawer(colours);

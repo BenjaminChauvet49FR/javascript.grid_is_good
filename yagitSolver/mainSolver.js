@@ -2,12 +2,10 @@ var solver;
 
 function main() {
 	var colors = {
-		circleArea : "#bbbbff",
-		//circleIn : "#000088", // Note : shapes already drawn by main drawer
-		//circleOut : "#8844ff",
-		squareArea : "#bbffbb", // TODO : make it colorblind-friendly !
-		//squareIn : "#008800",
-		//squareOut : "#00cc44"
+		circleArea : '#bbbbff', // Note : shapes already drawn by main drawer
+		squareArea : '#bbffbb',
+		deadEndArea : '#ff8888',
+		colourBlind : '#000044'
 	}; 
 	var drawer = new Drawer();
 	solver = DummySolver();
@@ -17,12 +15,12 @@ function main() {
 	var drawIndications;
 	var spanState = document.getElementById("span_resolution_state");
 	
-	const extraIndications = {checkBoxColorDeadEnds : document.getElementById("checkbox_color_deadEnds")};
+	const extraIndications = {checkBoxColorDeadEnds : document.getElementById("checkbox_color_deadEnds"), checkBoxColourblindFriendly : document.getElementById("checkbox_colourblind_friendly")};
 
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
-		drawing(context, drawer, colors, solver, extraIndications);
+		drawing(context, drawer, colors, solver, extraIndications, );
 		solver.callStateForItem(spanState);
 	}
 

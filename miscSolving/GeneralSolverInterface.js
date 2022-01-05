@@ -1,8 +1,8 @@
 GeneralSolver.prototype.callStateForItem = function(p_item) {
-	const colorSuccess = "#008800";
-	const colorFailure = "#880000";
-	const colorNeutral = "#000000";
-	const colorKindaFailure = "#880066";
+	const colorSuccess = '#008800';
+	const colorFailure = '#880000';
+	const colorNeutral = '#000000';
+	const colorKindaFailure = '#880066';
 	const defaultString = "-";
 	if (this.stateChangedSinceLastRefresh) {
 		this.stateChangedSinceLastRefresh = false;

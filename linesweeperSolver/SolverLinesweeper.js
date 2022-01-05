@@ -54,7 +54,8 @@ SolverLinesweeper.prototype.construct = function(p_numberGrid) {
 	}
 	
 	var numberXNull;
-	this.numericCoordinatesList = []; // List of coordinates of numeric spaces
+	this.numericCoordinatesList = []; // List of coordinates of numeric spaces ; also public for drawing
+	this.xCoordinatesList = []; // Public for drawing
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
 		this.numericArray.push([]);
 		for (var ix = 0 ; ix < this.xLength ; ix++) {
@@ -62,6 +63,7 @@ SolverLinesweeper.prototype.construct = function(p_numberGrid) {
 			if (numberXNull != null) {
 				if (isNaN(numberXNull)) {
 					this.numericArray[iy].push({number : NOT_FORCED});
+					this.xCoordinatesList.push({x : ix, y : iy});
 				} else {					
 					this.numericCoordinatesList.push({x : ix, y : iy});
 					// Numbers set to -1 to avoid screwing up

@@ -10,11 +10,11 @@ function main() {
 	var drawIndications;
 
 	var colors = {
-		litSpace : "#ffff88",
-		wallSpace : "#a000a0",
-		line : "#000066",
-		lightbulb : "#ffff00",
-		numberWrite : "#ffff88",
+		litSpace : '#ffff88',
+		wallSpace : '#a000a0',
+		line : '#000066',
+		lightbulb : '#ffff00',
+		numberWrite : '#ffff88',
 	}
 
 	//--------------------

@@ -8,15 +8,11 @@ function main() {
 	var canevasInteraction = document.getElementById("canevas");
 	var	context = canevasInteraction.getContext("2d");
 	var actionsManager  = {};
-	var drawIndications;
 
 	var colors = {
-		emptySquare : '#cccccc',
-		starIndication : "#00cccc",
-		crossIndication : "#cc0000",
-		regionIndication : "#008800",
-		selectedSpace : '#bbffcc',
-		selectedCornerSpace : '#bbccff'
+		emptySpace : COLOURS.X_LIGHT,
+		selectedSpace : COLOURS.SELECTED_SPACE,
+		selectedCornerSpace : COLOURS.SELECTED_CORNER_SPACE
 	}
 
 	//--------------------

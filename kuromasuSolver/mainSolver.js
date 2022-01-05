@@ -8,9 +8,9 @@ function main() {
 	var actionsManager = {}; 
 
 	var colors = {
-		openSquare : '#00ffcc',
-		closedSquare : '#cc0022',
-		numberWrite : '#000000'
+		openSpace : COLOURS.OPEN_SPREAD,
+		closedSpace : COLOURS.CLOSED_SPREAD,
+		numberWrite : COLOURS.WRITE_WITHIN_OPEN_WILD
 	}
 
 	//--------------------

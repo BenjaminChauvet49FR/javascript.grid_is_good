@@ -187,7 +187,8 @@ LoopSolver.prototype.loopSolverConstruct = function(p_puzzleSpecificMethodPack) 
 	// Ergonomic options
 	this.ergonomicOptions = {
 		displayOtherEnds : false,
-		colorChains : false
+		colorChains : false,
+		drawXsMyself : false
 	}
 }
 
@@ -279,6 +280,10 @@ LoopSolver.prototype.areAllOpenSpaces = function() {
 	return this.ergonomicOptions.allOpenSpaces;
 }
 
+LoopSolver.prototype.areXsAutomaticallyDrawed = function() {
+	return !this.ergonomicOptions.drawXsMyself;
+}
+
 LoopSolver.prototype.getColorChains = function (p_x, p_y) {
 	if (this.ergonomicOptions.colorChains == true) {
 		return this.colorChainsGrid[p_y][p_x];
@@ -298,6 +303,11 @@ LoopSolver.prototype.declareClosedSpacesActing = function() {
 // If used, all non-banned spaces must be open for this puzzle (ex. : EntryExit) (TODO : does it manage banned spaces yet ?)
 LoopSolver.prototype.signalAllOpenSpaces = function() {
 	this.ergonomicOptions.allOpenSpaces = true;
+}
+
+// Desactivate common drawing of closed space
+LoopSolver.prototype.desactivateXsDrawing = function() {
+	this.ergonomicOptions.drawXsMyself = true;
 }
 
 // -------------------
