@@ -285,7 +285,7 @@ Grid.prototype.listSpacesMirrorVertical = function(p_coors, p_yMiddle, p_isOrien
 }
 
 // Important to symbolize the directions. Not linked to the main 'directions' since it is for pure array representation.
-// Directions in strings MUST BE 'L' 'U' 'R' 'D' ; strings MUST NOT CONTAIN '%'
+// Directions in strings MUST BE same as symbols (so ... 'L' 'U' 'R' 'D' until it is updated) ; strings MUST NOT CONTAIN '%'
 
 function replacementCycle(p_string, p_array) {
 	if (p_string == null) {
@@ -299,19 +299,19 @@ function replacementCycle(p_string, p_array) {
 }
 
 function rotateCWString(p_string) {
-	return replacementCycle(p_string, ["L", "U", "R", "D"]);
+	return replacementCycle(p_string, [CHAR_DIRECTION.LEFT, CHAR_DIRECTION.UP, CHAR_DIRECTION.RIGHT, CHAR_DIRECTION.DOWN]);
 }
 
 function rotateCCWString(p_string) {
-	return replacementCycle(p_string, ["L", "D", "R", "U"]);
+	return replacementCycle(p_string, [CHAR_DIRECTION.LEFT, CHAR_DIRECTION.DOWN, CHAR_DIRECTION.RIGHT, CHAR_DIRECTION.UP]);
 }
 
 function mirrorHorizontalString(p_string) {
-	return replacementCycle(p_string, ["L", "R"]);
+	return replacementCycle(p_string, [CHAR_DIRECTION.LEFT, CHAR_DIRECTION.RIGHT]);
 }
 
 function mirrorVerticalString(p_string) {
-	return replacementCycle(p_string, ["U", "D"]);
+	return replacementCycle(p_string, [CHAR_DIRECTION.UP, CHAR_DIRECTION.DOWN]);
 }
 
 function rotateUTurnString(p_string) {

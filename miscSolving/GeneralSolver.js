@@ -408,11 +408,11 @@ p_passTools must contain the following methods (unlike deduction and mono-passin
 - orderPassArgumentsMethod : method that reorders the argument list, taking no argument and returning a list of pass arguments, each of which should be passed to p_generatePassEventsMethod)
 May be used only once at start or several times, depending on passTodoMethod
 - skipPassMethod (optional) : method that takes a pass argument and that determinates whether the set of possibilites designated by the pass argument is too big to be passed or not. The set of possibilities will have to be tested anyways if no other set has been tested so far in this cycle of multipasses.)
-- passTodoMethod (optional) : if defined, the orderedListPassArguments will be used only once by orderPassArgumentsMethod, and then reskipped. Useful when there are lots of items to pass and there is no point to sort them or recreate a list. Typically when passing all spaces or all fences in relevant solvers.
+- passTodoMethod (optional) : if defined, the listPassArguments will be used only once by orderPassArgumentsMethod, and then reskipped. Useful when there are lots of items to pass and there is no point to sort them or recreate a list. Typically when passing all spaces or all fences in relevant solvers.
 */
 GeneralSolver.prototype.multiPass = function(p_passTools) {  
 	var oneMoreLoop;
-	var orderedListPassArguments = p_passTools.orderPassArgumentsMethod(); 
+	var listPassArguments = p_passTools.orderPassArgumentsMethod(); 
 	var ok = true;
 	var resultPass;
 	var i;
@@ -423,18 +423,16 @@ GeneralSolver.prototype.multiPass = function(p_passTools) {
 		oneMoreLoop = false;
 		
 		i = 0;
-		while (ok && i < orderedListPassArguments.length) {
-			argPass = orderedListPassArguments[i];
+		while (ok && i < listPassArguments.length) {
+			argPass = listPassArguments[i];
 			if (!oneMoreLoop || !p_passTools.skipPassMethod || !p_passTools.skipPassMethod(argPass)) {
 				p_listListCoveringEvent = p_passTools.generatePassEventsMethod(argPass);
 				// Where the pass is performed !
 				resultPass = this.passEvents(p_listListCoveringEvent, argPass); 
 				if (resultPass == PASS_RESULT.SUCCESS) {
 					oneMoreLoop = true;
-					//console.log("Successful pass !"+argPass);
 				} else if (resultPass == PASS_RESULT.FAILURE) {
 					ok = false;
-					//console.log("Failed pass !"+argPass);
 				}
 			} else {
 				autoLogMultipass("C'est trop pour nous, on passe la région "+argPass);
@@ -449,15 +447,15 @@ GeneralSolver.prototype.multiPass = function(p_passTools) {
 			}
 			if (ok) {				
 				if (!p_passTools.passTodoMethod) {
-					orderedListPassArguments = p_passTools.orderPassArgumentsMethod(); 
+					listPassArguments = p_passTools.orderPassArgumentsMethod(); 
 				} else {
-					var newOrderedListPassArguments = [];
-					orderedListPassArguments.forEach(argPass => {
+					var newListPassArguments = [];
+					listPassArguments.forEach(argPass => {
 						if (p_passTools.passTodoMethod(argPass)) {
-							newOrderedListPassArguments.push(argPass);
+							newListPassArguments.push(argPass);
 						}
 					});
-					orderedListPassArguments = newOrderedListPassArguments;
+					listPassArguments = newListPassArguments; 
 				}
 			}
 		}
@@ -611,6 +609,8 @@ const EXAMPLE_SPECIAL_OPTIONS_RESOLVE = {retainOneSolution : false}
 // Methods needed : quickStartMethod to perform quickStart(s), and searchSolutionMethod
 // Note : this method works with tryAllPossibilities in order to find two solutions at most. It doesn't look for more. 
 GeneralSolver.prototype.resolve = function(p_specialOptions) {
+	this.depthResearch = 0; // Recursion depth - number of calls to the try-again recursive method 
+	this.depthOneSolution = 0; // Value of depthResearch once the first solution has been found
 	if (p_specialOptions && p_specialOptions.retainOneSolution == false) {
 		this.retainOneSolution = false;
 	} else {
@@ -622,7 +622,6 @@ GeneralSolver.prototype.resolve = function(p_specialOptions) {
 			return RESOLUTION_RESULT.FAILURE;
 		}
 	}
-	this.solutionsFoundCount = 0;
 	this.indexFirstUndecidedHypothesis = -1;
 	this.notTriedEventsSolution = [];
 	this.hypothesesToSolution = [];
@@ -645,22 +644,31 @@ GeneralSolver.prototype.resolve = function(p_specialOptions) {
 // Kinda like pass. Except we are doing ever more stuff because we are looking for one solution of the puzzle.
 // We are also noting all the possibilites that have not been tried at the first divergence point of the solution. 
 GeneralSolver.prototype.tryAllPossibilities = function(p_eventChoice)  {	
+	this.depthResearch++;
 	const lengthBeforeHypothesis = this.happenedEventsSeries.length; 
 	var ok = true;
+	var solutionsFoundCount = 0;
 	for (var i = 0 ; i < p_eventChoice.length ; i++) {
 		ok = (this.tryToApplyHypothesis(p_eventChoice[i]) != DEDUCTIONS_RESULT.FAILURE);
 		if (ok) {
 			const attemptAnswer = this.setResolution.searchSolutionMethod(); // Only recursive call !
 			if (attemptAnswer == RESOLUTION_RESULT.SUCCESS) {
-				this.solutionsFoundCount++;
-				if (this.solutionsFoundCount == 1 && this.retainOneSolution) {
-					this.copyFirstSolution();
+				solutionsFoundCount++;
+				if (solutionsFoundCount == 1) {
+					if (this.depthOneSolution == 0) {						
+						this.depthOneSolution = this.depthResearch; 
+					}
+					if (this.retainOneSolution) {						
+						this.copyFirstSolution();
+					}
 				}
-				if (this.solutionsFoundCount == 2) {
+				if (solutionsFoundCount == 2) {
+					this.depthResearch--;
 					return RESOLUTION_RESULT.MULTIPLE;
 				}
 				
 			} else if (attemptAnswer == RESOLUTION_RESULT.MULTIPLE) {
+				this.depthResearch--;
 				return RESOLUTION_RESULT.MULTIPLE;
 			}
 			while (this.happenedEventsSeries.length > lengthBeforeHypothesis) {				
@@ -668,10 +676,12 @@ GeneralSolver.prototype.tryAllPossibilities = function(p_eventChoice)  {
 			}
 		}
 	} // To for loop
-	if (this.solutionsFoundCount == 1) {
+	
+	this.depthResearch--; // No more recursive calls : decrease the level.
+	if (solutionsFoundCount == 1) {
 		return RESOLUTION_RESULT.SUCCESS;
 	}
-	if (this.solutionsFoundCount == 2) {
+	if (solutionsFoundCount == 2) {
 		return RESOLUTION_RESULT.MULTIPLE;
 	}
 	return RESOLUTION_RESULT.FAILURE;

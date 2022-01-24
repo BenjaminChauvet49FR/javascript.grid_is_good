@@ -35,7 +35,7 @@ SolverMasyu.prototype.construct = function(p_symbolGrid) {
 		setEdgeLinkedPSDeductions : setEdgeLinkedDeductionsClosure(this),
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
 		quickStartEventsPS : quickStartEventsClosure(this),
-		generateEventsForPassPS : generateEventsForSpaceClosure(this),
+		generateEventsForPassPS : generateEventsForSpacePassClosure(this),
 		orderedListPassArgumentsPS : startingOrderedListPassArgumentsMasyuClosure(this),
 		namingCategoryPS : namingCategoryClosure(this),
 		multipassPessimismPS : true,
@@ -47,7 +47,7 @@ SolverMasyu.prototype.construct = function(p_symbolGrid) {
 		
 	}); // this.xLength and yLength defined in the upper solver
 	// comparisonLoopEvents and copyLoopSolverEventMethod defined in LoopSolver
-	//this.setMultipass = {numberPSCategories : 2, PSCategoryMethod : multiPassMasyuCategoryClosure(this), generatePassEventsMethod : generateEventsForSpaceClosure(this)} RELIQUAT
+	//this.setMultipass = {numberPSCategories : 2, PSCategoryMethod : multiPassMasyuCategoryClosure(this), generatePassEventsMethod : generateEventsForSpacePassClosure(this)} RELIQUAT
 	this.pearlArray = [];
 	this.pearlSpacesList = [];
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
@@ -320,7 +320,7 @@ SolverMasyu.prototype.testExpansionWhitePearlSpace = function(p_eventList, p_x, 
 // -------------------
 // Passing
 
-generateEventsForSpaceClosure = function(p_solver) {
+generateEventsForSpacePassClosure = function(p_solver) {
 	return function(p_category) {
 		switch (p_solver.pearlArray[p_category.y][p_category.x]) {
 			case PEARL.WHITE : return generateWhitePearlPassEvents(p_category.x, p_category.y); break;
@@ -373,7 +373,7 @@ function namingCategoryClosure(p_solver) {
 
 function startingOrderedListPassArgumentsMasyuClosure(p_solver) {
 	return function() {
-		return p_solver.pearlSpacesList;
+		return p_solver.pearlSpacesList; // Note : only contains (x, y) properties but at least no "LOOP_PASS_CATEGORY.STANDARD_SPACE"
 	}
 }
 

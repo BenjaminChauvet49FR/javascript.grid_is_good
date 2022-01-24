@@ -201,10 +201,10 @@ SolverYajikabe.prototype.makeResolution = function() {
 //Offensive !
 SolverYajikabe.prototype.getDirection = function(p_x, p_y) { 
 	switch (this.clueGrid.get(p_x, p_y).charAt(0)) {
-		case 'L' : return DIRECTION.LEFT; break;
-		case 'U' : return DIRECTION.UP; break;
-		case 'R' : return DIRECTION.RIGHT; break;
-		case 'D' : return DIRECTION.DOWN; break;
+		case CHAR_DIRECTION.LEFT : return DIRECTION.LEFT; break;
+		case CHAR_DIRECTION.UP : return DIRECTION.UP; break;
+		case CHAR_DIRECTION.RIGHT : return DIRECTION.RIGHT; break;
+		case CHAR_DIRECTION.DOWN : return DIRECTION.DOWN; break;
 		default : return null;
 	}
 }

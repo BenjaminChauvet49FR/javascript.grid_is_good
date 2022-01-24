@@ -86,7 +86,7 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 				inputOptions.minNumber = 1;
 			}
 			p_editorCore.setVisibleGrids([GRID_ID.DIGIT_X_SPACE]); break;
-		case 'CanalView': case 'Corral': case 'Kuromasu': case 'Nurikabe':
+		case 'CanalView': case 'Corral': case 'Geradeweg': case 'Kuromasu': case 'Nurikabe':
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.NUMBERS_X_ONLY;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_X_SPACE]); break;
@@ -94,6 +94,15 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.YAJILIN_LIKE;
 			p_editorCore.setVisibleGrids([GRID_ID.YAJILIN_LIKE]); break;
+		case 'CastleWall': 
+			p_editorCore.setWallsOff();
+			saveLoadModeId = PUZZLES_KIND.YAJILIN_BLACK_WHITE;
+			p_editorCore.setVisibleGrids([GRID_ID.YAJILIN_BLACK_WHITE]); break;
+		case 'Shingoki':
+			p_editorCore.setWallsOff();
+			saveLoadModeId = PUZZLES_KIND.NUMBER_BLACK_WHITE;
+			inputOptions.minNumber = 2;
+			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_BLACK_WHITE]); break;
 		case 'Tapa': 
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.TAPA;
@@ -144,6 +153,7 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			usesChains = false;
 			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY;
 			p_editorCore.setLinksOnly();
+			break;
 		default: // norinori, lits, entryExit... no numbers, only regions. 
 			usesChains = false;
 			saveLoadModeId = PUZZLES_KIND.WALLS_ONLY;

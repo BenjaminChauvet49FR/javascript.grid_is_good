@@ -4,6 +4,7 @@ const DeltaY = [0, -1, 0, 1];
 const OppositeDirection = [2, 3, 0, 1];
 const TurningRightDirection = [1, 2, 3, 0];
 const TurningLeftDirection = [3, 0, 1, 2];
+const OrthogonalDirections = [[1, 3], [0, 2], [1, 3], [0, 2]];
 const KnownDirections = [DIRECTION.LEFT, DIRECTION.UP, DIRECTION.RIGHT, DIRECTION.DOWN];
 const ORIENTATION = {HORIZONTAL : 0, VERTICAL : 1}
 const KnownOrientations = [ORIENTATION.HORIZONTAL, ORIENTATION.VERTICAL];

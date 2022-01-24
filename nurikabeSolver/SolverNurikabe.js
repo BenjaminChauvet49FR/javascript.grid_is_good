@@ -29,7 +29,7 @@ SolverNurikabe.prototype.construct = function(p_numericXArray) {
 		undoEventClosure(this)
 	));
 	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
-	this.methodsSetMultipass = {generatePassEventsMethod : generateEventsForSpacePassClosure(this), orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
+	this.methodsSetMultipass = {generatePassEventsMethod : generateEventsForIslandPassClosure(this), orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 	skipPassMethod : skipPassClosure(this) };
 	this.setResolution = {
 		quickStartEventsMethod : quickStartEventsClosure(this),
@@ -582,7 +582,7 @@ function banInaccessibleIslandsClosure(p_solver) {
 // --------------------
 // Passing and multipassing
 
-generateEventsForSpacePassClosure = function(p_solver) {
+generateEventsForIslandPassClosure = function(p_solver) {
 	return function(p_indexIsland) {
 		return p_solver.generateEventsIslandPass(p_indexIsland);
 	}

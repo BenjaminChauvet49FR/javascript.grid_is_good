@@ -59,6 +59,12 @@ const COLOURS = {
 	UNDECIDED_LINK_DOTS : '#dddddd',
 	CLOSED_LINK_DOTS : '#eeeeff',
 	FIXED_LINK_DOTS : '#cc0088',
+	LIGHT_DOT_BG : '#ffffcc',
+	LIGHT_DOT_WRITE : '#000033',
+	DARK_DOT_BG : '#000033',
+	DARK_DOT_WRITE : '#ffffcc',
+	LIGHT_AREA : '#ffffee',
+	DARK_AREA : '#ddddff',
 	
 	// Specific ; editor plus solver
 	KNOT_INNER : '#002288',
@@ -93,7 +99,12 @@ const COLOURS = {
 	EDITOR_TEXT_WRITING : '#000000',
 	WILD_CARD_WRITING : '#000000',
 	// Purification
-	PURIFICATION_SYMBOL_GRID : '#ffaaaa'
+	PURIFICATION_SYMBOL_GRID : '#ffaaaa',
+	EDITOR_VAGUE_NODE : '#888888',
+	EDITOR_OPEN_LINK_DOTS : '#222222',
+	EDITOR_CLOSED_LINK_DOTS : '#dddddd',
+	WHITE_ON_BLACK : "#dddddd",
+	BLACK_ON_WHITE : "#000000"
 }
 
 // How fonts are named

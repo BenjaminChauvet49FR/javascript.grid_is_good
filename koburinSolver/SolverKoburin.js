@@ -26,12 +26,12 @@ SolverKoburin.prototype.construct = function(p_numberGrid) {
 		setSpaceClosedPSDeductions : setSpaceClosedPSDeductionsClosure(this),
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
 		quickStartEventsPS : quickStartEventsClosure(this),
-		generateEventsForPassPS : generateEventsForSpaceClosureKoburin(this),
+		generateEventsForPassPS : generateEventsForAroundSpacePassClosureKoburin(this),
 		orderedListPassArgumentsPS : startingOrderedListPassArgumentsKoburinClosure(this),
 		namingCategoryPS : namingCategoryClosure(this),
 		multipassPessimismPS : true,
 		passDefineTodoPSMethod : function(p_categoryPass) {
-			return true;
+			return (this.numericArray[p_categoryPass.y][p_categoryPass.x].notLinkedYet != 0);
 		}
 	});
 	this.declareClosedSpacesActing();
@@ -272,7 +272,7 @@ quickStartEventsClosure = function(p_solver) {
 // -------------------
 // Passing & multipassing
 
-generateEventsForSpaceClosureKoburin = function(p_solver) {
+generateEventsForAroundSpacePassClosureKoburin = function(p_solver) {
 	return function(p_space) {
 		var answer = []; // If the first events of the lists are applied in a glutton-algorithm style (here, closed in up and closed in left around a numeric space with value 2) are applied, the brackets are forgotten this is not a (list of list of events).
 		if (p_solver.getNumber(p_space.x, p_space.y) != null && p_solver.getNumber(p_space.x, p_space.y) != NOT_FORCED) {

@@ -23,33 +23,33 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 			this.drawEmptyGrid(p_context, xLength, yLength);
 		}
 	} else {
-		if (p_editorCore.holdsLinks()) {
+		if (p_editorCore.holdsLinks()) { // Note : move this away ?
 			this.drawDotsGrid(p_context, xLength, yLength, 
-			function(x, y) {return p_editorCore.getLinkR(x, y) == LINKGRID.NOT_LINKED ? COLOURS.OPEN_WALL : COLOURS.CLOSED_WALL},
-			function(x, y) {return p_editorCore.getLinkD(x, y) == LINKGRID.NOT_LINKED ? COLOURS.OPEN_WALL : COLOURS.CLOSED_WALL},
-			function(x, y) {return "#888888"},
+			function(x, y) {return p_editorCore.getLinkR(x, y) == LINKGRID.NOT_LINKED ? COLOURS.EDITOR_CLOSED_LINK_DOTS : COLOURS.EDITOR_OPEN_LINK_DOTS},
+			function(x, y) {return p_editorCore.getLinkD(x, y) == LINKGRID.NOT_LINKED ? COLOURS.EDITOR_CLOSED_LINK_DOTS : COLOURS.EDITOR_OPEN_LINK_DOTS},
+			function(x, y) {return COLOURS.EDITOR_VAGUE_NODE},
 			function() {return DOTS_SIZE.MEDIUM});
 		} else {			
 			this.drawDotsGridSimple(p_context, xLength+1, yLength+1, COLOURS.OPEN_LINK_DOTS);
 		}
 	}
 
-	// Selection
-	for (var iy = 0; iy < yLength; iy++) {
-		for (var ix = 0; ix < xLength; ix++) {
-			if (p_editorCore.getSelection(ix, iy) == SELECTED.YES) {
-				p_context.fillStyle = colourSet.selectedSpace;
-				p_context.fillRect(this.getPixInnerXLeft(ix), this.getPixInnerYUp(iy), this.getPixInnerSide(), this.getPixInnerSide());
+	const selection1st = !this.shouldDrawStrokedSelectionAfter(p_editorCore);
+
+	// Selection (part 1)
+	if (selection1st) {
+		for (var iy = 0; iy < yLength; iy++) {
+			for (var ix = 0; ix < xLength; ix++) {
+				if (p_editorCore.getSelection(ix, iy) == SELECTED.YES) {
+					this.fillInnerSpace(p_context, colourSet.selectedSpace, ix, iy);
+				}
 			}
 		}
+		const sc = p_editorCore.getSelectedSpaceForRectangle();
+		if (sc != null) {
+			this.fillInnerSpace(p_context, colourSet.selectedCornerSpace, sc.x, sc.y);
+		}
 	}
-	const sc = p_editorCore.getSelectedSpaceForRectangle();
-	if (sc != null) {
-		p_context.fillStyle = colourSet.selectedCornerSpace;
-		p_context.fillRect(this.getPixInnerXLeft(sc.x), this.getPixInnerYUp(sc.y), this.getPixInnerSide(), this.getPixInnerSide());
-	}
-
-
 	
 	// Which grids and margins are to be drawn ?
 	if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_REGION)) {
@@ -88,6 +88,12 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	if (p_editorCore.isVisibleGrid(GRID_ID.YAJILIN_LIKE)) {
 		this.drawCombinedArrowGridIndications(p_context, p_editorCore.getGrid(GRID_ID.YAJILIN_LIKE));
 	}
+	if (p_editorCore.isVisibleGrid(GRID_ID.YAJILIN_BLACK_WHITE)) {
+		this.drawCombinedArrowGridIndicationsBlackWhite(p_context, p_editorCore.getGrid(GRID_ID.YAJILIN_BLACK_WHITE));
+	}
+	if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_BLACK_WHITE)) {
+		this.drawNumbersBlackWhiteGrid(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_BLACK_WHITE), FONTS.ARIAL);
+	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.OX)) {
 		this.drawStringsGrid(p_context, p_editorCore.getGrid(GRID_ID.OX));
 	}
@@ -95,6 +101,27 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 		this.drawMarginLeftUpOne(p_context, p_editorCore.margins[EDGES.LEFT], p_editorCore.margins[EDGES.UP], FONTS.ARIAL);
 	}
 	this.drawWildCardGrid(p_context, p_editorCore.getWildCardGrid());
+	
+	// Selection (part 2)
+	if (!selection1st) {
+		const pixStroke = Math.max(this.getPixInnerSide()/8, 2);
+		for (var iy = 0; iy < yLength; iy++) {
+			for (var ix = 0; ix < xLength; ix++) {
+				if (p_editorCore.getSelection(ix, iy) == SELECTED.YES) {
+					this.strokeInnerSpace(p_context, colourSet.selectedSpace, ix, iy, pixStroke);
+				}
+			}
+		}
+		const sc = p_editorCore.getSelectedSpaceForRectangle();
+		if (sc != null) {
+			this.strokeInnerSpace(p_context, colourSet.selectedCornerSpace, sc.x, sc.y, pixStroke);
+		}
+	}
+	
+}
+
+Drawer.prototype.shouldDrawStrokedSelectionAfter = function(p_editorCore) {
+	return p_editorCore.isVisibleGrid(GRID_ID.YAJILIN_BLACK_WHITE) || p_editorCore.isVisibleGrid(GRID_ID.NUMBER_BLACK_WHITE);
 }
 
 Drawer.prototype.drawStringsLittleInCorner = function (p_context, p_numberGrid) {
@@ -169,4 +196,22 @@ Drawer.prototype.drawWildCardGrid = function(p_context, p_withWildCardsGrid) {
 			}
 		}
 	}
+}
+
+Drawer.prototype.drawNumbersBlackWhiteGrid = function(p_context, p_grid, p_font) {
+	writeFunction = function(p_x, p_y) { 
+		const chain = p_grid.get(p_x, p_y);
+		if (chain == null) {
+			return null;
+		}
+		if (chain[0] == SYMBOL_ID.BLACK) { 
+			colour1 = BLACK_ON_WHITE;
+			colour2 = WHITE_ON_BLACK;
+		} else {
+			colour1 = WHITE_ON_BLACK;
+			colour2 = BLACK_ON_WHITE;
+		}
+		return new DrawWriteSpaceValue( parseInt(chain.substring(1), 10), colour1, colour2);
+	}
+	this.drawTextInsideStandardWithBackground2Dimensions(p_context, writeFunction, p_font, p_grid.getXLength(), p_grid.getYLength());
 }

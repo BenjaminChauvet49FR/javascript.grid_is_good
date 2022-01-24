@@ -1,11 +1,17 @@
 var solver;
 function main() {
 	const colours = {
-		noLink : COLOURS.NO_LINK,
-		presentLink : COLOURS.LINK,
-		noLinkState : COLOURS.NO_LINK_SPACE,
-		presentLinkState : COLOURS.LINK_SPACE,
-		oppositeSpaceWrite : COLOURS.LOOP_ERGONOMIC_OPPOSITE_END
+		openLink : COLOURS.OPEN_LINK_DOTS,
+		openNode : COLOURS.OPEN_NODE_DOTS,
+		undecidedLink : COLOURS.UNDECIDED_LINK_DOTS,
+		closedLink : '#f8f0ff',
+		
+		darkPearlBG : COLOURS.DARK_DOT_BG,
+		darkPearlWrite : COLOURS.DARK_DOT_WRITE,
+		lightPearlBG : COLOURS.LIGHT_DOT_BG,
+		lightPearlWrite : COLOURS.LIGHT_DOT_WRITE,
+		areaIn : COLOURS.LIGHT_AREA,
+		areaOut : COLOURS.DARK_AREA,
 	}
 
 	var drawer = new Drawer(colours);
@@ -20,27 +26,24 @@ function main() {
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
-		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength);
-		drawer.drawCombinedArrowGridIndications(context, solver.clueGrid);
-		drawer.drawSolverLinkInsideSpaces(context, colours, solver); 
+		draw(context, drawer, colours, solver);
 		solver.callStateForItem(spanState);
-		// Note : no drawing of non-clue banned spaces
 	}
 	
 	setInterval(drawCanvas, 30);
 
 	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)}, false);
 	const defaultPuzzleValue = "20";
-	const puzzleTypeName = "Yajilin";
+	const puzzleTypeName = "Shingoki";
 	
 	buildPuzzleManagementMenu("div_puzzle_management", "input_grid_name", "submit_load_grid", puzzleTypeName, defaultPuzzleValue);
 	putActionElementClick("submit_load_grid", function(event) {
 		loadAction(canevas, drawer, solver, puzzleTypeName, document.getElementById("input_grid_name").value)
 	});
 	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
-	buildInputCanvas("div_canvas_buttons", actionsManager, "case", ENTRY.SPACE, [ACTION_EXCLUDE_LOOP_SPACE, ACTION_INCLUDE_LOOP_SPACE, ACTION_PASS_STRIP_OR_SPACE, ACTION_NOTHING]);
-	buildInputCanvas("div_canvas2_buttons", actionsManager, "lien", ENTRY.WALLS, [ACTION_LINK_SPACES, ACTION_CLOSE_LINKS, ACTION_NOTHING]);
+	buildInputCanvas("div_canvas_buttons", actionsManager, "noeud", ENTRY.NET_NODE, [ACTION_EXCLUDE_LOOP_SPACE, ACTION_INCLUDE_LOOP_SPACE, ACTION_PASS_SPACE, ACTION_NOTHING]);
+	buildInputCanvas("div_canvas2_buttons", actionsManager, "lien", ENTRY.NET_EDGE, [ACTION_LINK_SPACES, ACTION_CLOSE_LINKS, ACTION_NOTHING]);
 	buildActionsGlobal("div_global_actions", ["Multipasse", "Résolution", "Annuler"], 
 		[function(event){multipassAction(solver)}, function(event){solveAction(solver)}, function(event){undoAction(solver)}] );
-	initializeItemsLoopInfos("div_common_loop_display", solver);	
+	initializeItemsLoopInfos("div_common_loop_display", solver);
 }

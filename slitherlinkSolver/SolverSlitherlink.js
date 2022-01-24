@@ -25,13 +25,10 @@ SolverSlitherlink.prototype.construct = function(p_numberMeshGrid) {
 		setEdgeLinkedPSDeductions : setEdgeLinkedDeductionsClosure(this),
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
 		quickStartEventsPS : quickStartEventsClosure(this),
-		generateEventsForPassPS : generateEventsForSpaceClosureSlitherlink(this),
+		generateEventsForPassPS : generateEventsForMeshPassClosureSlitherlink(this),
 		orderedListPassArgumentsPS : startingOrderedListPassArgumentsSlitherlink(this),
 		namingCategoryPS : namingCategoryClosure(this),
-		multipassPessimismPS : true,
-		passDefineTodoPSMethod : function(p_categoryPass) {
-			return true;
-		}
+		multipassPessimismPS : true
 	});
 	this.setResolution.searchSolutionMethod = loopNaiveSearchClosure(this);
 
@@ -119,7 +116,7 @@ SolverSlitherlink.prototype.emitPassMesh = function(p_xSpace, p_ySpace) {
 }
 
 SolverSlitherlink.prototype.emitPassNode = function(p_x, p_y) {
-	return this.passLoop({passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
+	return this.passLoop({passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y}); 
 }
 
 SolverSlitherlink.prototype.makeMultipass = function() {
@@ -243,7 +240,7 @@ quickStartEventsClosure = function(p_solver) {
 // -------------------
 // Passing & multipassing
 
-generateEventsForSpaceClosureSlitherlink = function(p_solver) {
+generateEventsForMeshPassClosureSlitherlink = function(p_solver) {
 	return function(p_meshCoors) {		// p_meshCoors must hold a number
 		var answer = [];
 		answer.push(p_solver.generateEventChoiceForLink(p_meshCoors.x, p_meshCoors.y, DIRECTION.RIGHT));

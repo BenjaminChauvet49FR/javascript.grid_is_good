@@ -28,13 +28,10 @@ SolverRegionalin.prototype.construct = function(p_wallArray, p_regionIndications
 		setSpaceLinkedPSAtomicUndos : setSpaceLinkedPSAtomicUndosClosure(this),
 		setSpaceClosedPSAtomicUndos : setSpaceClosedPSAtomicUndosClosure(this),
 		quickStartEventsPS : quickStartEventsClosure(this),
-		generateEventsForPassPS : generateEventsForSpaceClosure(this),
+		generateEventsForPassPS : generateEventsForRegionPassClosure(this),
 		orderedListPassArgumentsPS : startingOrderedListPassArgumentsRegionalinClosure(this),
 		namingCategoryPS : namingCategoryClosure(this),
-		multipassPessimismPS : true,
-		passDefineTodoPSMethod : function(p_categoryPass) {
-			return true;
-		}
+		multipassPessimismPS : true
 	});
 	
 	this.setResolution.searchSolutionMethod = loopNaiveSearchClosure(this);
@@ -275,7 +272,7 @@ quickStartEventsClosure = function(p_solver) {
 // -------------------
 // Pass & multipass
 
-generateEventsForSpaceClosure = function(p_solver) {
+generateEventsForRegionPassClosure = function(p_solver) {
 	return function(p_index) {
 		return p_solver.passLinkedVSNotLinkedRegion(p_index.index);
 	}

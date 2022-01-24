@@ -9,6 +9,10 @@ LOOP_PASS_CATEGORY.YAJI_UNION = -2;
 SolverYajilin.prototype = Object.create(LoopSolver.prototype);
 SolverYajilin.prototype.constructor = SolverYajilin;
 
+function DummySolver() {
+	return new SolverYajilin(generateSymbolArray(1, 1));
+}
+
 SolverYajilin.prototype.construct = function(p_valueGrid) {
     this.xLength = p_valueGrid[0].length;
 	this.yLength = p_valueGrid.length;
@@ -166,10 +170,10 @@ SolverYajilin.prototype.construct = function(p_valueGrid) {
 //Offensive !
 SolverYajilin.prototype.getDirection = function(p_x, p_y) { 
 	switch (this.clueGrid.get(p_x, p_y).charAt(0)) {
-		case 'L' : return DIRECTION.LEFT; break;
-		case 'U' : return DIRECTION.UP; break;
-		case 'R' : return DIRECTION.RIGHT; break;
-		case 'D' : return DIRECTION.DOWN; break;
+		case CHAR_DIRECTION.LEFT : return DIRECTION.LEFT; break;
+		case CHAR_DIRECTION.UP : return DIRECTION.UP; break;
+		case CHAR_DIRECTION.RIGHT : return DIRECTION.RIGHT; break;
+		case CHAR_DIRECTION.DOWN : return DIRECTION.DOWN; break;
 		default : return null;
 	}
 }

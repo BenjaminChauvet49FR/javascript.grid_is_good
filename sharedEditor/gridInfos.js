@@ -8,6 +8,7 @@ const GRID_ID = {
     NUMBER_X_SPACE: 'NXS',
     PEARL: 'P',
 	YAJILIN_LIKE: 'YAJILIN', 
+	YAJILIN_BLACK_WHITE: 'YAJBW', 
 	TAPA: 'TAPA',
 	SUDOKU: {
 		CLASSIC_9x9 : 'SUDO9'
@@ -18,7 +19,8 @@ const GRID_ID = {
 	YAGIT: 'YG',
 	KNOTS: 'KNOTS',
 	OX: 'OX',
-	WILDCARD: 'WILD'
+	WILDCARD: 'WILD',
+	NUMBER_BLACK_WHITE:'NBW'
 }
 
 const GRID_TRANSFORMATION = {
@@ -51,6 +53,8 @@ const PUZZLES_KIND = {
 	YAGIT : {id:16},
 	XS_AND_ONE_O_PER_REGION : {id:17},
 	LINKS_ONLY : {id:8},
+	YAJILIN_BLACK_WHITE : {id:18},
+	NUMBER_BLACK_WHITE : {id:19},
 }
 
 const MARGIN_KIND = {

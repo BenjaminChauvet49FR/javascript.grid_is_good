@@ -14,16 +14,6 @@ function DummySolver() {
 
 LOOP_PASS_CATEGORY.NUMBER_LINESWEEPER = -1;
 
-SolverLinesweeper.prototype.emitPassSpace = function(p_x, p_y) {
-	var passIndex;
-	if (this.numericArray[p_y][p_x].number != null && this.numericArray[p_y][p_x].number != NOT_FORCED) {		
-		passIndex = {passCategory : LOOP_PASS_CATEGORY.NUMBER_LINESWEEPER, x : p_x, y : p_y};
-	} else {
-		passIndex = {passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
-	}
-	return this.passLoop(passIndex);
-}
-
 SolverLinesweeper.prototype.construct = function(p_numberGrid) {
     this.xLength = p_numberGrid[0].length;
 	this.yLength = p_numberGrid.length;
@@ -35,13 +25,14 @@ SolverLinesweeper.prototype.construct = function(p_numberGrid) {
 		setSpaceLinkedPSDeductions : setSpaceLinkedPSDeductionsClosure(this),
 		setSpaceClosedPSDeductions : setSpaceClosedPSDeductionsClosure(this),
 		quickStartEventsPS : quickStartEventsClosure(this),
-		generateEventsForPassPS : generateEventsForSpaceClosureLinesweeper(this),
+		generateEventsForPassPS : generateEventsForAroundSpacePassClosureLinesweeper(this),
 		orderedListPassArgumentsPS : startingOrderedListPassArgumentsLinesweeperClosure(this),
 		namingCategoryPS : namingCategoryClosure(this),
 		multipassPessimismPS : true,
-		passDefineTodoPSMethod : function(p_categoryPass) { // Note : false by default. Letting it to false may lead to undesired results...because non-standard spaces could be not called again when re-performing a while-loop of multipass.
-			return true;
+		passDefineTodoPSMethod : function(p_categoryPass) {
+			return (this.numericArray[p_categoryPass.y][p_categoryPass.x].notLinkedYet != 0); // Supposes that all spaces in multipass correspond to clues
 		}
+		
 	});
 
 	this.numericArray = [];
@@ -248,7 +239,7 @@ quickStartEventsClosure = function(p_solver) {
 // -------------------
 // Passing & multipassing
 
-generateEventsForSpaceClosureLinesweeper = function(p_solver) {
+generateEventsForAroundSpacePassClosureLinesweeper = function(p_solver) {
 	return function(p_space) {
 		const number = p_solver.getNumber(p_space.x, p_space.y);
 		if (number != null && number != NOT_FORCED) {

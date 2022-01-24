@@ -94,7 +94,7 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 	
 	// Pass and multipass related 
 	this.comparisonPS = p_packMethods.comparisonPS;
-	if (!this.comparisonPS) { this.comparisonPS = function(){}} // Should not be sollicited
+	if (!this.comparisonPS) { this.comparisonPS = function() {}} // Should not be sollicited
 	this.copyingPS = p_packMethods.copyingPS;         
 	if (!this.copyingPS) { this.copyingPS = function(p_event) {return p_event.copy();}} // Will likely be sollicited
 	this.namingCategoryPS = p_packMethods.namingCategoryPS;
@@ -103,8 +103,6 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 	if (!this.generateEventsForPassPS) { this.generateEventsForPassPS = function(p_indexPass) {return []} }
 	this.orderedListPassArgumentsPS = p_packMethods.orderedListPassArgumentsPS;
 	if (!this.orderedListPassArgumentsPS) { this.orderedListPassArgumentsPS = function() {return []} }
-	this.passDefineTodoPSMethod = p_packMethods.passDefineTodoPSMethod;
-	if (!this.passDefineTodoPSMethod) { this.passDefineTodoPSMethod = function() {return false;} }
 	if (p_packMethods.multipassPessimismPS != true && p_packMethods.multipassPessimismPS != false) {
 		if (!this.orderedListPassArgumentsPS) {
 			this.multipassPessimismPS = true;
@@ -114,6 +112,9 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 	} else {
 		this.multipassPessimismPS = p_packMethods.multipassPessimismPS;
 	}
+	
+	this.passDefineTodoPSMethod = p_packMethods.passDefineTodoPSMethod;
+	if (!this.passDefineTodoPSMethod) { this.passDefineTodoPSMethod = function() {return true;} } // For pass categories different from LOOP_PASS_CATEGORY.SPACE_STANDARD but that still makes reference to spaces. Masyu solver uses similar pass categories for standard pass spaces. Koburin and Linesweeper use (x, y) but not for standard pass at all
 }
 
 /* High conventions : 
@@ -235,11 +236,11 @@ LoopSolver.prototype.getLink = function(p_x, p_y, p_dir) {
 	}
 }
 
-LoopSolver.prototype.getLinkedEdges = function(p_x, p_y){
+LoopSolver.prototype.getLinkedEdges = function(p_x, p_y) {
 	return this.linksArray[p_y][p_x].linkedDirections.length;
 }
 
-LoopSolver.prototype.getClosedEdges = function(p_x, p_y){
+LoopSolver.prototype.getClosedEdges = function(p_x, p_y) {
 	return this.linksArray[p_y][p_x].closedEdges;
 }
 
@@ -251,7 +252,7 @@ LoopSolver.prototype.getSpace = function(p_space) {
 	return this.linksArray[p_space.y][p_space.x];
 }
 
-LoopSolver.prototype.isBanned = function(p_x, p_y){
+LoopSolver.prototype.isBanned = function(p_x, p_y) {
 	return this.bannedSpacesGrid[p_y][p_x];
 }
 
@@ -1012,11 +1013,10 @@ function orderedListpassArgumentsClosure(p_solver, p_orderedListPassArgumentsPSM
 		if (p_pessimistic) {			
 			for (var y = 0 ; y < p_solver.yLength ; y++) {
 				for (var x = 0 ; x < p_solver.xLength ; x++) {
-					//if (p_solver.linksArray[y][x].state != CLOSED && p_solver.linksArray[y][x].linkedDirections.length != 2) {
+					//if (p_solver.linksArray[y][x].state != CLOSED && p_solver.linksArray[y][x].linkedDirections.length != 2) { 
 					passIndex = {x : x, y : y, passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD}
-					if (p_solver.passDefineTodoLoop(passIndex)) {
-						answer.push(passIndex);
-					}
+					answer.push(passIndex);
+					//}
 				}	
 			}
 		}
@@ -1066,7 +1066,7 @@ LoopSolver.prototype.passDefineTodoLoop = function(p_passIndex) {
 		const y = p_passIndex.y;
 		return (this.linksArray[y][x].state != LOOP_STATE.CLOSED && this.linksArray[y][x].linkedDirections.length != 2);
 	} else {
-		return this.passDefineTodoPSMethod(p_passIndex);
+		return this.passDefineTodoPSMethod(p_passIndex); 
 	}
 }
 

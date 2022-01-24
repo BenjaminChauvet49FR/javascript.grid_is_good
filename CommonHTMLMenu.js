@@ -114,17 +114,34 @@ menuSolvers.push({
 });
 
 menuSolvers.push({
-	displayName : "Boucles",
+	displayName : "Boucles avec contraintes sur case",
+	documentPage : "Solver",
+	typeList : [
+		{name : "koburin", displayName : "Koburin", hoverDescription : "Indications d'adjacence, sans contact orthogonal fermé non-banni"},
+		{name : "linesweeper", displayName : "Linesweeper", hoverDescription : "Indications d'adjacence ortho-diagonale comme au Minesweeper"},
+		{name : "regionalin", displayName : "Regionalin", hoverDescription : "Indications par région, sans contact orthogonal fermé non-banni. Aussi appelé Regional Yajilin (mais n'a pas de flèches)"},
+		{name : "yajilin", displayName : "Yajilin", hoverDescription : "Indications flécho-numériques, sans contact orthogonal fermé non-banni"}
+	]
+});
+
+menuSolvers.push({
+	displayName : "Boucles avec contraintes sur lien",
+	documentPage : "Solver",
+	typeList : [
+		{name : "castleWall", displayName : "Castle Wall", hoverDescription : "Intérieur et extérieur de la boucle"},
+		{name : "grandTour", displayName : "Grand Tour", hoverDescription : "Tous les noeuds doivent être traversés, certains liens sont imposés"},
+		{name : "slitherlink", displayName : "Slitherlink", hoverDescription : "Combien d'arêtes traversées autour d'une maille ?"},
+	]
+});
+
+menuSolvers.push({
+	displayName : "Boucles opposant ligne droite et virages",
 	documentPage : "Solver",
 	typeList : [
 		{name : "detour", displayName : "Detour", hoverDescription : "Combien de tournants par région ?"},
-		{name : "grandTour", displayName : "Grand Tour", hoverDescription : "Tous les noeuds doivent être traversés, certains liens sont imposés"},
-		{name : "koburin", displayName : "Koburin", hoverDescription : "Indications d'adjacence, sans contact orthogonal fermé non-banni"},
-		{name : "linesweeper", displayName : "Linesweeper", hoverDescription : "Indications d'adjacence ortho-diagonale comme au Minesweeper"},
+		{name : "geradeweg", displayName : "Geradeweg", hoverDescription : "Lignes droites traversant les nombres"},
 		{name : "masyu", displayName : "Masyu", hoverDescription : "Perles blanches et noires à traverser"},
-		{name : "regionalin", displayName : "Regionalin", hoverDescription : "Indications par région, sans contact orthogonal fermé non-banni. Aussi appelé Regional Yajilin (mais n'a pas de flèches)"},
-		{name : "slitherlink", displayName : "Slitherlink", hoverDescription : "Combien d'arêtes traversées autour d'une maille ?"},
-		{name : "yajilin", displayName : "Yajilin", hoverDescription : "Indications flécho-numériques, sans contact orthogonal fermé non-banni"}
+		{name : "shingoki", displayName : "Shingoki", hoverDescription : "Perles blanches et noires numérotées donnant les longueurs des lignes"}
 	]
 });
 

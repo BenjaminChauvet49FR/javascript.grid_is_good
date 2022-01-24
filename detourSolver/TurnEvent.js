@@ -10,3 +10,7 @@ function TurnEvent(p_x, p_y, p_state) {
 TurnEvent.prototype.copy = function() {
 	return new TurnEvent(this.x, this.y, this.turningState);
 }
+
+TurnEvent.prototype.toLogString = function() {
+	return "(Turn." + (this.turningState == TURNING.YES ? "O" : "X") + " " + this.x + "," + this.y +")";
+}

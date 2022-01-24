@@ -2,24 +2,32 @@
 
 // ------------------------------------------
 
+// Note : clues for grids in editor, or grids that get loaded, or part of clues (typical example : "BD12" in castle wall)
 const SYMBOL_ID = { 
-    WHITE: 'W',
-    BLACK: 'B',
-	ROUND: 'R',
-	SQUARE: 'S',
-	TRIANGLE: 'T',
-	MOON: 'M',
-	SUN: 'S',
-	KNOT_HERE: 'K',
-	O: 'O',
-	X: 'X'
+    WHITE : 'W',
+    BLACK : 'B',
+	ROUND : 'R',
+	SQUARE : 'S',
+	TRIANGLE : 'T',
+	MOON : 'M',
+	SUN : 'S',
+	KNOT_HERE : 'K',
+	O : 'O',
+	X : 'X'
+}
+
+const CHAR_DIRECTION = {
+	LEFT : 'L',
+	UP : 'U',
+	RIGHT : 'R',
+	DOWN : 'D'
 }
 
 const GALAXIES_POSITION = {
-	CENTER: 0,
-	RIGHT: 1,
-	DOWN:2,
-	RIGHT_DOWN: 3
+	CENTER : 0,
+	RIGHT : 1,
+	DOWN :2,
+	RIGHT_DOWN : 3
 }
 
 /**
@@ -438,10 +446,10 @@ function arrowNumberCombinationsPuzzleToString(p_symbolsArray) {
 				value = null;
 			} else switch(p_symbolsArray[y][x].charAt(0)) {
 				case "X" : value = 0; break;
-				case "L" : mod = 1; break;
-				case "U" : mod = 2; break;
-				case "R" : mod = 3; break;
-				case "D" : mod = 4; break;
+				case CHAR_DIRECTION.LEFT : mod = 1; break;
+				case CHAR_DIRECTION.UP : mod = 2; break;
+				case CHAR_DIRECTION.RIGHT : mod = 3; break;
+				case CHAR_DIRECTION.DOWN : mod = 4; break;
 				default : value = null; break;
 			}
 			if (mod > 0) {
@@ -471,16 +479,129 @@ function stringToArrowNumberCombinationsPuzzle(p_string) {
 				array[y].push("X");
 			} else {
 				switch (decode % 4) {
-					case 1 : character = "L"; break;
-					case 2 : character = "U"; break;
-					case 3 : character = "R"; break;
-					default : character = "D"; break;
+					case 1 : character = CHAR_DIRECTION.LEFT; break;
+					case 2 : character = CHAR_DIRECTION.UP; break;
+					case 3 : character = CHAR_DIRECTION.RIGHT; break;
+					default : character = CHAR_DIRECTION.DOWN; break;
 				}
 				array[y].push(character + Math.floor((decode - 1)/4));
 			}
 		}
 	}
 	return {combinationsArray : array};
+}
+
+function arrowNumberCombinationsBWPuzzleToString(p_symbolsArray) {
+	var value, chain;
+	var streamSpaces = new StreamEncodingSparseAny();
+	for (var y = 0 ; y < p_symbolsArray.length ; y++) {
+		for (var x = 0 ; x < p_symbolsArray[0].length ; x++) {
+			chain = p_symbolsArray[y][x];
+			if (null == chain) {
+				value = null;
+			} else {
+				switch(chain.charAt(0)) {
+					case SYMBOL_ID.BLACK : colourMod = 0; break;
+					case SYMBOL_ID.WHITE : colourMod = 1; break;
+				}
+				if (chain.length > 1) {					
+					switch (chain.charAt(1)) {						
+						case CHAR_DIRECTION.LEFT : mod = 0; break;
+						case CHAR_DIRECTION.UP : mod = 1; break;
+						case CHAR_DIRECTION.RIGHT : mod = 2; break;
+						case CHAR_DIRECTION.DOWN : mod = 3; break;
+					}
+					value = 2 + colourMod * 4 + mod + 8 * parseInt(chain.substring(2), 10);
+				} else {
+					value = colourMod;		
+				}	
+			}
+			streamSpaces.encode(value);
+		}
+	}
+	return dimensionsToString(p_symbolsArray) + " " + streamSpaces.getString();
+}
+
+function stringToArrowNumberCombinationsBWPuzzle(p_string) {
+	const tokens = p_string.split(" ");
+	const dims = new stringToDimensions(tokens[0]);
+	const stream = new StreamDecodingSparseAny(tokens[1]);
+	var chain;
+	var decode;
+	var array = [];
+	for (var y = 0; y < dims.yLength ; y++) {
+		array.push([]);
+		for (var x = 0 ; x < dims.xLength ; x++) {
+			decode = stream.decode();
+			if (decode == null || decode == END_OF_DECODING_STREAM) {
+				array[y].push(null);
+			} else if (decode == 0) {
+				array[y].push("B");
+			} else if (decode == 1) {
+				array[y].push("W");
+			} else {
+				decode -= 2;
+				switch (decode % 8) {
+					case 0 : chain = "BL"; break;
+					case 1 : chain = "BU"; break;
+					case 2 : chain = "BR"; break;
+					case 3 : chain = "BD"; break;
+					case 4 : chain = "WL"; break;
+					case 5 : chain = "WU"; break;
+					case 6 : chain = "WR"; break;
+					case 7 : chain = "WD"; break;
+				}
+				array[y].push(chain + Math.floor(decode/8));
+			}
+		}
+	}
+	return {combinationsArray : array};
+}
+
+// ----------------
+
+// Black and white numbers
+function numbersBWPuzzleToString(p_symbolsArray) {
+	var value, chain;
+	var streamSpaces = new StreamEncodingSparseAny();
+	for (var y = 0 ; y < p_symbolsArray.length ; y++) {
+		for (var x = 0 ; x < p_symbolsArray[0].length ; x++) {
+			chain = p_symbolsArray[y][x];
+			if (null == chain) {
+				value = null;
+			} else {
+				switch(chain.charAt(0)) {
+					case "B" : colourMod = 0; break;
+					case "W" : colourMod = 1; break;
+				}
+				value = colourMod + 2 * parseInt(chain.substring(1), 10);	
+			}
+			streamSpaces.encode(value);
+		}
+	}
+	return dimensionsToString(p_symbolsArray) + " " + streamSpaces.getString();
+}
+
+function stringToNumbersBWPuzzle(p_string) { // Note : sub-optimal for Shingoki (use numbers from W2 and B2 onwards), but who cares...
+	const tokens = p_string.split(" ");
+	const dims = new stringToDimensions(tokens[0]);
+	const stream = new StreamDecodingSparseAny(tokens[1]);
+	var chain;
+	var decode;
+	var array = [];
+	for (var y = 0; y < dims.yLength ; y++) {
+		array.push([]);
+		for (var x = 0 ; x < dims.xLength ; x++) {
+			decode = stream.decode();
+			if (decode == null || decode == END_OF_DECODING_STREAM) {
+				array[y].push(null);
+			} else {
+				chain = (decode % 2 == 0) ? "B" : "W";
+				array[y].push(chain + Math.floor(decode/2));
+			}
+		}
+	}
+	return {numbersBWArray : array};
 }
 
 // ---------------
@@ -675,7 +796,6 @@ function stringToXsAndOneOPerRegionPuzzle(p_string) {
 	});
 	return {wallArray : wallArray, symbolArray : symbolArray}; 
 }
-
 
 // ----------------
 

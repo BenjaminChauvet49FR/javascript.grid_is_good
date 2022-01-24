@@ -31,7 +31,7 @@ SolverDetour.prototype.construct = function(p_wallArray, p_regionIndications) {
 		otherPSAtomicDos : otherAtomicDosClosure(this),
 		otherPSDeductions : otherDeductionsClosure(this),
 		quickStartEventsPS : quickStartEventsClosure(this),
-		generateEventsForPassPS : generateEventsForSpaceClosure(this),
+		generateEventsForPassPS : generateEventsForPassClosure(this),
 		orderedListPassArgumentsPS : startingOrderedListPassArgumentsDetourClosure(this),
 		namingCategoryPS : namingCategoryClosure(this),
 		comparisonPS : comparisonDetourMethod,
@@ -358,7 +358,7 @@ quickStartEventsClosure = function(p_solver) {
 // -------------------
 // Pass & multipass
 
-generateEventsForSpaceClosure = function(p_solver) {
+generateEventsForPassClosure = function(p_solver) {
 	return function(p_index) {
 		return p_solver.passCurveVSStraightRegion(p_index.index);
 	}

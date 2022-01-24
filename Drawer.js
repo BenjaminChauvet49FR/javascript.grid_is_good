@@ -13,7 +13,8 @@ function AlternateClosedPathDraw(p_wallGrid, p_colour) {
 
 // Setup
 function Drawer() {
-
+	this.automaticallyClean = true;
+	
     this.pix = {
         sideSpace: 30,
         borderSpace: 2, //Inner border
@@ -70,14 +71,24 @@ Drawer.prototype.setFenceColors = function(p_fenceColours) {
 	}
 }
 
+Drawer.prototype.inhibitAutoClean = function() {
+	this.automaticallyClean = false;
+}
+
 //---------------------
 // All draw functions are below
 
 //---------------------
 // Refresh
 
-function clearDrawing(p_context) {
+Drawer.prototype.clearDrawing = function(p_context) {
 	p_context.clearRect(0, 0, 9999, 9999 ); // Note : this used to be (800, 500) but the size of the canvas eventually went over this limit...
+}
+
+Drawer.prototype.clearDrawingMandatory = function(p_context) {
+	if (this.automaticallyClean) {
+		this.clearDrawing(p_context);
+	}
 }
 
 //---------------------
@@ -172,7 +183,7 @@ Drawer.prototype.drawEdgesGrid = function (p_context, p_xLength, p_yLength, p_co
 	var ix,
     iy,
     indexRegion;
-	clearDrawing(p_context);
+	this.clearDrawingMandatory(p_context);
 	
     //Upper-left pixel of the horizontal walls (Horiz) and vertical walls (Vert) ; pillars aren't part of walls (meeting of 4 walls)
     const pixStartXVert = this.pix.marginGrid.left + this.pix.sideSpace - this.pix.borderSpace;
@@ -329,7 +340,7 @@ Drawer.prototype.drawEmptyGrid = function (p_context, p_xLength, p_yLength) {
 
 Drawer.prototype.drawQuadrillageGrid = function (p_context, p_xLength, p_yLength, p_rightToColumnIndexes, p_downToRowIndexes) { // Private method 
     var i;
-	clearDrawing(p_context);
+	this.clearDrawingMandatory(p_context);
     const pixTotalWidth = p_xLength * this.pix.sideSpace;
     const pixTotalHeight = p_yLength * this.pix.sideSpace;
     var pixXStart = this.pix.marginGrid.left;
@@ -386,8 +397,12 @@ Drawer.prototype.drawDotsGridSimple = function(p_context, p_xDotsNumber, p_yDots
 	function(){return p_defaultColour});
 }
 
-Drawer.prototype.drawDotsGrid = function(p_context, p_xDotsNumber, p_yDotsNumber, p_linkRightColourMethod, p_linkDownColourMethod, p_dotsColorMethod, p_dotsSizeMethod) {
-	clearDrawing(p_context);
+Drawer.prototype.drawMeshContents2Dimensions = function(p_context, p_drawableItems, p_function, p_xMeshNumber, p_yMeshNumber) {
+	this.drawSpaceContents2Dimensions(p_context, p_drawableItems, p_function, p_xMeshNumber, p_yMeshNumber);
+}
+
+Drawer.prototype.drawDotsGrid = function(p_context, p_xDotsNumber, p_yDotsNumber, p_linkRightColourMethod, p_linkDownColourMethod, p_dotsColorMethod, p_dotsSizeMethod, p_drawableMethod) {
+	this.clearDrawingMandatory(p_context);
     		
 	//Links
     const pixStartXVert = this.pix.marginGrid.left - this.pix.borderSpace/2;
@@ -431,12 +446,14 @@ Drawer.prototype.drawDotsGrid = function(p_context, p_xDotsNumber, p_yDotsNumber
     for (iy = 0; iy < p_yDotsNumber; iy++) {
 		pixDrawXCenter = pixStartXCenter;
         for (ix = 0; ix < p_xDotsNumber; ix++) {
-			pixDotRadius = this.pix.borderSpace;
-			p_context.beginPath();
-			//p_context.lineWidth = 1;
-			p_context.ellipse(pixDrawXCenter, pixDrawYCenter, pixDotRadius, pixDotRadius, 0, 0, 2 * Math.PI);
-			p_context.fillStyle = p_dotsColorMethod(ix, iy); 
-			p_context.fill();
+			if (!p_drawableMethod || !p_drawableMethod(ix, iy)) {				
+				pixDotRadius = this.pix.borderSpace;
+				p_context.beginPath();
+				//p_context.lineWidth = 1;
+				p_context.ellipse(pixDrawXCenter, pixDrawYCenter, pixDotRadius, pixDotRadius, 0, 0, 2 * Math.PI);
+				p_context.fillStyle = p_dotsColorMethod(ix, iy); 
+				p_context.fill();
+			}
 			pixDrawXCenter+= this.pix.sideSpace;
 		}
 		pixDrawYCenter+= this.pix.sideSpace;
@@ -492,8 +509,8 @@ Drawer.prototype.drawSpaceContent = function(p_context, p_ix, p_iy, p_item, p_pi
 	} else if (p_item.kind == KIND_DRAWABLE_ITEM.CIRCLE) {
 		p_context.beginPath();
 		p_context.lineWidth = (p_item.thickness || p_item.thickness == 0) ? p_item.thickness : Math.max(1, this.getPixInnerSide()*1/16);
-		const radius = this.getPixInnerSide()*1/3;
-		p_context.ellipse(this.getPixCenterX(p_ix), this.getPixCenterY(p_iy), radius, radius, 0, 0, 2 * Math.PI);
+		const pixRadius = this.getPixInnerSide()*1/3;
+		p_context.ellipse(this.getPixCenterX(p_ix), this.getPixCenterY(p_iy), pixRadius, pixRadius, 0, 0, 2 * Math.PI);
 		if (p_item.colorInner && p_item.colorInner != null) { // Note : "p_context.fillStyle = X" seems not to change p_context.fillStyle when X is null.
 			p_context.fillStyle = p_item.colorInner; //An p_item property was taken rather than a method. I think this is better this way.
 			p_context.fill();
@@ -641,6 +658,26 @@ function DrawSpaceValue(p_value, p_colour) {
 	this.writeColour = p_colour;
 }
 
+function DrawWriteSpaceValue(p_value, p_backgroundColour, p_writeColour) {
+	this.value = p_value;
+	this.backgroundColour = p_backgroundColour;
+	this.writeColour = p_writeColour;
+}
+
+Drawer.prototype.fillInnerSpace = function(p_context, p_backgroundColour, p_ix, p_iy) { 
+	p_context.fillStyle = p_backgroundColour;
+	p_context.fillRect(this.getPixInnerXLeft(p_ix), this.getPixInnerYUp(p_iy), this.getPixInnerSide(), this.getPixInnerSide());	
+}
+
+Drawer.prototype.strokeInnerSpace = function(p_context, p_strokeColour, p_ix, p_iy, p_pixWidth) { 
+	p_context.strokeStyle = p_strokeColour;
+	p_context.lineWidth = p_pixWidth;
+	p_context.strokeRect(this.getPixInnerXLeft(p_ix), this.getPixInnerYUp(p_iy), this.getPixInnerSide(), this.getPixInnerSide());	
+}
+
+// -------------------------------
+// Draw inside grids non-specific
+
 Drawer.prototype.drawNumbersInsideStandardCoorsList = function(p_context, p_function, p_coordinates, p_font) {
 	setupFont(p_context, this.getPixInnerSide(), p_font);
 	alignFontCenter(p_context);
@@ -653,13 +690,28 @@ Drawer.prototype.drawNumbersInsideStandardCoorsList = function(p_context, p_func
 	});
 }
 
-Drawer.prototype.drawNumbersInsideStandard2Dimensions = function(p_context, p_function, p_font, p_xLength, p_yLength) {
+Drawer.prototype.drawNumbersInsideStandard2Dimensions = function(p_context, p_writeFunction, p_font, p_xLength, p_yLength) {
 	setupFont(p_context, this.getPixInnerSide(), p_font);
 	alignFontCenter(p_context);
 	for(var iy = 0 ; iy < p_yLength ; iy++) {
 		for(var ix = 0 ; ix < p_xLength ; ix++) {
-			supposedValue = p_function(ix, iy);
+			supposedValue = p_writeFunction(ix, iy);
 			if (supposedValue != null) {
+				p_context.fillStyle = supposedValue.writeColour;
+				p_context.fillText(supposedValue.value, this.getPixCenterX(ix), this.getPixWriteCenterY(iy));
+			} 
+		}
+	}
+}
+
+Drawer.prototype.drawTextInsideStandardWithBackground2Dimensions = function(p_context, p_writeFunction, p_font, p_xLength, p_yLength) {
+	setupFont(p_context, this.getPixInnerSide(), p_font);
+	alignFontCenter(p_context);
+	for(var iy = 0 ; iy < p_yLength ; iy++) {
+		for(var ix = 0 ; ix < p_xLength ; ix++) {
+			supposedValue = p_writeFunction(ix, iy);
+			if (supposedValue != null) {
+				this.fillInnerSpace(p_context, supposedValue.backgroundColour, ix, iy);
 				p_context.fillStyle = supposedValue.writeColour;
 				p_context.fillText(supposedValue.value, this.getPixCenterX(ix), this.getPixWriteCenterY(iy));
 			} 
@@ -689,32 +741,49 @@ Drawer.prototype.drawFixedNumbersOrX = function(p_context, p_method, p_coorsList
 // -------------------------------
 // Draw grid contents used both in editor and solvers, that are specific
 
-// Combined arrow = Yajilin-like. This method is a better deal than reusing a drawSpaceContents method since it doesn't draw spaces.
 Drawer.prototype.drawCombinedArrowGridIndications = function (p_context, p_combinedArrowGrid) {
+	this.drawCombinedArrowGridIndicationsPrivate(p_context, p_combinedArrowGrid, false);
+}
+
+Drawer.prototype.drawCombinedArrowGridIndicationsBlackWhite = function (p_context, p_combinedArrowGrid) {
+	this.drawCombinedArrowGridIndicationsPrivate(p_context, p_combinedArrowGrid, true);
+}
+
+// Combined arrow = Yajilin-like. This method is a better deal than reusing a drawSpaceContents method since it doesn't draw spaces.
+// Note : since this method is also used in solvers, it's not put in editor (although this may be changed)
+// Re-note : the code is copied with the drawing in castle wall solver.
+Drawer.prototype.drawCombinedArrowGridIndicationsPrivate = function (p_context, p_combinedArrowGrid, p_bwMode) {
 	const yLength = p_combinedArrowGrid.getYLength();
 	if (yLength > 0) {
+		const indexCoD = p_bwMode ? 1 : 0 ; // "indexCoD" = "index character of direction"
 		const xLength = p_combinedArrowGrid.getXLength();
-		var ix, iy, clue, isX; 
-		const pixBack = this.getPixInnerSide()/4
-		p_context.fillStyle = this.coloursFontsSpecificGrids.combinedArrowRingIndications; 
-		p_context.strokeStyle = this.coloursFontsSpecificGrids.combinedArrowRingIndications; 
+		var ix, iy, clue, isX, drawArrowPart, charDir; 
+		const pixBack = this.getPixInnerSide()/4;
+		if (!p_bwMode) {			
+			p_context.fillStyle = this.coloursFontsSpecificGrids.combinedArrowRingIndications; 
+			p_context.strokeStyle = this.coloursFontsSpecificGrids.combinedArrowRingIndications; 
+			drawArrowPart = true;
+		}
 		p_context.textAlign = "center"; // Credits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/textAlign
 		p_context.textBaseline = "middle"; // Credits : https://stackoverflow.com/questions/39294065/vertical-alignment-of-canvas-text https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/textBaseline
 		var pixX1, pixY1, pixX2, pixY2, pixX3, pixY3, pixTextX, pixTextY;
 		for (iy = 0; iy < yLength; iy++) {
-			for (ix = 0; ix < xLength; ix++) {
+			for (ix = 0; ix < xLength; ix++) {				
 				clue = p_combinedArrowGrid.get(ix, iy);
 				//Credits on drawing polygon : https://stackoverflow.com/questions/4839993/how-to-draw-polygons-on-an-html5-canvas
 				if (clue != null) {
 					p_context.beginPath();
-					switch (clue.charAt(0)) {
-						case 'L': case 'R': 
-							isX = false;
+					isX = false;
+					drawArrowPart = false;
+					charDir = clue.charAt(indexCoD);
+					switch (charDir) {
+						case CHAR_DIRECTION.LEFT: case CHAR_DIRECTION.RIGHT: 
+							drawArrowPart = true;
 							pixY1 = this.getPixCenterY(iy);
 							pixY2 = pixY1 - pixBack;
 							pixY3 = pixY1 + pixBack;
 							pixTextY = pixY1;
-							if (clue.charAt(0) == 'L') {
+							if (charDir == CHAR_DIRECTION.LEFT) {
 								pixX1 = this.getPixInnerXLeft(ix) + 1;
 								pixX2 = pixX1 + pixBack;
 								pixX3 = pixX2;
@@ -727,13 +796,13 @@ Drawer.prototype.drawCombinedArrowGridIndications = function (p_context, p_combi
 								pixTextX = (pixX2 + this.getPixInnerXLeft(ix)) / 2;
 							}
 						break;
-						case 'U': case 'D': 
-							isX = false;
+						case CHAR_DIRECTION.UP: case CHAR_DIRECTION.DOWN: 
+							drawArrowPart = true;
 							pixX1 = this.getPixCenterX(ix);
 							pixX2 = pixX1 - pixBack;
 							pixX3 = pixX1 + pixBack;
 							pixTextX = pixX1;
-							if (clue.charAt(0) == 'U') {
+							if (charDir == CHAR_DIRECTION.UP) {
 								pixY1 = this.getPixInnerYUp(iy) + 1;
 								pixY2 = pixY1 + pixBack;
 								pixY3 = pixY2;
@@ -748,17 +817,31 @@ Drawer.prototype.drawCombinedArrowGridIndications = function (p_context, p_combi
 						case 'X': {
 							isX = true;
 						}
-					}
+					} 
 					if (isX) {
 						this.drawCrossX(p_context, ix, iy, p_context.strokeStyle);
 					} else {
-						p_context.moveTo(pixX1, pixY1);
-						p_context.lineTo(pixX2, pixY2);
-						p_context.lineTo(pixX3, pixY3);
-						p_context.lineTo(pixX1, pixY1);
-						p_context.fillText(clue.substring(1), pixTextX, pixTextY);
-						p_context.closePath();
-						p_context.fill();
+						if (p_bwMode) {
+							if (clue.charAt(0) == SYMBOL_ID.BLACK) { // High convention : how a clue is made.
+								this.fillInnerSpace(p_context, COLOURS.BLACK_ON_WHITE, ix, iy); 
+								p_context.fillStyle = COLOURS.WHITE_ON_BLACK; 
+								p_context.strokeStyle = COLOURS.WHITE_ON_BLACK;
+							} else {
+								this.fillInnerSpace(p_context, COLOURS.WHITE_ON_BLACK, ix, iy);
+								p_context.fillStyle = COLOURS.BLACK_ON_WHITE;
+								p_context.strokeStyle = COLOURS.BLACK_ON_WHITE; 
+							}						
+						} 
+						if (drawArrowPart) {	
+							// Draw arrow and text
+							p_context.moveTo(pixX1, pixY1);
+							p_context.lineTo(pixX2, pixY2);
+							p_context.lineTo(pixX3, pixY3);
+							p_context.lineTo(pixX1, pixY1);
+							p_context.fillText(clue.substring(indexCoD+1), pixTextX, pixTextY);
+							p_context.closePath();
+							p_context.fill();
+						}
 					}
 				}
 			}
@@ -785,12 +868,12 @@ Drawer.prototype.drawKnotsInRD = function(p_context, p_knotsGrid, p_colourInner,
 	const xLength = p_knotsGrid.getXLength();
 	p_context.fillStyle = p_colourInner;
 	p_context.strokeStyle = p_colourBorder;
-	const radius = this.pix.sideSpace / 7;
+	const pixRadius = this.pix.sideSpace / 7;
 	for(var iy = 0 ; iy < yLength ; iy++) {
 		for(var ix = 0 ; ix < xLength ; ix++) {
 			if (p_knotsGrid.get(ix, iy) != null) {
 				p_context.beginPath();
-				p_context.ellipse(this.getPixXRight(ix), this.getPixYDown(iy), radius, radius, 0, 0, 2 * Math.PI);
+				p_context.ellipse(this.getPixXRight(ix), this.getPixYDown(iy), pixRadius, pixRadius, 0, 0, 2 * Math.PI);
 				p_context.stroke();
 				p_context.fill();	
 			}
@@ -874,9 +957,9 @@ Drawer.prototype.drawGalaxiesGrid = function (p_context, p_galaxiesGrid) {
 				break;
 			}
 			if (pixXCenter != 0) {
-				const radius = this.pix.sideSpace / 6;
+				const pixRadius = this.pix.sideSpace / 6;
 				p_context.beginPath();
-				p_context.ellipse(pixXCenter, pixYCenter, radius, radius, 0, 0, 2 * Math.PI);
+				p_context.ellipse(pixXCenter, pixYCenter, pixRadius, pixRadius, 0, 0, 2 * Math.PI);
 				p_context.stroke();
 				p_context.fill();
 			}
@@ -889,7 +972,7 @@ Drawer.prototype.drawDiscGrid = function (p_context, p_discGrid, p_symbols, p_co
 	if (yLength > 0) {
 		const xLength = p_discGrid.getXLength();
 		var ix, iy, disc, i, found;
-		const radius = this.getPixInnerSide()*1/3;
+		const pixRadius = this.getPixInnerSide()*1/3;
 		for (iy = 0; iy < yLength; iy++) {
 			for (ix = 0; ix < xLength; ix++) {
 				disc = p_discGrid.get(ix, iy);
@@ -900,7 +983,7 @@ Drawer.prototype.drawDiscGrid = function (p_context, p_discGrid, p_symbols, p_co
 						found = true;
 						//Crédits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/ellipse 
 						p_context.beginPath();
-						p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
+						p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), pixRadius, pixRadius, 0, 0, 2 * Math.PI);
 						if (p_coloursStroke[i] && p_coloursStroke[i] != null) {
 							p_context.strokeStyle = p_coloursStroke[i];
 							p_context.stroke();
@@ -1023,36 +1106,36 @@ Drawer.prototype.drawTriangle = function(p_context, p_xSpace, p_ySpace, p_item) 
 // Draw li'l shapes
 
 Drawer.prototype.drawLittleRoundUpperRight = function(p_context, p_xSpace, p_ySpace, p_item) {
-	const radius = this.pix.sideSpace / 6;
-	const pixXCenter = this.getPixXRight(p_xSpace) - 1 - radius;
-	const pixYCenter = this.getPixYUp(p_ySpace) + 1 + radius;
+	const pixRadius = this.pix.sideSpace / 6;
+	const pixXCenter = this.getPixXRight(p_xSpace) - 1 - pixRadius;
+	const pixYCenter = this.getPixYUp(p_ySpace) + 1 + pixRadius;
 	p_context.beginPath();
-	p_context.ellipse(pixXCenter, pixYCenter, radius, radius, 0, 0, 2 * Math.PI);
+	p_context.ellipse(pixXCenter, pixYCenter, pixRadius, pixRadius, 0, 0, 2 * Math.PI);
 	p_context.stroke();
 }
 
 Drawer.prototype.drawLittlePlusUpperRight = function(p_context, p_xSpace, p_ySpace, p_item) {
 	p_context.beginPath();
-	const radius = this.pix.sideSpace / 6;
-	const pixXCenter = this.getPixXRight(p_xSpace) - 1 - radius;
-	const pixYCenter = this.getPixYUp(p_ySpace) + 1 + radius;
-	p_context.moveTo(pixXCenter, pixYCenter - radius);
-	p_context.lineTo(pixXCenter, pixYCenter + radius);
-	p_context.moveTo(pixXCenter - radius, pixYCenter);
-	p_context.lineTo(pixXCenter + radius, pixYCenter);
+	const pixRadius = this.pix.sideSpace / 6;
+	const pixXCenter = this.getPixXRight(p_xSpace) - 1 - pixRadius;
+	const pixYCenter = this.getPixYUp(p_ySpace) + 1 + pixRadius;
+	p_context.moveTo(pixXCenter, pixYCenter - pixRadius);
+	p_context.lineTo(pixXCenter, pixYCenter + pixRadius);
+	p_context.moveTo(pixXCenter - pixRadius, pixYCenter);
+	p_context.lineTo(pixXCenter + pixRadius, pixYCenter);
 	p_context.stroke();
 }
 
 Drawer.prototype.drawLittleSquareUpperRight = function(p_context, p_xSpace, p_ySpace, p_item) {
 	p_context.beginPath();
-	const radius = this.pix.sideSpace / 6;
-	const pixXCenter = this.getPixXRight(p_xSpace) - 1 - radius;
-	const pixYCenter = this.getPixYUp(p_ySpace) + 1 + radius;
-	p_context.moveTo(pixXCenter - radius, pixYCenter - radius);
-	p_context.lineTo(pixXCenter - radius, pixYCenter + radius);
-	p_context.lineTo(pixXCenter + radius, pixYCenter + radius);
-	p_context.lineTo(pixXCenter + radius, pixYCenter - radius);
-	p_context.lineTo(pixXCenter - radius, pixYCenter - radius);
+	const pixRadius = this.pix.sideSpace / 6;
+	const pixXCenter = this.getPixXRight(p_xSpace) - 1 - pixRadius;
+	const pixYCenter = this.getPixYUp(p_ySpace) + 1 + pixRadius;
+	p_context.moveTo(pixXCenter - pixRadius, pixYCenter - pixRadius);
+	p_context.lineTo(pixXCenter - pixRadius, pixYCenter + pixRadius);
+	p_context.lineTo(pixXCenter + pixRadius, pixYCenter + pixRadius);
+	p_context.lineTo(pixXCenter + pixRadius, pixYCenter - pixRadius);
+	p_context.lineTo(pixXCenter - pixRadius, pixYCenter - pixRadius);
 	p_context.stroke();
 }
 
@@ -1108,6 +1191,20 @@ Drawer.prototype.getPixWriteCenterY = function (p_yIndex) {
 Drawer.prototype.getPixInnerSide = function () {
     return this.pix.sideSpace - 2 * this.pix.borderSpace;
 }
+Drawer.prototype.getPixSide = function () {
+    return this.pix.sideSpace;
+}
+Drawer.prototype.getPixXDot = function (p_xIndex) {
+    return this.pix.marginGrid.left + p_xIndex * this.pix.sideSpace;
+}
+Drawer.prototype.getPixYDot = function (p_yIndex) {
+    return this.pix.marginGrid.up + p_yIndex * this.pix.sideSpace;
+}
+// To be added when going from x-mesh / x-space to x-node 
+Drawer.prototype.getPixShiftSpaceToDot = function() {
+	return -this.getPixSide()/2;
+}
+
 
 // Gets the leftmost/upmost/rightmost/downmost pixel of a desired space
 Drawer.prototype.getPixXLeft = function (p_xIndex) {
@@ -1306,13 +1403,23 @@ Drawer.prototype.getClickEdgeD = function (event, p_canvas, p_xDotsNumber, p_yDo
     return null;
 }
 
-// Copied on getClickKnotRD
 Drawer.prototype.getClickNode = function (event, p_canvas, p_xDotsNumber, p_yDotsNumber) {
+	return this.getClickNodePrivate(event, p_canvas, p_xDotsNumber, p_yDotsNumber, false);
+}
+
+Drawer.prototype.getClickNodeTolerant = function (event, p_canvas, p_xDotsNumber, p_yDotsNumber) {
+	return this.getClickNodePrivate(event, p_canvas, p_xDotsNumber, p_yDotsNumber, true);
+}
+
+// Copied on getClickKnotRD
+Drawer.prototype.getClickNodePrivate = function(event, p_canvas, p_xDotsNumber, p_yDotsNumber, p_tolerance) {
 	const pixX = this.getPixXWithinGrid(event, p_canvas);
 	const pixY = this.getPixYWithinGrid(event, p_canvas);
 	const pixXModulo = (pixX + this.pix.borderClickDetection) % this.pix.sideSpace;
 	const pixYModulo = (pixY + this.pix.borderClickDetection) % this.pix.sideSpace;
-	if ((pixXModulo < 2 * this.pix.borderClickDetection) &&  (pixYModulo < 2 * this.pix.borderClickDetection)) {
+	const pixToleranceSquareIn = (p_tolerance ? this.pix.sideSpace/2.5 : this.pix.borderClickDetection); // Middle of side of the square. 
+	
+	if ((pixXModulo < 2 * pixToleranceSquareIn) &&  (pixYModulo < 2 * pixToleranceSquareIn)) {
 		const answer = {
 			x: Math.floor((pixX + this.pix.borderClickDetection) / this.pix.sideSpace),
 			y: Math.floor((pixY + this.pix.borderClickDetection) / this.pix.sideSpace)
@@ -1451,6 +1558,24 @@ Drawer.prototype.adaptCanvasDimensions = function (p_canvas, p_parameters) {
     p_canvas.width = totalXLength * this.pix.sideSpace;
     p_canvas.height = totalYLength * this.pix.sideSpace;
 }
+
+// -------------------
+// Utilitary functions
+
+// Rounded-corners rectangle. Credits : https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-using-html-canvas
+CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+  if (w < 2 * r) r = w / 2;
+  if (h < 2 * r) r = h / 2;
+  this.beginPath();
+  this.moveTo(x+r, y);
+  this.arcTo(x+w, y,   x+w, y+h, r);
+  this.arcTo(x+w, y+h, x,   y+h, r);
+  this.arcTo(x,   y+h, x,   y,   r);
+  this.arcTo(x,   y,   x+w, y,   r);
+  this.closePath();
+  return this;
+}
+
 
 //--------------------
 // Private functions

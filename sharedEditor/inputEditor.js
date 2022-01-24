@@ -125,6 +125,24 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			validityTokenMethod : validityTokenYajilin,
 			parameters : {emptySpaceChar : "<", isMonoChar : false}
 		}		
+	} else if (p_editorCore.isVisibleGrid(GRID_ID.YAJILIN_BLACK_WHITE)) {
+		return {
+			descriptionPrompt : "Entrer suite d'indices à la Yajilin précédé de noir/blanc (B|W)(L|U|R|D)(nombre) ou (B|W)",
+			descriptionPromptMono : "Entrer indice à la Yajilin précédé de noir/blanc (B|W)(L|U|R|D)(nombre) ou (B|W)",
+			defaultToken : "WL1",
+			gridId : GRID_ID.YAJILIN_BLACK_WHITE,
+			validityTokenMethod : validityTokenYajilinBorW,
+			parameters : {emptySpaceChar : "<", isMonoChar : false}
+		}		
+	} else if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_BLACK_WHITE)) {
+		return {
+			descriptionPrompt : "Entrer suite de (B|W)(nombre)",
+			descriptionPromptMono : "Entrer (B|W)(nombre)",
+			defaultToken : "W2",
+			gridId : GRID_ID.NUMBER_BLACK_WHITE,
+			validityTokenMethod : validityTokenNumbersBorW,
+			parameters : {emptySpaceChar : "<", isMonoChar : false}
+		}		
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.TAPA)) {
 		return {
 			descriptionPrompt : "Entrer suite de combinaisons de chiffres (au plus quatre chiffres) ou '?' pouvant correspondre à un indice valide de Tapa",
@@ -298,10 +316,33 @@ validityTokenYajilin = function(p_clue) {
 	if (charClue == 'X') {
 		return true;
 	}
-	if (charClue == 'L' || charClue == 'U' || charClue == 'R' || charClue == 'D') {
+	if (charClue == CHAR_DIRECTION.LEFT || charClue == CHAR_DIRECTION.UP || charClue == CHAR_DIRECTION.RIGHT || charClue == CHAR_DIRECTION.DOWN) {
 		return ((p_clue.length > 1) && !isNaN(p_clue.substring(1)));
 	}
 	return false;
+}
+
+validityTokenYajilinBorW = function(p_clue) {
+	var charClue = p_clue.charAt(0);
+	if (!(charClue == 'B' || charClue == 'W')) {
+		return false;
+	}
+	if (p_clue.length == 1) {
+		return true;
+	}
+	charClue = p_clue.charAt(1);
+	if (charClue == CHAR_DIRECTION.LEFT || charClue == CHAR_DIRECTION.UP || charClue == CHAR_DIRECTION.RIGHT || charClue == CHAR_DIRECTION.DOWN) {
+		return ((p_clue.length > 2) && !isNaN(p_clue.substring(2)));
+	}
+	return false;
+}
+
+validityTokenNumbersBorW = function(p_clue) {
+	var charClue = p_clue.charAt(0);
+	if (!(charClue == 'B' || charClue == 'W')) {
+		return false;
+	}
+	return p_clue.substring(1);
 }
 
 validityTokenTapa = function(p_clue) {
@@ -606,6 +647,10 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
             puzzleToSaveString = puzzleNumbersSymbolsToString(p_editorCore.getArray(GRID_ID.NUMBER_X_SPACE), ["X"]);
         } else if (p_saveLoadMode.id == PUZZLES_KIND.YAJILIN_LIKE.id) {
             puzzleToSaveString = arrowNumberCombinationsPuzzleToString(p_editorCore.getArray(GRID_ID.YAJILIN_LIKE));
+        } else if (p_saveLoadMode.id == PUZZLES_KIND.YAJILIN_BLACK_WHITE.id) {
+            puzzleToSaveString = arrowNumberCombinationsBWPuzzleToString(p_editorCore.getArray(GRID_ID.YAJILIN_BLACK_WHITE)); 
+        } else if (p_saveLoadMode.id == PUZZLES_KIND.NUMBER_BLACK_WHITE.id) {
+            puzzleToSaveString = numbersBWPuzzleToString(p_editorCore.getArray(GRID_ID.NUMBER_BLACK_WHITE)); 
         } else if (p_saveLoadMode.id == PUZZLES_KIND.TAPA.id) {
             sortTapaCluesInGrid(p_editorCore.getArray(GRID_ID.TAPA)); 
             puzzleToSaveString = tapaPuzzleToString(p_editorCore.getArray(GRID_ID.TAPA)); 
@@ -679,6 +724,16 @@ function getLoadedStuff(p_kindId, p_localStorageName, p_externalOptions) { // No
 			loadedItem.desiredIDs = [GRID_ID.YAJILIN_LIKE];
 			loadedItem.desiredArrays = [loadedItem.combinationsArray];
 			return loadedItem; break;
+		case PUZZLES_KIND.YAJILIN_BLACK_WHITE.id :
+			var loadedItem = stringToArrowNumberCombinationsBWPuzzle(localStorage.getItem(p_localStorageName));
+			loadedItem.desiredIDs = [GRID_ID.YAJILIN_BLACK_WHITE];
+			loadedItem.desiredArrays = [loadedItem.combinationsArray];
+			return loadedItem; break;
+		case PUZZLES_KIND.NUMBER_BLACK_WHITE.id :
+			var loadedItem = stringToNumbersBWPuzzle(localStorage.getItem(p_localStorageName));
+			loadedItem.desiredIDs = [GRID_ID.NUMBER_BLACK_WHITE];
+			loadedItem.desiredArrays = [loadedItem.numbersBWArray];
+			return loadedItem; break;				
 		case PUZZLES_KIND.REGIONS_NUMBERS.id :
 			var loadedItem = stringToWallsNumbersPuzzle(localStorage.getItem(p_localStorageName));
 			loadedItem.desiredIDs = [GRID_ID.NUMBER_SPACE];

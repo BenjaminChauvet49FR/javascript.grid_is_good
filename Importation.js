@@ -56,5 +56,11 @@ function addScriptInputSpacesSelection() { addScript("../miscSolving/InputSpaces
 function addScriptClusterFencesManagement() { addScript("../miscSolving/ClusterFencesManager.js"); }
 function addScriptClusterManagement() { addScript("../miscSolving/ClusterManager.js"); }
 function addScriptMisc() { addScript("../Misc.js"); }
+function addScriptsCollectionShingokiGeradeweg() {
+	addScript("../LoopSolver/ShingokiGeradeweg/SolveEvent.js");
+	addScript("../LoopSolver/ShingokiGeradeweg/Getters.js");
+	addScript("../LoopSolver/ShingokiGeradeweg/DosUndosDeductions.js");
+	addScript("../LoopSolver/ShingokiGeradeweg/Pass.js");
+}
 
 addScriptsLoopRegion = addScriptsClosure(["../LoopSolver/RegionLoopSolver.js", "../LoopSolver/RegionJunctionEvent.js"]);

@@ -807,7 +807,7 @@ EditorCore.prototype.clearContentsSelection = function() {
 // Parameters for / about grids
 
 function isOrientedGrid(p_name) {
-	return (p_name == GRID_ID.YAJILIN_LIKE);
+	return (p_name == GRID_ID.YAJILIN_LIKE || p_name == GRID_ID.YAJILIN_BLACK_WHITE);
 }
 
 // Corners don't include Galaxies !
