@@ -31,10 +31,10 @@ You successfully clicked on a region space (coordinates in parameter) or a wall.
 
 function clickWallDAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 	switch(p_action.id) {
-		case ACTION_OPEN_FENCE.id:
+		case ACTION_OPEN_FENCE.id :
 			p_solver.emitHypothesisDown(p_spaceIndexX, p_spaceIndexY, FENCE_STATE.OPEN); 
 		break;
-		case ACTION_CLOSE_FENCE.id:
+		case ACTION_CLOSE_FENCE.id :
 			p_solver.emitHypothesisDown(p_spaceIndexX, p_spaceIndexY, FENCE_STATE.CLOSED); 
 		break;
 	}
@@ -42,10 +42,10 @@ function clickWallDAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 
 function clickWallRAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 	switch(p_action.id) {
-		case ACTION_OPEN_FENCE.id:
+		case ACTION_OPEN_FENCE.id :
 			p_solver.emitHypothesisRight(p_spaceIndexX, p_spaceIndexY, FENCE_STATE.OPEN); 
 		break;
-		case ACTION_CLOSE_FENCE.id:
+		case ACTION_CLOSE_FENCE.id :
 			p_solver.emitHypothesisRight(p_spaceIndexX, p_spaceIndexY, FENCE_STATE.CLOSED); 
 		break;
 	}
@@ -53,7 +53,7 @@ function clickWallRAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 
 function clickSpace(p_solver, p_x, p_y, p_action) {
 	switch(p_action.id) {
-		case ACTION_PASS_AROUND_SPACE.id:
+		case ACTION_PASS_AROUND_SPACE.id :
 			p_solver.emitPassAroundSpace(p_x, p_y); 
 		break;
 	}
@@ -61,7 +61,7 @@ function clickSpace(p_solver, p_x, p_y, p_action) {
 
 function clickCornerAction(p_solver, p_cornerRDX, p_cornerRDY, p_action) {
 	switch(p_action.id) {
-		case ACTION_PASS_AROUND_KNOT.id:
+		case ACTION_PASS_AROUND_KNOT.id :
 			p_solver.emitPassNodeRD(p_cornerRDX, p_cornerRDY); 
 		break;
 	}

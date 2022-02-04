@@ -1,8 +1,8 @@
 /**
 Draws what's inside spaces 
 */
-function drawInsideSpaces(p_context, p_drawer, p_colours, p_solver) {
-	var items = [DrawableColor(p_colours.openSpace), DrawableX(p_colours.closedSpace)];
+function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver) {
+	var items = [DrawableColor(p_coloursSet.openSpace), DrawableX(p_coloursSet.closedSpace)];
 	function selection(x, y) {
 		if (!p_solver.isBanned(x, y)) {
 			if(p_solver.getAnswer(x, y) == ADJACENCY.YES) {

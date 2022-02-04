@@ -26,16 +26,16 @@ function clickCanvasAction(event,p_canvas, p_drawer, p_solver, p_actionsManager)
 
 function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 	switch(p_action.id) {
-		case ACTION_PUT_STITCH.id:
+		case ACTION_PUT_STITCH.id :
 			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, SPACE_STATE.BUTTON);
 		break;
-		case ACTION_PUT_NO_FILL.id:
+		case ACTION_PUT_NO_FILL.id :
 			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, SPACE_STATE.EMPTY);
 		break;
-		case ACTION_PASS_ROW.id:
+		case ACTION_PASS_ROW.id :
 			p_solver.emitPassRow(p_spaceIndexY);
 		break;
-		case ACTION_PASS_COLUMN.id:
+		case ACTION_PASS_COLUMN.id :
 			p_solver.emitPassColumn(p_spaceIndexX);
 		break;
 	}
@@ -43,13 +43,13 @@ function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 
 function clickWallDAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action) {
 	switch(p_action.id) {
-		case ACTION_BIND_STITCHES.id:
+		case ACTION_BIND_STITCHES.id :
 			p_solver.emitHypothesisDown(p_spaceIndexX, p_spaceIndexY, LINK_STATE.LINKED); 
 		break;
-		case ACTION_NOT_BIND_STITCHES.id:
+		case ACTION_NOT_BIND_STITCHES.id :
 			p_solver.emitHypothesisDown(p_spaceIndexX, p_spaceIndexY, LINK_STATE.CLOSED); 
 		break;
-		case ACTION_PASS_BORDER.id: 
+		case ACTION_PASS_BORDER.id : 
 			p_solver.emitPassBorderDown(p_spaceIndexX, p_spaceIndexY);
 		break;
 	}
@@ -57,13 +57,13 @@ function clickWallDAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action) {
 
 function clickWallRAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 	switch(p_action.id) {
-		case ACTION_BIND_STITCHES.id:
+		case ACTION_BIND_STITCHES.id :
 			p_solver.emitHypothesisRight(p_spaceIndexX, p_spaceIndexY, LINK_STATE.LINKED); 
 		break;
-		case ACTION_NOT_BIND_STITCHES.id:
+		case ACTION_NOT_BIND_STITCHES.id :
 			p_solver.emitHypothesisRight(p_spaceIndexX, p_spaceIndexY, LINK_STATE.CLOSED); 
 		break;
-		case ACTION_PASS_BORDER.id: 
+		case ACTION_PASS_BORDER.id : 
 			p_solver.emitPassBorderRight(p_spaceIndexX, p_spaceIndexY);
 		break;
 	}

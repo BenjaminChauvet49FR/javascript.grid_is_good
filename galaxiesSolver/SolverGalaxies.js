@@ -238,11 +238,11 @@ SolverGalaxies.prototype.commonPossibilities = function(p_x, p_y, p_dx, p_dy) {
 // ------------------------
 // Input methods
 
-SolverGalaxies.prototype.emitHypothesisRight = function(p_x, p_y, p_symbol) {
+SolverGalaxies.prototype.emitHypothesisRight = function(p_x, p_y, p_state) {
 	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, DIRECTION.RIGHT, p_state));
 }
 
-SolverGalaxies.prototype.emitHypothesisDown = function(p_x, p_y, p_symbol) {
+SolverGalaxies.prototype.emitHypothesisDown = function(p_x, p_y, p_state) {
 	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, DIRECTION.DOWN, p_state));
 }
 

@@ -1,20 +1,20 @@
 /**
 Draws what's inside spaces 
 */
-function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver, p_purificator) {	
+function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver, p_purificator) {	
 	p_drawer.drawFenceArray(p_context, p_solver.xLength, p_solver.yLength, getFenceRightDominoDrawingClosure(p_solver), getFenceDownDominoDrawingClosure(p_solver)); 
-	p_drawer.drawFixedNumbersOrX(p_context, drawNumberOrXClosure(p_solver), p_solver.numericCoordinatesList, p_solver.xCoordinatesList, p_colourSet.numberWrite, p_colourSet.numberWrite, FONTS.ARIAL);
+	p_drawer.drawFixedNumbersOrX(p_context, drawNumberOrXClosure(p_solver), p_solver.numericCoordinatesList, p_solver.xCoordinatesList, p_coloursSet.numberWrite, p_coloursSet.numberWrite, FONTS.ARIAL);
 	
-	const colours = [DrawableColor(p_colourSet.closedSpace), DrawableColor(p_colourSet.openSpace)];
+	const colours = [DrawableColor(p_coloursSet.closedSpace), DrawableColor(p_coloursSet.openSpace)];
 	selectionOpening = selectionOpeningClosure(p_solver);
 	p_drawer.drawSpaceContents2Dimensions(p_context, colours, selectionOpening, p_solver.xLength, p_solver.yLength);
-	shapes = [DrawableCircle(p_colourSet.shapeOuter, p_colourSet.shapeInner), DrawableSquare(p_colourSet.shapeOuter, p_colourSet.shapeInner)];
+	shapes = [DrawableCircle(p_coloursSet.shapeOuter, p_coloursSet.shapeInner), DrawableSquare(p_coloursSet.shapeOuter, p_coloursSet.shapeInner)];
 	p_drawer.drawSpaceContents2Dimensions(p_context, shapes, getShapeClosure(p_solver), p_solver.xLength, p_solver.yLength);
 	p_drawer.drawPolyomino4x5TiledMap(p_context, document.getElementById("img_map"), 16, selectionOpening, 1, p_solver.xLength, p_solver.yLength);
 	
 	if (p_purificator.isActive) {
 		// Purify mode
-		var itemsPur = [DrawableX(p_colourSet.purification)]; 
+		var itemsPur = [DrawableX(p_coloursSet.purification)]; 
 		function selectionSolverAndPurificator(x, y) {
 			switch(p_purificator.getPurificatorSpaceIfDifferent(x, y)) {
 				case "X" : return 0; 

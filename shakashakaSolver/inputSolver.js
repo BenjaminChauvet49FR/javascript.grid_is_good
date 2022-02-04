@@ -13,13 +13,13 @@ You successfully clicked on a region space (coordinates in parameter). Then what
 */
 function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_direction, p_action) {
 	switch(p_action.id) {
-		case ACTION_PUT_BLACK_QUARTER_TRIANGLE.id:
+		case ACTION_PUT_BLACK_QUARTER_TRIANGLE.id :
 			p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, p_direction, SHAKASHAKA.BLACK); 
 		break;
-		case ACTION_PUT_WHITE_QUARTER_TRIANGLE.id:
+		case ACTION_PUT_WHITE_QUARTER_TRIANGLE.id :
 			p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, p_direction, SHAKASHAKA.WHITE);
 		break;
-		case ACTION_PASS_SPACE.id: 
+		case ACTION_PASS_SPACE.id : 
 			p_solver.emitPassSpace(p_spaceIndexX, p_spaceIndexY);
 		break;
 	}

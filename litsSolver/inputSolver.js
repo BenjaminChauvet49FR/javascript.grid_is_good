@@ -13,18 +13,18 @@ You successfully clicked on a region space (coordinates in parameter). Then what
 */
 function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 	switch(p_action.id){
-		case ACTION_OPEN_SPACE.id:
+		case ACTION_OPEN_SPACE.id :
 			p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, ADJACENCY.YES); 
 		break;
-		case ACTION_CLOSE_SPACE.id:
+		case ACTION_CLOSE_SPACE.id :
 			p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, ADJACENCY.NO); 
 		break;
-		case ACTION_PASS_REGION.id:
+		case ACTION_PASS_REGION.id :
 			if (!p_solver.isBanned(p_spaceIndexX, p_spaceIndexY)) { //Slightly redundant since it digs for the region index
 				p_solver.passRegion(p_solver.getRegionIndex(p_spaceIndexX, p_spaceIndexY));
 			}
 		break;
-		case ACTION_PASS_REGION_AND_ADJACENCY_SPACES.id:
+		case ACTION_PASS_REGION_AND_ADJACENCY_SPACES.id :
 			p_solver.passRegionAndAdjacentSpaces(p_solver.getRegionIndex(p_spaceIndexX, p_spaceIndexY));
 		break;
 	}

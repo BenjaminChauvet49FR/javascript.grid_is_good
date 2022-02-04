@@ -19,18 +19,18 @@ You successfully clicked on a region space (coordinates in parameter). Then what
 */
 function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 	switch(p_action.id){
-		case ACTION_PUT_STAR.id:
+		case ACTION_PUT_STAR.id :
 			autoLogInput("HYPOTHESIS : "+p_spaceIndexX+" "+p_spaceIndexY+" "+STAR.YES);
 			p_solver.emitHypothesis(p_spaceIndexX,p_spaceIndexY,STAR.YES); 
 		break;
-		case ACTION_PUT_NO_FILL.id:
+		case ACTION_PUT_NO_FILL.id :
 			autoLogInput("HYPOTHESIS : "+p_spaceIndexX+" "+p_spaceIndexY+" "+STAR.NO);
 			p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, STAR.NO); 
 		break;		
-		case ACTION_PASS_ROW.id:
+		case ACTION_PASS_ROW.id :
 			p_solver.emitPassRow(p_spaceIndexY);
 		break;
-		case ACTION_PASS_COLUMN.id:
+		case ACTION_PASS_COLUMN.id :
 			p_solver.emitPassColumn(p_spaceIndexX);
 		break;
 	}

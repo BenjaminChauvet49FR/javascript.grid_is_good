@@ -1,8 +1,8 @@
 /**
 Draws what's inside spaces
  */
-function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver) {
-    var itemsSpace = [DrawableColor(p_colourSet.openSpace), DrawableColor(p_colourSet.closedSpace)];
+function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver) {
+    var itemsSpace = [DrawableColor(p_coloursSet.openSpace), DrawableColor(p_coloursSet.closedSpace)];
     function selectionOpening(x, y) {
         if (p_solver.getAnswer(x, y) == ADJACENCY.YES) {
             return 0;
@@ -12,7 +12,7 @@ function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver) {
         return -1;
     }
 	
-	var itemsTruth = [DrawableCircle(p_colourSet.truth, null), DrawableX(p_colourSet.lie)];
+	var itemsTruth = [DrawableCircle(p_coloursSet.truth, null), DrawableX(p_coloursSet.lie)];
 	
     function selectionTruth(x, y) {
         if (p_solver.getTruth(x, y) == USOONE.TRUTH) {
@@ -26,7 +26,7 @@ function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver) {
 	p_drawer.drawSpaceContents2Dimensions(p_context, itemsSpace, selectionOpening, p_solver.xLength, p_solver.yLength);
 	p_drawer.drawSpaceContentsCoorsList(p_context, itemsTruth, selectionTruth, p_solver.numberCoorsList);
     p_drawer.drawPolyomino4x5TiledMap(p_context, document.getElementById("img_map"), 16, selectionOpening, 0, p_solver.xLength, p_solver.yLength);
-	p_drawer.drawNumbersInsideStandardCoorsList(p_context, drawNumberClosure(p_solver, p_colourSet.numberWrite), p_solver.numberCoorsList, FONTS.ARIAL);
+	p_drawer.drawNumbersInsideStandardCoorsList(p_context, drawNumberClosure(p_solver, p_coloursSet.numberWrite), p_solver.numberCoorsList, FONTS.ARIAL);
 }
 
 drawNumberClosure = function(p_solver, p_colour) {

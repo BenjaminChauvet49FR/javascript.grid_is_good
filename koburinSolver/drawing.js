@@ -1,6 +1,6 @@
-function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver) {
-	p_drawer.drawSolverLinkInsideSpaces(p_context, p_colourSet, p_solver); 
-	p_drawer.drawFixedNumbersOrX(p_context, drawNumberClosure(p_solver), p_solver.numericCoordinatesList, p_solver.xCoordinatesList, p_colourSet.numberWrite, p_colourSet.numberWrite, FONTS.ARIAL);
+function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver) {
+	p_drawer.drawSolverLinkInsideSpaces(p_context, p_coloursSet, p_solver); 
+	p_drawer.drawFixedNumbersOrX(p_context, drawNumberClosure(p_solver), p_solver.numericCoordinatesList, p_solver.xCoordinatesList, p_coloursSet.numberWrite, p_coloursSet.numberWrite, FONTS.ARIAL);
 }
 
 drawNumberClosure = function(p_solver) {

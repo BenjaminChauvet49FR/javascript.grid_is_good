@@ -1,8 +1,8 @@
 /**
 Draws what's inside spaces 
 */
-function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver, p_purificator, p_selectionSet) {
-	const bgSelectionItems = [DrawableColor(p_colourSet.selectedSpace), DrawableColor(p_colourSet.selectedCornerSpace)];
+function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver, p_purificator, p_selectionSet) {
+	const bgSelectionItems = [DrawableColor(p_coloursSet.selectedSpace), DrawableColor(p_coloursSet.selectedCornerSpace)];
 	bgSelectionSelection = function(x, y) {
 		if (p_solver.getGridIndexes(x, y).length == 0) {
 			return -1;
@@ -15,11 +15,11 @@ function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver, p_purifica
 		return -1;
 	}
 	p_drawer.drawSpaceContents2Dimensions(p_context, bgSelectionItems, bgSelectionSelection, p_solver.xLength, p_solver.yLength);
-	p_drawer.drawNumbersInsideStandard2Dimensions(p_context, drawNumberClosure(p_solver, p_colourSet), FONTS.ARIAL, p_solver.xLength, p_solver.yLength);
+	p_drawer.drawNumbersInsideStandard2Dimensions(p_context, drawNumberClosure(p_solver, p_coloursSet), FONTS.ARIAL, p_solver.xLength, p_solver.yLength);
 	
 	if (p_purificator.isActive) {
 		// Purify mode
-		var itemsPur = [DrawableColor(p_colourSet.purification)]; 
+		var itemsPur = [DrawableColor(p_coloursSet.purification)]; 
 		function selectionSolverAndPurificator(x, y) {
 			switch(p_purificator.getPurificatorSpaceIfDifferent(x, y)) {
 				case null : return 0; // Remember : 'null' is when the new value is null !
@@ -31,15 +31,15 @@ function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver, p_purifica
 	
 }
 
-drawNumberClosure = function(p_solver, p_colourSet) {
+drawNumberClosure = function(p_solver, p_coloursSet) {
 	return function(p_x, p_y) {
 		supposedNumber = p_solver.getFixedNumber(p_x, p_y);
 		if (supposedNumber != null) {
-			return new DrawSpaceValue(supposedNumber, p_colourSet.numberWriteFixed);
+			return new DrawSpaceValue(supposedNumber, p_coloursSet.numberWriteFixed);
 		} else {
 			supposedNumber = p_solver.getNotFixedNumber(p_x, p_y);
 			if (supposedNumber != null) {
-				return new DrawSpaceValue(supposedNumber, p_colourSet.numberWriteNotFixed);
+				return new DrawSpaceValue(supposedNumber, p_coloursSet.numberWriteNotFixed);
 			}
 		}
 		return null;

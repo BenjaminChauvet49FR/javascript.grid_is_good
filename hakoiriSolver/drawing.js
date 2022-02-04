@@ -1,7 +1,7 @@
 /**
 Draws what's inside spaces 
 */
-function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver) {	
+function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver) {	
 
 	// The first method calls the second ! Overall, 1 = open fixed space. 0 = open space OR other open space. -1 = not an open space.
 	function selectionOpeningBGColour(p_x, p_y) {
@@ -21,16 +21,16 @@ function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver) {
 		return -1;
 	}
 	
-	const colours = [DrawableColor(p_colourSet.openFoundSpace), DrawableColor(p_colourSet.openFixedSpace)];
+	const colours = [DrawableColor(p_coloursSet.openFoundSpace), DrawableColor(p_coloursSet.openFixedSpace)];
 	p_drawer.drawSpaceContents2Dimensions(p_context, colours, selectionOpeningBGColour, p_solver.xLength, p_solver.yLength);
 	shapes = [
-	DrawableCircle(p_colourSet.edge, p_colourSet.circle), 
-	DrawableSquare(p_colourSet.edge, p_colourSet.square), 
-	DrawableTriangle(p_colourSet.edge, p_colourSet.triangle),
-	DrawableCircle(null, p_colourSet.circle), 
-	DrawableSquare(null, p_colourSet.square), 
-	DrawableTriangle(null, p_colourSet.triangle), 
-	DrawableX(p_colourSet.edge)
+	DrawableCircle(p_coloursSet.edge, p_coloursSet.circle), 
+	DrawableSquare(p_coloursSet.edge, p_coloursSet.square), 
+	DrawableTriangle(p_coloursSet.edge, p_coloursSet.triangle),
+	DrawableCircle(null, p_coloursSet.circle), 
+	DrawableSquare(null, p_coloursSet.square), 
+	DrawableTriangle(null, p_coloursSet.triangle), 
+	DrawableX(p_coloursSet.edge)
 	];
 	p_drawer.drawSpaceContents2Dimensions(p_context, shapes, getShapeClosure(p_solver), p_solver.xLength, p_solver.yLength);
 	p_drawer.drawPolyomino4x5TiledMap(p_context, document.getElementById("img_map"), 16, selectionOpening, 0, p_solver.xLength, p_solver.yLength);

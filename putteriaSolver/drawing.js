@@ -1,17 +1,17 @@
 /**
 Draws what's inside spaces 
 */
-function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver) {
+function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver) {
 	// Note : not a problem since running the grid an additional time seems not that compilcated, not even at a 30 fps speed, but still, not optimized.
-	p_drawer.drawNumbersInsideStandard2Dimensions(p_context, drawNumberOrXClosure(p_solver, p_colourSet), FONTS.ARIAL, p_solver.xLength, p_solver.yLength);
-	p_drawer.drawSpaceContents2Dimensions(p_context, [DrawableX(p_colourSet.fixedColour), DrawableX(p_colourSet.notFixedColour)], drawXClosure(p_solver), p_solver.xLength, p_solver.yLength);
+	p_drawer.drawNumbersInsideStandard2Dimensions(p_context, drawNumberOrXClosure(p_solver, p_coloursSet), FONTS.ARIAL, p_solver.xLength, p_solver.yLength);
+	p_drawer.drawSpaceContents2Dimensions(p_context, [DrawableX(p_coloursSet.fixedColour), DrawableX(p_coloursSet.notFixedColour)], drawXClosure(p_solver), p_solver.xLength, p_solver.yLength);
 }
 
-drawNumberOrXClosure = function(p_solver, p_colourSet) {
+drawNumberOrXClosure = function(p_solver, p_coloursSet) {
 	return function(p_x, p_y) {
 		var xOrNumber = p_solver.getXOrNumber(p_x, p_y);
 		if (xOrNumber != null && xOrNumber != "X") {
-			return new DrawSpaceValue(xOrNumber, p_solver.isFixed(p_x, p_y) ? p_colourSet.fixedColour : p_colourSet.notFixedColour);
+			return new DrawSpaceValue(xOrNumber, p_solver.isFixed(p_x, p_y) ? p_coloursSet.fixedColour : p_coloursSet.notFixedColour);
 		}
 		return null;
 	}

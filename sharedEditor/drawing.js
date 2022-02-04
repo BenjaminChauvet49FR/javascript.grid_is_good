@@ -11,7 +11,7 @@ const colourSet = {
 }
 
 /**
-Draw the grid on-screen on p_context, with p_editorCore informations, with this.pix and p_colors information for pixels and colors
+Draw the grid on-screen on p_context, with p_editorCore informations, with this.pix and coloursSet information for pixels and colors
 */
 Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	const xLength = p_editorCore.getXLength();

@@ -168,7 +168,7 @@ Drawer.prototype.drawFenceArrayPrivate = function (p_context, p_xLength, p_yLeng
 	pillarToColorFenceClosure(this, p_fenceMethodRight, p_fenceMethodDown, p_pillarsUnknownOverOpen), null);
 }
 
-Drawer.prototype.drawEdgesGrid = function (p_context, p_xLength, p_yLength, p_colorMethodRight, p_colorMethodDown, p_colorMethodPillar, p_colorMethodSpace) {
+Drawer.prototype.drawEdgesGrid = function (p_context, p_xLength, p_yLength, p_colourMethodRight, p_colourMethodDown, p_colourMethodPillar, p_colourMethodSpace) {
 	var ix,
     iy,
     indexRegion;
@@ -193,26 +193,26 @@ Drawer.prototype.drawEdgesGrid = function (p_context, p_xLength, p_yLength, p_co
         for (ix = 0; ix < p_xLength; ix++) {
             //Draw down wall
             if (iy <= p_yLength - 2) {
-                p_context.fillStyle = p_colorMethodDown(ix, iy);
+                p_context.fillStyle = p_colourMethodDown(ix, iy);
                 p_context.fillRect(pixDrawXHoriz, pixDrawYHoriz, pixLength, pixThickness);
             }
             //Draw right wall
             if (ix <= p_xLength - 2) {
-                p_context.fillStyle = p_colorMethodRight(ix, iy);
+                p_context.fillStyle = p_colourMethodRight(ix, iy);
                 p_context.fillRect(pixDrawXVert, pixDrawYVert, pixThickness, pixLength);
             }
             //Draw pillar
             if ((ix <= p_xLength - 2) && (iy <= p_yLength - 2)) {
-				if (p_colorMethodPillar && (p_colorMethodPillar != null)) {
-					p_context.fillStyle = p_colorMethodPillar(ix, iy);
+				if (p_colourMethodPillar && (p_colourMethodPillar != null)) {
+					p_context.fillStyle = p_colourMethodPillar(ix, iy);
 				} else {
 					p_context.fillStyle = this.wallToColor(WALLGRID.CLOSED);
 				}
 				p_context.fillRect(pixDrawXVert, pixDrawYHoriz, pixThickness, pixThickness);
             }
             //Draw inside space
-			if (p_colorMethodSpace && (p_colorMethodSpace != null)) {
-				filling = p_colorMethodSpace(ix, iy);
+			if (p_colourMethodSpace && (p_colourMethodSpace != null)) {
+				filling = p_colourMethodSpace(ix, iy);
 				if (filling != null) { // Note : looks like we can't set p_context.fillStyle to null (it doesn't change the previous value)
 					p_context.fillStyle = filling;
 					p_context.fillRect(pixDrawXHoriz, pixDrawYVert, pixLength, pixLength);
@@ -884,7 +884,7 @@ Drawer.prototype.drawGalaxiesGrid = function (p_context, p_galaxiesGrid) {
 	}
 }
 
-Drawer.prototype.drawDiscGrid = function (p_context, p_discGrid, p_symbols, p_colorsStroke, p_colorsFill) {
+Drawer.prototype.drawDiscGrid = function (p_context, p_discGrid, p_symbols, p_coloursStroke, p_coloursFill) {
 	const yLength = p_discGrid.getYLength();
 	if (yLength > 0) {
 		const xLength = p_discGrid.getXLength();
@@ -901,12 +901,12 @@ Drawer.prototype.drawDiscGrid = function (p_context, p_discGrid, p_symbols, p_co
 						//Crédits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/ellipse 
 						p_context.beginPath();
 						p_context.ellipse(this.getPixCenterX(ix), this.getPixCenterY(iy), radius, radius, 0, 0, 2 * Math.PI);
-						if (p_colorsStroke[i] && p_colorsStroke[i] != null) {
-							p_context.strokeStyle = p_colorsStroke[i];
+						if (p_coloursStroke[i] && p_coloursStroke[i] != null) {
+							p_context.strokeStyle = p_coloursStroke[i];
 							p_context.stroke();
 						}
-						if (p_colorsFill[i] && p_colorsFill[i] != null) {
-							p_context.fillStyle = p_colorsFill[i];
+						if (p_coloursFill[i] && p_coloursFill[i] != null) {
+							p_context.fillStyle = p_coloursFill[i];
 							p_context.fill();
 						}
 					}

@@ -15,7 +15,7 @@ You successfully clicked on a region space (coordinates in parameter). Then what
 */
 function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action, p_selectionSet) {
 	switch(p_action.id) {
-		case ACTION_PUT_STAR.id:
+		case ACTION_PUT_STAR.id :
 			autoLogInput("HYPOTHESIS : "+p_spaceIndexX+" "+p_spaceIndexY+" "+STAR.YES);
 			p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, STAR.YES); 
 		break;

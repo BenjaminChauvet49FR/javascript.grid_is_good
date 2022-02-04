@@ -1,7 +1,7 @@
 /**
 Draws what's inside spaces 
 */
-function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver) {
+function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver) {
 	
 	function getSpaceBackground(p_x, p_y) { // Wall or lit space
 		const val = p_solver.getFixedSpace(p_x, p_y);
@@ -27,19 +27,19 @@ function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver) {
 		return -1;
 	}
 	
-	drawNumberClosure = function(p_solver, p_colourSet) {
+	drawNumberClosure = function(p_solver, p_coloursSet) {
 		return function(p_x, p_y) {
 			supposedNumber = p_solver.getFixedSpace(p_x, p_y);
 			if (supposedNumber != null && supposedNumber != NOT_FORCED) {
-				return new DrawSpaceValue(supposedNumber, p_colourSet.numberWrite);
+				return new DrawSpaceValue(supposedNumber, p_coloursSet.numberWrite);
 			}
 			return null;
 		}
 	} 
 	
-	const spacesBG = [DrawableColor(p_colourSet.wallSpace), DrawableColor(p_colourSet.litSpace)];
-	const shapesFG = [DrawableCircle(p_colourSet.line, p_colourSet.lightbulb), DrawableLittleX(p_colourSet.line)];
+	const spacesBG = [DrawableColor(p_coloursSet.wallSpace), DrawableColor(p_coloursSet.litSpace)];
+	const shapesFG = [DrawableCircle(p_coloursSet.line, p_coloursSet.lightbulb), DrawableLittleX(p_coloursSet.line)];
 	p_drawer.drawSpaceContents2Dimensions(p_context, spacesBG, getSpaceBackground, p_solver.xLength, p_solver.yLength);
 	p_drawer.drawSpaceContents2Dimensions(p_context, shapesFG, getEmptySpaceElement, p_solver.xLength, p_solver.yLength);
-	p_drawer.drawNumbersInsideStandardCoorsList(p_context, drawNumberClosure(p_solver, p_colourSet), p_solver.numericSpacesList, FONTS.ARIAL);
+	p_drawer.drawNumbersInsideStandardCoorsList(p_context, drawNumberClosure(p_solver, p_coloursSet), p_solver.numericSpacesList, FONTS.ARIAL);
 }

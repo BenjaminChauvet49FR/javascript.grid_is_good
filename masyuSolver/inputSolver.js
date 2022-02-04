@@ -25,10 +25,10 @@ You successfully clicked on a region space (coordinates in parameter) or a wall.
 
 function clickWallDAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 	switch(p_action.id) {
-		case ACTION_LINK_SPACES.id:
+		case ACTION_LINK_SPACES.id :
 			p_solver.emitHypothesisDown(p_spaceIndexX, p_spaceIndexY, LOOP_STATE.LINKED); 
 		break;
-		case ACTION_CLOSE_LINKS.id:
+		case ACTION_CLOSE_LINKS.id :
 			p_solver.emitHypothesisDown(p_spaceIndexX, p_spaceIndexY, LOOP_STATE.CLOSED); 
 		break;
 	}
@@ -36,10 +36,10 @@ function clickWallDAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 
 function clickWallRAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 	switch(p_action.id){
-		case ACTION_LINK_SPACES.id:
+		case ACTION_LINK_SPACES.id :
 			p_solver.emitHypothesisRight(p_spaceIndexX, p_spaceIndexY, LOOP_STATE.LINKED); 
 		break;
-		case ACTION_CLOSE_LINKS.id:
+		case ACTION_CLOSE_LINKS.id :
 			p_solver.emitHypothesisRight(p_spaceIndexX, p_spaceIndexY, LOOP_STATE.CLOSED); 
 		break;
 	}
@@ -48,13 +48,13 @@ function clickWallRAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action){
 
 function clickSpaceAction(p_solver, p_purificator, p_spaceIndexX, p_spaceIndexY, p_action) {
 	switch(p_action.id){
-		case ACTION_INCLUDE_LOOP_SPACE.id:
+		case ACTION_INCLUDE_LOOP_SPACE.id :
 			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, LOOP_STATE.LINKED); 
 		break;
-		case ACTION_EXCLUDE_LOOP_SPACE.id:
+		case ACTION_EXCLUDE_LOOP_SPACE.id :
 			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, LOOP_STATE.CLOSED); 
 		break;
-		case ACTION_PASS_SPACE.id:
+		case ACTION_PASS_SPACE.id :
 			p_solver.emitPassSpace(p_spaceIndexX, p_spaceIndexY);
 		break;
 		case ACTION_PURIFY_SPACE.id : 

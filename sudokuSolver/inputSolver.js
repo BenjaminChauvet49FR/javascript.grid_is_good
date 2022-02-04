@@ -13,7 +13,7 @@ You successfully clicked on a region space (coordinates in parameter). Then what
 */
 function clickSpaceAction(p_solver, p_purificator, p_spaceIndexX, p_spaceIndexY, p_action, p_selectionSet) {
 	switch(p_action.id) {
-		case ACTION_ENTER_NUMBER.id:
+		case ACTION_ENTER_NUMBER.id :
 			if (!p_solver.isBlocked(p_spaceIndexX, p_spaceIndexY)) {
 				var value = prompt("Entrer valeur", 1);
 				value = parseInt(value, 10);

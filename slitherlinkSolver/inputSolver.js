@@ -25,10 +25,10 @@ function clickCanvasAction(event, p_canvas, p_drawer, p_solver, p_actionsManager
 
 function clickEdgeDAction(p_solver, p_x, p_y, p_action) {
 	switch (p_action.id) {
-		case ACTION_LINK_SPACES.id:
+		case ACTION_LINK_SPACES.id :
 			p_solver.emitHypothesisDown(p_x, p_y, LOOP_STATE.LINKED); 
 		break;
-		case ACTION_CLOSE_LINKS.id:
+		case ACTION_CLOSE_LINKS.id :
 			p_solver.emitHypothesisDown(p_x, p_y, LOOP_STATE.CLOSED); 
 		break;
 	}
@@ -36,10 +36,10 @@ function clickEdgeDAction(p_solver, p_x, p_y, p_action) {
 
 function clickEdgeRAction(p_solver, p_x, p_y, p_action) {
 	switch (p_action.id) {
-		case ACTION_LINK_SPACES.id:
+		case ACTION_LINK_SPACES.id :
 			p_solver.emitHypothesisRight(p_x, p_y, LOOP_STATE.LINKED); 
 		break;
-		case ACTION_CLOSE_LINKS.id:
+		case ACTION_CLOSE_LINKS.id :
 			p_solver.emitHypothesisRight(p_x, p_y, LOOP_STATE.CLOSED); 
 		break;
 	}
@@ -48,13 +48,13 @@ function clickEdgeRAction(p_solver, p_x, p_y, p_action) {
 
 function clickNodeAction(p_solver, p_x, p_y, p_action) {
 	switch(p_action.id) {
-		case ACTION_INCLUDE_LOOP_SPACE.id:
+		case ACTION_INCLUDE_LOOP_SPACE.id :
 			p_solver.emitHypothesisNode(p_x, p_y, LOOP_STATE.LINKED); 
 		break;
-		case ACTION_EXCLUDE_LOOP_SPACE.id:
+		case ACTION_EXCLUDE_LOOP_SPACE.id :
 			p_solver.emitHypothesisNode(p_x, p_y, LOOP_STATE.CLOSED); 
 		break;
-		case ACTION_PASS_SPACE:
+		case ACTION_PASS_SPACE.id :
 			p_solver.emitPassNode(p_x, p_y);
 		break;
 	}
@@ -62,7 +62,7 @@ function clickNodeAction(p_solver, p_x, p_y, p_action) {
 
 function clickMeshAction(p_solver, p_x, p_y, p_action) {
 	switch(p_action.id) {
-		case ACTION_PASS_MESH.id:
+		case ACTION_PASS_MESH.id :
 			p_solver.emitPassMesh(p_x, p_y); 
 		break;
 		// Maybe there will be other uses later...

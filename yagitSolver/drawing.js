@@ -12,7 +12,7 @@ function yagitGetFenceDownClosure(p_solver) {
 
 
 
-function drawing(p_context, p_drawer, p_colourSet, p_solver, p_extra) {
+function drawing(p_context, p_drawer, p_coloursSet, p_solver, p_extra) {
 	function getAreaIndex(p_x, p_y) {
 		switch (p_solver.getArea(p_x, p_y)) {
 			case YAGIT_SHAPE.ROUND : return 0; break;
@@ -31,11 +31,11 @@ function drawing(p_context, p_drawer, p_colourSet, p_solver, p_extra) {
 		return -1;
 	}
 	
-	const background = [DrawableColor(p_colourSet.circleArea), DrawableColor(p_colourSet.squareArea), DrawableColor(p_colourSet.deadEndArea)];
+	const background = [DrawableColor(p_coloursSet.circleArea), DrawableColor(p_coloursSet.squareArea), DrawableColor(p_coloursSet.deadEndArea)];
 	p_drawer.drawFenceArrayGhostPillars(p_context, p_solver.xLength, p_solver.yLength, yagitGetFenceRightClosure(p_solver), yagitGetFenceDownClosure(p_solver)); 	
 	p_drawer.drawSpaceContents2Dimensions(p_context, background, getAreaIndex, p_solver.xLength, p_solver.yLength);
 	if (p_extra.checkBoxColourblindFriendly.checked) {
-		const spacesFG = [DrawableLittleCircleUpperRight(p_colourSet.colourBlind), DrawableLittleSquareUpperRight(p_colourSet.colourBlind)];
+		const spacesFG = [DrawableLittleCircleUpperRight(p_coloursSet.colourBlind), DrawableLittleSquareUpperRight(p_coloursSet.colourBlind)];
 		p_drawer.drawSpaceContentsUpperRightCorner(p_context, spacesFG, getAreaIndexCBF, p_solver.xLength, p_solver.yLength);
 	}
 	p_drawer.drawYagitGrid(p_context, p_solver.yagitShapesGrid);

@@ -2,9 +2,9 @@
 /**
 Draws what's inside spaces 
 */
-function drawInsideSpaces(p_context, p_drawer, p_colours, p_solver) {
-	var items = [DrawableColor(p_colours.chocolateSquare), 
-				 DrawableX(p_colours.lackingSquare)];
+function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver) {
+	var items = [DrawableColor(p_coloursSet.chocolateSquare), 
+				 DrawableX(p_coloursSet.lackingSquare)];
 				
 	function selection(x,y) {
 		if (p_solver.getAnswer(x,y) == FILLING.YES) {
@@ -24,7 +24,7 @@ function drawInsideSpaces(p_context, p_drawer, p_colours, p_solver) {
 			return null;
 		} else {
 			const space = p_solver.getFirstSpaceRegion(p_index, 0);
-			const writeColour = p_solver.getAnswer(space.x,space.y) == FILLING.YES ? p_colours.reflectWrite : p_colours.standardWrite;
+			const writeColour = p_solver.getAnswer(space.x,space.y) == FILLING.YES ? p_coloursSet.reflectWrite : p_coloursSet.standardWrite;
 			return new DrawRegionArgument(space.x, space.y, forcedValue, writeColour) ;
 		}
 	}

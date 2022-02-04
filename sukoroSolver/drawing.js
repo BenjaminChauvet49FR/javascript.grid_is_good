@@ -1,7 +1,7 @@
 /**
 Draws what's inside spaces 
 */
-function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver, p_purificator) {
+function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver, p_purificator) {
 	function selectionSpace(p_x, p_y) {
 		// Note : no space background before quick start because of the design of the solver !
 		
@@ -27,15 +27,15 @@ function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver, p_purifica
 		return p_solver.methodsSetDeductions.adjacencyMethod(p_x, p_y) == ADJACENCY.YES ? 0 : -1;
 	}
 	
-	const colours = [DrawableColor(p_colourSet.openSpaceFixed), DrawableColor(p_colourSet.openSpaceNotFixed), DrawableX(p_colourSet.closedNearX), DrawableX(p_colourSet.closedFarX)];
+	const colours = [DrawableColor(p_coloursSet.openSpaceFixed), DrawableColor(p_coloursSet.openSpaceNotFixed), DrawableX(p_coloursSet.closedNearX), DrawableX(p_coloursSet.closedFarX)];
 	
 	p_drawer.drawSpaceContents2Dimensions(p_context, colours, selectionSpace, p_solver.xLength, p_solver.yLength);
 	p_drawer.drawPolyomino4x5TiledMap(p_context, document.getElementById("img_map"), 16, selectionOpening, 0, p_solver.xLength, p_solver.yLength);
-	p_drawer.drawNumbersInsideStandard2Dimensions(p_context, drawNumberClosure(p_solver, p_colourSet), FONTS.ARIAL, p_solver.xLength, p_solver.yLength);
+	p_drawer.drawNumbersInsideStandard2Dimensions(p_context, drawNumberClosure(p_solver, p_coloursSet), FONTS.ARIAL, p_solver.xLength, p_solver.yLength);
 	
 	if (p_purificator.isActive) {
 		// Purify mode
-		var itemsPur = [DrawableColor(p_colourSet.purification)]; 
+		var itemsPur = [DrawableColor(p_coloursSet.purification)]; 
 		function selectionSolverAndPurificator(x, y) {
 			switch(p_purificator.getPurificatorSpaceIfDifferent(x, y)) {
 				case null : return 0; // Remember : 'null' is when the new value is null !
@@ -47,15 +47,15 @@ function drawInsideSpaces(p_context, p_drawer, p_colourSet, p_solver, p_purifica
 	
 }
 
-drawNumberClosure = function(p_solver, p_colourSet) {
+drawNumberClosure = function(p_solver, p_coloursSet) {
 	return function(p_x, p_y) {
 		var supposedNumber = p_solver.getFixedNumber(p_x, p_y);
 		if (supposedNumber != null && supposedNumber >= 1 && supposedNumber <= 4) {
-			return new DrawSpaceValue(supposedNumber, p_colourSet.numberWriteFixed);
+			return new DrawSpaceValue(supposedNumber, p_coloursSet.numberWriteFixed);
 		} else {
 			supposedNumber = p_solver.getNotFixedNumber(p_x, p_y);
 			if (supposedNumber != null && supposedNumber >= 1 && supposedNumber <= 4) {
-				return new DrawSpaceValue(supposedNumber, p_colourSet.numberWriteNotFixed);
+				return new DrawSpaceValue(supposedNumber, p_coloursSet.numberWriteNotFixed);
 			}
 		}
 		return null;

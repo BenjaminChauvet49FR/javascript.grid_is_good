@@ -1,6 +1,6 @@
 // "Autonomous" only in the sense it doesn't reuse premade functions from main drawer !
 // To be done : Draw actual "half triangles" rather than quarters of them !
-function drawInsideSpacesAutonomous(p_context, p_drawer, p_colourSet, p_solver) {
+function drawInsideSpacesAutonomous(p_context, p_drawer, p_coloursSet, p_solver) {
 	const pixInnerSide = p_drawer.getPixInnerSide();
 	setupFont(p_context, pixInnerSide*4/5, FONTS.ARIAL);
 	var x, y, hasOne;
@@ -15,10 +15,10 @@ function drawInsideSpacesAutonomous(p_context, p_drawer, p_colourSet, p_solver) 
 		for (x = 0 ; x < p_solver.xLength ; x++) {
 			pixXCenter = p_drawer.getPixCenterX(x);
 			if (p_solver.isBlockedSpace(x, y)) {
-				p_context.fillStyle = p_colourSet.bannedSpace;
+				p_context.fillStyle = p_coloursSet.bannedSpace;
                 p_context.fillRect(p_drawer.getPixInnerXLeft(x), p_drawer.getPixInnerYUp(y), pixInnerSide, pixInnerSide);
 				if (p_solver.getNumericValue(x, y) != null) {					
-					p_context.fillStyle = p_colourSet.numberWrite; 
+					p_context.fillStyle = p_coloursSet.numberWrite; 
 					p_context.fillText(p_solver.getNumericValue(x, y), pixXCenter, pixYCenter);
 				}
 			} else {				
@@ -28,8 +28,8 @@ function drawInsideSpacesAutonomous(p_context, p_drawer, p_colourSet, p_solver) 
 				KnownDirections.forEach(dir => {
 					hasOne = true;
 					switch (p_solver.getAnswer(x, y, dir)) {
-						case SHAKASHAKA.WHITE : p_context.fillStyle = p_colourSet.whiteTriangle; break;
-						case SHAKASHAKA.BLACK : p_context.fillStyle = p_colourSet.blackTriangle; break;
+						case SHAKASHAKA.WHITE : p_context.fillStyle = p_coloursSet.whiteTriangle; break;
+						case SHAKASHAKA.BLACK : p_context.fillStyle = p_coloursSet.blackTriangle; break;
 						default : hasOne = false; break;
 					}
 					if (hasOne) {

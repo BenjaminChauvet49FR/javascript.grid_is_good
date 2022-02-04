@@ -24,19 +24,19 @@ You successfully clicked on a region space (coordinates in parameter). Then what
 */
 function clickSpaceAction(p_solver, p_purificator, p_spaceIndexX, p_spaceIndexY, p_action){
 	switch(p_action.id) {
-		case ACTION_OPEN_SPACE.id:
+		case ACTION_OPEN_SPACE.id :
 			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, SPACE_SHUGAKU.OPEN, true); 
 		break;
-		case ACTION_CLOSE_SPACE.id:
+		case ACTION_CLOSE_SPACE.id :
 			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, SPACE_SHUGAKU.OPEN, false); 
 		break;
-		case ACTION_PUT_ROUND.id:
+		case ACTION_PUT_ROUND.id :
 			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, SPACE_SHUGAKU.ROUND, true);  
 		break;
-		case ACTION_PUT_SQUARE.id:
+		case ACTION_PUT_SQUARE.id :
 			p_solver.emitHypothesisSpace(p_spaceIndexX, p_spaceIndexY, SPACE_SHUGAKU.SQUARE, true);  
 		break;
-		case ACTION_PASS_SPACE.id:
+		case ACTION_PASS_SPACE.id :
 			p_solver.emitPassSpace(p_spaceIndexX, p_spaceIndexY);
 		break;
 		case ACTION_PURIFY_SPACE.id : 
@@ -54,10 +54,10 @@ You successfully clicked on a region space (coordinates in parameter) or a wall.
 // C/P from Usotatami
 function clickWallDAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 	switch(p_action.id) {
-		case ACTION_OPEN_FENCE.id:
+		case ACTION_OPEN_FENCE.id :
 			p_solver.emitHypothesisDown(p_spaceIndexX, p_spaceIndexY, FENCE_STATE.OPEN); 
 		break;
-		case ACTION_CLOSE_FENCE.id:
+		case ACTION_CLOSE_FENCE.id :
 			p_solver.emitHypothesisDown(p_spaceIndexX, p_spaceIndexY, FENCE_STATE.CLOSED); 
 		break;
 	}
@@ -65,10 +65,10 @@ function clickWallDAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 
 function clickWallRAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 	switch(p_action.id){
-		case ACTION_OPEN_FENCE.id:
+		case ACTION_OPEN_FENCE.id :
 			p_solver.emitHypothesisRight(p_spaceIndexX, p_spaceIndexY, FENCE_STATE.OPEN); 
 		break;
-		case ACTION_CLOSE_FENCE.id:
+		case ACTION_CLOSE_FENCE.id :
 			p_solver.emitHypothesisRight(p_spaceIndexX, p_spaceIndexY, FENCE_STATE.CLOSED); 
 		break;
 	}

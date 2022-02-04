@@ -13,21 +13,21 @@ You successfully clicked on a space (coordinates in parameter). Then what ?
 */
 function clickSpaceAction(p_solver, p_purificator, p_spaceIndexX, p_spaceIndexY, p_action) {
 	switch(p_action.id) {
-		case ACTION_OPEN_SPACE.id:
+		case ACTION_OPEN_SPACE.id :
 			if (p_solver.isAutomaticMode()) {
 				p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, ADJACENCY.YES); 
 			} else {
 				p_solver.emitMove(p_spaceIndexX, p_spaceIndexY, ADJACENCY.YES);
 			}				
 		break;
-		case ACTION_CLOSE_SPACE.id:
+		case ACTION_CLOSE_SPACE.id :
 			if (p_solver.isAutomaticMode()) {
 				p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, ADJACENCY.NO); 
 			} else {
 				p_solver.emitMove(p_spaceIndexX, p_spaceIndexY, ADJACENCY.NO);
 			}	 
 		break;
-		case ACTION_PASS_STRIP.id:
+		case ACTION_PASS_STRIP.id :
 			p_solver.passStripFromSpace(p_spaceIndexX, p_spaceIndexY);				
 		break;
 		case ACTION_PURIFY_SPACE.id : 
@@ -36,7 +36,7 @@ function clickSpaceAction(p_solver, p_purificator, p_spaceIndexX, p_spaceIndexY,
 		case ACTION_UNPURIFY_SPACE.id : 
 			p_purificator.unpurify(p_spaceIndexX, p_spaceIndexY);
 		break;
-		case ACTION_NEUTRALIZE_SPACE.id:
+		case ACTION_NEUTRALIZE_SPACE.id :
 			p_solver.emitMove(p_spaceIndexX, p_spaceIndexY, ADJACENCY.UNDECIDED);
 		break;
 	}

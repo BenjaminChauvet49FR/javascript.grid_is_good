@@ -182,11 +182,11 @@ SolverUsotatami.prototype.setRange = function(p_x, p_y, p_dir, p_value) {
 // ------------------------
 // Input methods
 
-SolverUsotatami.prototype.emitHypothesisRight = function(p_x, p_y, p_symbol) {
+SolverUsotatami.prototype.emitHypothesisRight = function(p_x, p_y, p_state) {
 	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, DIRECTION.RIGHT, p_state));
 }
 
-SolverUsotatami.prototype.emitHypothesisDown = function(p_x, p_y, p_symbol) {
+SolverUsotatami.prototype.emitHypothesisDown = function(p_x, p_y, p_state) {
 	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, DIRECTION.DOWN, p_state));
 }
 

@@ -13,15 +13,15 @@ You successfully clicked on a region space (coordinates in parameter). Then what
 */
 function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 	switch(p_action.id) {
-		case ACTION_SEA_SPACE.id:
+		case ACTION_SEA_SPACE.id :
 			p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, true);
 			//p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, ADJACENCY.YES); 
 		break;
-		case ACTION_ISLAND_SPACE.id:
+		case ACTION_ISLAND_SPACE.id :
 			p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, false);
 			//p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, ADJACENCY.NO); 
 		break;
-		case ACTION_PASS_SPACE.id:
+		case ACTION_PASS_SPACE.id :
 			p_solver.emitPassSpace(p_spaceIndexX, p_spaceIndexY);				
 		break;
 	}

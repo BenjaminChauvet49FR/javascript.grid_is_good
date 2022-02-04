@@ -13,14 +13,14 @@ You successfully clicked on a region space (coordinates in parameter). Then what
 */
 function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 	switch(p_action.id){
-		case ACTION_ENTER_NUMBER.id:
+		case ACTION_ENTER_NUMBER.id :
 			var value = prompt("Entrer valeur", 1);
 			value = parseInt(value, 10);
 			if ((value != NaN) && (value > 0)) { // TODO ajouter condition maximum
 				p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, value); 
 			}
 		break;
-		case ACTION_PASS_REGION.id:
+		case ACTION_PASS_REGION.id :
 			p_solver.passRegion(p_solver.getRegionIndex(p_spaceIndexX,p_spaceIndexY));
 		break;
 	}
