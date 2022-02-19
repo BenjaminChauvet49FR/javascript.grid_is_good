@@ -1,3 +1,4 @@
+const EMPTINESS_CHARACTER = "E";
 // See "inputOptions" in inputComboChange.js
 
 // Note : what's gonna happen when we have other models of regions ? (Sudoku Killer)
@@ -60,7 +61,7 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			defaultToken : "1",
 			gridId : GRID_ID.NUMBER_SPACE,
 			validityTokenMethod : validityTokenMethod,
-			parameters : {emptySpaceChar : inputOptions.forceMonoCharacter ? " " : "<", isMonoChar : inputOptions.forceMonoCharacter, isNumeric : true}
+			parameters : {emptySpaceChar : inputOptions.forceMonoCharacter ? " " : EMPTINESS_CHARACTER, isMonoChar : inputOptions.forceMonoCharacter, isNumeric : true}
 		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.DIGIT_X_SPACE)) {
 		return {
@@ -78,7 +79,7 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			defaultToken : "1",
 			gridId : GRID_ID.NUMBER_X_SPACE,
 			validityTokenMethod : validityNumberRangeOrSymbolClosure(inputOptions.minNumber, inputOptions.maxNumber, ["X"]),
-			parameters : {emptySpaceChar : "<", isMonoChar : false, isNumeric : false}
+			parameters : {emptySpaceChar : EMPTINESS_CHARACTER, isMonoChar : false, isNumeric : false}
 		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_REGION)) {
 		return {			
@@ -87,7 +88,7 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			defaultToken : "1",
 			gridId : GRID_ID.NUMBER_REGION,
 			validityTokenMethod : validityTokenNumber,
-			parameters : {emptySpaceChar : "<", isMonoChar : false, isNumeric : true}
+			parameters : {emptySpaceChar : EMPTINESS_CHARACTER, isMonoChar : false, isNumeric : true}
 		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.PEARL)) {
 		return {
@@ -123,7 +124,7 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			defaultToken : "L1",
 			gridId : GRID_ID.YAJILIN_LIKE,
 			validityTokenMethod : validityTokenYajilin,
-			parameters : {emptySpaceChar : "<", isMonoChar : false}
+			parameters : {emptySpaceChar : EMPTINESS_CHARACTER, isMonoChar : false}
 		}		
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.YAJILIN_BLACK_WHITE)) {
 		return {
@@ -132,7 +133,7 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			defaultToken : "WL1",
 			gridId : GRID_ID.YAJILIN_BLACK_WHITE,
 			validityTokenMethod : validityTokenYajilinBorW,
-			parameters : {emptySpaceChar : "<", isMonoChar : false}
+			parameters : {emptySpaceChar : EMPTINESS_CHARACTER, isMonoChar : false}
 		}		
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_BLACK_WHITE)) {
 		return {
@@ -141,7 +142,7 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			defaultToken : "W2",
 			gridId : GRID_ID.NUMBER_BLACK_WHITE,
 			validityTokenMethod : validityTokenNumbersBorW,
-			parameters : {emptySpaceChar : "<", isMonoChar : false}
+			parameters : {emptySpaceChar : EMPTINESS_CHARACTER, isMonoChar : false}
 		}		
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.TAPA)) {
 		return {
@@ -150,7 +151,7 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			defaultToken : "21?",
 			gridId : GRID_ID.TAPA,
 			validityTokenMethod : validityTokenTapa,
-			parameters : {emptySpaceChar : "<", isMonoChar : false}
+			parameters : {emptySpaceChar : EMPTINESS_CHARACTER, isMonoChar : false}
 		}		
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.MOONSUN)) {
 		return {
@@ -188,9 +189,9 @@ clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
 		case (MODE_SELECTION_RECTANGLE.id) :
 		    p_editorCore.selectRectangleMechanism(p_x, p_y);
 		break;
-		case (MODE_ADD_WILD_CARDS.id) : 
+		case (MODE_ADD_WILDCARDS.id) : 
 			promptElements = getPromptElementsFromVisibleGrid(p_editorCore);
-			p_editorCore.switchWildCardWithGrid(promptElements.gridId, p_x, p_y);
+			p_editorCore.switchWildcardWithGrid(promptElements.gridId, p_x, p_y);
 		break;
 		case (MODE_ADD_ONE_SYMBOL.id) : 
 			p_editorCore.switchValue(inputOptions.monoSymbolGridId, p_x, p_y, inputOptions.monoSymbolToEnter); // Remember : see "input options" in inputComboChange
@@ -203,17 +204,20 @@ clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
 			}
 			p_editorCore.updateSelectionData();
 			var optionalTargetString = "";
-			var getWildCards = false;
-			if (p_editorCore.hasWildCardsSelected()) {
+			var getWildcards = false;
+			if (p_editorCore.hasWildcardsSelected()) {
 				optionalTargetString = "(Cible : les wildcards à partir de la case sélectionnée) ";
-				getWildCards = true;
+				getWildcards = true;
 			} else if (p_editorCore.getNumberSelectedSpaces()) {
 				optionalTargetString = "(Cible : les cases sélectionnées) ";
 			}
 			// Chains for 
 			var optionalRemindString = (!promptElements.parameters.isMonoChar && promptElements.parameters.emptySpaceChar != ' ') ? "(Penser à séparer les indices des caractères " + promptElements.parameters.emptySpaceChar + " par des espaces) " : "";
-			var clueChain = prompt(promptElements.descriptionPrompt + " ou '" + promptElements.parameters.emptySpaceChar + "' pour case vide " + optionalRemindString + optionalTargetString + ":", defaultVal );
-			p_editorCore.insertChainGrid(promptElements.gridId, clueChain, promptElements.validityTokenMethod, promptElements.parameters, p_x, p_y, getWildCards);
+			const optionsString = "Caractères supplémentaires ("+CHARACTER_MODE_CHARACTER + SAVE_ONE_MODE_CHARACTER +") : cf. mode d'emploi pour liste et utilisation"
+			var clueChain = prompt(promptElements.descriptionPrompt + " ou '" + promptElements.parameters.emptySpaceChar + "' pour case vide " + optionalRemindString + optionalTargetString + ":\n" + optionsString, defaultVal );
+			if (clueChain != null) {				
+				p_editorCore.insertChainGrid(promptElements.gridId, clueChain, promptElements.validityTokenMethod, promptElements.parameters, p_x, p_y, getWildcards);
+			}
 		break;
 		case (MODE_MASS_SYMBOL_PROMPT.id) :
 			const visibleGridId = getPromptElementsFromVisibleGrid(p_editorCore).gridId;
@@ -230,6 +234,18 @@ clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
 	}
 }
 
+clickPopUpHelpPromptAction = function() {
+	alert("Mode d'emploi de l'ajout de symboles en prompt : \n"+
+	"Possibilité de sélectionner des cases avant. La chaîne doit se présenter ainsi : (options)(SYMBOLES) \n"+
+	"Entrer les symboles les uns à la suite des autres. Peut être mono-caractère ou non.\n" +" Exemple dans Shingoki : 'B7 W4 "+EMPTINESS_CHARACTER+EMPTINESS_CHARACTER+EMPTINESS_CHARACTER+" B3'\n"+
+	"Où iront les symboles ?\n"+
+	"S'il n'y a pas de sélection : à la suite en partant de la case, de gauche à droite\n"+
+	"Avec cases sélectionnées : Cette fois, les cibles seront les cases sélectionnées (si aucune wildcard) ou bien les cases sélectionnées avec wildcard (si au moins une case a une wildcard).\n"+
+	CHARACTER_MODE_CHARACTER + " : tous les caractères sont lus individuellement et les espaces jouent le vide \n" +
+	SAVE_ONE_MODE_CHARACTER + " : le 1er caractère des cases, s'il existe, est préservé \n" +
+	"Exemple toujours avec Shingoki : 1) certaines cases peuvent être blanches ou noires après une lecture. 2) Faire 'sélectionner toutes cases', 3) puis 'déselectionner cases vides'. 4) La chaîne suivante est valide : cs3524212 pour mettre un 3 dans la 1ère case sélectionnée, puis un 5 dans dans la suivante et ainsi de suite, en préservant les couleurs.");
+}
+
 // Note : obviously copied on above. Will be evolved when margin is evolved.
 clickMarginAction = function(p_editorCore, p_edge, p_index) {
 	if (p_editorCore.getMarginInfoId() == MARGIN_KIND.NUMBERS_LEFT_UP.id) {
@@ -238,7 +254,7 @@ clickMarginAction = function(p_editorCore, p_edge, p_index) {
 			descriptionPromptMono : "Entrer valeur numérique >= 0",
 			defaultToken : "1",
 			validityTokenMethod : validityTokenNumber,
-			parameters : {emptySpaceChar : "<", isMonoChar : false, isNumeric : true}
+			parameters : {emptySpaceChar : EMPTINESS_CHARACTER, isMonoChar : false, isNumeric : true}
 		}
 		const optionalRemindString = (!promptElements.parameters.isMonoChar) ? "(Penser à séparer les indices des caractères " + promptElements.parameters.emptySpaceChar + " par des espaces) " : "";
 		var valuesChain = prompt(promptElements.descriptionPrompt + " ou " + promptElements.parameters.emptySpaceChar + " pour case vide " + optionalRemindString + ":", promptElements.defaultToken);
@@ -270,7 +286,6 @@ function applyChangesForSpaceMode(p_editorCore, p_mode) {
 	}*/ // Now, we use wild cards that make selection always good
 }
 
-// Ba bye !
 function actionUndoSymbolsPrompt(p_editorCore) {
 	if (!p_editorCore.undoLastChainGridInsert()) {
 		alert("Derniers changements inexistants ou irréversibles.");
@@ -389,8 +404,8 @@ p_editorCore : the Global item
 p_xLength : horizontal dimension
 p_yLength : vertical dimension
  */
-restartAction = function (p_canvas, p_drawer, p_editorCore, p_fieldsDefiningPuzzle) {
-    if (confirm("Redémarrer la grille ?")) {
+restartAction = function (p_canvas, p_drawer, p_editorCore, p_fieldsDefiningPuzzle, p_ask) {
+    if (!p_ask || confirm("Redémarrer la grille ?")) {
 		var xLength, yLength;
 		if (correspondsToSudokuPuzzle(p_fieldsDefiningPuzzle)) {
 			const sudokuMode = getSudokuIdFromLabel(p_fieldsDefiningPuzzle.fieldSudoku.value);
@@ -411,6 +426,26 @@ restartAction = function (p_canvas, p_drawer, p_editorCore, p_fieldsDefiningPuzz
 		});
         adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
     }
+}
+
+function handleFileSelectAction(p_files, p_canvas, p_drawer, p_editorCore, p_fieldsDefiningPuzzle) {
+
+	for (var i = 0, f; f = p_files[i]; i++) {
+		var reader = new FileReader()
+		reader.onload = (function(theFile) {
+			return function(e) {
+				if (analyzerModes.length == 0) {
+					alert("Désolé... on ne prend pas en charge ce type de puzzle pour l'instant !");
+					return;
+				} else {
+					restartAction(p_canvas, p_drawer, p_editorCore, p_fieldsDefiningPuzzle, false);
+					analyzerMode = analyzerModes[fieldsDefiningPuzzle.selectPictureModel.selectedIndex];
+					getInfo(e.target.result, p_drawer, p_editorCore, p_canvas, analyzerMode);
+				}
+			}
+		})(f);
+		reader.readAsDataURL(f);
+	}
 }
 
 //------------------------
@@ -513,20 +548,6 @@ getFieldY = function(p_fieldsDefiningPuzzle) {
 	}
 }
 
-function correspondsToSquarePuzzle(p_puzzleKind) {	
-	return p_puzzleKind.squareGrid; // Note : may be undefined, but typically used in boolean context (if (...))
-}
-
-// Note : rather than direct affectations, a distinctin between true and false
-function copySaveModeInto(p_start, p_destination) {
-	p_destination.id = p_start.id;
-	if (p_start.squareGrid) { 
-		p_destination.squareGrid = true;
-	} else {
-		p_destination.squareGrid = false;
-	}
-}
-
 function correspondsToSudokuPuzzle(p_fieldsDefiningPuzzle) {
 	return (p_fieldsDefiningPuzzle.spanSelectSudoku.style.display != "none");
 }
@@ -534,8 +555,16 @@ function correspondsToSudokuPuzzle(p_fieldsDefiningPuzzle) {
 //------------------------
 // Selections actions
 
+function actionSelectAll(p_editorCore) {
+	p_editorCore.selectAll();
+}
+
 function actionUnselectAll(p_editorCore) {
 	p_editorCore.unselectAll();
+}
+
+function actionUnselectNull(p_editorCore) {
+	p_editorCore.unselectNull();
 }
 
 function actionBuildWallsAroundSelection(p_editorCore) {
@@ -680,6 +709,11 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
 			puzzleToSaveString = wallsOnlyPuzzleToString(p_editorCore.getWallArray());
 		}
         localStorage.setItem(localStorageName, puzzleToSaveString);
+		// wildcard part
+		const puzzleToSaveStringWildcard = wildcardsGridToString(p_editorCore.getArray(GRID_ID.WILDCARD));
+		if (puzzleToSaveStringWildcard.length > 0) {			
+			localStorage.setItem(wildcardLocalStorageName(p_localStorageName), puzzleToSaveStringWildcard);
+		}
     }
 }
 
@@ -782,7 +816,7 @@ function getLoadedStuff(p_kindId, p_localStorageName, p_externalOptions) { // No
 			return stringToLinksOnlyPuzzle(localStorage.getItem(p_localStorageName)); // Contains "linkArray"
 		default :
 			return stringToWallsOnlyPuzzle(localStorage.getItem(p_localStorageName));
-	} 
+	}
 }
 
 /**
@@ -807,6 +841,7 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_puzzleName, p_d
 				}
 			}
 			p_editorCore.setupFromWallArray(wallArray);
+			
 			if (loadedStuff.desiredIDs) {
 				for (var i = 0 ; i < loadedStuff.desiredIDs.length ; i++) {
 					p_editorCore.addGrid(loadedStuff.desiredIDs[i], loadedStuff.desiredArrays[i]);
@@ -826,10 +861,21 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_puzzleName, p_d
 			}
             adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore); 
             updateFieldsAfterLoad(p_fieldsToUpdate, loadedStuff, wallArray[0].length, wallArray.length);
+
+			// wildcard part
+			if (localStorage.hasOwnProperty( wildcardLocalStorageName(localStorageName) )) { 
+				const wcGrid = stringToWildcardsGrid(localStorage.getItem( wildcardLocalStorageName(localStorageName) ), 
+					loadedStuff.desiredArrays[0][0].length, loadedStuff.desiredArrays[0].length);
+				p_editorCore.addGrid(GRID_ID.WILDCARD, wcGrid);
+			}
         }
     } else {
         alertMissingPuzzle(localStorageName);
     }
+}
+
+function wildcardLocalStorageName(p_localStorageName) {
+	return p_localStorageName + "WC";
 }
 
 // Updates all relevant fields in HTML

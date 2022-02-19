@@ -15,7 +15,7 @@ const MODE_SELECTION_RECTANGLE = {id:3, htmlText : "Sélection rectangulaire" , 
 const MODE_ERASE = {id:4, htmlText : "Effaçage", submitCaption:"Effacer murs autour case / effacer case"};
 const MODE_SYMBOLS_PROMPT = {id:5, htmlText : "Symboles en chaîne", submitCaption : "Ajouter symboles en chaîne"};
 const MODE_MASS_SYMBOL_PROMPT = {id:6, htmlText : "Symbole à ajouter : ", submitCaption : "Ajouter symbole en masse "};
-const MODE_ADD_WILD_CARDS = {id:7, htmlText : "Ajout de wildcards (penser à les sélectionner ensuite)", submitCaption : "Ajouter wildcards"};
+const MODE_ADD_WILDCARDS = {id:7, htmlText : "Ajout de wildcards (penser à les sélectionner ensuite)", submitCaption : "Ajouter wildcards"};
 const MODE_ADD_ONE_SYMBOL = {id:8, htmlText : "Ajout de symbole", submitCaption : "Ajouter symbole"};
 
 // Positive actions on space

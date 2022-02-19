@@ -9,7 +9,7 @@
     <body>
 		<div id="div_common_menu"></div>
 		<!-- Le fameux canevas -->
-		<canvas id="canevas" width="800" height="500">
+		<canvas id="canvas" width="800" height="500">
             Message pour les navigateurs ne supportant pas encore canvas.
         </canvas></br>
 		
@@ -82,18 +82,22 @@
 			<span id="span_stars">Etoiles par RLC : <input type="number" id="input_number_stars" value="2"></input> </span>
 			<span id="span_bounds">Liens par frontière : <input type="number" id="input_number_bounds" value="1"></input> </span>
 			<input type="submit" id="submit_resize_grid" value="Redimensionner la grille"></input></br>
-			<input type="submit" id="submit_new_grid" value="Nouvelle grille"></input>
+			<input type="submit" id="submit_new_grid" value="Nouvelle grille"></input></br>
+			<input id="inputFile" type="file"/><select id="select_picture_model"/></select>
 		</div>
 		Mode : <span id="span_mode"></span></br>
 		<input type="submit" id="submit_banned_space_mode" value="XXX"></input>
 		<input type="submit" id="submit_add_one_symbol" value="XXX"></input>
-		<input type="submit" id="submit_add_wild_cards" value="XXX"></input>
+		<input type="submit" id="submit_add_wildcards" value="XXX"></input>
 		<input type="submit" id="submit_add_symbols_prompt" value="Ajouter XXX"></input>
 		<input type="submit" id="submit_add_mass_symbol_prompt" value="Ajouter XXX"></input>
-		<input type="submit" id="submit_erase_mode" value="XXX"></input></br>
+		<input type="submit" id="submit_erase_mode" value="XXX"></input>
+		<input type="submit" id="submit_popup_help_prompt" value="Affcher mode d'emploi symboles en chaîne"></br>
 		<input type="submit" id="submit_select_mode" value="XXX"></input>
-		<input type="submit" id="submit_select_rectangles_mode" value="XXX"></input>
-		<input type="submit" id="submit_unselect" value="Désélectioner"></input></br>
+		<input type="submit" id="submit_select_rectangles_mode" value="XXX"></input></br>
+		<input type="submit" id="submit_select_all" value="Sélectionner tout"></input>
+		<input type="submit" id="submit_unselect_null" value="Désélectionner cases vides"></input>
+		<input type="submit" id="submit_unselect" value="Désélectionner"></input></br>
 		<input type="submit" id="submit_wall_selection" value="Murer sélection"></input>
 		<input type="submit" id="submit_move_selection" value="Déplacer sélection"></input>
 		<input type="submit" id="submit_copy_selection" value="Copier sélection"></input>
@@ -129,6 +133,7 @@
 		<script src="../commonEncodingDecoding.js"></script>
 		<script src="../Logs.js"></script>
 		
+		<script src="analyzerModes.js"></script>
 		<script src="gridInfos.js"></script>
 		<script src="drawing.js"></script>
 		<script src="inputEditor.js"></script>
@@ -137,6 +142,8 @@
 		<script src="EditorCore.js"></script>
 		<script src="actionManager.js"></script>
 		<script src="mainEditor.js"></script>
+		<script src="processingPictureAnalysis.js"></script>
+		<script src="PictureAnalyzer.js"></script> 
 		
 		<script src="massConversion.js"></script>
 	</body>

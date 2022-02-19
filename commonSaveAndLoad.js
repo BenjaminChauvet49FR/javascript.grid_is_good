@@ -808,3 +808,15 @@ function stringToLinksOnlyPuzzle(p_string) {
 	const answer = stringToWallsOnlyPuzzle(p_string);
 	return {linkArray : answer.wallArray}; // Subterfuge bureaucracy !
 }
+
+// --------------------
+// Wildcard part !
+
+// Note : saver takes an array, loader loads one !
+function wildcardsGridToString(p_wildcardArray) {
+	return symbolsArrayToString(p_wildcardArray, [WILDCARD_CHARACTER]);
+}
+
+function stringToWildcardsGrid(p_string, p_xLength, p_yLength) {
+	return stringToSymbolsArray(p_string, p_xLength, p_yLength, WILDCARD_CHARACTER);
+}

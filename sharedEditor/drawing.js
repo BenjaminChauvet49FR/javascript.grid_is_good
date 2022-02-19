@@ -100,7 +100,7 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	if (p_editorCore.getMarginInfoId() == MARGIN_KIND.NUMBERS_LEFT_UP.id) {
 		this.drawMarginLeftUpOne(p_context, p_editorCore.margins[EDGES.LEFT], p_editorCore.margins[EDGES.UP], FONTS.ARIAL);
 	}
-	this.drawWildCardGrid(p_context, p_editorCore.getWildCardGrid());
+	this.drawWildcardGrid(p_context, p_editorCore.getWildcardGrid());
 	
 	// Selection (part 2)
 	if (!selection1st) {
@@ -180,18 +180,18 @@ Drawer.prototype.drawPlaystationShapeGrid = function (p_context, p_shapeGrid) {
 	this.drawSpaceContents2Dimensions(p_context, shapes, getShape, p_shapeGrid.getXLength(), p_shapeGrid.getYLength()); 
 }
 
-Drawer.prototype.drawWildCardGrid = function(p_context, p_withWildCardsGrid) {
-	const yLength = p_withWildCardsGrid.getYLength();
+Drawer.prototype.drawWildcardGrid = function(p_context, p_withWildcardsGrid) {
+	const yLength = p_withWildcardsGrid.getYLength();
 	if (yLength > 0) {
-		const xLength = p_withWildCardsGrid.getXLength();
-		setupFont(p_context, this.getPixInnerSide() * 4/5, FONTS.ARIAL, COLOURS.WILD_CARD_WRITING);
+		const xLength = p_withWildcardsGrid.getXLength();
+		setupFont(p_context, this.getPixInnerSide() * 4/5, FONTS.ARIAL, COLOURS.WILDCARD_WRITING);
 		alignFontCenter(p_context);
 		p_context.mix_blend_mode = "exclusion";
 		var ix, iy; 
 		for (iy = 0; iy < yLength; iy++) {
 			for (ix = 0; ix < xLength; ix++) {
-				if (p_withWildCardsGrid.get(ix, iy) == WILD_CARD_CHARACTER) {
-					p_context.fillText(WILD_CARD_CHARACTER, this.getPixCenterX(ix), this.getPixCenterY(iy));
+				if (p_withWildcardsGrid.get(ix, iy) == WILDCARD_CHARACTER) {
+					p_context.fillText(WILDCARD_CHARACTER, this.getPixCenterX(ix), this.getPixCenterY(iy));
 				}
 			}
 		}
@@ -205,11 +205,11 @@ Drawer.prototype.drawNumbersBlackWhiteGrid = function(p_context, p_grid, p_font)
 			return null;
 		}
 		if (chain[0] == SYMBOL_ID.BLACK) { 
-			colour1 = BLACK_ON_WHITE;
-			colour2 = WHITE_ON_BLACK;
+			colour1 = COLOURS.BLACK_ON_WHITE;
+			colour2 = COLOURS.WHITE_ON_BLACK;
 		} else {
-			colour1 = WHITE_ON_BLACK;
-			colour2 = BLACK_ON_WHITE;
+			colour1 = COLOURS.WHITE_ON_BLACK;
+			colour2 = COLOURS.BLACK_ON_WHITE;
 		}
 		return new DrawWriteSpaceValue( parseInt(chain.substring(1), 10), colour1, colour2);
 	}

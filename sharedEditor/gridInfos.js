@@ -20,7 +20,7 @@ const GRID_ID = {
 	KNOTS: 'KNOTS',
 	OX: 'OX',
 	WILDCARD: 'WILD',
-	NUMBER_BLACK_WHITE:'NBW'
+	NUMBER_BLACK_WHITE: 'NBW'
 }
 
 const GRID_TRANSFORMATION = {
@@ -30,6 +30,22 @@ const GRID_TRANSFORMATION = {
 	MIRROR_HORIZONTAL : "MH",
 	MIRROR_VERTICAL : "MV",
 	RESIZE : "Rs"
+}
+
+
+
+function correspondsToSquarePuzzle(p_puzzleKind) {	
+	return p_puzzleKind.squareGrid; // Note : may be undefined, but typically used in boolean context (if (...))
+}
+
+// Note : rather than direct affectations, a distinctin between true and false
+function copySaveModeInto(p_start, p_destination) {
+	p_destination.id = p_start.id;
+	if (p_start.squareGrid) { 
+		p_destination.squareGrid = true;
+	} else {
+		p_destination.squareGrid = false;
+	}
 }
 
 const PUZZLES_KIND = {
