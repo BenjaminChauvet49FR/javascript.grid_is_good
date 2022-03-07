@@ -73,6 +73,30 @@ GeneralSolver.prototype.existingNeighborsDirections = function(p_x, p_y) {
 	return answer;
 }
 
+// Supposes a rectangular grid
+GeneralSolver.prototype.existingDiagonalNeighborsCoors = function(p_x, p_y) {
+	var answer = [];
+	const upExists = this.neighborExists(p_x, p_y, DIRECTION.UP); 
+	const downExists = this.neighborExists(p_x, p_y, DIRECTION.DOWN); 
+	if (p_x > 0) {
+		if (upExists) {
+			answer.push({x : p_x-1, y : p_y-1});
+		}
+		if (downExists) {
+			answer.push({x : p_x-1, y : p_y+1});
+		}
+	}
+	if (p_x <= this.xLength-2) {
+		if (upExists) {
+			answer.push({x : p_x+1, y : p_y-1});
+		}
+		if (downExists) {
+			answer.push({x : p_x+1, y : p_y+1});
+		}
+	}		
+	return answer;
+}
+
 // ----------
 // Existences of coordinates
 

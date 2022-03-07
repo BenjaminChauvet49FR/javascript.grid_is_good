@@ -1,6 +1,7 @@
+const FENCE_EVENT_KIND = 'kf';
+
 const FENCE_STATE = {OPEN : 2, CLOSED : 1, UNDECIDED : 0}
 const LabelFenceState = ["-", "C", "O"];
-const FENCE_EVENT_KIND = 'Fence'
 const OppositeFenceState = [0, 2, 1];
 
 function FenceEvent(p_x, p_y, p_direction, p_state) {
@@ -101,6 +102,28 @@ FencesGrid.prototype.setFence = function(p_x, p_y, p_direction, p_state) {
 		case DIRECTION.UP : this.setFenceUp(p_x, p_y, p_state); break;
 		default : autoLogFail("getFence returned an undefined result ! ");
 	}
+}
+
+// Neither method is safe ! 
+FencesGrid.prototype.isFenceSurelyOpen = function(p_x, p_y, p_direction) {
+	switch(p_direction) {
+		case DIRECTION.RIGHT : return (p_x < this.xLength-1) && (this.getFenceRight(p_x, p_y) == FENCE_STATE.OPEN); break;
+		case DIRECTION.DOWN : return (p_y < this.yLength-1) && (this.getFenceDown(p_x, p_y) == FENCE_STATE.OPEN); break;
+		case DIRECTION.LEFT : return (p_x > 0) && (this.getFenceLeft(p_x, p_y) == FENCE_STATE.OPEN); break;
+		case DIRECTION.UP : return (p_y > 0) && (this.getFenceUp(p_x, p_y) == FENCE_STATE.OPEN); break;
+		default : autoLogFail("isFenceSurelyOpen returned an undefined result ! ");
+	}	
+}
+
+// This one, a closed is considered even if the end is met. 
+FencesGrid.prototype.isFenceRatherClosed = function(p_x, p_y, p_direction) {
+	switch(p_direction) {
+		case DIRECTION.RIGHT : return (p_x == this.xLength-1) || (this.getFenceRight(p_x, p_y) == FENCE_STATE.CLOSED); break;
+		case DIRECTION.DOWN : return (p_y == this.yLength-1) || (this.getFenceDown(p_x, p_y) == FENCE_STATE.CLOSED); break;
+		case DIRECTION.LEFT : return (p_x == 0) || (this.getFenceLeft(p_x, p_y) == FENCE_STATE.CLOSED); break;
+		case DIRECTION.UP : return (p_y == 0) || (this.getFenceUp(p_x, p_y) == FENCE_STATE.CLOSED); break;
+		default : autoLogFail("isFenceRatherClosed returned an undefined result ! ");
+	}	
 }
 
 // Closures for drawing
@@ -367,6 +390,72 @@ FencesGrid.prototype.getUnknownFences = function(p_spacesChecker) {
 		}
 	});
 	return fencesList;
+}
+
+// ---------
+// Solving
+
+// Naive method
+FencesGrid.prototype.isComplete = function() {
+	for (var y = 0 ; y < this.yLength ; y++) {
+		for (var x = 0 ; x < this.xLength-1 ; x++) {
+			if (this.fenceArray[y][x].right == FENCE_STATE.UNDECIDED) {
+				return false;
+			}
+		}
+	}
+	for (var y = 0 ; y < this.yLength-1 ; y++) {
+		for (var x = 0 ; x < this.xLength ; x++) {
+			if (this.fenceArray[y][x].down == FENCE_STATE.UNDECIDED) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+// Naive research of the 'best' fence
+// Note : must be used after multipass, AND this must be a multipass that covers all fences. (so applying either a fence right or a fence down won't hurt the solving process)
+function searchBestFenceForSolutionSearch(p_solver, p_fencesGrid) { 
+	// Find index with the most solutions
+	var bestIndex = {nbD : -1};
+	var nbDeductions;
+	var event_;
+	var result;
+	for (solveX = 0 ; solveX < p_solver.xLength-1 ; solveX++) { // x and y are somehow modified by tryToApplyHypothesis...
+		for (solveY = 0 ; solveY < p_solver.yLength ; solveY++) {
+			if (p_fencesGrid.getFenceRight(solveX, solveY) == FENCE_STATE.UNDECIDED) {
+				[FENCE_STATE.OPEN, FENCE_STATE.CLOSED].forEach(state => {
+					event_ = new FenceEvent(solveX, solveY, DIRECTION.RIGHT, state);
+					result = p_solver.tryToApplyHypothesis(event_); 				
+					nbDeductions = p_solver.numberOfRelevantDeductionsSinceLastHypothesis();
+					if (bestIndex.nbD < nbDeductions) {
+						bestIndex = {nbD : nbDeductions , x : event_.fenceX, y : event_.fenceY, direction : DIRECTION.RIGHT}
+					}
+					p_solver.undoToLastHypothesis();
+				});	
+			}
+		}
+	}
+	for (solveX = 0 ; solveX < p_solver.xLength ; solveX++) { // x and y are somehow modified by tryToApplyHypothesis...
+		for (solveY = 0 ; solveY < p_solver.yLength-1 ; solveY++) {
+			if (p_solver.answerFencesGrid.getFenceDown(solveX, solveY) == FENCE_STATE.UNDECIDED) {
+				[FENCE_STATE.OPEN, FENCE_STATE.CLOSED].forEach(state => {
+					event_ = new FenceEvent(solveX, solveY, DIRECTION.DOWN, state);
+					result = p_solver.tryToApplyHypothesis(event_); 				
+					nbDeductions = p_solver.numberOfRelevantDeductionsSinceLastHypothesis();
+					if (bestIndex.nbD < nbDeductions) {
+						bestIndex = {nbD : nbDeductions , x : event_.fenceX, y : event_.fenceY, direction : DIRECTION.DOWN}
+					}
+					p_solver.undoToLastHypothesis();
+				});	
+			}
+		}
+	}
+	return p_solver.tryAllPossibilities(
+		[new FenceEvent(bestIndex.x, bestIndex.y, bestIndex.direction, FENCE_STATE.OPEN), 
+		new FenceEvent(bestIndex.x, bestIndex.y, bestIndex.direction, FENCE_STATE.CLOSED)]
+	);
 }
 
 // ---------

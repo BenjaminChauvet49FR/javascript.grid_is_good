@@ -208,16 +208,10 @@ applyEventClosure = function(p_solver) {
 		const index = p_eventToApply.index;
 		const choice = p_eventToApply.choice;
 		
-		const currentIndex = p_solver.answerChoiceArray[y][x].getValue(); 
-		if (choice && (currentIndex != null) && (index != currentIndex)) {
-			return EVENT_RESULT.FAILURE;
+		const answer = testNumericSelectSpaceChoice(p_solver.answerChoiceArray, x, y, index, choice);
+		if (answer != EVENT_RESULT.SUCCESS) {
+			return answer;
 		}
-		const currentState = (p_solver.answerChoiceArray[y][x].getState(index));
-		if (currentState == SPACE_CHOICE.YES) {
-			return choice ? EVENT_RESULT.HARMLESS : EVENT_RESULT.FAILURE;
-		} else if (currentState == SPACE_CHOICE.NO) {
-			return choice ? EVENT_RESULT.FAILURE : EVENT_RESULT.HARMLESS;
-		} 
 		if (index == NURIKABE_SEA) {
 			if (choice) {
 				p_solver.answerChoiceArray[y][x].choose(NURIKABE_SEA);
@@ -342,7 +336,7 @@ deductionsClosure = function (p_solver) {
 		const choice = p_eventBeingApplied.choice;
 		if (index == NURIKABE_SEA) {
 			if (choice) {
-				p_listEventsToApply = p_solver.alert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
+				p_listEventsToApply = p_solver.deductionsAlert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
 			} else {
 				var index2;
 				p_solver.existingNeighborsCoors(x, y).forEach(coors => {
@@ -394,16 +388,9 @@ deductionsClosure = function (p_solver) {
 		}
 		// Aaaand... if it's all about choices, let's go
 		if (choice) {
-			p_solver.answerChoiceArray[y][x].values().forEach(index2 => {
-				if (index2 != index) {
-					p_listEventsToApply.push(new ChoiceEvent(x, y, index2, false));
-				}
-			});
+			p_listEventsToApply = deductionsExcludeOthersNumericSelect(p_listEventsToApply, p_solver.answerChoiceArray, x, y, index, false);
 		} else {
-			const oneLeft = p_solver.answerChoiceArray[y][x].getOneLeft();
-			if (oneLeft != null) {
-				p_listEventsToApply.push(new ChoiceEvent(x, y, oneLeft, true));				
-			}
+			p_listEventsToApply = deductionsTestOneLeft(p_listEventsToApply, p_solver.answerChoiceArray, x, y);
 		}
 		return p_listEventsToApply;
 	}

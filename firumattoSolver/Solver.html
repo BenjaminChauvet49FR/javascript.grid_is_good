@@ -3,7 +3,7 @@
     <head>
 		<meta charset="utf-8"/>
 		<link rel="icon" type="image/png" href="../resources/star.png">
-        <title>Solveur Masyu</title>
+        <title>Solveur Firumatto !!!</title>
 		<link rel="stylesheet" type="text/css" href="../style.css">
     </head>
     <body>
@@ -16,27 +16,32 @@
 		<div id="div_main_buttons"></div>
 		<div id="div_solving">
 			<div id="div_solving_canvas_buttons"></div>
-			<div id="div_solving_canvas2_buttons"></div>
+			<div id="div_solving_canvas_buttons2"></div>
 			<div id="div_solving_global_actions"></div>
-			<span id="span_resolution_state"></span>
-			<div id="div_common_loop_display"></div>	<!-- Who thought making a single <div .../> tag would prevent the div_solving from closing ? This is what prevented all subsequent buttons to close. -->
+			<span id="span_resolution_state"></span></br>
+			<input type="checkbox" id="checkbox_possibilities">Affichage des possibilités</input>
 		</div>
 		<div id="div_purifying">
 			<div id="div_cleaning_canvas_buttons"></div>
 			<div id="div_cleaning_global_actions"></div>
-		</div> 		
+		</div>
+		<span id="span_resolution_state"></span></br>	
+		
 		<script src="../Importation.js"></script>
 		<script>
 		"use strict";
 		window.onload = function() {
 			addScriptsSolving();
 			addScriptsDirections();
+			addScriptFences();
 			addScriptsGeneric();
 			addScriptsLocal();
-			addScriptsLoop();
+			addScriptCheckCollection()
+			addScriptNonBinarySpaces();
+			addScriptConstants();
 			addScriptsPurificator();
-			addScriptMisc();
-			addScript("SolverMasyu.js");
+			addScript("Events.js");
+			addScript("SolverFirumatto.js");
 			startScriptLoading();
 		}		 
 		</script>

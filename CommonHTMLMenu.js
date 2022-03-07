@@ -160,6 +160,7 @@ menuSolvers.push({
 	documentPage : "Solver",
 	typeList : [
 		{name : "fillomino", displayName : "Fillomino", hoverDescription : "Polyominos, ceux de même taille ne peuvent pas se toucher"},
+		{name : "firumatto", displayName : "Firumatto", hoverDescription : "Bandes de taille 1 à 4, celles de même taille ne peuvent pas se toucher"},
 		{name : "galaxies", displayName : "Galaxies", hoverDescription : "Galaxies symétriques centralement sur un centre"},
 		{name : "usotatami", displayName : "Usotatami", hoverDescription : "Bandes avec un nombre unique n'indiquant pas la longueur"}
 	]

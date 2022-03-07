@@ -23,7 +23,7 @@ function main() {
 
 	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager)},false);
 	setInterval(drawCanvas, 30);
-	const defaultPuzzleValue = "1";
+	const defaultPuzzleValue = "457";
 	const puzzleTypeName = "Hakyuu";
 	
 	buildPuzzleManagementMenu("div_puzzle_management", "input_grid_name", "submit_load_grid", puzzleTypeName, defaultPuzzleValue);

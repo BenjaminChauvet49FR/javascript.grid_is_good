@@ -5,11 +5,12 @@ ACTION_PURIFICATION = {
 
 EQUAL_TO_SOLVER = "E"; // Not null, not a number. Used to mean that a space (or whatever) in a purificator is "equal to its solver counterpart."
 
-function GeneralPurificator() {} 
+function GeneralPurificator() {
+	this.isActive = true;
+} 
 
 GeneralPurificator.prototype.generalConstruct = function() {
 	this.actionIdPurificationList = []; // High warning : this list can grow indefinitely !
-	this.isActive = true;
 	this.methodsSetPurification = {
 		applyMethod : function() {},
 		undoMethod : function() {},

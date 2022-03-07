@@ -274,7 +274,7 @@ AdjacencyShiftEvent.prototype.toLogString = function() {
 // -----------------------
 // Some deduction methods
 
-GeneralSolver.prototype.alert2x2Areas = function(p_listEvents, p_methodSet, p_x, p_y) {
+GeneralSolver.prototype.deductionsAlert2x2Areas = function(p_listEvents, p_methodSet, p_x, p_y) {
 	isOccupiedMethod = isOccupiedClosure(p_methodSet.adjacencyMethod);
 	retrieveGDMethod = p_methodSet.retrieveGeographicalDeductionMethod;
 	if (p_x > 0) {

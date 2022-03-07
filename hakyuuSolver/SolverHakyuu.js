@@ -18,15 +18,15 @@ SolverHakyuu.prototype.construct = function(p_wallArray, p_numberArray) {
 			applyEventClosure(this), 
 			deductionsClosure(this),  
 			undoEventClosure(this));
-	/*this.methodsSetPass = {
+	this.methodsSetPass = {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
 		argumentToLabelMethod : namingCategoryClosure(this)};
 	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
-		skipPassMethod : skipPassClosure(this)
-	};*/
+		// skipPassMethod : skipPassClosure(this)
+	};
 	this.setResolution = {
 		quickStartEventsMethod : quickStartEventsClosure(this)
 		//searchSolutionMethod : searchClosure(this)
@@ -34,7 +34,8 @@ SolverHakyuu.prototype.construct = function(p_wallArray, p_numberArray) {
 	this.gridWall = WallGrid_data(p_wallArray); 
 	this.regionArray = this.gridWall.toRegionArray();
 	this.regions = [];
-	this.numbersArray = generateValueArray(this.xLength, this.yLength, null);
+	this.answerArray = generateValueArray(this.xLength, this.yLength, null);
+	this.fixedArray = generateValueArray(this.xLength, this.yLength, null);
 	const spacesByRegion = listSpacesByRegion(this.regionArray);
 	this.regionsNumber = spacesByRegion.length;
 	
@@ -49,107 +50,57 @@ SolverHakyuu.prototype.construct = function(p_wallArray, p_numberArray) {
 		});
 	}
 	
+	this.numericSpacesList = [];
 	// Data now that region spaces are known
+	// Warning : out-of-bound regions not handled.
 	for(ir = 0 ; ir < this.regionsNumber ; ir++) {
 		region = this.regions[ir];
 		//region.size = region.spaces.length;
 		for (is = 0 ; is < region.spaces.length ; is++) {
 			x = region.spaces[is].x;
 			y = region.spaces[is].y;
-			if (p_numberArray[y][x] == null) {
-				this.numbersArray[y][x] = new SpaceNumeric(1, region.size);
+			this.answerArray[y][x] = new SpaceNumeric(1, region.size);
+			if (p_numberArray[y][x] != null) {
+				this.fixedArray[y][x] = p_numberArray[y][x];
+				this.numericSpacesList.push({x : x, y : y});
 			} 
 		}
 	}
-	
-	// Purification ! (requires that non-fixed spaces are set) 
-	for(ir = 0 ; ir < this.regionsNumber ; ir++) {
-		region = this.regions[ir];
-		for (is = 0 ; is < region.spaces.length ; is++) {
-			x = region.spaces[is].x;
-			y = region.spaces[is].y;
-			fixedVal = p_numberArray[y][x];
-			if (fixedVal != null) {
-				this.numbersArray[y][x] = {fixedValue : p_numberArray[y][x]};
-				region.spaces.forEach(space => {
-					x2 = space.x;
-					y2 = space.y;
-					if (p_numberArray[y2][x2] == null) {
-						this.numbersArray[y2][x2].ban(fixedVal);
-					} 
-				});
-			}
-		}
-	}
-	
-	// Puzzle purification. Any conditional purification must be done after unconditional purification.
-	// Hakyuu specific part : ripple effect (offensve programming : do not ban anything that doesn't respect the max of a space. Also, do not ban spaces of the region as they have already been banned and there are no success checks here.)
-	for (var y = 0 ; y < this.yLength ; y++) {
-		for (var x = 0 ; x < this.xLength ; x++) {
-			fixedVal = p_numberArray[y][x];
-			if (fixedVal != null) {
-				var xLimit = Math.max(0, x-fixedVal);
-				for (var x2 = x-1; x2 >= xLimit ; x2--) {
-					this.banIfNecessary(p_numberArray, x2, y, fixedVal);
-				}
-				xLimit = Math.min(this.xLength-1, x+fixedVal);
-				for (var x2 = x+1; x2 <= xLimit ; x2++) {
-					this.banIfNecessary(p_numberArray, x2, y, fixedVal);
-				}
-				var yLimit = Math.max(0, y-fixedVal);
-				for (var y2 = y-1; y2 >= yLimit ; y2--) {
-					this.banIfNecessary(p_numberArray, x, y2, fixedVal);
-				}
-				yLimit = Math.min(this.yLength-1, y+fixedVal);
-				for (var y2 = y+1; y2 <= yLimit ; y2++) {
-					this.banIfNecessary(p_numberArray, x, y2, fixedVal);
-				}
-			}
-		}
-	}
-	
-	// Filters for each region (after purification) 
 	var notPlacedYet;
-	var setupNumericSpaces;
 	for(ir = 0 ; ir < this.regionsNumber ; ir++) {
 		region = this.regions[ir];
 		notPlacedYet = [];
-		setupNumericSpaces = [];
 		for (is = 0 ; is < region.spaces.length ; is++) {
 			notPlacedYet.push(1); // One number expected per region !
 		}
-		for (is = 0 ; is < region.spaces.length ; is++) {
-			x = region.spaces[is].x;
-			y = region.spaces[is].y;
-			const min = 1;
-			fixedVal = p_numberArray[y][x]; // Remember, p_numberArray is an argument of the constructor.
-			if (fixedVal != null) {
-				notPlacedYet[fixedVal - min]--;
-			} else {
-				setupNumericSpaces.push(this.numbersArray[y][x]);
-			}
-		}
-		region.possibilities = new SpaceSetNumeric(setupNumericSpaces, notPlacedYet, 1, region.size);
-	}
+		region.possibilities = new NumericSpacesSetAccountant(notPlacedYet, 1, region.size, region.size)
+	}	
 }
 
 SolverHakyuu.prototype.banIfNecessary = function(p_numberArray, p_x, p_y, p_fixedVal) {
-	if ((p_numberArray[p_y][p_x] == null) && (p_fixedVal <= this.numbersArray[p_y][p_x].getMax())) {
-		this.numbersArray[p_y][p_x].banIfNecessary(p_fixedVal);
+	if ((p_numberArray[p_y][p_x] == null) && (p_fixedVal <= this.answerArray[p_y][p_x].getMax())) {
+		this.answerArray[p_y][p_x].banIfNecessary(p_fixedVal);
 	}
 }
 
 //--------------------------------
 // Misc. methods
 
+SolverHakyuu.prototype.getFirstSpaceRegion = function(p_index) {
+	return this.regions[p_index].spaces[0];
+}
+
 SolverHakyuu.prototype.getFixedNumber = function(p_x, p_y) {
-	return this.numbersArray[p_y][p_x].fixedValue;
+	return this.fixedArray[p_y][p_x];
 }
 
 SolverHakyuu.prototype.getNotFixedNumber = function(p_x, p_y) {
-	return this.numbersArray[p_y][p_x].getValue();
+	return this.answerArray[p_y][p_x].getValue();
 }
 
+SolverHakyuu.prototype.getNumber = function(p_x, p_y) {
+	return this.answerArray[p_y][p_x].getValue();
+}
 
 SolverHakyuu.prototype.getRegion = function(p_x, p_y) {
 	return this.regions[this.getRegionIndex(p_x, p_y)];
@@ -163,7 +114,7 @@ SolverHakyuu.prototype.getRegionIndex = function(p_x, p_y) {
 
 // Input methods
 SolverHakyuu.prototype.emitHypothesis = function(p_x, p_y, p_number){
-	this.tryToApplyHypothesis(new SpaceAllowEvent(p_x, p_y, p_number, true));
+	this.tryToApplyHypothesisSafe(new ChoiceEvent(p_x, p_y, p_number, true));
 }
 
 SolverHakyuu.prototype.undo = function() {
@@ -171,12 +122,12 @@ SolverHakyuu.prototype.undo = function() {
 }
 
 SolverHakyuu.prototype.passRegion = function(p_indexRegion) {
-	//const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	//this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, p_indexRegion, "Region "+p_indexRegion); 
+	const generatedEvents = this.generateEventsForRegionPass(this.regions[p_indexRegion]);
+	this.passEventsSafe(generatedEvents, p_indexRegion); 
 }
 
 SolverHakyuu.prototype.makeMultiPass = function() {
-	//this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 SolverHakyuu.prototype.makeQuickStart = function () {
@@ -192,32 +143,15 @@ function applyEventClosure(p_solver) {
 		const x = p_eventToApply.x;
 		const y = p_eventToApply.y;
 		const number = p_eventToApply.number;
-		const fixedVal = p_solver.getFixedNumber(x, y);
-		if (fixedVal) {
-			if ((number == fixedVal) == choice) {
-				return EVENT_RESULT.HARMLESS;
-			}	else {
-				return EVENT_RESULT.FAILURE;
-			}
+		const answer = testNumericSpaceChoice(p_solver.answerArray, x, y, number, choice);
+		if (answer != EVENT_RESULT.SUCCESS) {
+			return answer;
 		}
-		if (number > p_solver.numbersArray[y][x].getMax()) {
-			return choice ? EVENT_RESULT.FAILURE : EVENT_RESULT.HARMLESS;
-		}
-		const currentNumber = p_solver.getNotFixedNumber(x, y); 
-		if (choice && (currentNumber != null) && (number != currentNumber)) {
-			return EVENT_RESULT.FAILURE;
-		}
-		const currentState = (p_solver.numbersArray[y][x].getState(number));
-		if (currentState == SPACE_CHOICE.YES) {
-			return choice ? EVENT_RESULT.HARMLESS : EVENT_RESULT.FAILURE;
-		} else if (currentState == SPACE_CHOICE.NO) {
-			return choice ? EVENT_RESULT.FAILURE : EVENT_RESULT.HARMLESS;
-		} 
 		if (choice) {
-			p_solver.numbersArray[y][x].choose(number);
+			p_solver.answerArray[y][x].choose(number);
 			p_solver.getRegion(x, y).possibilities.warnPlaced(number);
 		} else {
-			p_solver.numbersArray[y][x].ban(number);
+			p_solver.answerArray[y][x].ban(number);
 			p_solver.getRegion(x, y).possibilities.warnBanned(number);
 		}
 		return EVENT_RESULT.SUCCESS;
@@ -227,10 +161,10 @@ function applyEventClosure(p_solver) {
 function undoEventClosure(p_solver) {
 	return function(p_eventToUndo) {
 		if (p_eventToUndo.choice) {
-			p_solver.numbersArray[p_eventToUndo.y][p_eventToUndo.x].unchoose(p_eventToUndo.number);
+			p_solver.answerArray[p_eventToUndo.y][p_eventToUndo.x].unchoose(p_eventToUndo.number);
 			p_solver.getRegion(p_eventToUndo.x, p_eventToUndo.y).possibilities.unwarnPlaced(p_eventToUndo.number);
 		} else {
-			p_solver.numbersArray[p_eventToUndo.y][p_eventToUndo.x].unban(p_eventToUndo.number);
+			p_solver.answerArray[p_eventToUndo.y][p_eventToUndo.x].unban(p_eventToUndo.number);
 			p_solver.getRegion(p_eventToUndo.x, p_eventToUndo.y).possibilities.unwarnBanned(p_eventToUndo.number);
 		}
 	}
@@ -240,74 +174,40 @@ function undoEventClosure(p_solver) {
 // Deductions
 
 function deductionsClosure(p_solver) {
-	return function(p_eventList, p_eventToApply) {
+	return function(p_listEventsToApply, p_eventToApply) {
 		const x = p_eventToApply.x;
 		const y = p_eventToApply.y;
 		const number = p_eventToApply.number;
 		if (p_eventToApply.choice) {
-
+			
 			// Ban events for all other values in this space
-			for (var i = p_solver.numbersArray[y][x].getMin() ; i <= p_solver.numbersArray[y][x].getMax() ; i++) {
-				if (i != number) {
-					p_eventList.push(new SpaceAllowEvent(x, y, i, false));
-				};
-			}
+			p_listEventsToApply = deductionsExcludeOthersNumeric(p_listEventsToApply, p_solver.answerArray, x, y, number);
 			// Ban events for this values in all other non-occupied spaces in this region
-			p_solver.getRegion(x, y).spaces.forEach(space => {
-				x2 = space.x;
-				y2 = space.y;
-				if (!p_solver.getFixedNumber(x2, y2) && ((x2 != x) || (y2 != y))) {
-					p_eventList.push(new SpaceAllowEvent(x2, y2, number, false));
-				} 
-			});	
+			p_listEventsToApply = deductionsAlertNoneLeftInSpaceSet(p_listEventsToApply, p_solver.getRegion(x, y).possibilities, number, p_solver.getRegion(x, y).spaces, p_solver.answerArray);
+			
 			// Ban left/up/right/down
 			var xLimit = Math.max(0, x-number);
 			for (var x2 = x-1; x2 >= xLimit ; x2--) {
-				p_eventList.push(new SpaceAllowEvent(x2, y, number, false));
+				p_listEventsToApply.push(new ChoiceEvent(x2, y, number, false));
 			}
 			xLimit = Math.min(p_solver.xLength-1, x+number);
 			for (var x2 = x+1; x2 <= xLimit ; x2++) {
-				p_eventList.push(new SpaceAllowEvent(x2, y, number, false));
+				p_listEventsToApply.push(new ChoiceEvent(x2, y, number, false));
 			}
 			var yLimit = Math.max(0, y-number);
 			for (var y2 = y-1; y2 >= yLimit ; y2--) {
-				p_eventList.push(new SpaceAllowEvent(x, y2, number, false));
+				p_listEventsToApply.push(new ChoiceEvent(x, y2, number, false));
 			}
 			yLimit = Math.min(p_solver.yLength-1, y+number);
 			for (var y2 = y+1; y2 <= yLimit ; y2++) {
-				p_eventList.push(new SpaceAllowEvent(x, y2, number, false));
+				p_listEventsToApply.push(new ChoiceEvent(x, y2, number, false));
 			}
 		} else {
-			const last = p_solver.numbersArray[y][x].getOneLeft();
-			// Only one possibility left in this space
-			if (last) {
-				p_eventList.push(new SpaceAllowEvent(x, y, last, true));
-			}
-			// Only one possibility left in this space
-			p_eventList = p_solver.alertOneLeftInRegion(p_eventList,  p_solver.getRegion(x, y), number);
-			
+			p_listEventsToApply = deductionsTestOneLeft(p_listEventsToApply, p_solver.answerArray, x, y);
+			p_listEventsToApply = deductionsAlertRemainingPossibilitiesInSpaceSet(p_listEventsToApply, p_solver.getRegion(x, y).possibilities, number, p_solver.getRegion(x, y).spaces, p_solver.answerArray);
 		}
-		return p_eventList;
+		return p_listEventsToApply;
 	}
-}
-
-SolverHakyuu.prototype.alertOneLeftInRegion = function(p_eventList, p_region, p_number) {
-	if ((p_region.possibilities.getNotBannedYet(p_number) == 0) && (p_region.possibilities.getNotPlacedYet(p_number) > 0)) {
-		var x, y;
-		var spaceCount = 0;
-		p_region.spaces.forEach(space => {
-			x = space.x;
-			y = space.y;
-			if (!this.getFixedNumber(x, y) && this.numbersArray[y][x].getState(p_number) == SPACE_CHOICE.UNDECIDED) {
-				p_eventList.push(new SpaceAllowEvent(x, y, p_number, true));
-				spaceCount++;
-			}
-		});
-		if (spaceCount != p_region.possibilities.getNotPlacedYet(p_number)) {
-			p_eventList.push(new FailureEvent());
-		}
-	}
-	return p_eventList;
 }
 
 //--------------------------------
@@ -316,23 +216,76 @@ SolverHakyuu.prototype.alertOneLeftInRegion = function(p_eventList, p_region, p_
 quickStartEventsClosure = function(p_solver) {
 	return function() {
 		var listQSEvts = [{quickStartLabel : "Hakyuu"}];
-		var justOne;
-		for (var y = 0 ; y < p_solver.yLength ; y++) {
-			for (var x = 0 ; x < p_solver.xLength ; x++) {
-				if (!p_solver.numbersArray[y][x].fixedValue) {
-					justOne = p_solver.numbersArray[y][x].getOneLeft();
-					if (justOne) {
-						listQSEvts.push(new SpaceAllowEvent(x, y, justOne, true));
-					}
-				}
-			}
-		}
+		var x, y;
+		p_solver.numericSpacesList.forEach(coors => {			
+			x = coors.x;
+			y = coors.y;
+			listQSEvts.push(new ChoiceEvent(x, y, p_solver.fixedArray[y][x], true));			
+		});
+		// Note : considering all fixed numbers as choice events is great for code smoothing, up to and including in QS... just don't remove everything
+		var coors;
 		p_solver.regions.forEach(region => {
-			for (var nb = 1; nb <= region.size ; nb++) {
-				listQSEvts = p_solver.alertOneLeftInRegion(listQSEvts, region, nb);
+			if (region.size == 1) {
+				coors = region.spaces[0];
+				listQSEvts.push(new ChoiceEvent(coors.x, coors.y, 1, true));
 			}
 		});
 		return listQSEvts;
 	}
 }
 
+//--------------------------------
+// Pass !
+
+SolverHakyuu.prototype.generateEventsForRegionPass = function(p_region) {
+	var answer = [];
+	var x, y;
+	p_region.spaces.forEach(space => {
+		x = space.x;
+		y = space.y;
+		if (this.getNotFixedNumber(x, y) == null) { 
+			answer.push(this.oneSpaceEventsList(x, y, p_region.size));
+		}			 
+	});
+	return answer;
+}
+
+function generateEventsForRegionPassClosure(p_solver) {
+	return function(p_index) {
+		return p_solver.generateEventsForRegionPass(p_solver.regions[p_index]);
+	}
+}
+
+SolverHakyuu.prototype.oneSpaceEventsList = function(p_x, p_y, p_upTo) {
+	var eventsSpace = [];
+	for (number = 1 ; number <= p_upTo ; number++) {
+		eventsSpace.push(new ChoiceEvent(p_x, p_y, number, true));
+	}
+	return eventsSpace;
+}
+
+function comparison(p_event1, p_event2) {
+	return commonComparison([[p_event1.y, p_event1.x, p_event1.number, p_event1.choice],
+	[p_event2.y, p_event2.x, p_event2.number, p_event2.choice]]);
+} // Note : I could have factorized the comparison method for choice, but I didn't.
+
+function copying(p_event) {
+	return p_event.copy();
+}
+
+// Note : Factorize
+namingCategoryClosure = function(p_solver) {
+	return function(p_index) {
+		return "Region "+ p_index + " (" + p_solver.getFirstSpaceRegion(p_index).x +","+ p_solver.getFirstSpaceRegion(p_index).y + ")"; 
+	}
+}
+
+orderedListPassArgumentsClosure = function(p_solver) {
+	return function() {
+		var answer = [];
+		for (var i = 0 ; i < p_solver.regionsNumber ; i++) {
+			answer.push(i);
+		}
+		return answer;
+	}
+}

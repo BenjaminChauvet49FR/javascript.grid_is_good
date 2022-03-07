@@ -164,37 +164,31 @@ SolverGeradeweg.prototype.setupPearlFromPrevious = function(p_x, p_y, p_xD, p_yD
 // Input methods
 
 SolverGeradeweg.prototype.emitHypothesisDown = function(p_x, p_y, p_state) {
-	if (this.quickStartDone && p_y <= this.yLength-2) {
+	if (p_y <= this.yLength-2) {
 		this.tryToPutNewDown(p_x, p_y, p_state);
 	}
 }
 
 SolverGeradeweg.prototype.emitHypothesisRight = function(p_x, p_y, p_state) {
-	if (this.quickStartDone && p_x <= this.xLength-2) {
+	if (p_x <= this.xLength-2) {
 		this.tryToPutNewRight(p_x, p_y, p_state);
 	}
 }
 
 SolverGeradeweg.prototype.emitHypothesisNode = function(p_x, p_y, p_state) {
-	if (this.quickStartDone) {		
-		this.tryToPutNewSpace(p_x, p_y, p_state);
-	}
+	this.tryToPutNewSpace(p_x, p_y, p_state);
 }
 
 SolverGeradeweg.prototype.emitPassNode = function(p_x, p_y) {
-	if (this.quickStartDone) {	
-		if (this.getNumber(p_x, p_y) != null) {
-			return this.passLoop({passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
-		} else {
-			return this.passLoop({passCategory : LOOP_PASS_CATEGORY.GERADEWEG, x : p_x, y : p_y});
-		}
+	if (this.getNumber(p_x, p_y) != null) {
+		return this.passLoop({passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
+	} else {
+		return this.passLoop({passCategory : LOOP_PASS_CATEGORY.GERADEWEG, x : p_x, y : p_y});
 	}
 }
 
 SolverGeradeweg.prototype.makeMultipass = function() {
-	if (this.quickStartDone) {		
-		this.multipassLoop();
-	}
+	this.multipassLoop();
 }
 
 solveAction = function (p_solver) {

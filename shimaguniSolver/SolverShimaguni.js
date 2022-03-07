@@ -183,10 +183,8 @@ SolverShimaguni.prototype.makeQuickStart = function() {
 	this.quickStart();
 }
 
-SolverShimaguni.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	if (this.quickStartDone) {		
-		return this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
-	}
+SolverShimaguni.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {	
+	return this.tryToApplyHypothesisSafe(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverShimaguni.prototype.undo = function() {
@@ -194,22 +192,12 @@ SolverShimaguni.prototype.undo = function() {
 }
 
 SolverShimaguni.prototype.emitPassRegion = function(p_indexRegion) {
-	if (this.quickStartDone) {		
-		generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-		this.passEvents(generatedEvents, p_indexRegion); 
-	}
+	generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
+	this.passEventsSafe(generatedEvents, p_indexRegion); 
 }
 
 SolverShimaguni.prototype.makeMultiPass = function() {
-	if (this.quickStartDone) {		
-		this.multiPass(this.methodsSetMultipass);
-	}
-}
-
-SolverShimaguni.prototype.tryToBan = function(p_region, p_value) {
-	if (this.quickStartDone) {		
-		this.tryToApplyHypothesis(new NumberBanEvent(p_region, p_value));
-	}
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 //--------------------------------

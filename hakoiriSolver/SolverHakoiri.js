@@ -35,27 +35,34 @@ SolverHakoiri.prototype.construct = function(p_wallArray, p_symbolsArray) {
 	}
 
 	this.answerArray = [];		
-	this.numericSpaceList = []; // For quickstart
+	this.numericSpacesList = []; // For quickstart
 	this.gridWall = WallGrid_data(p_wallArray); 
 	this.regionArray = this.gridWall.toRegionArray();
 	this.regions = [];
+	this.fixedSpacesArray = [];
 	
 	var symbol;
 	
 	// Definition of answerArray
 	for (var y = 0; y < this.yLength ; y++) {
 		this.answerArray.push([]);
+		this.fixedSpacesArray.push([]);
 		for (var x = 0 ; x < this.xLength ; x++) {
 			if (this.regionArray[y][x] == WALLGRID.OUT_OF_REGIONS) {
 				this.answerArray[y].push({blocked : true, value : null});
+				this.fixedSpacesArray[y].push(null);
 			} else {	
+				this.answerArray[y].push(new SpaceNumeric(0, 3));
 				symbol = p_symbolsArray[y][x];
 				switch(symbol) {
-					case (SYMBOL_ID.ROUND) : this.answerArray[y].push({blocked : true, value : SPACE_HAKOIRI.ROUND});  break;
-					case (SYMBOL_ID.SQUARE) : this.answerArray[y].push({blocked : true, value : SPACE_HAKOIRI.SQUARE});  break;
-					case (SYMBOL_ID.TRIANGLE) : this.answerArray[y].push({blocked : true, value : SPACE_HAKOIRI.TRIANGLE});  break;
-					default : this.answerArray[y].push(new SpaceNumeric(0, 3));  break;
-				}	
+					case (SYMBOL_ID.ROUND) : this.fixedSpacesArray[y].push(SPACE_HAKOIRI.ROUND);  break;
+					case (SYMBOL_ID.SQUARE) : this.fixedSpacesArray[y].push(SPACE_HAKOIRI.SQUARE);  break;
+					case (SYMBOL_ID.TRIANGLE) : this.fixedSpacesArray[y].push(SPACE_HAKOIRI.TRIANGLE); break;
+					default : this.fixedSpacesArray[y].push(null); break;
+				}
+				if (symbol != null) {
+					this.numericSpacesList.push({x : x, y : y});
+				}
 			}
 		}
 	}
@@ -74,69 +81,15 @@ SolverHakoiri.prototype.construct = function(p_wallArray, p_symbolsArray) {
 		});
 	}
 	
-	// Purification ! For each region, ban all occurences of each appearing symbol in other spaces of the region.
-	for(ir = 0 ; ir < this.regionsNumber ; ir++) {
-		region = this.regions[ir];
-		for (is = 0 ; is < region.spaces.length ; is++) {
-			x = region.spaces[is].x;
-			y = region.spaces[is].y;
-			if (this.answerArray[y][x].blocked && this.answerArray[y][x].value != null) {
-				region.spaces.forEach(space => {
-					x2 = space.x;
-					y2 = space.y;
-					if (!this.answerArray[y2][x2].blocked) {
-						this.answerArray[y2][x2].ban(this.answerArray[y][x].value);
-					} 
-				});
-			}
-		}
-	}
-	
-	// Puzzle-related purification (ban orthogonally/diagonally adj. values)
-	for (var y = 0 ; y < this.yLength ; y++) {
-		for (var x = 0 ; x < this.xLength ; x++) {
-			if (this.answerArray[y][x].blocked) {
-				fixedShape = this.answerArray[y][x].value;
-				if (fixedShape != null) {
-					this.existingNeighborsCoorsWithDiagonals(x, y).forEach(coors => {
-						if (!this.answerArray[coors.y][coors.x].blocked) {							
-							this.answerArray[coors.y][coors.x].banIfNecessary(fixedShape);
-						}
-					});
-				}
-			}
-		}
-	}
-	
 	// Sets for each region, after purification
 	// Filters for each region (after purification) 
 	var notPlacedYet;
 	var setupNumericSpaces;
-	const min = 0;
-	const max = 3;
 	for(ir = 0 ; ir < this.regionsNumber ; ir++) {
 		region = this.regions[ir];
 		notPlacedYet = [region.size - 3, 1, 1, 1];
-		setupNumericSpaces = [];
-		for (is = 0 ; is < region.spaces.length ; is++) {
-			x = region.spaces[is].x;
-			y = region.spaces[is].y;
-
-			fixedVal = p_symbolsArray[y][x]; // Remember, p_symbolsArray is an argument of the constructor.
-			if (fixedVal == SYMBOL_ID.ROUND) {
-				notPlacedYet[1]--;
-			} else if (fixedVal == SYMBOL_ID.SQUARE) {
-				notPlacedYet[2]--;
-			} else if (fixedVal == SYMBOL_ID.TRIANGLE) {
-				notPlacedYet[3]--;
-			} else {
-				setupNumericSpaces.push(this.answerArray[y][x]);
-			}
-		}
-		region.possibilities = new SpaceSetNumeric(setupNumericSpaces, notPlacedYet, min, max);
-	}
-	
-	this.declarationsOpenAndClosed();
+		region.possibilities = new NumericSpacesSetAccountant(notPlacedYet, 0, 3, region.size); // 0, 3 = Min,max
+	}	
 }
 
 //--------------------------------
@@ -148,19 +101,15 @@ SolverHakoiri.prototype.isBanned = function(p_x, p_y) {
 }
 
 SolverHakoiri.prototype.getFixedShape = function(p_x, p_y) {
-	if (this.answerArray[p_y][p_x].blocked) {
-		return this.answerArray[p_y][p_x].value;
-	} else {
-		return null;
-	}
+	return this.fixedSpacesArray[p_y][p_x];
 }
 
 SolverHakoiri.prototype.getVariableShape = function(p_x, p_y) {
-		return this.answerArray[p_y][p_x].getValue();
+	return this.answerArray[p_y][p_x].getValue();
 }
 
 SolverHakoiri.prototype.isOpenNotBannedDraw = function(p_x, p_y) {
-	return (this.answerArray[p_y][p_x].blocked || this.answerArray[p_y][p_x].getState(SPACE_HAKOIRI.EMPTY) == SPACE_CHOICE.NO);
+	return (!this.isBanned(p_x, p_y) && this.answerArray[p_y][p_x].getState(SPACE_HAKOIRI.EMPTY) == SPACE_CHOICE.NO);
 }
 
 //--------------------------------
@@ -175,8 +124,8 @@ SolverHakoiri.prototype.makeQuickStart = function() {
 }
 
 SolverHakoiri.prototype.emitHypothesisSpace = function(p_x, p_y, p_value, p_ok) {
-	if (!this.answerArray[p_y][p_x].blocked) {
-		this.tryToApplyHypothesis(new SpaceAllowEvent(p_x, p_y, p_value, p_ok));
+	if (!this.isBanned(p_x, p_y)) {
+		this.tryToApplyHypothesisSafe(new ChoiceEvent(p_x, p_y, p_value, p_ok));
 	}
 }
 
@@ -189,7 +138,7 @@ SolverHakoiri.prototype.emitPassRegion = function(p_x, p_y) {
 }
 
 SolverHakoiri.prototype.makeMultiPass = function() {
-	return this.multiPass(this.methodsSetMultipass);
+	return this.multiPassSafe(this.methodsSetMultipass);
 }
 
 //--------------------------------
@@ -198,32 +147,16 @@ SolverHakoiri.prototype.makeMultiPass = function() {
 // Offensiveness : x and y valid, space not banned.
 applyEventClosure = function(p_solver) {
 	return function(p_eventToApply) {
-		return p_solver.putNewInSpace(p_eventToApply.x, p_eventToApply.y, p_eventToApply.symbol, p_eventToApply.choice);
+		return p_solver.putNewInSpace(p_eventToApply.x, p_eventToApply.y, p_eventToApply.getSymbol(), p_eventToApply.choice);
 	}
 }
 
 // Offensive programming : x and y are within bounds (and that's it, block spaces are checked first. Because beware of intrusions... looking at you, 2x2 square checker.)
 SolverHakoiri.prototype.putNewInSpace = function(p_x, p_y, p_symbol, p_choice) {
-	if (this.isBanned(p_x, p_y)) {
-		if (p_symbol == SPACE_HAKOIRI.EMPTY && p_choice == true) { // This check is mandatory only because banned spaces have a format different from non-banned ones.
-			return EVENT_RESULT.HARMLESS;
-		} else {
-			return EVENT_RESULT.FAILURE;
-		}
+	const answer = testNumericSpaceChoice(this.answerArray, p_x, p_y, p_symbol, p_choice);
+	if (answer != EVENT_RESULT.SUCCESS) {
+		return answer;
 	}
-	if (this.answerArray[p_y][p_x].blocked) {
-		if (p_symbol != this.answerArray[p_y][p_x].value) { 
-			return p_choice ? EVENT_RESULT.FAILURE : EVENT_RESULT.HARMLESS;
-		} else {
-			return p_choice ? EVENT_RESULT.HARMLESS : EVENT_RESULT.FAILURE;
-		}
-	}
-	const currentState = (this.answerArray[p_y][p_x].getState(p_symbol));
-	if (currentState == SPACE_CHOICE.YES) {
-		return p_choice ? EVENT_RESULT.HARMLESS : EVENT_RESULT.FAILURE;
-	} else if (currentState == SPACE_CHOICE.NO) {
-		return p_choice ? EVENT_RESULT.FAILURE : EVENT_RESULT.HARMLESS;
-	} 
 	const region = this.regions[this.regionArray[p_y][p_x]];
 	if (p_choice) {
 		this.answerArray[p_y][p_x].choose(p_symbol);
@@ -237,10 +170,9 @@ SolverHakoiri.prototype.putNewInSpace = function(p_x, p_y, p_symbol, p_choice) {
 
 undoEventClosure = function(p_solver) {
 	return function(p_eventToUndo) {
-		//  Set UNDECIDED
 		const x = p_eventToUndo.x;
 		const y = p_eventToUndo.y;
-		const symbol = p_eventToUndo.symbol;
+		const symbol = p_eventToUndo.getSymbol();
 		const region = p_solver.regions[p_solver.regionArray[y][x]];
 		if (p_eventToUndo.choice) {
 			p_solver.answerArray[y][x].unchoose(symbol);
@@ -258,23 +190,20 @@ undoEventClosure = function(p_solver) {
 quickStartEventsClosure = function(p_solver) {
 	return function() {
 		var listQSEvts = [{quickStartLabel : "Hakoiri"}];
-
-		for (var y = 0 ; y < p_solver.yLength ; y++) {
-			for (var x = 0 ; x < p_solver.xLength ; x++) {
-				// One number possible in a space
-				if (!p_solver.answerArray[y][x].blocked) {
-					justOne = p_solver.answerArray[y][x].getOneLeft();
-					if (justOne != null) {
-						listQSEvts.push(new SpaceAllowEvent(x, y, justOne, true));
-					}
-				}
+		var x, y;
+		p_solver.numericSpacesList.forEach(coors => {
+			x = coors.x;
+			y = coors.y;
+			if (p_solver.fixedSpacesArray[y][x] != null) { 
+				listQSEvts.push(new ChoiceEvent(x, y, p_solver.fixedSpacesArray[y][x], true));
 			}
-		}
-		
+		});
 		p_solver.regions.forEach(region => {
-			Object.keys(SPACE_HAKOIRI).forEach(symbol => {		
-				listQSEvts = p_solver.alertOneLeftInRegionDeductions(listQSEvts, region, SPACE_HAKOIRI[symbol]);
-			});
+			if (region.size == 3) {
+				region.spaces.forEach(coors => {
+					listQSEvts.push(new ChoiceEvent(coors.x, coors.y, SPACE_HAKOIRI.EMPTY, false));
+				});
+			}
 		});
 		return listQSEvts;
 	}
@@ -289,7 +218,7 @@ Transforms a geographical deduction (see dedicated class GeographicalDeduction) 
 */
 transformClosure = function (p_solver) {
     return function (p_geographicalDeduction) {
-		return new SpaceAllowEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, SPACE_HAKOIRI.EMPTY, p_geographicalDeduction.opening == ADJACENCY.NO);
+		return new ChoiceEvent(p_geographicalDeduction.x, p_geographicalDeduction.y, SPACE_HAKOIRI.EMPTY, p_geographicalDeduction.opening == ADJACENCY.NO);
     } 
 };
 
@@ -297,9 +226,6 @@ adjacencyClosure = function (p_solver) {
     return function (p_x, p_y) {
 		if (p_solver.regionArray[p_y][p_x] == WALLGRID.OUT_OF_REGIONS) {
 			return ADJACENCY.NO;
-		}
-		if (p_solver.answerArray[p_y][p_x].blocked) { // Warning : assumes that there are no "X" among the blocked spaces.
-			return ADJACENCY.YES;
 		}
         switch (p_solver.answerArray[p_y][p_x].getState(SPACE_HAKOIRI.EMPTY)) { 
 			case SPACE_CHOICE.YES : return ADJACENCY.NO; break;
@@ -318,44 +244,31 @@ deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {			
 		const x = p_eventBeingApplied.x;
 		const y = p_eventBeingApplied.y;
-		const symbol = p_eventBeingApplied.symbol;
+		const symbol = p_eventBeingApplied.getSymbol();
 		const region = p_solver.regions[p_solver.regionArray[y][x]];
 		if (p_eventBeingApplied.choice) {
-			// Ban all other possibilities for this space (if shape)
-			Object.keys(SPACE_HAKOIRI).forEach(value => {
-				if (SPACE_HAKOIRI[value] != symbol) {					
-					p_listEventsToApply.push(new SpaceAllowEvent(x, y, SPACE_HAKOIRI[value], false));
-				}
-			});
+			p_listEventsToApply = deductionsExcludeOthersNumeric(p_listEventsToApply, p_solver.answerArray, x, y, symbol);
 			// Last symbol ? Ban this shape for all other shapes for this region
-			var x2, y2;
-			if (region.possibilities.getNotPlacedYet(symbol) == 0) {
-				region.spaces.forEach(coors => {
-					x2 = coors.x;
-					y2 = coors.y;
-					if ((x2 != x || y2 != y) && (p_solver.answerArray[y2][x2].blocked || p_solver.answerArray[y2][x2].getState(symbol) == SPACE_CHOICE.UNDECIDED)) {
-						p_listEventsToApply.push(new SpaceAllowEvent(x2, y2, symbol, false));
-					}
-				});
-			}
+			p_listEventsToApply = deductionsAlertNoneLeftInSpaceSet(p_listEventsToApply, region.possibilities, symbol, region.spaces, p_solver.answerArray);
 			// If shape, ban diagonally
 			if (symbol != SPACE_HAKOIRI.EMPTY) {
 				p_solver.existingNeighborsCoorsWithDiagonals(x, y).forEach(coors => {
 					x2 = coors.x;
 					y2 = coors.y;
-					if (!p_solver.answerArray[y2][x2].blocked) {
-						p_listEventsToApply.push(new SpaceAllowEvent(x2, y2, symbol, false));
+					if (!p_solver.isBanned(x2, y2)) {
+						p_listEventsToApply.push(new ChoiceEvent(x2, y2, symbol, false));
 					}
 				});
-			}
+			} 
 		} else {
 			// Only one possibility left in this space ?
-			const last = p_solver.answerArray[y][x].getOneLeft();
-			if (last != null) {
-				p_listEventsToApply.push(new SpaceAllowEvent(x, y, last, true));
-			}
+			p_listEventsToApply = deductionsTestOneLeft(p_listEventsToApply, p_solver.answerArray, x, y);
 			// Only one possible place in this region ?
-			p_solver.alertOneLeftInRegionDeductions(p_listEventsToApply, region, symbol);
+			p_listEventsToApply = deductionsAlertRemainingPossibilitiesInSpaceSet(p_listEventsToApply, region.possibilities, symbol, region.spaces, p_solver.answerArray);
+			if (symbol == SPACE_HAKOIRI.EMPTY) {
+				// Good ol' 2x2 check, although circumstancial (if diagonal contact of 2 identical shapes was allowed or there were a 4th form, it wouldn't apply)
+				p_listEventsToApply = p_solver.deductionsAlert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
+			}
 		}
 		return p_listEventsToApply;
 	}
@@ -367,8 +280,8 @@ SolverHakoiri.prototype.alertOneLeftInRegionDeductions = function(p_eventList, p
 		p_region.spaces.forEach(coors => {
 			x = coors.x;
 			y = coors.y;
-			if (this.getFixedShape(x, y) == null && this.answerArray[y][x].getState(p_symbol) == SPACE_CHOICE.UNDECIDED) {
-				p_eventList.push(new SpaceAllowEvent(x, y, p_symbol, true));
+			if ((this.getFixedShape(x, y) == null) && this.answerArray[y][x].getState(p_symbol) == SPACE_CHOICE.UNDECIDED) {
+				p_eventList.push(new ChoiceEvent(x, y, p_symbol, true));
 				spaceCount++;
 			}
 		});
@@ -393,10 +306,10 @@ SolverHakoiri.prototype.generateEventsForRegionPass = function(p_index) {
 	var answer = [];
 	this.regions[p_index].spaces.forEach(coors => {
 		answer.push(
-		[new SpaceAllowEvent(coors.x, coors.y, SPACE_HAKOIRI.EMPTY, true), 
-		new SpaceAllowEvent(coors.x, coors.y, SPACE_HAKOIRI.ROUND, true),
-		new SpaceAllowEvent(coors.x, coors.y, SPACE_HAKOIRI.SQUARE, true),
-		new SpaceAllowEvent(coors.x, coors.y, SPACE_HAKOIRI.TRIANGLE, true)]
+		[new ChoiceEvent(coors.x, coors.y, SPACE_HAKOIRI.EMPTY, true), 
+		new ChoiceEvent(coors.x, coors.y, SPACE_HAKOIRI.ROUND, true),
+		new ChoiceEvent(coors.x, coors.y, SPACE_HAKOIRI.SQUARE, true),
+		new ChoiceEvent(coors.x, coors.y, SPACE_HAKOIRI.TRIANGLE, true)]
 		);
 	});
 	return answer;
@@ -415,7 +328,7 @@ copying = function(p_event) {
 
 comparison = function(p_event1, p_event2) {
 	return commonComparison( 
-		[[p_event1.y, p_event1.x, p_event1.symbol, p_event1.choice], [p_event2.y, p_event2.x, p_event2.symbol, p_event2.choice]]);
+		[[p_event1.y, p_event1.x, p_event1.getSymbol(), p_event1.choice], [p_event2.y, p_event2.x, p_event2.getSymbol(), p_event2.choice]]);
 }
 
 orderedListPassArgumentsClosure = function(p_solver) {
@@ -429,7 +342,7 @@ orderedListPassArgumentsClosure = function(p_solver) {
 			p_solver.regions[i].spaces.forEach(coors => {
 				x = coors.x;
 				y = coors.y;
-				if (p_solver.answerArray[y][x].blocked || p_solver.answerArray[y][x].getValue() != null) {
+				if (p_solver.answerArray[y][x].getValue() != null) {
 					incertain++;
 				}
 			});

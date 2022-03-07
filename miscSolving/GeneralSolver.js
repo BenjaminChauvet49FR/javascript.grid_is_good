@@ -25,7 +25,8 @@ const DEDUCTIONS_RESULT = {
 
 const QUICKSTART_RESULT = { // Don't give it the same values as DEDUCTIONS_RESULT. Some tried, they had trouble. 
 	SUCCESS : 16,
-    FAILURE : 17
+    FAILURE : 17,
+    ALREADY_DONE : 18,
 }
 
 const PASS_RESULT = {
@@ -231,6 +232,12 @@ GeneralSolver.prototype.undoToLastHypothesis = function () {
 	}
 }
 
+GeneralSolver.prototype.tryToApplyHypothesisSafe = function(p_event) {
+	if (this.quickStartDone) {	
+		return this.tryToApplyHypothesis(p_event);
+	}
+}
+
 /** 
 Marks an event as "compound" if its only purpose is to pile up other events to the pile of events to be applied. 
 Compound events are not saved into happenedEventsSeries.
@@ -280,7 +287,6 @@ GeneralSolver.prototype.passEvents = function (p_listListCoveringEvent, p_passAr
 	this.setStateHappening(answer);
 	return answer;
 }
-
 
 GeneralSolver.prototype.passEventsAnnex = function (p_listListCoveringEvent, p_indexInList) {
 	if (p_indexInList == p_listListCoveringEvent.length) {
@@ -360,6 +366,12 @@ function filterUnsortableEvents(p_list) {
 		}
 	});
 	return answer;
+}
+
+GeneralSolver.prototype.passEventsSafe = function (p_listListCoveringEvent, p_passArgument) {
+	if (this.quickStartDone) {
+		return this.passEvents(p_listListCoveringEvent, p_passArgument);
+	}
 }
 
 /** Public function that can be used to compare events for the pass. (see above)
@@ -475,6 +487,12 @@ GeneralSolver.prototype.multiPass = function(p_passTools) {
 	return answer;
 }
 
+GeneralSolver.prototype.multiPassSafe = function(p_passTools) {  
+	if (this.quickStartDone) {
+		return this.multiPass(p_passTools);
+	}
+}
+
 // --------------------------------
 // Quickstart
 
@@ -484,6 +502,10 @@ this.quickstart is enough, just provide an event list method so all the applied 
 */
 
 GeneralSolver.prototype.quickStart = function() {
+	if (this.quickStartDone) {
+		this.setStateHappening(QUICKSTART_RESULT.ALREADY_DONE);
+		return QUICKSTART_RESULT.ALREADY_DONE;
+	}
 	var ok = true;
 	this.separatelyStackDeductions = false;	
 	var happening;

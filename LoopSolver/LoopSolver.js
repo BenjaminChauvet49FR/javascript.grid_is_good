@@ -611,21 +611,16 @@ LoopSolver.prototype.maskChainsInformation = function() {
 // Central methods
 
 LoopSolver.prototype.tryToPutNewDown = function (p_x, p_y, p_state) {
-	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, DIRECTION.DOWN, p_state));
+	this.tryToApplyHypothesisSafe(new LinkEvent(p_x, p_y, DIRECTION.DOWN, p_state));
 }
 
 LoopSolver.prototype.tryToPutNewRight = function (p_x, p_y, p_state) {
-	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, DIRECTION.RIGHT, p_state));
-}
-
-LoopSolver.prototype.tryToPutNewLink = function (p_x, p_y, p_dir, p_state) {
-	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, p_dir, p_state));
+	this.tryToApplyHypothesisSafe(new LinkEvent(p_x, p_y, DIRECTION.RIGHT, p_state));
 }
 
 LoopSolver.prototype.tryToPutNewSpace = function (p_x, p_y, p_state) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_state));
+	this.tryToApplyHypothesisSafe(new SpaceEvent(p_x, p_y, p_state));
 }
-
 
 //--------------------------------
 // otherPSDeductions
@@ -933,7 +928,7 @@ function quickStartEventsLoopClosure(p_solver) {
 
 // Unitary pass. Uses methodSetMultiPass.generatePassEventsMethod because... it's commode ! 
 LoopSolver.prototype.passLoop = function(p_argumentPass) {	
-	this.passEvents(this.methodSetMultiPass.generatePassEventsMethod(p_argumentPass), p_argumentPass); 
+	this.passEventsSafe(this.methodSetMultiPass.generatePassEventsMethod(p_argumentPass), p_argumentPass); 
 }
 
 /**
@@ -1003,8 +998,11 @@ convertLoopEvent = function(p_event) {
 // Multipass
 
 LoopSolver.prototype.multipassLoop = function() {	
-	return this.multiPass(this.methodSetMultiPass);
+	return this.multiPassSafe(this.methodSetMultiPass);
 }
+
+// Quick start politics : now, all inputable methods (apply event, pass, multipass) in loops need to have quick start done first, as per the "safe" in multiPassSafe and so on.
+// Previously, was only in solvers of : Castle wall, Geradeweg, Grand Tour, Shingoki
 
 function orderedListpassArgumentsClosure(p_solver, p_orderedListPassArgumentsPSMethod, p_pessimistic) {
 	return function() {
@@ -1016,7 +1014,7 @@ function orderedListpassArgumentsClosure(p_solver, p_orderedListPassArgumentsPSM
 					//if (p_solver.linksArray[y][x].state != CLOSED && p_solver.linksArray[y][x].linkedDirections.length != 2) { 
 					passIndex = {x : x, y : y, passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD}
 					answer.push(passIndex);
-					//}
+					// }
 				}	
 			}
 		}

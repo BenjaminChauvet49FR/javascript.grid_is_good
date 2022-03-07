@@ -257,7 +257,7 @@ SolverSlitherlink.prototype.generateEventChoiceForLink = function(p_xLink, p_yLi
 
 function startingOrderedListPassArgumentsSlitherlink(p_solver) {
 	return function() {
-		return p_solver.numericMeshCoordinatesListAndPassArguments;
+		return copyCoordinatesList(p_solver.numericMeshCoordinatesListAndPassArguments);
 	}
 }
 

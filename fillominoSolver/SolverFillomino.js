@@ -81,7 +81,7 @@ SolverFillomino.prototype.isFixed = function(p_x, p_y) {
 	return this.fixedNumbersArray[p_y][p_x];
 }
 
-/* Many getters about getting and setting fences defined in the parent solver. */
+/* Many getters about getting and setting fences defined in the fence grid manager. */
 
 // ------------------------
 // Input methods

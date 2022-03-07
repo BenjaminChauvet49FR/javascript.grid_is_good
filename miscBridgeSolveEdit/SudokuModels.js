@@ -16,6 +16,7 @@ const SUDOKU_MODE = {
 		xTotalLength : 9, // Total length in spaces 
 		yTotalLength : 9,
 		startSpaces : [{x : 0, y : 0}],
+		crossingoverGridIndexes : [[0]],
 		min : 1,
 		max : 9
 	},
@@ -26,6 +27,7 @@ const SUDOKU_MODE = {
 		xTotalLength : 12,
 		yTotalLength : 12,
 		startSpaces : [{x : 0, y : 0}, {x : 3, y : 0}, {x : 0, y : 3}, {x : 3, y : 3}],
+		crossingoverGridIndexes : [[0,1,2,3]], // For multipass. Gives the indexes of crossing overgrids that should go to multipass. According to the same order as in the startSpaces list.
 		min : 1,
 		max : 9
 	},
@@ -41,6 +43,7 @@ const SUDOKU_MODE = {
 		xTotalLength : 12,
 		yTotalLength : 12,
 		startSpaces : [{x : 0, y : 0}],
+		crossingoverGridIndexes : [[0]],
 		min : 1,
 		max : 12
 	},
@@ -56,6 +59,7 @@ const SUDOKU_MODE = {
 		xTotalLength : 16,
 		yTotalLength : 16,
 		startSpaces : [{x : 0, y : 0}],
+		crossingoverGridIndexes : [[0]],
 		min : 1,
 		max : 16
 	},
@@ -66,6 +70,7 @@ const SUDOKU_MODE = {
 		xTotalLength : 21,  
 		yTotalLength : 21,
 		startSpaces : [{x : 0, y : 0}, {x : 12, y : 0}, {x : 6, y : 6}, {x : 0, y : 12}, {x : 12, y : 12}],
+		crossingoverGridIndexes : [[0, 2], [1, 2], [2, 3], [2, 4]],
 		min : 1,
 		max : 9
 	},
@@ -81,6 +86,7 @@ const SUDOKU_MODE = {
 						{x : 12, y : 0}, {x : 12, y : 12}, {x : 18, y : 6}, 
 						{x : 24, y : 0}, {x : 24, y : 12}, {x : 30, y : 6},
 						{x : 36, y : 0}, {x : 36, y : 12}],
+		crossingoverGridIndexes : [[0, 2], [1, 2], [2, 3], [2, 4], [3, 5], [4, 5], [5, 6], [5, 7], [6, 8], [7, 8], [8, 9], [8, 10]],						
 		min : 1,
 		max : 9
 	}

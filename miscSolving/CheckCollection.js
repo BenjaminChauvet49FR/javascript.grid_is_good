@@ -102,7 +102,6 @@ function CheckCollectionDoubleEntryDirectionalGeneric(p_xLength, p_yLength, p_de
 		this.array.push([]);
 		for (var x = 0 ; x < p_xLength ; x++) {
 			this.array[y].push([this.defaultValue, this.defaultValue, this.defaultValue, this.defaultValue]);
-			
 		}
 	}
 }
@@ -123,6 +122,11 @@ CheckCollectionDoubleEntryDirectionalGeneric.prototype.clean = function() {
 	this.list = [];
 }
 
+// Considers that one space that has been added should be removed before general clean.
+CheckCollectionDoubleEntryDirectionalGeneric.prototype.cleanOne = function(p_x, p_y, p_dir) {
+	this.array[p_y][p_x][p_dir] = this.defaultValue;
+}
+
 function CheckCollectionDoubleEntryDirectional(p_xLength, p_yLength) {
 	CheckCollectionDoubleEntryDirectionalGeneric.call(this, p_xLength, p_yLength, false);
 }
@@ -133,38 +137,88 @@ CheckCollectionDoubleEntryDirectional.prototype.add = function(p_x, p_y, p_dir) 
 	return this.addGeneric(p_x, p_y, p_dir, true);
 }
 
-// Considers that one space that has been added should be removed before general clean.
-CheckCollectionDoubleEntryDirectional.prototype.cleanOne = function(p_x, p_y, p_dir) {
-	this.array[p_y][p_x][p_dir] = this.defaultValue;
-}
-
-
 // ------------------------
-// Same as "double entry" but it deals with new spaces. (may be useless ...)
-/*
-function CheckCollectionPropagationDoubleEntry(p_xLength, p_yLength) {
-	CheckCollectionDoubleEntry.call(p_xLength, p_yLength);
-	this.newList = [];
-}
+// Same but with a 3rd dimension associated to fences. Uses {x, y, direction} items.
 
-CheckCollectionPropagationDoubleEntry.prototype = Object.create(GeneralSolver.prototype);
-CheckCollectionPropagationDoubleEntry.prototype.constructor = CheckCollectionDoubleEntry;
-
-CheckCollectionPropagationDoubleEntry.prototype.addToPropagation = function(p_x, p_y) {
-	ok = this.add(p_x, p_y);
-	if (ok) {
-		this.newList.push({x : ix, y : iy});
+function CheckCollectionDoubleEntryFencesGeneric(p_xLength, p_yLength, p_defaultValue) {
+	this.listRD = []; // Note : "listRD" and not list like most users to remember that only "right" and "down" directions can be contained here
+	this.defaultValue = p_defaultValue;
+	this.arrayH = [];
+	this.arrayV = [];
+	for (var y = 0; y < p_yLength ; y++) {
+		this.arrayH.push([]);
+		for (var x = 0 ; x < p_xLength-1 ; x++) {
+			this.arrayH[y].push(this.defaultValue);
+		}
 	}
-	return ok;
-}
-
-CheckCollectionPropagationDoubleEntry.prototype.hasStillNews = function() {
-	return (this.newList.length > 0);
-}
-
-CheckCollectionPropagationDoubleEntry.prototype.pushOneLeft = function() {
-	if (this.newList.length > 0) {
-		return this.newList.pop();
+	for (var y = 0; y < p_yLength-1  ; y++) {
+		this.arrayV.push([]);
+		for (var x = 0 ; x < p_xLength; x++) {
+			this.arrayV[y].push(this.defaultValue);
+		}
 	}
-	return null;
-}*/
+}
+
+CheckCollectionDoubleEntryFencesGeneric.prototype.addGeneric = function(p_x, p_y, p_direction, p_value) {
+	switch(p_direction) {
+		case DIRECTION.LEFT : 
+			if (this.arrayH[p_y][p_x-1] != p_value) {
+				this.arrayH[p_y][p_x-1] = p_value;
+				this.listRD.push({x : p_x-1, y : p_y, direction : DIRECTION.RIGHT}); 
+			} break;
+		case DIRECTION.UP : 
+			if (this.arrayV[p_y-1][p_x] != p_value) {
+				this.arrayV[p_y-1][p_x] = p_value;
+				this.listRD.push({x : p_x, y : p_y-1, direction : DIRECTION.DOWN}); 
+			} break;
+		case DIRECTION.RIGHT : 
+			if (this.arrayH[p_y][p_x] != p_value) {
+				this.arrayH[p_y][p_x] = p_value;
+				this.listRD.push({x : p_x, y : p_y, direction : DIRECTION.RIGHT}); 
+			} break;
+		case DIRECTION.DOWN : 
+			if (this.arrayV[p_y][p_x] != p_value) {
+				this.arrayV[p_y][p_x] = p_value;
+				this.listRD.push({x : p_x, y : p_y, direction : DIRECTION.DOWN}); 
+			} break;
+	}
+}
+
+CheckCollectionDoubleEntryFencesGeneric.prototype.get = function(p_x, p_y, p_direction) {
+	switch(p_direction) {
+		case DIRECTION_RIGHT : return this.arrayH[p_y][p_x]; break;
+		case DIRECTION_DOWN : return this.arrayV[p_y][p_x]; break;		
+		default : return null; // Note : not supposed to happen since we read data that have been added to listRD
+	}
+}
+
+CheckCollectionDoubleEntryFencesGeneric.prototype.clean = function() {
+	this.listRD.forEach(spaceDir => {
+		if (spaceDir.direction == DIRECTION.DOWN) {
+			this.arrayV[spaceDir.y][spaceDir.x] = this.defaultValue;
+		} else {			
+			this.arrayH[spaceDir.y][spaceDir.x] = this.defaultValue;
+		}
+	});
+	this.listRD = [];
+}
+
+// Considers that one space that has been added should be removed before general clean.
+CheckCollectionDoubleEntryFencesGeneric.prototype.cleanOne = function(p_x, p_y, p_dir) {
+	switch(p_direction) {
+		case DIRECTION.LEFT : this.arrayH[p_y][p_x-1] = this.defaultValue; break;
+		case DIRECTION.UP : this.arrayV[p_y-1][p_x] = this.defaultValue; break;
+		case DIRECTION.RIGHT : this.arrayH[p_y][p_x] = p_value; break;
+		case DIRECTION.DOWN : this.arrayV[p_y][p_x] = p_value; break;
+	}
+}
+
+function CheckCollectionDoubleEntryFences(p_xLength, p_yLength) {
+	CheckCollectionDoubleEntryFencesGeneric.call(this, p_xLength, p_yLength, false);
+}
+CheckCollectionDoubleEntryFences.prototype = Object.create(CheckCollectionDoubleEntryFencesGeneric.prototype);
+CheckCollectionDoubleEntryFences.prototype.constructor = CheckCollectionDoubleEntryFences;
+
+CheckCollectionDoubleEntryFences.prototype.add = function(p_x, p_y, p_dir) {
+	return this.addGeneric(p_x, p_y, p_dir, true);
+}

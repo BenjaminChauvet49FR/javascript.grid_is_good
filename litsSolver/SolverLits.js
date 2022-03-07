@@ -374,7 +374,7 @@ deductionsClosure = function (p_solver) {
 				p_solver.checkerNewOpenRegions.add(ir);
 				
 				// Alert on 2x2 areas
-				p_listEventsToApply = p_solver.alert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
+				p_listEventsToApply = p_solver.deductionsAlert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
 
 				// If 2 spaces are open, in the same region, in the same row/column and they are 1 space apart, then : this space must be open AND belong to this region. Otherwise, this is an immediate failure !
 				p_listEventsToApply = p_solver.fillOpenGaps(p_listEventsToApply, x, y, ir);

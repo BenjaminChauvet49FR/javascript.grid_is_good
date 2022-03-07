@@ -92,7 +92,7 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.DIGITS_X_ONLY;
 			inputOptions.maxNumber = (content == 'Linesweeper' ? 8 : 4);
-			if (content == 'Sukoro') {
+			if (content == 'Sukoro') { // Note : I have yet to see a Firumatto puzzle with Xs but hey, that's a challenge !
 				inputOptions.minNumber = 1;
 			}
 			if (content == 'Akari' || content == 'Shakashaka') {
@@ -101,6 +101,13 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 				fillListModes(p_analyzerModes, [ANALYZER_MODE.BLUE_ON_WHITE]);
 			}
 			p_editorCore.setVisibleGrids([GRID_ID.DIGIT_X_SPACE]); break;
+		case 'Firumatto' :
+			p_editorCore.setWallsOff();
+			saveLoadModeId = PUZZLES_KIND.DIGITS_QUESTION_ONLY;
+			inputOptions.minNumber = 1;
+			inputOptions.maxNumber = 4;
+			fillListModes(p_analyzerModes, [ANALYZER_MODE.BLUE_ON_WHITE]);
+			p_editorCore.setVisibleGrids([GRID_ID.DIGIT_QUESTION_SPACE]); break;
 		case 'CanalView': case 'Corral': case 'Geradeweg': case 'Kuromasu': case 'Nurikabe':
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.NUMBERS_X_ONLY;

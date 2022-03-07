@@ -67,6 +67,10 @@ undoAction = function(p_solver) {
 	p_solver.undo();
 }
 
+multipassAction = function(p_solver) {
+	p_solver.makeMultipass();
+}
+
 totalPassAction = function (p_solver) {
 	if (confirm("Faire une passe qui porte sur toutes les cases non décidées ?")) {		
 		p_solver.makeTotalPass();

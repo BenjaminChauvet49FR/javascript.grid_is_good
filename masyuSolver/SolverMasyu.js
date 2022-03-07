@@ -373,7 +373,7 @@ function namingCategoryClosure(p_solver) {
 
 function startingOrderedListPassArgumentsMasyuClosure(p_solver) {
 	return function() {
-		return p_solver.pearlSpacesList; // Note : only contains (x, y) properties but at least no "LOOP_PASS_CATEGORY.STANDARD_SPACE"
+		return copyCoordinatesList(p_solver.pearlSpacesList); // Note : only contains (x, y) properties but at least no "LOOP_PASS_CATEGORY.STANDARD_SPACE"
 	}
 }
 

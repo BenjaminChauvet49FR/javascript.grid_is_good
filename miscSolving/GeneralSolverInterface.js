@@ -80,6 +80,10 @@ GeneralSolver.prototype.callStateForItem = function(p_item) {
 				p_item.innerHTML = "Ce puzzle ne peut être résolu ! (échec du démarrage rapide)"; 
 				p_item.style.color = colorFailure;
 			break;
+			case QUICKSTART_RESULT.ALREADY_DONE : 
+				p_item.innerHTML = "-"; 
+				p_item.style.color = colorNeutral;
+			break;
 			
 			case OTHER_RESULTS.CANCEL : 
 				p_item.innerHTML = "Annulation"; 

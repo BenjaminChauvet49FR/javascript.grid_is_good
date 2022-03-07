@@ -202,37 +202,31 @@ SolverShingoki.prototype.getColourPearl = function(p_x, p_y) {
 // Input methods
 
 SolverShingoki.prototype.emitHypothesisDown = function(p_x, p_y, p_state) {
-	if (this.quickStartDone && p_y <= this.yLength-2) {
+	if (p_y <= this.yLength-2) {
 		this.tryToPutNewDown(p_x, p_y, p_state);
 	}
 }
 
 SolverShingoki.prototype.emitHypothesisRight = function(p_x, p_y, p_state) {
-	if (this.quickStartDone && p_x <= this.xLength-2) {
+	if (p_x <= this.xLength-2) {
 		this.tryToPutNewRight(p_x, p_y, p_state);
 	}
 }
 
 SolverShingoki.prototype.emitHypothesisNode = function(p_x, p_y, p_state) {
-	if (this.quickStartDone) {		
-		this.tryToPutNewSpace(p_x, p_y, p_state);
-	}
+	this.tryToPutNewSpace(p_x, p_y, p_state);
 }
 
 SolverShingoki.prototype.emitPassNode = function(p_x, p_y) {
-	if (this.quickStartDone) {	
-		if (this.getColourPearl(p_x, p_y) != null) {
-			return this.passLoop({passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
-		} else {
-			return this.passLoop({passCategory : LOOP_PASS_CATEGORY.PEARLY, x : p_x, y : p_y});
-		}
+	if (this.getColourPearl(p_x, p_y) != null) {
+		return this.passLoop({passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
+	} else {
+		return this.passLoop({passCategory : LOOP_PASS_CATEGORY.PEARLY, x : p_x, y : p_y});
 	}
 }
 
 SolverShingoki.prototype.makeMultipass = function() {
-	if (this.quickStartDone) {		
-		this.multipassLoop();
-	}
+	this.multipassLoop();
 }
 
 solveAction = function (p_solver) {

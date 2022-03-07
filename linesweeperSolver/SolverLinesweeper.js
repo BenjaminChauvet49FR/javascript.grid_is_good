@@ -257,7 +257,7 @@ generateEventsForAroundSpacePassClosureLinesweeper = function(p_solver) {
 
 function startingOrderedListPassArgumentsLinesweeperClosure(p_solver) {
 	return function() {
-		return p_solver.numericCoordinatesList;
+		return copyCoordinatesList(p_solver.numericCoordinatesList);
 	}
 }
 

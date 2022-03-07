@@ -138,20 +138,20 @@ fenceDownToColorClosure = function(p_solver, p_fenceMethodDown) {
 	}
 }
 
-pillarToColorFenceClosure = function(p_solver, p_fenceMethodRight, p_fenceMethodDown, p_undecidedOverOpen) {
+pillarToColorFenceClosure = function(p_drawer, p_fenceMethodRight, p_fenceMethodDown, p_undecidedOverOpen) {
 	return function(p_x, p_y) {
 		if (p_fenceMethodRight(p_x, p_y) == FENCE_STATE.CLOSED || p_fenceMethodDown(p_x, p_y) == FENCE_STATE.CLOSED ||
 			p_fenceMethodRight(p_x, p_y + 1) == FENCE_STATE.CLOSED || p_fenceMethodDown(p_x + 1, p_y) == FENCE_STATE.CLOSED) {
-			return p_solver.fenceToColor(FENCE_STATE.CLOSED);
+			return p_drawer.fenceToColor(FENCE_STATE.CLOSED);
 		} else {
 			const cond1 = !p_undecidedOverOpen && (p_fenceMethodRight(p_x, p_y) == FENCE_STATE.OPEN || p_fenceMethodDown(p_x, p_y) == FENCE_STATE.OPEN ||
 			p_fenceMethodRight(p_x, p_y + 1) == FENCE_STATE.OPEN || p_fenceMethodDown(p_x + 1, p_y) == FENCE_STATE.OPEN);
 			const cond2 = p_undecidedOverOpen && p_fenceMethodRight(p_x, p_y) == FENCE_STATE.OPEN && p_fenceMethodDown(p_x, p_y) == FENCE_STATE.OPEN &&
 			p_fenceMethodRight(p_x, p_y + 1) == FENCE_STATE.OPEN && p_fenceMethodDown(p_x + 1, p_y) == FENCE_STATE.OPEN;
 			if (cond1 || cond2) {
-				return p_solver.fenceToColor(FENCE_STATE.OPEN);
+				return p_drawer.fenceToColor(FENCE_STATE.OPEN);
 			} else {
-				return p_solver.fenceToColor(FENCE_STATE.UNDECIDED);
+				return p_drawer.fenceToColor(FENCE_STATE.UNDECIDED);
 			}
 		}
 	}
@@ -527,6 +527,13 @@ Drawer.prototype.drawSpaceContent = function(p_context, p_ix, p_iy, p_item, p_pi
 		this.drawSquare(p_context, p_ix, p_iy, p_item);
 	} else if (p_item.kind == KIND_DRAWABLE_ITEM.TRIANGLE) {
 		this.drawTriangle(p_context, p_ix, p_iy, p_item);
+	} else if (p_item.kind == KIND_DRAWABLE_ITEM.TEXT) {
+		setupFont(p_context, this.getPixInnerSide(), p_item.font);
+		alignFontCenter(p_context);
+		if (p_item.value != null) {
+			p_context.fillStyle = p_item.color;
+			p_context.fillText(p_item.value, this.getPixCenterX(p_ix), this.getPixWriteCenterY(p_iy));
+		} 
 	}
 }
 
@@ -678,7 +685,12 @@ Drawer.prototype.strokeInnerSpace = function(p_context, p_strokeColour, p_ix, p_
 // -------------------------------
 // Draw inside grids non-specific
 
+// Note : hatch (as right now this is a method for text drawing)
 Drawer.prototype.drawNumbersInsideStandardCoorsList = function(p_context, p_function, p_coordinates, p_font) {
+	this.drawTextInsideStandardCoorsList(p_context, p_function, p_coordinates, p_font);
+}
+
+Drawer.prototype.drawTextInsideStandardCoorsList = function(p_context, p_function, p_coordinates, p_font) {
 	setupFont(p_context, this.getPixInnerSide(), p_font);
 	alignFontCenter(p_context);
 	p_coordinates.forEach(coors => {		
@@ -690,8 +702,23 @@ Drawer.prototype.drawNumbersInsideStandardCoorsList = function(p_context, p_func
 	});
 }
 
+// Note : hatch
 Drawer.prototype.drawNumbersInsideStandard2Dimensions = function(p_context, p_writeFunction, p_font, p_xLength, p_yLength) {
-	setupFont(p_context, this.getPixInnerSide(), p_font);
+	this.drawTextInsideStandard2Dimensions(p_context, p_writeFunction, p_font, p_xLength, p_yLength);
+}
+
+Drawer.prototype.drawTextInsideStandard2DimensionsLittle = function(p_context, p_writeFunction, p_font, p_xLength, p_yLength) {
+	this.drawTextInsideStandard2Dimensions(p_context, p_writeFunction, p_font, p_xLength, p_yLength, {little : true});
+}
+
+Drawer.prototype.drawTextInsideStandard2Dimensions = function(p_context, p_writeFunction, p_font, p_xLength, p_yLength, p_options) {
+	var fontSize = this.getPixInnerSide();
+	if (p_options) {
+		if (p_options.little) {
+			fontSize *= 0.4;
+		}
+	}
+	setupFont(p_context, fontSize, p_font);
 	alignFontCenter(p_context);
 	for(var iy = 0 ; iy < p_yLength ; iy++) {
 		for(var ix = 0 ; ix < p_xLength ; ix++) {
@@ -719,8 +746,13 @@ Drawer.prototype.drawTextInsideStandardWithBackground2Dimensions = function(p_co
 	}
 }
 
-// p_method : method (x, y) that returns an integer, {draw : true} or null.
+// Note : hatch
 Drawer.prototype.drawFixedNumbersOrX = function(p_context, p_method, p_coorsList, p_coorsXList, p_colourNumbers, p_colourX, p_font) {
+	this.drawFixedTextOrX(p_context, p_method, p_coorsList, p_coorsXList, p_colourNumbers, p_colourX, p_font);
+}
+
+// p_method : method (x, y) that returns an integer, {draw : true} or null.
+Drawer.prototype.drawFixedTextOrX = function(p_context, p_method, p_coorsList, p_coorsXList, p_colourNumbers, p_colourX, p_font) {
 	p_context.fillStyle = p_colourNumbers;
 	setupFont(p_context, this.getPixInnerSide(), p_font);
 	alignFontCenter(p_context);
@@ -732,9 +764,7 @@ Drawer.prototype.drawFixedNumbersOrX = function(p_context, p_method, p_coorsList
 		}
 	});
 	p_coorsXList.forEach(coors => {
-		if (p_method(coors.x, coors.y) == "X") {			
-			this.drawCrossX(p_context, coors.x, coors.y, new DrawableX(p_colourX));
-		}
+		this.drawCrossX(p_context, coors.x, coors.y, new DrawableX(p_colourX));
 	});
 }
 

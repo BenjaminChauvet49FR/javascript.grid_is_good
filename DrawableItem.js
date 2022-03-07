@@ -10,7 +10,8 @@ const KIND_DRAWABLE_ITEM = {
 	TRIANGLE : 6,
 	CIRCLE_UPPER_RIGHT : 101,
 	PLUS_UPPER_RIGHT : 102,
-	SQUARE_UPPER_RIGHT : 103
+	SQUARE_UPPER_RIGHT : 103,
+	TEXT : 200
 }
 
 /*
@@ -59,6 +60,15 @@ function DrawableX(p_colour) {
 	var item = new DrawableItem();
 	item.kind = KIND_DRAWABLE_ITEM.X;
 	item.color = p_colour;
+	return item;
+}
+
+function DrawableText(p_colour, p_text, p_font) { // To use them with drawSpaceContentsCoorsList
+	var item = new DrawableItem();
+	item.kind = KIND_DRAWABLE_ITEM.TEXT;
+	item.color = p_colour;
+	item.value = p_text;  
+	item.font = p_font; 
 	return item;
 }
 

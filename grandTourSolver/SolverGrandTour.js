@@ -69,30 +69,20 @@ SolverGrandTour.prototype.getLinkDBlocked = function(p_x, p_y) {
 // -------------------
 // Input methods
 
-// quickStartDone required : because the "forced linked links" aren't fully made linked before QS. 
-
 SolverGrandTour.prototype.emitHypothesisDown = function(p_x, p_y, p_state) {
-	if (this.quickStartDone && p_y <= this.yLength-2) { // Note : name of "quickStartDone" defined in GeneralSolver.
-		this.tryToPutNewDown(p_x, p_y, p_state);
-	}
+	this.tryToPutNewDown(p_x, p_y, p_state);
 }
 
 SolverGrandTour.prototype.emitHypothesisRight = function(p_x, p_y, p_state) {
-	if (this.quickStartDone && p_x <= this.xLength-2) {
-		this.tryToPutNewRight(p_x, p_y, p_state);
-	}
+	this.tryToPutNewRight(p_x, p_y, p_state);
 }
 
 SolverGrandTour.prototype.emitPassNode = function(p_x, p_y) {
-	if (this.quickStartDone) {		
-		return this.passLoop({passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
-	}
+	return this.passLoop({passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
 }
 
 SolverGrandTour.prototype.makeMultipass = function() {
-	if (this.quickStartDone) {		
-		this.multipassLoop();
-	}
+	this.multipassLoop();
 }
 
 SolverGrandTour.prototype.makeResolution = function() { 

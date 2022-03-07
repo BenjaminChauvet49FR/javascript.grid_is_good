@@ -37,11 +37,19 @@ function getIndexInSortedArray(p_array, p_number) {
 	return (p_array[iMin] == p_number) ? iMin : null;
 }
 
-// Array of values 0 to n (included)
+// Array of values p_min to p_max (included)
 function numericSequenceArray(p_min, p_max, p_incr) {
 	var answer = [];
 	const incr = (p_incr ? p_incr : 1);
 	for (var i = p_min ; i <= p_max ; i += incr) {
+		answer.push(i);
+	}
+	return answer;
+}
+
+function monoArray(p_number, p_value) {
+	var answer = [];
+	for (var i = 0 ; i < p_number ; i ++) {
 		answer.push(i);
 	}
 	return answer;
@@ -62,6 +70,17 @@ function sortUnicityList(p_array, p_equalityFunction, p_sortFunction) {
 	});
 	return answer;
 }
+
+// Copies a coordinates list
+
+function copyCoordinatesList(p_coorsList) {
+	var answer = [];
+	p_coorsList.forEach(coors => {
+		answer.push({x : coors.x, y : coors.y});
+	});
+	return answer;
+}
+
 
 // -----------------------
 

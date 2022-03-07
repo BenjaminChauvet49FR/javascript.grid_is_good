@@ -288,7 +288,7 @@ generateEventsForAroundSpacePassClosureKoburin = function(p_solver) {
 
 function startingOrderedListPassArgumentsKoburinClosure(p_solver) {
 	return function() {
-		return p_solver.numericCoordinatesList;
+		return copyCoordinatesList(p_solver.numericCoordinatesList);
 	}
 }
 

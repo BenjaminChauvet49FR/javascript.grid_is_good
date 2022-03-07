@@ -102,15 +102,11 @@ SolverSukoro.prototype.isXSurroundedByNonX = function(p_x, p_y) {
 // Input methods
 
 SolverSukoro.prototype.emitHypothesis = function(p_x, p_y, p_adjacency) {
-	if (this.quickStartDone) {		
-		return this.tryToApplyHypothesis(new ChoiceEvent(p_x, p_y, SUKORO_CLOSED_SPACE, !p_adjacency));
-	}
+	return this.tryToApplyHypothesisSafe(new ChoiceEvent(p_x, p_y, SUKORO_CLOSED_SPACE, !p_adjacency));
 }
 
 SolverSukoro.prototype.emitHypothesisNumber = function(p_x, p_y, p_number) {
-	if (this.quickStartDone) {		
-		return this.tryToApplyHypothesis(new ChoiceEvent(p_x, p_y, p_number, true));
-	}
+	return this.tryToApplyHypothesisSafe(new ChoiceEvent(p_x, p_y, p_number, true));
 }
 
 SolverSukoro.prototype.undo = function() {
@@ -122,15 +118,11 @@ SolverSukoro.prototype.makeQuickStart = function() {
 }
 
 SolverSukoro.prototype.makeMultiPass = function() {	
-	if (this.quickStartDone) {	
-		return this.multiPass(this.methodsSetMultipass);
-	}
+	return this.multiPassSafe(this.methodsSetMultipass);
 }
 
 SolverSukoro.prototype.emitPassSpace = function(p_x, p_y) {
-	if (this.quickStartDone) {
-		return this.passEvents(this.generateEventsForSpacePass({x : p_x, y : p_y}), {x : p_x, y : p_y});
-	}
+	return this.passEventsSafe(this.generateEventsForSpacePass({x : p_x, y : p_y}), {x : p_x, y : p_y});
 }
 
 SolverSukoro.prototype.makeResolution = function() { 
@@ -146,12 +138,10 @@ function applyEventClosure(p_solver) {
 		const x = p_eventToApply.x;
 		const y = p_eventToApply.y;
 		const number = p_eventToApply.number;
-		const currentState = (p_solver.answerArray[y][x].getState(number));
-		if (currentState == SPACE_CHOICE.YES) {
-			return choice ? EVENT_RESULT.HARMLESS : EVENT_RESULT.FAILURE;
-		} else if (currentState == SPACE_CHOICE.NO) {
-			return choice ? EVENT_RESULT.FAILURE : EVENT_RESULT.HARMLESS;
-		} 
+		const answer = testNumericSpaceChoice(p_solver.answerArray, x, y, number, choice);
+		if (answer != EVENT_RESULT.SUCCESS) {
+			return answer;
+		}
 		if (choice) {
 			p_solver.answerArray[y][x].choose(number); 
 		} else {
@@ -189,11 +179,7 @@ function deductionsClosure(p_solver) {
 		const number = p_eventToApply.number;
 		if (p_eventToApply.choice) {
 			// Ban events for all other values in this space
-			for (var i = 0 ; i <= 4 ; i++) { // High convention again !
-				if (i != number) {
-					p_eventList.push(new ChoiceEvent(x, y, i, false));
-				};
-			}
+			p_listEventsToApply = deductionsExcludeOthersNumeric(p_eventList, p_solver.answerArray, x, y, number);
 			// Adjacency ban !
 			p_eventList = p_solver.banAdjacentNeighborsDeductions(p_eventList, x, y, number);
 		}
@@ -227,10 +213,7 @@ function filterOnePossibleClosure(p_solver) {
 			coors = p_solver.checkerOnePossible.list[i];
 			x = coors.x;
 			y = coors.y;
-			oneLeft = p_solver.answerArray[y][x].getOneLeft();
-			if (oneLeft != null) {
-				listEvents.push(new ChoiceEvent(x, y, oneLeft, true));
-			} 
+			listEvents = deductionsTestOneLeft(listEvents, p_solver.answerArray, x, y);
 			if (p_solver.answerArray[y][x].noAvailableValue()) {
 				return EVENT_RESULT.FAILURE; // Note : it may happen since unlike other solvers, when all but one values are possible for one space, the last one isn't made automatically possible before this filter, which may cause all values to be impossible at once. 
 			}
@@ -271,7 +254,7 @@ function filterAffectedNeighborsClosure(p_solver) {
 			for (i = maxOs+1 ; i <= 4 ; i++) {
 				listEvents.push(new ChoiceEvent(x, y, i, false));
 			}
-			val = p_solver.answerArray[y][x].getOneLeft();
+			val = p_solver.answerArray[y][x].getValue();
 			if (val != null && val != SUKORO_CLOSED_SPACE) {
 				if (minOs > val || maxOs < val) {
 					ok = false;

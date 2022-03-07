@@ -65,11 +65,20 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.DIGIT_X_SPACE)) {
 		return {
-			descriptionPrompt : "Entrer des chiffres entre 0 et " + inputOptions.maxNumber + " ou X",
-			descriptionPromptMono : "Entrer un chiffre entre 0 et " + inputOptions.maxNumber + " ou X",
+			descriptionPrompt : "Entrer des chiffres entre " + inputOptions.minNumber + " et " + inputOptions.maxNumber + " ou X",
+			descriptionPromptMono : "Entrer un chiffre entre " + inputOptions.minNumber + " et " + inputOptions.maxNumber + " ou X",
 			defaultToken : "1",
 			gridId : GRID_ID.DIGIT_X_SPACE,
 			validityTokenMethod : validityNumberRangeOrSymbolClosure(0, inputOptions.maxNumber, ["X"]),
+			parameters : {emptySpaceChar : " ", isMonoChar : true, isNumeric : false}
+		}
+	} else if (p_editorCore.isVisibleGrid(GRID_ID.DIGIT_QUESTION_SPACE)) {
+		return {
+			descriptionPrompt : "Entrer des chiffres entre " + inputOptions.minNumber + " et " + inputOptions.maxNumber + " ou ?",
+			descriptionPromptMono : "Entrer un chiffre entre " + inputOptions.minNumber + " et " + inputOptions.maxNumber + " ou ?",
+			defaultToken : "1",
+			gridId : GRID_ID.DIGIT_QUESTION_SPACE,
+			validityTokenMethod : validityNumberRangeOrSymbolClosure(0, inputOptions.maxNumber, ["?"]),
 			parameters : {emptySpaceChar : " ", isMonoChar : true, isNumeric : false}
 		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_X_SPACE)) {
@@ -672,6 +681,8 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
             puzzleToSaveString = numbersOnlyPuzzleToString(p_editorCore.getArray(GRID_ID.NUMBER_SPACE));
         } else if (p_saveLoadMode.id == PUZZLES_KIND.DIGITS_X_ONLY.id) {
             puzzleToSaveString = puzzleNumbersSymbolsToString(p_editorCore.getArray(GRID_ID.DIGIT_X_SPACE), ["X"]);
+        } else if (p_saveLoadMode.id == PUZZLES_KIND.DIGITS_QUESTION_ONLY.id) {
+            puzzleToSaveString = puzzleNumbersSymbolsToString(p_editorCore.getArray(GRID_ID.DIGIT_QUESTION_SPACE), ["?"]);
         } else if (p_saveLoadMode.id == PUZZLES_KIND.NUMBERS_X_ONLY.id) {
             puzzleToSaveString = puzzleNumbersSymbolsToString(p_editorCore.getArray(GRID_ID.NUMBER_X_SPACE), ["X"]);
         } else if (p_saveLoadMode.id == PUZZLES_KIND.YAJILIN_LIKE.id) {
@@ -746,6 +757,11 @@ function getLoadedStuff(p_kindId, p_localStorageName, p_externalOptions) { // No
 		case PUZZLES_KIND.DIGITS_X_ONLY.id :
 			var loadedItem = stringToNumbersSymbolsPuzzle(localStorage.getItem(p_localStorageName), ["X"]);
 			loadedItem.desiredIDs = [GRID_ID.DIGIT_X_SPACE];
+			loadedItem.desiredArrays = [loadedItem.numbersSymbolsArray];
+			return loadedItem; break;
+		case PUZZLES_KIND.DIGITS_QUESTION_ONLY.id :
+			var loadedItem = stringToNumbersSymbolsPuzzle(localStorage.getItem(p_localStorageName), ["?"]);
+			loadedItem.desiredIDs = [GRID_ID.DIGIT_QUESTION_SPACE];
 			loadedItem.desiredArrays = [loadedItem.numbersSymbolsArray];
 			return loadedItem; break;
 		case PUZZLES_KIND.NUMBERS_X_ONLY.id :

@@ -177,7 +177,7 @@ SolverUsotatami.prototype.setRange = function(p_x, p_y, p_dir, p_value) {
 	this.indicArray[p_y][p_x].range[p_dir] = p_value;
 }
 
-/* Many getters about getting and setting fences defined in the parent solver. */
+/* Many getters about getting and setting fences defined in the fence grid manager. */
 
 // ------------------------
 // Input methods

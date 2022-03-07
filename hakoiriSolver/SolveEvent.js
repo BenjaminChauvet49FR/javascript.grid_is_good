@@ -8,34 +8,27 @@ const SPACE_HAKOIRI = { // From 0 to N for compatibility with SpaceNumeric
 
 const LabelHakoiri = ['X', 'R', 'S', 'T'];
 
-function SpaceAllowEvent(p_x, p_y, p_symbol, p_choice) {
-	this.symbol = p_symbol;
-	this.x = p_x;
-	this.y = p_y;
-	this.choice = p_choice;
+ChoiceEvent.prototype.getSymbol = function() {
+	return this.number;
 }
 
-SpaceAllowEvent.prototype.toLogString = function() {	
-	return "["+ LabelHakoiri[this.symbol] + (this.choice ? "Y" : "N") + " " + this.x + "," + this.y + "]";
+ChoiceEvent.prototype.toLogString = function() {	
+	return "["+ LabelHakoiri[this.number] + (this.choice ? "Y" : "N") + " " + this.x + "," + this.y + "]";
 }
 
-SpaceAllowEvent.prototype.copy = function() {
-	return new SpaceAllowEvent(this.x, this.y, this.symbol, this.choice);
-}
-
-SpaceAllowEvent.prototype.opening = function() {
-	if (this.symbol == SPACE_HAKOIRI.EMPTY) {
+ChoiceEvent.prototype.opening = function() {
+	if (this.number == SPACE_HAKOIRI.EMPTY) {
 		return (this.choice ? ADJACENCY.NO : ADJACENCY.YES);
 	} else {
 		return (this.choice ? ADJACENCY.YES : ADJACENCY.UNDECIDED);
 	}
 }
 
-SpaceAllowEvent.prototype.coordinateX = function() {
+ChoiceEvent.prototype.coordinateX = function() {
 	return this.x;
 }
 
-SpaceAllowEvent.prototype.coordinateY = function() {
+ChoiceEvent.prototype.coordinateY = function() {
 	return this.y;
 }
 

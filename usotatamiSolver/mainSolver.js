@@ -1,7 +1,7 @@
 var solver;
 
 function main() {
-	var colors = {}; // TODO manage this some day
+	var colours = {numberWrite : COLOURS.WRITE_IN_FENCES}; // TODO manage this some day
 
 	var drawer = new Drawer();
 	solver = DummySolver();
@@ -14,7 +14,7 @@ function main() {
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
-		drawing(context, drawer, colors, solver);
+		drawing(context, drawer, colours, solver);
 		solver.callStateForItem(spanState);
 	}
 

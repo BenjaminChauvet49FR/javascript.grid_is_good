@@ -262,41 +262,31 @@ SolverCastleWall.prototype.isNumeric = function(p_x, p_y) {
 // Input methods
 
 SolverCastleWall.prototype.emitHypothesisDown = function(p_x, p_y, p_state) {
-	if (this.quickStartDone && p_y <= this.yLength-2) {
-		this.tryToPutNewDown(p_x, p_y, p_state);
-	}
+	this.tryToPutNewDown(p_x, p_y, p_state);
 }
 
 SolverCastleWall.prototype.emitHypothesisRight = function(p_x, p_y, p_state) {
-	if (this.quickStartDone && p_x <= this.xLength-2) {
-		this.tryToPutNewRight(p_x, p_y, p_state);
-	}
+	this.tryToPutNewRight(p_x, p_y, p_state);
 }
 
 SolverCastleWall.prototype.emitHypothesisNode = function(p_x, p_y, p_state) {
-	if (this.quickStartDone) {		
-		this.tryToPutNewSpace(p_x, p_y, p_state);
-	}
+	this.tryToPutNewSpace(p_x, p_y, p_state);
 }
 
 SolverCastleWall.prototype.emitPassNode = function(p_x, p_y) {
-	if (this.quickStartDone) {	
-		if (!this.isBanned(p_x, p_y)) {			
-			return this.passLoop({passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
-		} else if (this.unionsOriginsArray[p_y][p_x] != null) {
-			if (OrientationDirection[this.getDirection(p_x, p_y)] == ORIENTATION.HORIZONTAL) {
-				return this.passLoop({passCategory : LOOP_PASS_CATEGORY.CW_HORIZ, index : this.unionsOriginsArray[p_y][p_x]});
-			} else {
-				return this.passLoop({passCategory : LOOP_PASS_CATEGORY.CW_VERT, index : this.unionsOriginsArray[p_y][p_x]});
-			}
-		} 
-	}
+	if (!this.isBanned(p_x, p_y)) {			
+		return this.passLoop({passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
+	} else if (this.unionsOriginsArray[p_y][p_x] != null) {
+		if (OrientationDirection[this.getDirection(p_x, p_y)] == ORIENTATION.HORIZONTAL) {
+			return this.passLoop({passCategory : LOOP_PASS_CATEGORY.CW_HORIZ, index : this.unionsOriginsArray[p_y][p_x]});
+		} else {
+			return this.passLoop({passCategory : LOOP_PASS_CATEGORY.CW_VERT, index : this.unionsOriginsArray[p_y][p_x]});
+		}
+	} 
 }
 
 SolverCastleWall.prototype.makeMultipass = function() {
-	if (this.quickStartDone) {		
-		this.multipassLoop();
-	}
+	this.multipassLoop();
 }
 
 solveAction = function (p_solver) {

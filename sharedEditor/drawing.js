@@ -58,6 +58,9 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	if (p_editorCore.isVisibleGrid(GRID_ID.DIGIT_X_SPACE)) {
 		this.drawStringsGrid(p_context, p_editorCore.getGrid(GRID_ID.DIGIT_X_SPACE)); // TODO : add some actual crosses ? Letter X looks fine to me.
 	}
+	if (p_editorCore.isVisibleGrid(GRID_ID.DIGIT_QUESTION_SPACE)) {
+		this.drawStringsGrid(p_context, p_editorCore.getGrid(GRID_ID.DIGIT_QUESTION_SPACE));
+	}
 	if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_X_SPACE)) {
 		this.drawStringsGrid(p_context, p_editorCore.getGrid(GRID_ID.NUMBER_X_SPACE)); // See TODO above
 	}
@@ -132,13 +135,14 @@ Drawer.prototype.drawStringsGrid = function (p_context, p_numberGrid) {
 	this.drawOneStringPerSpace(p_context, p_numberGrid, this.getPixInnerSide() * 4 / 5, {offX : this.getPixInnerSide()/2, offY : this.getPixInnerSide()/2}, {alignH : "center", alignV : "middle"});
 }
 
+// Note : quite different from drawTextInsideStandard2Dimensions in main drawer, although both could be made equal (still, we have a distinction between drawer in editor and drawer in solver)
 Drawer.prototype.drawOneStringPerSpace = function (p_context, p_numberGrid, p_pixSize, p_pixInnerOffset, p_textAlign) {
 	const yLength = p_numberGrid.getYLength();
 	if (yLength > 0) {
 		const xLength = p_numberGrid.getXLength();
 		p_context.textAlign = p_textAlign.alignH;
 		p_context.textBaseline = p_textAlign.alignV;
-		p_context.font = p_pixSize + "px Arial";
+		p_context.font = p_pixSize + "px Arial"; // Note : in hard ! (but it's the editor)
 		p_context.fillStyle = COLOURS.EDITOR_TEXT_WRITING;
 		p_context.mix_blend_mode = "exclusion";
 		var ix,

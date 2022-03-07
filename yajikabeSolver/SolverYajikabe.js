@@ -348,7 +348,7 @@ deductionsClosure = function (p_solver) {
 		const y = p_eventBeingApplied.y;
 		const symbol = p_eventBeingApplied.symbol;
 		if (symbol == ADJACENCY.YES) {
-			p_listEventsToApply = p_solver.alert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
+			p_listEventsToApply = p_solver.deductionsAlert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
 			p_solver.stripesArray[y][x].forEach(index => { //Alert on strip
 				const clue = p_solver.cluesSpacesList[index];
 				if (clue.notPlacedOpensYet == 0) {

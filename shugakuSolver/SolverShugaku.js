@@ -372,7 +372,7 @@ deductionsClosure = function (p_solver) {
 							p_listEventsToApply.push(new FenceShugakuEvent(x, y, dd, FENCE_STATE.CLOSED));
 						}
 					});
-					p_listEventsToApply = p_solver.alert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
+					p_listEventsToApply = p_solver.deductionsAlert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
 				} else { // Space is closed
 					p_listEventsToApply = p_solver.deductionsChooseOneEventLeft(p_listEventsToApply, x, y, SPACE_SHUGAKU.SQUARE, SPACE_SHUGAKU.ROUND);
 					if (p_solver.answerArray[y][x].getState(SPACE_SHUGAKU.OPEN) == SPACE_CHOICE.NO) {

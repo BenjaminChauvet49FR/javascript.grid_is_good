@@ -60,8 +60,8 @@ function main() {
 
 	// Solver mode
 	buildInputCanvas("div_solving_canvas_buttons", actionsManagersSet.getActionsManager(0), "case", ENTRY.SPACE, [ACTION_ENTER_NUMBER, ACTION_PASS_GRIDS, ACTION_SELECTION_RECTANGLE]);
-	buildActionsGlobal("div_solving_global_actions", ["Démarrage rapide", "Passe totale (résolution)", "Déselectionner cases", "Passer cases sélectionnées", "Annuler"], 
-		[function(event){quickStartAction(solver)}, function(event){totalPassAction(solver)}, function(event){unselectAction(solver, selectedSpacesGrid)}, function(event){selectionPassAction(solver, selectedSpacesGrid)}, function(event){undoAction(solver)}] );
+	buildActionsGlobal("div_solving_global_actions", ["Démarrage rapide", "Multipasse", "Passe totale (résolution)", "Déselectionner cases", "Passer cases sélectionnées", "Annuler"], 
+		[function(event){quickStartAction(solver)}, function(event){multipassAction(solver)}, function(event){totalPassAction(solver)}, function(event){unselectAction(solver, selectedSpacesGrid)}, function(event){selectionPassAction(solver, selectedSpacesGrid)}, function(event){undoAction(solver)}] );
 
 	// Purificator mode
 	buildInputCanvas("div_cleaning_canvas_buttons", actionsManagersSet.getActionsManager(1), "case", ENTRY.SPACE, [ACTION_PURIFY_SPACE, ACTION_UNPURIFY_SPACE]);

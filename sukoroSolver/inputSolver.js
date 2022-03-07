@@ -18,7 +18,7 @@ function clickSpaceAction(p_solver, p_purificator, p_spaceIndexX, p_spaceIndexY,
 				var value = prompt("Entrer valeur", 1);
 				value = parseInt(value, 10);
 				if ((value != NaN) && (value > 0) && (value <= 4)) {
-					p_solver.emitHypothesis(p_spaceIndexX, p_spaceIndexY, value); 
+					p_solver.emitHypothesisNumber(p_spaceIndexX, p_spaceIndexY, value); 
 				}
 			}
 		break;
