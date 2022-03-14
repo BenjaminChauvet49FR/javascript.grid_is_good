@@ -3,7 +3,7 @@ const ANALYZER_MODE = {
 	NUMBERS_WALLED : {id : 1, hasWalls : true, label : "Murs et chiffres"},
 	NUMBERS_SUDOKU : {id : 2, hasFixedWalls : true, label : "Sudoku"},
 	NOT_GREY : {id : 3, hasWalls : false, label : "Cases non grises 204"},
-	GREY_NUMBERS_WALLED : {id : 4, hasWalls : true, label : "Cases grises 204 + murs"},
+	GREY_NUMBERS_WALLED : {id : 4, hasWalls : true, greyBackground : true, label : "Cases grises 204 + murs"},
 	NUMBERS_LEFT_UP_WALLED : {id : 5, hasWalls : true, label : "Murs et chiffres en haut à gauche"},
 	NOT_GREY_WALLED : {id : 6, hasWalls : true, label : "Cases non grises 204 + murs"},
 	BLUE_ON_WHITE : {id : 7, hasWalls : false, label : "Cases avec du bleu"},

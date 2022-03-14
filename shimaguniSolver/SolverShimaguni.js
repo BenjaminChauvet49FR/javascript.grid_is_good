@@ -45,6 +45,7 @@ SolverShimaguni.prototype.construct = function(p_wallArray, p_indicationsRegions
 	this.clusterArray = generateValueArray(this.xLength, this.yLength, 0);
 	const spacesByRegion = listSpacesByRegion(this.regionArray);
 	this.regionsNumber = spacesByRegion.length;
+	this.containsClueArray = generateValueArray(this.xLength, this.yLength, false);
 	
 	// Blantly initialize data of regions
 	this.regions = [];
@@ -97,9 +98,12 @@ SolverShimaguni.prototype.construct = function(p_wallArray, p_indicationsRegions
 	}
 	
 	// Initialize data of all regions that are possible only now that spaces by region are known.
+	var firstSpace;
 	p_indicationsRegions.forEach(indic => {
 		region = this.regions[indic.index];
 		region.forcedVal = indic.value;
+		firstSpace = region.spaces[0];
+		this.containsClueArray[firstSpace.y][firstSpace.x] = true;
 	});
 	for(var ir = 0;ir<this.regionsNumber;ir++) {
 		region = this.regions[ir];
@@ -174,6 +178,10 @@ SolverShimaguni.prototype.validateContact = function(p_i, p_j) {
 //Getter : answer
 SolverShimaguni.prototype.getAnswer = function(p_x, p_y) {
 	return this.answerArray[p_y][p_x];
+}
+
+SolverShimaguni.prototype.containsClueSpace = function(p_x, p_y) {
+	return this.containsClueArray[p_y][p_x];
 }
 
 //--------------
@@ -432,7 +440,6 @@ filterClustersClosure = function(p_solver) {
 			}
 			// If this is our very first O placed (or several of 'em) in this region, an update is mandatory so a "cluster with fill" is found.
 			var clusterBelong = (region.indexClusterWithFill == CLUSTER_WITH_FILL.NOT_FOUND) ? p_solver.clusterArray[introduced.y][introduced.x] : region.indexClusterWithFill;
-			//var clusterBelong = region.indexClusterWithFill;
 			// Ban clusters that don't contain a filled space
 			if (clusterBelong == CLUSTER_WITH_FILL.MULTI) {
 				ok = false;

@@ -170,19 +170,10 @@ function process(p_editorCore, p_pix, p_analyzerMode) {
 		}}
 	}
 	var state;
-	if (p_analyzerMode.hasFixedWalls) {	
-		if (drawnGridId != null) {
-			for (var y = 0 ; y < yLength ; y++) {for (var x = 0 ; x < xLength ; x++) {
-				state = analyzer.analyzeStateSpace(x, y);
-				if (state == WALLGRID.CLOSED) { 
-					p_editorCore.set(drawnGridId, x, y, null); 
-				}
-			}}
-		}
-	} else if (p_analyzerMode.hasWalls) {	
+	if (!p_analyzerMode.hasFixedWalls && p_analyzerMode.hasWalls) {	
 		if (drawnGridId != null) {			
 			for (var y = 0 ; y < yLength ; y++) {for (var x = 0 ; x < xLength ; x++) {
-				state = analyzer.analyzeStateSpace(x, y);
+				state = analyzer.analyzeStateSpace(x, y, p_analyzerMode.greyBackground);
 				p_editorCore.setState(x, y, state);
 				if (state == WALLGRID.CLOSED) { 
 					p_editorCore.set(drawnGridId, x, y, null); 

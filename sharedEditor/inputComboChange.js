@@ -63,7 +63,7 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			}
 			fillListModes(p_analyzerModes, [ANALYZER_MODE.BLUE_ON_WHITE, ANALYZER_MODE.BLACK_ON_WHITE, ANALYZER_MODE.BLUE_ON_WHITE]); break;
 			break;
-		case 'AYE-Heya': case 'Chocona': case 'CountryRoad': case 'Detour': case 'Heyawake': case 'Regionalin': case 'Shimaguni':
+		case 'AYE-Heya': case 'Chocona': case 'CountryRoad': case 'Detour': case 'Heyawake': case 'Regionalin': case 'Shimaguni': case 'Stostone':
 			saveLoadModeId = PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS;
 			p_editorCore.setVisibleGrids([GRID_ID.NUMBER_REGION]); 
 			fillListModes(p_analyzerModes, [ANALYZER_MODE.GREY_NUMBERS_WALLED, ANALYZER_MODE.NUMBERS_LEFT_UP_WALLED]); break;

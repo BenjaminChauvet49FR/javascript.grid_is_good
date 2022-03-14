@@ -723,7 +723,7 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
 		// wildcard part
 		const puzzleToSaveStringWildcard = wildcardsGridToString(p_editorCore.getArray(GRID_ID.WILDCARD));
 		if (puzzleToSaveStringWildcard.length > 0) {			
-			localStorage.setItem(wildcardLocalStorageName(p_localStorageName), puzzleToSaveStringWildcard);
+			localStorage.setItem(wildcardLocalStorageName(localStorageName), puzzleToSaveStringWildcard);
 		}
     }
 }
@@ -890,6 +890,7 @@ editorLoadAction = function (p_canvas, p_drawer, p_editorCore, p_puzzleName, p_d
     }
 }
 
+// Note : function used only twice I guess : in the saving, and in the loading.
 function wildcardLocalStorageName(p_localStorageName) {
 	return p_localStorageName + "WC";
 }

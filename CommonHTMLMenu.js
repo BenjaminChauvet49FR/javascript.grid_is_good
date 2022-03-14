@@ -53,6 +53,7 @@ menuSolvers.push({
 		{name : "rukkuea", displayName : "Rukkuea", hoverDescription : "Carrés, ceux de même taille ne doivent pas être en vis-à-vis"},
 		{name : "shimaguni", displayName : "Shimaguni", hoverDescription : "Polyominos séparés dans les régions, 2 régions différentes admettant des polyominos de taille différente"},
 		{name : "starBattle", displayName : "Star battle", hoverDescription : "Etoiles dans chaque ligne, colonne et région, sans contact"},
+		{name : "stostone", displayName : "Stostone", hoverDescription : "Polyominos séparés dans les régions correspondant à des pierres tombantes"},
 	]
 });
 

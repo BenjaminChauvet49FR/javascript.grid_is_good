@@ -36,7 +36,7 @@ SolveEvent.prototype.setupValue = function(p_index, p_val) {
 
 SolveEvent.prototype.toLogString = function(){	
 	if (this.kind == KIND.SYMBOL){
-		return "["+this.x+","+this.y+"] ("+this.symbol+")";
+		return "["+this.x+","+this.y+" ("+this.symbol+")]";
 	}
 	else {
 		return "[Reg. "+this.indexRegion+" X"+this.valueToBan+"]";

@@ -1,3 +1,8 @@
+const xSlashesForAnalysis = [0.1, 0.3, 0.5, 0.7, 0.9,  0.1, 0.3, 0.5, 0.7, 0.9];
+const ySlashesForAnalysis = [0.1, 0.1, 0.3, 0.3, 0.5,  0.5, 0.7, 0.7, 0.9, 0.9];
+const xSlashesForAnalysisInner = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8,  0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8,  0.5];
+const ySlashesForAnalysisInner = [0.4, 0.5, 0.6, 0.7, 0.8, 0.2, 0.3,  0.6, 0.7, 0.8, 0.2, 0.3, 0.4, 0.5,  0.5];
+
 function Colour(p_r, p_g, p_b) {
 	return {r : p_r, g : p_g, b : p_b} // Should be 0 to 255
 }
@@ -135,17 +140,14 @@ PictureAnalyzer.prototype.getColourInLine = function(p_pixStartX, p_pixStartY, p
 	return null;
 }
 
-
 // Uniformally analyze a space
-PictureAnalyzer.prototype.analyzeStateSpace = function(p_x, p_y) {
-	const whiteThreshold = 0.9;
-	var pixCenterX, pixCenterY, pixel;
-	x = [0.1, 0.3, 0.5, 0.7, 0.9, 0.1, 0.3, 0.5, 0.7, 0.9];
-	y = [0.1, 0.1, 0.3, 0.3, 0.5, 0.5, 0.7, 0.7, 0.9, 0.9];
-	for (var i = 0 ; i < x.length ; i++) {
-		pixCenterX = Math.floor(this.pix.x.sideSpace*(p_x + x[i]));
-		pixCenterY = Math.floor(this.pix.y.sideSpace*(p_y + y[i]));
-		pixel = this.getPixel(pixCenterX, pixCenterY);
+PictureAnalyzer.prototype.analyzeStateSpace = function(p_x, p_y, p_hasGreyBackground) {
+	const whiteThreshold = p_hasGreyBackground ? 0.5 : 0.9; 
+	var pixX, pixY, pixel;
+	for (var i = 0 ; i < xSlashesForAnalysis.length ; i++) {
+		pixX = Math.floor(this.pix.x.sideSpace*(p_x + xSlashesForAnalysis[i]));
+		pixY = Math.floor(this.pix.y.sideSpace*(p_y + ySlashesForAnalysis[i]));
+		pixel = this.getPixel(pixX, pixY);
 		if (whitenessOn765(pixel) >= 3*255*whiteThreshold) {
 			return WALLGRID.OPEN;
 		} 		
@@ -255,16 +257,18 @@ PictureAnalyzer.prototype.analyzeSpaceWhiteBlack = function(p_x, p_y) {
 // Analyzes if a space is centered in grey or not. If not, returns a wildcard.
 // Useful for puzzles where any space to have a state to be determined is grey and vice-versa.
 PictureAnalyzer.prototype.analyzeSpaceGreyOrNot = function(p_x, p_y) {
-	const pixCenterX = Math.floor(this.pix.x.sideSpace*(p_x + 0.5));
-	const pixCenterY = Math.floor(this.pix.y.sideSpace*(p_y + 0.5));
-	pixel = this.getPixel(pixCenterX, pixCenterY);
 	var tolerance = 32; // Delta of diffs r, g, b.
 	var greyLvl = 204;
-	if (colourDiff(new Colour(greyLvl, greyLvl, greyLvl), pixel) < tolerance) {
-		return null;
-	} else {
-		return WILDCARD_CHARACTER;
+	for (var i = 0 ; i < xSlashesForAnalysisInner.length ; i++) {
+		pixel = this.getPixel(
+			Math.floor(this.pix.x.sideSpace * (p_x + xSlashesForAnalysisInner[i])), 
+			Math.floor(this.pix.y.sideSpace * (p_y + ySlashesForAnalysisInner[i])) 
+		);
+		if (colourDiff(new Colour(greyLvl, greyLvl, greyLvl), pixel) > tolerance) {
+			return WILDCARD_CHARACTER;
+		}
 	}
+	return null;
 }
 
 // Analyzes if a space has a dark background.
