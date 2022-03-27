@@ -30,7 +30,7 @@ function main() {
 	});
 	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
 	buildInputCanvas("div_canvas_buttons", actionsManager, "case", ENTRY.SPACE, [ACTION_NOTHING, ACTION_PASS_AROUND_SPACE]);
-	buildInputCanvas("div_canvas2_buttons", actionsManager, "case", ENTRY.WALLS, [ACTION_CLOSE_FENCE, ACTION_OPEN_FENCE, ACTION_NOTHING, ]);
+	buildInputCanvas("div_canvas2_buttons", actionsManager, "case", ENTRY.WALLS, [ACTION_CLOSE_FENCE, ACTION_OPEN_FENCE, ACTION_PASS_FENCE, ACTION_NOTHING, ]);
 	buildActionsGlobal("div_global_actions", ["Multipasse", "Annuler"], 
 		[function(event){multipassAction(solver)}, function(event){undoAction(solver)}] );
 }

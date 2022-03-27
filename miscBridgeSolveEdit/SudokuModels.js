@@ -49,7 +49,7 @@ const SUDOKU_MODE = {
 	},
 	CLASSIC_16x16 : {
 		label : 'Unique (16x16)',
-		savedId : 'g', // g = 16 in base 64
+		savedId : 'G', // G = 16 in base 64
 		gridInfos : {
 			columnBlockWidth : 4,
 			rowBlockHeight : 4,
@@ -62,6 +62,38 @@ const SUDOKU_MODE = {
 		crossingoverGridIndexes : [[0]],
 		min : 1,
 		max : 16
+	},
+	FLOWER : { 
+		label : 'Flower',
+		savedId : 'fl', 
+		gridInfos : {
+			columnBlockWidth : 3,
+			rowBlockHeight : 3,
+			columnBlockNumber : 3,
+			rowBlockNumber : 3
+		},
+		xTotalLength : 15,
+		yTotalLength : 15,
+		startSpaces : [{x : 3, y : 0}, {x : 0, y : 3}, {x : 3, y : 3}, {x : 6, y : 3}, {x : 3, y : 6}],
+		crossingoverGridIndexes : [[0, 1, 2, 3, 4]],
+		min : 1,
+		max : 9
+	},
+	SOHEI : { 
+		label : 'Sohei',
+		savedId : 'so4', 
+		gridInfos : {
+			columnBlockWidth : 3,
+			rowBlockHeight : 3,
+			columnBlockNumber : 3,
+			rowBlockNumber : 3
+		},
+		xTotalLength : 21,
+		yTotalLength : 21,
+		startSpaces : [{x : 6, y : 0}, {x : 0, y : 6}, {x : 12, y : 6}, {x : 6, y : 12}],
+		crossingoverGridIndexes : [[0, 1], [1, 2], [2, 3], [0, 3]],
+		min : 1,
+		max : 9
 	},
 	SAMURAI : {
 		label : 'Samurai',

@@ -407,7 +407,11 @@ quickStartEventsClosure = function(p_solver) {
 					if (spaceInfos.notPlacedEmptiesYet == 0) {
 						listQSEvts = p_solver.surroundNumericSpace(listQSEvts, ix, iy, FILLING.YES);
 					}
-				}							
+				} else if (p_solver.answerArray[iy][ix] == FILLING.UNDECIDED) {
+					if ((spaceInfos.xMin == spaceInfos.xMax) && (spaceInfos.yMin == spaceInfos.yMax)) {
+						listQSEvts.push(new SpaceEvent(ix, iy, FILLING.YES)); // Totally isolated space (puzzle 570)
+					}
+				}					
 			}
 		}
 		return listQSEvts;

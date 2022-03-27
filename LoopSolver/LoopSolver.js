@@ -265,11 +265,11 @@ LoopSolver.prototype.isLinkUpAccessible = function(p_x, p_y) {
 }
 
 LoopSolver.prototype.isLinkRightAccessible = function(p_x, p_y) {
-	return (p_x < this.xLength-2 && this.getLinkRight(p_x, p_y) != LOOP_STATE.CLOSED);
+	return (p_x < this.xLength-1 && this.getLinkRight(p_x, p_y) != LOOP_STATE.CLOSED);
 }
 
 LoopSolver.prototype.isLinkDownAccessible = function(p_x, p_y) {
-	return (p_y < this.yLength-2 && this.getLinkDown(p_x, p_y) != LOOP_STATE.CLOSED);
+	return (p_y < this.yLength-1 && this.getLinkDown(p_x, p_y) != LOOP_STATE.CLOSED);
 }
 
 // Appearance getters

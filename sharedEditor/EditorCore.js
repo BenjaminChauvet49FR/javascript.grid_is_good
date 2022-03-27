@@ -26,7 +26,7 @@ function EditorCore(p_xLength, p_yLength, p_parameters) {
 	this.chainInsertData = { 
 		valid : false,
 		affectedGridNonWildId : null, // TODO only one grid at a time ?
-		lastChanges : [] // items with x, y, formerVal, newVal
+		lastChanges : [] // items with x, y, formerVal, newVal, gridId
 	}
 	
 }
@@ -285,6 +285,7 @@ EditorCore.prototype.getWildcardGrid = function() {
 }
 
 EditorCore.prototype.set = function (p_idGrid, p_x, p_y, p_value) {
+	this.grids[GRID_ID.WILDCARD].set(p_x, p_y, null);
     this.grids[p_idGrid].set(p_x, p_y, p_value);
 }
 
@@ -612,7 +613,7 @@ EditorCore.prototype.insertChainPrivate = function(p_destinationKind, p_destinat
 EditorCore.prototype.removeWildcardFromChainInsertion = function(p_gridId, p_x, p_y) {
 	if (this.get(p_gridId, p_x, p_y) != null && this.grids[GRID_ID.WILDCARD].get(p_x, p_y) != null) {
 		this.grids[GRID_ID.WILDCARD].set(p_x, p_y, null);
-		this.chainInsertData.lastChanges.push({x : p_x, y : p_y, formerVal : WILDCARD_CHARACTER, newVal : null});
+		this.chainInsertData.lastChanges.push({x : p_x, y : p_y, wasWildCard : true});
 	}	
 }
 
@@ -621,7 +622,7 @@ EditorCore.prototype.setAppropriatePlace = function (p_destinationKind, p_destin
 	var val = p_val;
 	switch(p_destinationKind) {
 		case INPUT_PLACE_KIND.GRID :  // p_destinationNomination = id of the grid
-			this.chainInsertData.lastChanges.push({x : p_x, y : p_y, formerVal : p_formerValue, newVal : val});
+			this.chainInsertData.lastChanges.push({x : p_x, y : p_y, formerVal : p_formerValue, wasWildCard : this.grids[GRID_ID.WILDCARD].get(p_x, p_y) == WILDCARD_CHARACTER, newVal : val});
 			this.set(p_destinationNomination, p_x, p_y, val);
 		break;
 		case INPUT_PLACE_KIND.MARGIN :  // p_destinationNomination = EDGES.LEFT, UP, RIGHT, DOWN. Only the first coordinate matters.
@@ -647,7 +648,7 @@ EditorCore.prototype.eraseAppropriatePlace = function(p_destinationKind, p_desti
 	switch(p_destinationKind) {
 		case INPUT_PLACE_KIND.GRID :
 			const formerValue = this.get(p_destinationNomination, p_x, p_y);
-			this.chainInsertData.lastChanges.push({x : p_x, y : p_y, formerVal : formerValue, newVal : null});
+			this.chainInsertData.lastChanges.push({x : p_x, y : p_y, wasWildCard : this.grids[GRID_ID.WILDCARD].get(p_x, p_y) == WILDCARD_CHARACTER, formerVal : formerValue, newVal : null});
 			this.set(p_destinationNomination, p_x, p_y, null);
 		break;
 		case INPUT_PLACE_KIND.MARGIN : 
@@ -658,22 +659,25 @@ EditorCore.prototype.eraseAppropriatePlace = function(p_destinationKind, p_desti
 
 EditorCore.prototype.undoLastChainGridInsert = function() {
 	const nonWildId = this.chainInsertData.affectedGridNonWildId;
-	var myId;
 	var cancellable = (this.chainInsertData.valid && this.isVisibleGrid(this.chainInsertData.affectedGridNonWildId));
 	if (cancellable) {
 		var i = 0;
 		var change;
 		while (cancellable && i < this.chainInsertData.lastChanges.length) {
 			change = this.chainInsertData.lastChanges[i];
-			myId = (change.newVal == WILDCARD_CHARACTER || change.formerVal == WILDCARD_CHARACTER) ? GRID_ID.WILDCARD : nonWildId;
-			cancellable = (change.x < this.xLength && change.y < this.yLength && this.get(myId, change.x, change.y) == change.newVal);
+			cancellable = (change.x < this.xLength && change.y < this.yLength && this.get(nonWildId, change.x, change.y) == change.newVal);
 			i++;
 		}
 	}
 	if (cancellable) {
 		this.chainInsertData.lastChanges.forEach(change => {
-			myId = (change.newVal == WILDCARD_CHARACTER || change.formerVal == WILDCARD_CHARACTER) ? GRID_ID.WILDCARD : nonWildId;
-			this.set(myId, change.x, change.y, change.formerVal);
+			if (change.wasWildCard) {	
+				this.set(nonWildId, change.x, change.y, null);
+				this.set(GRID_ID.WILDCARD, change.x, change.y, WILDCARD_CHARACTER);			
+			} else {
+				this.set(nonWildId, change.x, change.y, change.formerVal);
+				this.set(GRID_ID.WILDCARD, change.x, change.y, null);
+			}
 		});
 	}
 	this.chainInsertData.valid = false;
@@ -699,9 +703,9 @@ EditorCore.prototype.updateSelectionData = function() {
 				yMin = Math.min(iy, yMin);
 				yMax = iy;
 				listCoors.push({x : ix, y : iy});
-			}
-			if (this.get(GRID_ID.WILDCARD, ix, iy) == WILDCARD_CHARACTER) {
-				hasWC = true;
+				if (this.get(GRID_ID.WILDCARD, ix, iy) == WILDCARD_CHARACTER) {
+					hasWC = true;
+				}
 			}
 		}
 	}
@@ -803,7 +807,7 @@ EditorCore.prototype.unselectNull = function () {
         }
     }
     this.selectedCornerSpace = null;
-}
+} 
 
 EditorCore.prototype.resetSelection = function () {
     this.selectedArray = [];

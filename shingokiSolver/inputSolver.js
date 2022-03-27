@@ -3,21 +3,21 @@
 */
 function clickCanvasAction(event, p_canvas, p_drawer, p_solver, p_actionsManager) {
 	var clicked = p_drawer.getClickNode(event, p_canvas, p_solver.xLength, p_solver.yLength);
-	if (clicked != null && p_actionsManager.clickDot != ACTION_NOTHING) {
+	if (clicked != null && p_actionsManager.clickDot != ACTION_NOTHING ) {
 		clickNodeAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickDot);			
 	} else {
-		clicked = p_drawer.getClickEdgeD(event, p_canvas, p_solver.xLength, p_solver.yLength);
-		if (clicked != null && p_actionsManager.clickEdgeD != ACTION_NOTHING) {
-			clickEdgeDAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickEdgeD);
+		clicked = p_drawer.getClickNodeTolerant(event, p_canvas, p_solver.xLength, p_solver.yLength);
+		if (clicked != null && (p_solver.getColourPearl(clicked.x, clicked.y) != null) && p_actionsManager.clickDot != ACTION_NOTHING) {
+			clickNodeAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickDot);
 		} else {
-			clicked = p_drawer.getClickEdgeR(event, p_canvas, p_solver.xLength, p_solver.yLength);
+			clicked = p_drawer.getClickEdgeD(event, p_canvas, p_solver.xLength, p_solver.yLength);
 			if (clicked != null && p_actionsManager.clickEdgeD != ACTION_NOTHING) {
-				clickEdgeRAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickEdgeR);
+				clickEdgeDAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickEdgeD);
 			} else {
-				clicked = p_drawer.getClickNodeTolerant(event, p_canvas, p_solver.xLength, p_solver.yLength);
-				if (clicked != null && p_actionsManager.clickDot != ACTION_NOTHING) {
-					clickNodeAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickDot);
-				}
+				clicked = p_drawer.getClickEdgeR(event, p_canvas, p_solver.xLength, p_solver.yLength);
+				if (clicked != null && p_actionsManager.clickEdgeD != ACTION_NOTHING) {
+					clickEdgeRAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickEdgeR);
+				} 
 			}
 		}
 	}

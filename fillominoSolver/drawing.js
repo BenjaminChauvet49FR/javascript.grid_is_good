@@ -1,8 +1,16 @@
 // Note : a slight mix of Koburin drawing and LoopSolver drawing
-function drawing(p_context, p_drawer, p_coloursSet, p_solver) {
+function drawing(p_context, p_drawer, p_coloursSet, p_solver, p_selectionSet) {
 	// VERY ADVISED TO put methods that draw the grid in first, as they generally begin with a canvas clean.
 	// p_solver.getFenceRight / getFenceDown have no power here. Closures required. 	
 	p_drawer.drawFenceArray(p_context, p_solver.xLength, p_solver.yLength, getFenceRightClosure(p_solver.answerFencesGrid), getFenceDownClosure(p_solver.answerFencesGrid)); 
+	
+	const bgSelectionItems = [DrawableColor(p_coloursSet.selectedSpace), DrawableColor(p_coloursSet.selectedCornerSpace)];
+	bgSelectionSelection = function(x, y) {
+		return p_selectionSet.getDrawingSelectionIndex(x, y, 0, 1);
+	}
+	p_drawer.drawSpaceContents2Dimensions(p_context, bgSelectionItems, bgSelectionSelection, p_solver.xLength, p_solver.yLength);
+	
+	
 	p_drawer.drawNumbersInsideStandard2Dimensions(p_context, drawNumberClosure(p_solver, p_coloursSet), FONTS.ARIAL, p_solver.xLength, p_solver.yLength);
 }
 

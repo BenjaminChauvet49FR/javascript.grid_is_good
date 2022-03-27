@@ -471,7 +471,7 @@ GeneralSolver.prototype.multiPass = function(p_passTools) {
 				}
 			}
 		}
-	} while (ok && oneMoreLoop);
+	} while (ok && oneMoreLoop); 
 	if (!ok) {
 		while (this.happenedEventsSeries.length > lengthBeforeMultiPass) {
 			var lastEventsList = this.happenedEventsSeries.pop();

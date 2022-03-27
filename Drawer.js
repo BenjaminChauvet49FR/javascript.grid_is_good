@@ -1445,14 +1445,14 @@ Drawer.prototype.getClickNodeTolerant = function (event, p_canvas, p_xDotsNumber
 Drawer.prototype.getClickNodePrivate = function(event, p_canvas, p_xDotsNumber, p_yDotsNumber, p_tolerance) {
 	const pixX = this.getPixXWithinGrid(event, p_canvas);
 	const pixY = this.getPixYWithinGrid(event, p_canvas);
-	const pixXModulo = (pixX + this.pix.borderClickDetection) % this.pix.sideSpace;
-	const pixYModulo = (pixY + this.pix.borderClickDetection) % this.pix.sideSpace;
 	const pixToleranceSquareIn = (p_tolerance ? this.pix.sideSpace/2.5 : this.pix.borderClickDetection); // Middle of side of the square. 
+	const pixXModulo = (pixX + pixToleranceSquareIn) % this.pix.sideSpace;
+	const pixYModulo = (pixY + pixToleranceSquareIn) % this.pix.sideSpace;
 	
 	if ((pixXModulo < 2 * pixToleranceSquareIn) &&  (pixYModulo < 2 * pixToleranceSquareIn)) {
 		const answer = {
-			x: Math.floor((pixX + this.pix.borderClickDetection) / this.pix.sideSpace),
-			y: Math.floor((pixY + this.pix.borderClickDetection) / this.pix.sideSpace)
+			x: Math.floor((pixX + pixToleranceSquareIn) / this.pix.sideSpace),
+			y: Math.floor((pixY + pixToleranceSquareIn) / this.pix.sideSpace)
 		};
 		if ((answer.x < (p_xDotsNumber)) && (answer.x >= 0) && (answer.y < p_yDotsNumber) && (answer.y >= 0)) {
 			return answer;

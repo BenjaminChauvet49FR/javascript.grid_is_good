@@ -547,7 +547,7 @@ function searchClosure(p_solver) {
 						if (solveResultEvt == DEDUCTIONS_RESULT.SUCCESS) {
 							nbDeductions = p_solver.numberOfRelevantDeductionsSinceLastHypothesis();
 							if (bestIndex.nbD < nbDeductions) {
-								bestIndex = {nbD : nbDeductions , evt : event_.copy()}
+								bestIndex = {nbD : nbDeductions , x : solveX, y : solveY}
 							}
 							p_solver.undoToLastHypothesis();
 						}
@@ -557,7 +557,7 @@ function searchClosure(p_solver) {
 		}
 		
 		// Naive recursion !
-		return p_solver.tryAllPossibilities([bestIndex.evt, new SpaceEvent(bestIndex.evt.x, bestIndex.evt.y, ADJACENCY.YES),
-		bestIndex.evt, new SpaceEvent(bestIndex.evt.x, bestIndex.evt.y, ADJACENCY.NO)]);
+		return p_solver.tryAllPossibilities([new SpaceEvent(bestIndex.x, bestIndex.y, ADJACENCY.YES),
+		new SpaceEvent(bestIndex.x, bestIndex.y, ADJACENCY.NO)]);
 	}
 }

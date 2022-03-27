@@ -1,7 +1,7 @@
 /**
  When you click on the canvas
 */
-function clickCanvasAction(event, p_canvas, p_drawer, p_solver, p_actionsManager) {
+function clickCanvasAction(event, p_canvas, p_drawer, p_solver, p_actionsManager, p_selectionSet) {
 	var clicked = p_drawer.getClickWallR(event, p_canvas, p_solver.xLength, p_solver.yLength);
 	if (clicked != null && p_actionsManager.clickWallR.id != ACTION_NOTHING.id) {
 		clickWallRAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickWallR);
@@ -11,7 +11,7 @@ function clickCanvasAction(event, p_canvas, p_drawer, p_solver, p_actionsManager
 			clickWallDAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickWallD);
 		} else {
 			clicked = p_drawer.getClickSpace(event, p_canvas, p_solver.xLength, p_solver.yLength);
-			clickSpaceAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickSpace);
+			clickSpaceAction(p_solver, clicked.x, clicked.y, p_actionsManager.clickSpace, p_selectionSet);
 		}
 	}
 }
@@ -20,7 +20,7 @@ function clickCanvasAction(event, p_canvas, p_drawer, p_solver, p_actionsManager
 You successfully clicked on a region space (coordinates in parameter) or a wall. Then, what ? 
 */
 
-function clickWallDAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action) {
+function clickWallDAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 	switch(p_action.id){
 		case ACTION_OPEN_FENCE.id :
 			p_solver.emitHypothesisDown(p_spaceIndexX, p_spaceIndexY, FENCE_STATE.OPEN); 
@@ -42,7 +42,7 @@ function clickWallRAction(p_solver,p_spaceIndexX,p_spaceIndexY,p_action) {
 	}
 }
 
-function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
+function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action, p_selectionSet) {
 	if (p_action.id == ACTION_PASS_AROUND_SPACE.id) { // Note : this diamond space can truly be improved (in fact the solving can be)
 		var value = prompt("Force de la passe ?", 1);
 		value = parseInt(value, 10);
@@ -59,6 +59,9 @@ function clickSpaceAction(p_solver, p_spaceIndexX, p_spaceIndexY, p_action) {
 			}
 		}
 	}
+	if (p_action.id == ACTION_SELECTION_RECTANGLE.id) {		
+		p_selectionSet.triggerSpace(p_spaceIndexX, p_spaceIndexY); 
+	}
 }
 
 //--------------------------
@@ -74,6 +77,21 @@ undoAction = function(p_solver) {
 
 multipassAction = function(p_solver) {
 	p_solver.makeMultiPass();
+}
+
+solveAction = function(p_solver) {
+	p_solver.makeResolution();
+}
+
+selectionPassAction = function(p_solver, p_selectionSet) {
+	const passing = p_solver.emitPassSelection(p_selectionSet);
+	if (passing != PASS_RESULT.HARMLESS) {
+		p_selectionSet.restartSelectedSpaces();
+	}
+}
+
+unselectAction = function(p_solver, p_selectionSet) {
+	p_selectionSet.restartSelectedSpaces();
 }
 
 //--------------------------

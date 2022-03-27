@@ -6,12 +6,7 @@ function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver, p_selecti
 	
 	const bgSelectionItems = [DrawableColor(p_coloursSet.selectedSpace), DrawableColor(p_coloursSet.selectedCornerSpace)];
 	bgSelectionSelection = function(x, y) {
-		if (p_selectionSet.array[y][x] == SPACE_SELECTION_INPUT.SELECTED) {
-			return 0;
-		} else if (p_selectionSet.array[y][x] == SPACE_SELECTION_INPUT.CORNER_SELECTED) {
-			return 1;
-		}
-		return -1;
+		return p_selectionSet.getDrawingSelectionIndex(x, y, 0, 1);
 	}
 	p_drawer.drawSpaceContents2Dimensions(p_context, bgSelectionItems, bgSelectionSelection, p_solver.xLength, p_solver.yLength);
 	

@@ -1,5 +1,5 @@
 const SPACE_SELECTION_INPUT = {
-	NOT_SELECTED : 0,
+	NOT_SELECTED : 0, // High convention 0 == false : not selected in a boolean context !
 	CORNER_SELECTED : 1,
 	SELECTED : 2
 }
@@ -12,7 +12,7 @@ InputSpacesSelection = function(p_xLength, p_yLength) {
 	this.previousStateSelectedCornerSpace = null
 }
 
-
+// Note : not the same as the one found in Editorcore which is a bit more technical
 // Custom pass space selection
 InputSpacesSelection.prototype.triggerSpace = function(p_x, p_y) {
 	if (this.selectedCornerSpace == null) {		
@@ -35,11 +35,26 @@ InputSpacesSelection.prototype.triggerSpace = function(p_x, p_y) {
 			const xMax = Math.max(p_x, x);
 			const yMin = Math.min(p_y, y);
 			const yMax = Math.max(p_y, y);
+			var allSelected = true;
 			for (y = yMin ; y <= yMax ; y++) {
 				for (x = xMin ; x <= xMax ; x++) {
-					this.array[y][x] = SPACE_SELECTION_INPUT.SELECTED;
+					allSelected = (this.array[y][x] != SPACE_SELECTION_INPUT.NOT_SELECTED); 
+					this.array[y][x] = SPACE_SELECTION_INPUT.NOT_SELECTED;
+					if (!allSelected) {
+						break;
+					}
+				}
+				if (!allSelected) {
+					break;
 				}
 			} 
+			if (!allSelected) {
+				for (y = yMin ; y <= yMax ; y++) {
+					for (x = xMin ; x <= xMax ; x++) {
+						this.array[y][x] = SPACE_SELECTION_INPUT.SELECTED;
+					}
+				}
+			}
 		}
 	}
 }
@@ -47,13 +62,18 @@ InputSpacesSelection.prototype.triggerSpace = function(p_x, p_y) {
 InputSpacesSelection.prototype.selectSpaceList = function(p_coorsList) {
 	this.cancelCornerSelection();
 	var allSelected = true;
-	p_coorsList.forEach(coors => {
-		allSelected &= (this.array[coors.y][coors.x] == SPACE_SELECTION_INPUT.SELECTED);
-		this.array[coors.y][coors.x] = SPACE_SELECTION_INPUT.SELECTED;
-	});
-	if (allSelected) {
+	var coors;
+	for (var i = 0 ; i < p_coorsList.length ; i++) {
+		coors = p_coorsList[i];
+		allSelected = (this.array[coors.y][coors.x] != SPACE_SELECTION_INPUT.NOT_SELECTED);
+		if (!allSelected) {
+			break;
+		}
+		this.array[coors.y][coors.x] = SPACE_SELECTION_INPUT.NOT_SELECTED;
+	};
+	if (!allSelected) {
 		p_coorsList.forEach(coors => {
-			this.array[coors.y][coors.x] = SPACE_SELECTION_INPUT.NOT_SELECTED;
+			this.array[coors.y][coors.x] = SPACE_SELECTION_INPUT.SELECTED;
 		});
 	}
 }
@@ -84,6 +104,18 @@ InputSpacesSelection.prototype.cancelCornerSelection = function() {
 		this.selectedCornerSpace = null;
 	}
 }
+
+// ---
+// To be used in closure in "draw in spaces" (drawTextInsideStandard2Dimensions)
+
+InputSpacesSelection.prototype.getDrawingSelectionIndex = function(p_x, p_y, p_indexForSelected, p_indexForCornerSelected) {	
+	if (this.array[p_y][p_x] == SPACE_SELECTION_INPUT.SELECTED) {
+		return p_indexForSelected;
+	} else if (this.array[p_y][p_x] == SPACE_SELECTION_INPUT.CORNER_SELECTED) {
+		return p_indexForCornerSelected;
+	}
+	return -1; // High convention : a negative value is supposed to be the value for an empty space in drawSpaceContents2Dimensions
+} 
 
 // ---
 // Getter

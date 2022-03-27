@@ -780,9 +780,26 @@ namingCategoryClosure = function(p_solver) {
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
 		var indexList = [];
-		p_solver.rangedSpacesCoors.forEach(coors => {
+		/* p_solver.rangedSpacesCoors.forEach(coors => {
 			indexList.push({x : coors.x, y : coors.y, number : p_solver.numericArray[coors.y][coors.x].number});
-		}); // Note : nothing for indexed spaces
+		}); How it used to be. */
+		var x, y, number;
+		for (y = 0 ; y < p_solver.yLength ; y++) {
+			for (x = 0 ; x < p_solver.xLength ; x++) {
+				number = p_solver.numericArray[y][x].number;
+				if (number != null) {
+					indexList.push({x : x, y : y});
+				} else if (p_solver.answerArray[y][x] == ADJACENCY.UNDECIDED) {
+					indexList.push({x : x, y : y, number : number});
+				}
+			}
+		}
 		return indexList;
+	}
+}
+
+skipPassClosure = function(p_solver) {
+	return function (p_indexRegion) {
+		return false;
 	}
 }

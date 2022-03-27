@@ -717,8 +717,7 @@ function filterNoCagesClosure(p_solver) {
 					x = coors.x;
 					y = coors.y;
 					p_solver.exploredSpacesNoCagesChecker.add(x, y);  
-					//found = p_solver.shapeAreaArray[y][x] != YAGIT_SHAPE.UNDECIDED;  // Note : because of passes, areas can be colored without actually belong to the same open cluster as a shape space. Too bad... 
-					found = p_solver.yagitShapesGrid.get(x, y) != null; 
+					found = p_solver.shapeAreaArray[y][x] != YAGIT_SHAPE.UNDECIDED;  // Note : because of events out of passes, areas cannot be colored without actually belong to the same open cluster as a shape space. Great ! 
 					// Don't forget that "thisCluster" checker ! exploredSpacesNoCagesChecker isn't enough because its only purpose is not to revisit spaces from the initial checker.
 					if (!found && p_solver.exploredSpacesNoCagesThisClusterChecker.add(x, y)) {
 						p_solver.existingNeighborsCoorsDirections(x, y).forEach(coorsDir2 => {
@@ -853,10 +852,7 @@ function copying(p_event) {
 }
 
 function comparison(p_event1, p_event2) { // Warning : more events to come soon !
-	return commonComparisonMultiKinds([YAGIT_FENCE_EVENT_KIND, SHAPE_EVENT_KIND], 
-	[[p_event1.orientation, p_event1.index, p_event1.state], [p_event2.orientation, p_event2.index, p_event2.state], 
-	[p_event1.y, p_event1.x, p_event1.shape], [p_event2.y, p_event2.x, p_event2.shape]], 
-	p_event1.kind, p_event2.kind)
+	return commonComparison([p_event1.orientation, p_event1.index, p_event1.state], [p_event2.orientation, p_event2.index, p_event2.state])
 }
 
 SolverYagit.prototype.generateEventsAroundNodePass = function(p_x, p_y) {

@@ -7,12 +7,7 @@ function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver, p_selecti
 		if (p_solver.getRegion(x, y) == WALLGRID.OUT_OF_REGIONS) {
 			return -1;
 		}
-		if (p_selectionSet.array[y][x] == SPACE_SELECTION_INPUT.SELECTED) {
-			return 0;
-		} else if (p_selectionSet.array[y][x] == SPACE_SELECTION_INPUT.CORNER_SELECTED) {
-			return 1;
-		}
-		return -1;
+		return p_selectionSet.getDrawingSelectionIndex(x, y, 0, 1);
 	}
 	p_drawer.drawSpaceContents2Dimensions(p_context, bgSelectionItems, bgSelectionSelection, p_solver.xyLength, p_solver.xyLength);
 

@@ -20,10 +20,7 @@ function ShapeEvent(p_x, p_y, p_shape) {
 	this.y = p_y;
 	this.shape = p_shape;
 	this.kind = SHAPE_EVENT_KIND;
-}
-
-ShapeEvent.prototype.copy = function() {
-	return new ShapeEvent(this.x, this.y, this.shape);
+	this.outOfPass = true;
 }
 
 function DeadEndEvent(p_x, p_y) {
@@ -38,18 +35,18 @@ function DeadEndEvent(p_x, p_y) {
 YagitFenceEvent.prototype.toLogString = function(p_solver) {
 	const fence = p_solver.fencesList[this.orientation][this.index];
 	if (this.orientation == OH) {
-		return "FenceH<" + fence.xLeft+"-"+fence.xRight+","+fence.y+">" + LabelFenceState[this.state] ;
+		return "[FenceH<" + fence.xLeft+"-"+fence.xRight+","+fence.y+">" + LabelFenceState[this.state] + "]" ;
 	} else {
-		return "FenceV<" + fence.x+","+fence.yUp+"-"+fence.yDown+">" + LabelFenceState[this.state] ;		
+		return "[FenceV<" + fence.x+","+fence.yUp+"-"+fence.yDown+">" + LabelFenceState[this.state] + "]" ;		
 	}
 }
 
 ShapeEvent.prototype.toLogString = function() {
-	return "Sh." + this.shape + " " + this.x + "," + this.y;
+	return "[Sh." + this.shape + " " + this.x + "," + this.y + "]";
 }
 
 DeadEndEvent.prototype.toLogString = function() {
-	return "DE " + this.x + "," + this.y;
+	return "[DE " + this.x + "," + this.y + "]";
 }
 
 function shouldBeLoggedEvent(p_event) {

@@ -1,5 +1,9 @@
 // Constants
 const UNDECIDED_NUMBER = null;
+const PASS_CATEGORY = {
+	DIAMOND : 1, // Note : no pass on a single fence since it's not really interesting and it hadn't even been implemented.
+	CUSTOM : 2
+}
 
 // ------------------------
 // Setup
@@ -36,14 +40,14 @@ SolverFillomino.prototype.construct = function(p_numberArray) {
 		argumentToLabelMethod : namingCategoryClosure(this)
 	};
 	
-	/*this.methodsSetMultipass = {
+	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 		//skipPassMethod : skipPassClosure(this)
-	}; */
+	}; 
 	this.setResolution = {
-		quickStartEventsMethod : quickStartEventsClosure(this)
-		//searchSolutionMethod : searchClosure(this)
+		quickStartEventsMethod : quickStartEventsClosure(this),
+		searchSolutionMethod : searchClosure(this)
 	}
 	
 	this.fixedNumbersArray = [];
@@ -104,16 +108,25 @@ SolverFillomino.prototype.undo = function(){
 
 SolverFillomino.prototype.emitPassSpace = function(p_x, p_y, p_number) {
 	const generatedEvents = this.generateEventsPassDiamondSpace(p_x, p_y, p_number);
-	this.passEvents(generatedEvents, {x : p_x, y : p_y, strength : p_number}); 
+	this.passEvents(generatedEvents, {passCategory : PASS_CATEGORY.DIAMOND, x : p_x, y : p_y, strength : p_number}); 
 }
 
 SolverFillomino.prototype.makeMultiPass = function() {	
-	//this.multiPass(this.methodsSetMultipass);
+	this.multiPass(this.methodsSetMultipass);
 }
 
 // In this puzzle, quickstart is vital for the separation of numbers
 SolverFillomino.prototype.makeQuickStart = function(p_x, p_y) {
 	this.quickStart();
+}
+
+SolverFillomino.prototype.makeResolution = function() { 
+	this.resolve();
+}
+
+SolverFillomino.prototype.emitPassSelection = function(p_selectionSet) {
+	const eventsForPass = this.answerFencesGrid.getFencePassEventsForSpacesList(p_selectionSet.getSelectedSpacesList(), p_selectionSet.array);
+	return this.passEventsSafe(eventsForPass, {passCategory : PASS_CATEGORY.CUSTOM, numberSpaces : eventsForPass.length});
 }
 
 //--------------------------------
@@ -468,7 +481,7 @@ SolverFillomino.prototype.generateEventsPassDiamondSpace = function(p_x, p_y, p_
 	
 	
 	this.volcanicChecker.purifyListForUnicity();
-	const unknownFences = this.answerFencesGrid.getUnknownFences(this.volcanicChecker);
+	const unknownFences = this.answerFencesGrid.getUnknownFencesChecker(this.volcanicChecker);
 	var eventChoiceList = [];
 	unknownFences.forEach(fenceData => {
 		eventChoiceList.push([new FenceEvent(fenceData.x, fenceData.y, fenceData.direction, FENCE_STATE.OPEN), new FenceEvent(fenceData.x, fenceData.y, fenceData.direction, FENCE_STATE.CLOSED)])
@@ -476,14 +489,71 @@ SolverFillomino.prototype.generateEventsPassDiamondSpace = function(p_x, p_y, p_
 	return eventChoiceList;
 }
 
+SolverFillomino.prototype.generateEventsPassFence = function(p_x, p_y, p_direction) {
+	return [[new FenceEvent(p_x, p_y, p_direction, FENCE_STATE.OPEN), 
+			new FenceEvent(p_x, p_y, p_direction, FENCE_STATE.CLOSED)]]
+}
+
 namingCategoryClosure = function(p_solver) {
-	
+	return function(p_index) {
+		switch (p_index.passCategory) {
+			case PASS_CATEGORY.DIAMOND :
+				return "Diamond pass strength (" + p_index.strength + ") " + p_index.x + "," + p_index.y;
+			break;
+			case PASS_CATEGORY.CUSTOM :
+				return "Selection " + p_index.numberSpaces + " space" + (p_index.numberSpaces > 1 ? "s" : "");
+			break;
+		}
+	}
 }
 
 function generateEventsForPassClosure(p_solver) {
-	
+	return function(p_index) { // Note : remember, it's only relevant for orderedListPassArgumentsClosure.
+		switch (p_index.passCategory) {
+			case PASS_CATEGORY.DIAMOND :
+				return p_solver.generateEventsPassDiamondSpace(p_index.x, p_index.y, p_index.strength);
+			break;
+		}
+	}
 }
 
 function orderedListPassArgumentsClosure(p_solver) {
-	
+	return function() {		
+		var answer = [];
+		var x, y;
+		for (y = 0 ; y < p_solver.yLength; y++) {
+			for (x = 0 ; x < p_solver.xLength; x++) {
+				answer.push({passCategory : PASS_CATEGORY.DIAMOND, x : x, y : y, strength : 1});
+			}
+		}
+		return answer;
+	}
 }
+
+// --------------------
+// Resolution
+
+SolverFillomino.prototype.isSolved = function() {
+	return this.answerFencesGrid.isComplete(); // Note : could be optimized (see Firumatto)
+}
+
+function isSolvedClosure(p_solver) {
+	return function() {
+		return p_solver.isSolved();
+	}
+}
+
+function searchClosure(p_solver) {  
+	return function() {
+		var mp = p_solver.multiPass(p_solver.methodsSetMultipass);
+		if (mp == MULTIPASS_RESULT.FAILURE) {
+			return RESOLUTION_RESULT.FAILURE;
+		}			
+		if (p_solver.isSolved()) {		
+			return RESOLUTION_RESULT.SUCCESS;
+		}		
+		// Note : puzzle 234 trick
+		return searchBestFenceForSolutionSearch(p_solver, p_solver.answerFencesGrid);
+	}
+}
+

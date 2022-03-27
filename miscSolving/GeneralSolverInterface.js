@@ -81,7 +81,7 @@ GeneralSolver.prototype.callStateForItem = function(p_item) {
 				p_item.style.color = colorFailure;
 			break;
 			case QUICKSTART_RESULT.ALREADY_DONE : 
-				p_item.innerHTML = "-"; 
+				p_item.innerHTML = "Démarrage rapide déjà fait"; 
 				p_item.style.color = colorNeutral;
 			break;
 			

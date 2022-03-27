@@ -4,7 +4,7 @@ function main() {
 	var drawer = new Drawer();
 	solver = DummySolver();
 	purificator = DummyPurificatorSymbolArray();
-	purificator.configure({blockedSymbol : "X" , isBlockedDegradable : true});
+	purificator.configure({blockedSymbol : "X" , isBlockedDegradable : false}); // Note : possibility of passing isBlockedDegradable to false ; should be done later... ?
 	var spanState = document.getElementById("span_resolution_state");
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");

@@ -369,11 +369,15 @@ FencesGrid.prototype.addAccessibleSpacesToSetSpaces = function(p_checker, p_spac
 	};
 }
 
+FencesGrid.prototype.getUnknownFencesChecker = function(p_spacesChecker) {
+	return this.getUnknownFencesPrivate(p_spacesChecker.list, p_spacesChecker.array);
+}
+
 // Gets unknown fences within and outside the checker selection
-FencesGrid.prototype.getUnknownFences = function(p_spacesChecker) {
+FencesGrid.prototype.getUnknownFencesPrivate = function(p_list, p_array) {
 	var fencesList = [];
 	var x, y;
-	p_spacesChecker.list.forEach(coors => {
+	p_list.forEach(coors => {
 		x = coors.x;
 		y = coors.y;
 		if (x <= this.xLength-2 && this.getFenceRight(x, y) == FENCE_STATE.UNDECIDED) {
@@ -382,14 +386,30 @@ FencesGrid.prototype.getUnknownFences = function(p_spacesChecker) {
 		if (y <= this.yLength-2 && this.getFenceDown(x, y) == FENCE_STATE.UNDECIDED) {
 			fencesList.push({x : x, y : y, direction : DIRECTION.DOWN});
 		}
-		if (x > 0 && !(p_spacesChecker.array[y][x-1]) && this.getFenceLeft(x, y) == FENCE_STATE.UNDECIDED) {
+		if (x > 0 && !(p_array[y][x-1]) && this.getFenceLeft(x, y) == FENCE_STATE.UNDECIDED) {
 			fencesList.push({x : x, y : y, direction : DIRECTION.LEFT});
 		}
-		if (y > 0 && !(p_spacesChecker.array[y-1][x]) && this.getFenceUp(x, y) == FENCE_STATE.UNDECIDED) {
+		if (y > 0 && !(p_array[y-1][x]) && this.getFenceUp(x, y) == FENCE_STATE.UNDECIDED) {
 			fencesList.push({x : x, y : y, direction : DIRECTION.UP});
 		}
 	});
 	return fencesList;
+}
+
+// ---------
+// Returns the pass events for one fence (has to be stored into one array)
+// The fence is supposed to exist and to be undecided.
+
+FencesGrid.prototype.getPassEventsForOneFence = function(p_x, p_y, p_dir) {
+	return [new FenceEvent(p_x, p_y, p_dir, FENCE_STATE.OPEN), new FenceEvent(p_x, p_y, p_dir, FENCE_STATE.CLOSED)];
+}
+
+FencesGrid.prototype.getFencePassEventsForSpacesList = function(p_coorsList, p_coorsArray) {
+	var answer = [];
+	this.getUnknownFencesPrivate(p_coorsList, p_coorsArray).forEach(fence => {
+		answer.push(this.getPassEventsForOneFence(fence.x, fence.y, fence.direction));
+	});
+	return answer;
 }
 
 // ---------

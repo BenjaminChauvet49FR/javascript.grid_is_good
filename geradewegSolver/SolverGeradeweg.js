@@ -180,10 +180,10 @@ SolverGeradeweg.prototype.emitHypothesisNode = function(p_x, p_y, p_state) {
 }
 
 SolverGeradeweg.prototype.emitPassNode = function(p_x, p_y) {
-	if (this.getNumber(p_x, p_y) != null) {
+	if (this.getNumber(p_x, p_y) == null) {
 		return this.passLoop({passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
 	} else {
-		return this.passLoop({passCategory : LOOP_PASS_CATEGORY.GERADEWEG, x : p_x, y : p_y});
+		return this.passLoop({passCategory : LOOP_PASS_CATEGORY.PEARLY, x : p_x, y : p_y});
 	}
 }
 

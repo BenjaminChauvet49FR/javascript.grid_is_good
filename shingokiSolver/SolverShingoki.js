@@ -135,6 +135,10 @@ SolverShingoki.prototype.construct = function(p_valueGrid) {
 	});
 	this.checkerMinsToUpdate = new CheckCollectionDoubleEntryDirectional(this.xLength, this.yLength);
 	this.checkerMinMaxes = new CheckCollectionDoubleEntry(this.xLength, this.yLength);
+	
+	// For debug
+	this.getListPearls(true);
+	
 }
 
 SolverShingoki.prototype.setupNodesThatReachSameDir = function(p_x, p_y) {
@@ -168,7 +172,12 @@ SolverShingoki.prototype.setupPearlFromPrevious = function(p_x, p_y, p_xD, p_yD,
 				}
 			} else { // p_xD, p_yD is black
 				p_value = Math.min(p_value, p_absDist);
-				p_value = Math.min(p_value, this.getNumber(p_xD, p_yD)-1);
+				// If it is possible to reach the black pearl but its value too small
+				if (p_value >= this.getNumber(p_xD, p_yD)) {
+					p_value--;
+				} else {					
+					p_value = Math.min(p_value, this.getNumber(p_xD, p_yD)-1); // What went wrong on QS of 3128709 ? Down max in south 20,11 wrongly initialized
+				}
 			}
 		} else { // p_x, p_y is black
 			if (this.getColourPearl(p_xD, p_yD) == SHINGOKI_PEARL.WHITE) { // p_xD, p_yD is white
@@ -196,6 +205,25 @@ SolverShingoki.prototype.getColourPearl = function(p_x, p_y) {
 	return this.dataArray[p_y][p_x].pearl;
 }
 
+// Purely debug
+SolverShingoki.prototype.getListPearls = function(p_inhibReminder) {
+	this.listPearls = [];
+	var data;
+	var label;
+	this.pearlCoors.forEach(coors => {
+		data = this.dataArray[coors.y][coors.x];
+		
+		this.listPearls.push({coors : coors.x+","+coors.y, 
+		pearl : data.pearl,
+		number : data.number,
+		startMaxes : data.maxes[DIRECTION.LEFT]+"-"+data.maxes[DIRECTION.UP]+"-"+data.maxes[DIRECTION.RIGHT]+"-"+data.maxes[DIRECTION.DOWN]})
+	});
+	if (!p_inhibReminder) {		
+		console.log("this.listPearls is the list");
+	}
+	return this.listPearls;
+}
+
 // A few getters are in common part
 
 // -------------------
@@ -218,7 +246,7 @@ SolverShingoki.prototype.emitHypothesisNode = function(p_x, p_y, p_state) {
 }
 
 SolverShingoki.prototype.emitPassNode = function(p_x, p_y) {
-	if (this.getColourPearl(p_x, p_y) != null) {
+	if (this.getColourPearl(p_x, p_y) == null) {
 		return this.passLoop({passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
 	} else {
 		return this.passLoop({passCategory : LOOP_PASS_CATEGORY.PEARLY, x : p_x, y : p_y});
@@ -324,7 +352,7 @@ abortSolverShingokiClosure = function(p_solver) {
 // -------------------
 // Quickstart
 
-quickStartEventsClosure = function(p_solver) {
+quickStartEventsClosure = function(p_solver) { 
 	return function(p_QSeventsList) { 
 		p_QSeventsList.push({quickStartLabel : "Shingoki"});
 		var existLeft, existUp, existRight, existDown, position, x, y;
