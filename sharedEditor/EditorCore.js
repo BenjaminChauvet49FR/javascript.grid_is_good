@@ -290,8 +290,9 @@ EditorCore.prototype.set = function (p_idGrid, p_x, p_y, p_value) {
 }
 
 EditorCore.prototype.switchWildcardWithGrid = function(p_idGrid, p_x, p_y) {
+	const wasWildCard = this.grids[GRID_ID.WILDCARD].get(p_x, p_y) == WILDCARD_CHARACTER;
 	this.set(p_idGrid, p_x, p_y, null);
-	this.grids[GRID_ID.WILDCARD].toggle(p_x, p_y, WILDCARD_CHARACTER);
+	this.set(GRID_ID.WILDCARD, p_x, p_y, wasWildCard ? null : WILDCARD_CHARACTER);
 }
 
 EditorCore.prototype.switchValue = function (p_idGrid, p_x, p_y, p_value) {
@@ -1057,3 +1058,4 @@ EditorCore.prototype.alignToRegions = function (p_idGrid) {
 EditorCore.prototype.cleanRedundantWalls = function () { // Note : name transfer...
     this.wallGrid.cleanRedundantWalls();
 }
+

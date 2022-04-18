@@ -27,7 +27,7 @@ function main() {
 	
 	canevas.addEventListener('click', function(event){clickCanvasAction(event, canevas, drawer, solver, actionsManager, selectedSpacesGrid)},false);
 	
-	const defaultPuzzleValue = "15";
+	const defaultPuzzleValue = "27";
 	const puzzleTypeName = "SternenSchlacht";
 	
 	buildPuzzleManagementMenu("div_puzzle_management", "input_grid_name", "submit_load_grid", puzzleTypeName, defaultPuzzleValue);
@@ -38,7 +38,7 @@ function main() {
 	});
 	buildQuickStart("div_quickStart", function(event){quickStartAction(solver)});
 	buildInputCanvas("div_canvas_buttons", actionsManager, "case", ENTRY.SPACE, [ACTION_PUT_STAR, ACTION_PUT_NO_FILL, ACTION_PASS_REGION, ACTION_PASS_ROW, ACTION_PASS_COLUMN, ACTION_SELECTION_RECTANGLE, ACTION_SELECTION_REGION]);
-	buildActionsGlobal("div_global_actions", ["Multipasse", "Résolution", "Passer sélection", "Déselectionner", "Annuler"], 
-		[function(event){multipassAction(solver)}, function(event){solveAction(solver)}, function(event){selectionPassAction(solver, selectedSpacesGrid)}, 
+	buildActionsGlobal("div_global_actions", ["Multipasse", "Résolution", 'Résolution "avancée"', "Passer sélection", "Déselectionner", "Annuler"], 
+		[function(event){multipassAction(solver)}, function(event){solveAction(solver)}, function(event){solveActionII(solver)}, function(event){selectionPassAction(solver, selectedSpacesGrid)}, 
 		function(event){unselectAction(solver, selectedSpacesGrid)}, function(event){undoAction(solver)}] );
 }

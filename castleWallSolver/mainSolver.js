@@ -15,7 +15,7 @@ function main() {
 	}
 
 	var drawer = new Drawer(colours);
-	solver = DummySolver();
+	solver = DummySolver(); //Note : who needs drawed dummy solvers with dotted grids ? 
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
 	var actionsManager = {}; 

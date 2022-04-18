@@ -1,6 +1,6 @@
 // Note : grand part of code is shared with Geradeweg solver because of similarities
 
-const SHINGOKI_PEARL = {
+const SHINGOKI_PEARL = { 
 	BLACK : 0,
 	WHITE : 1
 }
@@ -14,7 +14,7 @@ SolverShingoki.prototype = Object.create(LoopSolver.prototype);
 SolverShingoki.prototype.constructor = SolverShingoki;
 
 function DummySolver() {
-	return new SolverShingoki(generateSymbolArray(1, 1));
+	return new SolverShingoki(generateSymbolArray(1, 1)); //Note : who needs drawed dummy solvers with dotted grids ? 
 }
 
 SolverShingoki.prototype.construct = function(p_valueGrid) {

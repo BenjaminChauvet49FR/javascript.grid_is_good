@@ -93,6 +93,7 @@ menuSolvers.push({
 	displayName : "Binaires avec adjacence divers",
 	documentPage : "Solver",
 	typeList : [
+		{name : "aqre", displayName : "Aqre", hoverDescription : "Pas trois cases alignées ouvertes ou fermées à la suite, régions indicatives"},
 		{name : "corral", displayName : "Corral", hoverDescription : "Visions de cases ouvertes en ligne et colonne, les cases fermées doivent accéder à l'extérieur"},
 	]
 });

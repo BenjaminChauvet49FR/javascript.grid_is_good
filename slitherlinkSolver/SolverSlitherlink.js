@@ -108,7 +108,7 @@ SolverSlitherlink.prototype.emitHypothesisNode = function(p_x, p_y, p_state) {
 }
 
 SolverSlitherlink.prototype.emitPassMesh = function(p_xSpace, p_ySpace) {
-	if (this.numericMeshArray[p_ySpace][p_xSpace].value != null) {		// Note : we don't want an arbitrary set of spaces to be passed, even though it is possible...
+	if (this.numericMeshArray[p_ySpace][p_xSpace].number != null) {		// Note : we don't want an arbitrary set of spaces to be passed, even though it is possible...
 		return this.passLoop({passCategory : LOOP_PASS_CATEGORY.MESH, x : p_xSpace, y : p_ySpace}); 
 	} else {
 		return null;

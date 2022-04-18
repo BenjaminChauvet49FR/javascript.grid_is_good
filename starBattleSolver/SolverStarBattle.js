@@ -16,7 +16,8 @@ const STAR_BATTLE_PASS_CATEGORY = {
 	REGION : 1,
 	ROW : 2,
 	COLUMN : 3,
-	CUSTOM : 4
+	CUSTOM : 4,
+	AGGREGATED_SELECTION : 5
 };
 
 // ---------------------
@@ -64,6 +65,8 @@ SolverStarBattle.prototype.construct = function(p_wallArray, p_starNumber) {
 		isSolvedMethod : isSolvedClosure(this)
 	}
 	
+	this.spacesToSelect = new CheckCollectionDoubleEntry(this.xyLength, this.xyLength);
+
 	
 	this.buildPossibilities(p_starNumber); //notPlacedYet
 	this.buildAnswerArray(); //answerArray
@@ -164,6 +167,11 @@ SolverStarBattle.prototype.passSelectedSpaces = function(p_coorsList) {
 
 SolverStarBattle.prototype.makeResolution = function() { 
 	this.resolve();
+}
+
+SolverStarBattle.prototype.makeResolutionAdvanced = function() {
+	this.quickStart();
+	this.setStateHappening(this.advancedSolution());
 }
 
 //------------------
@@ -397,12 +405,25 @@ skipPassClosure = function(p_solver) {
 
 namingCategoryClosure = function(p_solver) {
 	return function(p_indexAndFamily) {
+		var item;
 		const index = p_indexAndFamily.index;
 		switch (p_indexAndFamily.family) {
-			case STAR_BATTLE_PASS_CATEGORY.REGION : return "Region "+ index + " (" + p_solver.getFirstSpaceRegion(index).x +" "+ p_solver.getFirstSpaceRegion(index).y + ")"; break;
+			case STAR_BATTLE_PASS_CATEGORY.REGION : return "Region "+ index + " (" + p_solver.getFirstSpaceRegion(index).x +","+ p_solver.getFirstSpaceRegion(index).y + ")"; break;
 			case STAR_BATTLE_PASS_CATEGORY.ROW : return "Row " + index; break;
 			case STAR_BATTLE_PASS_CATEGORY.COLUMN : return "Column " + index; break;
 			case STAR_BATTLE_PASS_CATEGORY.CUSTOM : return "Selection " + p_indexAndFamily.numberSpaces + " space" + (p_indexAndFamily.numberSpaces > 1 ? "s" : ""); break;
+			case STAR_BATTLE_PASS_CATEGORY.AGGREGATED_SELECTION :
+				var answer = "Aggregated selection of spaces ";
+				p_indexAndFamily.listSelectedIndexes.forEach(selectionElt => {
+					item = selectionElt.item;
+					switch (item.family) {
+						case STAR_BATTLE_PASS_CATEGORY.ROW : answer += "Row."+item.index;break;
+						case STAR_BATTLE_PASS_CATEGORY.REGION : answer += "Reg."+item.index+ "(" + p_solver.getFirstSpaceRegion(item.index).x +","+ p_solver.getFirstSpaceRegion(item.index).y + ")";break;
+						case STAR_BATTLE_PASS_CATEGORY.COLUMN : answer += "Col."+item.index;break;
+					}
+					answer += "(+"+selectionElt.countNewSpaces+")" + " ";
+				});
+			return answer;
 			default : return "";
 		}
 	}
@@ -546,3 +567,240 @@ function answerArrayToString(p_grid) {
 		console.log(row);
 	}
 }
+
+//--------------
+// Another solution
+
+SolverStarBattle.prototype.advancedSolution = function() {
+	var mp, as;
+	this.researchStartDate = new Date(); // Research starts before multipass, to be honest, rather than QS. The resolution time may matter too but choices have to be made.
+	this.researchSuccessfulAggregatedPasses = 0;
+	while (true) {		
+		mp = this.multiPass(this.methodsSetMultipass);
+		if (mp == MULTIPASS_RESULT.FAILURE) {
+			return RESOLUTION_RESULT.FAILURE;
+		}			
+		if (this.isSolved()) {		
+			return RESOLUTION_RESULT.SUCCESS;
+		}
+		as = this.accumulativeSolution();
+		if (as != RESOLUTION_RESULT.SEARCHING) {
+			return as;
+		}
+		if (this.isSolved()) {		
+			return RESOLUTION_RESULT.SUCCESS;
+		}
+	}
+}
+
+
+// Accumulation of spaces into a selection that should be passed.
+SolverStarBattle.prototype.accumulativeSolution = function() {
+	// Maybe the list of ordered events is already updated, maybe not. Depends on the upper-level algorithm. Anyway, re-performing an ordered list should not be too much. 
+	var orderedList = orderedListPassArgumentsClosure(this)();
+	this.spacesToSelect.clean();
+	this.addNewSpacesInSelection(this.spacesToSelect, orderedList[0]);
+	
+	var listIndexes = [{item : orderedList[0], countNewSpaces : this.spacesToSelect.list.length}];
+	var ok = true;
+	var inProgress = false; // Should be "solved" but... 
+	var full = false;
+	var eventsForPass, p, numberNewSpaces;
+	var minPickIndex = 1;
+	var maxPickIndex = 10;
+	var itemFewerAddedSpaces;
+	var countCandidateSpaces = 10;
+	var consecutiveIncreases;
+	var latestDate = this.researchStartDate;
+	do {
+		consecutiveIncreases = 0;
+		// Aggregate spaces in selection 'till we have enough
+		while (consecutiveIncreases < 3 && countCandidateSpaces > this.spacesToSelect.list.length && !full) { 
+			// First and foremost, the minimal index ! // minPickIndex = 1st row/region/column which is not completely full.  
+			countUndecidedMPI = this.countNewSpacesInSelection(this.spacesToSelect, orderedList[minPickIndex]);
+			while (countUndecidedMPI == 0 && !full) {
+				minPickIndex++;
+				if (maxPickIndex < orderedList.length) {				
+					maxPickIndex++;
+				}
+				if (minPickIndex == orderedList.length) { 
+					// All undecided spaces are already in selection... and since we should have made a pass at this point, it means a pass doesn't allow a new deduction.
+					full = true; 
+				} else {					
+					countUndecidedMPI = this.countNewSpacesInSelection(this.spacesToSelect, orderedList[minPickIndex]);
+				}
+			}		
+			// Now, "minPickIndex" is the first (numeric) index in the list orderedList that corresponds to a row/column/reg. with at least 1 unknown space to be aggregated.
+			if (!full) { // if this is left unchecked, we can have minPickIndex equal to the size of the list, which is forbidden.
+				itemFewerAddedSpaces = {index : minPickIndex, countNewSpaces : countUndecidedMPI} 
+				
+				// Now onto the selection ! Choose an "item" (row, region or column) whose undecided spaces must be aggregated. It must contain at least one newly aggregated space.
+				for (var pi = minPickIndex+1 ; pi < maxPickIndex ; pi++) {
+					countUndecided = this.countNewSpacesInSelection(this.spacesToSelect, orderedList[pi]);
+					if (countUndecided < itemFewerAddedSpaces.countNewSpaces && countUndecided > 0) {
+						itemFewerAddedSpaces.index = pi;
+						itemFewerAddedSpaces.countNewSpaces = countUndecided;
+					}
+					if (countUndecided == 1) {
+						break;
+					}
+				}
+				// Item selected. Let's aggregate into selection.		
+				listIndexes.push({item : orderedList[itemFewerAddedSpaces.index], countNewSpaces : itemFewerAddedSpaces.countNewSpaces});
+				console.log(itemFewerAddedSpaces.index);
+				this.addNewSpacesInSelection(this.spacesToSelect, orderedList[itemFewerAddedSpaces.index]); 
+				//console.log(" eventually selected --- " + orderedList[itemFewerAddedSpaces.index].family + "-" + orderedList[itemFewerAddedSpaces.index].index + " ; answer " + itemFewerAddedSpaces.countNewSpaces);
+				// Note : Difficulty I met = what it took to have the correct "count" value (now stored in countNewSpaces). In reality, some variables were misnamed -names were really confusing, and were likely reinitialized in the wrong place within this method.
+				// Yet, the correct item was picked, or seemed to be. Anyway, it works fine now.
+				consecutiveIncreases++;
+			}
+		}			
+		while (countCandidateSpaces <= this.spacesToSelect.list.length) {
+			countCandidateSpaces += 5;
+		}
+		// Optionnal increase, but I like it.
+		/*if (maxPickIndex < orderedList.length) {				
+			maxPickIndex++;
+		} */	
+		if (new Date() - latestDate > 5000) {		// This log limits the risk of messages to fall !	
+			latestDate = new Date();
+			console.log("Number of selected spaces for aggregated pass : " + this.spacesToSelect.list.length + " ; number of successful aggregared passes : " + this.researchSuccessfulAggregatedPasses + " ; ms since the starting date : " + (latestDate - this.researchStartDate) + ")"); 
+		} // I guess this is necessary to prevent the puzzle to complain about no answer but at least it allows to give some information about the progression. And the time elapsed too. Actually, what takes the most time is a pass.
+		var eventsForPass = this.generateEventsForSpacesList(this.spacesToSelect.list);
+		p = this.passEvents(eventsForPass, {family : STAR_BATTLE_PASS_CATEGORY.AGGREGATED_SELECTION, listSelectedIndexes : listIndexes.slice()});
+		if (p == PASS_RESULT.FAILURE) {
+			ok = false;
+		} else if (p == PASS_RESULT.SUCCESS) {
+			inProgress = true;
+			this.researchSuccessfulAggregatedPasses++;
+		}
+		
+	} while (ok && !inProgress && !full);
+	if (ok) {		
+		if (full && !inProgress) {
+			return RESOLUTION_RESULT.MULTIPLE; // WARNING : this one hasn't been tested.
+		} else {			
+			return RESOLUTION_RESULT.SEARCHING;
+		}
+	} else {
+		return RESOLUTION_RESULT.FAILURE;
+	}
+} 
+
+SolverStarBattle.prototype.addNewSpacesInSelection = function(p_checker, p_indexAndFamily) {
+	this.newSpacesToBeAdded(p_checker, p_indexAndFamily, true);
+}
+
+SolverStarBattle.prototype.countNewSpacesInSelection = function(p_checker, p_indexAndFamily) {
+	return this.newSpacesToBeAdded(p_checker, p_indexAndFamily, false);
+}
+
+SolverStarBattle.prototype.newSpacesToBeAdded = function(p_checker, p_indexAndFamily, p_addMode) {
+	var x, y;
+	var count = 0;
+	switch (p_indexAndFamily.family) {
+			case STAR_BATTLE_PASS_CATEGORY.REGION : 
+				if (p_addMode) {
+					this.spacesByRegion[p_indexAndFamily.index].forEach(coors => {
+						x = coors.x;
+						y = coors.y;
+						if (this.answerArray[y][x] == STAR.UNDECIDED) {						
+							p_checker.add(x, y); 
+						}
+					});
+				} else {					
+					this.spacesByRegion[p_indexAndFamily.index].forEach(coors => {
+						x = coors.x;
+						y = coors.y;
+						if (!p_checker.array[y][x] && this.answerArray[y][x] == STAR.UNDECIDED) {						
+							count++; 
+						}
+					});
+				}
+				break;
+			case STAR_BATTLE_PASS_CATEGORY.ROW : 
+				y = p_indexAndFamily.index;
+				if (p_addMode) {
+					for (var x = 0 ; x < this.xyLength ; x++) {					
+						if (this.answerArray[y][x] == STAR.UNDECIDED) {						
+							p_checker.add(x, y); 
+						}
+					}
+				} else {					
+					for (var x = 0 ; x < this.xyLength ; x++) {					
+						if (!p_checker.array[y][x] && this.answerArray[y][x] == STAR.UNDECIDED) {						
+							count++;
+						}
+					}
+				}
+				break;
+			case STAR_BATTLE_PASS_CATEGORY.COLUMN :
+				x = p_indexAndFamily.index;
+				if (p_addMode) {
+					for (var y = 0 ; y < this.xyLength ; y++) {					
+						if (this.answerArray[y][x] == STAR.UNDECIDED) {						
+							p_checker.add(x, y); 
+						}
+					}
+				} else {					
+					for (var y = 0 ; y < this.xyLength ; y++) {					
+						if (!p_checker.array[y][x] && this.answerArray[y][x] == STAR.UNDECIDED) {						
+							count++;
+						}
+					}
+				}
+				break;
+	}
+	// console.log(" examining index " + p_indexAndFamily.family + "-" + p_indexAndFamily.index + " ; answer " + count);
+	return count;
+}
+
+
+
+
+
+
+// This one was a naive failure.
+/*SolverStarBattle.prototype.getSolution = function() {
+	var mp = this.multiPass(this.methodsSetMultipass);
+	if (mp == MULTIPASS_RESULT.FAILURE) {
+		return RESOLUTION_RESULT.FAILURE;
+	}			
+	if (this.isSolved()) {		
+		return RESOLUTION_RESULT.SUCCESS;
+	}
+	// this; // Maybe it is already updated, maybe not. Depends on the generic implementation. Anyway, re-performing a orderedList should not be too much. 
+	var orderedList = orderedListPassArgumentsClosure(this)();
+	if (orderedList.length == 1) { // Only one row/region/column after multipass and you just cannot pass it : multiple solutions ! 
+		return RESOLUTION_RESULT.MULTIPLE;
+	}
+	this.addNewSpacesInSelection(this.spacesToSelect, orderedList[0]);
+	this.addNewSpacesInSelection(this.spacesToSelect, orderedList[1]);
+	var listItemsForSolution = [orderedList[0], orderedList[1]];
+	var ok = true;
+	var inProgress = false; // Should be "solved" but... 
+	var full = false;
+	var i = 2;
+	var eventsForPass, p, numberNewSpaces;
+	do {
+		numberNewSpaces = this.addNewSpacesInSelection(this.spacesToSelect, orderedList[i]);
+		i++;
+		if (numberNewSpaces == 0) {
+			continue;
+		}
+		var eventsForPass = this.generateEventsForSpacesList(this.spacesToSelect.list);
+		p = this.passEvents(eventsForPass, {family : STAR_BATTLE_PASS_CATEGORY.CUSTOM, numberSpaces : eventsForPass.length});
+		if (p == PASS_RESULT.FAILURE) {
+			ok = false;
+		} else if (p == PASS_RESULT.SUCCESS) {
+			inProgress = true;
+		}
+		// Si au moins une case a été ajoutée : 
+		// this.push(listItemsForSolution())
+	} while (ok && !inProgress && i < orderedList.length);
+	if (ok) {		
+		return RESOLUTION_RESULT.SUCCESS;
+	} else {
+		return RESOLUTION_RESULT.FAILURE;
+	}
+} */

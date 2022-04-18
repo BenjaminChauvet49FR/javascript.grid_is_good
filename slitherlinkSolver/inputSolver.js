@@ -1,5 +1,5 @@
 /**
- When you click on the canvas
+ When you click on the canvas (for passing meshes, only numbers)
 */
 function clickCanvasAction(event, p_canvas, p_drawer, p_solver, p_actionsManager) {
 	var clicked = p_drawer.getClickNode(event, p_canvas, p_solver.xLength, p_solver.yLength);
@@ -87,7 +87,7 @@ undoAction = function(p_solver,p_textArea){
 }
 
 solveAction = function (p_solver) {
-	p_solver.resolve();
+	p_solver.makeResolution();
 }
 
 //--------------------------

@@ -510,14 +510,18 @@ GeneralSolver.prototype.quickStart = function() {
 	this.separatelyStackDeductions = false;	
 	var happening;
 	const eventList = this.setResolution.quickStartEventsMethod();
-	this.happenedEventsSeries = [{kind : SERIE_KIND.QUICKSTART, label : null, list : [] }];
+	this.happenedEventsSeries.push({kind : SERIE_KIND.QUICKSTART, label : null, list : [] });
+	// Event list is one single list that may contain either events or QS labels.
 	for (var i = 0 ; i < eventList.length ; i++) {
 		if (eventList[i].quickStartLabel) {
+			// If the previous QS deduction didn't bring anything new, expel it...
 			if (this.happenedEventsSeries[this.happenedEventsSeries.length-1].list.length == 0) {
 				this.happenedEventsSeries.pop();
 			}			
+			// Add a new potentially filled serie
 			this.happenedEventsSeries.push({kind : SERIE_KIND.QUICKSTART , label : eventList[i].quickStartLabel, list : [] });	
 		} else {			
+			// Add an event to the last serie
 			happening = this.tryToApplyHypothesis(eventList[i]);
 			if (happening == DEDUCTIONS_RESULT.FAILURE) {
 				ok = false;
@@ -525,6 +529,7 @@ GeneralSolver.prototype.quickStart = function() {
 			}				
 		}
 	}
+	// Quick start not parasital if list in happenedEventsSeries is empty.
 	if (this.happenedEventsSeries[this.happenedEventsSeries.length-1].list.length == 0) {
 		this.happenedEventsSeries.pop();
 	}
@@ -653,7 +658,7 @@ GeneralSolver.prototype.resolve = function(p_specialOptions) {
 		while (this.happenedEventsSeries.length > 0) {				
 			this.undoToLastHypothesis();
 		}
-		this.quickStart();
+		//this.quickStart(); Well, why were several QS needed ? Am I missing sthg ?
 		for (var k = 0 ; k < this.hypothesesToSolution.length ; k++) {
 			this.tryToApplyHypothesis(this.hypothesesToSolution[k]);
 		}

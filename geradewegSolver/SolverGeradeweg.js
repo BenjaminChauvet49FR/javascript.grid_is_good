@@ -9,7 +9,7 @@ SolverGeradeweg.prototype = Object.create(LoopSolver.prototype);
 SolverGeradeweg.prototype.constructor = SolverGeradeweg;
 
 function DummySolver() {
-	return new SolverGeradeweg(generateSymbolArray(1, 1));
+	return new SolverGeradeweg(generateSymbolArray(1, 1)); //Note : who needs drawed dummy solvers with dotted grids ? 
 }
 
 // Note : "pearl" is used in this puzzle and not "ball", like in Shingoki, because I used "pearl" for Shingoki and it's really similar.
