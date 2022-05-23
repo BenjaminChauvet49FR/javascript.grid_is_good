@@ -12,13 +12,21 @@ function createReferenceElement(p_path, p_displayedText, p_hoverText) {
 	return aNode;
 } // Credits for mouse hovering : http://sites.cognitivescience.co/knowledgebase/resources/using-google-sites/creating-mouseover-text-with-html (yes it's title)
 
-function addMenuPart(p_divElement, p_menuPart) {
+function addMenuPartEditor(p_divElement, p_menuPart) {
+	addMenuPart(p_divElement, p_menuPart, "Editor");
+}
+
+function addMenuPartSolver(p_divElement, p_menuPart) {
+	addMenuPart(p_divElement, p_menuPart, "Solver");
+}
+
+function addMenuPart(p_divElement, p_menuPart, p_family) {
 	addText(p_divElement, p_menuPart.displayName+" : ");
 	p_menuPart.typeList.sort(function(a, b) {
 		return (b.displayName > a.displayName ? -1 : (a.displayName > b.displayName ? 1 : 0));
 	});
 	p_menuPart.typeList.forEach( type => {
-		p_divElement.appendChild(createReferenceElement(getHTMLpath(p_menuPart.documentPage, type.name), type.displayName, type.hoverDescription));
+		p_divElement.appendChild(createReferenceElement(getHTMLpath(p_family, type.name), type.displayName, type.hoverDescription));
 		addText(p_divElement, " ");		
 	});
 }
@@ -33,9 +41,8 @@ function addText(p_divElement, p_text) {
 
 const menuEditor = {
 	displayName : "Editeur",
-	documentPage : "Editor",
 	typeList : [
-		{name : "shared", displayName : "Editeur partagé"}
+		{name : "shared", displayName : "Editeur partagé", hoverDescription : "Editeur de puzzles"}
 	]
 }
 
@@ -59,7 +66,6 @@ menuSolvers.push({
 
 menuSolvers.push({
 	displayName : "Remplissages de régions avec des nombres",
-	documentPage : "Solver",
 	typeList : [
 		{name : "hakyuu", displayName : "Hakyuu", hoverDescription : "Nombres de 1 à N par région, séparation suffisante entre 2 nombres identiques sur une ligne ou colonne"}
 	]
@@ -67,7 +73,6 @@ menuSolvers.push({
 
 menuSolvers.push({
 	displayName : "Binaires avec adjacence sans contact orthogonal fermé non banni",
-	documentPage : "Solver",
 	typeList : [
 		{name : "ayeHeya", displayName : "AYE-Heya", hoverDescription : "Heyawake avec cases symétriques centralement dans une région"},
 		{name : "curvingRoad", displayName : "Curving road", hoverDescription : "Pas plus de 2 tournants sur un chemin ouvert entre deux cercles"},
@@ -79,7 +84,6 @@ menuSolvers.push({
 
 menuSolvers.push({
 	displayName : "Binaires avec adjacence sans carré 2x2 ouvert",
-	documentPage : "Solver",
 	typeList : [
 		{name : "canalView", displayName : "CanalView", hoverDescription : "Visions de cases ouvertes consécutives en ligne et colonne"},
 		{name : "LITS", displayName : "LITS", hoverDescription : "Tetrominos, deux en contact doivent être différents"},
@@ -91,7 +95,6 @@ menuSolvers.push({
 
 menuSolvers.push({
 	displayName : "Binaires avec adjacence divers",
-	documentPage : "Solver",
 	typeList : [
 		{name : "aqre", displayName : "Aqre", hoverDescription : "Pas trois cases alignées ouvertes ou fermées à la suite, régions indicatives"},
 		{name : "corral", displayName : "Corral", hoverDescription : "Visions de cases ouvertes en ligne et colonne, les cases fermées doivent accéder à l'extérieur"},
@@ -100,7 +103,6 @@ menuSolvers.push({
 
 menuSolvers.push({
 	displayName : "Binaires non-assumés avec adjacence ",
-	documentPage : "Solver",
 	typeList : [
 		{name : "sukoro", displayName : "Sukoro", hoverDescription : "Nombre = nombre de voisins. Pas deux nombres identiques orthogonaement adjacents."}
 	]
@@ -108,7 +110,6 @@ menuSolvers.push({
 
 menuSolvers.push({
 	displayName : "Multiples avec adjacence",
-	documentPage : "Solver",
 	typeList : [
 		{name : "shugaku", displayName : "Shugaku", hoverDescription : "Carrés et ronds et dominos, couloir ouvert sans 2x2, contraintes"},
 		{name : "hakoiri", displayName : "Hakoiri", hoverDescription : "Un carré un rond un triangle par région, sans contact de formes identiques"}
@@ -117,7 +118,6 @@ menuSolvers.push({
 
 menuSolvers.push({
 	displayName : "Boucles avec contraintes sur case",
-	documentPage : "Solver",
 	typeList : [
 		{name : "koburin", displayName : "Koburin", hoverDescription : "Indications d'adjacence, sans contact orthogonal fermé non-banni"},
 		{name : "linesweeper", displayName : "Linesweeper", hoverDescription : "Indications d'adjacence ortho-diagonale comme au Minesweeper"},
@@ -128,7 +128,6 @@ menuSolvers.push({
 
 menuSolvers.push({
 	displayName : "Boucles avec contraintes sur lien",
-	documentPage : "Solver",
 	typeList : [
 		{name : "castleWall", displayName : "Castle Wall", hoverDescription : "Intérieur et extérieur de la boucle"},
 		{name : "grandTour", displayName : "Grand Tour", hoverDescription : "Tous les noeuds doivent être traversés, certains liens sont imposés"},
@@ -138,7 +137,6 @@ menuSolvers.push({
 
 menuSolvers.push({
 	displayName : "Boucles opposant ligne droite et virages",
-	documentPage : "Solver",
 	typeList : [
 		{name : "detour", displayName : "Detour", hoverDescription : "Combien de tournants par région ?"},
 		{name : "geradeweg", displayName : "Geradeweg", hoverDescription : "Lignes droites traversant les nombres"},
@@ -149,7 +147,6 @@ menuSolvers.push({
 
 menuSolvers.push({
 	displayName : "Boucles à région",
-	documentPage : "Solver",
 	typeList : [
 		{name : "countryRoad", displayName : "CountryRoad", hoverDescription : "2 cases de part et d'autre d'une frontière ne doivent pas rester non-visitées"},
 		{name : "entryExit", displayName : "EntryExit", hoverDescription : "Boucle régionale classique"},	
@@ -158,8 +155,14 @@ menuSolvers.push({
 });
 
 menuSolvers.push({
+	displayName : "Boucles à ordre",
+	typeList : [
+		{name : "suraromu", displayName : "Suraromu", hoverDescription : "Traverser les portes dans le bon ordre"}
+	]
+});
+
+menuSolvers.push({
 	displayName : "Découpage en région",
-	documentPage : "Solver",
 	typeList : [
 		{name : "fillomino", displayName : "Fillomino", hoverDescription : "Polyominos, ceux de même taille ne peuvent pas se toucher"},
 		{name : "firumatto", displayName : "Firumatto", hoverDescription : "Bandes de taille 1 à 4, celles de même taille ne peuvent pas se toucher"},
@@ -170,7 +173,6 @@ menuSolvers.push({
 
 menuSolvers.push({
 	displayName : "Binaires divers (hors grille)",
-	documentPage : "Solver",
 	typeList : [
 		{name : "shakashaka", displayName : "Shakashaka", hoverDescription : "Placer des triangles noirs pour que les surfaces blanches soient des rectangles"},
 		{name : "stitches", displayName : "Stitches", hoverDescription : "Points de couture entre régions"},
@@ -180,7 +182,6 @@ menuSolvers.push({
 
 menuSolvers.push({
 	displayName : "Sudokus",
-	documentPage : "Solver",
 	typeList : [
 		{name : "sudoku", displayName : "Sudoku", hoverDescription : "Sudoku classique ; peut avoir plusieurs grilles imbriquées"}
 	]
@@ -188,7 +189,6 @@ menuSolvers.push({
 
 menuSolvers.push({
 	displayName : "Théorique",
-	documentPage : "Solver",
 	typeList : [
 		{name : "theoryCluster", displayName : "Clusters d'adjacence", hoverDescription : 'Solveur théorique sur les puzzles nécessitant que toutes les cases "ouvertes" doivent être adjacentes entre elles'},
 		{name : "theoryLoop", displayName : "Boucles",  hoverDescription : 'Solveur théorique sur les puzzles avec une unique boucle orthogonale'},
@@ -197,11 +197,11 @@ menuSolvers.push({
 });
 
 const divElement = document.getElementById("div_common_menu");
-addMenuPart(divElement, menuEditor);
+addMenuPartEditor(divElement, menuEditor);
 divElement.appendChild(document.createElement("br"));
 addText(divElement, "Solveurs :");
 divElement.appendChild(document.createElement("br"));
 menuSolvers.forEach(menu => {
-	addMenuPart(divElement, menu);
+	addMenuPartSolver(divElement, menu);
 	divElement.appendChild(document.createElement("br"));
 })

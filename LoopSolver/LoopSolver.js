@@ -95,8 +95,7 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 	// Pass and multipass related 
 	this.comparisonPS = p_packMethods.comparisonPS;
 	if (!this.comparisonPS) { this.comparisonPS = function() {}} // Should not be sollicited
-	this.copyingPS = p_packMethods.copyingPS;         
-	if (!this.copyingPS) { this.copyingPS = function(p_event) {return p_event.copy();}} // Will likely be sollicited
+	this.copyingMethod = function(p_event) {return p_event.copy();} // Any event that should be involved into pass must be copied with a method named .copy() ; the standard ones, as well as the puzzle specific ones.
 	this.namingCategoryPS = p_packMethods.namingCategoryPS;
 	if (!this.namingCategoryPS) { this.namingCategoryPS = function(p_event) {return ""}}
 	this.generateEventsForPassPS = p_packMethods.generateEventsForPassPS;
@@ -112,6 +111,7 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 	} else {
 		this.multipassPessimismPS = p_packMethods.multipassPessimismPS;
 	}
+	this.amazeingPS = (p_packMethods.amazeingPS ? true : false);
 	
 	this.passDefineTodoPSMethod = p_packMethods.passDefineTodoPSMethod;
 	if (!this.passDefineTodoPSMethod) { this.passDefineTodoPSMethod = function() {return true;} } // For pass categories different from LOOP_PASS_CATEGORY.SPACE_STANDARD but that still makes reference to spaces. Masyu solver uses similar pass categories for standard pass spaces. Koburin and Linesweeper use (x, y) but not for standard pass at all
@@ -135,10 +135,10 @@ LoopSolver.prototype.loopSolverConstruct = function(p_puzzleSpecificMethodPack) 
 	this.methodsSetDeductions.addMoreFilters(this.PSFilters);
 	this.methodsSetDeductions.addMoreAborts(this.PSAbortMethods);
 	this.methodsSetDeductions.addCompoundEventMethod(compoundEventClosure(this)); // TODO Note : someday I'll want to make compound events in a sub problem (although this is whole "compound event" thing is more something for passes). I'll make the behaviour specific for sub solvers then.
-	this.methodsSetPass = {comparisonMethod : comparisonLoopSolverEventsClosure(this.comparisonPS), copyMethod : this.copyingPS, argumentToLabelMethod : namingCategoryLoopClosure(this.namingCategoryPS)};
+	this.methodsSetPass = {comparisonMethod : comparisonLoopSolverEventsClosure(this.comparisonPS), copyMethod : this.copyingMethod, argumentToLabelMethod : namingCategoryLoopClosure(this.namingCategoryPS)};
 	this.methodSetMultiPass = {
 		generatePassEventsMethod : generateEventsForPassLoopClosure(this, this.generateEventsForPassPS),
-		orderPassArgumentsMethod : orderedListpassArgumentsClosure(this, this.orderedListPassArgumentsPS, this.multipassPessimismPS),
+		orderPassArgumentsMethod : orderedListpassArgumentsClosure(this, this.orderedListPassArgumentsPS, this.multipassPessimismPS, this.amazeingPS),
 		passTodoMethod : passDefineTodoClosure(this)
 	};
 	this.setResolution = {
@@ -1004,18 +1004,29 @@ LoopSolver.prototype.multipassLoop = function() {
 // Quick start politics : now, all inputable methods (apply event, pass, multipass) in loops need to have quick start done first, as per the "safe" in multiPassSafe and so on.
 // Previously, was only in solvers of : Castle wall, Geradeweg, Grand Tour, Shingoki
 
-function orderedListpassArgumentsClosure(p_solver, p_orderedListPassArgumentsPSMethod, p_pessimistic) {
+function orderedListpassArgumentsClosure(p_solver, p_orderedListPassArgumentsPSMethod, p_pessimistic, p_amazeing) {
 	return function() {
 		var passIndex;
 		var answer = p_orderedListPassArgumentsPSMethod();
-		if (p_pessimistic) {			
-			for (var y = 0 ; y < p_solver.yLength ; y++) {
-				for (var x = 0 ; x < p_solver.xLength ; x++) {
-					//if (p_solver.linksArray[y][x].state != CLOSED && p_solver.linksArray[y][x].linkedDirections.length != 2) { 
-					passIndex = {x : x, y : y, passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD}
-					answer.push(passIndex);
-					// }
-				}	
+		if (p_pessimistic) {
+			if (p_amazeing) {
+				for (var y = 0 ; y < p_solver.yLength ; y++) {
+					for (var x = 0 ; x < p_solver.xLength ; x++) {
+						if (p_solver.linksArray[y][x].state != LOOP_STATE.CLOSED && p_solver.linksArray[y][x].closedEdges < 2) { // Any space that has 2 openings doesn't deserve to be tried. Worth checking because the solver is a maze... ing.
+							passIndex = {x : x, y : y, passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD}
+							answer.push(passIndex);
+						}
+					}	
+				}
+			} else {				
+				for (var y = 0 ; y < p_solver.yLength ; y++) {
+					for (var x = 0 ; x < p_solver.xLength ; x++) {
+						//if (p_solver.linksArray[y][x].state != CLOSED && p_solver.linksArray[y][x].linkedDirections.length != 2) { 
+						passIndex = {x : x, y : y, passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD}
+						answer.push(passIndex);
+						// }
+					}	
+				}
 			}
 		}
 		return answer;
@@ -1148,7 +1159,7 @@ loopNaiveSearchClosure = function(p_solver) {
 		
 		// Let's go !
 		return p_solver.tryAllPossibilities([bestIndex.evt, 
-			new LinkEvent(bestIndex.evt.linkX, bestIndex.evt.linkY, bestIndex.evt.direction, OppositeLoopState[bestIndex.evt.state]) ]);
+			new LinkEvent(bestIndex.evt.linkX, bestIndex.evt.linkY, bestIndex.evt.direction, LOOP_STATE.CLOSED) ]);
 	}
 }
 

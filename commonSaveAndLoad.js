@@ -1,34 +1,5 @@
 // Many elements that are used by saving and loading. Does not contain input methods, though ! (see common input or the input in the puzzles/editors directly)
-
 // ------------------------------------------
-
-// Note : clues for grids in editor, or grids that get loaded, or part of clues (typical example : "BD12" in castle wall)
-const SYMBOL_ID = { 
-    WHITE : 'W',
-    BLACK : 'B',
-	ROUND : 'R',
-	SQUARE : 'S',
-	TRIANGLE : 'T',
-	MOON : 'M',
-	SUN : 'S',
-	KNOT_HERE : 'K',
-	O : 'O',
-	X : 'X'
-}
-
-const CHAR_DIRECTION = {
-	LEFT : 'L',
-	UP : 'U',
-	RIGHT : 'R',
-	DOWN : 'D'
-}
-
-const GALAXIES_POSITION = {
-	CENTER : 0,
-	RIGHT : 1,
-	DOWN :2,
-	RIGHT_DOWN : 3
-}
 
 /**
 Returns a name to store into / load from local storage
@@ -750,6 +721,83 @@ function stringToYagitPuzzle(p_string) {
 		}
 	}
 	return {symbolArray : stringToBase2HalfFullArray(tokens[1], dims.xLength, dims.yLength, SYMBOL_ID.SQUARE, SYMBOL_ID.ROUND), knotsArray : knotsArray} 
+}
+
+// ----------------
+// Suraromu
+function suraromuPuzzleToString(p_array) {
+	var streamHV = new StreamEncodingSparseAny();
+	var streamSX = new StreamEncodingSparseBinary();
+	var str, ch, valHV, valSX;
+	var positionS = null;
+	var numberXSeen = 0;
+	for (var y = 0; y < p_array.length ; y++) {
+		for (var x = 0 ; x < p_array[y].length ; x++) {
+			str = p_array[y][x];
+			ch = null;
+			valHV = null;
+			valSX = null;
+			if (str != null) {		
+				ch = str.charAt(0);
+				if (ch == SYMBOL_ID.HORIZONTAL_DOTS || ch == SYMBOL_ID.VERTICAL_DOTS) {			
+					valHV = (str.length == 1 ? 0 : parseInt(str.substring(1), 10));
+					valHV = valHV*2 + (ch == SYMBOL_ID.HORIZONTAL_DOTS ? 0 : 1);
+				} else if (ch != null) {
+					valSX = (p_array[y][x] == SYMBOL_ID.START_POINT || p_array[y][x] == SYMBOL_ID.X);
+					if (p_array[y][x] == SYMBOL_ID.START_POINT) {
+						positionS = numberXSeen;
+					}
+					numberXSeen++;
+					
+				}
+			} 
+			streamHV.encode(valHV);
+			streamSX.encode(valSX);
+		}
+	}
+	var streamDimsPos = new StreamEncodingString64();
+	streamDimsPos.encode(p_array[0].length);
+	streamDimsPos.encode(p_array.length);
+	streamDimsPos.encode(positionS);
+	return streamDimsPos.getString() + " " + streamSX.getString() + " " + streamHV.getString();
+} // Note : first string is "width height position", with position = position in reading order of the O among all the Xs and Os starting at 0 (e.g. there are 10 Xs before the O and 5 Xs after, the 16 "O and Xs" are encoded and position = 10.
+
+
+function stringToSuraromuPuzzle(p_string) {
+	const tokens = p_string.split(" ");
+	const streamDimsPos = new StreamDecodingString64(tokens[0]);
+	const xLength = streamDimsPos.decode();
+	const yLength = streamDimsPos.decode(); 
+	const posS = streamDimsPos.decode();
+	var numberXSeen = 0;
+	const streamSX = new StreamDecodingSparseBinary(tokens[1]);
+	const streamHV = new StreamDecodingSparseAny(tokens[2]);
+	var character;
+	var decodeHV;
+	var decodeSX;
+	var value = null;
+	var array = [];
+
+	for (var y = 0; y < yLength ; y++) {
+		array.push([]);
+		for (var x = 0 ; x < xLength ; x++) {
+			decodeHV = streamHV.decode();
+			decodeSX = streamSX.decode();
+			if (decodeHV != null  && decodeHV != END_OF_DECODING_STREAM) {
+				value = (decodeHV % 2 == 0 ? SYMBOL_ID.HORIZONTAL_DOTS : SYMBOL_ID.VERTICAL_DOTS) + "" + (Math.floor(decodeHV/2) > 0 ? Math.floor(decodeHV/2) : "");
+			} else if (decodeSX && decodeSX != END_OF_DECODING_STREAM) {
+				value = SYMBOL_ID.X;
+				if (numberXSeen == posS) {
+					value = SYMBOL_ID.START_POINT;
+				}
+				numberXSeen++;
+			} else {
+				value = null;
+			}
+			array[y].push(value);
+		}
+	}
+	return {array : array}
 }
 
 // ----------------

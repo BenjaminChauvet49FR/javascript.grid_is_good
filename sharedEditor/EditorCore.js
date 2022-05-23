@@ -1043,6 +1043,46 @@ EditorCore.prototype.getLinkArray = function() {
 }
 
 // -------------------------------------------
+// Misc. specific.
+// For Suraromu
+EditorCore.prototype.cleanRedundantGates = function () {
+	var chain;
+	var removeDots;
+	var x, y;
+	for (y = 0; y < this.getYLength(); y++) {
+		removeDots = false;
+        for (x = 0; x < this.getXLength(); x++) {
+			chain = this.get(GRID_ID.SURAROMU, x, y);
+			if (chain != null) {
+				if (removeDots && chain.charAt(0) == SYMBOL_ID.HORIZONTAL_DOTS) {
+					this.set(GRID_ID.SURAROMU, x, y, null);					
+				} else if (chain == SYMBOL_ID.X) {
+					removeDots = false;
+				} else if (chain.charAt(0) == SYMBOL_ID.HORIZONTAL_DOTS) {
+					removeDots = true;
+				}
+			}
+		}
+	}        
+	for (x = 0; x < this.getXLength(); x++) {
+		removeDots = false;
+		for (y = 0; y < this.getYLength(); y++) {
+			chain = this.get(GRID_ID.SURAROMU, x, y);
+			if (chain != null) {
+				if (removeDots && chain.charAt(0) == SYMBOL_ID.VERTICAL_DOTS) {
+					this.set(GRID_ID.SURAROMU, x, y, null);					
+				} else if (chain == SYMBOL_ID.X) {
+					removeDots = false;
+				} else if (chain.charAt(0) == SYMBOL_ID.VERTICAL_DOTS) {
+					removeDots = true;
+				}
+			}
+		}
+	}
+
+}
+
+// -------------------------------------------
 // Misc.
 
 EditorCore.prototype.clearWallsAround = function (p_x, p_y) {
@@ -1058,4 +1098,3 @@ EditorCore.prototype.alignToRegions = function (p_idGrid) {
 EditorCore.prototype.cleanRedundantWalls = function () { // Note : name transfer...
     this.wallGrid.cleanRedundantWalls();
 }
-

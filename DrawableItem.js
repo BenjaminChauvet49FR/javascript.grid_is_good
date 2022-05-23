@@ -8,6 +8,9 @@ const KIND_DRAWABLE_ITEM = {
 	X : 4,
 	SQUARE : 5,
 	TRIANGLE : 6,
+	HORIZONTAL_DOTS : 7,
+	VERTICAL_DOTS : 8,
+	
 	CIRCLE_UPPER_RIGHT : 101,
 	PLUS_UPPER_RIGHT : 102,
 	SQUARE_UPPER_RIGHT : 103,
@@ -97,6 +100,22 @@ function DrawableLittleSquareUpperRight(p_colour) {
 	var item = new DrawableItem();
 	item.kind = KIND_DRAWABLE_ITEM.SQUARE_UPPER_RIGHT;
 	item.color = p_colour;
+	return item;
+}
+
+function DrawableHorizDots(p_colour, p_number) {
+	var item = new DrawableItem();
+	item.kind = KIND_DRAWABLE_ITEM.HORIZONTAL_DOTS;
+	item.color = p_colour; 
+	item.number = p_number;
+	return item;
+}
+
+function DrawableVertDots(p_colour, p_number) {
+	var item = new DrawableItem();
+	item.kind = KIND_DRAWABLE_ITEM.VERTICAL_DOTS;
+	item.color = p_colour;
+	item.number = p_number;
 	return item;
 }
 

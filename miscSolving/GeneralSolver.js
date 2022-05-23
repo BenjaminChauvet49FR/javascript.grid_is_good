@@ -435,7 +435,7 @@ GeneralSolver.prototype.multiPass = function(p_passTools) {
 		oneMoreLoop = false;
 		
 		i = 0;
-		while (ok && i < listPassArguments.length) {
+		while (ok && i < listPassArguments.length) { 
 			argPass = listPassArguments[i];
 			if (!oneMoreLoop || !p_passTools.skipPassMethod || !p_passTools.skipPassMethod(argPass)) {
 				p_listListCoveringEvent = p_passTools.generatePassEventsMethod(argPass);
@@ -471,7 +471,7 @@ GeneralSolver.prototype.multiPass = function(p_passTools) {
 				}
 			}
 		}
-	} while (ok && oneMoreLoop); 
+	} while (ok && oneMoreLoop);
 	if (!ok) {
 		while (this.happenedEventsSeries.length > lengthBeforeMultiPass) {
 			var lastEventsList = this.happenedEventsSeries.pop();
@@ -658,7 +658,7 @@ GeneralSolver.prototype.resolve = function(p_specialOptions) {
 		while (this.happenedEventsSeries.length > 0) {				
 			this.undoToLastHypothesis();
 		}
-		//this.quickStart(); Well, why were several QS needed ? Am I missing sthg ?
+		this.quickStart(); // Yes, you need to redo quick start since you ... well, cleaned everything ! (IDK why I removed this line)
 		for (var k = 0 ; k < this.hypothesesToSolution.length ; k++) {
 			this.tryToApplyHypothesis(this.hypothesesToSolution[k]);
 		}

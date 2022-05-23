@@ -394,3 +394,43 @@ PictureAnalyzer.prototype.hasPearlGalaxyPrivate = function(p_xPos, p_yPos) {
 	}
 	return false;
 }
+
+PictureAnalyzer.prototype.analyzeSpaceSuramoru = function(p_xPos, p_yPos) {
+	const pixLeftX = Math.floor(this.pix.x.sideSpace*(p_xPos+0.1));
+	const pixUpY = Math.floor(this.pix.y.sideSpace*(p_yPos+0.1));
+	const pixRightX = Math.floor(this.pix.x.sideSpace*(p_xPos+0.9));
+	const pixDownY = Math.floor(this.pix.y.sideSpace*(p_yPos+0.9));	
+	if ((whitenessOn765(this.getPixel(pixLeftX, pixUpY)) < 555) && 
+		(whitenessOn765(this.getPixel(pixRightX, pixUpY)) < 555) && 
+		(whitenessOn765(this.getPixel(pixLeftX, pixDownY)) < 555) && 
+		(whitenessOn765(this.getPixel(pixRightX, pixDownY)) < 555)) {
+		return SYMBOL_ID.X;
+	} else {
+		var whiteness;
+		var countBlackV = 0;
+		var countBlackH = 0;
+		const pixMiddleX = Math.floor(this.pix.x.sideSpace * (p_xPos+0.5));
+		const pixMiddleY = Math.floor(this.pix.y.sideSpace * (p_yPos+0.5));
+		for (var i = 0.1 ; i <= 0.9 ; i+= 0.05) {
+			whiteness = whitenessOn765(this.getPixel(pixMiddleX, Math.floor(this.pix.y.sideSpace*(p_yPos+i))));
+			if (whiteness < 555) {
+				countBlackV++;
+			}
+			whiteness = whitenessOn765(this.getPixel(Math.floor(this.pix.x.sideSpace*(p_xPos+i)), pixMiddleY));
+			if (whiteness < 555) {
+				countBlackH++;
+			}
+		}
+		if (countBlackV >= 7) {
+			if (countBlackH >= 7) {
+				return SYMBOL_ID.START_POINT;
+			} else {
+				return SYMBOL_ID.VERTICAL_DOTS;
+			}
+		} else if (countBlackH >= 7) {
+			return SYMBOL_ID.HORIZONTAL_DOTS;
+		} else {
+			return null;
+		}
+	}
+}

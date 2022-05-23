@@ -10,6 +10,7 @@ const ANALYZER_MODE = {
 	BLACK_ON_WHITE : {id : 8, hasWalls : false, label : "Cases avec du noir"},
 	FROM_BLACK : {id : 9, hasWalls : false, label : "Cases d'une noirceur (whiteness < 200)"},
 	FROM_BLACK_2 : {id : 10, hasWalls : false, label : "Cases avec du noir sur diagonale GH-DB"},
+	SURAROMU : {id : 11, hasWalls : false, label : "Cases Suramoru"},
 	
 	MOONSUN : {id : 100, hasWalls : true, label : "Moonsun 255 170"},
 	PLAYSTATION_SHAPES : {id : 101, hasWalls : true, label : "Trinité RGB 170"},

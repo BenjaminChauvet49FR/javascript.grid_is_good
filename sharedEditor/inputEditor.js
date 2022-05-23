@@ -180,8 +180,17 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			validityTokenMethod : validityTokenCharacterSelectionClosure(['R', 'S']),
 			parameters : {emptySpaceChar : " ", isMonoChar : true}
 		}		
+	} else if (p_editorCore.isVisibleGrid(GRID_ID.SURAROMU)) {
+		return {
+			descriptionPrompt : "Entrer suite d'indications Suraromu (H|V|H#|V#|S|X) (# = nombre)",
+			descriptionPromptMono : "Entrer indication Suraromu (H|V|H#|V#|S|X) (# = nombre)",
+			defaultToken : "S",
+			gridId : GRID_ID.SURAROMU,
+			validityTokenMethod : validityTokenSuraromu,
+			parameters : {emptySpaceChar : "<", isMonoChar : false}
+		}		
 	}
-}
+} 
 
 
 clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
@@ -381,6 +390,16 @@ validityTokenTapa = function(p_clue) {
 	}
 	var clue = sortedTapaClueString(p_clue);
 	return (indexTapaCombination(clue) != TAPA_INDEX_NOT_FOUND);
+}
+
+validityTokenSuraromu = function(p_clue) {
+	const charClue = p_clue.charAt(0);
+	if (charClue == "S" || charClue == "X") {
+		return p_clue.length == 1;
+	} else if (charClue == "H" || charClue == "V") {
+		return (p_clue.length == 1 || !isNaN(p_clue.substring(1)));
+	}
+	return false;
 }
 
 //------------------------
@@ -716,6 +735,9 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
 			puzzleToSaveString = XsAndOneOPerRegionPuzzleToString(p_editorCore.getWallGrid(), p_editorCore.getArray(GRID_ID.OX));
 		} else if (p_saveLoadMode.id == PUZZLES_KIND.LINKS_ONLY.id) {
 			puzzleToSaveString = linksOnlyPuzzleToString(p_editorCore.getLinkArray()); // Note : may be a subterfuge if wallsGrid = linksGrid but that's life...
+		} else if (p_saveLoadMode.id == PUZZLES_KIND.SURAROMU.id) {
+			editorCore.cleanRedundantGates();
+			puzzleToSaveString = suraromuPuzzleToString(p_editorCore.getArray(GRID_ID.SURAROMU));
 		} else {
 			puzzleToSaveString = wallsOnlyPuzzleToString(p_editorCore.getWallArray());
 		}
@@ -829,7 +851,13 @@ function getLoadedStuff(p_kindId, p_localStorageName, p_externalOptions) { // No
 			loadedItem.desiredArrays = [loadedItem.symbolArray];
 			return loadedItem; break;
 		case PUZZLES_KIND.LINKS_ONLY.id :
-			return stringToLinksOnlyPuzzle(localStorage.getItem(p_localStorageName)); // Contains "linkArray"
+			return stringToLinksOnlyPuzzle(localStorage.getItem(p_localStorageName)); break; // Contains "linkArray"
+		case PUZZLES_KIND.SURAROMU.id : 
+			var loadedItem = stringToSuraromuPuzzle(localStorage.getItem(p_localStorageName));
+			loadedItem.desiredIDs = [GRID_ID.SURAROMU];
+			loadedItem.desiredArrays = [loadedItem.array];
+			return loadedItem;
+			break;
 		default :
 			return stringToWallsOnlyPuzzle(localStorage.getItem(p_localStorageName));
 	}

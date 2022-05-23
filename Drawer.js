@@ -534,6 +534,25 @@ Drawer.prototype.drawSpaceContent = function(p_context, p_ix, p_iy, p_item, p_pi
 			p_context.fillStyle = p_item.color;
 			p_context.fillText(p_item.value, this.getPixCenterX(p_ix), this.getPixWriteCenterY(p_iy));
 		} 
+	} else if (p_item.kind == KIND_DRAWABLE_ITEM.HORIZONTAL_DOTS) {
+		p_context.fillStyle = p_item.color; // Note : "horizontal dots" and "vertical dots" will likely be used in Suraromu only, hence the tentation to draw them apart. Only useful if we have so many specific draws, though; plus Suraromu drawings use more classical drawable items too (as I write this note).
+		p_context.strokeStyle = p_item.color;
+		pixDistance = this.getPixInnerSide()/(2 * p_item.number);
+		for (var x = 0 ; x < p_item.number ; x++) {
+			p_context.beginPath(); // (1) 2-3 (4-5) 6-7 (8-9) 10-11 (12-13) 14-15 (16) (in parenthesis : blank. Without : portion of median line covered by the dot)
+			p_context.ellipse(this.getPixInnerXLeft(p_ix) + pixDistance * (2*x+1) , this.getPixCenterY(p_iy), pixDistance/2, pixDistance/2, 0, 0, 2 * Math.PI);
+			p_context.fill();
+		}
+		
+	} else if (p_item.kind == KIND_DRAWABLE_ITEM.VERTICAL_DOTS) {
+		p_context.fillStyle = p_item.color; 
+		p_context.strokeStyle = p_item.color;
+		pixDistance = this.getPixInnerSide()/(2 * p_item.number);
+		for (var y = 0 ; y < p_item.number ; y++) {
+			p_context.beginPath();
+			p_context.ellipse(this.getPixCenterX(p_ix), this.getPixInnerYUp(p_iy) + pixDistance * (2*y+1) , pixDistance/2, pixDistance/2, 0, 0, 2 * Math.PI);
+			p_context.fill();
+		}
 	}
 }
 
@@ -711,22 +730,58 @@ Drawer.prototype.drawTextInsideStandard2DimensionsLittle = function(p_context, p
 	this.drawTextInsideStandard2Dimensions(p_context, p_writeFunction, p_font, p_xLength, p_yLength, {little : true});
 }
 
+// Note : not used yet. Editor has : drawStringsLittleInCorner, which uses a grid
+Drawer.prototype.drawTextInsideStandard2DimensionsLittleInCorner = function(p_context, p_writeFunction, p_font, p_xLength, p_yLength) {
+	this.drawTextInsideStandard2Dimensions(p_context, p_writeFunction, p_font, p_xLength, p_yLength, {little : true, leftUp : true});
+}
+
+Drawer.prototype.drawTextInsideStandard2DimensionsLittleInCornerOnGround = function(p_context, p_writeFunction, p_font, p_xLength, p_yLength) {
+	this.drawTextInsideStandard2Dimensions(p_context, p_writeFunction, p_font, p_xLength, p_yLength, {little : true, leftUp : true, onGround : true});
+}
+
+// Warning : onGround only works with leftup, as you can see.
+// Resembles drawRegionIndications except it may be used by things not related to regions
 Drawer.prototype.drawTextInsideStandard2Dimensions = function(p_context, p_writeFunction, p_font, p_xLength, p_yLength, p_options) {
 	var fontSize = this.getPixInnerSide();
+	var leftUp = false;
+	var pixOffset = this.getPixInnerSide()*1/7;
 	if (p_options) {
 		if (p_options.little) {
 			fontSize *= 0.4;
 		}
+		if (p_options.leftUp) {
+			leftUp = true;
+		}
 	}
-	setupFont(p_context, fontSize, p_font);
-	alignFontCenter(p_context);
-	for(var iy = 0 ; iy < p_yLength ; iy++) {
-		for(var ix = 0 ; ix < p_xLength ; ix++) {
-			supposedValue = p_writeFunction(ix, iy);
-			if (supposedValue != null) {
-				p_context.fillStyle = supposedValue.writeColour;
-				p_context.fillText(supposedValue.value, this.getPixCenterX(ix), this.getPixWriteCenterY(iy));
-			} 
+	if (leftUp) { 	
+		setupFont(p_context, fontSize, p_font);
+		alignFontLeft(p_context);
+		for(var iy = 0 ; iy < p_yLength ; iy++) {
+			for(var ix = 0 ; ix < p_xLength ; ix++) {
+				supposedValue = p_writeFunction(ix, iy);
+				if (supposedValue != null) {
+					pixLeft = this.getPixInnerXLeft(ix) + pixOffset; // Note : not same offset as drawRegionIndications, though a bit of copied elements
+					pixUp = this.getPixInnerYUp(iy) + pixOffset;
+					if (p_options.onGround) { 
+						 p_context.fillStyle = supposedValue.backgroundColour; 
+						 p_context.fillRect(pixLeft, pixUp, fontSize*((""+supposedValue.value).length), fontSize);
+					}
+					p_context.fillStyle = supposedValue.writeColour;
+					p_context.fillText(supposedValue.value, pixLeft, pixUp); 
+				} 
+			}
+		}
+	} else {		
+		setupFont(p_context, fontSize, p_font);
+		alignFontCenter(p_context);
+		for(var iy = 0 ; iy < p_yLength ; iy++) {
+			for(var ix = 0 ; ix < p_xLength ; ix++) {
+				supposedValue = p_writeFunction(ix, iy);
+				if (supposedValue != null) {
+					p_context.fillStyle = supposedValue.writeColour;
+					p_context.fillText(supposedValue.value, this.getPixCenterX(ix), this.getPixWriteCenterY(iy));
+				} 
+			}
 		}
 	}
 }
@@ -1028,6 +1083,12 @@ Drawer.prototype.drawDiscGrid = function (p_context, p_discGrid, p_symbols, p_co
 			}
 		}
 	}
+}
+
+// Suraromu : with gates and a starting point, but you need to provide the shapes
+Drawer.prototype.drawSuraromuGrid = function(p_context, p_getSpaceMethod, p_shapesForSpaceContents, p_getGateNumberMethod, p_xLength, p_yLength) {
+	this.drawSpaceContents2Dimensions(p_context, p_shapesForSpaceContents, p_getSpaceMethod, p_xLength, p_yLength);
+	this.drawTextInsideStandard2DimensionsLittleInCornerOnGround(p_context, p_getGateNumberMethod, FONTS.ARIAL, p_xLength, p_yLength);
 }
 
 // -----------------

@@ -169,8 +169,13 @@ function process(p_editorCore, p_pix, p_analyzerMode) {
 			p_editorCore.set(GRID_ID.WILDCARD, x, y, analyzer.analyzeSpaceDigitOnWhiteAccurate(x, y)); 
 		}}
 	}
-	var state;
+	if (p_analyzerMode.id == ANALYZER_MODE.SURAROMU.id) {
+		for (y = 0 ; y < yLength ; y++) {for (x = 0 ; x < xLength ; x++) {
+			p_editorCore.set(GRID_ID.SURAROMU, x, y, analyzer.analyzeSpaceSuramoru(x, y)); 
+		}}
+	}	
 	if (!p_analyzerMode.hasFixedWalls && p_analyzerMode.hasWalls) {	
+		var state;
 		if (drawnGridId != null) {			
 			for (var y = 0 ; y < yLength ; y++) {for (var x = 0 ; x < xLength ; x++) {
 				state = analyzer.analyzeStateSpace(x, y, p_analyzerMode.greyBackground);

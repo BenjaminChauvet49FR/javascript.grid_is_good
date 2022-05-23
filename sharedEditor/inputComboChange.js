@@ -87,7 +87,13 @@ function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode
 			saveLoadModeId = PUZZLES_KIND.STAR_BATTLE; 
 			p_editorCore.maskAllGrids();
 			hasStars = true; 
-			fillListModes(p_analyzerModes, [ANALYZER_MODE.WALLS]); break;	
+			fillListModes(p_analyzerModes, [ANALYZER_MODE.WALLS]); break;
+		case 'Suraromu':
+			saveLoadModeId = PUZZLES_KIND.SURAROMU; 
+			p_editorCore.maskAllGrids();
+			p_editorCore.setWallsOff();
+			p_editorCore.setVisibleGrids([GRID_ID.SURAROMU]); 
+			fillListModes(p_analyzerModes, [ANALYZER_MODE.SURAROMU]); break;
 		case 'Akari': case 'Koburin': case 'Linesweeper': case 'Shakashaka': case 'Shugaku': case 'Sukoro':
 			p_editorCore.setWallsOff();
 			saveLoadModeId = PUZZLES_KIND.DIGITS_X_ONLY;

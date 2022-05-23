@@ -64,6 +64,7 @@ const ACTION_PASS_AROUND_KNOT = {id:109, htmlCaption : "Passer autour noeud"};
 const ACTION_PASS_NUMBERS_SET = {id:101, htmlCaption : "Passer ensemble de cases"};
 const ACTION_PASS_GALAXY_DELIMITATION = {id:101, htmlCaption : "Passer autour centre galaxie"};
 const ACTION_PASS_MESH = {id:102, htmlCaption : "Passer autour maille"};
+const ACTION_PASS_GATE_OR_SPACE = {id:109, htmlCaption : "Passer porte ou case"};
 
 // Positive actions on walls/fence
 const ACTION_LINK_SPACES = {id:51, htmlCaption : "Lier cases"};
