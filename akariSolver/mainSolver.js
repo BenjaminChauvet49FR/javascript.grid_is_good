@@ -9,19 +9,19 @@ function main() {
 	var actionsManager = {}; 
 	var drawIndications;
 
-	var colors = {
-		litSpace : '#ffff88',
-		wallSpace : '#a000a0',
-		line : '#000066',
-		lightbulb : '#ffff00',
-		numberWrite : '#ffff88',
+	var colours = {
+		litSpace : COLOURS.LIGHT_SPACE,
+		wallSpace : COLOURS.WALL_THAT_BLOCKS_LIGHT,
+		line : COLOURS.X_DARK_BLUE,
+		lightbulb : COLOURS.LIGHT_BULB,
+		numberWrite : COLOURS.LIGHT_SPACE,
 	}
 
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
 		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength); 
-		drawInsideSpaces(context, drawer, colors, solver);
+		drawInsideSpaces(context, drawer, colours, solver);
 		solver.callStateForItem(spanState);
 	}
 	setInterval(drawCanvas, 30);

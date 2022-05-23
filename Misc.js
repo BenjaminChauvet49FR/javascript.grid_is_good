@@ -1,6 +1,6 @@
 // Intersection of two integer lists with ascending values
 function intersectAscendingValues(p_sortedValues1, p_sortedValues2) {
-	var answer = [];
+	var result = [];
 	var i1 = 0;
 	var i2 = 0;
 	var val1, val2;
@@ -8,7 +8,7 @@ function intersectAscendingValues(p_sortedValues1, p_sortedValues2) {
 		val1 = p_sortedValues1[i1];
 		val2 = p_sortedValues2[i2];
 		if (val1 == val2) {
-			answer.push(val1);
+			result.push(val1);
 			i1++;
 			i2++;
 		} else if (val1 < val2) {
@@ -17,7 +17,7 @@ function intersectAscendingValues(p_sortedValues1, p_sortedValues2) {
 			i2++;
 		}
 	}
-	return answer;
+	return result;
 }
 
 // If a sorted list contains an integer
@@ -39,20 +39,20 @@ function getIndexInSortedArray(p_array, p_number) {
 
 // Array of values p_min to p_max (included)
 function numericSequenceArray(p_min, p_max, p_incr) {
-	var answer = [];
+	var result = [];
 	const incr = (p_incr ? p_incr : 1);
 	for (var i = p_min ; i <= p_max ; i += incr) {
-		answer.push(i);
+		result.push(i);
 	}
-	return answer;
+	return result;
 }
 
 function monoArray(p_number, p_value) {
-	var answer = [];
+	var result = [];
 	for (var i = 0 ; i < p_number ; i ++) {
-		answer.push(i);
+		result.push(i);
 	}
-	return answer;
+	return result;
 }
 
 function sortUnicityList(p_array, p_equalityFunction, p_sortFunction) {
@@ -62,23 +62,23 @@ function sortUnicityList(p_array, p_equalityFunction, p_sortFunction) {
 	} else {
 		myArray = p_array;
 	}
-	var answer = [];
+	var result = [];
 	myArray.forEach(value => {
-		if (answer.length == 0 || (!p_equalityFunction(value, answer[answer.length-1]))) {
-			answer.push(value);
+		if (result.length == 0 || (!p_equalityFunction(value, result[result.length-1]))) {
+			result.push(value);
 		}
 	});
-	return answer;
+	return result;
 }
 
 // Copies a coordinates list
 
 function copyCoordinatesList(p_coorsList) {
-	var answer = [];
+	var result = [];
 	p_coorsList.forEach(coors => {
-		answer.push({x : coors.x, y : coors.y});
+		result.push({x : coors.x, y : coors.y});
 	});
-	return answer;
+	return result;
 }
 
 

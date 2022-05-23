@@ -68,7 +68,7 @@ SolverLITS.prototype.construct = function(p_wallArray) {
 	this.checkerNewOpenRegions = new CheckCollection(this.regionsNumber);
 	this.checkerNewlyClosed = new CheckCollectionDoubleEntry(this.xLength, this.yLength);
 	
-	this.checkClusterInRegion = new CheckCollectionDoubleEntry(this.xLength, this.yLength); // Only used in applyDeclarations1or2Open
+	this.checkClusterInRegion = new CheckCollectionDoubleEntry(this.xLength, this.yLength); // Only used in deductionsApplyDeclarations1or2Open
 	// Now that region data are created : 
 	// Initialize spaces by region +  purify grid (the purification didn't occur earlier because 1) I decided to work on purification much after I built this space first, 2) because of this I already put everything for other arrays (shapeArray, proximitiesArray...)
 	var region;
@@ -150,19 +150,19 @@ SolverLITS.prototype.makeQuickStart = function() {
 }
 
 SolverLITS.prototype.passRegionAndAdjacentSpaces = function(p_indexRegion) {
-	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
+	const listPassNow = this.generateEventsForRegionPass(p_indexRegion);
 	this.regions[p_indexRegion].neighborSpaces.forEach(space => {
 		if (this.answerArray[space.y][space.x] == ADJACENCY.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
-			generatedEvents.push([new SpaceEvent(space.x, space.y, ADJACENCY.YES), new SpaceEvent(space.x, space.y, ADJACENCY.NO)]);
+			listPassNow.push([new SpaceEvent(space.x, space.y, ADJACENCY.YES), new SpaceEvent(space.x, space.y, ADJACENCY.NO)]);
 		}	
 	});
-	this.passEvents(generatedEvents, p_indexRegion); 
+	this.passEvents(listPassNow, p_indexRegion); 
 }
 
 SolverLITS.prototype.passRegion = function(p_indexRegion) {
-	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
+	const listPassNow = this.generateEventsForRegionPass(p_indexRegion);
 	this.methodsSetPass.argumentToLabelMethod = namingRegionClosure(this);
-	this.passEvents(generatedEvents, p_indexRegion); 
+	this.passEvents(listPassNow, p_indexRegion); 
 }
 
 SolverLITS.prototype.makeMultiPass = function() {
@@ -310,15 +310,15 @@ adjacencyClosure = function (p_solver) {
 // Quickstart !
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "LITS"}]
+		var listQSEvents = [{quickStartLabel : "LITS"}]
 		p_solver.regions.forEach(region => {
 			if (region.size == 4) {
 				for (var i = 0; i <= 3 ; i++) {
-					listQSEvts.push(new SpaceEvent(region.spaces[i].x, region.spaces[i].y, ADJACENCY.YES));
+					listQSEvents.push(new SpaceEvent(region.spaces[i].x, region.spaces[i].y, ADJACENCY.YES));
 				}
 			};
 		});
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -365,7 +365,7 @@ deductionsClosure = function (p_solver) {
 				p_solver.checkerNewlyClosed.add(x, y);
 				//Alert on region
 				if (region.notPlacedYetClosed == 0) {
-					p_listEventsToApply = p_solver.alertRegion(p_listEventsToApply,ir,ADJACENCY.YES, 4-region.openSpaces.length);			
+					p_solver.deductionsAlertRegion(p_listEventsToApply,ir,ADJACENCY.YES, 4-region.openSpaces.length);			
 				}
 				if (region.openSpaces.length == 3) { // Now that a space is closed, maybe something new is found in that region.
 					p_solver.checkerNewOpenRegions.add(ir); // Note : is everything okay ? I wrote " Est-ce ce qu'il faut ? "
@@ -374,20 +374,20 @@ deductionsClosure = function (p_solver) {
 				p_solver.checkerNewOpenRegions.add(ir);
 				
 				// Alert on 2x2 areas
-				p_listEventsToApply = p_solver.deductionsAlert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
+				p_solver.deductionsAlert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
 
 				// If 2 spaces are open, in the same region, in the same row/column and they are 1 space apart, then : this space must be open AND belong to this region. Otherwise, this is an immediate failure !
-				p_listEventsToApply = p_solver.fillOpenGaps(p_listEventsToApply, x, y, ir);
+				p_solver.deductionsFillOpenGaps(p_listEventsToApply, x, y, ir);
 				
 				//Alert on region
 				if (region.openSpaces.length == 4) {
-					p_listEventsToApply = p_solver.alertRegion(p_listEventsToApply,ir,ADJACENCY.NO,region.notPlacedYetClosed);			
+					p_solver.deductionsAlertRegion(p_listEventsToApply, ir, ADJACENCY.NO, region.notPlacedYetClosed);			
 				}
 				
 				// Test the non-adjacency of same shapes + affect a shape to the region
 				shape = p_solver.shapeArray[y][x];
 				if (shape != LITS.UNDECIDED) {
-					p_listEventsToApply = p_solver.closeUpTo4NeighborsOrNotSameShapeWhileOpen(p_listEventsToApply, x, y, ir, shape);
+					p_solver.deductionsCloseUpTo4NeighborsOrNotSameShapeWhileOpen(p_listEventsToApply, x, y, ir, shape);
 					p_listEventsToApply.push(new ShapeRegionEvent(ir, shape));
 				}
 				
@@ -415,7 +415,7 @@ deductionsClosure = function (p_solver) {
 			}
 			// A shape event : if 2 spaces across borders are affected the same shape, if either of them is open, close the other one. 
 			if (p_solver.answerArray[y][x] == ADJACENCY.YES) {
-				p_listEventsToApply = p_solver.closeUpTo4NeighborsOrNotSameShapeWhileOpen(p_listEventsToApply, x, y, ir, shape);
+				p_solver.deductionsCloseUpTo4NeighborsOrNotSameShapeWhileOpen(p_listEventsToApply, x, y, ir, shape);
 				p_listEventsToApply.push(new ShapeRegionEvent(ir, shape));
 			} 
 		} else {
@@ -425,7 +425,6 @@ deductionsClosure = function (p_solver) {
 				p_listEventsToApply.push(new SpaceEvent(coors.x, coors.y, ADJACENCY.NO));
 			});
 		}
-		return p_listEventsToApply;
 	}
 }
 
@@ -434,7 +433,7 @@ SolverLITS.prototype.isNotClosed = function (p_x,p_y) {
 }
 
 // The classical "when the remaining spaces of a region must be closed/open to reach the numbers"
-SolverLITS.prototype.alertRegion = function(p_listEvents, p_regionIndex, p_missingSymbol, p_missingNumber) {
+SolverLITS.prototype.deductionsAlertRegion = function(p_listEventsToApply, p_regionIndex, p_missingSymbol, p_missingNumber) {
 	const region = this.regions[p_regionIndex];
 	var xa,ya,alertSpace;
 	var remaining = p_missingNumber
@@ -443,19 +442,18 @@ SolverLITS.prototype.alertRegion = function(p_listEvents, p_regionIndex, p_missi
 		xa = alertSpace.x;
 		ya = alertSpace.y;
 		if (this.answerArray[ya][xa] == ADJACENCY.UNDECIDED) {
-			p_listEvents.push(new SpaceEvent(xa, ya, p_missingSymbol));
+			p_listEventsToApply.push(new SpaceEvent(xa, ya, p_missingSymbol));
 			remaining--;
 			if (remaining == 0) {
 				break;
 			}
 		}
 	}
-	return p_listEvents;
 }
 
 // Fill "open gaps", eg if 2 spaces in the same region are open and in the same row/column with 1 space in-between, that space must be filled.
 // Note : this assumes the fact that the space in-between automatically belongs to the region. If the discrimination of unreachables has been correctly performed, a situation where the space in-between doesn't belong to the region shouldn't exist.
-SolverLITS.prototype.fillOpenGaps = function(p_listEventsToApply, p_x, p_y, p_ir) {
+SolverLITS.prototype.deductionsFillOpenGaps = function(p_listEventsToApply, p_x, p_y, p_ir) {
 	KnownDirections.forEach (dir => {
 		if (this.distantNeighborExists(p_x, p_y, 2, dir) && 
 		(this.regionArray[p_y + DeltaY[dir] * 2][p_x + DeltaX[dir] * 2] == p_ir) && 
@@ -463,11 +461,10 @@ SolverLITS.prototype.fillOpenGaps = function(p_listEventsToApply, p_x, p_y, p_ir
 			p_listEventsToApply.push(new SpaceEvent(p_x + DeltaX[dir] ,p_y + DeltaY[dir] ,ADJACENCY.YES));
 		}
 	});
-	return p_listEventsToApply;
 }
 
 // Potentially close all 4 spaces (but not the space itself) as the space p_x, p_y is open
-SolverLITS.prototype.closeUpTo4NeighborsOrNotSameShapeWhileOpen = function (p_listEventsToApply, p_x, p_y, p_ir, p_shape) {
+SolverLITS.prototype.deductionsCloseUpTo4NeighborsOrNotSameShapeWhileOpen = function (p_listEventsToApply, p_x, p_y, p_ir, p_shape) {
 	var xd, yd;
 	this.existingNeighborsCoors(p_x, p_y).forEach(coors => {
 		xd = coors.x;
@@ -476,7 +473,6 @@ SolverLITS.prototype.closeUpTo4NeighborsOrNotSameShapeWhileOpen = function (p_li
 			p_listEventsToApply.push(new SpaceEvent(xd, yd, ADJACENCY.NO));
 		}
 	});
-	return p_listEventsToApply;
 }
 
 // -------------
@@ -484,13 +480,13 @@ SolverLITS.prototype.closeUpTo4NeighborsOrNotSameShapeWhileOpen = function (p_li
 
 filterClosureNewlyOpen = function(p_solver) {
 	return function() {
-		return p_solver.applyDeclarationsNewlyOpen();
+		return p_solver.filterDeclarationsNewlyOpen();
 	}
 }
 
 filterClosureNewlyClosed = function(p_solver) {
 	return function() {
-		return p_solver.applyDeclarationsNewlyClosed();
+		return p_solver.filterDeclarationsNewlyClosed();
 	}
 }
 
@@ -511,32 +507,31 @@ SolverLITS.prototype.cleanDeclarationsNewlyClosed = function() {
 
 // Post-indiviual-events filter : for each region that has 3 or 4 spaces, apply the consequences... and clean the environment afterwards !
 // Since it is a filter it must return FAILURE or a list of deducted events
-SolverLITS.prototype.applyDeclarationsNewlyOpen = function() {
-	var eventsList = [];
-
+SolverLITS.prototype.filterDeclarationsNewlyOpen = function() { 
+	var listEventsToApply = [];
 	for (var i = 0 ; i < this.checkerNewOpenRegions.list.length ; i++) { //Note : forEach doesn't allow simple returns
 		indexRegion = this.checkerNewOpenRegions.list[i];
 		if (4 == this.regions[indexRegion].openSpaces.length) {				
-			eventsList = this.eventsTetrominoIdentification(eventsList, indexRegion);
+			this.deductionsEventsTetrominoIdentification(listEventsToApply, indexRegion); 
 		} else if (3 == this.regions[indexRegion].openSpaces.length) {				
-			eventsList = this.eventsTripletPlacement(eventsList, indexRegion);
+			this.deductionsEventsTripletPlacement(listEventsToApply, indexRegion);
 		} else {
-			eventsList = this.applyDeclarations1or2Open(eventsList, indexRegion);
+			this.deductionsApplyDeclarations1or2Open(listEventsToApply, indexRegion);
 		}
-		if (eventsList == EVENT_RESULT.FAILURE) {
-			return EVENT_RESULT.FAILURE; 
+		if (isFailed(listEventsToApply)) { 
+			return listEventsToApply;
 		}
 	};
 	this.cleanDeclarationsNewOpenRegions();
-	return eventsList;
+	return listEventsToApply;
 }
 
 // ---
 // Second filter, a far easier-to-understand one :
 // Detects clusters in regions of size < 4 and does nothing else ! (the pass will do the job (TM))
 // checkClusterInRegion is used only in this function and the descending ones and is always cleaned before it returns, hence no cleans outside.
-SolverLITS.prototype.applyDeclarationsNewlyClosed = function() {
-	var listEvents = [];
+SolverLITS.prototype.filterDeclarationsNewlyClosed = function() { 
+	var listEventsToApply = [];
 	var x, y, ir; // TODO : we detect non-closed in-region clusters in their whole, so we can plan to do something about clusters with open spaces
 	this.checkerNewlyClosed.list.forEach(space => {
 		x = space.x;
@@ -544,18 +539,18 @@ SolverLITS.prototype.applyDeclarationsNewlyClosed = function() {
 		ir = this.regionArray[y][x];
 		KnownDirections.forEach(dir => {
 			if (this.neighborExists(x, y, dir)) {
-				listEvents = this.getNotClosedClusterInRegionAndCloseIfTooSmall(listEvents, x + DeltaX[dir], y + DeltaY[dir], ir);
+				this.deductionsGetNotClosedClusterInRegionAndCloseIfTooSmall(listEventsToApply, x + DeltaX[dir], y + DeltaY[dir], ir);
 			}
 		});
 	});
 	this.checkClusterInRegion.clean();
 	this.cleanDeclarationsNewlyClosed();
-	return listEvents;
+	return listEventsToApply;
 }
 
 // Starting from p_x, p_y, tests if the space is not closed, has its "non-closed cluster in region" (checkClusterInRegion) not formed yet and forms it.
 // Also adds closing events if a cluster is too small.
-SolverLITS.prototype.getNotClosedClusterInRegionAndCloseIfTooSmall = function(p_listEvents, p_x, p_y, p_ir) {
+SolverLITS.prototype.deductionsGetNotClosedClusterInRegionAndCloseIfTooSmall = function(p_listEventsToApply, p_x, p_y, p_ir) {
 	var spacesInCluster = [];
 	if ((this.regionArray[p_y][p_x] == p_ir) && (this.isNotClosed(p_x, p_y))) {
 		if (this.checkClusterInRegion.add(p_x, p_y)) {
@@ -577,10 +572,9 @@ SolverLITS.prototype.getNotClosedClusterInRegionAndCloseIfTooSmall = function(p_
 	
 	if (spacesInCluster.length < 4) {
 		spacesInCluster.forEach(space => {
-			p_listEvents.push(new SpaceEvent(space.x, space.y, ADJACENCY.NO));
+			p_listEventsToApply.push(new SpaceEvent(space.x, space.y, ADJACENCY.NO));
 		});
 	}
-	return p_listEvents;
 }
 
 SolverLITS.prototype.checkNotAddedNotClosedInRegion = function (p_spacesToCheck, p_xx, p_yy, p_indexRegion) {
@@ -596,21 +590,20 @@ SolverLITS.prototype.checkNotAddedNotClosedInRegion = function (p_spacesToCheck,
 
 // Plan events to discard any space that is too far away (distance > 3) or separated by closed spaces : once the 1st space in a region is set open, all those that are too far away won't be legally set open.
 // If an open space is in a too small non-closed cluster, this leads to a situation where there are spaces left to reach the number of 4 and open-set events are planned on those same spaces : imminent failure, and everything will be undone.
-SolverLITS.prototype.applyDeclarations1or2Open = function(p_eventsList, p_indexRegion) {
+SolverLITS.prototype.deductionsApplyDeclarations1or2Open = function(p_listEventsToApply, p_indexRegion) {
 	var nbOpenSpaces;
 	const region = this.regions[p_indexRegion];
 	if (region.notPlacedYetClosed > 0) {
 		region.openSpaces.forEach(space => {
-			p_eventsList = this.discriminateUnreachable(p_eventsList, space.x, space.y, p_indexRegion);
+			this.deductionsDiscriminateUnreachable(p_listEventsToApply, space.x, space.y, p_indexRegion);
 		});
 	}
-	return p_eventsList;
 }
 
 // List of closed events to declare closed all spaces that cannot be reached at a distance of 4 of the given (p_x, p_y) open space.
 // Note : a non-closed (eg. open + undecided) cluster too small can remain for a while, and by default no event is placed to close such a cluster. But any attempt to try to put an open space into a too small cluster will lead to a failure !
 // That is, unless a detector of too small non-closed clusters is made.
-SolverLITS.prototype.discriminateUnreachable = function(p_listEvents, p_x, p_y, p_indexRegion) {
+SolverLITS.prototype.deductionsDiscriminateUnreachable = function(p_listEventsToApply, p_x, p_y, p_indexRegion) {
 	var list_spacesToPropagate = [{x: p_x, y:p_y}];
 	var x,y;
 	this.proximitiesArray[p_y][p_x] = 3; // The central space is worth 3, then the proximities values will descend by one at each successive space, comparatively to lava flowing from a volcano...
@@ -623,7 +616,7 @@ SolverLITS.prototype.discriminateUnreachable = function(p_listEvents, p_x, p_y, 
 		proximity = this.proximitiesArray[y][x];
 		KnownDirections.forEach(dir => {
 			if (this.neighborExists(x, y, dir)) {
-				list_spacesToPropagate = this.updateSpacesToPropagate(list_spacesToPropagate, x + DeltaX[dir], y + DeltaY[dir], p_indexRegion, proximity);
+				this.updateSpacesToPropagate(list_spacesToPropagate, x + DeltaX[dir], y + DeltaY[dir], p_indexRegion, proximity);
 			}
 		});
 	}
@@ -633,22 +626,20 @@ SolverLITS.prototype.discriminateUnreachable = function(p_listEvents, p_x, p_y, 
 		x = space.x;
 		y = space.y;
 		if (this.proximitiesArray[y][x] == -1) {
-			p_listEvents.push(new SpaceEvent(x, y, ADJACENCY.NO));
+			p_listEventsToApply.push(new SpaceEvent(x, y, ADJACENCY.NO));
 		} else {
 			this.proximitiesArray[y][x] = -1;	
 		}
 	});
-	return p_listEvents;
 }
 
 // Test to propagate or not a space in a direction (left, up, right, down), whose coordinates have been passed by the above method
 // By the way, no check for values of p_xx and p_yy as it is done above.
-SolverLITS.prototype.updateSpacesToPropagate = function (p_listSpacesToPropagate, p_xx, p_yy, p_indexRegion, p_originalProximity){
+SolverLITS.prototype.updateSpacesToPropagate = function (p_listSpacesToPropagate, p_xx, p_yy, p_indexRegion, p_originalProximity) {
 	if ((this.regionArray[p_yy][p_xx] == p_indexRegion) && this.isNotClosed(p_xx,p_yy) && (this.proximitiesArray[p_yy][p_xx] < p_originalProximity-1)) {
 		this.proximitiesArray[p_yy][p_xx] = p_originalProximity-1;
 		p_listSpacesToPropagate.push({x : p_xx, y : p_yy});
 	}
-	return p_listSpacesToPropagate;
 }
 
 // --------------------
@@ -686,20 +677,20 @@ comparison = function(p_event1, p_event2) {
 
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		var indexList = [];
+		var listIndexesPass = [];
 		var values = [];
 		for (var i = 0; i < p_solver.regions.length ; i++) {
 			if (p_solver.regions[i].openSpaces.length < 4) {	
-				indexList.push(i); 
+				listIndexesPass.push(i); 
 				values.push(p_solver.uncertainity(i));
 			} else {
 				values.push(-1); // There MUST be one of these per region.
 			}
 		}
-		indexList.sort(function(p_i1, p_i2) {
+		listIndexesPass.sort(function(p_i1, p_i2) {
 			return values[p_i1]-values[p_i2];
 		});
-		return indexList;
+		return listIndexesPass;
 	}
 }
 

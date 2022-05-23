@@ -5,7 +5,7 @@ function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver, p_purific
 	p_drawer.drawFenceArray(p_context, p_solver.xLength, p_solver.yLength, getFenceRightDominoDrawingClosure(p_solver), getFenceDownDominoDrawingClosure(p_solver)); 
 	p_drawer.drawFixedNumbersOrX(p_context, drawNumberOrXClosure(p_solver), p_solver.numericCoordinatesList, p_solver.xCoordinatesList, p_coloursSet.numberWrite, p_coloursSet.numberWrite, FONTS.ARIAL);
 	
-	const colours = [DrawableColor(p_coloursSet.closedSpace), DrawableColor(p_coloursSet.openSpace)];
+	const colours = [DrawableColour(p_coloursSet.closedSpace), DrawableColour(p_coloursSet.openSpace)];
 	selectionOpening = selectionOpeningClosure(p_solver);
 	p_drawer.drawSpaceContents2Dimensions(p_context, colours, selectionOpening, p_solver.xLength, p_solver.yLength);
 	shapes = [DrawableCircle(p_coloursSet.shapeOuter, p_coloursSet.shapeInner), DrawableSquare(p_coloursSet.shapeOuter, p_coloursSet.shapeInner)];

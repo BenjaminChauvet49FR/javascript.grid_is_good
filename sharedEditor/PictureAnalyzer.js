@@ -161,16 +161,16 @@ PictureAnalyzer.prototype.analyzeCenterSpace = function(p_x, p_y, p_possibleColo
 	const pixCenterX = Math.floor(this.pix.x.sideSpace*(p_x + 0.5));
 	const pixCenterY = Math.floor(this.pix.y.sideSpace*(p_y + 0.5));
 	pixel = this.getPixel(pixCenterX, pixCenterY);
-	var answer = null;
+	var result = null;
 	var i = 0;
 	var tolerance = 32; // Delta of diffs r, g, b.
-	while (answer == null && i < p_possibleColours.length) {
+	while (result == null && i < p_possibleColours.length) {
 		if (colourDiff(p_possibleColours[i], pixel) < tolerance) {
-			answer = p_matchingSymbols[i];
+			result = p_matchingSymbols[i];
 		}
 		i++;
 	}
-	return answer;
+	return result;
 }
 
 PictureAnalyzer.prototype.analyzeMoonsun = function(p_x, p_y) {

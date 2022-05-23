@@ -51,7 +51,7 @@ SolverEntryExit.prototype.construct = function(p_wallArray) {
 		}
 	}
 	
-	this.signalAllOpenSpaces();
+	this.signalAllLinkedSpaces();
 	
 }
 
@@ -92,23 +92,22 @@ SolverEntryExit.prototype.makeMultipass = function() {
 // Quickstart
 
 quickStartEventsClosure = function(p_solver) {
-	return function(p_QSeventsList) {
-		p_QSeventsList.push({quickStartLabel : "Entry exit"});
+	return function(p_listQSEvents) {
+		p_listQSEvents.push({quickStartLabel : "Entry exit"});
 		p_solver.regions.forEach(region => {
 			if (region.endSpaces.length == 2) {
-				p_QSeventsList = p_solver.buildPatrioticBorderNoEnds(p_QSeventsList, region);
+				p_solver.deductionsBuildPatrioticBorderNoEnds(p_listQSEvents, region);
 			} else if (region.endSpaces.length == 1) {
-				p_QSeventsList = p_solver.buildPatrioticBorderParity(p_QSeventsList, region);
+				p_solver.deductionsBuildPatrioticBorderParity(p_listQSEvents, region);
 			}
 		});
-		return p_QSeventsList;
 	}
 }
 
 /**
 Adds closed link events to all spaces outside the bound of the region
 */
-SolverEntryExit.prototype.buildPatrioticBorderNoEnds = function(p_eventsToApply, p_region) {
+SolverEntryExit.prototype.deductionsBuildPatrioticBorderNoEnds = function(p_listEventsToApply, p_region) {
 	var x,y;
 	const ir = p_region.index;
 	const xEnd1 = p_region.endSpaces[0].x;
@@ -120,16 +119,15 @@ SolverEntryExit.prototype.buildPatrioticBorderNoEnds = function(p_eventsToApply,
 		y = space.y;
 		if ( ((x != xEnd1) || (y != yEnd1)) && ((x != xEnd2) || (y != yEnd2)) ) {
 			this.otherRegionsDirectionsArray[y][x].forEach(dir => {
-				p_eventsToApply.push(new LinkEvent(x, y, dir, LOOP_STATE.CLOSED));
+				p_listEventsToApply.push(new LinkEvent(x, y, dir, LOOP_STATE.CLOSED));
 			});
 		}
 	});
-	p_eventsToApply.push(new LinkEvent(xEnd1, yEnd1, p_region.endSpaces[0].directionMyRegion, LOOP_STATE.LINKED)); 
-	p_eventsToApply.push(new LinkEvent(xEnd2, yEnd2, p_region.endSpaces[1].directionMyRegion, LOOP_STATE.LINKED));
-	return p_eventsToApply;
+	p_listEventsToApply.push(new LinkEvent(xEnd1, yEnd1, p_region.endSpaces[0].directionMyRegion, LOOP_STATE.LINKED)); 
+	p_listEventsToApply.push(new LinkEvent(xEnd2, yEnd2, p_region.endSpaces[1].directionMyRegion, LOOP_STATE.LINKED));
 }
 
-SolverEntryExit.prototype.buildPatrioticBorderParity = function(p_eventsToApply, p_region) {
+SolverEntryExit.prototype.deductionsBuildPatrioticBorderParity = function(p_listEventsToApply, p_region) {
 	const ir = p_region.index;
 	const xEnd = p_region.endSpaces[0].x;
 	const yEnd = p_region.endSpaces[0].y;
@@ -141,22 +139,9 @@ SolverEntryExit.prototype.buildPatrioticBorderParity = function(p_eventsToApply,
 		y = space.y;
 		if (((x + xEndMod2 + y + yEndMod2) % 2 == parityNumberSpaces) && ((x != xEnd) || (y != yEnd))) {
 			this.otherRegionsDirectionsArray[y][x].forEach(dir => {
-				p_eventsToApply.push(new LinkEvent(x, y, dir, LOOP_STATE.CLOSED));
+				p_listEventsToApply.push(new LinkEvent(x, y, dir, LOOP_STATE.CLOSED));
 			});
 		}
 	});
-	p_eventsToApply.push(new LinkEvent(xEnd, yEnd, p_region.endSpaces[0].directionMyRegion, LOOP_STATE.LINKED));
-	return p_eventsToApply;
+	p_listEventsToApply.push(new LinkEvent(xEnd, yEnd, p_region.endSpaces[0].directionMyRegion, LOOP_STATE.LINKED));
 }
-
-// -------------------
-// Passing
-
-/*function namingCategoryClosure(p_solver) {
-	return function (p_space) {
-		const x = p_space.x;
-		const y = p_space.y;
-		var answer = x+","+y;
-		return answer;
-	}
-}*/

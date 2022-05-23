@@ -22,7 +22,7 @@ SolverPutteria.prototype.construct = function(p_wallArray, p_symbolArray) {
 	this.methodsSetPass = {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
-		argumentToLabelMethod : namingCategoryClosure(this)};
+		argumentToLabelMethod : namingCategoryPassClosure(this)};
 	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsChoicesPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
@@ -181,8 +181,8 @@ SolverPutteria.prototype.makeQuickStart = function() {
 
 SolverPutteria.prototype.emitPassAllRegionsSize = function(p_x, p_y) {
 	const size = this.getRegion(p_x, p_y).size;
-	const generatedEvents = this.generateEventsChoicesForAllRegionsWithThisSize(size);
-	this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, size); 
+	const listPassNow = this.generateEventsChoicesForAllRegionsWithThisSize(size);
+	this.passEvents(listPassNow, this.methodsSetDeductions, this.methodsSetPass, size); 
 }
 
 SolverPutteria.prototype.makeMultiPass = function() {
@@ -236,31 +236,33 @@ function undoEventClosure(p_solver) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Putteria"}];
-		p_solver.regions.forEach(region => {
+		var listQSEvents = [{quickStartLabel : "Putteria"}];
+		var ir, region;
+		for (ir = 0; ir < p_solver.regions.length ; ir++) {
+			region = p_solver.regions[ir];
 			if (region.size == 1) { // 1-sized regions (don't forget them)
-				listQSEvts.push(new SpaceEvent(region.spaces[0].x, region.spaces[0].y, FILLING.YES));
+				listQSEvents.push(new SpaceEvent(region.spaces[0].x, region.spaces[0].y, FILLING.YES));
 			} else if (region.hasANumber) {
 				// Completion & adjacency
 				region.spaces.forEach(coors => {
 					xx = coors.x;
 					yy = coors.y;
 					if (p_solver.answerArray[yy][xx] != FILLING.YES) { // Supposes that there is no more than one number per region at setup
-						listQSEvts.push(new SpaceEvent(xx, yy, FILLING.NO));
+						listQSEvents.push(new SpaceEvent(xx, yy, FILLING.NO));
 					} else {
 						p_solver.existingNeighborsCoors(xx, yy).forEach(coors2 => {
-							listQSEvts.push(new SpaceEvent(coors2.x, coors2.y, FILLING.NO));
+							listQSEvents.push(new SpaceEvent(coors2.x, coors2.y, FILLING.NO));
 						});
-						listQSEvts = p_solver.columnSameSizesFillingNoDeductions(listQSEvts, xx, yy);
-						listQSEvts = p_solver.rowSameSizesFillingNoDeductions(listQSEvts, xx, yy);
+						p_solver.deductionsColumnSameSizesFillingNo(listQSEvents, xx, yy);
+						p_solver.deductionsRowSameSizesFillingNo(listQSEvents, xx, yy);
 					}
 				});
 			} else {
 				// Only possibilities are in a row or a column
-				listQSEvts = p_solver.checkXRegionsDeductions(listQSEvts, region); 
+				p_solver.deductionsCheckXRegions(listQSEvents, region); 
 			}
-		});
-		return listQSEvts;
+		};
+		return listQSEvents;
 	}
 }
 
@@ -268,82 +270,77 @@ quickStartEventsClosure = function(p_solver) {
 // Deductions
 
 function deductionsClosure(p_solver) {
-	return function(p_futureEventsList, p_eventToApply) {
+	return function(p_listEventsToApply, p_eventToApply) {
 		const x = p_eventToApply.x;
 		const y = p_eventToApply.y;
 		if (p_eventToApply.symbol == FILLING.YES) {
 			// Adjacency
 			p_solver.existingNeighborsCoorsDirections(x, y).forEach(coorsDir => {
-				p_futureEventsList.push(new SpaceEvent(coorsDir.x, coorsDir.y, FILLING.NO)); 
+				p_listEventsToApply.push(new SpaceEvent(coorsDir.x, coorsDir.y, FILLING.NO)); 
 			});
 			// Row/column
-			p_futureEventsList = p_solver.columnSameSizesFillingNoDeductions(p_futureEventsList, x, y);
-			p_futureEventsList = p_solver.rowSameSizesFillingNoDeductions(p_futureEventsList, x, y);
+			p_solver.deductionsColumnSameSizesFillingNo(p_listEventsToApply, x, y);
+			p_solver.deductionsRowSameSizesFillingNo(p_listEventsToApply, x, y);
 			// Completion of region
 			const region = p_solver.getRegion(x, y);
 			region.spaces.forEach(coors => {
 				xx = coors.x;
 				yy = coors.y;
 				if (xx != x || yy != y) {
-					p_futureEventsList.push(new SpaceEvent(xx, yy, FILLING.NO));
+					p_listEventsToApply.push(new SpaceEvent(xx, yy, FILLING.NO));
 				}
 			});
 		}
-		return p_futureEventsList;
 	}
 }
 
-SolverPutteria.prototype.columnSameSizesFillingNoDeductions = function(p_eventsList, p_x, p_y) { // Note : not "columnSameSizesXDeductions" to avoid confusion with coordinate X
+SolverPutteria.prototype.deductionsColumnSameSizesFillingNo = function(p_listEventsToApply, p_x, p_y) { // Note : not "columnSameSizesXDeductions" to avoid confusion with coordinate X
 	var y;
 	[DIRECTION.UP, DIRECTION.DOWN].forEach(dir => {
 		y = this.nextNumberPositionArray[p_y][p_x][dir];
 		while(y != null) {
-			p_eventsList.push(new SpaceEvent(p_x, y, FILLING.NO)); 
+			p_listEventsToApply.push(new SpaceEvent(p_x, y, FILLING.NO)); 
 			y = this.nextNumberPositionArray[y][p_x][dir];
 		}		
 	});
-	return p_eventsList;
 }
 
-SolverPutteria.prototype.rowSameSizesFillingNoDeductions = function(p_eventsList, p_x, p_y) {
+SolverPutteria.prototype.deductionsRowSameSizesFillingNo = function(p_listEventsToApply, p_x, p_y) {
 	var x;
 	[DIRECTION.LEFT, DIRECTION.RIGHT].forEach(dir => {
 		x = this.nextNumberPositionArray[p_y][p_x][dir];
 		while(x != null) {
-			p_eventsList.push(new SpaceEvent(x, p_y, FILLING.NO)); 
+			p_listEventsToApply.push(new SpaceEvent(x, p_y, FILLING.NO)); 
 			x = this.nextNumberPositionArray[p_y][x][dir];
 		}		
 	});
-	return p_eventsList;
 }
 
 
-SolverPutteria.prototype.columnSameSizesFillingNoOutOfRegionDeductions = function(p_eventsList, p_x, p_y, p_ir) { // Note : C/C
+SolverPutteria.prototype.deductionsColumnSameSizesFillingNoOutOfRegion = function(p_listEventsToApply, p_x, p_y, p_ir) { // Note : C/C
 	var y;
 	[DIRECTION.UP, DIRECTION.DOWN].forEach(dir => {
 		y = this.nextNumberPositionArray[p_y][p_x][dir];
 		while(y != null) {
 			if (this.regionArray[y][p_x] != p_ir) {				
-				p_eventsList.push(new SpaceEvent(p_x, y, FILLING.NO)); 
+				p_listEventsToApply.push(new SpaceEvent(p_x, y, FILLING.NO)); 
 			}
 			y = this.nextNumberPositionArray[y][p_x][dir];
 		}		
 	});
-	return p_eventsList;
 }
 
-SolverPutteria.prototype.rowSameSizesFillingNoOutOfRegionDeductions = function(p_eventsList, p_x, p_y, p_ir) {
+SolverPutteria.prototype.deductionsRowSameSizesFillingNoOutOfRegion = function(p_listEventsToApply, p_x, p_y, p_ir) {
 	var x;
 	[DIRECTION.LEFT, DIRECTION.RIGHT].forEach(dir => {
 		x = this.nextNumberPositionArray[p_y][p_x][dir];
 		while(x != null) {
 			if (this.regionArray[p_y][x] != p_ir) {				
-				p_eventsList.push(new SpaceEvent(x, p_y, FILLING.NO)); 
+				p_listEventsToApply.push(new SpaceEvent(x, p_y, FILLING.NO)); 
 			}
 			x = this.nextNumberPositionArray[p_y][x][dir];
 		}		
 	});
-	return p_eventsList;
 }	
 
 
@@ -351,7 +348,7 @@ SolverPutteria.prototype.rowSameSizesFillingNoOutOfRegionDeductions = function(p
 // Checks in each region without a FILLING.YES the remaining undecided spaces. 
 // None : failure. One : add an O ; more and they are in the same row/col : add X elsewhere !
 // Used in QS (all deductions) and filter ; only for regions without a number. 
-SolverPutteria.prototype.checkXRegionsDeductions = function(p_eventsList, p_region) {
+SolverPutteria.prototype.deductionsCheckXRegions = function(p_listEventsToApply, p_region) {
 	var xRemain = null;
 	var yRemain = null;
 	var xExample, yExample;
@@ -374,20 +371,20 @@ SolverPutteria.prototype.checkXRegionsDeductions = function(p_eventsList, p_regi
 		}		
 	}
 	if (xRemain == null) {
-		return EVENT_RESULT.FAILURE;
+		p_listEventsToApply.push(new FailureEvent());
+		return;
 	}
 	if (xRemain == -1) {
 		if (yRemain != -1) {
-			p_eventsList = this.rowSameSizesFillingNoOutOfRegionDeductions(p_eventsList, xExample, yRemain, this.regionArray[yRemain][xExample]);
+			this.deductionsRowSameSizesFillingNoOutOfRegion(p_listEventsToApply, xExample, yRemain, this.regionArray[yRemain][xExample]);
 		}
 	} else {
 		if (yRemain == -1) {
-			p_eventsList = this.columnSameSizesFillingNoOutOfRegionDeductions(p_eventsList, xRemain, yExample, this.regionArray[yExample][xRemain]);
+			this.deductionsColumnSameSizesFillingNoOutOfRegion(p_listEventsToApply, xRemain, yExample, this.regionArray[yExample][xRemain]);
 		} else {
-			p_eventsList.push(new SpaceEvent(xRemain, yRemain, FILLING.YES));
+			p_listEventsToApply.push(new SpaceEvent(xRemain, yRemain, FILLING.YES));
 		}
 	}
-	return p_eventsList;
 }
 
 // Filter & abort :
@@ -395,18 +392,18 @@ SolverPutteria.prototype.checkXRegionsDeductions = function(p_eventsList, p_regi
 // This filter : only checks remaining undecided in regions
 filterRegionsClosure = function(p_solver) {
 	return function() {
-		var p_eventsList = [];
+		var listEventsToApply = [];
 		for (var i = 0 ; i < p_solver.checkerRegionsNewX.list.length ; i++) {
 			region = p_solver.regions[p_solver.checkerRegionsNewX.list[i]];
 			if (!region.hasANumber) {
-				p_eventsList = p_solver.checkXRegionsDeductions(p_eventsList, region);
-				if (p_eventsList == EVENT_RESULT.FAILURE) {
-					return p_eventsList;
+				p_solver.deductionsCheckXRegions(listEventsToApply, region);
+				if (isFailed(listEventsToApply)) {
+					return listEventsToApply;
 				}
 			}
 		}
 		p_solver.cleanCheckerRegions();
-		return p_eventsList;
+		return listEventsToApply; 
 	}
 }
 
@@ -447,7 +444,7 @@ SolverPutteria.prototype.generateEventChoiceForRegion = function(p_regIndex) {
 	return p_eventChoice; 
 }
 
-function namingCategoryClosure(p_solver) {
+function namingCategoryPassClosure(p_solver) {
 	return function(p_sizes) {
 		return "All regions with size " + p_sizes;
 	}

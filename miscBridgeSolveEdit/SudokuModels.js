@@ -136,13 +136,13 @@ function getSudokuWallGrid(p_sudokuMode) {
 	const yTotalLength = p_sudokuMode.yTotalLength;
 	const xGridLength = cw * cg; // Note ; xGridLength && yGridLength should be equal in fact...
 	const yGridLength = rh * rg;
-	var answer = WallGrid_dim(xTotalLength, yTotalLength);
+	var result = WallGrid_dim(xTotalLength, yTotalLength);
 	
 	// Close all spaces by default (unless no grid needs to be closed)
 	if (xTotalLength != xGridLength && yTotalLength != yGridLength) {
 		for (var y = 0 ; y < yTotalLength ; y++) {
 			for (var x = 0 ; x < xTotalLength ; x++) {
-				answer.setState(x, y, WALLGRID.CLOSED);
+				result.setState(x, y, WALLGRID.CLOSED);
 			}
 		}
 		
@@ -151,7 +151,7 @@ function getSudokuWallGrid(p_sudokuMode) {
 			const yOrigin = coors.y;
 			for (var x = 0 ; x < xGridLength ; x++) {
 				for (var y = 0 ; y < yGridLength ; y++) {
-					answer.setState(x + xOrigin, y + yOrigin, WALLGRID.OPEN);
+					result.setState(x + xOrigin, y + yOrigin, WALLGRID.OPEN);
 				}
 			}
 		});
@@ -163,17 +163,17 @@ function getSudokuWallGrid(p_sudokuMode) {
 		const yOrigin = coors.y; 
 		for (var x = xOrigin + cw ; x < xOrigin + xGridLength ; x += cw) {
 			for (var y = yOrigin ; y < yOrigin + yGridLength ; y++) {
-				answer.setWallL(x, y, WALLGRID.CLOSED);
+				result.setWallL(x, y, WALLGRID.CLOSED);
 			}
 		}
 
 		for (var y = yOrigin + rh ; y < yOrigin + yGridLength ; y += rh) {
 			for (var x = xOrigin ; x < xOrigin + xGridLength ; x++) {
-				answer.setWallU(x, y, WALLGRID.CLOSED);
+				result.setWallU(x, y, WALLGRID.CLOSED);
 			}
 		}		
 	});
-	return answer;
+	return result;
 }
 
 function sudokuPuzzleName(p_name, p_sudokuMode) {
@@ -181,13 +181,13 @@ function sudokuPuzzleName(p_name, p_sudokuMode) {
 }
 
 function getSudokuIdFromLabel(p_sudokuComboboxValue) {
-	var answer = null;
+	var result = null;
 	Object.keys(SUDOKU_MODE).forEach(id => {
 		if (p_sudokuComboboxValue == SUDOKU_MODE[id].label) {
-			answer = SUDOKU_MODE[id];
+			result = SUDOKU_MODE[id];
 		}
 	});
-	return answer;
+	return result;
 }
 
 function getGridLength(p_gridInfos) {

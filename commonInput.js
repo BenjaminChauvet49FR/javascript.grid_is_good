@@ -5,7 +5,7 @@ View the numbers of puzzle list
 */ 
 // Warning : only properties of local storage that start with "puzzleNamedListToSort" are taken into consideration. Otherwise, local storage has to be looked into !
 function viewPuzzleList(p_puzzleName) {
-    var answer = "Préfixe : "+p_puzzleName+" \n";
+    var resultDisplay = "Préfixe : "+p_puzzleName+" \n";
     var numericListToSort = [];
 	var puzzleNamedListToSort = [];
 	var suffix, intToTest;
@@ -31,31 +31,31 @@ function viewPuzzleList(p_puzzleName) {
         return a - b;
     });
 	if (numericListToSort.length > 0) {
-		answer += "Valeurs numériques : "
+		resultDisplay += "Valeurs numériques : "
 		conditionalComma = "";
 		for (var i = 0; i < numericListToSort.length; i++) {
-			answer += (conditionalComma + numericListToSort[i]);
+			resultDisplay += (conditionalComma + numericListToSort[i]);
 			conditionalComma = ", ";
 		}
 		conditionalBackLine = "\n";
 	} 
 	puzzleNamedListToSort = puzzleNamedListToSort.sort();
 	if (puzzleNamedListToSort.length > 0) {
-		answer += conditionalBackLine+"Valeurs non numériques : ";
+		resultDisplay += conditionalBackLine+"Valeurs non numériques : ";
 		conditionalComma = "";
 		var start = 0;
 		if (puzzleNamedListToSort[0] == "") {// Since the 0 entry may be different, no need for a conditionalComma
-			answer += "<valeur vide>"
+			resultDisplay += "<valeur vide>"
 			conditionalComma = ", ";
 			start = 1;
 		}
 		for (var i = start; i < puzzleNamedListToSort.length; i++) {
-			answer += (conditionalComma + puzzleNamedListToSort[i]);
+			resultDisplay += (conditionalComma + puzzleNamedListToSort[i]);
 			conditionalComma = ", ";
 		}
 		conditionalBackLine = "\n";
 	} 
-    alert(answer);
+    alert(resultDisplay);
 }
 
 /** 

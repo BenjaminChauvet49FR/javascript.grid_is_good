@@ -1,0 +1,56 @@
+The purpose of this doc is to recense everything that is not bound by functions, to make it easier with search in docs for instance.
+The more we go down in this document, the less likely it is to be useful/fully applied. But hey, a bit of organization does more good than harm.
+
+Lists of events to be applied :
+p_listEventsToApply (events chained that are planned) / listEventsToApply (for filters)
+listQSEvents : for quick start  (p_listQSEvents in loop solver and so)
+
+Events :
+p_eventToApply : in application methods
+p_eventBeingApplied : in deduction methods
+p_eventToUndo : in undo methods
+
+List of selection of events :
+listPass / p_listPass : list of "list of events to be chosen from"
+listPassNow : in input methods, list that should be passed in a near future.
+
+Other lists :
+listIndexesPass : indexes list for the pass, should be ordonnated by the end.
+indexPass / p_indexPass : argument for the pass. Given to a method of "list of events to be chosen from". May have a category. May be logged. 
+May be remplaced if there is no category of events, for example if only regions or only spaces are passed (p_indexRegion or p_coors).
+
+List of events to be chosen from :
+listEventsChoice / p_listEventsChoice : List of events one must be chosen from ([FILLING.YES 1,0 , FILLING.NO 1,0] par exemple)
+
+Strings : 
+nameCatPass : Returned variable in the naming of pass categories (rare, we prefer to treat the names directly)
+(non-standardized : logs)
+
+Enums (typically success / failure) : 
+resultDo : standard answer of a "do" event"
+resultDeds : answer of a series of deductions AND global deductions
+resultMP : answer of a multipass
+
+Int : 
+resultUncertain : answer for methods of uncertainity / uncertainity  in pass
+
+Booleans :
+resultToDo : answer to multipassDefineTodoClosure
+
+Methods : 
+generateEventsFor... : génération d'évènements pour une passe. 
+
+Closures :
+namingCategoryPassClosure 
+
+=====
+
+Big thing that may be changed :
+"closure" at the start or at the end of methods
+Name of "puzzle specific" closures in loop solvers.
+
+=====
+Historical (methods that were written once and I'm not sure to discard them) :
+
+loggedSpaceEvent (in SolverNorinori)
+

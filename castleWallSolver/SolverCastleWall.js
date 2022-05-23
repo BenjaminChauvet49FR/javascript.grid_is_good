@@ -48,7 +48,7 @@ SolverCastleWall.prototype.construct = function(p_valueGrid) {
 		
 		generateEventsForPassPS : generateEventsForPassClosure(this),
 		orderedListPassArgumentsPS : orderedListPassArgumentsClosureCastleWall(this),
-		namingCategoryPS : namingCategoryClosure(this),
+		namingCategoryPS : namingCategoryPassClosure(this),
 		multipassPessimismPS : true,
 		comparisonPS : comparisonCastleWallMethod
 	});
@@ -398,10 +398,10 @@ SolverCastleWall.prototype.handleVertLinesNotLinkedClosedYet = function(p_xLinkL
 // Deductions
 
 function otherAtomicDosClosure(p_solver) {
-	return function(p_event) {
-		const x = p_event.xMesh;
-		const y = p_event.yMesh;
-		const position = p_event.position;
+	return function(p_eventToApply) {
+		const x = p_eventToApply.xMesh;
+		const y = p_eventToApply.yMesh;
+		const position = p_eventToApply.position;
 		const oldPos = p_solver.innerOuterRDArray[y][x];
 		if (oldPos == position) {
 			return EVENT_RESULT.HARMLESS;
@@ -415,63 +415,65 @@ function otherAtomicDosClosure(p_solver) {
 }
 
 function otherAtomicUndosClosure(p_solver) {
-	return function(p_event) {
-		p_solver.innerOuterRDArray[p_event.yMesh][p_event.xMesh] = CW_POSITION.UNDECIDED;
+	return function(p_eventToUndo) {
+		p_solver.innerOuterRDArray[p_eventToUndo.yMesh][p_eventToUndo.xMesh] = CW_POSITION.UNDECIDED;
 	}
 }
 
 function setEdgeLinkedDeductionsClosure(p_solver) {
-	return function(p_eventList, p_eventBeingApplied) {
-		return p_solver.positionTransmissionDeductions(p_eventList, p_eventBeingApplied.linkX, p_eventBeingApplied.linkY, p_eventBeingApplied.direction, LOOP_STATE.LINKED);
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		p_solver.deductionsTransmissionPosition(p_listEventsToApply, p_eventBeingApplied.linkX, p_eventBeingApplied.linkY, p_eventBeingApplied.direction, LOOP_STATE.LINKED);
 	}
 }
 
 function setEdgeClosedDeductionsClosure(p_solver) {
-	return function(p_eventList, p_eventBeingApplied) {
-		return p_solver.positionTransmissionDeductions(p_eventList, p_eventBeingApplied.linkX, p_eventBeingApplied.linkY, p_eventBeingApplied.direction, LOOP_STATE.CLOSED);
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		p_solver.deductionsTransmissionPosition(p_listEventsToApply, p_eventBeingApplied.linkX, p_eventBeingApplied.linkY, p_eventBeingApplied.direction, LOOP_STATE.CLOSED);
 	}
 }
 
  // Assumption : xLength and yLength are at least 2. (because of the else after the p_linkX/p_linkY)
-SolverCastleWall.prototype.positionTransmissionDeductions = function(p_eventList, p_linkX, p_linkY, p_dir, p_linkState) {
+SolverCastleWall.prototype.deductionsTransmissionPosition = function(p_listEventsToApply, p_linkX, p_linkY, p_dir, p_linkState) {
 	var position;
 	if (p_dir == DIRECTION.LEFT) {
-		return this.positionTransmissionDeductions(p_eventList, p_linkX-1, p_linkY, DIRECTION.RIGHT, p_linkState);
+		this.deductionsTransmissionPosition(p_listEventsToApply, p_linkX-1, p_linkY, DIRECTION.RIGHT, p_linkState);
+		return;
 	}
 	if (p_dir == DIRECTION.UP) {
-		return this.positionTransmissionDeductions(p_eventList, p_linkX, p_linkY-1, DIRECTION.DOWN, p_linkState);
+		this.deductionsTransmissionPosition(p_listEventsToApply, p_linkX, p_linkY-1, DIRECTION.DOWN, p_linkState);
+		return;
 	}
 	if (p_dir == DIRECTION.RIGHT) {
 		if (p_linkY == 0) {
-			p_eventList.push(new InOutEvent(p_linkX, 0, borderState(p_linkState)));
+			p_listEventsToApply.push(new InOutEvent(p_linkX, 0, borderState(p_linkState)));
+			return;
 		} else if (p_linkY == this.yLength-1) { 
-			p_eventList.push(new InOutEvent(p_linkX, this.yLength-2, borderState(p_linkState)));
+			p_listEventsToApply.push(new InOutEvent(p_linkX, this.yLength-2, borderState(p_linkState)));
+			return;
 		} else {
-			p_eventList = this.transferPositionsDeductions(p_eventList, p_linkX, p_linkY, p_linkX, p_linkY-1, p_linkState);		
+			this.deductionsTransferPositions(p_listEventsToApply, p_linkX, p_linkY, p_linkX, p_linkY-1, p_linkState);		
 		} 
 	} else {
 		if (p_linkX == 0) {
-			p_eventList.push(new InOutEvent(0, p_linkY, borderState(p_linkState)));
+			p_listEventsToApply.push(new InOutEvent(0, p_linkY, borderState(p_linkState)));
 		} else if (p_linkX == this.xLength-1) { 
-			p_eventList.push(new InOutEvent(this.xLength-2, p_linkY, borderState(p_linkState)));
+			p_listEventsToApply.push(new InOutEvent(this.xLength-2, p_linkY, borderState(p_linkState)));
 		} else {
-			p_eventList = this.transferPositionsDeductions(p_eventList, p_linkX, p_linkY, p_linkX-1, p_linkY, p_linkState);			
+			this.deductionsTransferPositions(p_listEventsToApply, p_linkX, p_linkY, p_linkX-1, p_linkY, p_linkState);			
 		} 
 	}
-	return p_eventList;
 }
 
 // Between two meshes, one is known and the other one should be filled according to the link state
-SolverCastleWall.prototype.transferPositionsDeductions = function(p_eventList, p_xMesh1, p_yMesh1, p_xMesh2, p_yMesh2, p_linkState) {
+SolverCastleWall.prototype.deductionsTransferPositions = function(p_listEventsToApply, p_xMesh1, p_yMesh1, p_xMesh2, p_yMesh2, p_linkState) {
 	position = this.innerOuterRDArray[p_yMesh1][p_xMesh1];
 	if (position != CW_POSITION.UNDECIDED) {
-		p_eventList.push(new InOutEvent(p_xMesh2, p_yMesh2, p_linkState == LOOP_STATE.CLOSED ? position : otherCWPosition(position)));
+		p_listEventsToApply.push(new InOutEvent(p_xMesh2, p_yMesh2, p_linkState == LOOP_STATE.CLOSED ? position : otherCWPosition(position)));
 	}
 	position = this.innerOuterRDArray[p_yMesh2][p_xMesh2];
 	if (position != CW_POSITION.UNDECIDED) {
-		p_eventList.push(new InOutEvent(p_xMesh1, p_yMesh1, p_linkState == LOOP_STATE.CLOSED ? position : otherCWPosition(position)));
+		p_listEventsToApply.push(new InOutEvent(p_xMesh1, p_yMesh1, p_linkState == LOOP_STATE.CLOSED ? position : otherCWPosition(position)));
 	}	
-	return p_eventList;
 }
 
 function closedIfSameMeshes(p_position1, p_position2) {
@@ -483,7 +485,7 @@ function borderState(p_linkState) {
 }
 
 function otherDeductionsClosure(p_solver) {
-	return function(p_eventList, p_eventBeingApplied) {
+	return function(p_listEventsToApply, p_eventBeingApplied) {
 		const xMesh = p_eventBeingApplied.xMesh;
 		const yMesh = p_eventBeingApplied.yMesh;
 		const position = p_eventBeingApplied.position;
@@ -492,146 +494,144 @@ function otherDeductionsClosure(p_solver) {
 		if (xMesh > 0) { // Inspecting LEFT
 			position2 = p_solver.innerOuterRDArray[yMesh][xMesh-1];
 			if (position2 != CW_POSITION.UNDECIDED) {
-				p_eventList.push(new LinkEvent(xMesh, yMesh, DIRECTION.DOWN, closedIfSameMeshes(position, position2) ));
+				p_listEventsToApply.push(new LinkEvent(xMesh, yMesh, DIRECTION.DOWN, closedIfSameMeshes(position, position2) ));
 			}
-			p_eventList = solver.diagonalUpDownNodeDifferentPositionsDeductions(p_eventList, xMesh, -1, xMesh, yMesh);
+			solver.deductionsDiagonalUpDownNodeDifferentPositions(p_listEventsToApply, xMesh, -1, xMesh, yMesh);
 			linkState = solver.getLink(xMesh, yMesh, DIRECTION.DOWN);
 			if (linkState != LOOP_STATE.UNDECIDED) {				
-				p_eventList = solver.transferPositionsDeductions(p_eventList, xMesh, yMesh, xMesh-1, yMesh, linkState);
+				solver.deductionsTransferPositions(p_listEventsToApply, xMesh, yMesh, xMesh-1, yMesh, linkState);
 			}
 		} else {
-			p_eventList.push(new LinkEvent(0, yMesh, DIRECTION.DOWN, closedIfSameMeshes(position, CW_POSITION.OUTER) ));
+			p_listEventsToApply.push(new LinkEvent(0, yMesh, DIRECTION.DOWN, closedIfSameMeshes(position, CW_POSITION.OUTER) ));
 		}
 		if (xMesh < p_solver.xLastMeshIndex) { // Inspecting RIGHT
 			position2 = p_solver.innerOuterRDArray[yMesh][xMesh+1];
 			if (position2 != CW_POSITION.UNDECIDED) {
-				p_eventList.push(new LinkEvent(xMesh+1, yMesh, DIRECTION.DOWN, closedIfSameMeshes(position, position2) ));
+				p_listEventsToApply.push(new LinkEvent(xMesh+1, yMesh, DIRECTION.DOWN, closedIfSameMeshes(position, position2) ));
 			}
-			p_eventList = solver.diagonalUpDownNodeDifferentPositionsDeductions(p_eventList, xMesh, +1, xMesh+1, yMesh);
+			solver.deductionsDiagonalUpDownNodeDifferentPositions(p_listEventsToApply, xMesh, +1, xMesh+1, yMesh);
 			linkState = solver.getLink(xMesh+1, yMesh, DIRECTION.DOWN);
 			if (linkState != LOOP_STATE.UNDECIDED) {				
-				p_eventList = solver.transferPositionsDeductions(p_eventList, xMesh, yMesh, xMesh+1, yMesh, linkState);
+				solver.deductionsTransferPositions(p_listEventsToApply, xMesh, yMesh, xMesh+1, yMesh, linkState);
 			}
 		} else {
-			p_eventList.push(new LinkEvent(p_solver.xLength-1, yMesh, DIRECTION.DOWN, closedIfSameMeshes(position, CW_POSITION.OUTER) ));
+			p_listEventsToApply.push(new LinkEvent(p_solver.xLength-1, yMesh, DIRECTION.DOWN, closedIfSameMeshes(position, CW_POSITION.OUTER) ));
 		}
 		
 		if (yMesh > 0) { // Inspecting UP
 			position2 = p_solver.innerOuterRDArray[yMesh-1][xMesh];
 			if (position2 != CW_POSITION.UNDECIDED) {
-				p_eventList.push(new LinkEvent(xMesh, yMesh, DIRECTION.RIGHT, closedIfSameMeshes(position, position2) ));
+				p_listEventsToApply.push(new LinkEvent(xMesh, yMesh, DIRECTION.RIGHT, closedIfSameMeshes(position, position2) ));
 			}
 			linkState = solver.getLink(xMesh, yMesh, DIRECTION.RIGHT);
 			if (linkState != LOOP_STATE.UNDECIDED) {				
-				p_eventList = solver.transferPositionsDeductions(p_eventList, xMesh, yMesh, xMesh, yMesh-1, linkState);
+				solver.deductionsTransferPositions(p_listEventsToApply, xMesh, yMesh, xMesh, yMesh-1, linkState);
 			}
 		} else {
-			p_eventList.push(new LinkEvent(xMesh, 0, DIRECTION.RIGHT, closedIfSameMeshes(position, CW_POSITION.OUTER) ));
+			p_listEventsToApply.push(new LinkEvent(xMesh, 0, DIRECTION.RIGHT, closedIfSameMeshes(position, CW_POSITION.OUTER) ));
 		}
 		if (yMesh < p_solver.yLastMeshIndex) { // Inspecting DOWN
 			position2 = p_solver.innerOuterRDArray[yMesh+1][xMesh];
 			if (position2 != CW_POSITION.UNDECIDED) {
-				p_eventList.push(new LinkEvent(xMesh, yMesh+1, DIRECTION.RIGHT, closedIfSameMeshes(position, position2) ));
+				p_listEventsToApply.push(new LinkEvent(xMesh, yMesh+1, DIRECTION.RIGHT, closedIfSameMeshes(position, position2) ));
 			}
 			linkState = solver.getLink(xMesh, yMesh+1, DIRECTION.RIGHT);
 			if (linkState != LOOP_STATE.UNDECIDED) {
-				p_eventList = solver.transferPositionsDeductions(p_eventList, xMesh, yMesh, xMesh, yMesh+1, linkState);
+				solver.deductionsTransferPositions(p_listEventsToApply, xMesh, yMesh, xMesh, yMesh+1, linkState);
 			}
 		} else {
-			p_eventList.push(new LinkEvent(xMesh, p_solver.yLength-1, DIRECTION.RIGHT, closedIfSameMeshes(position, CW_POSITION.OUTER) ));
+			p_listEventsToApply.push(new LinkEvent(xMesh, p_solver.yLength-1, DIRECTION.RIGHT, closedIfSameMeshes(position, CW_POSITION.OUTER) ));
 		}
-		return p_eventList;
 	}
 }
 
 // We are looking if either (LU and LD separately) or (RU and RD separately) mesh is defined and different. If yes, space yes.
 // Precondition : p_xMesh+p_deltaXMesh is an existing mesh. 
-SolverCastleWall.prototype.diagonalUpDownNodeDifferentPositionsDeductions = function(p_eventList, p_xMesh, p_deltaXMesh, p_xNode, p_yMesh) {
+SolverCastleWall.prototype.deductionsDiagonalUpDownNodeDifferentPositions = function(p_listEventsToApply, p_xMesh, p_deltaXMesh, p_xNode, p_yMesh) {
 	const pos = this.innerOuterRDArray[p_yMesh][p_xMesh];
 	if (pos != CW_POSITION.UNDECIDED) {		
 		var pos2;
 		if (p_yMesh > 0) {
 			pos2 = this.innerOuterRDArray[p_yMesh-1][p_xMesh+p_deltaXMesh];
 			if (pos2 != CW_POSITION.UNDECIDED && pos != pos2) {
-				p_eventList.push(new SpaceEvent(p_xNode, p_yMesh, LOOP_STATE.LINKED));
+				p_listEventsToApply.push(new SpaceEvent(p_xNode, p_yMesh, LOOP_STATE.LINKED));
 			}
 		}
 		if (p_yMesh <= this.yLength-2) {
 			pos2 = this.innerOuterRDArray[p_yMesh+1][p_xMesh+p_deltaXMesh];
 			if (pos2 != CW_POSITION.UNDECIDED && pos != pos2) {
-				p_eventList.push(new SpaceEvent(p_xNode, p_yMesh+1, LOOP_STATE.LINKED));
+				p_listEventsToApply.push(new SpaceEvent(p_xNode, p_yMesh+1, LOOP_STATE.LINKED));
 			}
 		}
 	}
-	return p_eventList;
 }
 
 // -------------------
 // Filters
 
 // The band must be already checked
-SolverCastleWall.prototype.fillHorizLineDeductions = function(p_listEvents, p_item, p_stateToFill) {
+SolverCastleWall.prototype.deductionsFillHorizLine = function(p_listEventsToApply, p_item, p_stateToFill) {
 	const y = p_item.y;
 	for (var xLeft = p_item.firstXLeftLink ; xLeft <= p_item.lastXLeftLink ; xLeft++) {					
 		if (this.getLink(xLeft, y, DIRECTION.RIGHT) == LOOP_STATE.UNDECIDED) {
-			p_listEvents.push(new LinkEvent(xLeft, y, DIRECTION.RIGHT, p_stateToFill));
+			p_listEventsToApply.push(new LinkEvent(xLeft, y, DIRECTION.RIGHT, p_stateToFill));
 		}
 	}
-	return p_listEvents;
 }
 
-SolverCastleWall.prototype.fillVertLineDeductions = function(p_listEvents, p_item, p_stateToFill) {
+SolverCastleWall.prototype.deductionsFillVertLine = function(p_listEventsToApply, p_item, p_stateToFill) {
 	const x = p_item.x;
 	for (var yUp = p_item.firstYUpLink ; yUp <= p_item.lastYUpLink ; yUp++) {					
 		if (this.getLink(x, yUp, DIRECTION.DOWN) == LOOP_STATE.UNDECIDED) {
-			p_listEvents.push(new LinkEvent(x, yUp, DIRECTION.DOWN, p_stateToFill));
+			p_listEventsToApply.push(new LinkEvent(x, yUp, DIRECTION.DOWN, p_stateToFill));
 		}
 	}
-	return p_listEvents;
 }
 
 // Remember : if "not yet" deductions are done at once in a filter, it is necessary to check if a "not yet" counter didn't go below 0 (or beyond its intended value) !!!
 // Unless check was already performed in atomic dos/undos
 function filterStripsClosure(p_solver) {
 	return function() {
-		var listEvents = [];
-		var item, nyl, nyc;
-		p_solver.checkerHorizLink.list.forEach(index => {
-			if (listEvents != EVENT_RESULT.FAILURE) {				
-				item = p_solver.horizLinesList[index];
-				nyl = item.notYet[NOT_YET.LINKED];
-				nyc = item.notYet[NOT_YET.CLOSED];
-				if (nyc < 0 || nyl < 0) {
-					listEvents = EVENT_RESULT.FAILURE;
-				} else {				
-					if (nyc == 0) {
-						listEvents = p_solver.fillHorizLineDeductions(listEvents, item, LOOP_STATE.LINKED);
-					}
-					if (nyl == 0) {
-						listEvents = p_solver.fillHorizLineDeductions(listEvents, item, LOOP_STATE.CLOSED);
-					}			
+		var listEventsToApply = []; 
+		var item, nyl, nyc, index;
+		for (var i = 0 ; i < p_solver.checkerHorizLink.list.length ; i++) {
+			index = p_solver.checkerHorizLink.list[i];
+			item = p_solver.horizLinesList[index];
+			nyl = item.notYet[NOT_YET.LINKED];
+			nyc = item.notYet[NOT_YET.CLOSED];
+			if (nyc < 0 || nyl < 0) {
+				listEventsToApply = FILTER_FAILURE;
+				break;
+			} else {				
+				if (nyc == 0) {
+					p_solver.deductionsFillHorizLine(listEventsToApply, item, LOOP_STATE.LINKED);
 				}
+				if (nyl == 0) {
+					p_solver.deductionsFillHorizLine(listEventsToApply, item, LOOP_STATE.CLOSED);
+				}			
 			}
-		});
-		p_solver.checkerVertLink.list.forEach(index => {
-			if (listEvents != EVENT_RESULT.FAILURE) {	
+		};
+		if (listEventsToApply != FILTER_FAILURE) {			
+			for (var i = 0 ; i < p_solver.checkerVertLink.list.length ; i++) {
+				index = p_solver.checkerVertLink.list[i];	
 				item = p_solver.vertLinesList[index];
 				nyl = item.notYet[NOT_YET.LINKED];
 				nyc = item.notYet[NOT_YET.CLOSED];
 				if (nyc < 0 || nyl < 0) {
-					listEvents = EVENT_RESULT.FAILURE;
+					listEventsToApply = FILTER_FAILURE;
+					break;
 				} else {				
 					if (nyc == 0) {
-						listEvents = p_solver.fillVertLineDeductions(listEvents, item, LOOP_STATE.LINKED);
+						p_solver.deductionsFillVertLine(listEventsToApply, item, LOOP_STATE.LINKED);
 					}
 					if (nyl == 0) {
-						listEvents = p_solver.fillVertLineDeductions(listEvents, item, LOOP_STATE.CLOSED);
+						p_solver.deductionsFillVertLine(listEventsToApply, item, LOOP_STATE.CLOSED);
 					}			
 				}
-			}
-		});
+			};
+		}
 		p_solver.cleanCheckStrips();
-		return listEvents;
+		return listEventsToApply;
 	}
 }
 
@@ -650,8 +650,8 @@ abortCastleWallClosure = function(p_solver) {
 // Quickstart
 
 quickStartEventsClosure = function(p_solver) {
-	return function(p_QSeventsList) { 
-		p_QSeventsList.push({quickStartLabel : "Castle wall"});
+	return function(p_listQSEvents) { 
+		p_listQSEvents.push({quickStartLabel : "Castle wall"});
 		var existLeft, existUp, existRight, existDown, position, x, y;
 		p_solver.obstaclesNodes.forEach(coors => {
 			x = coors.x;
@@ -663,93 +663,92 @@ quickStartEventsClosure = function(p_solver) {
 			existDown = p_solver.neighborExists(x, y, DIRECTION.DOWN);
 			if (existUp) {
 				if (existLeft) {
-					p_QSeventsList.push(new InOutEvent(x-1, y-1, position));
+					p_listQSEvents.push(new InOutEvent(x-1, y-1, position));
 				}
 				if (existRight) {
-					p_QSeventsList.push(new InOutEvent(x, y-1, position));
+					p_listQSEvents.push(new InOutEvent(x, y-1, position));
 				}
 			}					
 			if (existDown) {
 				if (existLeft) {
-					p_QSeventsList.push(new InOutEvent(x-1, y, position));
+					p_listQSEvents.push(new InOutEvent(x-1, y, position));
 				}
 				if (existRight) {
-					p_QSeventsList.push(new InOutEvent(x, y, position));
+					p_listQSEvents.push(new InOutEvent(x, y, position));
 				}
 			}
 		});
 		p_solver.horizLinesList.forEach(item => {
 			if (item.notYet[NOT_YET.CLOSED] == 0) {
-				p_QSeventsList = p_solver.fillHorizLineDeductions(p_QSeventsList, item, LOOP_STATE.LINKED);
+				p_solver.deductionsFillHorizLine(p_listQSEvents, item, LOOP_STATE.LINKED);
 			}
 			if (item.notYet[NOT_YET.LINKED] == 0) {
-				p_QSeventsList = p_solver.fillHorizLineDeductions(p_QSeventsList, item, LOOP_STATE.CLOSED);
+				p_solver.deductionsFillHorizLine(p_listQSEvents, item, LOOP_STATE.CLOSED);
 			}	
 		});
 		p_solver.vertLinesList.forEach(item => {
 			if (item.notYet[NOT_YET.CLOSED] == 0) {
-				p_QSeventsList = p_solver.fillVertLineDeductions(p_QSeventsList, item, LOOP_STATE.LINKED);
+				p_solver.deductionsFillVertLine(p_listQSEvents, item, LOOP_STATE.LINKED);
 			}
 			if (item.notYet[NOT_YET.LINKED] == 0) {
-				p_QSeventsList = p_solver.fillVertLineDeductions(p_QSeventsList, item, LOOP_STATE.CLOSED);
+				p_solver.deductionsFillVertLine(p_listQSEvents, item, LOOP_STATE.CLOSED);
 			}	
 		}); 
-		return p_QSeventsList;
 	}
 }
 
 // -------------------
-// Passing & multipassing (copied onto Yajikabe)
+// Passing & multipassing 
 		
 generateEventsForPassClosure = function (p_solver) {
-	return function (p_indexFamily) {
-		return p_solver.passLine(p_indexFamily);
+	return function (p_indexPass) {
+		return p_solver.passLine(p_indexPass);
 	}
 }
 
-SolverCastleWall.prototype.passLine = function(p_indexFamily) {
+SolverCastleWall.prototype.passLine = function(p_indexPass) {
 	var union, x, y;
-	var answer = [];
-	if (p_indexFamily.passCategory == LOOP_PASS_CATEGORY.CW_HORIZ) {
-		union = this.horizUnions[p_indexFamily.index];
+	var listPass = [];
+	if (p_indexPass.passCategory == LOOP_PASS_CATEGORY.CW_HORIZ) {
+		union = this.horizUnions[p_indexPass.index];
 		y = union.y;
 		for (x = union.xMin ; x <= union.xMax; x++) {
 			if (this.getLink(x, y, DIRECTION.RIGHT) == LOOP_STATE.UNDECIDED) {
-				answer.push([new LinkEvent(x, y, DIRECTION.RIGHT, LOOP_STATE.LINKED), new LinkEvent(x, y, DIRECTION.RIGHT, LOOP_STATE.CLOSED)]);
+				listPass.push([new LinkEvent(x, y, DIRECTION.RIGHT, LOOP_STATE.LINKED), new LinkEvent(x, y, DIRECTION.RIGHT, LOOP_STATE.CLOSED)]);
 			}
 		}
 	} else {
-		union = this.vertUnions[p_indexFamily.index];
+		union = this.vertUnions[p_indexPass.index];
 		x = union.x;
 		for (y = union.yMin ; y <= union.yMin; y++) {
 			if (this.getLink(x, y, DIRECTION.DOWN) == LOOP_STATE.UNDECIDED) {
-				answer.push([new LinkEvent(x, y, DIRECTION.DOWN, LOOP_STATE.LINKED), new LinkEvent(x, y, DIRECTION.DOWN, LOOP_STATE.CLOSED)]);
+				listPass.push([new LinkEvent(x, y, DIRECTION.DOWN, LOOP_STATE.LINKED), new LinkEvent(x, y, DIRECTION.DOWN, LOOP_STATE.CLOSED)]);
 			}
 		}
 	}
-	return answer;
+	return listPass;
 }
 
 orderedListPassArgumentsClosureCastleWall = function(p_solver) {
 	return function() {
-		var answer = [];
+		var listIndexesPass = [];
 		for (var i = 0 ; i < p_solver.horizUnions.length ; i++) {
-			answer.push({passCategory : LOOP_PASS_CATEGORY.CW_HORIZ, index : i});
+			listIndexesPass.push({passCategory : LOOP_PASS_CATEGORY.CW_HORIZ, index : i});
 		}
 		for (var i = 0 ; i < p_solver.vertUnions.length ; i++) {
-			answer.push({passCategory : LOOP_PASS_CATEGORY.CW_VERT, index : i});
+			listIndexesPass.push({passCategory : LOOP_PASS_CATEGORY.CW_VERT, index : i});
 		}
-		return answer;
+		return listIndexesPass;
 	}
 }
 
-namingCategoryClosure = function(p_solver) {
-	return function(p_passIndex) {
-		if (p_passIndex.passCategory == LOOP_PASS_CATEGORY.CW_HORIZ) {
-			var item = p_solver.horizUnions[p_passIndex.index];
+namingCategoryPassClosure = function(p_solver) {
+	return function(p_indexPass) {
+		if (p_indexPass.passCategory == LOOP_PASS_CATEGORY.CW_HORIZ) {
+			var item = p_solver.horizUnions[p_indexPass.index];
 			return "Horiz.line " + item.xMin + "-" + item.xMax + "," + item.y;
 		} else {
-			var item = p_solver.vertUnions[p_passIndex.index];
+			var item = p_solver.vertUnions[p_indexPass.index];
 			return "Vert.line " + item.x + "," + item.yMin + "-" + item.yMax;
 		}
 	}

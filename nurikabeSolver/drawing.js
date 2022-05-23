@@ -2,7 +2,7 @@
 Draws what's inside spaces 
 */
 function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver) {
-	var items = [DrawableColor(p_coloursSet.openSpace)];
+	var items = [DrawableColour(p_coloursSet.openSpace)];
 	function selection(x, y) {
 		if(p_solver.getAnswer(x, y) == NURIKABE_SEA) {
 			return 0;

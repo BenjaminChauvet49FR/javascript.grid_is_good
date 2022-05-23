@@ -2,7 +2,7 @@
 Draws what's inside spaces 
 */
 function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver, p_purificator, p_selectionSet) {
-	const bgSelectionItems = [DrawableColor(p_coloursSet.selectedSpace), DrawableColor(p_coloursSet.selectedCornerSpace)];
+	const bgSelectionItems = [DrawableColour(p_coloursSet.selectedSpace), DrawableColour(p_coloursSet.selectedCornerSpace)];
 	bgSelectionSelection = function(x, y) {
 		if (p_solver.getGridIndexes(x, y).length == 0) { // If it's out of regions, basically
 			return -1;
@@ -14,7 +14,7 @@ function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver, p_purific
 	
 	if (p_purificator.isActive) {
 		// Purify mode
-		var itemsPur = [DrawableColor(p_coloursSet.purification)]; 
+		var itemsPur = [DrawableColour(p_coloursSet.purification)]; 
 		function selectionSolverAndPurificator(x, y) {
 			switch(p_purificator.getPurificatorSpaceIfDifferent(x, y)) {
 				case null : return 0; // Remember : 'null' is when the new value is null !

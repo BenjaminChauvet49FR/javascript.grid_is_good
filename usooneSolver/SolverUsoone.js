@@ -23,7 +23,7 @@ SolverUsoone.prototype.construct = function (p_wallArray, p_numberArray) {
 			transformClosure(this), 
 			undoEventClosure(this)));
 	
-	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryPassClosure(this)};
 	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForNumbersSetsClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
@@ -119,8 +119,8 @@ SolverUsoone.prototype.makeQuickStart = function () {
 SolverUsoone.prototype.emitPass = function(p_x, p_y) {
 	if (this.getNumber(p_x, p_y) != null) {
 		const index = this.numberManagementArray[p_y][p_x].index;
-		const generatedEvents = this.generateEventsForNumbersSets(index);
-		this.passEvents(generatedEvents, index); 
+		const listPassNow = this.generateEventsForNumbersSets(index);
+		this.passEvents(listPassNow, index); 
 	}
 }
 
@@ -175,11 +175,11 @@ SolverUsoone.prototype.putTruth = function(p_x, p_y, p_truth) {
 }
 
 applyEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		if (isSpaceEvent(eventToApply)) {			
-			return p_solver.putNew(eventToApply.x, eventToApply.y, eventToApply.symbol);
+	return function(p_eventToApply) {
+		if (isSpaceEvent(p_eventToApply)) {			
+			return p_solver.putNew(p_eventToApply.x, p_eventToApply.y, p_eventToApply.symbol);
 		} else {
-			return p_solver.putTruth(eventToApply.x, eventToApply.y, eventToApply.truth);
+			return p_solver.putTruth(p_eventToApply.x, p_eventToApply.y, p_eventToApply.truth);
 		}
 	}
 }
@@ -236,26 +236,26 @@ transformClosure = function (p_solver) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Usoone"}]
+		var listQSEvents = [{quickStartLabel : "Usoone"}]
 		p_solver.numbersSets.forEach(numberSet => {
 			if (numberSet.coors.length == 1) {
 				x = numberSet.coors[0].x; 
 				y = numberSet.coors[0].y;
-				listQSEvts.push(new TruthEvent(x, y, USOONE.LIE));
+				listQSEvents.push(new TruthEvent(x, y, USOONE.LIE));
 			} else {
 				numberSet.coors.forEach(myCoors => {
 					x = myCoors.x; 
 					y = myCoors.y;
 					if (notEnoughSurroundingUndecidedToMeet(p_solver.numberManagementArray[y][x])) {							
-						listQSEvts.push(new TruthEvent(x, y, USOONE.LIE));
+						listQSEvents.push(new TruthEvent(x, y, USOONE.LIE));
 					}
 					if (p_solver.numberManagementArray[y][x].value == 0 && p_solver.numberManagementArray[y][x].adjacentUndecideds == 0 && p_solver.numberManagementArray[y][x].adjacentCloseds == 0) {
-						listQSEvts.push(new TruthEvent(x, y, USOONE.TRUTH)); // Puzzle 26 : a 0 is fully surrounded by numbered spaces and should then be labelled true for QS.
+						listQSEvents.push(new TruthEvent(x, y, USOONE.TRUTH)); // Puzzle 26 : a 0 is fully surrounded by numbered spaces and should then be labelled true for QS.
 					}
 				});
 			}
 		});
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -282,12 +282,12 @@ deductionsClosure = function (p_solver) {
 						if (tooManySurroundingCloseds(numbMgmtAround)) {							
 							p_listEventsToApply.push(new TruthEvent(xx, yy, USOONE.LIE));
 						} else {
-							p_listEventsToApply = p_solver.deductionsDeclareSpaceTrue(p_listEventsToApply, xx, yy, numbMgmtAround);
+							p_solver.deductionsDeclareSpaceTrue(p_listEventsToApply, xx, yy, numbMgmtAround);
 							numbMgmtAround = p_solver.numberManagementArray[yy][xx];
 							if (numbMgmtAround.truth == USOONE.TRUTH && allClosedSpacesAroundPlaced(numbMgmtAround)) {
-								p_listEventsToApply = p_solver.deductionsFillingSurroundingsUsoone(p_listEventsToApply, xx, yy, ADJACENCY.YES);
+								p_solver.deductionsFillingSurroundingsUsoone(p_listEventsToApply, xx, yy, ADJACENCY.YES);
 							} else if (numbMgmtAround.truth == USOONE.LIE && p_solver.numberManagementArray[yy][xx].adjacentUndecideds == 1) {
-								p_listEventsToApply = p_solver.deductionsSolveSurroundingsLyingSpace(p_listEventsToApply, xx, yy);
+								p_solver.deductionsSolveSurroundingsLyingSpace(p_listEventsToApply, xx, yy);
 							}
 						}
 					}
@@ -301,11 +301,11 @@ deductionsClosure = function (p_solver) {
 						if (notEnoughSurroundingUndecidedToMeet(numbMgmtAround)) {							
 							p_listEventsToApply.push(new TruthEvent(xx, yy, USOONE.LIE));
 						} else {							
-							p_listEventsToApply = p_solver.deductionsDeclareSpaceTrue(p_listEventsToApply, xx, yy, numbMgmtAround);
+							p_solver.deductionsDeclareSpaceTrue(p_listEventsToApply, xx, yy, numbMgmtAround);
 							if (numbMgmtAround.truth == USOONE.TRUTH && allOpenSpacesAroundPlaced(numbMgmtAround)) {
-								p_listEventsToApply = p_solver.deductionsFillingSurroundingsUsoone(p_listEventsToApply, xx, yy, ADJACENCY.NO);
+								p_solver.deductionsFillingSurroundingsUsoone(p_listEventsToApply, xx, yy, ADJACENCY.NO);
 							} else if (numbMgmtAround.truth == USOONE.LIE && p_solver.numberManagementArray[yy][xx].adjacentUndecideds == 1) {
-								p_listEventsToApply = p_solver.deductionsSolveSurroundingsLyingSpace(p_listEventsToApply, xx, yy);
+								p_solver.deductionsSolveSurroundingsLyingSpace(p_listEventsToApply, xx, yy);
 							}
 						}
 					}
@@ -319,32 +319,31 @@ deductionsClosure = function (p_solver) {
 			var numbersSet = p_solver.numbersSets[numbMgmt.index];
 			if (t == USOONE.TRUTH) {
 				if (numbersSet.notPlacedTrueYet == 0) { // One lying space per region
-					p_listEventsToApply = p_solver.deductionsFillingNumbersSet(p_listEventsToApply, numbersSet, USOONE.LIE);
+					p_solver.deductionsFillingNumbersSet(p_listEventsToApply, numbersSet, USOONE.LIE);
 				}
 				if (notEnoughSurroundingUndecidedToMeet(numbMgmt) || tooManySurroundingCloseds(numbMgmt)) {
 					p_listEventsToApply.push(new FailureEvent()); // Failure !
 				}
 				// Let's fill with what's missing !
 				if (allClosedSpacesAroundPlaced(numbMgmt)) { 
-					p_listEventsToApply = p_solver.deductionsFillingSurroundingsUsoone(p_listEventsToApply, x, y, ADJACENCY.YES);
+					p_solver.deductionsFillingSurroundingsUsoone(p_listEventsToApply, x, y, ADJACENCY.YES);
 				}
 				if (allOpenSpacesAroundPlaced(numbMgmt)) {
-					p_listEventsToApply = p_solver.deductionsFillingSurroundingsUsoone(p_listEventsToApply, x, y, ADJACENCY.NO);
+					p_solver.deductionsFillingSurroundingsUsoone(p_listEventsToApply, x, y, ADJACENCY.NO);
 				}
 			} else if (t == USOONE.LIE) {
 				if (numbersSet.notPlacedFalseYet == 0) { // One lying space per region
-					p_listEventsToApply = p_solver.deductionsFillingNumbersSet(p_listEventsToApply, numbersSet, USOONE.TRUTH);
+					p_solver.deductionsFillingNumbersSet(p_listEventsToApply, numbersSet, USOONE.TRUTH);
 				}
 				if (numbMgmt.adjacentUndecideds == 0 && allClosedSpacesAroundPlaced(numbMgmt)) { // Failure !
 					p_listEventsToApply.push(new FailureEvent()); 
 				}
 				// Let's solve the fakes !
 				if (numbMgmt.adjacentUndecideds == 1) {
-					p_listEventsToApply = p_solver.deductionsSolveSurroundingsLyingSpace(p_listEventsToApply, x, y);
+					p_solver.deductionsSolveSurroundingsLyingSpace(p_listEventsToApply, x, y);
 				}
 			}
 		}
-		return p_listEventsToApply
 	}	
 }
 
@@ -352,7 +351,6 @@ SolverUsoone.prototype.deductionsDeclareSpaceTrue = function(p_listEventsToApply
 	if ((p_numberMgmtAround.value == p_numberMgmtAround.adjacentCloseds) && p_numberMgmtAround.adjacentUndecideds == 0) {
 		p_listEventsToApply.push(new TruthEvent(p_x, p_y, USOONE.TRUTH));
 	}
-	return p_listEventsToApply;
 }
 
 // Closures required instead of "this" since functions are defined here !
@@ -363,7 +361,7 @@ function closureEventTruth (p_truth) { return function(p_x, p_y) { return new Tr
 function closureEventSpace (p_adjacency) { return function(p_x, p_y) { return new SpaceEvent(p_x, p_y, p_adjacency)}} ;
 
 SolverUsoone.prototype.deductionsFillingNumbersSet = function(p_listEventsToApply, p_numbersSet, p_value) {
-	return this.fillingSetSpaceDeductions(p_listEventsToApply, p_numbersSet.coors, closureSpaceTruth(this), USOONE.UNDECIDED, closureEventTruth(p_value));
+	return this.deductionsFillingSetSpace(p_listEventsToApply, p_numbersSet.coors, closureSpaceTruth(this), USOONE.UNDECIDED, closureEventTruth(p_value));
 }
 
 SolverUsoone.prototype.deductionsFillingSurroundingsUsoone = function(p_listEventsToApply, p_x, p_y, p_value) {
@@ -375,11 +373,10 @@ SolverUsoone.prototype.deductionsSolveSurroundingsLyingSpace = function(p_listEv
 	const numb = this.numberManagementArray[p_y][p_x].value;
 	const closeds = this.numberManagementArray[p_y][p_x].adjacentCloseds;
 	if (numb == closeds + 1) {
-		p_listEventsToApply = this.deductionsFillingSurroundings(p_listEventsToApply, p_x, p_y, closureSpaceSpace(this), ADJACENCY.UNDECIDED, closureEventSpace(ADJACENCY.YES));
+		this.deductionsFillingSurroundings(p_listEventsToApply, p_x, p_y, closureSpaceSpace(this), ADJACENCY.UNDECIDED, closureEventSpace(ADJACENCY.YES));
 	} else if (numb == closeds) {
-		p_listEventsToApply = this.deductionsFillingSurroundings(p_listEventsToApply, p_x, p_y, closureSpaceSpace(this), ADJACENCY.UNDECIDED, closureEventSpace(ADJACENCY.NO));
+		this.deductionsFillingSurroundings(p_listEventsToApply, p_x, p_y, closureSpaceSpace(this), ADJACENCY.UNDECIDED, closureEventSpace(ADJACENCY.NO));
 	}
-	return p_listEventsToApply;
 }
 
 // Methods useful for deductions
@@ -414,24 +411,24 @@ comparison = function(p_event1, p_event2) {
 	kind1, kind2);
 }
 
-namingCategoryClosure = function(p_solver) {
-	return function (p_index) {
-		const firstSpaceCoors = p_solver.numbersSets[p_index].coors[0];
-		return "Region " + p_index + " (" + firstSpaceCoors.x + "," + firstSpaceCoors.y + ")"; 
+namingCategoryPassClosure = function(p_solver) {
+	return function (p_indexPass) {
+		const firstSpaceCoors = p_solver.numbersSets[p_indexPass].coors[0];
+		return "Region " + p_indexPass + " (" + firstSpaceCoors.x + "," + firstSpaceCoors.y + ")"; 
 	}
 }
 
 generateEventsForNumbersSetsClosure = function(p_solver) {
-	return function(p_index) {
-		return p_solver.generateEventsForNumbersSets(p_index);
+	return function(p_indexPass) {
+		return p_solver.generateEventsForNumbersSets(p_indexPass);
 	}
 }
 
-SolverUsoone.prototype.generateEventsForNumbersSets = function(p_index) {
+SolverUsoone.prototype.generateEventsForNumbersSets = function(p_indexPass) {
 	var spaceCoorsX = [];
 	var spaceCoorsY = [];
 	var x, y;
-	this.numbersSets[p_index].coors.forEach(myCoors => {
+	this.numbersSets[p_indexPass].coors.forEach(myCoors => {
 		this.existingNeighborsCoorsDirections(myCoors.x, myCoors.y).forEach(coorsAround => {
 			x = coorsAround.x;
 			y = coorsAround.y;
@@ -439,19 +436,19 @@ SolverUsoone.prototype.generateEventsForNumbersSets = function(p_index) {
 			spaceCoorsY.push(coorsAround.y); // Note : greedy algorithm : ALL spaces around are added, even already open ones, and spaces can be added several times !
 		});
 	});
-	var answer = [];
+	var listPass = [];
 	for (var i = 0 ; i < spaceCoorsX.length ; i++) {		
-		answer.push([new SpaceEvent(spaceCoorsX[i], spaceCoorsY[i], ADJACENCY.NO), new SpaceEvent(spaceCoorsX[i], spaceCoorsY[i], ADJACENCY.YES)]);
+		listPass.push([new SpaceEvent(spaceCoorsX[i], spaceCoorsY[i], ADJACENCY.NO), new SpaceEvent(spaceCoorsX[i], spaceCoorsY[i], ADJACENCY.YES)]);
 	}
-	return answer;
+	return listPass; 
 }
 
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		answer = [];
+		listIndexesPass = [];
 		for (var i = 0 ; i < p_solver.numbersSetsNumber ; i++) {
-			answer.push(i);
+			listIndexesPass.push(i);
 		}
-		return answer;
+		return listIndexesPass; 
 	}
 }

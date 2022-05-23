@@ -13,27 +13,27 @@ function logTapaResult(p_array) {
 		autoLogDebug(p_array);
 		return;
 	}
-	var answer = "";
+	var resultLog = "";
 	p_array.forEach(tapass => {
 		switch(tapass) {
-			case TAPASS.YES : answer += "O"; break;
-			case TAPASS.NO : answer += "X"; break;
-			default : answer += "-"; break;
+			case TAPASS.YES : resultLog += "O"; break;
+			case TAPASS.NO : resultLog += "X"; break;
+			default : resultLog += "-"; break;
 		}
 	});
-	autoLogDebug(answer);
+	autoLogDebug(resultLog);
 }
 
 function stringToTaparray(p_string) {
-	var answer = [];
+	var resultLog = [];
 	for (var i = 0; i < p_string.length ; i++) {
 		switch(p_string.charAt(i)) {
-			case 'O' : answer.push(TAPASS.YES); break;
-			case 'X' : answer.push(TAPASS.NO); break;
-			default : answer.push(TAPASS.UNDECIDED); break;
+			case 'O' : resultLog.push(TAPASS.YES); break;
+			case 'X' : resultLog.push(TAPASS.NO); break;
+			default : resultLog.push(TAPASS.UNDECIDED); break;
 		}
 	}
-	return answer;
+	return resultLog;
 }
 
 
@@ -49,13 +49,13 @@ function tapass(p_numbers, p_taparray) {
 		if (p_numbers[4] == 8) {
 			return [];
 		} else {			
-			return EVENT_RESULT.FAILURE;
+			return DEDUCTIONS_RESULT.FAILURE;
 		}
 	}
 	var consecutiveOs = p_taparray.length-1-rightMostNoO;
 	
 	tapaIndexes = [];
-	tapaIntersector = EVENT_RESULT.FAILURE;
+	tapaIntersector = DEDUCTIONS_RESULT.FAILURE;
 	for (var i = 0 ; i < p_taparray.length ; i++) {
 		if (p_taparray[i] == TAPASS.UNDECIDED) {
 			tapaIndexes.push(i);
@@ -81,15 +81,15 @@ function tapassAnnex(p_numbers, p_taparray, p_indexToPass, p_closedRight, p_cons
 		if (numbers[4] < p_consecutiveOs && numbers[0] == 0) 
 	    { 
 			if (p_consecutiveOs > 3) {				
-				return EVENT_RESULT.FAILURE;
+				return DEDUCTIONS_RESULT.FAILURE;
 			}
 			if (numbers[3] == 0) {
 				if (p_consecutiveOs == 3) {
-					return EVENT_RESULT.FAILURE;
+					return DEDUCTIONS_RESULT.FAILURE;
 				}
 				if (numbers[2] == 0) {
 					if (p_consecutiveOs == 2 || numbers[1] == 0) {
-						return EVENT_RESULT.FAILURE;
+						return DEDUCTIONS_RESULT.FAILURE;
 					}
 				}
 			}
@@ -110,15 +110,15 @@ function tapassAnnex(p_numbers, p_taparray, p_indexToPass, p_closedRight, p_cons
 			}
 			numberOsLastChain = taparray.length - 1 - rightMostNoO + leftMostNoO;
 			numbers = closeTheNumber(numbers, numberOsLastChain);
-			if (numbers == EVENT_RESULT.FAILURE) {
-				return EVENT_RESULT.FAILURE;
+			if (numbers == DEDUCTIONS_RESULT.FAILURE) {
+				return DEDUCTIONS_RESULT.FAILURE;
 			}
 		}
 		
 		// All chains have been managed. Are all at 0 ? Time to check !
 		for (var i = 0 ; i <= 4 ; i++) {
 			if (numbers[i] != 0) {
-				return EVENT_RESULT.FAILURE;
+				return DEDUCTIONS_RESULT.FAILURE;
 			}
 		}
 		
@@ -145,8 +145,8 @@ function tapassAnnex(p_numbers, p_taparray, p_indexToPass, p_closedRight, p_cons
 			if (!stillOpen) {
 				// It's time to count this tapa chain !
 				numbers = closeTheNumber(numbers, p_consecutiveOs);
-				if (numbers == EVENT_RESULT.FAILURE) {
-					return EVENT_RESULT.FAILURE;
+				if (numbers == DEDUCTIONS_RESULT.FAILURE) {
+					return DEDUCTIONS_RESULT.FAILURE;
 				}
 			}
 			return tapassAnnex(numbers, taparray, p_indexToPass+1, p_closedRight, 0);
@@ -172,8 +172,8 @@ function tapassAnnex(p_numbers, p_taparray, p_indexToPass, p_closedRight, p_cons
 	if (!stillOpen) {
 		// It's time to count this tapa chain !
 		numbers = closeTheNumber(numbers, p_consecutiveOs);
-		if (numbers == EVENT_RESULT.FAILURE) {
-			return EVENT_RESULT.FAILURE;
+		if (numbers == DEDUCTIONS_RESULT.FAILURE) {
+			return DEDUCTIONS_RESULT.FAILURE;
 		}
 	}	
 	tapassAnnex(numbers, taparray, p_indexToPass + 1, p_closedRight, 0);
@@ -194,7 +194,7 @@ function closeTheNumber(p_numbers, p_numberToClose) {
 		if (p_numbers[4] == p_numberToClose) {
 			p_numbers[4] = 0;
 		} else if (p_numbers[0] == 0) {
-			return EVENT_RESULT.FAILURE;
+			return DEDUCTIONS_RESULT.FAILURE;
 		} else {
 			p_numbers[0]--;
 		}
@@ -203,7 +203,7 @@ function closeTheNumber(p_numbers, p_numberToClose) {
 		if (p_numbers[p_numberToClose] == 0 && p_numbers[0] > 0) {
 			p_numbers[0]--;
 		} else if (p_numbers[p_numberToClose] == 0) {
-			return EVENT_RESULT.FAILURE;
+			return DEDUCTIONS_RESULT.FAILURE;
 		} else {
 			p_numbers[p_numberToClose]--;
 		}
@@ -213,7 +213,7 @@ function closeTheNumber(p_numbers, p_numberToClose) {
 
 // p_fullTaparray = full tapa array resulting of a "winning combination"
 function intersectWinningCombination(p_fullTaparray) {
-	if (tapaIntersector == EVENT_RESULT.FAILURE) {
+	if (tapaIntersector == DEDUCTIONS_RESULT.FAILURE) {
 		tapaIntersector = p_fullTaparray;
 		return;
 	} 

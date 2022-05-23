@@ -9,18 +9,18 @@ function main() {
 	var actionsManager = {}; 
 	var drawIndications;
 
-	var colors = {
-		whiteTriangle : '#cceeff',
-		blackTriangle : '#000000',
-		bannedSpace : '#000044',
-		numberWrite : '#ffff88',
+	var colours = {
+		whiteTriangle : COLOURS.SHAKASHAKA_WHITE_TRIANGLE,
+		blackTriangle : COLOURS.SHAKASHAKA_BLACK_TRIANGLE,
+		bannedSpace :   COLOURS.SHAKASHAKA_BANNED_SPACE,
+		numberWrite :   COLOURS.STANDARD_CLOSED_WRITE, 
 	}
 
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
 		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength); 
-		drawInsideSpacesAutonomous(context, drawer, colors, solver);
+		drawInsideSpacesAutonomous(context, drawer, colours, solver);
 		solver.callStateForItem(spanState);
 	}
 	setInterval(drawCanvas, 30);

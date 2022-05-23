@@ -22,7 +22,7 @@ SolverKuromasu.prototype.construct = function(p_numbersXArray, p_isCorral) {
 	this.methodsSetPass = {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
-		argumentToLabelMethod : namingCategoryClosure(this)};
+		argumentToLabelMethod : namingCategoryPassClosure(this)};
 	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForSpacePassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
@@ -35,7 +35,7 @@ SolverKuromasu.prototype.construct = function(p_numbersXArray, p_isCorral) {
 			transformClosure(this), 
 			undoEventClosure(this)));
 
-	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filtersUpdateMinsFromNewlyOpenSpaces(this), filtersMinMaxClosure(this), filterCorralClosure(this)]);
+	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterUpdateMinsFromNewlyOpenSpaces(this), filterMinMaxClosure(this), filterCorralClosure(this)]);
 	// Note : may be optimized with adding the last filter depending on this.isCorral
 	this.setResolution = {
 		quickStartEventsMethod : quickStartEventsClosure(this)
@@ -149,8 +149,8 @@ SolverKuromasu.prototype.getNumber = function(p_x, p_y) {
 	return this.numericArray[p_y][p_x].number;
 }
 
-function distanceAligned(coors1, coors2) {
-	return Math.abs(coors2.y - coors1.y) + Math.abs(coors2.x - coors1.x);
+function distanceAligned(p_coors1, p_coors2) {
+	return Math.abs(p_coors2.y - p_coors1.y) + Math.abs(p_coors2.x - p_coors1.x);
 }
 
 SolverKuromasu.prototype.getRangedSpace = function(p_index) {
@@ -176,11 +176,11 @@ SolverKuromasu.prototype.makeQuickStart = function() {
 SolverKuromasu.prototype.emitPassSpace = function(p_x, p_y) {
 	const number = this.getNumber(p_x, p_y);
 	if (number != null) {		
-		const generatedEvents = this.generateEventsRangedDynamicPass(p_x, p_y, number);
-		this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y, number : number}); 
+		const listPassNow = this.generateEventsRangedDynamicPass(p_x, p_y, number);
+		this.passEvents(listPassNow, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y, number : number}); 
 	} else {
-		const generatedEvents = this.generateEventsSinglePass(p_x, p_y);
-		this.passEvents(generatedEvents, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y}); 
+		const listPassNow = this.generateEventsSinglePass(p_x, p_y);
+		this.passEvents(listPassNow, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y}); 
 	}
 }
 
@@ -265,43 +265,43 @@ SolverKuromasu.prototype.applyClosedAdjacentOutsideArray = function(p_x, p_y) {
 }
 
 applyEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		switch (eventToApply.kind) {	
-			case KIND_EVENT.SPACE :	return p_solver.applyFillSpace(eventToApply.x, eventToApply.y, eventToApply.symbol); break;
-			case KIND_EVENT.RANGE_MIN : return p_solver.applyRangeMin(eventToApply.x, eventToApply.y, eventToApply.direction, eventToApply.min); break;
-			case KIND_EVENT.RANGE_MAX : return p_solver.applyRangeMax(eventToApply.x, eventToApply.y, eventToApply.direction, eventToApply.max); break;
-			case KIND_EVENT.BIND : return p_solver.applyBindSpaces(eventToApply.x, eventToApply.y, eventToApply.direction); break;
-			case KIND_EVENT.CLOSED_ADJACENT_OUTSIDE : return p_solver.applyClosedAdjacentOutsideArray(eventToApply.x, eventToApply.y); break;
+	return function(p_eventToApply) {
+		switch (p_eventToApply.kind) {	
+			case KIND_EVENT.SPACE :	return p_solver.applyFillSpace(p_eventToApply.x, p_eventToApply.y, p_eventToApply.symbol); break;
+			case KIND_EVENT.RANGE_MIN : return p_solver.applyRangeMin(p_eventToApply.x, p_eventToApply.y, p_eventToApply.direction, p_eventToApply.min); break;
+			case KIND_EVENT.RANGE_MAX : return p_solver.applyRangeMax(p_eventToApply.x, p_eventToApply.y, p_eventToApply.direction, p_eventToApply.max); break;
+			case KIND_EVENT.BIND : return p_solver.applyBindSpaces(p_eventToApply.x, p_eventToApply.y, p_eventToApply.direction); break;
+			case KIND_EVENT.CLOSED_ADJACENT_OUTSIDE : return p_solver.applyClosedAdjacentOutsideArray(p_eventToApply.x, p_eventToApply.y); break;
 		}
 	}
 }
 
 undoEventClosure = function(p_solver) {
-	return function(eventToApply) {
+	return function(p_eventToApply) {
 		var x, y, index, symbol, numericSpace;
-		switch(eventToApply.kind) {
+		switch(p_eventToApply.kind) {
 			case KIND_EVENT.SPACE : 
-				x = eventToApply.x; 
-				y = eventToApply.y;
-				symbol = eventToApply.symbol;
+				x = p_eventToApply.x; 
+				y = p_eventToApply.y;
+				symbol = p_eventToApply.symbol;
 				p_solver.answerArray[y][x] = ADJACENCY.UNDECIDED; 
 			break;
 			case KIND_EVENT.CLOSED_ADJACENT_OUTSIDE : 
-				p_solver.closedAdjacentOutsideArray[eventToApply.y][eventToApply.x] = false;
+				p_solver.closedAdjacentOutsideArray[p_eventToApply.y][p_eventToApply.x] = false;
 			break;
 			case KIND_EVENT.RANGE_MIN : 
-				dir = eventToApply.direction;
-				numericSpace = p_solver.numericArray[eventToApply.y][eventToApply.x];
+				dir = p_eventToApply.direction;
+				numericSpace = p_solver.numericArray[p_eventToApply.y][p_eventToApply.x];
 				numericSpace.mins[dir] = numericSpace.backedMins[dir].pop();
 			break;
 			case KIND_EVENT.RANGE_MAX : 
-				dir = eventToApply.direction;
-				numericSpace = p_solver.numericArray[eventToApply.y][eventToApply.x];
+				dir = p_eventToApply.direction;
+				numericSpace = p_solver.numericArray[p_eventToApply.y][p_eventToApply.x];
 				numericSpace.maxs[dir] = numericSpace.backedMaxs[dir].pop();
 			break;
 			case KIND_EVENT.BIND : 
-				numericSpace = p_solver.numericArray[eventToApply.y][eventToApply.x];
-				numericSpace.bounds[eventToApply.direction] = false;
+				numericSpace = p_solver.numericArray[p_eventToApply.y][p_eventToApply.x];
+				numericSpace.bounds[p_eventToApply.direction] = false;
 			break; 
 		}
 	}
@@ -330,7 +330,7 @@ adjacencyClosure = function (p_solver) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : (p_solver.isCorral ? "Corral" : "Kuromasu")}]
+		var listQSEvents = [{quickStartLabel : (p_solver.isCorral ? "Corral" : "Kuromasu")}]
 		var space;
 		// TODO more can be done
 		
@@ -338,14 +338,14 @@ quickStartEventsClosure = function(p_solver) {
 		p_solver.rangedSpacesCoors.forEach(coors => {
 			space = p_solver.numericArray[coors.y][coors.x];
 			KnownDirections.forEach(dir => {
-				listQSEvts.push(new MaxRangeEvent(coors.x, coors.y, dir, space.number));
+				listQSEvents.push(new MaxRangeEvent(coors.x, coors.y, dir, space.number));
 			});
 		});
 		// Mins and maxes
 		for (var i = 0 ; i < p_solver.rangedSpacesCoors.length ; i++) {
-			listQSEvts = p_solver.deductionsSumsMinMax(listQSEvts, p_solver.rangedSpacesCoors[i].x, p_solver.rangedSpacesCoors[i].y);
+			p_solver.deductionsSumsMinMax(listQSEvents, p_solver.rangedSpacesCoors[i].x, p_solver.rangedSpacesCoors[i].y);
 		}
-		return listQSEvts;
+		return listQSEvents;
 	}
 } 
 
@@ -368,7 +368,7 @@ deductionsClosure = function (p_solver) {
 					});
 				} else {
 					// Corral : make sure there is no 2x2 square in checkerboard
-					p_listEventsToApply = p_solver.deductionsNoCheckers(p_listEventsToApply, x, y,  ADJACENCY.NO);
+					p_solver.deductionsNoCheckers(p_listEventsToApply, x, y,  ADJACENCY.NO);
 					// Free closed spaces ?
 					KnownDirections.forEach(dir => {
 						if (!p_solver.neighborExists(x, y, dir) || p_solver.closedAdjacentOutsideArray[y + DeltaY[dir]][x + DeltaX[dir]] == true) {
@@ -391,7 +391,7 @@ deductionsClosure = function (p_solver) {
 				// should be warned about min to left/up/right/down, so... work will be in filter
 				// Corral : make sure there is no 2x2 square in checkerboard
 				if (p_solver.isCorral) {
-					p_listEventsToApply = p_solver.deductionsNoCheckers(p_listEventsToApply, x, y, ADJACENCY.YES);
+					p_solver.deductionsNoCheckers(p_listEventsToApply, x, y, ADJACENCY.YES);
 				}
 			}
 		} else if (kind == KIND_EVENT.RANGE_MAX) {
@@ -399,19 +399,19 @@ deductionsClosure = function (p_solver) {
 			const dir = p_eventBeingApplied.direction;
 			const x = p_eventBeingApplied.x;
 			const y = p_eventBeingApplied.y;
-			p_listEventsToApply = p_solver.deductionsTestMinEqualsMax(p_listEventsToApply, x, y, dir);
+			p_solver.deductionsTestMinEqualsMax(p_listEventsToApply, x, y, dir);
 			// Synchronize max in bind orientation
-			p_listEventsToApply = p_solver.deductionsTestBindSynchronizeMinMax(p_listEventsToApply, x, y, dir, dir, false);
-			p_listEventsToApply = p_solver.deductionsTestBindSynchronizeMinMax(p_listEventsToApply, x, y, OppositeDirection[dir], dir, false);
+			p_solver.deductionsTestBindSynchronizeMinMax(p_listEventsToApply, x, y, dir, dir, false);
+			p_solver.deductionsTestBindSynchronizeMinMax(p_listEventsToApply, x, y, OppositeDirection[dir], dir, false);
 		} else if (kind == KIND_EVENT.RANGE_MIN) {
 			const x = p_eventBeingApplied.x;
 			const y = p_eventBeingApplied.y;
 			const dir = p_eventBeingApplied.direction;
 			// If max == min in that direction : add a closed space 
-			p_listEventsToApply = p_solver.deductionsTestMinEqualsMax(p_listEventsToApply, x, y, dir);
+			p_solver.deductionsTestMinEqualsMax(p_listEventsToApply, x, y, dir);
 			// Synchronize min in bind orientation
-			p_listEventsToApply = p_solver.deductionsTestBindSynchronizeMinMax(p_listEventsToApply, x, y, dir, dir, true);
-			p_listEventsToApply = p_solver.deductionsTestBindSynchronizeMinMax(p_listEventsToApply, x, y, OppositeDirection[dir], dir, true);
+			p_solver.deductionsTestBindSynchronizeMinMax(p_listEventsToApply, x, y, dir, dir, true);
+			p_solver.deductionsTestBindSynchronizeMinMax(p_listEventsToApply, x, y, OppositeDirection[dir], dir, true);
 			// Add open spaces
 			const backedMins = p_solver.numericArray[y][x].backedMins[dir];
 			const formerMin = backedMins[backedMins.length-1];
@@ -453,7 +453,6 @@ deductionsClosure = function (p_solver) {
 				}
 			});
 		}
-		return p_listEventsToApply;
 	}
 }
 
@@ -492,7 +491,6 @@ SolverKuromasu.prototype.deductionsNoCheckers = function(p_listEventsToApply, p_
 			}
 		}
 	});
-	return p_listEventsToApply;
 }
 
 // Test if 2 spaces are bound in a given direction (directionBound). If so, create events to synchronize the mins/maxes in directionMinMax (may be the same or opposite to directionBound).
@@ -511,7 +509,6 @@ SolverKuromasu.prototype.deductionsTestBindSynchronizeMinMax = function(p_listEv
 			p_listEventsToApply.push(new MaxRangeEvent(coors2.x, coors2.y, p_directionMinMax, value - delta));			
 		}
 	}
-	return p_listEventsToApply;
 }
 
 // Positive difference between two aligned coordinates, with p_coors2 looking at p_coors1 in p_direction (e.g if p_direction == LEFT, then we may have (0, 0) and (3, 0) as p_coors1 and p_coors2)
@@ -535,7 +532,6 @@ SolverKuromasu.prototype.deductionsTestMinEqualsMax = function(p_listEventsToApp
 			p_listEventsToApply.push(new SpaceEvent(x, y, ADJACENCY.NO));
 		}
 	}
-	return p_listEventsToApply;
 }
 
 // ----------
@@ -543,9 +539,9 @@ SolverKuromasu.prototype.deductionsTestMinEqualsMax = function(p_listEventsToApp
 
 // Each space that has 'mins' that may have to be updated 
 // For each space, for each direction, count the number of open spaces in that direction without an interruption and update mins as such
-filtersUpdateMinsFromNewlyOpenSpaces = function(p_solver) {
+filterUpdateMinsFromNewlyOpenSpaces = function(p_solver) { 
 	return function() {
-		var listEvents = [];
+		var listEventsToApply = [];
 		var coors, space, delta;
 		p_solver.checkerNewlyOpenSpaces.list.forEach(index => {
 			coors = p_solver.rangedSpacesCoors[index];
@@ -562,11 +558,11 @@ filtersUpdateMinsFromNewlyOpenSpaces = function(p_solver) {
 				}
 				xx -= DeltaX[dir];
 				yy -= DeltaY[dir];
-				listEvents.push(new MinRangeEvent(x, y, dir, Math.abs(xx - x) + Math.abs(yy - y)));
+				listEventsToApply.push(new MinRangeEvent(x, y, dir, Math.abs(xx - x) + Math.abs(yy - y)));
 			});
 		});
 		p_solver.clearNewlyOpenSpaces();
-		return listEvents;
+		return listEventsToApply;
 	}
 }
 
@@ -574,7 +570,7 @@ SolverKuromasu.prototype.clearNewlyOpenSpaces = function() {
 	this.checkerNewlyOpenSpaces.clean();
 }
 
-filtersMinMaxClosure = function(p_solver) {
+filterMinMaxClosure = function(p_solver) { 
 	return function() {
 		var listEventsToApply = [];
 		/* For each numeric space with an updated min/max :
@@ -583,7 +579,7 @@ filtersMinMaxClosure = function(p_solver) {
 		var coors;
 		p_solver.checkerUpdatedMinMax.list.forEach(index => {
 			coors = p_solver.rangedSpacesCoors[index];
-			listEventsToApply = p_solver.deductionsSumsMinMax(listEventsToApply, coors.x, coors.y);
+			p_solver.deductionsSumsMinMax(listEventsToApply, coors.x, coors.y);
 		});
 		p_solver.clearUpdatedMinMaxes();
 		// TODO do the same with bound spaces ?
@@ -603,7 +599,6 @@ SolverKuromasu.prototype.deductionsSumsMinMax = function(p_listEventsToApply, p_
 		otherValues = space.maxs[TurningLeftDirection[dir]] + space.maxs[OppositeDirection[dir]] + space.maxs[TurningRightDirection[dir]];
 		p_listEventsToApply.push(new MinRangeEvent(p_x, p_y, dir, space.number - 1 - otherValues));
 	});
-	return p_listEventsToApply;
 }
 
 
@@ -628,7 +623,7 @@ filterCorralClosure = function(p_solver) {
 			// Ne pas arrêter de fouiller le groupe (on ne doit pas re-fouiller les cases plusieurs fois)
 			// Si le groupe possède au moins une case fermée : pour une case fermée libre : faire un tour des cases façon ceinture à l'intérieur en excluant les "cases ouvertes sur l'extérieur".
 			// cf. "turningLeftArray" dans AdjacencyCheck
-			var answer = [];
+			var listEventsToApply = [];
 			var toAddToCluster = [];
 			var theCluster = [];
 			var x, y, xx, yy, adjacentFreeCoorsDir, foundClosed, alreadyFoundAPreviousCluster;
@@ -685,20 +680,18 @@ filterCorralClosure = function(p_solver) {
 				}
 				if (adjacentFreeCoorsDir == null && !alreadyFoundAPreviousCluster) {
 					if (foundClosed) {
-						answer = EVENT_RESULT.FAILURE;
+						listEventsToApply.push(new FailureEvent());
+						return listEventsToApply;
 					} else {
 						theCluster.forEach(coors2 => {
-							answer.push(new SpaceEvent(coors2.x, coors2.y, ADJACENCY.YES));
+							listEventsToApply.push(new SpaceEvent(coors2.x, coors2.y, ADJACENCY.YES));
 						});
 					}
-				}
-				if (answer == EVENT_RESULT.FAILURE) {
-					break;
 				}
 			};
 			p_solver.checkerAdjacencyClustersFreeClosed.clean();
 			p_solver.checkerAdjacencyNewlyOpen.clean();
-			return answer;
+			return listEventsToApply;
 		}
 	}
 }
@@ -711,10 +704,10 @@ SolverKuromasu.prototype.isSpaceDiggableClusterFreeClosed = function(p_x, p_y) {
 // Passing
 
 generateEventsForSpacePassClosure = function(p_solver) {
-	return function(p_index) {
-		const x = p_index.x;
-		const y = p_index.y;
-		const number = p_index.number;
+	return function(p_indexPass) {
+		const x = p_indexPass.x;
+		const y = p_indexPass.y;
+		const number = p_indexPass.number;
 		if (number != null) {
 			return p_solver.generateEventsRangedDynamicPass(x, y, number);
 		} else {
@@ -724,7 +717,7 @@ generateEventsForSpacePassClosure = function(p_solver) {
 }
 
 SolverKuromasu.prototype.generateEventsRangedDynamicPass = function(p_x, p_y, p_number) {
-	var answer = [];
+	var listPass = [];
 	var x, y;
 	KnownDirections.forEach(dir => {
 		x = p_x + DeltaX[dir];
@@ -732,14 +725,14 @@ SolverKuromasu.prototype.generateEventsRangedDynamicPass = function(p_x, p_y, p_
 		i = 1;
 		while (this.testExistingCoordinates(x, y, dir) && this.answerArray[y][x] != ADJACENCY.NO && i < p_number) {
 			if (this.answerArray[y][x] == ADJACENCY.UNDECIDED) {
-				answer.push(eventsForOneSpacePass(x, y));
+				listPass.push(eventsForOneSpacePass(x, y));
 			}
 			x += DeltaX[dir];
 			y += DeltaY[dir];
 			i++; // Without "i < p_number" we could have ~30 spaces tested at once and it seems a lot. TODO improve this !
 		}
 	});
-	return answer;
+	return listPass;
 }
 
 SolverKuromasu.prototype.generateEventsSinglePass = function(p_x, p_y) {
@@ -767,34 +760,34 @@ comparison = function(p_event1, p_event2) {
 		], k1, k2);
 }
 
-namingCategoryClosure = function(p_solver) {
-	return function(p_index) {
-		if (p_index.number != null) {
-			return "Dynamic from " + p_index.x + "," + p_index.y + " (" + p_index.number + ")"; 
+namingCategoryPassClosure = function(p_solver) {
+	return function(p_indexPass) {
+		if (p_indexPass.number != null) {
+			return "Dynamic from " + p_indexPass.x + "," + p_indexPass.y + " (" + p_indexPass.number + ")"; 
 		} else {
-			return "Single " + p_index.x + "," + p_index.y;
+			return "Single " + p_indexPass.x + "," + p_indexPass.y;
 		}
 	}
 }
 
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		var indexList = [];
+		var listIndexesPass = [];
 		/* p_solver.rangedSpacesCoors.forEach(coors => {
-			indexList.push({x : coors.x, y : coors.y, number : p_solver.numericArray[coors.y][coors.x].number});
+			listIndexesPass.push({x : coors.x, y : coors.y, number : p_solver.numericArray[coors.y][coors.x].number});
 		}); How it used to be. */
 		var x, y, number;
 		for (y = 0 ; y < p_solver.yLength ; y++) {
 			for (x = 0 ; x < p_solver.xLength ; x++) {
 				number = p_solver.numericArray[y][x].number;
 				if (number != null) {
-					indexList.push({x : x, y : y});
+					listIndexesPass.push({x : x, y : y});
 				} else if (p_solver.answerArray[y][x] == ADJACENCY.UNDECIDED) {
-					indexList.push({x : x, y : y, number : number});
+					listIndexesPass.push({x : x, y : y, number : number});
 				}
 			}
 		}
-		return indexList;
+		return listIndexesPass;
 	}
 }
 

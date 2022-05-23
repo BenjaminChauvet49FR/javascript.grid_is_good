@@ -124,26 +124,24 @@ setSpaceLinkedUndosClosure = function(p_solver) {
 // Deductions
 
 setSpaceLinkedDeductionsClosure = function(p_solver) {
-	return function(p_listEvents, p_eventBeingApplied) {
-		p_listEvents = p_solver.alertLinkedSpacesRegion(p_listEvents, p_solver.getRegionIndex(p_eventBeingApplied.x, p_eventBeingApplied.y));
-		return p_listEvents;
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		p_solver.deductionsAlertLinkedSpacesRegion(p_listEventsToApply, p_solver.getRegionIndex(p_eventBeingApplied.x, p_eventBeingApplied.y));
 	}	
 }
 
 setSpaceClosedDeductionsClosure = function(p_solver) {
-	return function(p_listEvents, p_eventBeingApplied) {
+	return function(p_listEventsToApply, p_eventBeingApplied) {
 		const x = p_eventBeingApplied.x;
 		const y = p_eventBeingApplied.y;
 		var dir;
 		p_solver.otherRegionsDirectionsArray[y][x].forEach(dir => {
-			p_listEvents.push(new SpaceEvent(x + DeltaX[dir], y + DeltaY[dir], LOOP_STATE.LINKED));
+			p_listEventsToApply.push(new SpaceEvent(x + DeltaX[dir], y + DeltaY[dir], LOOP_STATE.LINKED));
 		});
-		p_listEvents = p_solver.alertClosedSpacesRegion(p_listEvents, p_solver.getRegionIndex(x, y));
-		return p_listEvents;
+		p_solver.deductionsAlertClosedSpacesRegion(p_listEventsToApply, p_solver.getRegionIndex(x, y));
 	}
 }
 
-SolverCountryRoad.prototype.alertLinkedSpacesRegion = function(p_listEvents, p_index) {
+SolverCountryRoad.prototype.deductionsAlertLinkedSpacesRegion = function(p_listEventsToApply, p_index) {
 	const region = this.regions[p_index];
 	var space, eventsYetToPlace;
 	if (region.forcedValue && (region.spacesNotLinkedYet == 0)) {
@@ -152,15 +150,14 @@ SolverCountryRoad.prototype.alertLinkedSpacesRegion = function(p_listEvents, p_i
 			eventsYetToPlace = region.spacesNotClosedYet;
 			if (this.getLinkSpace(space.x, space.y) == LOOP_STATE.UNDECIDED) {
 				eventsYetToPlace--;
-				p_listEvents.push(new SpaceEvent(space.x, space.y, LOOP_STATE.CLOSED));
+				p_listEventsToApply.push(new SpaceEvent(space.x, space.y, LOOP_STATE.CLOSED));
 			}
 		}
 	}
-	return p_listEvents;
 }
 
 // Copied over the above method !
-SolverCountryRoad.prototype.alertClosedSpacesRegion = function(p_listEvents, p_index) {
+SolverCountryRoad.prototype.deductionsAlertClosedSpacesRegion = function(p_listEventsToApply, p_index) {
 	const region = this.regions[p_index];
 	var space, eventsYetToPlace;
 	if (region.forcedValue && (region.spacesNotClosedYet == 0)) {
@@ -169,23 +166,21 @@ SolverCountryRoad.prototype.alertClosedSpacesRegion = function(p_listEvents, p_i
 			eventsYetToPlace = region.spacesNotLinkedYet;
 			if (this.getLinkSpace(space.x, space.y) == LOOP_STATE.UNDECIDED) {
 				eventsYetToPlace--;
-				p_listEvents.push(new SpaceEvent(space.x, space.y, LOOP_STATE.LINKED));
+				p_listEventsToApply.push(new SpaceEvent(space.x, space.y, LOOP_STATE.LINKED));
 			}
 		}
 	}
-	return p_listEvents;
 }
 
 // -----------
 // Quickstart
 
 quickStartEventsClosure = function(p_solver) {
-	return function(p_QSeventsList) {
-		p_QSeventsList.push({quickStartLabel : "Country road"});
+	return function(p_listQSEvents) {
+		p_listQSEvents.push({quickStartLabel : "Country road"});
 		for (var i = 0 ; i < p_solver.regions.length ; i++) {
-			p_QSeventsList = p_solver.alertClosedSpacesRegion(p_QSeventsList, i);
+			p_solver.deductionsAlertClosedSpacesRegion(p_listQSEvents, i);
 		}
-		return p_QSeventsList;
 	}
 }
 

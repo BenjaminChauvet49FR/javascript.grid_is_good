@@ -8,7 +8,7 @@ function main() {
 	var actionsManager = {}; 
 	var selectedSpacesGrid = new InputSpacesSelection(solver.xLength, solver.yLength);
 
-	var colors = {
+	var colours = {
 		openSpace : COLOURS.OPEN_WILD,
 		closedSpace : COLOURS.CLOSED_WILD,
 		standardWrite : COLOURS.WRITE_WITHIN_OPEN_WILD, 
@@ -21,7 +21,7 @@ function main() {
 	//The main draw function (at start)
 	function drawCanvas() {
 		drawer.drawWallGrid(context, solver.gridWall, solver.xLength, solver.yLength); 
-		drawInsideSpaces(context, drawer, colors, solver, selectedSpacesGrid);
+		drawInsideSpaces(context, drawer, colours, solver, selectedSpacesGrid);
 		solver.callStateForItem(spanState);
 	}
 	

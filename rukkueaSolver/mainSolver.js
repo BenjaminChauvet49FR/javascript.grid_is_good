@@ -9,8 +9,8 @@ function main() {
 	var spanState = document.getElementById("span_resolution_state");
 	var selectedSpacesGrid = new InputSpacesSelection(solver.xLength, solver.yLength);
 
-	var colors = {
-		filledSpace : '#4400ff',
+	var colours = {
+		filledSpace : COLOURS.RUKKUEA_SQUARE,
 		emptySpace : COLOURS.X_LIGHT, 
 		numberWrite : COLOURS.WRITE_WITHIN_FIELD,
 		selectedSpace : COLOURS.SELECTED_SPACE,
@@ -21,7 +21,7 @@ function main() {
 	//The main draw function (at start)
 	function drawCanvas() {
 		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength);
-		drawInsideSpaces(context, drawer, colors, solver, selectedSpacesGrid);
+		drawInsideSpaces(context, drawer, colours, solver, selectedSpacesGrid);
 		solver.callStateForItem(spanState);
 	}
 	

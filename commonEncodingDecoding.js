@@ -197,9 +197,9 @@ StreamBinaryBlock7Encoder.prototype.getString = function() {
 	this.numberBitsInBlock = -1;
 	this.numberBitsSinceLastBlock = 0;
 	this.value0to63 = 0;
-	const answer = this.privateString;
+	const resultEncode = this.privateString; 
 	this.privateString = "";
-	return answer;
+	return resultEncode;
 }
 
 // No decoder yet.
@@ -239,9 +239,9 @@ StreamEncodingFullBase.prototype.getString = function() {
 		}
 		this.privateString += encode64ToCharacter(this.value0to63);
 	}		
-	const answer = this.privateString;
+	const resultEncode = this.privateString;
 	this.privateString = "";
-	return answer;
+	return resultEncode;
 }
 
 StreamDecodingFullBase = function(p_base, p_string) {
@@ -267,7 +267,7 @@ StreamDecodingFullBase.prototype.decode = function() {
 	if (this.indexInString == this.privateString.length) {
 		return END_OF_DECODING_STREAM;
 	}
-	const answer = this.arrayDigits[this.indexInArrayDigits];
+	const resultDecode = this.arrayDigits[this.indexInArrayDigits];
 	this.indexInArrayDigits++;
 	if (this.indexInArrayDigits == this.capDigits) {
 		this.indexInArrayDigits = 0;
@@ -276,22 +276,22 @@ StreamDecodingFullBase.prototype.decode = function() {
 			this.arrayDigits = arrayDigitsBase(decode64FromCharacter(this.privateString.charAt(this.indexInString)), this.base, this.capDigits);
 		}
 	}
-	return answer;
+	return resultDecode;
 }
 
 // test : decoder = new StreamDecodingFullBase(4, "Bonjour");
 
 arrayDigitsBase = function(p_value0to63, p_base, p_capDigits) {
-	var answer = [];
+	var resultADB = [];
 	var val = p_value0to63;
 	for (var i = 0; i < p_capDigits ; i++) {
-		answer.push(0);
+		resultADB.push(0);
 	}
 	for (var i = 0 ; i < p_capDigits ; i++) {
-		answer[p_capDigits-1-i] = val % p_base;
+		resultADB[p_capDigits-1-i] = val % p_base;
 		val = Math.floor(val / p_base);
 	}
-	return answer;
+	return resultADB;
 }
 
 StreamDecodingFullBase.prototype.getConsumedCharacters = function() {
@@ -350,9 +350,9 @@ StreamDecodingSparseAny = function(p_string) {
 StreamDecodingSparseAny.prototype.decode = function() {
 	if (this.remainingNull == 0) {
 		if (this.reservedValue != NOT_DECODED_CHARACTER) {
-			const answer = this.reservedValue;
+			const resultDecode = this.reservedValue;
 			this.reservedValue = NOT_DECODED_CHARACTER;
-			return answer;
+			return resultDecode;
 		} else {
 			const val = this.privateStream.decodeWithPrefix();
 			if (val == END_OF_DECODING_STREAM) {
@@ -427,12 +427,12 @@ StreamEncodingSparseBinary.prototype.encodeSerieOf1 = function() {
 
 StreamEncodingSparseBinary.prototype.getString = function() {
 	this.encodeSerieOf1();
-	const answer = this.privateStream.getString();
+	const resultEncode = this.privateStream.getString();
 	this.privateStream.string = "";
 	this.previous0s = 0;
 	this.previous1s = 0;
 	this.noDigitsYet = true;
-	return answer; 
+	return resultEncode; 
 }
 
 /* Test :

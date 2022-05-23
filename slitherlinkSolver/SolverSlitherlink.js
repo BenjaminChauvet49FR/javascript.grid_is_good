@@ -27,7 +27,7 @@ SolverSlitherlink.prototype.construct = function(p_numberMeshGrid) {
 		quickStartEventsPS : quickStartEventsClosure(this),
 		generateEventsForPassPS : generateEventsForMeshPassClosureSlitherlink(this),
 		orderedListPassArgumentsPS : startingOrderedListPassArgumentsSlitherlink(this),
-		namingCategoryPS : namingCategoryClosure(this),
+		namingCategoryPS : namingCategoryPassClosure(this),
 		multipassPessimismPS : true
 	});
 	this.setResolution.searchSolutionMethod = loopNaiveSearchClosure(this);
@@ -59,33 +59,32 @@ SolverSlitherlink.prototype.getNumberInMesh = function(p_x, p_y) {
 }
 
 SolverSlitherlink.prototype.getXYMeshesSidesLink = function(p_x, p_y, p_dir) {
-	var answer = []; // Remember : mesh down-right of the (p_x, p_y) dot !
+	var resultCoors = []; // Remember : mesh down-right of the (p_x, p_y) dot !
 	switch(p_dir) {
 		case DIRECTION.LEFT : 
-			answer = this.conditionalNumberedMesh(answer, p_y > 0, p_x-1, p_y-1);
-			answer = this.conditionalNumberedMesh(answer, p_y <= this.yLength-2, p_x-1, p_y);
+			this.conditionalNumberedMesh(resultCoors, p_y > 0, p_x-1, p_y-1);
+			this.conditionalNumberedMesh(resultCoors, p_y <= this.yLength-2, p_x-1, p_y);
 		break;
 		case DIRECTION.RIGHT : 
-			answer = this.conditionalNumberedMesh(answer, p_y > 0, p_x, p_y-1);
-			answer = this.conditionalNumberedMesh(answer, p_y <= this.yLength-2, p_x, p_y);
+			this.conditionalNumberedMesh(resultCoors, p_y > 0, p_x, p_y-1);
+			this.conditionalNumberedMesh(resultCoors, p_y <= this.yLength-2, p_x, p_y);
 		break;
 		case DIRECTION.UP :
-			answer = this.conditionalNumberedMesh(answer, p_x > 0, p_x-1, p_y-1);
-			answer = this.conditionalNumberedMesh(answer, p_x <= this.xLength-2, p_x, p_y-1);
+			this.conditionalNumberedMesh(resultCoors, p_x > 0, p_x-1, p_y-1);
+			this.conditionalNumberedMesh(resultCoors, p_x <= this.xLength-2, p_x, p_y-1);
 		break;
 		case DIRECTION.DOWN :
-			answer = this.conditionalNumberedMesh(answer, p_x > 0, p_x-1, p_y);
-			answer = this.conditionalNumberedMesh(answer, p_x <= this.xLength-2, p_x, p_y);
+			this.conditionalNumberedMesh(resultCoors, p_x > 0, p_x-1, p_y);
+			this.conditionalNumberedMesh(resultCoors, p_x <= this.xLength-2, p_x, p_y);
 		break;		
 	}
-	return answer;
+	return resultCoors;
 }
 
-SolverSlitherlink.prototype.conditionalNumberedMesh = function(p_answerCoorsList, p_XYcondition, p_x, p_y) {
+SolverSlitherlink.prototype.conditionalNumberedMesh = function(p_coorsList, p_XYcondition, p_x, p_y) {
 	if (p_XYcondition && this.numericMeshArray[p_y][p_x].number != null) {
-		p_answerCoorsList.push({x : p_x, y : p_y});
+		p_coorsList.push({x : p_x, y : p_y});
 	}
-	return p_answerCoorsList;
 }
 
 // -------------------
@@ -166,27 +165,25 @@ function setEdgeClosedPSAtomicUndosClosure(p_solver) {
 // Closure deduction
 
 function setEdgeClosedDeductionsClosure(p_solver) {
-	return function(p_futureEventsList, p_eventToApply) {
+	return function(p_listEventsToApply, p_eventToApply) {
 		p_solver.getXYMeshesSidesLink(p_eventToApply.linkX, p_eventToApply.linkY, p_eventToApply.direction).forEach(coors => {
-			p_futureEventsList = p_solver.testLinkAllAroundDeductions(p_futureEventsList, coors.x, coors.y);
+			p_solver.deductionsTestLinkAllAround(p_listEventsToApply, coors.x, coors.y);
 		});
-		return p_futureEventsList;
 	}
 }
 
 function setEdgeLinkedDeductionsClosure(p_solver) {
-	return function(p_futureEventsList, p_eventToApply) {
+	return function(p_listEventsToApply, p_eventToApply) {
 		p_solver.getXYMeshesSidesLink(p_eventToApply.linkX, p_eventToApply.linkY, p_eventToApply.direction).forEach(coors => {
-			p_futureEventsList = p_solver.testCloseAllAroundDeductions(p_futureEventsList, coors.x, coors.y);
+			p_solver.deductionsTestCloseAllAround(p_listEventsToApply, coors.x, coors.y);
 		});		
-		return p_futureEventsList;
 	}
 }
 
 /*
 OK, here are the things that are "deduced by pass only" right now and that should be deduced by deduction :
 -If there is a linked link between 2 nodes and one of them is around a 3-mesh : link the 2 links of the 3-mesh that don't use that node.
--If a node has 2 remaining undecided links and no linked link AND is near a 1-mesh or a 3-mesh : either close or open these meshes.
+-If a node has 2 remaining undecided links and no linked link AND is near a 1-mesh or a 3-mesh : either close or link these meshes.
 But maybe writing the "whole solver" will actually do the trick.
 
 Things that could have been deduced by QS but are deduced by multipass right now (inspecting around the 4 edges of a given numeric mesh) :
@@ -195,31 +192,28 @@ Two or more adjacent 3-meshs, : link orthogonal to the orientation of adjacency 
 Two diagonally adjacent 3s : links on the outside are linked
 */
 
-SolverSlitherlink.prototype.testCloseAllAroundDeductions = function(p_eventsList, p_xMesh, p_yMesh) {
+SolverSlitherlink.prototype.deductionsTestCloseAllAround = function(p_listEventsToApply, p_xMesh, p_yMesh) { 
 	if (this.numericMeshArray[p_yMesh][p_xMesh].notLinkedCirclingEdgesYet == 0) {
-		p_eventsList = this.pushIfUndecided(p_eventsList, p_xMesh, p_yMesh, DIRECTION.RIGHT, LOOP_STATE.CLOSED);
-		p_eventsList = this.pushIfUndecided(p_eventsList, p_xMesh, p_yMesh, DIRECTION.DOWN, LOOP_STATE.CLOSED);
-		p_eventsList = this.pushIfUndecided(p_eventsList, p_xMesh+1, p_yMesh, DIRECTION.DOWN, LOOP_STATE.CLOSED);
-		p_eventsList = this.pushIfUndecided(p_eventsList, p_xMesh, p_yMesh+1, DIRECTION.RIGHT, LOOP_STATE.CLOSED);
+		this.deductionsIfSpaceUndecided(p_listEventsToApply, p_xMesh, p_yMesh, DIRECTION.RIGHT, LOOP_STATE.CLOSED);
+		this.deductionsIfSpaceUndecided(p_listEventsToApply, p_xMesh, p_yMesh, DIRECTION.DOWN, LOOP_STATE.CLOSED);
+		this.deductionsIfSpaceUndecided(p_listEventsToApply, p_xMesh+1, p_yMesh, DIRECTION.DOWN, LOOP_STATE.CLOSED);
+		this.deductionsIfSpaceUndecided(p_listEventsToApply, p_xMesh, p_yMesh+1, DIRECTION.RIGHT, LOOP_STATE.CLOSED);
 	} 
-	return p_eventsList;
 }
 
-SolverSlitherlink.prototype.testLinkAllAroundDeductions = function(p_eventsList, p_xMesh, p_yMesh) {
+SolverSlitherlink.prototype.deductionsTestLinkAllAround = function(p_listEventsToApply, p_xMesh, p_yMesh) {
 	if (this.numericMeshArray[p_yMesh][p_xMesh].notClosedCirclingEdgesYet == 0) {
-		p_eventsList = this.pushIfUndecided(p_eventsList, p_xMesh, p_yMesh, DIRECTION.RIGHT, LOOP_STATE.LINKED);
-		p_eventsList = this.pushIfUndecided(p_eventsList, p_xMesh, p_yMesh, DIRECTION.DOWN, LOOP_STATE.LINKED);
-		p_eventsList = this.pushIfUndecided(p_eventsList, p_xMesh+1, p_yMesh, DIRECTION.DOWN, LOOP_STATE.LINKED);
-		p_eventsList = this.pushIfUndecided(p_eventsList, p_xMesh, p_yMesh+1, DIRECTION.RIGHT, LOOP_STATE.LINKED);
+		this.deductionsIfSpaceUndecided(p_listEventsToApply, p_xMesh, p_yMesh, DIRECTION.RIGHT, LOOP_STATE.LINKED);
+		this.deductionsIfSpaceUndecided(p_listEventsToApply, p_xMesh, p_yMesh, DIRECTION.DOWN, LOOP_STATE.LINKED);
+		this.deductionsIfSpaceUndecided(p_listEventsToApply, p_xMesh+1, p_yMesh, DIRECTION.DOWN, LOOP_STATE.LINKED);
+		this.deductionsIfSpaceUndecided(p_listEventsToApply, p_xMesh, p_yMesh+1, DIRECTION.RIGHT, LOOP_STATE.LINKED);
 	} 
-	return p_eventsList;
 }
 
-SolverSlitherlink.prototype.pushIfUndecided = function(p_eventsList, p_x, p_y, p_direction, p_state) {
+SolverSlitherlink.prototype.deductionsIfSpaceUndecided = function(p_listEventsToApply, p_x, p_y, p_direction, p_state) {
 	if (this.getLink(p_x, p_y, p_direction) == LOOP_STATE.UNDECIDED) {
-		p_eventsList.push(new LinkEvent(p_x, p_y, p_direction, p_state));
+		p_listEventsToApply.push(new LinkEvent(p_x, p_y, p_direction, p_state));
 	}
-	return p_eventsList;
 }
 
 
@@ -227,13 +221,12 @@ SolverSlitherlink.prototype.pushIfUndecided = function(p_eventsList, p_x, p_y, p
 // Quickstart
 
 quickStartEventsClosure = function(p_solver) {
-	return function(p_QSeventsList) { 
-		p_QSeventsList.push({quickStartLabel : "Slitherlink"});
+	return function(p_listQSEvents) { 
+		p_listQSEvents.push({quickStartLabel : "Slitherlink"});
 		p_solver.numericMeshCoordinatesListAndPassArguments.forEach(coors => {
-			p_QSeventsList = p_solver.testLinkAllAroundDeductions(p_QSeventsList, coors.x, coors.y);
-			p_QSeventsList = p_solver.testCloseAllAroundDeductions(p_QSeventsList, coors.x, coors.y);
+			p_solver.deductionsTestLinkAllAround(p_listQSEvents, coors.x, coors.y);
+			p_solver.deductionsTestCloseAllAround(p_listQSEvents, coors.x, coors.y);
 		});
-		return p_QSeventsList;
 	}
 }
 
@@ -242,12 +235,12 @@ quickStartEventsClosure = function(p_solver) {
 
 generateEventsForMeshPassClosureSlitherlink = function(p_solver) {
 	return function(p_meshCoors) {		// p_meshCoors must hold a number
-		var answer = [];
-		answer.push(p_solver.generateEventChoiceForLink(p_meshCoors.x, p_meshCoors.y, DIRECTION.RIGHT));
-		answer.push(p_solver.generateEventChoiceForLink(p_meshCoors.x, p_meshCoors.y, DIRECTION.DOWN));
-		answer.push(p_solver.generateEventChoiceForLink(p_meshCoors.x+1, p_meshCoors.y, DIRECTION.DOWN));
-		answer.push(p_solver.generateEventChoiceForLink(p_meshCoors.x, p_meshCoors.y+1, DIRECTION.RIGHT));
-		return answer; 
+		var listPass = [];
+		listPass.push(p_solver.generateEventChoiceForLink(p_meshCoors.x, p_meshCoors.y, DIRECTION.RIGHT));
+		listPass.push(p_solver.generateEventChoiceForLink(p_meshCoors.x, p_meshCoors.y, DIRECTION.DOWN));
+		listPass.push(p_solver.generateEventChoiceForLink(p_meshCoors.x+1, p_meshCoors.y, DIRECTION.DOWN));
+		listPass.push(p_solver.generateEventChoiceForLink(p_meshCoors.x, p_meshCoors.y+1, DIRECTION.RIGHT));
+		return listPass; 
 	}
 }
 
@@ -261,10 +254,10 @@ function startingOrderedListPassArgumentsSlitherlink(p_solver) {
 	}
 }
 
-function namingCategoryClosure(p_solver) {
-	return function (p_passIndex) {
-		const x = p_passIndex.x;
-		const y = p_passIndex.y;
+function namingCategoryPassClosure(p_solver) {
+	return function (p_indexPass) {
+		const x = p_indexPass.x;
+		const y = p_indexPass.y;
 		return "(number " + p_solver.numericMeshArray[y][x].number + ") " + x + "," + y ;
 	}
 }

@@ -24,26 +24,26 @@ function generateSymbolArray(p_widthGrid, p_heightGrid) {
 }
 
 function generateValueArray(p_widthGrid, p_heightGrid, p_value) {
-	var answer = [];
+	var result = [];
     for (var iy = 0; iy < p_heightGrid; iy++) {
-        answer.push([]);
+        result.push([]);
         for (var ix = 0; ix < p_widthGrid; ix++) {
-            answer[iy].push(p_value);
+            result[iy].push(p_value);
         }
     }
-    return answer;
+    return result;
 }
 
 
 function generateFunctionValueArray(p_widthGrid, p_heightGrid, p_function) {
-	var answer = [];
+	var result = [];
     for (var iy = 0 ; iy < p_heightGrid; iy++) {
-        answer.push([]);
+        result.push([]);
         for (var ix = 0 ; ix < p_widthGrid ; ix++) {
-            answer[iy].push(p_function(ix, iy));
+            result[iy].push(p_function(ix, iy));
         }
     }
-    return answer;
+    return result;
 }
 
 /*
@@ -291,11 +291,11 @@ function replacementCycle(p_string, p_array) {
 	if (p_string == null) {
 		return null;
 	}
-	var answer = p_string.replace(p_array[p_array.length-1], "%");
+	var result = p_string.replace(p_array[p_array.length-1], "%");
 	for (var i = p_array.length-2 ; i >= 0 ; i--) {
-		answer = answer.replace(p_array[i], p_array[i+1]);
+		result = result.replace(p_array[i], p_array[i+1]);
 	}
-	return answer.replace("%", p_array[0]);
+	return result.replace("%", p_array[0]);
 }
 
 function rotateCWString(p_string) {
@@ -335,15 +335,15 @@ Can give coordinates if "p_dealCoordinates" is set to true
 function arrayToStringSpaces(p_array, p_dealCoordinates) {
     xLength = p_array[0].length;
     yLength = p_array.length;
-    var answer = (p_dealCoordinates ? xLength + " " + yLength + " " : "");
+    var result = (p_dealCoordinates ? xLength + " " + yLength + " " : "");
     for (var iy = 0; iy < yLength; iy++) {
         for (var ix = 0; ix < xLength; ix++) {
             if (p_array[iy][ix] != null) {
-                answer += (ix + " " + iy + " " + p_array[iy][ix] + " ");
+                result += (ix + " " + iy + " " + p_array[iy][ix] + " ");
             }
         }
     }
-    return answer;
+    return result;
 }
 
 /*
@@ -425,7 +425,7 @@ A mix of a lot of different values are possible
 Space at start of string !
 */
 function lexicalSpacesValuesToString(p_valuesArray) {
-	var answer = "";
+	var result = "";
 	var skippedSpaces = 0;
 	var value;
 	for(var iy = 0 ; iy < p_valuesArray.length ; iy++) {
@@ -433,18 +433,18 @@ function lexicalSpacesValuesToString(p_valuesArray) {
 			value = p_valuesArray[iy][ix];
 			if (value != null) {
 				if (skippedSpaces == 1) {
-					answer += " X";
+					result += " X";
 				} else if (skippedSpaces == 2) {
-					answer += " XX";
+					result += " XX";
 				} else if (skippedSpaces >= 3) {
-					answer += " X"+skippedSpaces;
+					result += " X"+skippedSpaces;
 				}
-				answer += " " + ((typeof(value) == "string" && value.charAt(0) == 'X') ? ('x' + value) : value); // No parentheses to circle the whole ternary (from "(typeof"  to ": value)" ) = small cap Xs everywhere.
+				result += " " + ((typeof(value) == "string" && value.charAt(0) == 'X') ? ('x' + value) : value); // No parentheses to circle the whole ternary (from "(typeof"  to ": value)" ) = small cap Xs everywhere.
 				skippedSpaces = 0;
 			} else {
 				skippedSpaces++;
 			}
 		}
 	}
-	return answer;
+	return result;
 }

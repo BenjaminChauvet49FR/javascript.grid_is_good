@@ -8,7 +8,7 @@ function main() {
 	var drawIndications;
 	var spanState = document.getElementById("span_resolution_state");
 
-	var colors = {
+	var colours = {
 		emptySpace : COLOURS.X_LIGHT
 	}
 
@@ -17,7 +17,7 @@ function main() {
 	function drawCanvas() {
 		drawer.drawEmptyGrid(context, solver.xyLength, solver.xyLength); 
 		drawer.drawMarginLeftUpOne(context, solver.numbersMarginsLeft, solver.numbersMarginsUp, FONTS.ARIAL);
-		drawInsideSpaces(context, drawer, colors, solver);
+		drawInsideSpaces(context, drawer, colours, solver);
 		solver.callStateForItem(spanState);
 	}
 

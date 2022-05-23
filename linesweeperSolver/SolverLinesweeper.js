@@ -27,7 +27,7 @@ SolverLinesweeper.prototype.construct = function(p_numberGrid) {
 		quickStartEventsPS : quickStartEventsClosure(this),
 		generateEventsForPassPS : generateEventsForAroundSpacePassClosureLinesweeper(this),
 		orderedListPassArgumentsPS : startingOrderedListPassArgumentsLinesweeperClosure(this),
-		namingCategoryPS : namingCategoryClosure(this),
+		namingCategoryPS : namingCategoryPassClosure(this),
 		multipassPessimismPS : true,
 		passDefineTodoPSMethod : function(p_categoryPass) {
 			return (this.numericArray[p_categoryPass.y][p_categoryPass.x].notLinkedYet != 0); // Supposes that all spaces in multipass correspond to clues
@@ -127,13 +127,13 @@ SolverLinesweeper.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 }
 
 SolverLinesweeper.prototype.passSpace = function(p_x, p_y) {
-	var passIndex;
+	var indexPass;
 	if (this.numericArray[p_y][p_x].number != null && this.numericArray[p_y][p_x].number != NOT_FORCED) {		
-		passIndex = {passCategory : LOOP_PASS_CATEGORY.NUMBER_LINESWEEPER, x : p_x, y : p_y};
+		indexPass = {passCategory : LOOP_PASS_CATEGORY.NUMBER_LINESWEEPER, x : p_x, y : p_y};
 	} else {
-		passIndex = {passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
+		indexPass = {passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
 	}
-	return this.passLoop(passIndex); 
+	return this.passLoop(indexPass); 
 }
 
 SolverLinesweeper.prototype.makeMultipass = function() {
@@ -179,36 +179,34 @@ function setSpaceClosedPSAtomicUndosClosure(p_solver) {
 // Closure deduction
 
 function setSpaceClosedPSDeductionsClosure(p_solver) {
-	return function(p_listEvents, p_eventToApply) {
-		const x = p_eventToApply.x;
-		const y = p_eventToApply.y;
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		const x = p_eventBeingApplied.x;
+		const y = p_eventBeingApplied.y;
 		p_solver.neighborsNumbersArray[y][x].forEach(space => {
-			p_listEvents = p_solver.testNumericSpaceDeductions(p_listEvents, space.x, space.y); 
+			p_solver.deductionsTestNumericSpace(p_listEventsToApply, space.x, space.y); 
 		});
-		return p_listEvents;
 	}
 }
 
 function setSpaceLinkedPSDeductionsClosure(p_solver) {
-	return function(p_listEvents, p_eventToApply) {
-		const x = p_eventToApply.x;
-		const y = p_eventToApply.y;
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		const x = p_eventBeingApplied.x;
+		const y = p_eventBeingApplied.y;
 		p_solver.neighborsNumbersArray[y][x].forEach(space => {
-			p_listEvents = p_solver.testNumericSpaceDeductions(p_listEvents, space.x, space.y);
+			p_solver.deductionsTestNumericSpace(p_listEventsToApply, space.x, space.y);
 		});
-		return p_listEvents;
 	}
 }
 
 // Precondition : p_x, p_y is a numeric space
-SolverLinesweeper.prototype.testNumericSpaceDeductions = function(p_listEvents, p_x, p_y) {
+SolverLinesweeper.prototype.deductionsTestNumericSpace = function(p_listEventsToApply, p_x, p_y) {
 	if (this.numericArray[p_y][p_x].notClosedYet == 0) {
 		var x, y;
 		this.existingNeighborsCoorsWithDiagonals(p_x, p_y).forEach(coors => {
 			x = coors.x;
 			y = coors.y;
 			if (this.getLinkSpace(x, y) == LOOP_STATE.UNDECIDED) {
-				p_listEvents.push(new SpaceEvent(x, y, LOOP_STATE.LINKED));
+				p_listEventsToApply.push(new SpaceEvent(x, y, LOOP_STATE.LINKED));
 			}
 		});
 	} else if (this.numericArray[p_y][p_x].notLinkedYet == 0) {
@@ -216,23 +214,21 @@ SolverLinesweeper.prototype.testNumericSpaceDeductions = function(p_listEvents, 
 			x = coors.x;
 			y = coors.y;
 			if (this.getLinkSpace(x, y) == LOOP_STATE.UNDECIDED) {
-				p_listEvents.push(new SpaceEvent(x, y, LOOP_STATE.CLOSED));
+				p_listEventsToApply.push(new SpaceEvent(x, y, LOOP_STATE.CLOSED));
 			}
 		});
 	} 
-	return p_listEvents;
 }
 
 // -------------------
 // Quickstart
 
 quickStartEventsClosure = function(p_solver) {
-	return function(p_QSeventsList) {
-		p_QSeventsList.push({quickStartLabel : "Linesweeper"});
+	return function(p_listQSEvents) {
+		p_listQSEvents.push({quickStartLabel : "Linesweeper"});
 		p_solver.numericCoordinatesList.forEach(space => {
-			 p_QSeventsList = p_solver.testNumericSpaceDeductions(p_QSeventsList, space.x, space.y); 
+			 p_solver.deductionsTestNumericSpace(p_listQSEvents, space.x, space.y); 
 		});
-		return p_QSeventsList;
 	}
 }
 
@@ -243,12 +239,12 @@ generateEventsForAroundSpacePassClosureLinesweeper = function(p_solver) {
 	return function(p_space) {
 		const number = p_solver.getNumber(p_space.x, p_space.y);
 		if (number != null && number != NOT_FORCED) {
-			var answer = [];
+			var listPass = [];
 			p_solver.existingNeighborsCoorsWithDiagonals(p_space.x, p_space.y).forEach(coors => {
-				answer.push([new SpaceEvent(coors.x, coors.y, LOOP_STATE.CLOSED),
+				listPass.push([new SpaceEvent(coors.x, coors.y, LOOP_STATE.CLOSED),
 						new SpaceEvent(coors.x, coors.y, LOOP_STATE.LINKED)]);
 			});
-			return answer;
+			return listPass;
 		} 
 		return [];
 	}
@@ -261,10 +257,10 @@ function startingOrderedListPassArgumentsLinesweeperClosure(p_solver) {
 	}
 }
 
-function namingCategoryClosure(p_solver) {
-	return function (p_passIndex) {
-		const x = p_passIndex.x;
-		const y = p_passIndex.y;
+function namingCategoryPassClosure(p_solver) {
+	return function (p_indexPass) {
+		const x = p_indexPass.x;
+		const y = p_indexPass.y;
 		return "(number " + p_solver.numericArray[y][x].number + ") " + x + "," + y ;
 	}
 }

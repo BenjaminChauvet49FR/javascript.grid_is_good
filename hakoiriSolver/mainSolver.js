@@ -9,7 +9,7 @@ function main() {
 	var drawIndications;
 	var spanState = document.getElementById("span_resolution_state");
 
-	var colors = {
+	var colours = {
 		circle : COLOURS.HAKOIRI_ROUND,
 		square : COLOURS.HAKOIRI_SQUARE,
 		triangle : COLOURS.HAKOIRI_TRIANGLE,
@@ -22,7 +22,7 @@ function main() {
 	//The main draw function (at start)
 	function drawCanvas() {
 		drawer.drawWallGrid(context, solver.gridWall, solver.xLength, solver.yLength); 
-		drawInsideSpaces(context, drawer, colors, solver);
+		drawInsideSpaces(context, drawer, colours, solver);
 		solver.callStateForItem(spanState);
 	}
 	setInterval(drawCanvas, 30);

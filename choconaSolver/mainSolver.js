@@ -8,18 +8,18 @@ function main() {
 	var drawIndications;
 	var spanState = document.getElementById("span_resolution_state");
 
-	var colors = {
-		chocolateSquare : '#ffcccc',
+	var colours = {
+		chocolateSquare : COLOURS.CHOCOLATE_SPACE,
 		lackingSquare : COLOURS.X_LIGHT,
-		standardWrite : '#000000',
-		reflectWrite : '#ffff88'
+		standardWrite : COLOURS.STANDARD_NOT_CLOSED_WRITE,
+		reflectWrite : COLOURS.STANDARD_NOT_CLOSED_WRITE 
 	}
 
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
 		drawer.drawWallGrid(context, solver.gridWall, solver.xLength, solver.yLength); 
-		drawInsideSpaces(context, drawer, colors, solver);
+		drawInsideSpaces(context, drawer, colours, solver);
 		solver.callStateForItem(spanState);
 	}
 	

@@ -21,7 +21,7 @@ function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver) {
 		return -1;
 	}
 	
-	const colours = [DrawableColor(p_coloursSet.openFoundSpace), DrawableColor(p_coloursSet.openFixedSpace)];
+	const colours = [DrawableColour(p_coloursSet.openFoundSpace), DrawableColour(p_coloursSet.openFixedSpace)];
 	p_drawer.drawSpaceContents2Dimensions(p_context, colours, selectionOpeningBGColour, p_solver.xLength, p_solver.yLength);
 	shapes = [
 	DrawableCircle(p_coloursSet.edge, p_coloursSet.circle), 

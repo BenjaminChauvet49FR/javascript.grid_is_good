@@ -33,7 +33,7 @@ SolverUsotatami.prototype.construct = function(p_numberGrid) {
 	this.methodsSetPass = {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
-		argumentToLabelMethod : namingCategoryClosure(this)
+		argumentToLabelMethod : namingCategoryPassClosure(this)
 	};
 	
 	this.methodsSetMultipass = {
@@ -195,8 +195,8 @@ SolverUsotatami.prototype.undo = function(){
 }
 
 SolverUsotatami.prototype.emitPassSpace = function(p_x, p_y) {
-	const generatedEvents = this.generateEventsPassNumericSpace(p_x, p_y);
-	this.passEvents(generatedEvents, {x : p_x, y : p_y}); 
+	const listPassNow = this.generateEventsPassNumericSpace(p_x, p_y);
+	this.passEvents(listPassNow, {x : p_x, y : p_y}); 
 }
 
 SolverUsotatami.prototype.makeMultiPass = function() {	
@@ -220,22 +220,22 @@ SolverUsotatami.prototype.tryToPutNew = function(p_x, p_y, p_direction, p_state)
 // Offensive programming : we assume x and y are consistent.
 
 applyEventClosure = function(p_solver) {
-	return function(p_event) {
-		switch (p_event.kind) {
-			case FENCE_EVENT_KIND : return p_solver.applyFenceEvent(p_event.fenceX, p_event.fenceY, p_event.direction, p_event.state);
-			case VIEW_EVENT_KIND : return p_solver.applyViewEvent(p_event.x, p_event.y, p_event.direction, p_event.view);
-			case RANGE_EVENT_KIND : return p_solver.applyRangeEvent(p_event.x, p_event.y, p_event.direction, p_event.range);
+	return function(p_eventToApply) {
+		switch (p_eventToApply.kind) {
+			case FENCE_EVENT_KIND : return p_solver.applyFenceEvent(p_eventToApply.fenceX, p_eventToApply.fenceY, p_eventToApply.direction, p_eventToApply.state);
+			case VIEW_EVENT_KIND : return p_solver.applyViewEvent(p_eventToApply.x, p_eventToApply.y, p_eventToApply.direction, p_eventToApply.view);
+			case RANGE_EVENT_KIND : return p_solver.applyRangeEvent(p_eventToApply.x, p_eventToApply.y, p_eventToApply.direction, p_eventToApply.range);
 			default : autoLogFail("applyEventClosure : kind of event not found ! ");
 		}
 	}
 }
 
 undoEventClosure = function(p_solver) {
-	return function(p_event) {
-		switch (p_event.kind) {
-			case FENCE_EVENT_KIND : return p_solver.undoFenceEvent(p_event.fenceX, p_event.fenceY, p_event.direction, p_event.state);
-			case VIEW_EVENT_KIND : return p_solver.undoViewEvent(p_event.x, p_event.y, p_event.direction, p_event.view);
-			case RANGE_EVENT_KIND : return p_solver.undoRangeEvent(p_event.x, p_event.y, p_event.direction, p_event.range);
+	return function(p_eventToUndo) {
+		switch (p_eventToUndo.kind) {
+			case FENCE_EVENT_KIND : return p_solver.undoFenceEvent(p_eventToUndo.fenceX, p_eventToUndo.fenceY, p_eventToUndo.direction, p_eventToUndo.state);
+			case VIEW_EVENT_KIND : return p_solver.undoViewEvent(p_eventToUndo.x, p_eventToUndo.y, p_eventToUndo.direction, p_eventToUndo.view);
+			case RANGE_EVENT_KIND : return p_solver.undoRangeEvent(p_eventToUndo.x, p_eventToUndo.y, p_eventToUndo.direction, p_eventToUndo.range);
 			default : autoLogFail("applyEventClosure : kind of event not found ! ");
 		}
 	}
@@ -304,22 +304,22 @@ SolverUsotatami.prototype.undoRangeEvent = function(p_x, p_y, p_dir) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Usotatami"}];
+		var listQSEvents = [{quickStartLabel : "Usotatami"}];
 		for (var y = 0 ; y < p_solver.yLength ; y++) {
 			for (var x = 0 ; x < p_solver.xLength ; x++) {
 				// Separation of numbers
 				if (p_solver.getNumber(x, y) != null) {
 					[DIRECTION.RIGHT, DIRECTION.DOWN].forEach(dir => {
 						if (p_solver.neighborExists(x, y, dir) && (p_solver.getNumber(x+DeltaX[dir], y+DeltaY[dir]) != null)) {
-							listQSEvts.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED));
+							listQSEvents.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED));
 						}
 					});
 				}
 				// Claustrophobia test.
-				listQSEvts = p_solver.claustrophobiaDeductions(listQSEvts, x, y);
+				p_solver.deductionsClaustrophobia(listQSEvents, x, y);
 			}
 		}
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -327,7 +327,7 @@ quickStartEventsClosure = function(p_solver) {
 // Deductions
 
 deductionsClosure = function(p_solver) {
-	return function (p_eventList, p_eventBeingApplied) {
+	return function (p_listEventsToApply, p_eventBeingApplied) {
 		if (p_eventBeingApplied.kind == FENCE_EVENT_KIND) {
 			const x = p_eventBeingApplied.fenceX;
 			const y = p_eventBeingApplied.fenceY;
@@ -338,31 +338,31 @@ deductionsClosure = function(p_solver) {
 			const n1 = p_solver.getNumber(x, y);
 			const n2 = p_solver.getNumber(dx, dy);
 			if (p_eventBeingApplied.state == FENCE_STATE.OPEN) {
-				p_eventList = p_solver.answerFencesGrid.stripBuild(p_eventList, x, y, dx, dy, dir);
+				p_solver.answerFencesGrid.deductionsStripBuild(p_listEventsToApply, x, y, dx, dy, dir);
 
 				// Hypothesis : thanks to setup/quickstart, it is impossible for both spaces to have numbers if a fence is open here
 				if (n1 != null) {
-					p_eventList.push(new ViewEvent(dx, dy, odir, USOTATAMI_VIEW.NUMBER)); // One of the spaces has a number : Share vision
+					p_listEventsToApply.push(new ViewEvent(dx, dy, odir, USOTATAMI_VIEW.NUMBER)); // One of the spaces has a number : Share vision
 				} else if (n2 != null) {
-					p_eventList.push(new ViewEvent(x, y, dir, USOTATAMI_VIEW.NUMBER));
+					p_listEventsToApply.push(new ViewEvent(x, y, dir, USOTATAMI_VIEW.NUMBER));
 				} else if (p_solver.getView(dx, dy, dir) == USOTATAMI_VIEW.NUMBER) { // Neither has a number but one sees a number away : share vision
-					p_eventList.push(new ViewEvent(x, y, dir, USOTATAMI_VIEW.NUMBER));
+					p_listEventsToApply.push(new ViewEvent(x, y, dir, USOTATAMI_VIEW.NUMBER));
 				} else if (p_solver.getView(x, y, odir) == USOTATAMI_VIEW.NUMBER) {
-					p_eventList.push(new ViewEvent(dx, dy, odir, USOTATAMI_VIEW.NUMBER));
+					p_listEventsToApply.push(new ViewEvent(dx, dy, odir, USOTATAMI_VIEW.NUMBER));
 				}
 			} else {
-				p_eventList = p_solver.answerFencesGrid.avoidCrossBuildDeductions(p_eventList, x, y, dx, dy, dir);
+				p_solver.answerFencesGrid.deductionsAvoidCrossBuild(p_listEventsToApply, x, y, dx, dy, dir);
 				if (n1 != null) {
-					p_eventList.push(new RangeEvent(x, y, dir, 0));
+					p_listEventsToApply.push(new RangeEvent(x, y, dir, 0));
 				} else {
-					p_eventList.push(new ViewEvent(x, y, dir, USOTATAMI_VIEW.WALL));
-					p_eventList = p_solver.deadEndSeeingNumberRangeDeductions(p_eventList, x, y); // If a space is surrounded by 3 walls and sees a number, set a range
+					p_listEventsToApply.push(new ViewEvent(x, y, dir, USOTATAMI_VIEW.WALL));
+					p_solver.deductionsDeadEndSeeingNumberRange(p_listEventsToApply, x, y); // If a space is surrounded by 3 walls and sees a number, set a range
 				}
 				if (n2 != null) {
-					p_eventList.push(new RangeEvent(dx, dy, odir, 0));
+					p_listEventsToApply.push(new RangeEvent(dx, dy, odir, 0));
 				} else {
-					p_eventList.push(new ViewEvent(dx, dy, odir, USOTATAMI_VIEW.WALL));
-					p_eventList = p_solver.deadEndSeeingNumberRangeDeductions(p_eventList, dx, dy);
+					p_listEventsToApply.push(new ViewEvent(dx, dy, odir, USOTATAMI_VIEW.WALL));
+					p_solver.deductionsDeadEndSeeingNumberRange(p_listEventsToApply, dx, dy);
 				}
 			}
 		} else if (p_eventBeingApplied.kind == VIEW_EVENT_KIND) { // VIEW_EVENT_KIND (damn, it was .state)
@@ -377,70 +377,68 @@ deductionsClosure = function(p_solver) {
 					const bx = x - DeltaX[dir];
 					const by = y - DeltaY[dir];
 					if (p_solver.getNumber(bx, by) == null) {
-						p_eventList.push(new ViewEvent(bx, by, dir, USOTATAMI_VIEW.WALL));
+						p_listEventsToApply.push(new ViewEvent(bx, by, dir, USOTATAMI_VIEW.WALL));
 					}						
 				}
 				// If both opposite directions of this space see walls : construct walls around !
 				
 				if (p_solver.getView(x, y, odir) == USOTATAMI_VIEW.WALL) {
-					p_eventList.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED));
+					p_listEventsToApply.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED));
 					if (p_solver.neighborExists(x, y, odir)) {
-						p_eventList.push(new FenceEvent(x, y, odir, FENCE_STATE.CLOSED));
+						p_listEventsToApply.push(new FenceEvent(x, y, odir, FENCE_STATE.CLOSED));
 					}
 				}
 				// If 3 directions see walls : claustrophobia, create opening events until meeting a number ! (exactly 1 number per strip = at least one)
-				p_eventList = p_solver.claustrophobiaDeductions(p_eventList, x, y);
+				p_solver.deductionsClaustrophobia(p_listEventsToApply, x, y);
 				// If all 4 directions see wall : failure !
 				if (p_solver.getWallDirections(x, y) == 4) {
-					return [new FailureEvent()];
+					p_listEventsToApply.push(new FailureEvent());
+					return;
 				}
 			} else {
 				const dx = x + DeltaX[dir];
 				const dy = y + DeltaY[dir];
 				// A number is seen, it means unless it's a number (I forgot to code it first) the opposite direction in this space and in the space behind must see walls ! (exactly 1 number per strip = max one.)
 				if (p_solver.getNumber(dx, dy) == null) {
-					p_eventList.push(new ViewEvent(dx, dy, odir, USOTATAMI_VIEW.WALL));
+					p_listEventsToApply.push(new ViewEvent(dx, dy, odir, USOTATAMI_VIEW.WALL));
 				}
 				// What happens behind ?
 				if (p_solver.neighborExists(x, y, odir)) {
 					const bx = x - DeltaX[dir];
 					const by = y - DeltaY[dir];
 					if (p_solver.getNumber(bx, by) != null) { // Space behind is a number : immediately close the space
-						p_eventList.push(new FenceEvent(x, y, odir, FENCE_STATE.CLOSED));
+						p_listEventsToApply.push(new FenceEvent(x, y, odir, FENCE_STATE.CLOSED));
 					} else if (p_solver.answerFencesGrid.getFence(bx, by, dir) == FENCE_STATE.OPEN) { // Open space behind : propagate vision.
-						p_eventList.push(new ViewEvent(bx, by, dir, USOTATAMI_VIEW.NUMBER));
+						p_listEventsToApply.push(new ViewEvent(bx, by, dir, USOTATAMI_VIEW.NUMBER));
 					} else {
 						if (p_solver.getView(bx, by, odir) == FENCE_STATE.OPEN) {
-							p_eventList.push(new FenceEvent(bx, by, dir, USOTATAMI_VIEW.WALL)); // Space behind sees a number in the opposite direction (in the opposite direction, eh ?) : close fence ! // It was my primary intention but I didn't put the right event and put it after the if / else instruction set.
+							p_listEventsToApply.push(new FenceEvent(bx, by, dir, USOTATAMI_VIEW.WALL)); // Space behind sees a number in the opposite direction (in the opposite direction, eh ?) : close fence ! // It was my primary intention but I didn't put the right event and put it after the if / else instruction set.
 						}
 					} 
 				}
 				// If 3 spaces are seen, maybe go for a range event.
-				p_eventList = p_solver.deadEndSeeingNumberRangeDeductions(p_eventList, x, y);
+				p_solver.deductionsDeadEndSeeingNumberRange(p_listEventsToApply, x, y);
 				// By the way, do not close other visions because it should be done when adding fences, open or closed.
 			}
 		}
-		// Ajouter également le "Range event" :
-		// Pas de déduction, le seul contrôle est dans l'application du range event : si les 4 ranges sont définies et leur somme est égale au numéro de la case : failure !
-		// Après, si 3 directions sont décidées et il n'en reste qu'une 4ème, la passe fera le travail (TM).
-		return p_eventList;
+		// For range event : no deduction, there is only a control in the application of it. If all 4 ranges are defined and their sum, it's a falure.
+		// What could be done : if 3 ranges are fully known and there is a 4th one with right now as many open fences as the forbidden range, open a space. But "la passe fera le taf"
 	}
 }
 
 // If a non-number space sees numbers in 1 direction, open towards it
-SolverUsotatami.prototype.claustrophobiaDeductions = function(p_eventList, p_x, p_y) {
+SolverUsotatami.prototype.deductionsClaustrophobia = function(p_listEventsToApply, p_x, p_y) {
 	if (this.getWallDirections(p_x, p_y) == 3) {
 		KnownDirections.forEach(dir => {
 			if (this.getView(p_x, p_y, dir) != USOTATAMI_VIEW.WALL) {
-				p_eventList.push(new FenceEvent(p_x, p_y, dir, FENCE_STATE.OPEN));
+				p_listEventsToApply.push(new FenceEvent(p_x, p_y, dir, FENCE_STATE.OPEN));
 			}
 		}); // Can be optimized by returning early but whatever, it's a quickstart.
 	}
-	return p_eventList;
 }
 
 // Test if a non-number space is a dead end and sees a number. If yes, add a range event.
-SolverUsotatami.prototype.deadEndSeeingNumberRangeDeductions = function(p_eventList, p_x, p_y) {
+SolverUsotatami.prototype.deductionsDeadEndSeeingNumberRange = function(p_listEventsToApply, p_x, p_y) {
 	var numberWalls = 0;
 	var directionSight = DIRECTION.UNDECIDED;
 	var dir;
@@ -467,9 +465,8 @@ SolverUsotatami.prototype.deadEndSeeingNumberRangeDeductions = function(p_eventL
 			case DIRECTION.UP : range = p_y-y; break;
 			case DIRECTION.DOWN : range = y-p_y; break;
 		}
-		p_eventList.push(new RangeEvent(x, y, OppositeDirection[directionSight], range));
+		p_listEventsToApply.push(new RangeEvent(x, y, OppositeDirection[directionSight], range));
 	}
-	return p_eventList;
 }
 
 // Filters (well, likely slower than a pass for the same result)
@@ -542,29 +539,29 @@ function copying(p_event) {
 // Preconditions : p_x, p_y are coordinates of a numeric space
 // We coud have checked the whole row and column of a space but let's go administrative !
 SolverUsotatami.prototype.generateEventsPassNumericSpace = function(p_x, p_y) {
-	var answer = [];
+	var listPass = [];
 	var x, y;
 	KnownDirections.forEach(dir => {
 		x = p_x;
 		y = p_y;
 		while (this.neighborExists(x, y, dir) && (this.getNumber(x + DeltaX[dir], y + DeltaY[dir]) == null) && this.answerFencesGrid.getFence(x, y, dir) != FENCE_STATE.CLOSED) {			
-			answer.push([new FenceEvent(x, y, dir, FENCE_STATE.OPEN), new FenceEvent(x, y, dir, FENCE_STATE.CLOSED)]);
+			listPass.push([new FenceEvent(x, y, dir, FENCE_STATE.OPEN), new FenceEvent(x, y, dir, FENCE_STATE.CLOSED)]);
 			x += DeltaX[dir];
 			y += DeltaY[dir];
 		}
 	});
-	return answer;
+	return listPass;
 }
 
-namingCategoryClosure = function(p_solver) {
-	return function(p_index) {
-		return (p_solver.getNumber(p_index.x, p_index.y) != null ? "(numeric)" : "(simple)") + " " + p_index.x + "," + p_index.y;
+namingCategoryPassClosure = function(p_solver) {
+	return function(p_indexPass) {
+		return (p_solver.getNumber(p_indexPass.x, p_indexPass.y) != null ? "(numeric)" : "(simple)") + " " + p_indexPass.x + "," + p_indexPass.y;
 	}
 }
 
 function generateEventsForPassClosure(p_solver) {
-	return function(p_index) {
-		return p_solver.generateEventsPassNumericSpace(p_index.x, p_index.y);
+	return function(p_indexPass) {
+		return p_solver.generateEventsPassNumericSpace(p_indexPass.x, p_indexPass.y);
 	}
 }
 

@@ -12,7 +12,7 @@ function FenceEvent(p_x, p_y, p_direction, p_state) {
 	this.direction = p_direction;
 }
 
-FenceEvent.prototype.standardFenceCopy = function() {
+FenceEvent.prototype.standardFenceCopy = function() { 
 	switch(this.direction) {
 		case DIRECTION.LEFT : return new FenceEvent(this.fenceX - 1, this.fenceY, DIRECTION.RIGHT, this.state); break;
 		case DIRECTION.UP : return new FenceEvent(this.fenceX, this.fenceY - 1, DIRECTION.DOWN, this.state); break;
@@ -145,47 +145,46 @@ function getFenceDownClosure(p_grid) {
 /**
 Open fence : declare closed fences around in order to create a strip.
 */
-FencesGrid.prototype.stripBuild = function(p_eventList, p_x, p_y, p_dx, p_dy, p_dir) {
+FencesGrid.prototype.deductionsStripBuild = function(p_listEventsToApply, p_x, p_y, p_dx, p_dy, p_dir) {
 	if ((p_dir == DIRECTION.UP) || (p_dir == DIRECTION.DOWN)) {
 		if (p_x > 0) {
-			p_eventList.push(new FenceEvent(p_x, p_y, DIRECTION.LEFT, FENCE_STATE.CLOSED));
-			p_eventList.push(new FenceEvent(p_x, p_dy, DIRECTION.LEFT, FENCE_STATE.CLOSED));
+			p_listEventsToApply.push(new FenceEvent(p_x, p_y, DIRECTION.LEFT, FENCE_STATE.CLOSED));
+			p_listEventsToApply.push(new FenceEvent(p_x, p_dy, DIRECTION.LEFT, FENCE_STATE.CLOSED));
 		}
 		if (p_x <= this.xLength - 2) {
-			p_eventList.push(new FenceEvent(p_x, p_y, DIRECTION.RIGHT, FENCE_STATE.CLOSED));
-			p_eventList.push(new FenceEvent(p_x, p_dy, DIRECTION.RIGHT, FENCE_STATE.CLOSED));
+			p_listEventsToApply.push(new FenceEvent(p_x, p_y, DIRECTION.RIGHT, FENCE_STATE.CLOSED));
+			p_listEventsToApply.push(new FenceEvent(p_x, p_dy, DIRECTION.RIGHT, FENCE_STATE.CLOSED));
 		}
 	}
 	if ((p_dir == DIRECTION.LEFT) || (p_dir == DIRECTION.RIGHT)) {
 		if (p_y > 0) {
-			p_eventList.push(new FenceEvent(p_x, p_y, DIRECTION.UP, FENCE_STATE.CLOSED));
-			p_eventList.push(new FenceEvent(p_dx, p_y, DIRECTION.UP, FENCE_STATE.CLOSED));
+			p_listEventsToApply.push(new FenceEvent(p_x, p_y, DIRECTION.UP, FENCE_STATE.CLOSED));
+			p_listEventsToApply.push(new FenceEvent(p_dx, p_y, DIRECTION.UP, FENCE_STATE.CLOSED));
 		}
 		if (p_y <= this.yLength - 2) {
-			p_eventList.push(new FenceEvent(p_x, p_y, DIRECTION.DOWN, FENCE_STATE.CLOSED));
-			p_eventList.push(new FenceEvent(p_dx, p_y, DIRECTION.DOWN, FENCE_STATE.CLOSED));
+			p_listEventsToApply.push(new FenceEvent(p_x, p_y, DIRECTION.DOWN, FENCE_STATE.CLOSED));
+			p_listEventsToApply.push(new FenceEvent(p_dx, p_y, DIRECTION.DOWN, FENCE_STATE.CLOSED));
 		}
 	}
-	return p_eventList;
 }
 
 /**
 Closed fence : When up to 3 fences may meet at a given point and the fence (x,y,dir) just got closed
 */
-FencesGrid.prototype.avoidCrossBuildDeductions = function(p_eventList, p_x, p_y, p_dx, p_dy, p_dir) { // Can be exported ?
+FencesGrid.prototype.deductionsAvoidCrossBuild = function(p_listEventsToApply, p_x, p_y, p_dx, p_dy, p_dir) { // Can be exported ?
 	if ((p_dir == DIRECTION.UP) || (p_dir == DIRECTION.DOWN)) {
 		if (p_x > 0) { // Check cross left
 			const state1 = this.getFenceLeft(p_x, p_y) == FENCE_STATE.CLOSED;
 			const state2 = this.getFenceLeft(p_x, p_dy) == FENCE_STATE.CLOSED;
 			if (state1 == state2) {
 				if (state1) { // 1 and 2
-					p_eventList.push(new FenceEvent(p_x-1, p_y, p_dir, FENCE_STATE.OPEN));
+					p_listEventsToApply.push(new FenceEvent(p_x-1, p_y, p_dir, FENCE_STATE.OPEN));
 				}
 			} else if (this.getFence(p_x-1, p_y, p_dir) == FENCE_STATE.CLOSED) {
 				if (state1) { // 1 and opposite
-					p_eventList.push(new FenceEvent(p_x, p_dy, DIRECTION.LEFT, FENCE_STATE.OPEN));
+					p_listEventsToApply.push(new FenceEvent(p_x, p_dy, DIRECTION.LEFT, FENCE_STATE.OPEN));
 				} else { // 2 and opposite
-					p_eventList.push(new FenceEvent(p_x, p_y, DIRECTION.LEFT, FENCE_STATE.OPEN));
+					p_listEventsToApply.push(new FenceEvent(p_x, p_y, DIRECTION.LEFT, FENCE_STATE.OPEN));
 				}
 			}
 		}
@@ -195,13 +194,13 @@ FencesGrid.prototype.avoidCrossBuildDeductions = function(p_eventList, p_x, p_y,
 			const state2 = this.getFenceRight(p_x, p_dy) == FENCE_STATE.CLOSED;
 			if (state1 == state2) {
 				if (state1) { // 1 and 2
-					p_eventList.push(new FenceEvent(p_x+1, p_y, p_dir, FENCE_STATE.OPEN));
+					p_listEventsToApply.push(new FenceEvent(p_x+1, p_y, p_dir, FENCE_STATE.OPEN));
 				}
 			} else if (this.getFence(p_x+1, p_y, p_dir) == FENCE_STATE.CLOSED) {
 				if (state1) { // 1 and opposite
-					p_eventList.push(new FenceEvent(p_x, p_dy, DIRECTION.RIGHT, FENCE_STATE.OPEN));
+					p_listEventsToApply.push(new FenceEvent(p_x, p_dy, DIRECTION.RIGHT, FENCE_STATE.OPEN));
 				} else { // 2 and opposite
-					p_eventList.push(new FenceEvent(p_x, p_y, DIRECTION.RIGHT, FENCE_STATE.OPEN));
+					p_listEventsToApply.push(new FenceEvent(p_x, p_y, DIRECTION.RIGHT, FENCE_STATE.OPEN));
 				}
 			}
 		}
@@ -211,13 +210,13 @@ FencesGrid.prototype.avoidCrossBuildDeductions = function(p_eventList, p_x, p_y,
 			const state2 = this.getFenceUp(p_dx, p_y) == FENCE_STATE.CLOSED;
 			if (state1 == state2) {
 				if (state1) { // 1 and 2
-					p_eventList.push(new FenceEvent(p_x, p_y-1, p_dir, FENCE_STATE.OPEN));
+					p_listEventsToApply.push(new FenceEvent(p_x, p_y-1, p_dir, FENCE_STATE.OPEN));
 				}
 			} else if (this.getFence(p_x, p_y-1, p_dir) == FENCE_STATE.CLOSED) {
 				if (state1) { // 1 and opposite
-					p_eventList.push(new FenceEvent(p_dx, p_y, DIRECTION.UP, FENCE_STATE.OPEN));
+					p_listEventsToApply.push(new FenceEvent(p_dx, p_y, DIRECTION.UP, FENCE_STATE.OPEN));
 				} else { // 2 and opposite
-					p_eventList.push(new FenceEvent(p_x, p_y, DIRECTION.UP, FENCE_STATE.OPEN));
+					p_listEventsToApply.push(new FenceEvent(p_x, p_y, DIRECTION.UP, FENCE_STATE.OPEN));
 				}
 			}
 		}
@@ -227,23 +226,22 @@ FencesGrid.prototype.avoidCrossBuildDeductions = function(p_eventList, p_x, p_y,
 			const state2 = this.getFenceDown(p_dx, p_y) == FENCE_STATE.CLOSED;
 			if (state1 == state2) {
 				if (state1) { // 1 and 2
-					p_eventList.push(new FenceEvent(p_x, p_y+1, p_dir, FENCE_STATE.OPEN));
+					p_listEventsToApply.push(new FenceEvent(p_x, p_y+1, p_dir, FENCE_STATE.OPEN));
 				}
 			} else if (this.getFence(p_x, p_y+1, p_dir) == FENCE_STATE.CLOSED) {
 				if (state1) { // 1 and opposite
-					p_eventList.push(new FenceEvent(p_dx, p_y, DIRECTION.DOWN, FENCE_STATE.OPEN));
+					p_listEventsToApply.push(new FenceEvent(p_dx, p_y, DIRECTION.DOWN, FENCE_STATE.OPEN));
 				} else { // 2 and opposite
-					p_eventList.push(new FenceEvent(p_x, p_y, DIRECTION.DOWN, FENCE_STATE.OPEN));
+					p_listEventsToApply.push(new FenceEvent(p_x, p_y, DIRECTION.DOWN, FENCE_STATE.OPEN));
 				}
 			}
 		}
 	}
-	return p_eventList;
 }
 
 // From a fence, forces regionalism around points at the extremity of the fence (not at edges) so there cannot be 3 open fences and the 4th closed.
 // Note that it cannot guarantee that a fence between two spaces that belong to the same region, thanks to other fences that are open, is open. It will be the responsibility of the solver.
-FencesGrid.prototype.forceRegionalismDeductions = function(p_eventList, p_xSpace, p_ySpace, p_directionFence) {
+FencesGrid.prototype.deductionsForceRegionalism = function(p_listEventsToApply, p_xSpace, p_ySpace, p_directionFence) {
 	var x1 = null;
 	var x2 = null;
 	var y1, y2;
@@ -273,17 +271,16 @@ FencesGrid.prototype.forceRegionalismDeductions = function(p_eventList, p_xSpace
 		break;
 	}
 	if (x1 != null) {		
-		p_eventList = this.forceRegionalismRDPointDeductions(p_eventList, x1, y1);
+		this.deductionsForceRegionalismRDPoint(p_listEventsToApply, x1, y1);
 	}
 	if (x2 != null) {		
-		p_eventList = this.forceRegionalismRDPointDeductions(p_eventList, x2, y2);
+		this.deductionsForceRegionalismRDPoint(p_listEventsToApply, x2, y2);
 	}
-	return p_eventList;
 }
 
 // Forces the creation of new fences events so that regions are created.
 // Preconditions : p_xRight, p_yDown is inside the grid.
-FencesGrid.prototype.forceRegionalismRDPointDeductions = function(p_eventList, p_xRight, p_yDown) {
+FencesGrid.prototype.deductionsForceRegionalismRDPoint = function(p_listEventsToApply, p_xRight, p_yDown) {
 	const stateLeftPoint = this.getFenceDown(p_xRight, p_yDown);
 	const stateUpPoint = this.getFenceRight(p_xRight, p_yDown);
 	const stateRightPoint = this.getFenceDown(p_xRight + 1, p_yDown);
@@ -291,50 +288,49 @@ FencesGrid.prototype.forceRegionalismRDPointDeductions = function(p_eventList, p
 	if (stateLeftPoint == FENCE_STATE.OPEN) {
 		if (stateRightPoint == FENCE_STATE.OPEN) {
 			if (stateUpPoint != FENCE_STATE.UNDECIDED) {
-				p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.DOWN, stateUpPoint));
+				p_listEventsToApply.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.DOWN, stateUpPoint));
 			}
 			if (stateDownPoint != FENCE_STATE.UNDECIDED) {
-				p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.UP, stateDownPoint));
+				p_listEventsToApply.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.UP, stateDownPoint));
 			}
 		} else if (stateRightPoint == FENCE_STATE.CLOSED) {
 			if (stateUpPoint == FENCE_STATE.OPEN) {
-				p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.DOWN, FENCE_STATE.CLOSED));
+				p_listEventsToApply.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.DOWN, FENCE_STATE.CLOSED));
 			}
 			if (stateDownPoint == FENCE_STATE.OPEN) {
-				p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.UP, FENCE_STATE.CLOSED));
+				p_listEventsToApply.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.UP, FENCE_STATE.CLOSED));
 			}
 		} else if (stateUpPoint == FENCE_STATE.OPEN) {
 			if (stateDownPoint != FENCE_STATE.UNDECIDED) {				
-				p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.RIGHT, stateDownPoint));
+				p_listEventsToApply.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.RIGHT, stateDownPoint));
 			}
 		} else if (stateUpPoint == FENCE_STATE.CLOSED && stateDownPoint == FENCE_STATE.OPEN) {
-			p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.RIGHT, FENCE_STATE.CLOSED));
+			p_listEventsToApply.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.RIGHT, FENCE_STATE.CLOSED));
 		}
 	} else if (stateLeftPoint == FENCE_STATE.CLOSED) {
 		if (stateRightPoint == FENCE_STATE.OPEN) {
 			if (stateUpPoint == FENCE_STATE.OPEN) {
-				p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.DOWN, FENCE_STATE.CLOSED));
+				p_listEventsToApply.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.DOWN, FENCE_STATE.CLOSED));
 			}
 			if (stateDownPoint == FENCE_STATE.OPEN) {
-				p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.UP, FENCE_STATE.CLOSED));
+				p_listEventsToApply.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.UP, FENCE_STATE.CLOSED));
 			}
 		} else if (stateRightPoint == FENCE_STATE.CLOSED) {
 			
 		} else if ((stateUpPoint == FENCE_STATE.OPEN) && (stateDownPoint == FENCE_STATE.OPEN)) {
-			p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.RIGHT, FENCE_STATE.CLOSED));
+			p_listEventsToApply.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.RIGHT, FENCE_STATE.CLOSED));
 		}
 	} else { // left point fence is unknown, it may be decided only if 3 others are known 
 		if (stateUpPoint == FENCE_STATE.OPEN) {
 			if (stateDownPoint == FENCE_STATE.OPEN && stateRightPoint != FENCE_STATE.UNDECIDED) {
-				p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.LEFT, stateRightPoint));
+				p_listEventsToApply.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.LEFT, stateRightPoint));
 			} else if (stateDownPoint == FENCE_STATE.CLOSED && stateRightPoint == FENCE_STATE.OPEN) {
-				p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.LEFT, FENCE_STATE.CLOSED));
+				p_listEventsToApply.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.LEFT, FENCE_STATE.CLOSED));
 			}
 		} else if (stateUpPoint == FENCE_STATE.CLOSED && stateRightPoint == FENCE_STATE.OPEN && stateDownPoint == FENCE_STATE.OPEN) {
-			p_eventList.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.LEFT, FENCE_STATE.CLOSED));
+			p_listEventsToApply.push(this.FenceEventFromPoint(p_xRight, p_yDown, DIRECTION.LEFT, FENCE_STATE.CLOSED));
 		}
 	}
-	return p_eventList;
 }
 
 FencesGrid.prototype.FenceEventFromPoint = function(p_xRight, p_yRight, p_direction, p_state) {
@@ -374,10 +370,10 @@ FencesGrid.prototype.getUnknownFencesChecker = function(p_spacesChecker) {
 }
 
 // Gets unknown fences within and outside the checker selection
-FencesGrid.prototype.getUnknownFencesPrivate = function(p_list, p_array) {
+FencesGrid.prototype.getUnknownFencesPrivate = function(p_listCoors, p_array) {
 	var fencesList = [];
 	var x, y;
-	p_list.forEach(coors => {
+	p_listCoors.forEach(coors => {
 		x = coors.x;
 		y = coors.y;
 		if (x <= this.xLength-2 && this.getFenceRight(x, y) == FENCE_STATE.UNDECIDED) {
@@ -404,12 +400,12 @@ FencesGrid.prototype.getPassEventsForOneFence = function(p_x, p_y, p_dir) {
 	return [new FenceEvent(p_x, p_y, p_dir, FENCE_STATE.OPEN), new FenceEvent(p_x, p_y, p_dir, FENCE_STATE.CLOSED)];
 }
 
-FencesGrid.prototype.getFencePassEventsForSpacesList = function(p_coorsList, p_coorsArray) {
-	var answer = [];
-	this.getUnknownFencesPrivate(p_coorsList, p_coorsArray).forEach(fence => {
-		answer.push(this.getPassEventsForOneFence(fence.x, fence.y, fence.direction));
+FencesGrid.prototype.getFencePassEventsForSpacesList = function(p_listCoors, p_arrayCoors) { 
+	var listPass = [];
+	this.getUnknownFencesPrivate(p_listCoors, p_arrayCoors).forEach(fence => {
+		listPass.push(this.getPassEventsForOneFence(fence.x, fence.y, fence.direction));
 	});
-	return answer;
+	return listPass;
 }
 
 // ---------
@@ -441,13 +437,13 @@ function searchBestFenceForSolutionSearch(p_solver, p_fencesGrid) {
 	var bestIndex = {nbD : -1};
 	var nbDeductions;
 	var event_;
-	var result;
+	var resultDo;
 	for (solveX = 0 ; solveX < p_solver.xLength-1 ; solveX++) { // x and y are somehow modified by tryToApplyHypothesis...
 		for (solveY = 0 ; solveY < p_solver.yLength ; solveY++) {
 			if (p_fencesGrid.getFenceRight(solveX, solveY) == FENCE_STATE.UNDECIDED) {
 				[FENCE_STATE.OPEN, FENCE_STATE.CLOSED].forEach(state => {
 					event_ = new FenceEvent(solveX, solveY, DIRECTION.RIGHT, state);
-					result = p_solver.tryToApplyHypothesis(event_); 				
+					resultDo = p_solver.tryToApplyHypothesis(event_); 				
 					nbDeductions = p_solver.numberOfRelevantDeductionsSinceLastHypothesis();
 					if (bestIndex.nbD < nbDeductions) {
 						bestIndex = {nbD : nbDeductions , x : event_.fenceX, y : event_.fenceY, direction : DIRECTION.RIGHT}
@@ -459,10 +455,10 @@ function searchBestFenceForSolutionSearch(p_solver, p_fencesGrid) {
 	}
 	for (solveX = 0 ; solveX < p_solver.xLength ; solveX++) { // x and y are somehow modified by tryToApplyHypothesis...
 		for (solveY = 0 ; solveY < p_solver.yLength-1 ; solveY++) {
-			if (p_solver.answerFencesGrid.getFenceDown(solveX, solveY) == FENCE_STATE.UNDECIDED) {
+			if (p_fencesGrid.getFenceDown(solveX, solveY) == FENCE_STATE.UNDECIDED) {
 				[FENCE_STATE.OPEN, FENCE_STATE.CLOSED].forEach(state => {
 					event_ = new FenceEvent(solveX, solveY, DIRECTION.DOWN, state);
-					result = p_solver.tryToApplyHypothesis(event_); 				
+					resultDo = p_solver.tryToApplyHypothesis(event_); 				
 					nbDeductions = p_solver.numberOfRelevantDeductionsSinceLastHypothesis();
 					if (bestIndex.nbD < nbDeductions) {
 						bestIndex = {nbD : nbDeductions , x : event_.fenceX, y : event_.fenceY, direction : DIRECTION.DOWN}

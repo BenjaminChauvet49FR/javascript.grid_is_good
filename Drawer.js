@@ -28,7 +28,7 @@ function Drawer() {
     }
 	
 	// Colour : common part
-	this.wallColorSet = { 
+	this.wallColourSet = { 
 		closed_wall : COLOURS.CLOSED_WALL,
 		open_wall : COLOURS.OPEN_WALL,
 		edge_walls : COLOURS.EDGE_WALL,
@@ -42,30 +42,30 @@ function Drawer() {
 	
 	// Specific puzzle part
 	this.coloursFontsSpecificGrids = {
-		combinedArrowRingIndications : '#440000',
-		tapaIndications : '#000044',
+		combinedArrowRingIndications : COLOURS.WRITE_FOR_LINE_RED,
+		tapaIndications : COLOURS.WRITE_ON_ISLAND,
 		tapaFont : FONTS.ARIAL,
-		marginText : '#440000'
+		marginText : COLOURS.WRITE_FOR_LINE_RED
 	}
 	this.galaxiesColourSet = {
-		inner : '#ffffdd',
-		border : '#440000'
+		inner : COLOURS.GALAXIES_INNER,
+		border : COLOURS.GALAXIES_OUTER,
 	}
 	this.yagitColourSet = {
-		roundBorder : '#000088',
-		roundInner : '#8844ff',
-		squareBorder : '#008800',
-		squareInner : '#00cc44'
+		roundBorder : COLOURS.YAGIT_ROUND_BORDER,
+		roundInner : COLOURS.YAGIT_ROUND_INNER,
+		squareBorder : COLOURS.YAGIT_SQUARE_BORDER, 
+		squareInner : COLOURS.YAGIT_SQUARE_INNER
 	}
 }
 
-Drawer.prototype.setWallColors = function(p_wallColorSet) {
-	for (const [key, value] of Object.entries(p_wallColorSet)) {
-		this.wallColorSet[key] = value;
+Drawer.prototype.setWallColours = function(p_wallColourSet) {
+	for (const [key, value] of Object.entries(p_wallColourSet)) {
+		this.wallColourSet[key] = value;
 	}
 }
 
-Drawer.prototype.setFenceColors = function(p_fenceColours) {
+Drawer.prototype.setFenceColours = function(p_fenceColours) {
 	for (const [key, value] of Object.entries(p_fenceColours)) {
 		this.fenceColourSet[key] = value;
 	}
@@ -94,64 +94,64 @@ Drawer.prototype.clearDrawingMandatory = function(p_context) {
 //---------------------
 // Drawing grids
 
-wallRightToColorClosure = function(p_solver, p_wallGrid) {
+wallRightToColourClosure = function(p_solver, p_wallGrid) {
 	return function(p_x, p_y) {
-		return p_solver.wallToColor(p_wallGrid.getWallR(p_x, p_y));
+		return p_solver.wallToColour(p_wallGrid.getWallR(p_x, p_y));
 	}
 }
 
-wallDownToColorClosure = function(p_solver, p_wallGrid) {
+wallDownToColourClosure = function(p_solver, p_wallGrid) {
 	return function(p_x, p_y) {
-		return p_solver.wallToColor(p_wallGrid.getWallD(p_x, p_y));
+		return p_solver.wallToColour(p_wallGrid.getWallD(p_x, p_y));
 	}
 }
 
-pillarToColorClosure = function(p_solver, p_wallGrid) {
+pillarToColourClosure = function(p_solver, p_wallGrid) {
 	return function(p_x, p_y) {
 		if (p_wallGrid.getWallR(p_x, p_y) == WALLGRID.CLOSED || p_wallGrid.getWallD(p_x, p_y) == WALLGRID.CLOSED ||
 			p_wallGrid.getWallR(p_x, p_y + 1) == WALLGRID.CLOSED || p_wallGrid.getWallD(p_x + 1, p_y) == WALLGRID.CLOSED) {
-			return p_solver.wallToColor(WALLGRID.CLOSED);
+			return p_solver.wallToColour(WALLGRID.CLOSED);
 		} else {
-			return p_solver.wallToColor(WALLGRID.OPEN);
+			return p_solver.wallToColour(WALLGRID.OPEN);
 		}
 	}
 }
 
-spaceToColorClosure = function(p_solver, p_wallGrid) {
+spaceToColourClosure = function(p_solver, p_wallGrid) {
 	return function(p_x, p_y) {
 		if (p_wallGrid.getState(p_x, p_y) == WALLGRID.CLOSED) {
-            return p_solver.wallColorSet.bannedSpace;
+            return p_solver.wallColourSet.bannedSpace;
 		}
 		return null;
 	}
 }
 
-fenceRightToColorClosure = function(p_solver, p_fenceMethodRight) {
+fenceRightToColourClosure = function(p_solver, p_fenceMethodRight) {
 	return function(p_x, p_y) {
-		return p_solver.fenceToColor(p_fenceMethodRight(p_x, p_y));
+		return p_solver.fenceToColour(p_fenceMethodRight(p_x, p_y));
 	}
 }
 
-fenceDownToColorClosure = function(p_solver, p_fenceMethodDown) {
+fenceDownToColourClosure = function(p_solver, p_fenceMethodDown) {
 	return function(p_x, p_y) {
-		return p_solver.fenceToColor(p_fenceMethodDown(p_x, p_y));
+		return p_solver.fenceToColour(p_fenceMethodDown(p_x, p_y));
 	}
 }
 
-pillarToColorFenceClosure = function(p_drawer, p_fenceMethodRight, p_fenceMethodDown, p_undecidedOverOpen) {
+pillarToColourFenceClosure = function(p_drawer, p_fenceMethodRight, p_fenceMethodDown, p_undecidedOverOpen) {
 	return function(p_x, p_y) {
 		if (p_fenceMethodRight(p_x, p_y) == FENCE_STATE.CLOSED || p_fenceMethodDown(p_x, p_y) == FENCE_STATE.CLOSED ||
 			p_fenceMethodRight(p_x, p_y + 1) == FENCE_STATE.CLOSED || p_fenceMethodDown(p_x + 1, p_y) == FENCE_STATE.CLOSED) {
-			return p_drawer.fenceToColor(FENCE_STATE.CLOSED);
+			return p_drawer.fenceToColour(FENCE_STATE.CLOSED);
 		} else {
 			const cond1 = !p_undecidedOverOpen && (p_fenceMethodRight(p_x, p_y) == FENCE_STATE.OPEN || p_fenceMethodDown(p_x, p_y) == FENCE_STATE.OPEN ||
 			p_fenceMethodRight(p_x, p_y + 1) == FENCE_STATE.OPEN || p_fenceMethodDown(p_x + 1, p_y) == FENCE_STATE.OPEN);
 			const cond2 = p_undecidedOverOpen && p_fenceMethodRight(p_x, p_y) == FENCE_STATE.OPEN && p_fenceMethodDown(p_x, p_y) == FENCE_STATE.OPEN &&
 			p_fenceMethodRight(p_x, p_y + 1) == FENCE_STATE.OPEN && p_fenceMethodDown(p_x + 1, p_y) == FENCE_STATE.OPEN;
 			if (cond1 || cond2) {
-				return p_drawer.fenceToColor(FENCE_STATE.OPEN);
+				return p_drawer.fenceToColour(FENCE_STATE.OPEN);
 			} else {
-				return p_drawer.fenceToColor(FENCE_STATE.UNDECIDED);
+				return p_drawer.fenceToColour(FENCE_STATE.UNDECIDED);
 			}
 		}
 	}
@@ -159,8 +159,8 @@ pillarToColorFenceClosure = function(p_drawer, p_fenceMethodRight, p_fenceMethod
 
 Drawer.prototype.drawWallGrid = function (p_context, p_wallGrid, p_xLength, p_yLength) {
 	this.drawEdgesGrid(p_context, p_xLength, p_yLength, 
-	wallRightToColorClosure(this, p_wallGrid), wallDownToColorClosure(this, p_wallGrid), 
-	pillarToColorClosure(this, p_wallGrid), spaceToColorClosure(this, p_wallGrid))
+	wallRightToColourClosure(this, p_wallGrid), wallDownToColourClosure(this, p_wallGrid), 
+	pillarToColourClosure(this, p_wallGrid), spaceToColourClosure(this, p_wallGrid))
 }
 
 Drawer.prototype.drawFenceArray = function (p_context, p_xLength, p_yLength, p_fenceMethodRight, p_fenceMethodDown) {
@@ -175,8 +175,8 @@ Drawer.prototype.drawFenceArrayGhostPillars = function (p_context, p_xLength, p_
 
 Drawer.prototype.drawFenceArrayPrivate = function (p_context, p_xLength, p_yLength, p_fenceMethodRight, p_fenceMethodDown, p_pillarsUnknownOverOpen) {
 	this.drawEdgesGrid(p_context, p_xLength, p_yLength, 
-	fenceRightToColorClosure(this, p_fenceMethodRight), fenceDownToColorClosure(this, p_fenceMethodDown), 
-	pillarToColorFenceClosure(this, p_fenceMethodRight, p_fenceMethodDown, p_pillarsUnknownOverOpen), null);
+	fenceRightToColourClosure(this, p_fenceMethodRight), fenceDownToColourClosure(this, p_fenceMethodDown), 
+	pillarToColourFenceClosure(this, p_fenceMethodRight, p_fenceMethodDown, p_pillarsUnknownOverOpen), null);
 }
 
 Drawer.prototype.drawEdgesGrid = function (p_context, p_xLength, p_yLength, p_colourMethodRight, p_colourMethodDown, p_colourMethodPillar, p_colourMethodSpace) {
@@ -192,7 +192,7 @@ Drawer.prototype.drawEdgesGrid = function (p_context, p_xLength, p_yLength, p_co
     var pixDrawYHoriz = this.pix.marginGrid.up + this.pix.sideSpace - this.pix.borderSpace;
     var pixDrawXVert = pixStartXVert;
     var pixDrawYVert = this.pix.marginGrid.up + this.pix.borderSpace;
-    var innerSpaceNotColored;
+    var innerSpaceNotColoured;
 	var filling;
 
     //Rectangle dimensions
@@ -217,7 +217,7 @@ Drawer.prototype.drawEdgesGrid = function (p_context, p_xLength, p_yLength, p_co
 				if (p_colourMethodPillar && (p_colourMethodPillar != null)) {
 					p_context.fillStyle = p_colourMethodPillar(ix, iy);
 				} else {
-					p_context.fillStyle = this.wallToColor(WALLGRID.CLOSED);
+					p_context.fillStyle = this.wallToColour(WALLGRID.CLOSED);
 				}
 				p_context.fillRect(pixDrawXVert, pixDrawYHoriz, pixThickness, pixThickness);
             }
@@ -241,7 +241,7 @@ Drawer.prototype.drawEdgesGrid = function (p_context, p_xLength, p_yLength, p_co
     //Draws the borders
     const pixTotalWidth = p_xLength * this.pix.sideSpace;
     const pixTotalHeight = p_yLength * this.pix.sideSpace;
-    p_context.fillStyle = this.wallColorSet.edge_walls;
+    p_context.fillStyle = this.wallColourSet.edge_walls;
     p_context.fillRect(this.pix.marginGrid.left, this.pix.marginGrid.up, this.pix.borderSpace, pixTotalHeight);
     p_context.fillRect(this.pix.marginGrid.left, this.pix.marginGrid.up, pixTotalWidth, this.pix.borderSpace);
     p_context.fillRect(this.pix.marginGrid.left + pixTotalWidth - this.pix.borderSpace, this.pix.marginGrid.up,
@@ -348,7 +348,7 @@ Drawer.prototype.drawQuadrillageGrid = function (p_context, p_xLength, p_yLength
     var pixY = pixYStart - this.pix.borderSpace;
     const pixInsideThickness = 2 * this.pix.borderSpace;
     const pixInnerLength = this.getPixInnerSide();
-    p_context.fillStyle = this.wallColorSet.open_wall;
+    p_context.fillStyle = this.wallColourSet.open_wall;
     for (i = 0; i < p_yLength; i++) {
         pixY += this.pix.sideSpace;
         p_context.fillRect(pixXStart, pixY, pixTotalWidth, pixInsideThickness); // Some will be overdrawn but that's it !
@@ -359,7 +359,7 @@ Drawer.prototype.drawQuadrillageGrid = function (p_context, p_xLength, p_yLength
         p_context.fillRect(pixX, pixYStart, pixInsideThickness, pixTotalHeight);
     }
 	
-	p_context.fillStyle = this.wallColorSet.closed_wall;
+	p_context.fillStyle = this.wallColourSet.closed_wall;
 	if (p_rightToColumnIndexes) {
 		const pixXOffset = pixXStart + this.pix.sideSpace - this.pix.borderSpace; // pix.sidespace counted once in this offset constant ! We could have multiplied pix.sidespace by (index+1) otherwise.
 		p_rightToColumnIndexes.forEach(indexRtoC => {
@@ -374,7 +374,7 @@ Drawer.prototype.drawQuadrillageGrid = function (p_context, p_xLength, p_yLength
 	}
 	
 	// All four walls on the edge
-    p_context.fillStyle = this.wallColorSet.edge_walls;
+    p_context.fillStyle = this.wallColourSet.edge_walls;
     p_context.fillRect(pixXStart, pixYStart, pixTotalWidth, this.pix.borderSpace);
     p_context.fillRect(pixXStart, pixYStart, this.pix.borderSpace, pixTotalHeight);
     p_context.fillRect(pixXStart, pixY, pixTotalWidth, this.pix.borderSpace);
@@ -401,7 +401,7 @@ Drawer.prototype.drawMeshContents2Dimensions = function(p_context, p_drawableIte
 	this.drawSpaceContents2Dimensions(p_context, p_drawableItems, p_function, p_xMeshNumber, p_yMeshNumber);
 }
 
-Drawer.prototype.drawDotsGrid = function(p_context, p_xDotsNumber, p_yDotsNumber, p_linkRightColourMethod, p_linkDownColourMethod, p_dotsColorMethod, p_dotsSizeMethod, p_drawableMethod) {
+Drawer.prototype.drawDotsGrid = function(p_context, p_xDotsNumber, p_yDotsNumber, p_linkRightColourMethod, p_linkDownColourMethod, p_dotsColourMethod, p_dotsSizeMethod, p_drawableMethod) {
 	this.clearDrawingMandatory(p_context);
     		
 	//Links
@@ -411,7 +411,7 @@ Drawer.prototype.drawDotsGrid = function(p_context, p_xDotsNumber, p_yDotsNumber
     var pixDrawYHoriz = this.pix.marginGrid.up - this.pix.borderSpace/2;
     var pixDrawXVert = pixStartXVert;
     var pixDrawYVert = this.pix.marginGrid.up;
-    var innerSpaceNotColored;
+    var innerSpaceNotColoured;
 	var filling;
     const pixLength = this.pix.sideSpace - this.pix.borderSpace + 2; // Extra pixels should be masked by dots
     const pixThickness = this.pix.borderSpace;
@@ -451,7 +451,7 @@ Drawer.prototype.drawDotsGrid = function(p_context, p_xDotsNumber, p_yDotsNumber
 				p_context.beginPath();
 				//p_context.lineWidth = 1;
 				p_context.ellipse(pixDrawXCenter, pixDrawYCenter, pixDotRadius, pixDotRadius, 0, 0, 2 * Math.PI);
-				p_context.fillStyle = p_dotsColorMethod(ix, iy); 
+				p_context.fillStyle = p_dotsColourMethod(ix, iy); 
 				p_context.fill();
 			}
 			pixDrawXCenter+= this.pix.sideSpace;
@@ -465,7 +465,7 @@ Drawer.prototype.drawDotsGrid = function(p_context, p_xDotsNumber, p_yDotsNumber
 
 /**
 Draws the main content of a space into a grid.
-(It is used mainly for solver as the space is supposed to be colorized, to have an image into it...)
+(It is used mainly for solver as the space is supposed to be colourized, to have an image into it...)
 
 p_drawableItems : array of items to draw.
 p_function : function to return the index.
@@ -503,7 +503,7 @@ Drawer.prototype.drawSpaceContentsCoorsList = function (p_context, p_drawableIte
 Drawer.prototype.drawSpaceContent = function(p_context, p_ix, p_iy, p_item, p_pixInnerSide) {
 	if (p_item.kind == KIND_DRAWABLE_ITEM.IMAGE) {
 		p_context.drawImage(p_item.picture, p_item.x1, p_item.y1, p_item.x2, p_item.y2, this.getPixInnerXLeft(p_ix), this.getPixInnerYUp(p_iy), p_pixInnerSide, p_pixInnerSide);
-	} else if (p_item.kind == KIND_DRAWABLE_ITEM.COLOR) {
+	} else if (p_item.kind == KIND_DRAWABLE_ITEM.COLOUR) {
 		p_context.fillStyle = p_item.getColour();
 		p_context.fillRect(this.getPixInnerXLeft(p_ix), this.getPixInnerYUp(p_iy), p_pixInnerSide, p_pixInnerSide);
 	} else if (p_item.kind == KIND_DRAWABLE_ITEM.CIRCLE) {
@@ -511,12 +511,12 @@ Drawer.prototype.drawSpaceContent = function(p_context, p_ix, p_iy, p_item, p_pi
 		p_context.lineWidth = (p_item.thickness || p_item.thickness == 0) ? p_item.thickness : Math.max(1, this.getPixInnerSide()*1/16);
 		const pixRadius = this.getPixInnerSide()*1/3;
 		p_context.ellipse(this.getPixCenterX(p_ix), this.getPixCenterY(p_iy), pixRadius, pixRadius, 0, 0, 2 * Math.PI);
-		if (p_item.colorInner && p_item.colorInner != null) { // Note : "p_context.fillStyle = X" seems not to change p_context.fillStyle when X is null.
-			p_context.fillStyle = p_item.colorInner; //An p_item property was taken rather than a method. I think this is better this way.
+		if (p_item.colourInner && p_item.colourInner != null) { // Note : "p_context.fillStyle = X" seems not to change p_context.fillStyle when X is null.
+			p_context.fillStyle = p_item.colourInner; //An p_item property was taken rather than a method. I think this is better this way.
 			p_context.fill();
 		}
-		if (p_item.colorBorder && p_item.colorBorder != null) {
-			p_context.strokeStyle = p_item.colorBorder;
+		if (p_item.colourBorder && p_item.colourBorder != null) {
+			p_context.strokeStyle = p_item.colourBorder;
 			p_context.stroke();
 		}
 	} else if (p_item.kind == KIND_DRAWABLE_ITEM.X) {
@@ -531,12 +531,12 @@ Drawer.prototype.drawSpaceContent = function(p_context, p_ix, p_iy, p_item, p_pi
 		setupFont(p_context, this.getPixInnerSide(), p_item.font);
 		alignFontCenter(p_context);
 		if (p_item.value != null) {
-			p_context.fillStyle = p_item.color;
+			p_context.fillStyle = p_item.colour;
 			p_context.fillText(p_item.value, this.getPixCenterX(p_ix), this.getPixWriteCenterY(p_iy));
 		} 
 	} else if (p_item.kind == KIND_DRAWABLE_ITEM.HORIZONTAL_DOTS) {
-		p_context.fillStyle = p_item.color; // Note : "horizontal dots" and "vertical dots" will likely be used in Suraromu only, hence the tentation to draw them apart. Only useful if we have so many specific draws, though; plus Suraromu drawings use more classical drawable items too (as I write this note).
-		p_context.strokeStyle = p_item.color;
+		p_context.fillStyle = p_item.colour; // Note : "horizontal dots" and "vertical dots" will likely be used in Suraromu only, hence the tentation to draw them apart. Only useful if we have so many specific draws, though; plus Suraromu drawings use more classical drawable items too (as I write this note).
+		p_context.strokeStyle = p_item.colour;
 		pixDistance = this.getPixInnerSide()/(2 * p_item.number);
 		for (var x = 0 ; x < p_item.number ; x++) {
 			p_context.beginPath(); // (1) 2-3 (4-5) 6-7 (8-9) 10-11 (12-13) 14-15 (16) (in parenthesis : blank. Without : portion of median line covered by the dot)
@@ -545,8 +545,8 @@ Drawer.prototype.drawSpaceContent = function(p_context, p_ix, p_iy, p_item, p_pi
 		}
 		
 	} else if (p_item.kind == KIND_DRAWABLE_ITEM.VERTICAL_DOTS) {
-		p_context.fillStyle = p_item.color; 
-		p_context.strokeStyle = p_item.color;
+		p_context.fillStyle = p_item.colour; 
+		p_context.strokeStyle = p_item.colour;
 		pixDistance = this.getPixInnerSide()/(2 * p_item.number);
 		for (var y = 0 ; y < p_item.number ; y++) {
 			p_context.beginPath();
@@ -976,7 +976,6 @@ Drawer.prototype.drawTapaGrid = function (p_context, p_tapaGrid) {
 		const pixDeltaInnerY = 1/4*this.getPixInnerSide();
 		p_context.fillStyle = this.coloursFontsSpecificGrids.tapaIndications;
 		alignFontCenter(p_context);
-		p_context.fillStyle = '#000000';
 		for (iy = 0; iy < yLength; iy++) {
 			for (ix = 0; ix < xLength; ix++) {
 				tapaClue = p_tapaGrid.get(ix, iy);
@@ -1103,7 +1102,7 @@ function DrawRegionArgument(p_x, p_y, p_value, p_colour) {
 
 /**
 Draws values in appropriate spaces of region (usually the first) in the same grid as where drawSpaceContents variants are used. (coordinates and 2-dimensions)
-p_functionRegionIndicationColour : function that transforms an integer in 0 .. p_numberRegions-1 into an item containing properties {x, y, value, color}, or null ; this way, several colours may be used depending on the context.
+p_functionRegionIndicationColour : function that transforms an integer in 0 .. p_numberRegions-1 into an item containing properties {x, y, value, colour}, or null ; this way, several colours may be used depending on the context.
 p_numberRegions : number of regions
 p_font : font in which values are drawn.
 */ 
@@ -1136,7 +1135,7 @@ Drawer.prototype.drawCrossLittleX = function(p_context, p_xSpace, p_ySpace, p_it
 
 Drawer.prototype.drawCrossXInner = function(p_context, p_xSpace, p_ySpace, p_item, p_pixDistanceFromEdge) {
 	p_context.beginPath();
-	p_context.strokeStyle = p_item.color; 
+	p_context.strokeStyle = p_item.colour; 
 	p_context.lineWidth = Math.max(Math.floor(this.getPixInnerSide()/10, 1));
 	const pixLeft = this.getPixInnerXLeft(p_xSpace) + p_pixDistanceFromEdge;
 	const pixRight = this.getPixInnerXRight(p_xSpace) - p_pixDistanceFromEdge;
@@ -1151,8 +1150,8 @@ Drawer.prototype.drawCrossXInner = function(p_context, p_xSpace, p_ySpace, p_ite
 
 Drawer.prototype.drawSquare = function(p_context, p_xSpace, p_ySpace, p_item) {
 	p_context.beginPath();
-	p_context.strokeStyle = p_item.colorBorder; 
-	p_context.fillStyle = p_item.colorInner; 
+	p_context.strokeStyle = p_item.colourBorder; 
+	p_context.fillStyle = p_item.colourInner; 
 	p_context.lineWidth = Math.max(Math.floor(this.getPixInnerSide()/10, 2));
 	
 	const pixAway = Math.floor(this.getPixInnerSide()/5);
@@ -1166,7 +1165,7 @@ Drawer.prototype.drawSquare = function(p_context, p_xSpace, p_ySpace, p_item) {
 	p_context.lineTo(pixLeft, pixDown);
 	p_context.lineTo(pixLeft, pixUp);
 	p_context.lineTo(pixRight, pixUp);
-	if (p_item.colorBorder != null) {		
+	if (p_item.colourBorder != null) {		
 		p_context.stroke();
 	}
 	p_context.fill();
@@ -1174,8 +1173,8 @@ Drawer.prototype.drawSquare = function(p_context, p_xSpace, p_ySpace, p_item) {
 
 Drawer.prototype.drawTriangle = function(p_context, p_xSpace, p_ySpace, p_item) {
 	p_context.beginPath();
-	p_context.strokeStyle = p_item.colorBorder; 
-	p_context.fillStyle = p_item.colorInner; 
+	p_context.strokeStyle = p_item.colourBorder; 
+	p_context.fillStyle = p_item.colourInner; 
 	p_context.lineWidth = Math.max(Math.floor(this.getPixInnerSide()/10, 2));
 	
 	const pixAway = Math.floor(this.getPixInnerSide()/6);
@@ -1188,7 +1187,7 @@ Drawer.prototype.drawTriangle = function(p_context, p_xSpace, p_ySpace, p_item) 
 	p_context.lineTo(pixRight, pixDown);
 	p_context.lineTo(pixLeft, pixDown);
 	p_context.lineTo(pixMid, pixUp);
-	if (p_item.colorBorder != null) {
+	if (p_item.colourBorder != null) {
 		p_context.stroke();
 	}
 	p_context.fill();
@@ -1200,16 +1199,18 @@ Drawer.prototype.drawLittleRoundUpperRight = function(p_context, p_xSpace, p_ySp
 	const pixRadius = this.pix.sideSpace / 6;
 	const pixXCenter = this.getPixXRight(p_xSpace) - 1 - pixRadius;
 	const pixYCenter = this.getPixYUp(p_ySpace) + 1 + pixRadius;
+	p_context.strokeStyle = p_item.colour; 
 	p_context.beginPath();
 	p_context.ellipse(pixXCenter, pixYCenter, pixRadius, pixRadius, 0, 0, 2 * Math.PI);
 	p_context.stroke();
 }
 
 Drawer.prototype.drawLittlePlusUpperRight = function(p_context, p_xSpace, p_ySpace, p_item) {
-	p_context.beginPath();
 	const pixRadius = this.pix.sideSpace / 6;
 	const pixXCenter = this.getPixXRight(p_xSpace) - 1 - pixRadius;
 	const pixYCenter = this.getPixYUp(p_ySpace) + 1 + pixRadius;
+	p_context.strokeStyle = p_item.colour; 
+	p_context.beginPath();
 	p_context.moveTo(pixXCenter, pixYCenter - pixRadius);
 	p_context.lineTo(pixXCenter, pixYCenter + pixRadius);
 	p_context.moveTo(pixXCenter - pixRadius, pixYCenter);
@@ -1356,12 +1357,12 @@ Drawer.prototype.getClickKnotRD = function (event, p_canvas, p_xLength, p_yLengt
 	const pixXModulo = (pixX + this.pix.borderClickDetection) % this.pix.sideSpace;
 	const pixYModulo = (pixY + this.pix.borderClickDetection) % this.pix.sideSpace;
 	if ((pixXModulo < 2 * this.pix.borderClickDetection) &&  (pixYModulo < 2 * this.pix.borderClickDetection)) {
-		const answer = {
+		const resultKnot = {
 			x: Math.floor((pixX + this.pix.borderClickDetection) / this.pix.sideSpace) - 1,
 			y: Math.floor((pixY + this.pix.borderClickDetection) / this.pix.sideSpace) - 1
 		};
-		if ((answer.x < (p_xLength - 1)) && (answer.x >= 0) && (answer.y < p_yLength) && (answer.y >= 0)) {
-			return answer;
+		if ((resultKnot.x < (p_xLength - 1)) && (resultKnot.x >= 0) && (resultKnot.y < p_yLength) && (resultKnot.y >= 0)) {
+			return resultKnot;
 		}
 	}
     return null;
@@ -1375,12 +1376,12 @@ Drawer.prototype.getClickWallR = function (event, p_canvas, p_xLength, p_yLength
 	const pixY = this.getPixYWithinGrid(event, p_canvas);
 	const pixXModulo = (pixX + this.pix.borderClickDetection) % this.pix.sideSpace;
 	if (pixXModulo < 2 * this.pix.borderClickDetection) {
-		const answer = {
+		const resultWall = {
 			x: Math.floor((pixX + this.pix.borderClickDetection) / this.pix.sideSpace) - 1,
 			y: Math.floor(pixY / this.pix.sideSpace)
 		};
-		if ((answer.x < (p_xLength - 1)) && (answer.x >= 0) && (answer.y < p_yLength) && (answer.y >= 0)) {
-			return answer;
+		if ((resultWall.x < (p_xLength - 1)) && (resultWall.x >= 0) && (resultWall.y < p_yLength) && (resultWall.y >= 0)) {
+			return resultWall;
 		}
 	}
     return null;
@@ -1394,12 +1395,12 @@ Drawer.prototype.getClickWallD = function (event, p_canvas, p_xLength, p_yLength
 	const pixY = this.getPixYWithinGrid(event, p_canvas);
 	const pixYModulo = (pixY + this.pix.borderClickDetection) % this.pix.sideSpace;
 	if (pixYModulo < 2 * this.pix.borderClickDetection) {
-		const answer = {
+		const resultWall = {
 			x: Math.floor(pixX / this.pix.sideSpace),
 			y: Math.floor((pixY + this.pix.borderClickDetection) / this.pix.sideSpace) - 1
 		};
-		if ((answer.y < (p_yLength - 1)) && (answer.y >= 0) && (answer.x < p_xLength) && (answer.x >= 0)) {
-			return answer;
+		if ((resultWall.y < (p_yLength - 1)) && (resultWall.y >= 0) && (resultWall.x < p_xLength) && (resultWall.x >= 0)) {
+			return resultWall;
 		}
 	}
     return null;
@@ -1414,12 +1415,12 @@ Drawer.prototype.getClickAroundWallR = function (event, p_canvas, p_xLength, p_y
 	var distanceY = pixY % sideSpace;
 	distanceY = Math.min(distanceY, sideSpace - distanceY);
 	if (distanceX < distanceY) {
-		const answer = {
+		const resultWall = {
 			x: Math.floor((pixX - sideSpace / 2) / sideSpace),
 			y: Math.floor(pixY / sideSpace)
 		}
-		if ((answer.x < (p_xLength - 1)) && (answer.x >= 0) && (answer.y < p_yLength) && (answer.y >= 0)) {
-			return answer;
+		if ((resultWall.x < (p_xLength - 1)) && (resultWall.x >= 0) && (resultWall.y < p_yLength) && (resultWall.y >= 0)) {
+			return resultWall;
 		}
 	}
     return null;
@@ -1434,29 +1435,30 @@ Drawer.prototype.getClickAroundWallD = function (event, p_canvas, p_xLength, p_y
 	var distanceY = pixY % sideSpace;
 	distanceY = Math.min(distanceY, sideSpace - distanceY);
 	if (distanceX > distanceY) {
-		const answer = {
+		const resultWall = {
 			x: Math.floor(pixX / sideSpace),
 			y: Math.floor((pixY - sideSpace / 2) / sideSpace)
 		}
-		if ((answer.y < (p_yLength - 1)) && (answer.y >= 0) && (answer.x < p_xLength) && (answer.x >= 0)) {
-			return answer;	
+		if ((resultWall.y < (p_yLength - 1)) && (resultWall.y >= 0) && (resultWall.x < p_xLength) && (resultWall.x >= 0)) {
+			return resultWall;	
 		}
 	}
     return null;
 }
 
-// Edges ! (partly copy-pasted on space above) 
+// Edges ! Used in a few loop solvers that use nodes instead of the classic spaces.
+// Note : difference with getClickWallD/R is pretty subtle but it exists. First, edge R is the same as wall D. (since it's the edges of a net...)
 Drawer.prototype.getClickEdgeR = function (event, p_canvas, p_xDotsNumber, p_yDotsNumber) {
 	const pixX = this.getPixXWithinGrid(event, p_canvas);
 	const pixY = this.getPixYWithinGrid(event, p_canvas);
 	const pixYModulo = (pixY + this.pix.borderClickDetection) % this.pix.sideSpace;
 	if (pixYModulo < 2 * this.pix.borderClickDetection) {
-		const answer = {
+		const resultEdge = {
 			x: Math.floor(pixX / this.pix.sideSpace),
 			y: Math.floor((pixY + this.pix.borderClickDetection) / this.pix.sideSpace)
 		};
-		if ((answer.x < p_xDotsNumber) && (answer.x >= 0) && (answer.y <= p_yDotsNumber) && (answer.y >= 0)) {
-			return answer;
+		if ((resultEdge.x < p_xDotsNumber) && (resultEdge.x >= 0) && (resultEdge.y <= p_yDotsNumber) && (resultEdge.y >= 0)) {
+			return resultEdge;
 		}
 	}
     return null;
@@ -1467,28 +1469,12 @@ Drawer.prototype.getClickEdgeD = function (event, p_canvas, p_xDotsNumber, p_yDo
 	const pixY = this.getPixYWithinGrid(event, p_canvas);
 	const pixXModulo = (pixX + this.pix.borderClickDetection) % this.pix.sideSpace;
 	if (pixXModulo < 2 * this.pix.borderClickDetection) {
-		const answer = {
+		const resultEdge = {
 			x: Math.floor((pixX + this.pix.borderClickDetection) / this.pix.sideSpace),
 			y: Math.floor(pixY / this.pix.sideSpace)
 		};
-		if ((answer.y < p_yDotsNumber) && (answer.y >= 0) && (answer.x <= p_xDotsNumber) && (answer.x >= 0)) {
-			return answer;
-		}
-	}
-    return null;
-}
-
-Drawer.prototype.getClickEdgeD = function (event, p_canvas, p_xDotsNumber, p_yDotsNumber) {
-	const pixX = this.getPixXWithinGrid(event, p_canvas);
-	const pixY = this.getPixYWithinGrid(event, p_canvas);
-	const pixXModulo = (pixX + this.pix.borderClickDetection) % this.pix.sideSpace;
-	if (pixXModulo < 2 * this.pix.borderClickDetection) {
-		const answer = {
-			x: Math.floor((pixX + this.pix.borderClickDetection) / this.pix.sideSpace),
-			y: Math.floor(pixY / this.pix.sideSpace)
-		};
-		if ((answer.y < p_yDotsNumber) && (answer.y >= 0) && (answer.x <= p_xDotsNumber) && (answer.x >= 0)) {
-			return answer;
+		if ((resultEdge.y < p_yDotsNumber) && (resultEdge.y >= 0) && (resultEdge.x <= p_xDotsNumber) && (resultEdge.x >= 0)) {
+			return resultEdge;
 		}
 	}
     return null;
@@ -1511,12 +1497,12 @@ Drawer.prototype.getClickNodePrivate = function(event, p_canvas, p_xDotsNumber, 
 	const pixYModulo = (pixY + pixToleranceSquareIn) % this.pix.sideSpace;
 	
 	if ((pixXModulo < 2 * pixToleranceSquareIn) &&  (pixYModulo < 2 * pixToleranceSquareIn)) {
-		const answer = {
+		const resultNode = {
 			x: Math.floor((pixX + pixToleranceSquareIn) / this.pix.sideSpace),
 			y: Math.floor((pixY + pixToleranceSquareIn) / this.pix.sideSpace)
 		};
-		if ((answer.x < (p_xDotsNumber)) && (answer.x >= 0) && (answer.y < p_yDotsNumber) && (answer.y >= 0)) {
-			return answer;
+		if ((resultNode.x < (p_xDotsNumber)) && (resultNode.x >= 0) && (resultNode.y < p_yDotsNumber) && (resultNode.y >= 0)) {
+			return resultNode;
 		}
 	}
     return null;
@@ -1689,23 +1675,23 @@ Drawer.prototype.getPixYWithinGrid = function (event, p_canvas) {
 
 /**
 (private string)
-Gives the correct wall color from a wall type (a #RRGGBB string)
+Gives the correct wall colour from a wall type (a #RRGGBB string)
 @p_wallType : a type of wall between 2 spaces
  */
-Drawer.prototype.wallToColor = function (p_wallType) {
+Drawer.prototype.wallToColour = function (p_wallType) {
     switch (p_wallType) {
     case (WALLGRID.OPEN):
-        return (this.wallColorSet.open_wall);
+        return (this.wallColourSet.open_wall);
         break;
     case (WALLGRID.CLOSED):
-        return (this.wallColorSet.closed_wall);
+        return (this.wallColourSet.closed_wall);
         break;
     }
-    return '#ffffff';
+    return '#ffffff'; // Should not happen
 }
 
 // With fences
-Drawer.prototype.fenceToColor = function (p_fenceState) {
+Drawer.prototype.fenceToColour = function (p_fenceState) {
     switch (p_fenceState) {
 		case (FENCE_STATE.OPEN): return (this.fenceColourSet.open_fence); break;
 		case (FENCE_STATE.CLOSED): return (this.fenceColourSet.closed_fence); break;

@@ -11,17 +11,15 @@ function main() {
 	var colours = {
 		openSpace : COLOURS.OPEN_WILD,
 		closedSpace : COLOURS.CLOSED_WILD,
-		LSpace : '#ffcccc',
-		ISpace : '#ffcc88',
-		TSpace : '#ccffcc',
-		SSpace : '#ccccff',
-		LSpaceLight : '#ffe5e5',
-		ISpaceLight : '#ffe5c0',
-		TSpaceLight : '#e5ffe5',
-		SSpaceLight : '#e5e5ff',
-		insideIndicationsOnWhite : '#008800',
-		insideIndicationsOnFilled : '#00ff00',
-		colourblindWrite : '#000000'	
+		LSpace : COLOURS.LITS_L_DARK,
+		ISpace : COLOURS.LITS_I_DARK,
+		TSpace : COLOURS.LITS_T_DARK,
+		SSpace : COLOURS.LITS_S_DARK,
+		LSpaceLight : COLOURS.LITS_L_LIGHT,
+		ISpaceLight : COLOURS.LITS_I_LIGHT,
+		TSpaceLight : COLOURS.LITS_T_LIGHT,
+		SSpaceLight : COLOURS.LITS_S_LIGHT,
+		colourblindWrite : COLOURS.STANDARD_COLOURBLIND_WRITE	
 	}
 
 	const checkBoxColourblindFriendly = document.getElementById("checkbox_colourblind_friendly");

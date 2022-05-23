@@ -1,7 +1,7 @@
 var solver;
 
 function main() {
-	var colors = {}; 
+	var colours = {}; 
 	var drawer = new Drawer();
 	solver = DummySolver();
 	var canevas = document.getElementById("canevas");
@@ -13,7 +13,7 @@ function main() {
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
-		drawing(context, drawer, colors, solver);
+		drawing(context, drawer, colours, solver);
 		solver.callStateForItem(spanState);
 	}
 

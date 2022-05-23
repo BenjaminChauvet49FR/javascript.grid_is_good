@@ -7,17 +7,17 @@ function main() {
 	var	context = canevas.getContext("2d");
 	var actionsManager = {}; 
 
-	var colors = {
-		openSpace : '#0088ff',
-		closedSpace : '#ccffcc',
-		numberWrite : '#000000',
+	var colours = {
+		openSpace : COLOURS.SEA,
+		closedSpace : COLOURS.ISLAND,
+		numberWrite : COLOURS.WRITE_ON_ISLAND,
 	}
 
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
 		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength);
-		drawInsideSpaces(context, drawer, colors, solver);
+		drawInsideSpaces(context, drawer, colours, solver);
 		solver.callStateForItem(spanState);
 	}
 	

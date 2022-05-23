@@ -33,7 +33,7 @@ SolverAqre.prototype.construct = function(p_wallArray, p_indications) {
 	this.methodsSetPass = {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
-		argumentToLabelMethod : namingCategoryClosure(this)};
+		argumentToLabelMethod : namingCategoryPassClosure(this)};
 	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
@@ -145,21 +145,21 @@ SolverAqre.prototype.makeQuickStart = function() {
 }
 
 SolverAqre.prototype.emitPassRegion = function(p_indexRegion) {
-	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
+	const listPassNow = this.generateEventsForRegionPass(p_indexRegion);
 	const index = {category : AQRE_PASS_CATEGORY.REGION, value : p_indexRegion};
-	this.passEvents(generatedEvents, index); 
+	this.passEvents(listPassNow, index); 
 }
 
 SolverAqre.prototype.emitPassRow = function(p_y) {
-	const generatedEvents = this.generateEventsForRowPass(p_y);
+	const listPassNow = this.generateEventsForRowPass(p_y);
 	const index = {category : AQRE_PASS_CATEGORY.ROW, y : p_y};
-	this.passEvents(generatedEvents, index); 
+	this.passEvents(listPassNow, index); 
 }
 
 SolverAqre.prototype.emitPassColumn = function(p_x) {
-	const generatedEvents = this.generateEventsForColumnPass(p_x);
+	const listPassNow = this.generateEventsForColumnPass(p_x);
 	const index = {category : AQRE_PASS_CATEGORY.COLUMN, x : p_x};
-	this.passEvents(generatedEvents, index); 
+	this.passEvents(listPassNow, index); 
 }
 
 SolverAqre.prototype.makeMultiPass = function() {
@@ -167,8 +167,8 @@ SolverAqre.prototype.makeMultiPass = function() {
 }
 
 SolverAqre.prototype.passSelectedSpaces = function(p_coorsList) {
-	const eventsForPass = this.generateEventsForSpacesList(p_coorsList);
-	return this.passEvents(eventsForPass, {family : AQRE_PASS_CATEGORY.CUSTOM, numberSpaces : eventsForPass.length});
+	const listPassNow = this.generateEventsForSpacesList(p_coorsList);
+	return this.passEvents(listPassNow, {family : AQRE_PASS_CATEGORY.CUSTOM, numberSpaces : listPassNow.length});
 }
 
 SolverAqre.prototype.makeResolution = function() { 
@@ -202,16 +202,16 @@ SolverAqre.prototype.putNew = function(p_x, p_y, p_symbol) {
 
 
 applyEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		return p_solver.putNew(eventToApply.x, eventToApply.y, eventToApply.symbol);
+	return function(p_eventToApply) {
+		return p_solver.putNew(p_eventToApply.x, p_eventToApply.y, p_eventToApply.symbol);
 	}
 }
 
 undoEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		const x = eventToApply.x;
-		const y = eventToApply.y;
-		const symbol = eventToApply.symbol;
+	return function(p_eventToUndo) {
+		const x = p_eventToUndo.x;
+		const y = p_eventToUndo.y;
+		const symbol = p_eventToUndo.symbol;
 		p_solver.answerArray[y][x] = ADJACENCY.UNDECIDED;
 		var ir = p_solver.regionArray[y][x];
 		var region = p_solver.regions[ir];
@@ -251,23 +251,23 @@ adjacencyClosure = function (p_solver) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel  :"Aqre"}]
+		var listQSEvents = [{quickStartLabel  :"Aqre"}]
 		
 		p_solver.regions.forEach(region => {
 			if (region.notPlacedYet != null) {
 				if (region.notPlacedYet.CLOSEDs == 0) {
 					region.spaces.forEach(space => {
-						listQSEvts.push(new SpaceEvent(space.x, space.y, ADJACENCY.YES));
+						listQSEvents.push(new SpaceEvent(space.x, space.y, ADJACENCY.YES));
 					});
 				}
 				if (region.notPlacedYet.OPENs == 0) {
 					region.spaces.forEach(space => {
-						listQSEvts.push(new SpaceEvent(space.x, space.y, ADJACENCY.NO));
+						listQSEvents.push(new SpaceEvent(space.x, space.y, ADJACENCY.NO));
 					});
 				}
 			}			
 		});
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -284,22 +284,21 @@ deductionsClosure = function (p_solver) {
 		if (symbol == ADJACENCY.NO) {
 			//Alert on region
 			if (region.notPlacedYet != null && region.notPlacedYet.CLOSEDs == 0) {
-				p_listEventsToApply = p_solver.alertRegionDeductions(p_listEventsToApply, ir, ADJACENCY.YES, region.notPlacedYet.OPENs);			
+				p_solver.deductionsAlertRegion(p_listEventsToApply, ir, ADJACENCY.YES, region.notPlacedYet.OPENs);			
 			}
 			// Strip searching
-			p_listEventsToApply = p_solver.stripDeductions(p_listEventsToApply, x, y, ADJACENCY.NO, ADJACENCY.YES);
+			p_solver.deductionsStrip(p_listEventsToApply, x, y, ADJACENCY.NO, ADJACENCY.YES);
 		} else {
 			//Alert on region
 			if (region.notPlacedYet != null && region.notPlacedYet.OPENs == 0) {
-				p_listEventsToApply = p_solver.alertRegionDeductions(p_listEventsToApply, ir, ADJACENCY.NO, region.notPlacedYet.CLOSEDs);			
+				p_solver.deductionsAlertRegion(p_listEventsToApply, ir, ADJACENCY.NO, region.notPlacedYet.CLOSEDs);			
 			}
-			p_listEventsToApply = p_solver.stripDeductions(p_listEventsToApply, x, y, ADJACENCY.YES, ADJACENCY.NO);
+			p_solver.deductionsStrip(p_listEventsToApply, x, y, ADJACENCY.YES, ADJACENCY.NO);
 		}
-		return p_listEventsToApply;
 	}
 }
 
-SolverAqre.prototype.alertRegionDeductions = function(p_listEvents, p_regionIndex, p_missingSymbol, p_missingNumber) {
+SolverAqre.prototype.deductionsAlertRegion = function(p_listEventsToApply, p_regionIndex, p_missingSymbol, p_missingNumber) {
 	const region = this.regions[p_regionIndex];
 	var xa,ya,alertSpace;
 	var remaining = p_missingNumber
@@ -308,17 +307,16 @@ SolverAqre.prototype.alertRegionDeductions = function(p_listEvents, p_regionInde
 		xa = alertSpace.x;
 		ya = alertSpace.y;
 		if (this.answerArray[ya][xa] == ADJACENCY.UNDECIDED) {
-			p_listEvents.push(new SpaceEvent(xa, ya, p_missingSymbol));
+			p_listEventsToApply.push(new SpaceEvent(xa, ya, p_missingSymbol));
 			remaining--;
 			if (remaining == 0){
 				break;
 			}
 		}
 	}
-	return p_listEvents;
 }
 
-SolverAqre.prototype.stripDeductions = function(p_listEventsToApply, p_x, p_y, p_newState, p_fillingState) {
+SolverAqre.prototype.deductionsStrip = function(p_listEventsToApply, p_x, p_y, p_newState, p_fillingState) {
 	// Horizontal : look from (3 spaces to the left) to (3 spaces to the right) (within grid boundaries, of course) : if among 4 consecutive spaces there are three 'newState', fill the 4th one
 	var counterTotal = 0;
 	var counterNewState = 0;
@@ -334,7 +332,7 @@ SolverAqre.prototype.stripDeductions = function(p_listEventsToApply, p_x, p_y, p
 		}
 		if (counterNewState == 4) {
 			p_listEventsToApply.push(new FailureEvent());
-			return p_listEventsToApply;
+			return;
 		}
 		if (counterTotal >= 3) {
 			if (this.answerArray[p_y][x-3] == p_newState) {
@@ -359,7 +357,7 @@ SolverAqre.prototype.stripDeductions = function(p_listEventsToApply, p_x, p_y, p
 		}
 		if (counterNewState == 4) {
 			p_listEventsToApply.push(new FailureEvent());
-			return p_listEventsToApply;
+			return;
 		}
 		if (counterTotal >= 3) {
 			if (this.answerArray[y-3][p_x] == p_newState) {
@@ -369,16 +367,14 @@ SolverAqre.prototype.stripDeductions = function(p_listEventsToApply, p_x, p_y, p
 			counterTotal++;
 		}
 	}
-	
-	return p_listEventsToApply;
 }
 
 
 function filterTODOStripesClosure(p_solver) {
 	return function() {
-		var answer = [];
+		var listEventsToApply = [];
 		p_solver.cleanTODO();
-		return answer; // Yup... this is "to do".
+		return listEventsToApply; // Yup... this is "to do".
 	}
 }
 
@@ -393,63 +389,63 @@ SolverAqre.prototype.cleanTODO = function() {
 }
 
 // --------------------
-// Passing
+// Passing and multipassing
 
 generateEventsForRegionPassClosure = function(p_solver) {
-	return function(p_index) {
-		switch(p_index.category) {
+	return function(p_indexPass) {
+		switch(p_indexPass.category) {
 			case AQRE_PASS_CATEGORY.REGION : 
-				return p_solver.generateEventsForRegionPass(p_index.value);
+				return p_solver.generateEventsForRegionPass(p_indexPass.value);
 			case AQRE_PASS_CATEGORY.ROW : 
-				return p_solver.generateEventsForRowPass(p_index.y);
+				return p_solver.generateEventsForRowPass(p_indexPass.y);
 			case AQRE_PASS_CATEGORY.COLUMN : 
-				return p_solver.generateEventsForColumnPass(p_index.x);
+				return p_solver.generateEventsForColumnPass(p_indexPass.x);
 		}
 	}
 }
 
 // Generate covering events for "region pass".
 SolverAqre.prototype.generateEventsForRegionPass = function(p_indexRegion) {
-	var choiceList = [];
+	var listEventsChoice = [];
 	this.regions[p_indexRegion].spaces.forEach(space => {
-		this.addChoiceIfUndecided(choiceList, space.x, space.y);			 
+		this.addChoiceIfUndecided(listEventsChoice, space.x, space.y);			 
 	});
-	return choiceList;
+	return listEventsChoice;
 }
 
 SolverAqre.prototype.generateEventsForRowPass = function(p_y) {
-	var choiceList = [];
+	var listEventsChoice = [];
 	for (var x = 0 ; x < this.xLength ; x++) {
-		this.addChoiceIfUndecided(choiceList, x, p_y);
+		this.addChoiceIfUndecided(listEventsChoice, x, p_y);
 	}
-	return choiceList;
+	return listEventsChoice;
 }
 
 SolverAqre.prototype.generateEventsForColumnPass = function(p_x) {
-	var choiceList = [];
+	var listEventsChoice = [];
 	for (var y = 0 ; y < this.yLength ; y++) {
-		this.addChoiceIfUndecided(choiceList, p_x, y);
+		this.addChoiceIfUndecided(listEventsChoice, p_x, y);
 	}
-	return choiceList;
+	return listEventsChoice;
 }
 
-SolverAqre.prototype.addChoiceIfUndecided = function(p_choiceList, p_x, p_y) {
+SolverAqre.prototype.addChoiceIfUndecided = function(p_listEventsChoice, p_x, p_y) {
 	if (this.answerArray[p_y][p_x] == ADJACENCY.UNDECIDED) { // It would still be correct, albeit useless, to pass already filled spaces
 		const region = this.regions[this.getRegionIndex(p_x, p_y)];
 		if (region.notPlacedYet != null && region.notPlacedYet.YES < region.notPlacedYet.NO) {
-			p_choiceList.push([new SpaceEvent(p_x, p_y, ADJACENCY.YES), new SpaceEvent(p_x, p_y, ADJACENCY.NO)]);
+			p_listEventsChoice.push([new SpaceEvent(p_x, p_y, ADJACENCY.YES), new SpaceEvent(p_x, p_y, ADJACENCY.NO)]);
 		} else {			
-			p_choiceList.push([new SpaceEvent(p_x, p_y, ADJACENCY.NO), new SpaceEvent(p_x, p_y, ADJACENCY.YES)]);
+			p_listEventsChoice.push([new SpaceEvent(p_x, p_y, ADJACENCY.NO), new SpaceEvent(p_x, p_y, ADJACENCY.YES)]);
 		}
 	}
 }
 
 SolverAqre.prototype.generateEventsForSpacesList = function(p_coorsList) {
-	var answer = [];
+	var p_listEventsChoice = [];
 	p_coorsList.forEach(space => {
-		this.addChoiceIfUndecided(answer, space.x, space.y)
+		this.addChoiceIfUndecided(p_listEventsChoice, space.x, space.y)
 	});
-	return answer;
+	return p_listEventsChoice;
 }
 
 copying = function(p_event) {
@@ -463,74 +459,74 @@ comparison = function(p_event1, p_event2) {
 // --------------------
 // Multipass
 
-// Note : incertainity can be improved if incertain spaces are counted in real time. Also we can do one pass of answerArray rather than counting each row and then each column.
+// Note : uncertainity can be improved if uncertain spaces are counted in real time. Also we can do one pass of answerArray rather than counting each row and then each column.
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		var indexList = [];
-		var incertainity;
+		var listIndexesPass = [];
+		var uncertainity;
 		for (var i = 0; i < p_solver.regions.length ; i++) {
 			if (p_solver.regions[i].notPlacedYet) {
-				incertainity = p_solver.incertainityRegion(i);
-				if (incertainity <= 25) {					
-					indexList.push({category : AQRE_PASS_CATEGORY.REGION, value : i, 
-						incertainity : incertainity});
+				uncertainity = p_solver.uncertainityRegion(i);
+				if (uncertainity <= 25) {					
+					listIndexesPass.push({category : AQRE_PASS_CATEGORY.REGION, value : i, 
+						uncertainity : uncertainity});
 				}
 			} 
 		}
 		for (var x = 0 ; x < p_solver.xLength ; x++) {
-			indexList.push({category : AQRE_PASS_CATEGORY.COLUMN, x : x,
-				incertainity : p_solver.incertainityColumn(x)});
+			listIndexesPass.push({category : AQRE_PASS_CATEGORY.COLUMN, x : x,
+				uncertainity : p_solver.uncertainityColumn(x)});
 		}
 		for (var y = 0 ; y < p_solver.yLength ; y++) {
-			indexList.push({category : AQRE_PASS_CATEGORY.ROW, y : y,
-				incertainity : p_solver.incertainityRow(y)});
+			listIndexesPass.push({category : AQRE_PASS_CATEGORY.ROW, y : y,
+				uncertainity : p_solver.uncertainityRow(y)});
 		}
-		indexList.sort(function(p_index1, p_index2) {
-			return p_index1.incertainity - p_index2.incertainity;
+		listIndexesPass.sort(function(p_index1, p_index2) {
+			return p_index1.uncertainity - p_index2.uncertainity;
 		}); 
-		return indexList;
+		return listIndexesPass;
 	}
 }
 
-SolverAqre.prototype.incertainityRegion = function(p_ir) { 
+SolverAqre.prototype.uncertainityRegion = function(p_ir) { 
 	const region = this.regions[p_ir];
 	return Math.min(region.notPlacedYet.OPENs, region.notPlacedYet.CLOSEDs);	
 }
 
-SolverAqre.prototype.incertainityRow = function(p_y) { 
-	var answer = 0;
+SolverAqre.prototype.uncertainityRow = function(p_y) { 
+	var resultUncertain = 0;
 	for (var x = 0 ; x < this.xLength ; x++) {
 		if (this.answerArray[p_y][x] == ADJACENCY.UNDECIDED) {
-			answer++;
+			resultUncertain++;
 		}
 	}
-	return answer;
+	return resultUncertain;
 }
 
-SolverAqre.prototype.incertainityColumn = function(p_x) { 
-	var answer = 0;
+SolverAqre.prototype.uncertainityColumn = function(p_x) { 
+	var resultUncertain = 0;
 	for (var y = 0 ; y < this.yLength ; y++) {
 		if (this.answerArray[y][p_x] == ADJACENCY.UNDECIDED) {
-			answer++;
+			resultUncertain++;
 		}
 	}
-	return answer;
+	return resultUncertain;
 }
 
 skipPassClosure = function(p_solver) {
-	return function (p_index) {
-		return p_solver.incertainity > 20; // Arbitrary value !
+	return function (p_indexPass) {
+		return p_solver.uncertainity > 20; // Arbitrary value !
 	}
 }
 
-namingCategoryClosure = function(p_solver) {
-	return function(p_index) {
-		switch(p_index.category) {
+namingCategoryPassClosure = function(p_solver) {
+	return function(p_indexPass) {
+		switch(p_indexPass.category) {
 			case AQRE_PASS_CATEGORY.REGION : 
-				return "Region "+ p_index.value + " (" + p_solver.getFirstSpaceRegion(p_index.value).x +" "+ p_solver.getFirstSpaceRegion(p_index.value).y + ")"; break;
-			case AQRE_PASS_CATEGORY.ROW : return "Row " + p_index.y; break;
-			case AQRE_PASS_CATEGORY.COLUMN : return "Column " + p_index.x; break;
-			case AQRE_PASS_CATEGORY.CUSTOM : return "Selection " + p_index.numberSpaces + " space" + (p_indexAndFamily.numberSpaces > 1 ? "s" : ""); break;
+				return "Region "+ p_indexPass.value + " (" + p_solver.getFirstSpaceRegion(p_indexPass.value).x +" "+ p_solver.getFirstSpaceRegion(p_indexPass.value).y + ")"; break;
+			case AQRE_PASS_CATEGORY.ROW : return "Row " + p_indexPass.y; break;
+			case AQRE_PASS_CATEGORY.COLUMN : return "Column " + p_indexPass.x; break;
+			case AQRE_PASS_CATEGORY.CUSTOM : return "Selection " + p_indexPass.numberSpaces + " space" + (p_indexAndFamily.numberSpaces > 1 ? "s" : ""); break;
 			
 		} 
 	}

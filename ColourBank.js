@@ -1,11 +1,18 @@
 const COLOURS = {
 	
 	// Misc
-	X_LIGHT : '#cccccc',
 	FILLING : '#000088',
 	PEARL_OUT : '#000000',
-	BLACK_PEARL_IN : '#000044',
+	BLACK_PEARL_IN : '#000044', 
 	WHITE_PEARL_IN : '#ffffff',
+	
+	// Xs
+	X_LIGHT : '#cccccc',
+	X_DARK_BLUE : '#000066',
+	X_COLOURED_LIGHT : '880044',
+	X_COLOURED_DARK : 'ff88cc',
+	X_COLOURED_DISTANCE_NEAR : '#440000',
+	X_COLOURED_DISTANCE_FAR : '#cc88ff',
 	
 	// Wall grid
 	CLOSED_WALL : '#222222',
@@ -54,10 +61,10 @@ const COLOURS = {
 	'#8000ff'
 	],
 	// Dotted grid
-	OPEN_LINK_DOTS : '#000000',
-	OPEN_NODE_DOTS : '#440022',
+	LINKED_LINK_DOTS : '#000000',
+	LINKED_NODE_DOTS : '#440022',
 	UNDECIDED_LINK_DOTS : '#dddddd',
-	CLOSED_LINK_DOTS : '#eeeeff',
+	CLOSED_LINK_DOTS : '#f8f0ff',
 	FIXED_LINK_DOTS : '#cc0088',
 	LIGHT_DOT_BG : '#ffffcc',
 	LIGHT_DOT_WRITE : '#000033',
@@ -66,7 +73,7 @@ const COLOURS = {
 	LIGHT_AREA : '#ffffee',
 	DARK_AREA : '#ddddff',
 	
-	// Specific ; editor plus solver
+	// Specific ; editor plus solver	
 	KNOT_INNER : '#002288',
 	KNOT_BORDER : '#000044',
 	HAKOIRI_TRIANGLE : '#4400ff',
@@ -84,16 +91,54 @@ const COLOURS = {
 	SURAROMU_LABEL_BG_FIXED : '#ffffdd',
 	SURAROMU_LABEL_BG_NOT_FIXED : '#ffcc22',
 	SURAROMU_LABEL_WRITE : '#000088',
+	CURVING_CIRCLE_IN : '#ffe100',
+	CURVINT_CIRCLE_OUT : '#300000',
+	SEA : '#0088ff',
+	ISLAND : '#ccffcc',
+	RUKKUEA_SQUARE : '#4400ff',
+	YAGIT_SQUARE_INNER : '#008800',
+	YAGIT_SQUARE_BORDER : '#00cc44',
+	YAGIT_SQUARE_AREA : '#bbffbb',
+	YAGIT_ROUND_INNER : '#000088',
+	YAGIT_ROUND_BORDER : '#8844ff',
+	YAGIT_ROUND_AREA : '#bbbbff',
+	GALAXIES_INNER : '#ffffdd',
+	GALAXIES_OUTER : '#440000',
+	SHUGAKU_DOMINO_INNER : '#88ff88',
+	SHUGAKU_DOMINO_OUTER : '#cc0000',
+	SHUGAKU_SHAPE_OUTER : '#004488',
+	SHUGAKU_SHAPE_INNER : '#ffffff',
 	
+	// Specific - pure solver
+	LIGHT_SPACE : '#ffff88',
+	LIGHT_BULB : '#ffff00',
+	WALL_THAT_BLOCKS_LIGHT : '#a000a0',
+	CHOCOLATE_SPACE : '#ffcccc',
+	STITCHES_BUTTON_OUT : '#8800ff',
+	STITCHES_BUTTON_IN : '#44008f',
+	STITCHES_BIND : '#008844',
+	STITCHES_SEPARATE_REGION : '#ff0000',
+	TRUTH_O : '#88dd88',
+	LIE_X : '#cc8800',
+	SHAKASHAKA_WHITE_TRIANGLE : '#cceeff',
+	SHAKASHAKA_BLACK_TRIANGLE : '#000000',
+	SHAKASHAKA_BANNED_SPACE : '#000044',
+	LITS_L_LIGHT : '#ffcccc',
+	LITS_L_DARK : '#ffe5e5',
+	LITS_I_LIGHT : '#ffcc88',
+	LITS_I_DARK : '#ffe5c0',
+	LITS_T_LIGHT : '#ccffcc',
+	LITS_T_DARK : '#e5ffe5',
+	LITS_S_LIGHT : '#ccccff',
+	LITS_S_DARK : '#e5e5ff',
 	
 	// Sudokus
 	SUDOKU_FRAME_ACTIVE : '#ff8800',
 	SUDOKU_FRAMES_RAINBOW : ['#ff0000', '#00ccff', '#8800ff', '#00aa00', '#0000ff'],
 	
 	// Solvers - text writing in canvas
-	STANDARD_NOT_CLOSED_WRITE : '#000000',
+	STANDARD_NOT_CLOSED_WRITE : '#000044',
 	STANDARD_CLOSED_WRITE : '#ffff88',
-	STANDARD_ALL_OPEN_WRITE : '#008800',
 	LOOP_DIGITS_WRITE : '#004488',
 	WRITE_BLOCKING_KABE : '#000000',
 	WRITE_IN_FENCES : '#000044',
@@ -101,6 +146,18 @@ const COLOURS = {
 	WRITE_WITHIN_FIELD : '#000000', // Space in blue for instance
 	LOOP_STANDARD_NOT_CLOSED_WRITE : '#440044',
 	LOOP_STANDARD_CLOSED_WRITE : '#ccff00',
+	WRITE_ON_ISLAND : '#000000',
+	WRITE_FOR_LINE_RED : '#440000',
+	WRITE_FOR_LINE_BLUE : '#000044',
+	INDIC_DETOUR_PLUS : '#8888ff',
+	INDIC_DETOUR_ROUND : '#88ff88',
+	
+	// Solvers : displaying clues
+	CLUE_INDICATING : '#ff0000',
+	DEAD_END_AREA : '#ff8888',
+	
+	// Solvers : colourblind
+	STANDARD_COLOURBLIND_WRITE : '#000000', 
 	
 	// Editor
 	SELECTED_SPACE : '#bbffcc',
@@ -110,10 +167,10 @@ const COLOURS = {
 	// Purification
 	PURIFICATION_SYMBOL_GRID : '#ffaaaa',
 	EDITOR_VAGUE_NODE : '#888888',
-	EDITOR_OPEN_LINK_DOTS : '#222222',
+	EDITOR_LINKED_LINK_DOTS : '#222222',
 	EDITOR_CLOSED_LINK_DOTS : '#dddddd',
-	WHITE_ON_BLACK : "#dddddd",
-	BLACK_ON_WHITE : "#000000"
+	WHITE_ON_BLACK : '#dddddd',
+	BLACK_ON_WHITE : '#000000',
 }
 
 // How fonts are named

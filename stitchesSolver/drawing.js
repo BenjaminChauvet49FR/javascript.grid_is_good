@@ -31,6 +31,6 @@ function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver) {
 		} 
 		return -1;
 	}
-	p_drawer.drawSpaceContents2Dimensions(p_context, [DrawableCircle(p_coloursSet.openStitchOut, p_coloursSet.openStitchIn), DrawableX(p_coloursSet.closedSpace)], getStitch, p_solver.xLength, p_solver.yLength); 
+	p_drawer.drawSpaceContents2Dimensions(p_context, [DrawableCircle(p_coloursSet.linkedStitchOut, p_coloursSet.linkedStitchIn), DrawableX(p_coloursSet.closedSpace)], getStitch, p_solver.xLength, p_solver.yLength); 
 }
 

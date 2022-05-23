@@ -28,7 +28,7 @@ SolverNurikabe.prototype.construct = function(p_numericXArray) {
 		transformClosure(this),
 		undoEventClosure(this)
 	));
-	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryPassClosure(this)};
 	this.methodsSetMultipass = {generatePassEventsMethod : generateEventsForIslandPassClosure(this), orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 	skipPassMethod : skipPassClosure(this) };
 	this.setResolution = {
@@ -39,7 +39,6 @@ SolverNurikabe.prototype.construct = function(p_numericXArray) {
 
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterBorderingNewlyExpandedIslandClosure(this), filterAffectedIslandSpacesClosure(this)]);
 	
-	//this.answerArray = [];
 	this.islandGrid = Grid_data(p_numericXArray);
 	this.clusterManager = new ClusterManager(this.xLength, this.yLength);
 	this.islandList = [];
@@ -48,11 +47,10 @@ SolverNurikabe.prototype.construct = function(p_numericXArray) {
 	this.accessibleIslandsArray = generateFunctionValueArray(this.xLength, this.yLength, function(p_x, p_y) {return [NURIKABE_SEA];});
 	
 	var ix,iy;
-	// Initialize answerArray purified
+	// Initialize answerChoiceArray purified
 	for(iy = 0 ; iy < this.yLength ; iy++) {
 		for(ix = 0 ; ix < this.xLength ; ix++) {
 			if (this.islandGrid.get(ix, iy) != null) {
-				//this.answerArray[iy].push(ADJACENCY.NO);
 				this.clusterManager.add(ix, iy);
 				const number = this.islandGrid.get(ix, iy);
 				const previousLength = this.islandList.length;
@@ -180,8 +178,8 @@ SolverNurikabe.prototype.makeQuickStart = function() {
 SolverNurikabe.prototype.emitPassSpace = function(p_x, p_y) {
 	if (this.islandGrid.get(p_x, p_y) != null) {		
 		const ixi = this.answerChoiceArray[p_y][p_x].getOneLeft();
-		const generatedEvents = this.generateEventsIslandPass(ixi); 
-		this.passEvents(generatedEvents, ixi); 
+		const listPassNow = this.generateEventsIslandPass(ixi); 
+		this.passEvents(listPassNow, ixi); 
 	}
 }
 
@@ -208,9 +206,9 @@ applyEventClosure = function(p_solver) {
 		const index = p_eventToApply.index;
 		const choice = p_eventToApply.choice;
 		
-		const answer = testNumericSelectSpaceChoice(p_solver.answerChoiceArray, x, y, index, choice);
-		if (answer != EVENT_RESULT.SUCCESS) {
-			return answer;
+		const resultDo = testNumericSelectSpaceChoice(p_solver.answerChoiceArray, x, y, index, choice);
+		if (resultDo != EVENT_RESULT.SUCCESS) {
+			return resultDo;
 		}
 		if (index == NURIKABE_SEA) {
 			if (choice) {
@@ -300,7 +298,7 @@ adjacencyClosure = function (p_solver) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Nurikabe"}];
+		var listQSEvents = [{quickStartLabel : "Nurikabe"}];
 		
 		// Necessity (spaces adjacent to 2 or more islands OR to a 1-sized island that wouldn't have expanded)
 		// It declares all islands are non-sea spaces
@@ -310,18 +308,18 @@ quickStartEventsClosure = function(p_solver) {
 			for (var x = 0 ; x < p_solver.xLength ; x++) {
 				singleIndex = p_solver.answerChoiceArray[y][x].getSingleValue(); 
 				if (singleIndex != null) {
-					listQSEvts.push(new ChoiceEvent(x, y, singleIndex ,true));
+					listQSEvents.push(new ChoiceEvent(x, y, singleIndex ,true));
 				}
 			}
 		}
 		p_solver.islandList.forEach(island => {
 			if (island.number == island.accessibleSpaces.length) {
 				island.accessibleSpaces.forEach(coors => {
-					listQSEvts.push(new ChoiceEvent(coors.x, coors.y, NURIKABE_SEA, false));
+					listQSEvents.push(new ChoiceEvent(coors.x, coors.y, NURIKABE_SEA, false));
 				});
 			}
 		});
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -336,7 +334,7 @@ deductionsClosure = function (p_solver) {
 		const choice = p_eventBeingApplied.choice;
 		if (index == NURIKABE_SEA) {
 			if (choice) {
-				p_listEventsToApply = p_solver.deductionsAlert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
+				p_solver.deductionsAlert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
 			} else {
 				var index2;
 				p_solver.existingNeighborsCoors(x, y).forEach(coors => {
@@ -388,11 +386,10 @@ deductionsClosure = function (p_solver) {
 		}
 		// Aaaand... if it's all about choices, let's go
 		if (choice) {
-			p_listEventsToApply = deductionsExcludeOthersNumericSelect(p_listEventsToApply, p_solver.answerChoiceArray, x, y, index, false);
+			deductionsExcludeOthersNumericSelect(p_listEventsToApply, p_solver.answerChoiceArray, x, y, index, false);
 		} else {
-			p_listEventsToApply = deductionsTestOneLeft(p_listEventsToApply, p_solver.answerChoiceArray, x, y);
+			deductionsTestOneLeft(p_listEventsToApply, p_solver.answerChoiceArray, x, y);
 		}
-		return p_listEventsToApply;
 	}
 }
 
@@ -403,9 +400,11 @@ function isAggregatedLandIndex(p_index) {
 // By doing the filter now, we allow that all islands and inclusions are in a stable state, so no events are to be applied right now
 filterBorderingNewlyExpandedIslandClosure = function(p_solver) {
 	return function() {
-		var listEvents = [];
+		var listEventsToApply = [];
 		var island, ic, aroundSpaces, x, y;
-		p_solver.checkerNewlyExpandedIslands.list.forEach(index => {
+		var index, i;
+		for (i = 0 ; i < p_solver.checkerNewlyExpandedIslands.list.length ; i++) {
+			index = p_solver.checkerNewlyExpandedIslands.list[i];
 			// If the island has reached its target capacity : 
 				// Make sure the island cluster has a size equal to the target, otherwise failure
 				// If not fail, sea-open the unknown around spaces
@@ -414,42 +413,40 @@ filterBorderingNewlyExpandedIslandClosure = function(p_solver) {
 			// If there are none, failure.
 			// For each unknown space, if it is adjacent to another closed space :
 				// If that closed is included in another island OR if it is not included in an island but the resulting island would be too big, sea-open space between them
-			if (listEvents != EVENT_RESULT.FAILURE) {
-				island = p_solver.islandList[index];
-				if (island.notIncludedYet == 0) {
-					ic = p_solver.clusterManager.index(island.capitalX, island.capitalY);
-					if (p_solver.clusterManager.sizeCluster(ic) != island.number) {						
-						listEvents = EVENT_RESULT.FAILURE;
-					} else {
-						aroundSpaces = p_solver.clusterManager.unknownAroundSpacesCluster(ic);
-						aroundSpaces.forEach(coors => {
-							listEvents.push(new ChoiceEvent(coors.x, coors.y, NURIKABE_SEA, true));
-						});
-					}
+			island = p_solver.islandList[index];
+			if (island.notIncludedYet == 0) {
+				ic = p_solver.clusterManager.index(island.capitalX, island.capitalY);
+				if (p_solver.clusterManager.sizeCluster(ic) != island.number) {						
+					return FILTER_FAILURE;
 				} else {
-					ic = p_solver.clusterManager.index(island.capitalX, island.capitalY);
 					aroundSpaces = p_solver.clusterManager.unknownAroundSpacesCluster(ic);
-					if (aroundSpaces.length == 0) {
-						listEvents = EVENT_RESULT.FAILURE;
-					} else {
-						aroundSpaces.forEach(coors => {
-							p_solver.existingNeighborsCoors(coors.x, coors.y).forEach(coors2 => {
-								inclusion = p_solver.answerChoiceArray[coors2.y][coors2.x].getOneLeft();
-								if (isAggregatedLandIndex(inclusion) && inclusion != island.index) {
-									listEvents.push(new ChoiceEvent(coors.x, coors.y, NURIKABE_SEA, true));
-								}
-								if (inclusion == null && p_solver.answerChoiceArray[coors2.y][coors2.x].getState(NURIKABE_SEA) == SPACE_CHOICE.NO
-								&& p_solver.clusterManager.sizeClusterSpace(coors2.x, coors2.y) + 1 + p_solver.clusterManager.sizeCluster(ic) > island.number) {
-									listEvents.push(new ChoiceEvent(coors.x, coors.y, NURIKABE_SEA, true));
-								}
-							});
+					aroundSpaces.forEach(coors => {
+						listEventsToApply.push(new ChoiceEvent(coors.x, coors.y, NURIKABE_SEA, true));
+					});
+				}
+			} else {
+				ic = p_solver.clusterManager.index(island.capitalX, island.capitalY);
+				aroundSpaces = p_solver.clusterManager.unknownAroundSpacesCluster(ic);
+				if (aroundSpaces.length == 0) {
+					return FILTER_FAILURE;
+				} else {
+					aroundSpaces.forEach(coors => {
+						p_solver.existingNeighborsCoors(coors.x, coors.y).forEach(coors2 => {
+							inclusion = p_solver.answerChoiceArray[coors2.y][coors2.x].getOneLeft();
+							if (isAggregatedLandIndex(inclusion) && inclusion != island.index) {
+								listEventsToApply.push(new ChoiceEvent(coors.x, coors.y, NURIKABE_SEA, true));
+							}
+							if (inclusion == null && p_solver.answerChoiceArray[coors2.y][coors2.x].getState(NURIKABE_SEA) == SPACE_CHOICE.NO
+							&& p_solver.clusterManager.sizeClusterSpace(coors2.x, coors2.y) + 1 + p_solver.clusterManager.sizeCluster(ic) > island.number) {
+								listEventsToApply.push(new ChoiceEvent(coors.x, coors.y, NURIKABE_SEA, true));
+							}
 						});
-					}
+					});
 				}
 			}				
-		});
+		};
 		p_solver.cleanNewlyExpandedIslands();
-		return listEvents;
+		return listEventsToApply;
 	}
 }
 
@@ -457,63 +454,63 @@ filterBorderingNewlyExpandedIslandClosure = function(p_solver) {
 // Also, any unknown space ('swimming spaces') adjacent to a newly added sea spaces.
 filterAffectedIslandSpacesClosure = function(p_solver) {
 	return function() {
-		var listEvents = [];
+		var listEventsToApply = [];
 		var x, y, ic, x3, y3, island, inclusion;
 		p_solver.actualClosedIndexes.clean();
-		p_solver.checkerPotentiallyNewlyAffectedIslandAndSwimmingSpaces.list.forEach(coors => {
-			if (listEvents != EVENT_RESULT.FAILURE) {
-				// Island spaces :
-				// Look at the (actual) cluster it belongs to. 
-				// If it has already been treated during this filter, do nothing. Otherwise : 
-					// Look at the unknown spaces around. 
-						// If it has none : if it is included AND the island has reached target capacity, it's fine. Otherwise, failure. 
-						// If it has only one : island-close that space. (deductions should include it) (note that the closed space must belong to an island that hasn't reached its capacity yet because of filter order)
-						// If the cluster is not included : see among the around spaces which ones could be linked to an included island that would be too big, and sea-open them
-				x = coors.x;
-				y = coors.y;
-				if (p_solver.answerChoiceArray[y][x].getState(NURIKABE_SEA) == SPACE_CHOICE.NO) {
-					ic = p_solver.clusterManager.index(x, y);
-					if (p_solver.actualClosedIndexes.add(ic)) {
-						aroundSpaces = p_solver.clusterManager.unknownAroundSpacesCluster(ic);
-						if (aroundSpaces.length == 0 && 
-								!(isAggregatedLandIndex(p_solver.answerChoiceArray[y][x].getOneLeft()) && p_solver.islandList[p_solver.answerChoiceArray[y][x].getOneLeft()].notIncludedYet == 0 )) {
-							listEvents = EVENT_RESULT.FAILURE; // Too bad, we use only one space of it. Could be optimized, or... ?
-						} else { // Note : special case exception ! Spaces labelled 1 are never "newly included" ! Thus they aren't concerned by the filter.
-							if (aroundSpaces.length == 1 && p_solver.islandGrid.get(x, y) != 1) {
-								listEvents.push(new ChoiceEvent(aroundSpaces[0].x, aroundSpaces[0].y, NURIKABE_SEA, false));
-							}
-							if (p_solver.answerChoiceArray[y][x].getOneLeft() == null) {								
-								aroundSpaces.forEach(coors2 => {
-									p_solver.existingNeighborsCoors(coors2.x, coors2.y).forEach(coors3 => {
-										x3 = coors3.x;
-										y3 = coors3.y;
-										inclusion = p_solver.answerChoiceArray[y3][x3].getOneLeft();
-										if (isAggregatedLandIndex(inclusion)) {											
-											island = p_solver.islandList[inclusion];
-											if (p_solver.clusterManager.sizeClusterSpace(x3, y3) + 1 + p_solver.clusterManager.sizeCluster(ic) > island.number) {
-												listEvents.push(new ChoiceEvent(coors2.x, coors2.y, NURIKABE_SEA, true));
-											}
+		var i, coors;
+		for (i = 0 ; i < p_solver.checkerPotentiallyNewlyAffectedIslandAndSwimmingSpaces.list.length ; i++) {
+			coors = p_solver.checkerPotentiallyNewlyAffectedIslandAndSwimmingSpaces.list[i];
+			// Island spaces :
+			// Look at the (actual) cluster it belongs to. 
+			// If it has already been treated during this filter, do nothing. Otherwise : 
+				// Look at the unknown spaces around. 
+					// If it has none : if it is included AND the island has reached target capacity, it's fine. Otherwise, failure. 
+					// If it has only one : island-close that space. (deductions should include it) (note that the closed space must belong to an island that hasn't reached its capacity yet because of filter order)
+					// If the cluster is not included : see among the around spaces which ones could be linked to an included island that would be too big, and sea-open them
+			x = coors.x;
+			y = coors.y;
+			if (p_solver.answerChoiceArray[y][x].getState(NURIKABE_SEA) == SPACE_CHOICE.NO) {
+				ic = p_solver.clusterManager.index(x, y);
+				if (p_solver.actualClosedIndexes.add(ic)) {
+					aroundSpaces = p_solver.clusterManager.unknownAroundSpacesCluster(ic);
+					if (aroundSpaces.length == 0 && 
+							!(isAggregatedLandIndex(p_solver.answerChoiceArray[y][x].getOneLeft()) && p_solver.islandList[p_solver.answerChoiceArray[y][x].getOneLeft()].notIncludedYet == 0 )) {
+						return FILTER_FAILURE; // Too bad, we use only one space of it. Could be optimized, or... ?
+					} else { // Note : special case exception ! Spaces labelled 1 are never "newly included" ! Thus they aren't concerned by the filter.
+						if (aroundSpaces.length == 1 && p_solver.islandGrid.get(x, y) != 1) {
+							listEventsToApply.push(new ChoiceEvent(aroundSpaces[0].x, aroundSpaces[0].y, NURIKABE_SEA, false));
+						}
+						if (p_solver.answerChoiceArray[y][x].getOneLeft() == null) {								
+							aroundSpaces.forEach(coors2 => {
+								p_solver.existingNeighborsCoors(coors2.x, coors2.y).forEach(coors3 => {
+									x3 = coors3.x;
+									y3 = coors3.y;
+									inclusion = p_solver.answerChoiceArray[y3][x3].getOneLeft();
+									if (isAggregatedLandIndex(inclusion)) {											
+										island = p_solver.islandList[inclusion];
+										if (p_solver.clusterManager.sizeClusterSpace(x3, y3) + 1 + p_solver.clusterManager.sizeCluster(ic) > island.number) {
+											listEventsToApply.push(new ChoiceEvent(coors2.x, coors2.y, NURIKABE_SEA, true));
 										}
-									});
+									}
 								});
-							}
+							});
 						}
 					}
 				}
-				// Bonus (intelligent) : if a space is undecided and fully surrounded by sea : sea-open it.
-				else if (p_solver.answerChoiceArray[y][x].getState(NURIKABE_SEA) == SPACE_CHOICE.UNDECIDED) {
-					var onlySea = true;
-					p_solver.existingNeighborsCoors(x, y).forEach(coors2 => {
-						onlySea &= (p_solver.answerChoiceArray[coors2.y][coors2.x].getState(NURIKABE_SEA) == SPACE_CHOICE.YES);
-					});
-					if (onlySea) {
-						listEvents.push(new ChoiceEvent(x, y, NURIKABE_SEA, true));
-					}
+			}
+			// Bonus (intelligent) : if a space is undecided and fully surrounded by sea : sea-open it.
+			else if (p_solver.answerChoiceArray[y][x].getState(NURIKABE_SEA) == SPACE_CHOICE.UNDECIDED) {
+				var onlySea = true;
+				p_solver.existingNeighborsCoors(x, y).forEach(coors2 => {
+					onlySea &= (p_solver.answerChoiceArray[coors2.y][coors2.x].getState(NURIKABE_SEA) == SPACE_CHOICE.YES);
+				});
+				if (onlySea) {
+					listEventsToApply.push(new ChoiceEvent(x, y, NURIKABE_SEA, true));
 				}
 			}
-		});
+		};
 		p_solver.cleanNewlyIslandSpaces();
-		return listEvents;
+		return listEventsToApply;
 	}
 }
 
@@ -538,8 +535,7 @@ function banInaccessibleIslandsClosure(p_solver) {
 		var ok = true;
 		var found = false;
 		var island;
-		//p_solver.islandList.forEach(island => {
-		for (i = 0 ; i < p_solver.islandListSortedIndexes.length ; i++) {
+		for (var i = 0 ; i < p_solver.islandListSortedIndexes.length ; i++) {
 			island = p_solver.islandList[p_solver.islandListSortedIndexes[i]];
 			p_solver.spacesAccessiblesInRangeFromSetSpaces(island.spacesIncluded, island.notIncludedYet, p_solver.volcanicChecker, canGoThereClosure(p_solver, island.index));
 			var spacesToDiscard = [];
@@ -560,7 +556,6 @@ function banInaccessibleIslandsClosure(p_solver) {
 					found |= (state == DEDUCTIONS_RESULT.SUCCESS);
 				}
 			}
-		// });
 		}
 		return (found ? GLOBAL_DEDUCTIONS_RESULT.SUCCESS : GLOBAL_DEDUCTIONS_RESULT.HARMLESS);
 	}
@@ -576,7 +571,7 @@ generateEventsForIslandPassClosure = function(p_solver) {
 }
 
 SolverNurikabe.prototype.generateEventsIslandPass = function(p_indexIsland) {
-	var answer = [];
+	var listPass = [];
 	const island = this.islandList[p_indexIsland];
 	var spacesClosestFirst = this.spacesAccessiblesInRangeFromSetSpacesClosestFirst(island.spacesIncluded, island.notIncludedYet, this.volcanicChecker, canGoThereClosure(this, p_indexIsland));
 	var spacesToDiscard = [];
@@ -584,27 +579,27 @@ SolverNurikabe.prototype.generateEventsIslandPass = function(p_indexIsland) {
 	island.accessibleSpaces.forEach(coors => {
 		if (!this.volcanicChecker.array[coors.y][coors.x] && 
 			this.answerChoiceArray[coors.y][coors.x].getState(p_indexIsland) != SPACE_CHOICE.YES) { 
-			answer.push([new ChoiceEvent(coors.x, coors.y, p_indexIsland, false)]);
+			listPass.push([new ChoiceEvent(coors.x, coors.y, p_indexIsland, false)]);
 		}
 	});
 	// Number of "not excluded yet" minus number of unreachable spaces too big in comparison to island-related unknown spaces ? Only test the latter ones !
 	const aroundSpaces = this.clusterManager.unknownAroundSpacesClusterSpace(island.capitalX, island.capitalY);
-	if (aroundSpaces.length < island.notExcludedYet - answer.length) {
+	if (aroundSpaces.length < island.notExcludedYet - listPass.length) {
 		aroundSpaces.forEach(coors => {
 			if (this.answerChoiceArray[coors.y][coors.x].getState(p_indexIsland) == SPACE_CHOICE.UNDECIDED) {			
-				answer.push(eventsForOneSpacePass(coors.x, coors.y, p_indexIsland));
+				listPass.push(eventsForOneSpacePass(coors.x, coors.y, p_indexIsland));
 			}
 		});
 	}
 	else {		
 		spacesClosestFirst.forEach(coors => {
 			if (this.answerChoiceArray[coors.y][coors.x].getState(p_indexIsland) == SPACE_CHOICE.UNDECIDED) {			
-				answer.push(eventsForOneSpacePass(coors.x, coors.y, p_indexIsland));
+				listPass.push(eventsForOneSpacePass(coors.x, coors.y, p_indexIsland));
 			}
 		});
 	}
 	
-	return answer;
+	return listPass;
 }
 
 SolverNurikabe.prototype.generateEventsSinglePass = function(p_x, p_y) {
@@ -624,7 +619,7 @@ comparison = function(p_event1, p_event2) {
 	return commonComparison([[p_event1.y, p_event1.x, p_event1.index, p_event1.choice], [p_event2.y, p_event2.x, p_event2.index, p_event2.choice]]);
 }
 
-namingCategoryClosure = function(p_solver) {
+namingCategoryPassClosure = function(p_solver) {
 	return function(p_indexPass) {
 		const island = p_solver.islandList[p_indexPass];
 		return "Pass around " + island.capitalX + "," + island.capitalY + " (" + island.number + ")"; 
@@ -637,35 +632,35 @@ SolverNurikabe.prototype.purgeBeforeEx = function(p_solver) {
 
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		var answer = [];
-		var incertainities = []; // One per index !
+		var listIndexesPass = [];
+		var uncertainities = []; // One per index !
 		p_solver.islandList.forEach(island => {
 			if (island.notIncludedYet > 0) {
-				answer.push(island.index);
-				incertainities.push(p_solver.incertainity(island)); // TODO : improve ! 
+				listIndexesPass.push(island.index);
+				uncertainities.push(p_solver.uncertainity(island)); // TODO : improve ! 
 			} else {
-				incertainities.push(0);
+				uncertainities.push(0);
 			}
 		});
-		answer.sort(function(p_ixi1, p_ixi2) {
-			const val = incertainities[p_ixi1] - incertainities[p_ixi2];
+		listIndexesPass.sort(function(p_ixi1, p_ixi2) {
+			const val = uncertainities[p_ixi1] - uncertainities[p_ixi2];
 			if (val == 0) {
 				return p_ixi1 - p_ixi2;
 			} else {
 				return val;
 			}
 		});
-		return answer;
+		return listIndexesPass;
 	}
 }
 
-SolverNurikabe.prototype.incertainity = function(p_island) {
+SolverNurikabe.prototype.uncertainity = function(p_island) {
 	return p_island.notIncludedYet * p_island.notExcludedYet * this.clusterManager.unknownAroundSpacesClusterSpace(p_island.capitalX, p_island.capitalY).length	
 }
 
 skipPassClosure = function(p_solver) {
-	return function (p_index) {
-		return p_solver.incertainity(p_solver.islandList[p_index]) > p_solver.arbitrarySkipPassThreshold; // Arbitrary... or not ?
+	return function (p_indexPass) {
+		return p_solver.uncertainity(p_solver.islandList[p_indexPass]) > p_solver.arbitrarySkipPassThreshold; // Arbitrary... or not ?
 	}
 }
 

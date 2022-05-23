@@ -6,7 +6,7 @@ function draw(p_context, p_drawer, p_coloursSet, p_solver) {
 		function(p_xN, p_yN) {
 			switch (p_solver.getLinkSpace(p_xN, p_yN)) {
 				case LOOP_STATE.CLOSED : return p_coloursSet.closedLink; break;
-				case LOOP_STATE.LINKED : return p_coloursSet.openNode; break;
+				case LOOP_STATE.LINKED : return p_coloursSet.linkedNode; break;
 				default : return p_coloursSet.undecidedLink; break;
 			}
 		}, 
@@ -26,7 +26,7 @@ drawNumberClosure = function(p_solver, p_coloursSet) {
 
 function linkToColour(p_link, p_coloursSet) {
 	switch (p_link) {
-		case LOOP_STATE.LINKED : return p_coloursSet.openLink; break;
+		case LOOP_STATE.LINKED : return p_coloursSet.linkedLink; break;
 		case LOOP_STATE.CLOSED : return p_coloursSet.closedLink; break;
 		default : return p_coloursSet.undecidedLink; break;
 	}

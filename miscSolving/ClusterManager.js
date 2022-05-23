@@ -28,12 +28,12 @@ ClusterManager.prototype.actualIndex = function(p_patchworkIndex) {
 	if (pwi < 0) {
 		return pwi;
 	} 
-	var answer = this.patchworkList[pwi].boundIndex;
-	while (answer != pwi) {
-		pwi = answer;
-		answer = this.patchworkList[answer].boundIndex;
+	var result = this.patchworkList[pwi].boundIndex;
+	while (result != pwi) {
+		pwi = result;
+		result = this.patchworkList[result].boundIndex;
 	}
-	return answer;
+	return result;
 }
 
 // Offensive programming : 
@@ -160,11 +160,11 @@ ClusterManager.prototype.sizeCluster = function(p_index) { // Public
 }
 
 ClusterManager.prototype.sizeClusterAnnex = function(p_index) {
-	var answer = this.patchworkList[p_index].spaces.length;
+	var result = this.patchworkList[p_index].spaces.length;
 	this.patchworkList[p_index].indexRecipient.forEach(index => {
-		answer += this.sizeClusterAnnex(index);
+		result += this.sizeClusterAnnex(index);
 	});
-	return answer;
+	return result;
 }
 
 ClusterManager.prototype.unknownAroundSpacesClusterSpace = function(p_x, p_y) {
@@ -225,7 +225,7 @@ ClusterManager.prototype.spacesCluster = function(p_x, p_y) { // Public
 }
 
 ClusterManager.prototype.spaceClusterAnnex = function(p_index) {
-	var answer = [];
+	var result = [];
 	// TODO
-	return answer;
+	return result;
 }

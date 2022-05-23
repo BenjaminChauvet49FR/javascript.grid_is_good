@@ -17,7 +17,7 @@ function drawing(p_context, p_drawer, p_coloursSet, p_solver, p_extra) {
 		switch (p_solver.getArea(p_x, p_y)) {
 			case YAGIT_SHAPE.ROUND : return 0; break;
 			case YAGIT_SHAPE.SQUARE : return 1; break;
-			default : return (p_extra.checkBoxColorDeadEnds.checked && p_solver.deadEndsArray[p_y][p_x]) ? 2 : -1; break;
+			default : return (p_extra.checkBoxColourDeadEnds.checked && p_solver.deadEndsArray[p_y][p_x]) ? 2 : -1; break;
 		}
 	}
 	
@@ -31,7 +31,7 @@ function drawing(p_context, p_drawer, p_coloursSet, p_solver, p_extra) {
 		return -1;
 	}
 	
-	const background = [DrawableColor(p_coloursSet.circleArea), DrawableColor(p_coloursSet.squareArea), DrawableColor(p_coloursSet.deadEndArea)];
+	const background = [DrawableColour(p_coloursSet.circleArea), DrawableColour(p_coloursSet.squareArea), DrawableColour(p_coloursSet.deadEndArea)];
 	p_drawer.drawFenceArrayGhostPillars(p_context, p_solver.xLength, p_solver.yLength, yagitGetFenceRightClosure(p_solver), yagitGetFenceDownClosure(p_solver)); 	
 	p_drawer.drawSpaceContents2Dimensions(p_context, background, getAreaIndex, p_solver.xLength, p_solver.yLength);
 	if (p_extra.checkBoxColourblindFriendly.checked) {

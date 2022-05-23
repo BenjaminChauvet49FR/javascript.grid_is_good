@@ -35,7 +35,7 @@ SolverStitches.prototype.construct = function(p_wallArray, p_marginLeftArray, p_
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
 		//skipPassMethod : skipPassClosure(this)
 	};
-	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryPassClosure(this)};
 	this.setResolution = {
 		quickStartEventsMethod : quickStartEventsClosure(this)
 		//searchSolutionMethod : searchClosure(this)
@@ -285,28 +285,28 @@ undoEventClosure = function(p_solver) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Stitches"}];
+		var listQSEvents = [{quickStartLabel : "Stitches"}];
 		for (var ri1 = 0 ; ri1 < p_solver.regionsNumber ; ri1 ++) {
 			for (var ri2 = 0 ; ri2 < ri1; ri2 ++) {
 				if (p_solver.getBorder(ri1, ri2) != null) {				
-					listQSEvts = p_solver.eventsMayFindBreachInBorder(listQSEvts, ri1, ri2);
+					 p_solver.deductionsMayFindBreachInBorder(listQSEvents, ri1, ri2);
 				}
 			}
 		}
 		for (var x = 0 ; x < p_solver.xLength ; x++) {
 			if (p_solver.columnsInfos[x].notPlacedYet == 0) {					
-				listQSEvts = p_solver.eventsFillColumn(listQSEvts, x, SPACE_STATE.EMPTY);
+				 p_solver.deductionsFillColumn(listQSEvents, x, SPACE_STATE.EMPTY);
 			}
 			if (p_solver.columnsInfos[x].notEmptiedYet == 0) {					
-				listQSEvts = p_solver.eventsFillColumn(listQSEvts, x, SPACE_STATE.BUTTON);
+				 p_solver.deductionsFillColumn(listQSEvents, x, SPACE_STATE.BUTTON);
 			}
 		}
 		for (var y = 0 ; y < p_solver.yLength ; y++) {
 			if (p_solver.rowsInfos[y].notPlacedYet == 0) {					
-				listQSEvts = p_solver.eventsFillRow(listQSEvts, y, SPACE_STATE.EMPTY);
+				 p_solver.deductionsFillRow(listQSEvents, y, SPACE_STATE.EMPTY);
 			}
 			if (p_solver.rowsInfos[y].notEmptiedYet == 0) {					
-				listQSEvts = p_solver.eventsFillRow(listQSEvts, y, SPACE_STATE.BUTTON);
+				 p_solver.deductionsFillRow(listQSEvents, y, SPACE_STATE.BUTTON);
 			}
 		}
 		// Check all spaces out (it's not intelligence, is it ?)
@@ -320,11 +320,11 @@ quickStartEventsClosure = function(p_solver) {
 					}
 				});
 				if (innerSpace) {
-					listQSEvts.push(new SpaceEvent(x, y, SPACE_STATE.EMPTY));
+					listQSEvents.push(new SpaceEvent(x, y, SPACE_STATE.EMPTY));
 				}
 			}
 		}
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -341,12 +341,12 @@ deductionsClosure = function (p_solver) {
 			const symbol = p_eventBeingApplied.symbol; // Note : Well, symbol doesn't need to be saved in events but it's practical, plus it doesn't take too much space...
 			if (symbol == SPACE_STATE.BUTTON) {
 				if (p_solver.rowsInfos[y].notPlacedYet == 0) {					
-					p_listEventsToApply = p_solver.eventsFillRow(p_listEventsToApply, y, SPACE_STATE.EMPTY);
+					p_solver.deductionsFillRow(p_listEventsToApply, y, SPACE_STATE.EMPTY);
 				}
 				if (p_solver.columnsInfos[x].notPlacedYet == 0) {					
-					p_listEventsToApply = p_solver.eventsFillColumn(p_listEventsToApply, x, SPACE_STATE.EMPTY);
+					p_solver.deductionsFillColumn(p_listEventsToApply, x, SPACE_STATE.EMPTY);
 				}
-				// A space has only one border possible ? Open it !
+				// A space has only one border possible ? Link it !
 				var oneDirection = null;
 				var moreThanOne = false;
 				var thelink;
@@ -365,10 +365,10 @@ deductionsClosure = function (p_solver) {
 				}
 			} else {
 				if (p_solver.rowsInfos[y].notEmptiedYet == 0) {					
-					p_listEventsToApply = p_solver.eventsFillRow(p_listEventsToApply, y, SPACE_STATE.BUTTON);
+					p_solver.deductionsFillRow(p_listEventsToApply, y, SPACE_STATE.BUTTON); 
 				}
 				if (p_solver.columnsInfos[x].notEmptiedYet == 0) {					
-					p_listEventsToApply = p_solver.eventsFillColumn(p_listEventsToApply, x, SPACE_STATE.BUTTON);
+					p_solver.deductionsFillColumn(p_listEventsToApply, x, SPACE_STATE.BUTTON);
 				}
 				// Space was near a region boundary ? Close that link !
 				p_solver.bordersDirectionsArray[y][x].forEach(dir => {
@@ -389,7 +389,7 @@ deductionsClosure = function (p_solver) {
 				p_listEventsToApply.push(new SpaceEvent(dx, dy, SPACE_STATE.BUTTON));
 				const border = p_solver.getBorder(r1, r2);
 				if ((border.notClosedYet > 0) && (border.notLinkedYet == 0)) {				
-					p_listEventsToApply = p_solver.eventsFillBorder(p_listEventsToApply, border, LINK_STATE.CLOSED);
+					p_solver.deductionsFillBorder(p_listEventsToApply, border, LINK_STATE.CLOSED);
 				}
 				// Close all other links in both spaces
 				p_solver.bordersDirectionsArray[y][x].forEach(dir2 => {
@@ -403,17 +403,16 @@ deductionsClosure = function (p_solver) {
 					}
 				});
 			} else {
-				p_listEventsToApply = p_solver.eventsMayFindBreachInBorder(p_listEventsToApply, r1, r2);
-				p_listEventsToApply = p_solver.eventsOneOrNoBorderReachable(p_listEventsToApply, x, y);
-				p_listEventsToApply = p_solver.eventsOneOrNoBorderReachable(p_listEventsToApply, dx, dy);
+				p_solver.deductionsMayFindBreachInBorder(p_listEventsToApply, r1, r2);
+				p_solver.deductionsOneOrNoBorderReachable(p_listEventsToApply, x, y);
+				p_solver.deductionsOneOrNoBorderReachable(p_listEventsToApply, dx, dy);
 			}
 		}
-		return p_listEventsToApply;
 	}
 }
 
-// We closed a link. If there is no border available, close the spaces. If there is one border BUT it has a button, open that link.
-SolverStitches.prototype.eventsOneOrNoBorderReachable = function(p_listEventsToApply, p_x, p_y) {
+// We closed a link. If there is no border available, close the spaces. If there is one border BUT it has a button, link that link.
+SolverStitches.prototype.deductionsOneOrNoBorderReachable = function(p_listEventsToApply, p_x, p_y) {
 	var moreThanOne = false;
 	var oneDirection = null;
 	this.bordersDirectionsArray[p_y][p_x].forEach(dir => {
@@ -431,46 +430,43 @@ SolverStitches.prototype.eventsOneOrNoBorderReachable = function(p_listEventsToA
 	} else if (!moreThanOne && this.getSpace(p_x, p_y) == SPACE_STATE.BUTTON) {
 		p_listEventsToApply.push(new LinkEvent(p_x, p_y, oneDirection, LINK_STATE.LINKED));
 	}
-	return p_listEventsToApply;
 }
 
 function spaceClosure(p_solver) { return function(p_x, p_y) { return p_solver.answerArray[p_y][p_x].state }}
 function eventClosure(p_symbol) { return function(p_x, p_y) { return new SpaceEvent(p_x, p_y, p_symbol)}}
 
-SolverStitches.prototype.eventsFillRow = function(p_listEventsToApply, p_y, p_symbolToFill) {
+SolverStitches.prototype.deductionsFillRow = function(p_listEventsToApply, p_y, p_symbolToFill) {
 	return this.deductionsFillingRow(p_listEventsToApply, p_y, spaceClosure(this), SPACE_STATE.UNDECIDED, eventClosure(p_symbolToFill));
 }
 
-SolverStitches.prototype.eventsFillColumn = function(p_listEventsToApply, p_x, p_symbolToFill) {
+SolverStitches.prototype.deductionsFillColumn = function(p_listEventsToApply, p_x, p_symbolToFill) {
 	return this.deductionsFillingColumn(p_listEventsToApply, p_x, spaceClosure(this), SPACE_STATE.UNDECIDED, eventClosure(p_symbolToFill));
 }
 
-SolverStitches.prototype.eventsMayFindBreachInBorder = function(p_listEventsToApply, p_r1, p_r2) {
+SolverStitches.prototype.deductionsMayFindBreachInBorder = function(p_listEventsToApply, p_r1, p_r2) {
 	const border = this.getBorder(p_r1, p_r2);
 	if ((border.notClosedYet == 0) && (border.notLinkedYet > 0)) {
-		return this.eventsFillBorder(p_listEventsToApply, border, LINK_STATE.LINKED);
+		return this.deductionsFillBorder(p_listEventsToApply, border, LINK_STATE.LINKED);
 	}
-	return p_listEventsToApply;
 }
 
-SolverStitches.prototype.eventsFillBorder = function(p_listEventsToApply, p_border, p_value) {
+SolverStitches.prototype.deductionsFillBorder = function(p_listEventsToApply, p_border, p_value) {
 	p_border.listLinks.forEach(theLink => {
 		if (this.getLink(theLink.x, theLink.y, theLink.direction) == LINK_STATE.UNDECIDED) {
 			p_listEventsToApply.push(new LinkEvent(theLink.x, theLink.y, theLink.direction, p_value));
 		}
 	});
-	return p_listEventsToApply;
 }
 
 // --------------------
 // Passing
 
 generateEventsForPassClosure = function(p_solver) {
-	return function(p_index) {
-		switch (p_index.family) {
-			case STITCHES_PASS_KIND.BORDER : return p_solver.generateEventsForBorderPass(p_index.index1, p_index.index2);
-			case STITCHES_PASS_KIND.ROW : return p_solver.generateEventsForRowPass(p_index.y);
-			case STITCHES_PASS_KIND.COLUMN : return p_solver.generateEventsForColumnPass(p_index.x);
+	return function(p_indexPass) {
+		switch (p_indexPass.family) {
+			case STITCHES_PASS_KIND.BORDER : return p_solver.generateEventsForBorderPass(p_indexPass.index1, p_indexPass.index2);
+			case STITCHES_PASS_KIND.ROW : return p_solver.generateEventsForRowPass(p_indexPass.y);
+			case STITCHES_PASS_KIND.COLUMN : return p_solver.generateEventsForColumnPass(p_indexPass.x);
 		};
 	}
 }
@@ -515,12 +511,12 @@ copying = function(p_event) {
 
 
 
-namingCategoryClosure = function(p_solver) {
-	return function(p_passIndex) {
-		switch (p_passIndex.family) {
-			case STITCHES_PASS_KIND.BORDER : return "Border between " + p_passIndex.index1 + " and " + p_passIndex.index2 ; break;
-			case STITCHES_PASS_KIND.ROW : return "Row " + p_passIndex.y; break;
-			case STITCHES_PASS_KIND.COLUMN : return "Column " + p_passIndex.x; break;
+namingCategoryPassClosure = function(p_solver) {
+	return function(p_indexPass) {
+		switch (p_indexPass.family) {
+			case STITCHES_PASS_KIND.BORDER : return "Border between " + p_indexPass.index1 + " and " + p_indexPass.index2 ; break;
+			case STITCHES_PASS_KIND.ROW : return "Row " + p_indexPass.y; break;
+			case STITCHES_PASS_KIND.COLUMN : return "Column " + p_indexPass.x; break;
 			default : return "";
 		}
 	}
@@ -541,20 +537,20 @@ comparison = function(p_event1, p_event2) {
 // Not so ordered... but puzzles are still simple so far !
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		var indexList = [];
+		var listIndexesPass = [];
 		for (var y = 0 ; y < p_solver.yLength ; y++) {
-			indexList.push({family : STITCHES_PASS_KIND.ROW, y : y});
+			listIndexesPass.push({family : STITCHES_PASS_KIND.ROW, y : y});
 		}
 		for (var x = 0 ; x < p_solver.xLength ; x++) {
-			indexList.push({family : STITCHES_PASS_KIND.COLUMN, x : x});
+			listIndexesPass.push({family : STITCHES_PASS_KIND.COLUMN, x : x});
 		}
 		for (var ir = 0 ; ir < p_solver.regionsNumber ; ir++) {
 			for (var ir2 = 0 ; ir2 < ir ; ir2++) {
 				if (p_solver.getBorder(ir, ir2) != null) {					
-					indexList.push({family : STITCHES_PASS_KIND.BORDER, index1 : ir, index2 : ir2});
+					listIndexesPass.push({family : STITCHES_PASS_KIND.BORDER, index1 : ir, index2 : ir2});
 				}
 			}
 		}
-		return indexList;
+		return listIndexesPass;
 	}
 }

@@ -25,12 +25,12 @@ ClusterFencesManager.prototype.actualIndex = function(p_patchworkIndex) {
 	if (pwi < 0) {
 		return pwi;
 	} 
-	var answer = this.patchworkList[pwi].boundIndex;
-	while (answer != pwi) {
-		pwi = answer;
-		answer = this.patchworkList[answer].boundIndex;
+	var result = this.patchworkList[pwi].boundIndex;
+	while (result != pwi) {
+		pwi = result;
+		result = this.patchworkList[result].boundIndex;
 	}
-	return answer;
+	return result;
 }
 
 ClusterFencesManager.prototype.indexClusterBySpace = function(p_x, p_y) { // Just like all "bySpace" methods to come, this is... public !
@@ -199,11 +199,11 @@ ClusterFencesManager.prototype.sizeCluster = function(p_index) { // Public
 }
 
 ClusterFencesManager.prototype.sizeClusterAnnex = function(p_index) {
-	var answer = this.patchworkList[p_index].spaces.length;
+	var result = this.patchworkList[p_index].spaces.length;
 	this.patchworkList[p_index].indexRecipient.forEach(index => {
-		answer += this.sizeClusterAnnex(index);
+		result += this.sizeClusterAnnex(index);
 	});
-	return answer;
+	return result;
 }
 
 // Offensive : space must be in a cluster, too
@@ -214,11 +214,11 @@ ClusterFencesManager.prototype.unknownFencesClusterBySpace = function(p_x, p_y) 
 ClusterFencesManager.prototype.unknownFencesClusterBySpaceDefensive = function(p_x, p_y) { // Public
 	const ip = this.patchworkArray[p_y][p_x];
 	if (ip == CLUSTER_UNDECIDED) {
-		var answer = [];
+		var result = [];
 		existingNeighborsDirections(p_x, p_y, this.xLength, this.yLength).forEach(dir => {
-			answer.push({x : p_x, y : p_y, direction : dir});
+			result.push({x : p_x, y : p_y, direction : dir});
 		});
-		return answer;
+		return result;
 	} else {
 		return this.unknownAroundFencesCluster(ip);
 	}

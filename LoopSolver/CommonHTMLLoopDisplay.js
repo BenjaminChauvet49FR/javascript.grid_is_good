@@ -8,14 +8,14 @@ var itemInputSubmit = function(p_id, p_value) {
 
 function initializeItemsLoopInfos(p_itemId, p_solver) {
 	const divCommonLoopDisplayElement = document.getElementById(p_itemId);
-	const inputColour = itemInputSubmit("submit_color_chains", "Colorier les chaînes");
+	const inputColour = itemInputSubmit("submit_colour_chains", "Colorier les chaînes");
 	const inputDisplayEnds = itemInputSubmit("submit_see_opposite_ends", "Afficher les bouts opposés");
 	const inputDisplayOut = itemInputSubmit("submit_mask_information_chains", "Masquer informations");
 	divCommonLoopDisplayElement.innerText = "Affichage : ";
 	divCommonLoopDisplayElement.appendChild(inputColour);
 	divCommonLoopDisplayElement.appendChild(inputDisplayEnds);
 	divCommonLoopDisplayElement.appendChild(inputDisplayOut);
-	putActionElementClick("submit_color_chains",function(event){p_solver.seeColorChainsAction()}); 
+	putActionElementClick("submit_colour_chains",function(event){p_solver.seeColourChainsAction()}); 
 	putActionElementClick("submit_see_opposite_ends",function(event){p_solver.seeOppositeEndsAction()});
 	putActionElementClick("submit_mask_information_chains",function(event){p_solver.maskChainsInformation()});
 }

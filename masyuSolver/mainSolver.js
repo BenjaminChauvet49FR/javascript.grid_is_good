@@ -1,7 +1,7 @@
 var solver;
 var purificator;
 function main() {
-	const colors = {
+	const colours = {
 		noLink : COLOURS.NO_LINK,
 		presentLink : COLOURS.LINK,
 		noLinkState : COLOURS.NO_LINK_SPACE,
@@ -14,7 +14,7 @@ function main() {
 		purification : COLOURS.PURIFICATION_SYMBOL_GRID
 	}
 
-	var drawer = new Drawer(colors);
+	var drawer = new Drawer(colours);
 	solver = DummySolver();
 	purificator = DummyPurificatorSymbolArray();
 	purificator.configure({isBlockedDegradable : true});
@@ -30,7 +30,7 @@ function main() {
 	
 	function drawCanvas() {
 		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength);
-		drawInsideSpaces(context, drawer, colors, solver, purificator);
+		drawInsideSpaces(context, drawer, colours, solver, purificator);
 		solver.callStateForItem(spanState);
 	}
 	

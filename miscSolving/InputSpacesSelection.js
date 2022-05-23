@@ -121,13 +121,13 @@ InputSpacesSelection.prototype.getDrawingSelectionIndex = function(p_x, p_y, p_i
 // Getter
 
 InputSpacesSelection.prototype.getSelectedSpacesList = function() {
-	var answer = [];
+	var result = [];
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
 		for (var ix = 0 ; ix < this.xLength ; ix++) {
 			if (this.array[iy][ix] != SPACE_SELECTION_INPUT.NOT_SELECTED) {
-				answer.push({x : ix, y : iy});
+				result.push({x : ix, y : iy});
 			}
 		}
 	}
-	return answer;
+	return result;
 }

@@ -24,7 +24,7 @@ SolverSukoro.prototype.construct = function(p_numberSymbolsArray) {
 		undoEventClosure(this)
 	));
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterOnePossibleClosure(this), filterAffectedNeighborsClosure(this)]);
-	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryPassClosure(this)};
 	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForSpacePassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
@@ -138,9 +138,9 @@ function applyEventClosure(p_solver) {
 		const x = p_eventToApply.x;
 		const y = p_eventToApply.y;
 		const number = p_eventToApply.number;
-		const answer = testNumericSpaceChoice(p_solver.answerArray, x, y, number, choice);
-		if (answer != EVENT_RESULT.SUCCESS) {
-			return answer;
+		const resultDo = testNumericSpaceChoice(p_solver.answerArray, x, y, number, choice);
+		if (resultDo != EVENT_RESULT.SUCCESS) {
+			return resultDo;
 		}
 		if (choice) {
 			p_solver.answerArray[y][x].choose(number); 
@@ -173,27 +173,25 @@ function undoEventClosure(p_solver) {
 // Deductions
 
 function deductionsClosure(p_solver) {
-	return function(p_eventList, p_eventToApply) {
+	return function(p_listEventsToApply, p_eventToApply) {
 		const x = p_eventToApply.x;
 		const y = p_eventToApply.y;
 		const number = p_eventToApply.number;
 		if (p_eventToApply.choice) {
 			// Ban events for all other values in this space
-			p_listEventsToApply = deductionsExcludeOthersNumeric(p_eventList, p_solver.answerArray, x, y, number);
+			deductionsExcludeOthersNumeric(p_listEventsToApply, p_solver.answerArray, x, y, number); 
 			// Adjacency ban !
-			p_eventList = p_solver.banAdjacentNeighborsDeductions(p_eventList, x, y, number);
+			p_solver.deductionsBanAdjacentNeighbors(p_listEventsToApply, x, y, number);
 		}
-		return p_eventList;
 	}
 }
 
-SolverSukoro.prototype.banAdjacentNeighborsDeductions = function(p_events, p_x, p_y, p_number) {
+SolverSukoro.prototype.deductionsBanAdjacentNeighbors = function(p_listEventsToApply, p_x, p_y, p_number) {
 	if (p_number != SUKORO_CLOSED_SPACE) {	
 		this.existingNeighborsCoors(p_x, p_y).forEach(coors => {
-			p_events.push(new ChoiceEvent(coors.x, coors.y, p_number, false));
+			p_listEventsToApply.push(new ChoiceEvent(coors.x, coors.y, p_number, false));
 		});
 	}
-	return p_events;
 }
 
 // Filters
@@ -207,32 +205,32 @@ function abortClosure(p_solver) {
 
 function filterOnePossibleClosure(p_solver) {
 	return function() {
-		var listEvents = [];
+		var listEventsToApply = [];
 		var x, y, oneLeft, coors;
 		for (var i = 0 ; i < p_solver.checkerOnePossible.list.length ; i++) {
 			coors = p_solver.checkerOnePossible.list[i];
 			x = coors.x;
 			y = coors.y;
-			listEvents = deductionsTestOneLeft(listEvents, p_solver.answerArray, x, y);
+			deductionsTestOneLeft(listEventsToApply, p_solver.answerArray, x, y);
 			if (p_solver.answerArray[y][x].noAvailableValue()) {
-				return EVENT_RESULT.FAILURE; // Note : it may happen since unlike other solvers, when all but one values are possible for one space, the last one isn't made automatically possible before this filter, which may cause all values to be impossible at once. 
+				listEventsToApply.push(new FailureEvent());
+				return listEventsToApply; // Note : it may happen since unlike other solvers, when all but one values are possible for one space, the last one isn't made automatically possible before this filter, which may cause all values to be impossible at once. 
 			}
 		};
 		p_solver.checkerOnePossible.clean();
-		return listEvents;
+		return listEventsToApply; 
 	}
 }
 
 function filterAffectedNeighborsClosure(p_solver) {
 	return function() {
-		var listEvents = [];
+		var listEventsToApply = [];
 		var minOs, maxOs, val;
 		var x, y, i;
 		var ok = true;
-		p_solver.checkerMovedNeighbors.list.forEach(coors => {
-			if (!ok) {
-				return; // High convention : Sub-optimization !
-			}
+		var j, coors;
+		for (var j = 0 ; j < p_solver.checkerMovedNeighbors.list.length ; j++) {
+			coors = p_solver.checkerMovedNeighbors.list[j];
 			// Consistency with neighborhood
 			x = coors.x;
 			y = coors.y;
@@ -249,10 +247,10 @@ function filterAffectedNeighborsClosure(p_solver) {
 				}			
 			});
 			for (i = 1 ; i < minOs ; i++) {
-				listEvents.push(new ChoiceEvent(x, y, i, false));
+				listEventsToApply.push(new ChoiceEvent(x, y, i, false));
 			}
 			for (i = maxOs+1 ; i <= 4 ; i++) {
-				listEvents.push(new ChoiceEvent(x, y, i, false));
+				listEventsToApply.push(new ChoiceEvent(x, y, i, false));
 			}
 			val = p_solver.answerArray[y][x].getValue();
 			if (val != null && val != SUKORO_CLOSED_SPACE) {
@@ -260,28 +258,23 @@ function filterAffectedNeighborsClosure(p_solver) {
 					ok = false;
 				} 
 				if (minOs == val) {
-					listEvents = p_solver.completeClosedAroundDeductions(listEvents, x, y, true);
+					p_solver.deductionsCompleteClosedAround(listEventsToApply, x, y, true);
 				}
 				if (maxOs == val) {
-					listEvents = p_solver.completeClosedAroundDeductions(listEvents, x, y, false);						
+					p_solver.deductionsCompleteClosedAround(listEventsToApply, x, y, false);						
 				}
 			}
-		});
-		if (!ok) {
-			return EVENT_RESULT.FAILURE;
-		}
+		};
 		p_solver.checkerMovedNeighbors.clean();
-		return listEvents;
 	}
 }
 
-SolverSukoro.prototype.completeClosedAroundDeductions = function(p_eventsList, p_x, p_y, p_isClosed) {
+SolverSukoro.prototype.deductionsCompleteClosedAround = function(p_listEventsToApply, p_x, p_y, p_isClosed) {
 	this.existingNeighborsCoors(p_x, p_y).forEach(coors => {
 		if (this.answerArray[coors.y][coors.x].getState(SUKORO_CLOSED_SPACE) == SPACE_CHOICE.UNDECIDED) {
-			p_eventsList.push(new ChoiceEvent(coors.x, coors.y, SUKORO_CLOSED_SPACE, p_isClosed));
+			p_listEventsToApply.push(new ChoiceEvent(coors.x, coors.y, SUKORO_CLOSED_SPACE, p_isClosed));
 		}
 	});
-	return p_eventsList;
 }
 
 //--------------------------------
@@ -289,11 +282,11 @@ SolverSukoro.prototype.completeClosedAroundDeductions = function(p_eventsList, p
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Sukoro"}];
+		var listQSEvents = [{quickStartLabel : "Sukoro"}];
 		p_solver.fixedSpaces.forEach(coors => {
-			listQSEvts.push(new ChoiceEvent(coors.x, coors.y, p_solver.fixedArray[coors.y][coors.x], true));
+			listQSEvents.push(new ChoiceEvent(coors.x, coors.y, p_solver.fixedArray[coors.y][coors.x], true));
 		});
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -326,12 +319,6 @@ adjacencyClosure = function (p_solver) {
 // --------------------
 // Pass and multipass
 
-namingCategoryClosure = function(p_solver) {
-	return function(p_index) {
-		return p_index.x + "," + p_index.y;
-	}
-}
-
 generateEventsForSpacePassClosure = function(p_solver) {
 	return function(p_space) {
 		return p_solver.generateEventsForSpacePass(p_space);
@@ -343,7 +330,7 @@ SolverSukoro.prototype.generateEventsForSpacePass = function(p_space) {
 	new ChoiceEvent(p_space.x, p_space.y, SUKORO_CLOSED_SPACE, false)]];
 }
 
-namingCategoryClosure = function(p_solver) {
+namingCategoryPassClosure = function(p_solver) {
 	return function (p_space) {
 		return "Space (" + p_space.x + "," + p_space.y + ")"; 
 	}
@@ -359,15 +346,15 @@ comparison = function(p_event1, p_event2) {
 
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		var answer = [];
+		var listIndexesPass = [];
 		for (var iy = 0 ; iy < p_solver.yLength ; iy++) {
 			for (var ix = 0 ; ix < p_solver.xLength ; ix++) {
 				if (p_solver.answerArray[iy][ix].getState(SUKORO_CLOSED_SPACE) == SPACE_CHOICE.UNDECIDED) {
-					answer.push({x : ix, y : iy});
+					listIndexesPass.push({x : ix, y : iy});
 				}
 			}
 		}
-		return answer;
+		return listIndexesPass;
 	}
 }
 
@@ -384,7 +371,6 @@ multipassDefineTodoClosure = function(p_solver) {
 SolverSukoro.prototype.isSolved = function() {
 	for (var x = 0; x < this.xLength ; x++) {
 		for (var y = 0; y < this.yLength ; y++) {
-			//if (this.answerArray[y][x].getValue() == null) {
 			if (this.answerArray[y][x].getState(SUKORO_CLOSED_SPACE) == SPACE_CHOICE.UNDECIDED) {
 				return false;
 			}
@@ -414,14 +400,14 @@ function searchClosure(p_solver) {
 		var bestIndex = {nbD : -1};
 		var nbDeductions;
 		var event_;
-		var result;
+		var resultDeds;
 		for (solveX = 0 ; solveX < p_solver.xLength ; solveX++) { // x and y are somehow modified by tryToApplyHypothesis...
 			for (solveY = 0 ; solveY < p_solver.yLength ; solveY++) {
 				if (p_solver.answerArray[solveY][solveX].getState(SUKORO_CLOSED_SPACE) == SPACE_CHOICE.UNDECIDED) {
 					[true, false].forEach(state => {
 						event_ = new ChoiceEvent(solveX, solveY, SUKORO_CLOSED_SPACE, state);
-						result = p_solver.tryToApplyHypothesis(event_); 
-						if (result != DEDUCTIONS_RESULT.FAILURE) {							
+						resultDeds = p_solver.tryToApplyHypothesis(event_); 
+						if (resultDeds != DEDUCTIONS_RESULT.FAILURE) {							
 							nbDeductions = p_solver.numberOfRelevantDeductionsSinceLastHypothesis();
 							if (bestIndex.nbD < nbDeductions) {
 								bestIndex = {nbD : nbDeductions , x : event_.x, y : event_.y}

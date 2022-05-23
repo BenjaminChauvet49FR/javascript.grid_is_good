@@ -320,7 +320,7 @@ validityTokenNumber = function(p_clue) {
 validityNumberRangeOrSymbolClosure = function(p_min, p_max, p_symbol) {
 	return function(p_clue) {
 		if (!isNaN(p_clue)) {
-			const number = parseInt(p_clue, 10);//p_clue == "X" || 
+			const number = parseInt(p_clue, 10);
 			return ((p_min == null) || (p_min <= number)) && ((p_max == null) || (p_max >= number));
 		} else {
 			for (var i = 0; i < p_symbol.length ; i++) {
@@ -409,16 +409,16 @@ validityTokenSuraromu = function(p_clue) {
 p_min and p_max must be either numbers or null
 */
 function stringRange(p_min, p_max) {
-	var answer = "";
+	var result = "";
 	var optionalSpace = "";
 	if (p_min != null) {
-		answer = ">= " + p_min;
+		result = ">= " + p_min;
 		optionalSpace = " et ";
 	}
 	if (p_max != null) {
-		answer += optionalSpace + "<= " + p_max;
+		result += optionalSpace + "<= " + p_max;
 	}
-	return answer;
+	return result;
 }
 
 //------------------------
@@ -452,7 +452,7 @@ restartAction = function (p_canvas, p_drawer, p_editorCore, p_fieldsDefiningPuzz
 		Object.keys(GRID_ID).forEach(id => {
 			editorCore.addCleanGrid(id, xLength, yLength); //  See GRID_ID in EditorCore
 		});
-        adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore);
+        adaptCanvasAndGrid(p_canvas, p_drawer, p_editorCore); // Note : all methods that call adaptCanvasAndGrid force the upper methods to carry p_canvas and p_drawer arguments only for them.
     }
 }
 

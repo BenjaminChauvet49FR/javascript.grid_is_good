@@ -7,7 +7,7 @@ function main() {
 	var spanState = document.getElementById("span_resolution_state");
 	var actionsManager = {}; 
 
-	var colors = {
+	var colours = {
 		openSpace : COLOURS.OPEN_SPREAD,
 		closedSpace : COLOURS.CLOSED_SPREAD,
 		numberWrite : COLOURS.WRITE_WITHIN_OPEN_WILD
@@ -17,7 +17,7 @@ function main() {
 	//The main draw function (at start)
 	function drawCanvas() {
 		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength);
-		drawInsideSpaces(context, drawer, colors, solver);
+		drawInsideSpaces(context, drawer, colours, solver);
 		solver.callStateForItem(spanState);
 	}
 	

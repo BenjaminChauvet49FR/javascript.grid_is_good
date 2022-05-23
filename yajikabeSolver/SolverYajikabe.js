@@ -26,7 +26,7 @@ SolverYajikabe.prototype.construct = function(p_combinationArray) {
 	this.methodsSetPass = {
 		comparisonMethod : comparison,
 		copyMethod : copying,
-		argumentToLabelMethod : namingCategoryClosure(this)
+		argumentToLabelMethod : namingCategoryPassClosure(this)
 		};
 	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForStripesAndUnionsClosure(this),
@@ -238,13 +238,13 @@ SolverYajikabe.prototype.passStripFromSpace = function(p_x, p_y) {
 	if (this.isNumeric(p_x, p_y)) {
 		const index = this.stripesArray[p_y][p_x];
 		const unionIndex = this.cluesSpacesList[index].union;
-		var generatedEvents;
+		var listPassNow;
 		if (unionIndex != null) {
-			generatedEvents = this.generateEventsForUnionStripPass(unionIndex);
-			this.passEvents(generatedEvents, {category : YAJIKABE_CATEGORY.UNION, index : unionIndex}); 
+			listPassNow = this.generateEventsForUnionStripPass(unionIndex);
+			this.passEvents(listPassNow, {category : YAJIKABE_CATEGORY.UNION, index : unionIndex}); 
 		} else {
-			generatedEvents = this.generateEventsForSingleStripPass(index);
-			this.passEvents(generatedEvents, {category : YAJIKABE_CATEGORY.STRIP, index : index}); 
+			listPassNow = this.generateEventsForSingleStripPass(index);
+			this.passEvents(listPassNow, {category : YAJIKABE_CATEGORY.STRIP, index : index}); 
 		}
 	}
 }
@@ -280,16 +280,16 @@ SolverYajikabe.prototype.putNew = function(p_x,p_y,p_symbol) {
 
 
 applyEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		return p_solver.putNew(eventToApply.x, eventToApply.y, eventToApply.symbol);
+	return function(p_eventToApply) {
+		return p_solver.putNew(p_eventToApply.x, p_eventToApply.y, p_eventToApply.symbol);
 	}
 }
 
 undoEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		const x = eventToApply.x;
-		const y = eventToApply.y;
-		const symbol = eventToApply.symbol;
+	return function(p_eventToUndo) {
+		const x = p_eventToUndo.x;
+		const y = p_eventToUndo.y;
+		const symbol = p_eventToUndo.symbol;
 		if (symbol == ADJACENCY.YES) {
 			p_solver.stripesArray[y][x].forEach(index => {
 				p_solver.cluesSpacesList[index].notPlacedOpensYet++;
@@ -326,16 +326,16 @@ adjacencyClosure = function (p_solver) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Yajikabe"}];
+		var listQSEvents = [{quickStartLabel : "Yajikabe"}];
 		p_solver.cluesSpacesList.forEach(clue => {
 			if (clue.notPlacedClosedsYet == 0) {
-				listQSEvts = p_solver.fillWithBlanks(listQSEvts, clue, ADJACENCY.YES);
+				p_solver.deductionsFillWithBlanks(listQSEvents, clue, ADJACENCY.YES);
 			}
 			if (clue.notPlacedOpensYet == 0) {
-				listQSEvts = p_solver.fillWithBlanks(listQSEvts, clue, ADJACENCY.NO);
+				p_solver.deductionsFillWithBlanks(listQSEvents, clue, ADJACENCY.NO);
 			}
 		});
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -348,26 +348,25 @@ deductionsClosure = function (p_solver) {
 		const y = p_eventBeingApplied.y;
 		const symbol = p_eventBeingApplied.symbol;
 		if (symbol == ADJACENCY.YES) {
-			p_listEventsToApply = p_solver.deductionsAlert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
+			p_solver.deductionsAlert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
 			p_solver.stripesArray[y][x].forEach(index => { //Alert on strip
 				const clue = p_solver.cluesSpacesList[index];
 				if (clue.notPlacedOpensYet == 0) {
-					p_listEventsToApply = p_solver.fillWithBlanks(p_listEventsToApply, clue, ADJACENCY.NO);
+					p_solver.deductionsFillWithBlanks(p_listEventsToApply, clue, ADJACENCY.NO);
 				}
 			});
 		} else {
 			p_solver.stripesArray[y][x].forEach(index => { //Alert on strip
 				const clue = p_solver.cluesSpacesList[index];
 				if (clue.notPlacedClosedsYet == 0) {
-					p_listEventsToApply = p_solver.fillWithBlanks(p_listEventsToApply, clue, ADJACENCY.YES);
+					p_solver.deductionsFillWithBlanks(p_listEventsToApply, clue, ADJACENCY.YES);
 				}
 			});
 		}
-		return p_listEventsToApply;
 	}
 }
 
-SolverYajikabe.prototype.fillWithBlanks = function(p_listEventsToApply, p_clue, p_spaceToFill) {
+SolverYajikabe.prototype.deductionsFillWithBlanks = function(p_listEventsToApply, p_clue, p_spaceToFill) {
 	if ((p_clue.direction == DIRECTION.LEFT) || (p_clue.direction == DIRECTION.RIGHT)) {
 		const y = p_clue.y;
 		for (var x = p_clue.xMin ; x <= p_clue.xMax ; x++) {
@@ -383,8 +382,6 @@ SolverYajikabe.prototype.fillWithBlanks = function(p_listEventsToApply, p_clue, 
 			}
 		}
 	}
-	
-	return p_listEventsToApply;
 }
 
 // --------------------
@@ -393,44 +390,44 @@ SolverYajikabe.prototype.fillWithBlanks = function(p_listEventsToApply, p_clue, 
 // Index strip must match the index of a strip WITHOUT UNION !
 SolverYajikabe.prototype.generateEventsForSingleStripPass = function(p_indexStrip) {
 	const clue = this.cluesSpacesList[p_indexStrip];
-	var eventList = [];
+	var listPass = [];
 	if ((clue.direction == DIRECTION.LEFT) || (clue.direction == DIRECTION.RIGHT)) {
 		const y = clue.y;
 		for (var x = clue.xMin ; x <= clue.xMax ; x++) {
 			if (this.answerArray[y][x] == ADJACENCY.UNDECIDED) {
-				eventList.push([new SpaceEvent(x, y, ADJACENCY.YES), new SpaceEvent(x, y, ADJACENCY.NO)]);		
+				listPass.push([new SpaceEvent(x, y, ADJACENCY.YES), new SpaceEvent(x, y, ADJACENCY.NO)]);		
 			}
 		}
 	} else {
 		const x = clue.x;
 		for (var y = clue.yMin ; y <= clue.yMax ; y++) {
 			if (this.answerArray[y][x] == ADJACENCY.UNDECIDED) {
-				eventList.push([new SpaceEvent(x, y, ADJACENCY.YES), new SpaceEvent(x, y, ADJACENCY.NO)]);		
+				listPass.push([new SpaceEvent(x, y, ADJACENCY.YES), new SpaceEvent(x, y, ADJACENCY.NO)]);		
 			}
 		}
 	}
-	return eventList;
+	return listPass;
 }
 
 SolverYajikabe.prototype.generateEventsForUnionStripPass = function(p_indexUnion) {
 	const clue = this.unionsStripesList[p_indexUnion];
-	var eventList = [];
+	var listPass = [];
 	if ((clue.orientation == ORIENTATION.HORIZONTAL)) {
 		const y = clue.y;
 		for (var x = clue.xMin ; x <= clue.xMax ; x++) {
 			if (this.answerArray[y][x] == ADJACENCY.UNDECIDED) {
-				eventList.push([new SpaceEvent(x, y, ADJACENCY.YES), new SpaceEvent(x, y, ADJACENCY.NO)]);		
+				listPass.push([new SpaceEvent(x, y, ADJACENCY.YES), new SpaceEvent(x, y, ADJACENCY.NO)]);		
 			}
 		}
 	} else {
 		const x = clue.x;
 		for (var y = clue.yMin ; y <= clue.yMax ; y++) {
 			if (this.answerArray[y][x] == ADJACENCY.UNDECIDED) {
-				eventList.push([new SpaceEvent(x, y, ADJACENCY.YES), new SpaceEvent(x, y, ADJACENCY.NO)]);		
+				listPass.push([new SpaceEvent(x, y, ADJACENCY.YES), new SpaceEvent(x, y, ADJACENCY.NO)]);		
 			}
 		}
 	}
-	return eventList;
+	return listPass;
 }
 
 
@@ -447,11 +444,11 @@ comparison = function(p_event1, p_event2) {
 // Multipass
 
 generateEventsForStripesAndUnionsClosure = function (p_solver) {
-	return function (p_indexFamily) {
-		if (p_indexFamily.category == YAJIKABE_CATEGORY.STRIP) {
-			return p_solver.generateEventsForSingleStripPass(p_indexFamily.index);
+	return function (p_indexPass) {
+		if (p_indexPass.category == YAJIKABE_CATEGORY.STRIP) {
+			return p_solver.generateEventsForSingleStripPass(p_indexPass.index);
 		} else {
-			return  p_solver.generateEventsForUnionStripPass(p_indexFamily.index); 
+			return  p_solver.generateEventsForUnionStripPass(p_indexPass.index); 
 		}
 	}
 }
@@ -463,30 +460,30 @@ const YAJIKABE_CATEGORY = {
 
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		var indexList = [];
+		var listIndexesPass = [];
 		for (var i = 0 ; i < p_solver.cluesSpacesList.length ; i++) {
 			if (p_solver.cluesSpacesList[i].union == null) {
-				indexList.push({category : YAJIKABE_CATEGORY.STRIP, index : i}); // TODO possibility of adding more details for incertainity
+				listIndexesPass.push({category : YAJIKABE_CATEGORY.STRIP, index : i}); // TODO possibility of adding more details for uncertainity
 			} 
 		}
 		for (var i = 0 ; i < p_solver.unionsStripesList.length ; i++) {
-			indexList.push({category : YAJIKABE_CATEGORY.UNION, index : i});
+			listIndexesPass.push({category : YAJIKABE_CATEGORY.UNION, index : i});
 		}
-		return indexList;
+		return listIndexesPass;
 	}
 }
 
-namingCategoryClosure = function(p_solver) {
-	return function(p_passIndex) {
-		if (p_passIndex.passCategory == YAJIKABE_CATEGORY.UNION) {
-			const uni = p_solver.unionsStripesList[p_passIndex.index];
+namingCategoryPassClosure = function(p_solver) {
+	return function(p_indexPass) {
+		if (p_indexPass.passCategory == YAJIKABE_CATEGORY.UNION) {
+			const uni = p_solver.unionsStripesList[p_indexPass.index];
 			if (uni.orientation == ORIENTATION.VERTICAL) {
 				return "(Stripes V " + uni.x + "," + uni.yMin + "-" + uni.yMax +")";
 			} else {
 				return "(Stripes H " + uni.xMin + "-" + uni.xMax + "," + uni.y +")";
 			}
 		} else {
-			const str = p_solver.cluesSpacesList[p_passIndex.index];
+			const str = p_solver.cluesSpacesList[p_indexPass.index];
 			if (str.direction == DIRECTION.UP || str.direction == DIRECTION.DOWN) {
 				return "(Strip V " + str.x + "," + str.yMin + "-" + str.yMax +")";
 			} else {

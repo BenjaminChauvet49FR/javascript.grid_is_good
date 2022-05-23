@@ -8,10 +8,10 @@ function main() {
 	var actionsManager = {}; 
 
 	var colours = {
-		cross : '#880044', 
-		crossLight : '#ff88cc', 
-		standardWrite : '#000000', 
-		reflectWrite : '#ffff88',
+		cross : COLOURS.X_COLOURED_DARK, 
+		crossLight : COLOURS.X_COLOURED_LIGHT, 
+		standardWrite : COLOURS.STANDARD_NOT_CLOSED_WRITE, 
+		reflectWrite : COLOURS.STANDARD_CLOSED_WRITE,
 	}
 	
 	var spanState = document.getElementById("span_resolution_state");

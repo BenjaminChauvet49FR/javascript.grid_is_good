@@ -24,7 +24,7 @@ SolverNorinori.prototype.construct = function(p_wallArray) {
 	this.buildPossibilities(); //notPlacedYetByRegion
 	this.buildAnswerArray(); //answerArray
 	this.buildNeighborsArray(); //neighborsArray
-	this.purifyanswerArray(); 
+	this.purifyAnswerArray(); 
 	this.indexRegionsSortedBySize = null; //Will be initialized in the first use of multipass.
 	this.methodsSetDeductions = new ApplyEventMethodPack(
 		applyEventClosure(this),
@@ -36,7 +36,7 @@ SolverNorinori.prototype.construct = function(p_wallArray) {
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
 		skipPassMethod : skipPassClosure(this)
 	};
-	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryPassClosure(this)};
 	this.setResolution = {
 		quickStartEventsMethod : quickStartEventsClosure(this)
 		//searchSolutionMethod : searchClosure(this)
@@ -60,7 +60,7 @@ SolverNorinori.prototype.buildAnswerArray = function() {
 Puts NOs into the answerArray corresponding to banned spaces 
 Precondition : both spacesByRegion and notPlacedYetByRegion have been refreshed and answerArray is ok.
 */
-SolverNorinori.prototype.purifyanswerArray = function(){
+SolverNorinori.prototype.purifyAnswerArray = function(){
 	//Removing banned spaces (hence the necessity to have things already updated)
 	for(iy = 0; iy < this.yLength ; iy++) {
 		for(ix = 0; ix < this.xLength ; ix++) {
@@ -148,15 +148,15 @@ SolverNorinori.prototype.makeQuickStart = function() {
 }
 
 SolverNorinori.prototype.emitPassRegion = function(p_indexRegion) {
-	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEvents(generatedEvents, p_indexRegion); 
+	const listPassNow = this.generateEventsForRegionPass(p_indexRegion);
+	this.passEvents(listPassNow, p_indexRegion); 
 }
 
 SolverNorinori.prototype.makeMultiPass = function() {
 	this.multiPass(this.methodsSetMultipass);
 }
 
-namingCategoryClosure = function(p_solver) {
+namingCategoryPassClosure = function(p_solver) {
 	return function (p_indexRegion) {
 		return "Region "+ p_indexRegion + " (" + p_solver.getFirstSpaceRegion(p_indexRegion).x +" "+ p_solver.getFirstSpaceRegion(p_indexRegion).y + ")"; 
 	}
@@ -166,8 +166,8 @@ namingCategoryClosure = function(p_solver) {
 // Doing and undoing
 
 applyEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		return p_solver.putNew(eventToApply.x, eventToApply.y, eventToApply.symbol);
+	return function(p_eventToApply) {
+		return p_solver.putNew(p_eventToApply.x, p_eventToApply.y, p_eventToApply.symbol);
 	}
 }
 
@@ -207,9 +207,9 @@ SolverNorinori.prototype.putNew = function(p_x,p_y,p_symbol){
 }
 
 undoEventClosure = function(p_solver) {
-	return function(eventToUndo) {
-		x = eventToUndo.x;
-		y = eventToUndo.y;
+	return function(p_eventToUndo) {
+		x = p_eventToUndo.x;
+		y = p_eventToUndo.y;
 		var indexRegion = p_solver.regionArray[y][x];
 		var symbol = p_solver.answerArray[y][x];
 		p_solver.answerArray[y][x] = FILLING.UNDECIDED;
@@ -235,15 +235,15 @@ undoEventClosure = function(p_solver) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Norinori"}];
+		var listQSEvents = [{quickStartLabel : "Norinori"}];
 		var space;
 		for(var i=0 ; i < p_solver.spacesByRegion.length ; i++) {
 			if(p_solver.spacesByRegion[i].length == 2) {
 				space = p_solver.spacesByRegion[i][0];
-				listQSEvts.push(new SpaceEvent(space.x, space.y, FILLING.YES));
+				listQSEvents.push(new SpaceEvent(space.x, space.y, FILLING.YES));
 			}
 		}
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -290,13 +290,13 @@ deductionsClosure = function (p_solver) {
 				if(p_solver.answerArray[dy][dx] == FILLING.YES){
 					switch(coorsDir.direction) {
 						case(DIRECTION.UP) :
-							p_listEventsToApply = p_solver.pushEventsDominoMadeVerticalDeductions(p_listEventsToApply, x, y-1);break;
+							p_solver.deductionsDominoMadeVertical(p_listEventsToApply, x, y-1);break;
 						case(DIRECTION.RIGHT) :
-							p_listEventsToApply = p_solver.pushEventsDominoMadeHorizontalDeductions(p_listEventsToApply, x, y);break;
+							p_solver.deductionsDominoMadeHorizontal(p_listEventsToApply, x, y);break;
 						case(DIRECTION.DOWN) :
-							p_listEventsToApply = p_solver.pushEventsDominoMadeVerticalDeductions(p_listEventsToApply, x, y);break;
+							p_solver.deductionsDominoMadeVertical(p_listEventsToApply, x, y);break;
 						case(DIRECTION.LEFT) :
-							p_listEventsToApply = p_solver.pushEventsDominoMadeHorizontalDeductions(p_listEventsToApply, x-1, y);break;
+							p_solver.deductionsDominoMadeHorizontal(p_listEventsToApply, x-1, y);break;
 					}
 				} else if (p_solver.neighborsArray[dy][dx].Os == 2) {
 					p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(dx, dy, FILLING.NO)));
@@ -327,7 +327,7 @@ deductionsClosure = function (p_solver) {
 					}
 				}
 			}
-			p_listEventsToApply = p_solver.ifAloneAndCorneredDeductions(p_listEventsToApply, x, y);
+			p_solver.deductionsIfAloneAndCornered(p_listEventsToApply, x, y);
 		}
 		if (symbol == FILLING.NO) {
 			var alterX; 
@@ -349,7 +349,7 @@ deductionsClosure = function (p_solver) {
 					p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(dx, dy, FILLING.NO)));
 				}
 				if ((p_solver.answerArray[dy][dx] == FILLING.YES) && (p_solver.distantNeighborExists(dx, dy, 2, dir))){
-					p_listEventsToApply = p_solver.ifAloneAndCorneredDeductions(p_listEventsToApply, dx, dy);
+					p_solver.deductionsIfAloneAndCornered(p_listEventsToApply, dx, dy);
 				}
 				if (p_solver.readyToBeCompletedDomino(dx, dy)) {
 					KnownDirections.forEach(direction2 => {
@@ -363,51 +363,48 @@ deductionsClosure = function (p_solver) {
 				}
 			});
 		}		
-		return p_listEventsToApply;
 	}
 }
 
 /**
 Pushes six events corresponding to the surroundings of an horizontal domino given the left space
 */
-SolverNorinori.prototype.pushEventsDominoMadeHorizontalDeductions = function(p_eventsToAdd, p_xLeft, p_yLeft) {
+SolverNorinori.prototype.deductionsDominoMadeHorizontal = function(p_listEventsToApply, p_xLeft, p_yLeft) { 
 	if (this.distantNeighborExists(p_xLeft, p_yLeft, 2, DIRECTION.RIGHT)) {		
-		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xLeft+2, p_yLeft, FILLING.NO)));
+		p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(p_xLeft+2, p_yLeft, FILLING.NO))); // loggedSpaceEvent is a historical method
 	}
 	if (this.neighborExists(p_xLeft, p_yLeft, DIRECTION.LEFT)) {		
-		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xLeft-1, p_yLeft, FILLING.NO)));
+		p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(p_xLeft-1, p_yLeft, FILLING.NO)));
 	}
 	if (this.neighborExists(p_xLeft, p_yLeft, DIRECTION.UP)) {		
-		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xLeft, p_yLeft-1, FILLING.NO)));
-		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xLeft+1, p_yLeft-1, FILLING.NO)));
+		p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(p_xLeft, p_yLeft-1, FILLING.NO)));
+		p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(p_xLeft+1, p_yLeft-1, FILLING.NO)));
 	}
 	if (this.neighborExists(p_xLeft, p_yLeft, DIRECTION.DOWN)) {		
-		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xLeft, p_yLeft+1, FILLING.NO)));
-		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xLeft+1, p_yLeft+1, FILLING.NO)));
+		p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(p_xLeft, p_yLeft+1, FILLING.NO)));
+		p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(p_xLeft+1, p_yLeft+1, FILLING.NO)));
 	}
-	return p_eventsToAdd;
 }
 
 
 /**
 Pushes six events corresponding to the surroundings of a vertical domino given the up space
 */
-SolverNorinori.prototype.pushEventsDominoMadeVerticalDeductions = function(p_eventsToAdd, p_xUp, p_yUp) {
+SolverNorinori.prototype.deductionsDominoMadeVertical = function(p_listEventsToApply, p_xUp, p_yUp) {
 	if (this.distantNeighborExists(p_xUp, p_yUp, 2, DIRECTION.DOWN)) {	
-		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xUp, p_yUp+2, FILLING.NO)));
+		p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(p_xUp, p_yUp+2, FILLING.NO)));
 	}
 	if (this.neighborExists(p_xUp, p_yUp, DIRECTION.UP)) {
-		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xUp, p_yUp-1, FILLING.NO)));
+		p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(p_xUp, p_yUp-1, FILLING.NO)));
 	}
 	if (this.neighborExists(p_xUp, p_yUp, DIRECTION.LEFT)) {
-		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xUp-1, p_yUp+1, FILLING.NO)));
-		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xUp-1, p_yUp, FILLING.NO)));
+		p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(p_xUp-1, p_yUp+1, FILLING.NO)));
+		p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(p_xUp-1, p_yUp, FILLING.NO)));
 	}
 	if (this.neighborExists(p_xUp, p_yUp, DIRECTION.RIGHT)) {
-		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xUp+1, p_yUp+1, FILLING.NO)));
-		p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_xUp+1, p_yUp, FILLING.NO)));
+		p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(p_xUp+1, p_yUp+1, FILLING.NO)));
+		p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(p_xUp+1, p_yUp, FILLING.NO)));
 	}
-	return p_eventsToAdd;
 }
 
 SolverNorinori.prototype.readyToBeCompletedDomino = function(p_x, p_y) {
@@ -419,11 +416,11 @@ SolverNorinori.prototype.isNeighborQualifiable = function(p_indexRegion, p_x, p_
 }
 
 SolverNorinori.prototype.hasNeighborQualifiable = function(p_indexRegion, p_x, p_y) {
-	var answer = true;
+	var resultNQ = true; 
 	KnownDirections.forEach(dir => {
-		answer |= (this.neighborExists(p_x, p_y, dir) && this.isNeighborQualifiable(p_indexRegion, p_x + DeltaX[dir], p_y + DeltaY[dir]));
+		resultNQ |= (this.neighborExists(p_x, p_y, dir) && this.isNeighborQualifiable(p_indexRegion, p_x + DeltaX[dir], p_y + DeltaY[dir]));
 	});
-	return answer;
+	return resultNQ;
 }
 
 /**
@@ -439,12 +436,12 @@ SolverNorinori.prototype.directionFillingNo = function(p_x, p_y, p_dir) {
 }
 
 /**
-Tests if an O in a space is alone and "cornered" (for all four corners)
-The (p_x,p_y) space must contain an O.
+Tests if an O in a space is alone and "cornered" (e.g. there are Xs or edges in two orthogonal directions) (for all four corners)
+The (p_x, p_y) space must contain an O.
 */
-SolverNorinori.prototype.ifAloneAndCorneredDeductions = function(p_eventsToAdd, p_x, p_y) {
+SolverNorinori.prototype.deductionsIfAloneAndCornered = function(p_listEventsToApply, p_x, p_y) {
 	if (this.neighborsArray[p_y][p_x].Os == 1) {
-		return p_eventsToAdd;
+		return;
 	}
 	const leftward = this.neighborExists(p_x, p_y, DIRECTION.LEFT);
 	const upward = this.neighborExists(p_x, p_y, DIRECTION.UP);
@@ -458,21 +455,20 @@ SolverNorinori.prototype.ifAloneAndCorneredDeductions = function(p_eventsToAdd, 
 	var goUp = upward && downBlocked;
 	if (leftBlocked && rightward){
 		if (goDown){
-			p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_x+1, p_y+1, FILLING.NO)));
+			p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(p_x+1, p_y+1, FILLING.NO)));
 		}                                                             
 		if (goUp){                                                    
-			p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_x+1, p_y-1, FILLING.NO)));
+			p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(p_x+1, p_y-1, FILLING.NO)));
 		}                                                             
 	}                                                                 
 	if (leftward && rightBlocked){                                    
 		if (goDown){                                                  
-			p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_x-1, p_y+1, FILLING.NO)));
+			p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(p_x-1, p_y+1, FILLING.NO)));
 		}                                                             
 		if (goUp){                                                    
-			p_eventsToAdd.push(loggedSpaceEvent(new SpaceEvent(p_x-1, p_y-1, FILLING.NO)));
+			p_listEventsToApply.push(loggedSpaceEvent(new SpaceEvent(p_x-1, p_y-1, FILLING.NO)));
 		}
 	}
-	return p_eventsToAdd;
 }
 
 /**Tests if two pairs of coordinates are orthogonally adjacent or identical
@@ -513,20 +509,20 @@ comparison = function(p_event1, p_event2) {
 
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		var indexList = [];
+		var listIndexesPass = [];
 		var values = [];
 		for (var i = 0; i < p_solver.spacesByRegion.length ; i++) {
 			if (p_solver.notPlacedYetByRegion[i].Os > 0) {
-				indexList.push(i);
+				listIndexesPass.push(i);
 				values.push(p_solver.uncertainity(i));
 			} else {
 				values.push(-1); // There MUST be one of these per region.
 			}
 		}
-		indexList.sort(function(p_i1, p_i2) {
+		listIndexesPass.sort(function(p_i1, p_i2) {
 			return values[p_i1]-values[p_i2];
 		});
-		return indexList;
+		return listIndexesPass;
 	}
 }
 
@@ -546,7 +542,7 @@ skipPassClosure = function(p_solver) {
 /**
 Logs that a space event is pushed into a list (in the calling function !) and returns the space event !
 */
-function loggedSpaceEvent(spaceEvt){
+function loggedSpaceEvent(spaceEvt) {
 	autoLogTryToPutNewGold("Event pushed : "+spaceEvt.toLogString());
 	return spaceEvt
 }

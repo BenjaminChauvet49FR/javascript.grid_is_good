@@ -41,7 +41,7 @@ SolverYagit.prototype.construct = function(p_symbolArray, p_knotsArray) {
 	this.methodsSetPass = {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
-		argumentToLabelMethod : namingCategoryClosure(this)
+		argumentToLabelMethod : namingCategoryPassClosure(this)
 	};
 	
 	this.methodsSetMultipass = {
@@ -65,7 +65,6 @@ SolverYagit.prototype.construct = function(p_symbolArray, p_knotsArray) {
 			default : return YAGIT_SHAPE.UNDECIDED;
 		}
 	});
-	this.answerGrid = new FencesGrid(this.xLength, this.yLength); // Grid of fences
 	this.nodesOccupationRDArray = [];
 	this.numberNodes = 0;
 	this.coorsRDNodes = [];
@@ -230,14 +229,14 @@ SolverYagit.prototype.emitHypothesisDown = function(p_x, p_y, p_state) {
 }
 
 SolverYagit.prototype.emitPassAroundSpace = function(p_x, p_y) {
-	const generatedEvents = this.generateEventsAroundSpacePass(p_x, p_y);
-	this.passEvents(generatedEvents, {passCategory : PASS_CATEGORY.SPACE, x : p_x, y : p_y}); 
+	const listPassNow = this.generateEventsAroundSpacePass(p_x, p_y);
+	this.passEvents(listPassNow, {passCategory : PASS_CATEGORY.SPACE, x : p_x, y : p_y}); 
 }
 
 SolverYagit.prototype.emitPassNodeRD = function(p_x, p_y) {
 	if (this.nodesOccupationRDArray[p_y][p_x] != null) {
-		const generatedEvents = this.generateEventsAroundNodePass(p_x, p_y);
-		this.passEvents(generatedEvents, {passCategory : PASS_CATEGORY.CORNER, x : p_x, y : p_y}); 
+		const listPassNow = this.generateEventsAroundNodePass(p_x, p_y);
+		this.passEvents(listPassNow, {passCategory : PASS_CATEGORY.CORNER, x : p_x, y : p_y}); 
 	}
 }
 
@@ -267,11 +266,11 @@ SolverYagit.prototype.tryToPutNewFence = function(p_x, p_y, p_directionFromSpace
 // Offensive programming : we assume x and y are consistent.
 
 applyEventClosure = function(p_solver) {
-	return function(p_event) {
-		if (p_event.kind == YAGIT_FENCE_EVENT_KIND) {
-			const index = p_event.index;
-			const state = p_event.state;
-			const orientation = p_event.orientation;
+	return function(p_eventToApply) {
+		if (p_eventToApply.kind == YAGIT_FENCE_EVENT_KIND) {
+			const index = p_eventToApply.index;
+			const state = p_eventToApply.state;
+			const orientation = p_eventToApply.orientation;
 			var fence = p_solver.fencesList[orientation][index];
 			// Classical state check
 			if (state == fence.state) {
@@ -347,10 +346,10 @@ applyEventClosure = function(p_solver) {
 				}
 			}
 			return EVENT_RESULT.SUCCESS;
-		} else if (p_event.kind == SHAPE_EVENT_KIND) {
-			const x = p_event.x;
-			const y = p_event.y;
-			const shape = p_event.shape;
+		} else if (p_eventToApply.kind == SHAPE_EVENT_KIND) {
+			const x = p_eventToApply.x;
+			const y = p_eventToApply.y;
+			const shape = p_eventToApply.shape;
 			const formerShape = p_solver.shapeAreaArray[y][x];
 			if (formerShape == shape) {
 				return EVENT_RESULT.HARMLESS;
@@ -361,11 +360,11 @@ applyEventClosure = function(p_solver) {
 			p_solver.shapeAreaArray[y][x] = shape;
 			return EVENT_RESULT.SUCCESS;
 		} else {
-			if (p_solver.deadEndsArray[p_event.y][p_event.x]) {
+			if (p_solver.deadEndsArray[p_eventToApply.y][p_eventToApply.x]) {
 				return EVENT_RESULT.HARMLESS;			
 			} else {				
-				p_solver.deadEndsArray[p_event.y][p_event.x] = true;
-				p_solver.existingNeighborsCoors(p_event.x, p_event.y).forEach(coors => {
+				p_solver.deadEndsArray[p_eventToApply.y][p_eventToApply.x] = true;
+				p_solver.existingNeighborsCoors(p_eventToApply.x, p_eventToApply.y).forEach(coors => {
 					p_solver.maybeAddClaustrophobia(coors.x, coors.y);
 				});
 				return EVENT_RESULT.SUCCESS;
@@ -399,11 +398,11 @@ SolverYagit.prototype.expandChain = function(p_newNode, p_expandedNode, p_opposi
 // Beware : The down-right node of the space is supposed to be returned and nothing else !
 SolverYagit.prototype.nodeRDSelection = function(p_condition, p_x, p_y, p_state) {
 	if (p_condition) {
-		const answer = this.nodesOccupationRDArray[p_y][p_x];
-		if (answer.chains.length == 2 && p_state == FENCE_STATE.CLOSED) { // Too many links ! We MUSTN'T add a 3rd one !
+		const resultNode = this.nodesOccupationRDArray[p_y][p_x];
+		if (resultNode.chains.length == 2 && p_state == FENCE_STATE.CLOSED) { // Too many links ! We MUSTN'T add a 3rd one !
 			return EVENT_RESULT.FAILURE;
 		} else { 
-			return answer;
+			return resultNode;
 		}
 	} else {
 		return null;
@@ -454,11 +453,11 @@ handleNodesCompatibility = function(p_node1, p_node2, p_directionOccupiedBy1, p_
 }
 
 undoEventClosure = function(p_solver) {
-	return function(p_event) {
-		if (p_event.kind == YAGIT_FENCE_EVENT_KIND) {
-			const index = p_event.index;
-			const orientation = p_event.orientation;
-			const stateClosed = (p_event.state == FENCE_STATE.CLOSED);
+	return function(p_eventToUndo) {
+		if (p_eventToUndo.kind == YAGIT_FENCE_EVENT_KIND) {
+			const index = p_eventToUndo.index;
+			const orientation = p_eventToUndo.orientation;
+			const stateClosed = (p_eventToUndo.state == FENCE_STATE.CLOSED);
 			var fence = p_solver.fencesList[orientation][index];		
 			var node1 = null;
 			var node2 = null;
@@ -486,10 +485,10 @@ undoEventClosure = function(p_solver) {
 			if (node1 != null) { node1.stillUnknownYet++; }
 			if (node2 != null) { node2.stillUnknownYet++; }
 			fence.state = FENCE_STATE.UNDECIDED;
-		} else if (p_event.kind == SHAPE_EVENT_KIND) {
-			p_solver.shapeAreaArray[p_event.y][p_event.x] = YAGIT_SHAPE.UNDECIDED;
+		} else if (p_eventToUndo.kind == SHAPE_EVENT_KIND) {
+			p_solver.shapeAreaArray[p_eventToUndo.y][p_eventToUndo.x] = YAGIT_SHAPE.UNDECIDED;
 		} else {
-			p_solver.deadEndsArray[p_event.y][p_event.x] = false;
+			p_solver.deadEndsArray[p_eventToUndo.y][p_eventToUndo.x] = false;
 		}
 	}
 }
@@ -510,13 +509,13 @@ SolverYagit.prototype.undoNodeBounds = function(p_node) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Yagit"}];
+		var listQSEvents = [{quickStartLabel : "Yagit"}];
 		KnownOrientations.forEach(orientation => {
 			p_solver.roundAndSquareFencesCheckers[orientation].list.forEach(index => {
-				listQSEvts.push(new YagitFenceEvent(orientation, index, FENCE_STATE.CLOSED));
+				listQSEvents.push(new YagitFenceEvent(orientation, index, FENCE_STATE.CLOSED));
 			});
 		});
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -524,7 +523,7 @@ quickStartEventsClosure = function(p_solver) {
 // Deductions
 
 deductionsClosure = function(p_solver) {
-	return function (p_eventList, p_eventBeingApplied) {
+	return function (p_listEventsToApply, p_eventBeingApplied) {
 		if (p_eventBeingApplied.kind == YAGIT_FENCE_EVENT_KIND) {
 			var node1, node2, fence;
 			const orientation = p_eventBeingApplied.orientation;
@@ -549,14 +548,14 @@ deductionsClosure = function(p_solver) {
 								correctOrientation = OrientationDirection[dir];
 							}
 						});
-						p_eventList.push(new YagitFenceEvent(correctOrientation, missingIndex, node.chains.length == 1 ? FENCE_STATE.CLOSED : FENCE_STATE.OPEN));
+						p_listEventsToApply.push(new YagitFenceEvent(correctOrientation, missingIndex, node.chains.length == 1 ? FENCE_STATE.CLOSED : FENCE_STATE.OPEN));
 					} else if (node.chains.length == 2) {
 						var fence2, correctOrientation;
 						KnownDirections.forEach(dir => {							
 							fence2 = p_solver.getFenceFromNode(node, dir); 
 							if (fence2.state == FENCE_STATE.UNDECIDED) {
 								correctOrientation = OrientationDirection[dir];
-								p_eventList.push(new YagitFenceEvent(correctOrientation , node.fenceIndexesAround[dir], FENCE_STATE.OPEN));
+								p_listEventsToApply.push(new YagitFenceEvent(correctOrientation , node.fenceIndexesAround[dir], FENCE_STATE.OPEN));
 							}
 						});
 					}
@@ -571,7 +570,7 @@ deductionsClosure = function(p_solver) {
 					const extremeNode2 = node2.chains.length == 1 ? node2 : p_solver.getNodeFromIndex(node2.oppositeEnd);
 					KnownDirections.forEach(dir => {
 						if (extremeNode1.fenceIndexesAround[dir] == extremeNode2.fenceIndexesAround[OppositeDirection[dir]]) {
-							p_eventList.push(new YagitFenceEvent(OrientationDirection[dir], extremeNode1.fenceIndexesAround[dir], FENCE_STATE.OPEN));
+							p_listEventsToApply.push(new YagitFenceEvent(OrientationDirection[dir], extremeNode1.fenceIndexesAround[dir], FENCE_STATE.OPEN));
 						}
 					});				
 				}
@@ -580,8 +579,8 @@ deductionsClosure = function(p_solver) {
 					if (node != null && node.chains.length == 1) {
 						x = node.xRD;
 						y = node.yRD;
-						p_eventList = p_solver.smartOppositionCornerAroundCornerDeductions(p_eventList, x, y, x+1, y+1, node.chains[0], true, node.fenceIndexesAround);
-						p_eventList = p_solver.smartOppositionCornerAroundCornerDeductions(p_eventList, x+1, y, x, y+1, node.chains[0], false, node.fenceIndexesAround);
+						p_solver.deductionsSmartOppositionCornerAroundCorner(p_listEventsToApply, x, y, x+1, y+1, node.chains[0], true, node.fenceIndexesAround);
+						p_solver.deductionsSmartOppositionCornerAroundCorner(p_listEventsToApply, x+1, y, x, y+1, node.chains[0], false, node.fenceIndexesAround);
 					}
 				});
 			} else {
@@ -589,12 +588,12 @@ deductionsClosure = function(p_solver) {
 				if (orientation == OV) {
 					const x = fence.x;
 					for (var y = fence.yUp ; y <= fence.yDown ; y++) {
-						p_eventList = p_solver.openFenceDeductions(p_eventList, x, y, x+1, y);
+						p_solver.deductionsOpenFence(p_listEventsToApply, x, y, x+1, y);
 					}
 				} else {
 					const y = fence.y;
 					for (var x = fence.xLeft ; x <= fence.xRight ; x++) {
-						p_eventList = p_solver.openFenceDeductions(p_eventList, x, y, x, y+1);
+						p_solver.deductionsOpenFence(p_listEventsToApply, x, y, x, y+1);
 					}
 				}
 			}
@@ -608,11 +607,11 @@ deductionsClosure = function(p_solver) {
 				yy = coorsDir.y;
 				dir = coorsDir.direction;
 				if (p_solver.getFenceFromSpace(x, y, dir).state == FENCE_STATE.OPEN) {
-					p_eventList.push(new ShapeEvent(xx, yy, shape));
+					p_listEventsToApply.push(new ShapeEvent(xx, yy, shape));
 				}
 				shapeN = p_solver.shapeAreaArray[yy][xx];
 				if (shapeN != FENCE_STATE.UNDECIDED && shapeN != shape) {
-					p_eventList.push(new YagitFenceEvent(OrthogonalOrientationDirection[dir], p_solver.fencesIDGrid.getFence(x, y, dir), FENCE_STATE.CLOSED));
+					p_listEventsToApply.push(new YagitFenceEvent(OrthogonalOrientationDirection[dir], p_solver.fencesIDGrid.getFence(x, y, dir), FENCE_STATE.CLOSED));
 				}
 			});
 			// For each node of the space : if the diagonally opposite space has the opposite shape AND there is a closed fence, open the fence !
@@ -620,23 +619,22 @@ deductionsClosure = function(p_solver) {
 			otherShape = (shape == YAGIT_SHAPE.SQUARE ? YAGIT_SHAPE.ROUND : YAGIT_SHAPE.SQUARE);
 			if (x > 0) {
 				if (y > 0 && p_solver.nodesOccupationRDArray[y-1][x-1] != null) {
-					p_eventList = p_solver.smartOppositionCornerFromShapeDeductionsFromShape(p_eventList, p_solver.nodesOccupationRDArray[y-1][x-1], x-1, y-1, otherShape, true);
+					p_solver.deductionsFromShapeSmartOppositionCornerFromShape(p_listEventsToApply, p_solver.nodesOccupationRDArray[y-1][x-1], x-1, y-1, otherShape, true);
 				}
 				if (y <= this.yLength-2 && p_solver.nodesOccupationRDArray[y][x-1] != null) {
-					p_eventList = p_solver.smartOppositionCornerFromShapeDeductionsFromShape(p_eventList, p_solver.nodesOccupationRDArray[y][x-1], x-1, y+1, otherShape, false);
+					p_solver.deductionsFromShapeSmartOppositionCornerFromShape(p_listEventsToApply, p_solver.nodesOccupationRDArray[y][x-1], x-1, y+1, otherShape, false);
 				}
 			} 
 			if (x <= this.xLength-2) {
 				if (y > 0 && p_solver.nodesOccupationRDArray[y-1][x] != null) {
-					p_eventList = p_solver.smartOppositionCornerFromShapeDeductionsFromShape(p_eventList, p_solver.nodesOccupationRDArray[y-1][x], x+1, y-1, otherShape, false);
+					p_solver.deductionsFromShapeSmartOppositionCornerFromShape(p_listEventsToApply, p_solver.nodesOccupationRDArray[y-1][x], x+1, y-1, otherShape, false);
 				}
 				if (y <= this.yLength-2 && p_solver.nodesOccupationRDArray[y][x] != null) {
-					p_eventList = p_solver.smartOppositionCornerFromShapeDeductionsFromShape(p_eventList, p_solver.nodesOccupationRDArray[y][x], x+1, y+1, otherShape, true);
+					p_solver.deductionsFromShapeSmartOppositionCornerFromShape(p_listEventsToApply, p_solver.nodesOccupationRDArray[y][x], x+1, y+1, otherShape, true);
 				}
 			}
 			
 		}
-		return p_eventList;
 	}
 }
 
@@ -649,22 +647,21 @@ SolverYagit.prototype.nodeRDSelectionDeduction = function(p_condition, p_x, p_y)
 }
 
 // x1, y1 and x2, y2 are coordinates of neighbor spaces separated by an open fence
-SolverYagit.prototype.openFenceDeductions = function(p_eventList, p_x1, p_y1, p_x2, p_y2) {
+SolverYagit.prototype.deductionsOpenFence = function(p_listEventsToApply, p_x1, p_y1, p_x2, p_y2) {
 	const s1 = this.shapeAreaArray[p_y1][p_x1];
 	const s2 = this.shapeAreaArray[p_y2][p_x2];
 	if (s1 != YAGIT_SHAPE.UNDECIDED) {
-		p_eventList.push(new ShapeEvent(p_x2, p_y2, s1));
+		p_listEventsToApply.push(new ShapeEvent(p_x2, p_y2, s1));
 	}
 	if (s2 != YAGIT_SHAPE.UNDECIDED) {
-		p_eventList.push(new ShapeEvent(p_x1, p_y1, s2));
+		p_listEventsToApply.push(new ShapeEvent(p_x1, p_y1, s2));
 	}
-	return p_eventList;
 }
 
 
 // Preconditions : between p_x, p_y and p_x2, p_y2, there is a node. That node has a closed fence in p_closedFenceDirection.
 // p_LUvsRD true if we oppose left-up space to right-down, false otherwise
-SolverYagit.prototype.smartOppositionCornerAroundCornerDeductions = function(p_eventList, p_x, p_y, p_x2, p_y2, p_closedFenceDirection, p_LUvsRD, p_indexRoundingNodes) {
+SolverYagit.prototype.deductionsSmartOppositionCornerAroundCorner = function(p_listEventsToApply, p_x, p_y, p_x2, p_y2, p_closedFenceDirection, p_LUvsRD, p_indexRoundingNodes) {
 	const shape1 = this.shapeAreaArray[p_y][p_x];
 	var directionToOpen;
 	if (shape1 != YAGIT_SHAPE.UNDECIDED) {
@@ -676,14 +673,13 @@ SolverYagit.prototype.smartOppositionCornerAroundCornerDeductions = function(p_e
 				case DIRECTION.RIGHT : directionToOpen = p_LUvsRD ? DIRECTION.UP : DIRECTION.DOWN ; break;
 				case DIRECTION.DOWN : directionToOpen = p_LUvsRD ? DIRECTION.LEFT : DIRECTION.RIGHT; break;
 			}
-			p_eventList.push(new YagitFenceEvent(OrientationDirection[directionToOpen], p_indexRoundingNodes[directionToOpen], FENCE_STATE.OPEN));
+			p_listEventsToApply.push(new YagitFenceEvent(OrientationDirection[directionToOpen], p_indexRoundingNodes[directionToOpen], FENCE_STATE.OPEN));
 		}
 	} 
-	return p_eventList;
 }
 
 // Preconditions : p_xTarget
-SolverYagit.prototype.smartOppositionCornerFromShapeDeductionsFromShape = function(p_eventList, p_node, p_xTarget, p_yTarget, p_oppositeShape, p_LUvsRD) {
+SolverYagit.prototype.deductionsFromShapeSmartOppositionCornerFromShape = function(p_listEventsToApply, p_node, p_xTarget, p_yTarget, p_oppositeShape, p_LUvsRD) {
 	if (node.chains.length == 1 && this.shapeAreaArray[p_yTarget][p_xTarget] == p_oppositeShape) {
 		const closedFenceDirection = node.chains[0];
 		var directionToOpen;
@@ -694,7 +690,6 @@ SolverYagit.prototype.smartOppositionCornerFromShapeDeductionsFromShape = functi
 			case DIRECTION.DOWN : directionToOpen = p_LUvsRD ? DIRECTION.LEFT : DIRECTION.RIGHT; break;
 		}
 	}
-	return p_eventList;
 }
 
 // -------------------
@@ -703,57 +698,55 @@ SolverYagit.prototype.smartOppositionCornerFromShapeDeductionsFromShape = functi
 // Check that "no cage" (region without any symbol) has been generated
 function filterNoCagesClosure(p_solver) {
 	return function() {
-		var answer = [];
+		var listEventsToApply = [];
 		var xi, yi, x, y, coors, x2, y2, dir2, found;
-		p_solver.nearToNewFencesChecker.list.forEach(coorsInit => {
-			if (answer != EVENT_RESULT.FAILURE) {
-				p_solver.exploredSpacesNoCagesThisClusterChecker.clean();
-				xi = coorsInit.x;
-				yi = coorsInit.y;
-				var spacesToExplore = [{x : xi, y : yi}];
-				found = !p_solver.exploredSpacesNoCagesChecker.add(xi, yi); // See in setter the role of each of the three checkers.
-				while (!found && spacesToExplore.length > 0) {
-					coors = spacesToExplore.pop();
-					x = coors.x;
-					y = coors.y;
-					p_solver.exploredSpacesNoCagesChecker.add(x, y);  
-					found = p_solver.shapeAreaArray[y][x] != YAGIT_SHAPE.UNDECIDED;  // Note : because of events out of passes, areas cannot be colored without actually belong to the same open cluster as a shape space. Great ! 
-					// Don't forget that "thisCluster" checker ! exploredSpacesNoCagesChecker isn't enough because its only purpose is not to revisit spaces from the initial checker.
-					if (!found && p_solver.exploredSpacesNoCagesThisClusterChecker.add(x, y)) {
-						p_solver.existingNeighborsCoorsDirections(x, y).forEach(coorsDir2 => {
-							x2 = coorsDir2.x;
-							y2 = coorsDir2.y;
-							dir2 = coorsDir2.direction;
-							if (p_solver.getFenceFromSpace(x, y, dir2).state != FENCE_STATE.CLOSED) {
-								spacesToExplore.push({x : x2, y : y2});
-							}
-						});
-					}
-				}
-				if (!found) {
-					answer = EVENT_RESULT.FAILURE;
+		var coorsInit, i;
+		for (var i = 0 ; i < p_solver.nearToNewFencesChecker.list.length ; i++) {
+			coorsInit = p_solver.nearToNewFencesChecker.list[i];
+			p_solver.exploredSpacesNoCagesThisClusterChecker.clean();
+			xi = coorsInit.x;
+			yi = coorsInit.y;
+			var spacesToExplore = [{x : xi, y : yi}];
+			found = !p_solver.exploredSpacesNoCagesChecker.add(xi, yi); // See in setter the role of each of the three checkers.
+			while (!found && spacesToExplore.length > 0) {
+				coors = spacesToExplore.pop();
+				x = coors.x;
+				y = coors.y;
+				p_solver.exploredSpacesNoCagesChecker.add(x, y);  
+				found = p_solver.shapeAreaArray[y][x] != YAGIT_SHAPE.UNDECIDED;  // Note : because of events out of passes, areas cannot be coloured without actually belong to the same open cluster as a shape space. Great ! 
+				// Don't forget that "thisCluster" checker ! exploredSpacesNoCagesChecker isn't enough because its only purpose is not to revisit spaces from the initial checker.
+				if (!found && p_solver.exploredSpacesNoCagesThisClusterChecker.add(x, y)) {
+					p_solver.existingNeighborsCoorsDirections(x, y).forEach(coorsDir2 => {
+						x2 = coorsDir2.x;
+						y2 = coorsDir2.y;
+						dir2 = coorsDir2.direction;
+						if (p_solver.getFenceFromSpace(x, y, dir2).state != FENCE_STATE.CLOSED) {
+							spacesToExplore.push({x : x2, y : y2});
+						}
+					});
 				}
 			}
-		});
+			if (!found) {
+				listEventsToApply.push(new FailureEvent());
+			}
+		};
 		p_solver.cleanNoCagesChecker();
-		return answer;
+		return listEventsToApply;
 	}
 }
 
 // Preconditions : no cages generated. (see previous filter)
-// Declares spaces that belongs to rectangles of empty un-colored spaces as dead ends. Such rectangles are delimited by closed fences, edges of the grid and other dead-ends that aren't inspecte again.
+// Declares spaces that belongs to rectangles of empty un-coloured spaces as dead ends. Such rectangles are delimited by closed fences, edges of the grid and other dead-ends that aren't inspecte again.
 // New open fences can be deducted as well.
 function filterClaustrophobiaClosure(p_solver) {
 	return function() {
-		var answer = [];
+		var listEventsToApply = [];
 		var spaceToCheck;
 		var freeDirectionsChecker = new CheckCollection(4);
 		var xx, yy;
 		p_solver.solvedTheOtherWayChecker.clean();
-		p_solver.claustrophobiaChecker.list.forEach(coors => {
-			if (answer == EVENT_RESULT.FAILURE) { 
-				return;
-			}
+		for (var i = 0 ; i < p_solver.claustrophobiaChecker.list.length ; i++) {
+			coors = p_solver.claustrophobiaChecker.list[i];
 			x = coors.x;
 			y = coors.y
 			if (p_solver.shapeAreaArray[y][x] == YAGIT_SHAPE.UNDECIDED && !p_solver.deadEndsArray[y][x]) {
@@ -764,11 +757,12 @@ function filterClaustrophobiaClosure(p_solver) {
 					}
 				});
 				if (freeDirectionsChecker.list.length == 0) {				
-					answer = EVENT_RESULT.FAILURE;
+					listEventsToApply.push(new FailureEvent());
+					return listEventsToApply;
 				} else if (freeDirectionsChecker.list.length == 1) {
 					const dir = freeDirectionsChecker.list[0];
-					answer.push(new YagitFenceEvent(OrthogonalOrientationDirection[dir], p_solver.fencesIDGrid.getFence(x, y, dir), FENCE_STATE.OPEN));
-					answer.push(new DeadEndEvent(x, y));
+					listEventsToApply.push(new YagitFenceEvent(OrthogonalOrientationDirection[dir], p_solver.fencesIDGrid.getFence(x, y, dir), FENCE_STATE.OPEN));
+					listEventsToApply.push(new DeadEndEvent(x, y));
 				} else {
 					// Okay ! For each free direction (at least 2), find potential dead ends.
 					var canGoLeftTurn, canGoRightTurn, xx, yy, colourFound, canContinueAhead, listSpacesDeadEnd;
@@ -813,18 +807,18 @@ function filterClaustrophobiaClosure(p_solver) {
 							}
 							if (!canContinueAhead && !doubleFound) { // If we have !colourFound we have canContinueAhead
 								listSpacesDeadEnd.forEach(coors => {
-									answer.push(new DeadEndEvent(coors.x, coors.y));
+									listEventsToApply.push(new DeadEndEvent(coors.x, coors.y));
 								});
-								answer.push(new YagitFenceEvent(OrientationDirection[dir], fenceToOpenIndex, FENCE_STATE.OPEN));
+								listEventsToApply.push(new YagitFenceEvent(OrientationDirection[dir], fenceToOpenIndex, FENCE_STATE.OPEN));
 								p_solver.solvedTheOtherWayChecker.add(xx, yy, OppositeDirection[dir]);
 							}
 						}						
 					});
 				}
 			}
-		});
+		};
 		p_solver.cleanClaustrophobiaChecker();
-		return answer;
+		return listEventsToApply;
 	}
 }
 
@@ -857,68 +851,68 @@ function comparison(p_event1, p_event2) { // Warning : more events to come soon 
 
 SolverYagit.prototype.generateEventsAroundNodePass = function(p_x, p_y) {
 	const node = this.nodesOccupationRDArray[p_y][p_x];
-	var answer = [];
+	var listPass = [];
 	KnownDirections.forEach(dir => {		
-		answer.push([new YagitFenceEvent(OrientationDirection[dir], node.fenceIndexesAround[dir], FENCE_STATE.OPEN), 
+		listPass.push([new YagitFenceEvent(OrientationDirection[dir], node.fenceIndexesAround[dir], FENCE_STATE.OPEN), 
 		new YagitFenceEvent(OrientationDirection[dir], node.fenceIndexesAround[dir], FENCE_STATE.CLOSED)]);
 	});
-	return answer;
+	return listPass;
 }
 
 SolverYagit.prototype.generateEventsAroundSpacePass = function(p_x, p_y) {
-	var answer = [];
+	var listPass = [];
 	var x, y, index, orientation;
 	this.existingNeighborsDirections(p_x, p_y).forEach(dir => {
 		orientation = OrthogonalOrientationDirection[dir];
 		index = this.getIndexFence(p_x, p_y, dir);
-		answer.push([new YagitFenceEvent(orientation, index, FENCE_STATE.OPEN), 
+		listPass.push([new YagitFenceEvent(orientation, index, FENCE_STATE.OPEN), 
 		new YagitFenceEvent(orientation, index, FENCE_STATE.CLOSED)]);
 	});
-	return answer;
+	return listPass;
 }
 
-namingCategoryClosure = function(p_solver) {
-	return function(p_passIndex) {
-		switch (p_passIndex.passCategory) {
+namingCategoryPassClosure = function(p_solver) {
+	return function(p_indexPass) {
+		switch (p_indexPass.passCategory) {
 			case PASS_CATEGORY.NODE : 
-				return ("Node " + p_passIndex.x + "," + p_passIndex.y); break;
+				return ("Node " + p_indexPass.x + "," + p_indexPass.y); break;
 			case PASS_CATEGORY.SPACE : 
-				return ("Space " + p_passIndex.x + "," + p_passIndex.y); break;
+				return ("Space " + p_indexPass.x + "," + p_indexPass.y); break;
 		}
 	}
 }
 
 generateEventsForPassClosure = function(p_solver) {
-	return function(p_passIndex) {
-		switch (p_passIndex.passCategory) {
+	return function(p_indexPass) {
+		switch (p_indexPass.passCategory) {
 			case PASS_CATEGORY.NODE : 
-				return p_solver.generateEventsAroundNodePass(p_passIndex.x, p_passIndex.y); break;
+				return p_solver.generateEventsAroundNodePass(p_indexPass.x, p_indexPass.y); break;
 			case PASS_CATEGORY.SPACE : 
-				return p_solver.generateEventsAroundSpacePass(p_passIndex.x, p_passIndex.y); break;			
+				return p_solver.generateEventsAroundSpacePass(p_indexPass.x, p_indexPass.y); break;			
 		}
 	}
 }
 
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		var listArguments = [];
+		var listIndexesPass = [];
 		var x, y, node;
 		p_solver.coorsRDNodes.forEach(coors => {
 			x = coors.x;
 			y = coors.y;
 			node = p_solver.nodesOccupationRDArray[y][x];
 			if (node != null && node.stillUnknownYet > 0) {
-				listArguments.push({passCategory : PASS_CATEGORY.NODE, x : x, y : y});
+				listIndexesPass.push({passCategory : PASS_CATEGORY.NODE, x : x, y : y});
 			}
 		});
 		// TODO : okay, can be optimized !
 		for(y = 0 ; y < p_solver.yLength ; y++) {			
 			for (x = 0; x < p_solver.xLength ; x++) {
 				if (p_solver.shapeAreaArray[y][x] == YAGIT_SHAPE.UNDECIDED) {
-					listArguments.push({passCategory : PASS_CATEGORY.SPACE, x : x, y : y});
+					listIndexesPass.push({passCategory : PASS_CATEGORY.SPACE, x : x, y : y});
 				}
 			}
 		}
-		return listArguments;
+		return listIndexesPass;
 	}	
 }

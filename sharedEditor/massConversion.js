@@ -109,18 +109,18 @@ function viewPuzzles(p_puzzleName) {
 
 // Transforms all the numeric spaces of an array into string ones
 function numericToStringArray(p_array) {
-	var answer = [];
+	var result = [];
 	var val;
 	for (var iy = 0 ; iy < p_array.length ; iy ++) {
-		answer.push([]);
+		result.push([]);
 		for (var ix = 0 ; ix < p_array[iy].length ; ix ++) {
 			val = p_array[iy][ix];
 			if (val != null) {
-				answer[iy].push("" + val);
+				result[iy].push("" + val);
 			} else {
-				answer[iy].push(null);
+				result[iy].push(null);
 			}
 		}
 	}
-	return answer;
+	return result;
 }

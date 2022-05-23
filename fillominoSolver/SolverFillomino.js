@@ -37,7 +37,7 @@ SolverFillomino.prototype.construct = function(p_numberArray) {
 	this.methodsSetPass = {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
-		argumentToLabelMethod : namingCategoryClosure(this)
+		argumentToLabelMethod : namingCategoryPassClosure(this)
 	};
 	
 	this.methodsSetMultipass = {
@@ -107,8 +107,8 @@ SolverFillomino.prototype.undo = function(){
 }
 
 SolverFillomino.prototype.emitPassSpace = function(p_x, p_y, p_number) {
-	const generatedEvents = this.generateEventsPassDiamondSpace(p_x, p_y, p_number);
-	this.passEvents(generatedEvents, {passCategory : PASS_CATEGORY.DIAMOND, x : p_x, y : p_y, strength : p_number}); 
+	const listPassNow = this.generateEventsPassDiamondSpace(p_x, p_y, p_number);
+	this.passEvents(listPassNow, {passCategory : PASS_CATEGORY.DIAMOND, x : p_x, y : p_y, strength : p_number}); 
 }
 
 SolverFillomino.prototype.makeMultiPass = function() {	
@@ -125,8 +125,8 @@ SolverFillomino.prototype.makeResolution = function() {
 }
 
 SolverFillomino.prototype.emitPassSelection = function(p_selectionSet) {
-	const eventsForPass = this.answerFencesGrid.getFencePassEventsForSpacesList(p_selectionSet.getSelectedSpacesList(), p_selectionSet.array);
-	return this.passEventsSafe(eventsForPass, {passCategory : PASS_CATEGORY.CUSTOM, numberSpaces : eventsForPass.length});
+	const listPassNow = this.answerFencesGrid.getFencePassEventsForSpacesList(p_selectionSet.getSelectedSpacesList(), p_selectionSet.array);
+	return this.passEventsSafe(listPassNow, {passCategory : PASS_CATEGORY.CUSTOM, numberSpaces : listPassNow.length});
 }
 
 //--------------------------------
@@ -135,21 +135,21 @@ SolverFillomino.prototype.emitPassSelection = function(p_selectionSet) {
 // Offensive programming assumption : we assume x and y are consistent.
 
 applyEventClosure = function(p_solver) { 
-	return function(p_event) {
-		if (p_event.kind == FENCE_EVENT_KIND) {
-			return p_solver.applyFenceEvent(p_event.fenceX, p_event.fenceY, p_event.direction, p_event.state);
+	return function(p_eventToApply) {
+		if (p_eventToApply.kind == FENCE_EVENT_KIND) {
+			return p_solver.applyFenceEvent(p_eventToApply.fenceX, p_eventToApply.fenceY, p_eventToApply.direction, p_eventToApply.state);
 		} else {
-			return p_solver.applyNumberEvent(p_event.x, p_event.y, p_event.number, p_event.view);
+			return p_solver.applyNumberEvent(p_eventToApply.x, p_eventToApply.y, p_eventToApply.number, p_eventToApply.view);
 		}
 	}
 }
 
 undoEventClosure = function(p_solver) { 
-	return function(p_event) {
-		if (p_event.kind == FENCE_EVENT_KIND) {
-			return p_solver.undoFenceEvent(p_event.fenceX, p_event.fenceY, p_event.direction, p_event.state);
+	return function(p_eventToUndo) {
+		if (p_eventToUndo.kind == FENCE_EVENT_KIND) {
+			return p_solver.undoFenceEvent(p_eventToUndo.fenceX, p_eventToUndo.fenceY, p_eventToUndo.direction, p_eventToUndo.state);
 		} else {
-			return p_solver.undoNumberEvent(p_event.x, p_event.y, p_event.number);
+			return p_solver.undoNumberEvent(p_eventToUndo.x, p_eventToUndo.y, p_eventToUndo.number);
 		}
 	}
 }
@@ -193,27 +193,27 @@ SolverFillomino.prototype.undoNumberEvent = function(p_x, p_y, p_number) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Fillomino"}];
+		var listQSEvents = [{quickStartLabel : "Fillomino"}];
 		var x, y, number;
 		for (y = 0 ; y < p_solver.yLength ; y++) {
 			for (x = 0 ; x < p_solver.xLength ; x++) {
 				number = p_solver.answerNumbersArray[y][x];
 				if (number != UNDECIDED_NUMBER) {
 					if (x > 0 && p_solver.answerNumbersArray[y][x-1] != UNDECIDED_NUMBER) {
-						listQSEvts.push(new FenceEvent(x, y, DIRECTION.LEFT, number == p_solver.answerNumbersArray[y][x-1] ? FENCE_STATE.OPEN : FENCE_STATE.CLOSED));
+						listQSEvents.push(new FenceEvent(x, y, DIRECTION.LEFT, number == p_solver.answerNumbersArray[y][x-1] ? FENCE_STATE.OPEN : FENCE_STATE.CLOSED));
 					}
 					if (y > 0  && p_solver.answerNumbersArray[y-1][x] != UNDECIDED_NUMBER) {
-						listQSEvts.push(new FenceEvent(x, y, DIRECTION.UP, number == p_solver.answerNumbersArray[y-1][x] ? FENCE_STATE.OPEN : FENCE_STATE.CLOSED));
+						listQSEvents.push(new FenceEvent(x, y, DIRECTION.UP, number == p_solver.answerNumbersArray[y-1][x] ? FENCE_STATE.OPEN : FENCE_STATE.CLOSED));
 					}
 					if (number == 1) {
 						p_solver.existingNeighborsDirections(x, y).forEach(dir => {
-							listQSEvts.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED));
+							listQSEvents.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED));
 						});
 					}
 				}
 			}
 		}
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -221,23 +221,23 @@ quickStartEventsClosure = function(p_solver) {
 // Deductions
 
 deductionsClosure = function(p_solver) {
-	return function (p_futureEventsList, p_eventBeingApplied) {
+	return function (p_listEventsToApply, p_eventBeingApplied) { 
 		var x, y;
 		if (p_eventBeingApplied.kind == FENCE_EVENT_KIND) {
 			x = p_eventBeingApplied.fenceX;
 			y = p_eventBeingApplied.fenceY;
 			const dir = p_eventBeingApplied.direction;
 			// Forced regionalism
-			p_futureEventsList = p_solver.answerFencesGrid.forceRegionalismDeductions(p_futureEventsList, x, y, dir);
+			p_solver.answerFencesGrid.deductionsForceRegionalism(p_listEventsToApply, x, y, dir);
 			// Propagation
 			if (p_eventBeingApplied.state == FENCE_STATE.OPEN) {
 				const dx = x + DeltaX[dir];
 				const dy = y + DeltaY[dir];
 				if (p_solver.answerNumbersArray[y][x] != UNDECIDED_NUMBER) {					
-					p_futureEventsList.push(new NumberEvent(dx, dy, p_solver.answerNumbersArray[y][x]));
+					p_listEventsToApply.push(new NumberEvent(dx, dy, p_solver.answerNumbersArray[y][x]));
 				}
 				if (p_solver.answerNumbersArray[dy][dx] != UNDECIDED_NUMBER) {					
-					p_futureEventsList.push(new NumberEvent(x, y, p_solver.answerNumbersArray[dy][dx]));
+					p_listEventsToApply.push(new NumberEvent(x, y, p_solver.answerNumbersArray[dy][dx]));
 				}
 			} 
 		} else {
@@ -249,23 +249,22 @@ deductionsClosure = function(p_solver) {
 			p_solver.existingNeighborsCoorsDirections(x, y).forEach(coorsDir => {
 				number2 = p_solver.answerNumbersArray[coorsDir.y][coorsDir.x];
 				if (number2 != UNDECIDED_NUMBER && number2 != number) {
-					p_futureEventsList.push(new FenceEvent(x, y, coorsDir.direction, FENCE_STATE.CLOSED));
+					p_listEventsToApply.push(new FenceEvent(x, y, coorsDir.direction, FENCE_STATE.CLOSED));
 				}
 				if (number2 == number) {
-					p_futureEventsList.push(new FenceEvent(x, y, coorsDir.direction, FENCE_STATE.OPEN));
+					p_listEventsToApply.push(new FenceEvent(x, y, coorsDir.direction, FENCE_STATE.OPEN));
 				}
 				if (p_solver.answerFencesGrid.getFence(x, y, coorsDir.direction) == FENCE_STATE.OPEN) {
-					p_futureEventsList.push(new NumberEvent(coorsDir.x, coorsDir.y, number));
+					p_listEventsToApply.push(new NumberEvent(coorsDir.x, coorsDir.y, number));
 				}
 			});
 			// Value 1
 			if (number == 1) {
 				p_solver.existingNeighborsDirections(x, y).forEach(dir => {
-					p_futureEventsList.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED));
+					p_listEventsToApply.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED));
 				});
 			}
 		}
-		return p_futureEventsList;
 	}
 }
 
@@ -274,7 +273,7 @@ deductionsClosure = function(p_solver) {
 // Applied when all fences states are consistent with the numbers inside.
 filterCompletedClustersClosure = function(p_solver) {
 	return function() {
-		var p_eventsList = [];
+		var listEventsToApply = [];
 		// (re)initialize cluster
 		p_solver.clusterFencesManager.reinitializeClusterCheckers();
 		var x, y, space, number, unknownFences;
@@ -290,18 +289,18 @@ filterCompletedClustersClosure = function(p_solver) {
 				number = p_solver.answerNumbersArray[y][x];
 				if (unknownFences.length == 0) {
 					if (number == UNDECIDED_NUMBER) {
-						p_eventsList.push(new NumberEvent(x, y, size));
+						listEventsToApply.push(new NumberEvent(x, y, size));
 					} else if (number != size) {
-						return EVENT_RESULT.FAILURE;
+						return FILTER_FAILURE;
 					}
 				} else { // Anything below is intelligence... but required intelligence if we want somewhat functional passes
 					// Cluster with a number
 					if (number != UNDECIDED_NUMBER) {
 						if (number < size) {
-							return EVENT_RESULT.FAILURE;
+							return FILTER_FAILURE;
 						} else if (number == size) {
 							unknownFences.forEach(dirCoors => {
-								p_eventsList.push(new FenceEvent(dirCoors.x, dirCoors.y, dirCoors.direction, FENCE_STATE.CLOSED));
+								listEventsToApply.push(new FenceEvent(dirCoors.x, dirCoors.y, dirCoors.direction, FENCE_STATE.CLOSED));
 							});
 						} else {							
 							var xMonoExit, yMonoExit;
@@ -312,7 +311,7 @@ filterCompletedClustersClosure = function(p_solver) {
 								yy = dirCoors.y + DeltaY[dirCoors.direction];
 								/* // CRUCIAL ASSUMPTION : fences in unknownFences are directed towards outside the cluster (x, y is inside)
 								if (size + p_solver.clusterFencesManager.sizeClusterBySpaceDefensive(xx, yy) > number) {
-									p_eventsList.push(new FenceEvent(dirCoors.x, dirCoors.y, dirCoors.direction, FENCE_STATE.CLOSED));
+									listEventsToApply.push(new FenceEvent(dirCoors.x, dirCoors.y, dirCoors.direction, FENCE_STATE.CLOSED));
 								}*/
 								// Should also do the "would join two same-numbered clusters" thing.
 								emptyClustersNearNumberedClustersSpaces.push({x : xx, y : yy}); // Cluster near the numbered space mustn't be numbered, otherwise space wouldn't be opened
@@ -328,7 +327,7 @@ filterCompletedClustersClosure = function(p_solver) {
 								}
 							});
 							if (dirMono != null && dirMono != -1) {
-								p_eventsList.push(new FenceEvent(xMonoExit, yMonoExit, OppositeDirection[dirMono], FENCE_STATE.OPEN));		
+								listEventsToApply.push(new FenceEvent(xMonoExit, yMonoExit, OppositeDirection[dirMono], FENCE_STATE.OPEN));		
 							}
 						}
 					} else { // this.answerNumbersArray[y][x] is unknown
@@ -370,7 +369,7 @@ filterCompletedClustersClosure = function(p_solver) {
 					number = p_solver.answerNumbersArray[dy][dx];
 					if (number != UNDECIDED_NUMBER) {
 						if (nearNumbersBanned.indexOf(number) != -1) {
-							p_eventsList.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED)); // another identical number is adjacent to this one
+							listEventsToApply.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED)); // another identical number is adjacent to this one
 						} else {							
 							adjacentNumberedSpacesData.push({
 								number : number, 
@@ -412,7 +411,7 @@ filterCompletedClustersClosure = function(p_solver) {
 						// j-1 = last index with "currentNumber"
 						for (k = firstInfoThisNumber ; k < j ; k++) {
 							data = adjacentNumberedSpacesData[k];
-							p_eventsList.push(new FenceEvent(data.x, data.y, data.direction, FENCE_STATE.CLOSED));
+							listEventsToApply.push(new FenceEvent(data.x, data.y, data.direction, FENCE_STATE.CLOSED));
 						}
 					} else {						
 						j++;
@@ -421,7 +420,7 @@ filterCompletedClustersClosure = function(p_solver) {
 			}
 		});
 		p_solver.cleanCheckerFences();
-		return p_eventsList;
+		return listEventsToApply;
 	}
 }
 
@@ -482,11 +481,11 @@ SolverFillomino.prototype.generateEventsPassDiamondSpace = function(p_x, p_y, p_
 	
 	this.volcanicChecker.purifyListForUnicity();
 	const unknownFences = this.answerFencesGrid.getUnknownFencesChecker(this.volcanicChecker);
-	var eventChoiceList = [];
+	var listEventsChoice = [];
 	unknownFences.forEach(fenceData => {
-		eventChoiceList.push([new FenceEvent(fenceData.x, fenceData.y, fenceData.direction, FENCE_STATE.OPEN), new FenceEvent(fenceData.x, fenceData.y, fenceData.direction, FENCE_STATE.CLOSED)])
+		listEventsChoice.push([new FenceEvent(fenceData.x, fenceData.y, fenceData.direction, FENCE_STATE.OPEN), new FenceEvent(fenceData.x, fenceData.y, fenceData.direction, FENCE_STATE.CLOSED)])
 	});
-	return eventChoiceList;
+	return listEventsChoice; 
 }
 
 SolverFillomino.prototype.generateEventsPassFence = function(p_x, p_y, p_direction) {
@@ -494,24 +493,24 @@ SolverFillomino.prototype.generateEventsPassFence = function(p_x, p_y, p_directi
 			new FenceEvent(p_x, p_y, p_direction, FENCE_STATE.CLOSED)]]
 }
 
-namingCategoryClosure = function(p_solver) {
-	return function(p_index) {
-		switch (p_index.passCategory) {
+namingCategoryPassClosure = function(p_solver) {
+	return function(p_indexPass) {
+		switch (p_indexPass.passCategory) {
 			case PASS_CATEGORY.DIAMOND :
-				return "Diamond pass strength (" + p_index.strength + ") " + p_index.x + "," + p_index.y;
+				return "Diamond pass strength (" + p_indexPass.strength + ") " + p_indexPass.x + "," + p_indexPass.y;
 			break;
 			case PASS_CATEGORY.CUSTOM :
-				return "Selection " + p_index.numberSpaces + " space" + (p_index.numberSpaces > 1 ? "s" : "");
+				return "Selection " + p_indexPass.numberSpaces + " space" + (p_indexPass.numberSpaces > 1 ? "s" : "");
 			break;
 		}
 	}
 }
 
 function generateEventsForPassClosure(p_solver) {
-	return function(p_index) { // Note : remember, it's only relevant for orderedListPassArgumentsClosure.
-		switch (p_index.passCategory) {
+	return function(p_indexPass) { // Note : remember, it's only relevant for orderedListPassArgumentsClosure.
+		switch (p_indexPass.passCategory) {
 			case PASS_CATEGORY.DIAMOND :
-				return p_solver.generateEventsPassDiamondSpace(p_index.x, p_index.y, p_index.strength);
+				return p_solver.generateEventsPassDiamondSpace(p_indexPass.x, p_indexPass.y, p_indexPass.strength);
 			break;
 		}
 	}
@@ -519,14 +518,14 @@ function generateEventsForPassClosure(p_solver) {
 
 function orderedListPassArgumentsClosure(p_solver) {
 	return function() {		
-		var answer = [];
+		var listIndexesPass = [];
 		var x, y;
 		for (y = 0 ; y < p_solver.yLength; y++) {
 			for (x = 0 ; x < p_solver.xLength; x++) {
-				answer.push({passCategory : PASS_CATEGORY.DIAMOND, x : x, y : y, strength : 1});
+				listIndexesPass.push({passCategory : PASS_CATEGORY.DIAMOND, x : x, y : y, strength : 1});
 			}
 		}
-		return answer;
+		return listIndexesPass;
 	}
 }
 

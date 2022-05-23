@@ -3,7 +3,7 @@
 Draws what's inside spaces 
 */
 function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver) {
-	var items = [DrawableColor(p_coloursSet.chocolateSquare), 
+	var items = [DrawableColour(p_coloursSet.chocolateSquare), 
 				 DrawableX(p_coloursSet.lackingSquare)];
 				
 	function selection(x,y) {

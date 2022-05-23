@@ -41,7 +41,7 @@ SolverShingoki.prototype.construct = function(p_valueGrid) {
 		
 		generateEventsForPassPS : generateEventsForPassClosure(this),
 		orderedListPassArgumentsPS : orderedListPassArgumentsClosureSolverPearly(this),
-		namingCategoryPS : namingCategoryClosure(this),
+		namingCategoryPS : namingCategoryPassClosure(this),
 		multipassPessimismPS : true
 	});
 	this.clueGrid = Grid_data(p_valueGrid);
@@ -272,7 +272,7 @@ solveAction = function (p_solver) {
 // already made deductions between direct links and white/black pearls (white : one linked/closed link = deduces the 3 others, black : one linked/closed = deduces the opposite), though only at distance 0, not at distance 1, 2, 3...
 function filterPearlsClosure(p_solver) {
 	return function() {
-		var listEvents = [];
+		var listEventsToApply = [];
 		var x, y;
 		var maxMax, actualMin, expectedMin;
 		p_solver.checkerMinMaxes.list.forEach(coors => {
@@ -285,15 +285,15 @@ function filterPearlsClosure(p_solver) {
 				for (var pivot = 0 ; pivot <= 1 ; pivot++) {	
 					if (p_solver.getMax(x, y, DIRECTION.LEFT+pivot) + p_solver.getMax(x, y, DIRECTION.RIGHT+pivot) < number) {
 						if (p_solver.neighborExists(x, y, DIRECTION.LEFT+pivot)) {						
-							listEvents.push(new LinkEvent(x, y, DIRECTION.LEFT+pivot, LOOP_STATE.CLOSED));
+							listEventsToApply.push(new LinkEvent(x, y, DIRECTION.LEFT+pivot, LOOP_STATE.CLOSED));
 						} else {
-							listEvents.push(new LinkEvent(x, y, DIRECTION.RIGHT+pivot, LOOP_STATE.CLOSED));
+							listEventsToApply.push(new LinkEvent(x, y, DIRECTION.RIGHT+pivot, LOOP_STATE.CLOSED));
 						}
 					}
 					if (p_solver.getMin(x, y, DIRECTION.LEFT+pivot) > 0) { // Right is here too.
 						[DIRECTION.LEFT+pivot, DIRECTION.RIGHT+pivot].forEach(dir => {
-							listEvents.push(new MinRangeEvent(x, y, OppositeDirection[dir], number-p_solver.getMax(x, y, dir) ));
-							listEvents.push(new MaxRangeEvent(x, y, OppositeDirection[dir], number-p_solver.getMin(x, y, dir) ));
+							listEventsToApply.push(new MinRangeEvent(x, y, OppositeDirection[dir], number-p_solver.getMax(x, y, dir) ));
+							listEventsToApply.push(new MaxRangeEvent(x, y, OppositeDirection[dir], number-p_solver.getMin(x, y, dir) ));
 						});
 					}
 				}
@@ -305,32 +305,32 @@ function filterPearlsClosure(p_solver) {
 					expectedMin = number - maxMax;
 					[DIRECTION.UP + pivot, (DIRECTION.DOWN + pivot)%4].forEach(dir => {
 						if (p_solver.getMin(x, y, dir) > 0) {						
-							listEvents.push(new MinRangeEvent(x, y, dir, expectedMin)); // If a direction is open, push the expected min (according to ortho. directions) into it.
+							listEventsToApply.push(new MinRangeEvent(x, y, dir, expectedMin)); // If a direction is linked, push the expected min (according to ortho. directions) into it.
 							requiredMinForExtend = number - p_solver.getMax(x, y, dir);
 							[DIRECTION.LEFT + pivot, DIRECTION.RIGHT + pivot].forEach(dirOrtho => {
 								if (p_solver.getMax(x, y, dirOrtho) < requiredMinForExtend) { // If in one of the orthogonal directions we can't extend enough, go for the remaining ortho. direction
-									listEvents.push(new MinRangeEvent(x, y, OppositeDirection[dirOrtho], requiredMinForExtend));
+									listEventsToApply.push(new MinRangeEvent(x, y, OppositeDirection[dirOrtho], requiredMinForExtend));
 								}
 								if (p_solver.getMin(x, y, dirOrtho) > 0) {
 									// May be suboptimal but hey, it works just like white !
-									listEvents.push(new MinRangeEvent(x, y, dirOrtho, number-p_solver.getMax(x, y, dir) ));
-									listEvents.push(new MaxRangeEvent(x, y, dirOrtho, number-p_solver.getMin(x, y, dir) ));
-									listEvents.push(new MinRangeEvent(x, y, dir, number-p_solver.getMax(x, y, dirOrtho) ));
-									listEvents.push(new MaxRangeEvent(x, y, dir, number-p_solver.getMin(x, y, dirOrtho) ));
+									listEventsToApply.push(new MinRangeEvent(x, y, dirOrtho, number-p_solver.getMax(x, y, dir) ));
+									listEventsToApply.push(new MaxRangeEvent(x, y, dirOrtho, number-p_solver.getMin(x, y, dir) ));
+									listEventsToApply.push(new MinRangeEvent(x, y, dir, number-p_solver.getMax(x, y, dirOrtho) ));
+									listEventsToApply.push(new MaxRangeEvent(x, y, dir, number-p_solver.getMin(x, y, dirOrtho) ));
 								}
 							});
 						}
 						if (expectedMin > p_solver.getMax(x, y, dir)) {
-							listEvents.push(new MinRangeEvent(x, y, OppositeDirection[dir], expectedMin ));
+							listEventsToApply.push(new MinRangeEvent(x, y, OppositeDirection[dir], expectedMin ));
 						}
-						listEvents.push(new MaxRangeEvent(x, y, dir, number-actualMin)); // Will be done for all 4 directions
+						listEventsToApply.push(new MaxRangeEvent(x, y, dir, number-actualMin)); // Will be done for all 4 directions
 					});
 				}
 			}
 			// Note : nothing about white pearls in extension of black pearls, but it should be done on setup.
 		});
 		p_solver.cleanMinMaxes();
-		return listEvents;
+		return listEventsToApply;
 	}
 }
 
@@ -353,25 +353,23 @@ abortSolverShingokiClosure = function(p_solver) {
 // Quickstart
 
 quickStartEventsClosure = function(p_solver) { 
-	return function(p_QSeventsList) { 
-		p_QSeventsList.push({quickStartLabel : "Shingoki"});
+	return function(p_listQSEvents) { 
+		p_listQSEvents.push({quickStartLabel : "Shingoki"});
 		var existLeft, existUp, existRight, existDown, position, x, y;
 		p_solver.pearlCoors.forEach(coors => {
 			x = coors.x;
 			y = coors.y;
-			p_QSeventsList.push(new SpaceEvent(x, y, LOOP_STATE.LINKED));
-			p_QSeventsList = p_solver.edgeGridReactionDeductions(p_QSeventsList, x, y, p_solver.getColourPearl(x, y) == SHINGOKI_PEARL.WHITE ? LOOP_STATE.CLOSED : LOOP_STATE.LINKED);
+			p_listQSEvents.push(new SpaceEvent(x, y, LOOP_STATE.LINKED));
+			p_solver.deductionsEdgeGridReaction(p_listQSEvents, x, y, p_solver.getColourPearl(x, y) == SHINGOKI_PEARL.WHITE ? LOOP_STATE.CLOSED : LOOP_STATE.LINKED);
 		});
-		return p_QSeventsList;
 	}
 }
 
-SolverShingoki.prototype.edgeGridReactionDeductions = function(p_eventList, p_x, p_y, p_stateToApply) {
+SolverShingoki.prototype.deductionsEdgeGridReaction = function(p_listEventsToApply, p_x, p_y, p_stateToApply) {
 	KnownDirections.forEach(dir => {
 		if (!this.neighborExists(p_x, p_y, dir)) {
-			p_eventList.push(new LinkEvent(p_x, p_y, OppositeDirection[dir], p_stateToApply));
+			p_listEventsToApply.push(new LinkEvent(p_x, p_y, OppositeDirection[dir], p_stateToApply));
 		}
 	});
-	return p_eventList;
 }
 

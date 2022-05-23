@@ -51,50 +51,50 @@ GeneralSolver.prototype.existingNeighborsCoors = function(p_x, p_y) {
 }
 
 GeneralSolver.prototype.existingNeighborsCoorsWithDiagonals = function(p_x, p_y) {
-	var answer = [];
+	var result = [];
 	KnownDirections.forEach(dir => {
 		if (this.neighborExists(p_x, p_y, dir)) {
-			answer.push({x : p_x + DeltaX[dir], y : p_y + DeltaY[dir]});
+			result.push({x : p_x + DeltaX[dir], y : p_y + DeltaY[dir]});
 			if (this.neighborExists(p_x, p_y, TurningRightDirection[dir])) { // Supposes a rectangular grid !
-				answer.push({x : p_x + DeltaX[dir] + DeltaX[TurningRightDirection[dir]], y : p_y + DeltaY[dir] + DeltaY[TurningRightDirection[dir]]});
+				result.push({x : p_x + DeltaX[dir] + DeltaX[TurningRightDirection[dir]], y : p_y + DeltaY[dir] + DeltaY[TurningRightDirection[dir]]});
 			}
 		}
 	});
-	return answer;
+	return result;
 }
 
 GeneralSolver.prototype.existingNeighborsDirections = function(p_x, p_y) {
-	var answer = [];
+	var result = [];
 	KnownDirections.forEach(dir => {
 		if (this.neighborExists(p_x, p_y, dir)) {
-			answer.push(dir);
+			result.push(dir);
 		}
 	});
-	return answer;
+	return result;
 }
 
 // Supposes a rectangular grid
 GeneralSolver.prototype.existingDiagonalNeighborsCoors = function(p_x, p_y) {
-	var answer = [];
+	var result = [];
 	const upExists = this.neighborExists(p_x, p_y, DIRECTION.UP); 
 	const downExists = this.neighborExists(p_x, p_y, DIRECTION.DOWN); 
 	if (p_x > 0) {
 		if (upExists) {
-			answer.push({x : p_x-1, y : p_y-1});
+			result.push({x : p_x-1, y : p_y-1});
 		}
 		if (downExists) {
-			answer.push({x : p_x-1, y : p_y+1});
+			result.push({x : p_x-1, y : p_y+1});
 		}
 	}
 	if (p_x <= this.xLength-2) {
 		if (upExists) {
-			answer.push({x : p_x+1, y : p_y-1});
+			result.push({x : p_x+1, y : p_y-1});
 		}
 		if (downExists) {
-			answer.push({x : p_x+1, y : p_y+1});
+			result.push({x : p_x+1, y : p_y+1});
 		}
 	}		
-	return answer;
+	return result;
 }
 
 // ----------
@@ -104,20 +104,20 @@ GeneralSolver.prototype.areCoordinatesInPuzzle = function(p_x, p_y) {
 	return p_x >= 0 && p_y >= 0 && p_x < this.xLength && p_y < this.yLength;
 }
 
-GeneralSolver.prototype.testExistingCoordinate = function(coor, dir) {
-	switch (dir) {
+GeneralSolver.prototype.testExistingCoordinate = function(p_coor, p_dir) {
+	switch (p_dir) {
 		case DIRECTION.LEFT : 
-		case DIRECTION.UP : return coor >= 0; break;
-		case DIRECTION.RIGHT : return coor < this.xLength; break;
-		case DIRECTION.DOWN : return coor < this.yLength; break;
+		case DIRECTION.UP : return p_coor >= 0; break;
+		case DIRECTION.RIGHT : return p_coor < this.xLength; break;
+		case DIRECTION.DOWN : return p_coor < this.yLength; break;
 	}
 }
 
-GeneralSolver.prototype.testExistingCoordinates = function(x, y, dir) {
-	switch (dir) {
-		case DIRECTION.LEFT : return x >= 0; break;
-		case DIRECTION.UP : return y >= 0; break;
-		case DIRECTION.RIGHT : return x < this.xLength; break;
-		case DIRECTION.DOWN : return y < this.yLength; break;
+GeneralSolver.prototype.testExistingCoordinates = function(p_x, p_y, p_dir) {
+	switch (p_dir) {
+		case DIRECTION.LEFT : return p_x >= 0; break;
+		case DIRECTION.UP : return p_y >= 0; break;
+		case DIRECTION.RIGHT : return p_x < this.xLength; break;
+		case DIRECTION.DOWN : return p_y < this.yLength; break;
 	}
 }

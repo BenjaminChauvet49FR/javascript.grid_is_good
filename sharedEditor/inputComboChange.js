@@ -9,9 +9,9 @@ var inputOptions = {
 }
 
 //How to use the change of a combobox. Credits : https://www.scriptol.fr/html5/combobox.php
-function comboChange(p_thelist, p_canvas, p_drawer, p_editorCore, p_saveLoadMode, p_fields, p_buttons, p_analyzerModes) {
-    var idx = p_thelist.selectedIndex;
-    var content = p_thelist.options[idx].innerHTML;
+function comboChange(p_docElement, p_canvas, p_drawer, p_editorCore, p_saveLoadMode, p_fields, p_buttons, p_analyzerModes) {
+    var idx = p_docElement.selectedIndex;
+    var content = p_docElement.options[idx].innerHTML;
 	
 	// Default options
 	p_editorCore.setWallsOn();

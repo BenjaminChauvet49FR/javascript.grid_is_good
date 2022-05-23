@@ -8,12 +8,11 @@ function main() {
 	var actionsManager = {}; 
 	var drawIndications;
 
-	var colors = {
-		openStitchOut : '#8800ff',
-		openStitchIn : '#44008f',
-		marginWrite : '#000044',
-		bind : '#008844',
-		isolateRegion : '#ff0000',
+	var colours = {
+		linkedStitchOut : COLOURS.STITCHES_BUTTON_OUT,
+		linkedStitchIn : COLOURS.STITCHES_BUTTON_IN,
+		bind : COLOURS.STITCHES_BIND,
+		isolateRegion : COLOURS.STITCHES_SEPARATE_REGION,
 		closedSpace : COLOURS.CLOSED_WILD
 	}
 
@@ -22,7 +21,7 @@ function main() {
 	function drawCanvas() {
 		drawer.drawWallGrid(context, solver.gridWall, solver.xLength, solver.yLength); 
 		drawer.drawMarginLeftUpOne(context, solver.numbersMarginsLeft, solver.numbersMarginsUp, FONTS.ARIAL);
-		drawInsideSpaces(context, drawer, colors, solver);
+		drawInsideSpaces(context, drawer, colours, solver);
 		solver.callStateForItem(spanState);
 	}
 

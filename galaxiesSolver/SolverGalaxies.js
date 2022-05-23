@@ -42,7 +42,7 @@ SolverGalaxies.prototype.construct = function(p_symbolArray) {
 	this.methodsSetPass = {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
-		argumentToLabelMethod : namingCategoryClosure(this)
+		argumentToLabelMethod : namingCategoryPassClosure(this)
 	};
 	
 	this.methodsSetMultipass = {
@@ -247,21 +247,21 @@ SolverGalaxies.prototype.emitHypothesisDown = function(p_x, p_y, p_state) {
 }
 
 SolverGalaxies.prototype.emitPassRight = function(p_x, p_y) {
-	const generatedEvents = [this.generatePassEventsOneFence(p_x, p_y, DIRECTION.RIGHT)];
-	return this.passEvents(generatedEvents, {x : p_x, y : p_y, direction : DIRECTION.RIGHT, categoryPass : GALAXIES_PASS_CATEGORY.UNIQUE}); 
+	const listPassNow = [this.generatePassEventsOneFence(p_x, p_y, DIRECTION.RIGHT)];
+	return this.passEvents(listPassNow, {x : p_x, y : p_y, direction : DIRECTION.RIGHT, categoryPass : GALAXIES_PASS_CATEGORY.UNIQUE}); 
 }
 
 SolverGalaxies.prototype.emitPassCenterForSpace = function(p_x, p_y) {
 	const index = this.centersInArray[p_y][p_x];
 	if (index != null) {
-		const generatedEvents = this.generatePassEventsCenterExpansion(index);
-		this.passEvents(generatedEvents, {categoryPass : GALAXIES_PASS_CATEGORY.AROUND_CENTER, index : index});
+		const listPassNow = this.generatePassEventsCenterExpansion(index);
+		this.passEvents(listPassNow, {categoryPass : GALAXIES_PASS_CATEGORY.AROUND_CENTER, index : index});
 	}
 }
 
 SolverGalaxies.prototype.emitPassDown = function(p_x, p_y) {
-	const generatedEvents = [this.generatePassEventsOneFence(p_x, p_y, DIRECTION.DOWN)];
-	return this.passEvents(generatedEvents, {x : p_x, y : p_y, direction : DIRECTION.DOWN, categoryPass : GALAXIES_PASS_CATEGORY.UNIQUE}); 
+	const listPassNow = [this.generatePassEventsOneFence(p_x, p_y, DIRECTION.DOWN)];
+	return this.passEvents(listPassNow, {x : p_x, y : p_y, direction : DIRECTION.DOWN, categoryPass : GALAXIES_PASS_CATEGORY.UNIQUE}); 
 }
 
 SolverGalaxies.prototype.undo = function(){
@@ -283,19 +283,19 @@ SolverGalaxies.prototype.makeQuickStart = function(p_x, p_y) {
 // Offensive programming : we assume x and y are consistent.
 
 applyEventClosure = function(p_solver) {
-	return function(p_event) {
-		switch (p_event.kind) {
-			case FENCE_EVENT_KIND : return p_solver.applyFenceEvent(p_event.fenceX, p_event.fenceY, p_event.direction, p_event.state); break;
-			case CHOICE_EVENT_KIND : return p_solver.applyChoiceEvent(p_event.x, p_event.y, p_event.getIndex(), p_event.choice); break;
+	return function(p_eventToApply) {
+		switch (p_eventToApply.kind) {
+			case FENCE_EVENT_KIND : return p_solver.applyFenceEvent(p_eventToApply.fenceX, p_eventToApply.fenceY, p_eventToApply.direction, p_eventToApply.state); break;
+			case CHOICE_EVENT_KIND : return p_solver.applyChoiceEvent(p_eventToApply.x, p_eventToApply.y, p_eventToApply.getIndex(), p_eventToApply.choice); break;
 		}
 	}
 }
 
 undoEventClosure = function(p_solver) {
-	return function(p_event) {
-		switch (p_event.kind) {
-			case FENCE_EVENT_KIND : return p_solver.undoFenceEvent(p_event.fenceX, p_event.fenceY, p_event.direction, p_event.state); break;
-			case CHOICE_EVENT_KIND : return p_solver.undoChoiceEvent(p_event.x, p_event.y, p_event.getIndex(), p_event.choice); break;
+	return function(p_eventToUndo) {
+		switch (p_eventToUndo.kind) {
+			case FENCE_EVENT_KIND : return p_solver.undoFenceEvent(p_eventToUndo.fenceX, p_eventToUndo.fenceY, p_eventToUndo.direction, p_eventToUndo.state); break;
+			case CHOICE_EVENT_KIND : return p_solver.undoChoiceEvent(p_eventToUndo.x, p_eventToUndo.y, p_eventToUndo.getIndex(), p_eventToUndo.choice); break;
 		}
 	}
 }
@@ -314,9 +314,9 @@ const state = this.answerFenceGrid.getFence(p_x, p_y, p_dir);
 }
 
 SolverGalaxies.prototype.applyChoiceEvent = function(p_x, p_y, p_index, p_choice) {
-	const answer = testNumericSelectSpaceChoice(this.choiceGalaxyArray, p_x, p_y, p_index, p_choice);
-	if (answer != EVENT_RESULT.SUCCESS) {
-		return answer;
+	const resultDo = testNumericSelectSpaceChoice(this.choiceGalaxyArray, p_x, p_y, p_index, p_choice);
+	if (resultDo != EVENT_RESULT.SUCCESS) {
+		return resultDo;
 	}
 	if (p_choice) {
 		this.choiceGalaxyArray[p_y][p_x].choose(p_index);
@@ -345,24 +345,24 @@ SolverGalaxies.prototype.undoChoiceEvent = function(p_x, p_y, p_index, p_choice)
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Galaxies"}];
+		var listQSEvents = [{quickStartLabel : "Galaxies"}];
 		for (var y = 0 ; y < p_solver.yLength ; y++) {
 			for (var x = 0 ; x < p_solver.xLength ; x++) {
 				// A space has only one possible index ? Define that space.
 				singleIndex = p_solver.choiceGalaxyArray[y][x].getSingleValue(); 
 				if (singleIndex != null) {
-					listQSEvts.push(new ChoiceEvent(x, y, singleIndex ,true));
+					listQSEvents.push(new ChoiceEvent(x, y, singleIndex ,true));
 				}
 				// Two indexes are incompatible ? 
 				if (y <= p_solver.yLength - 2) {
-					listQSEvts = p_solver.noCompatibleIndexDeductions(listQSEvts, x, y, x, y+1, DIRECTION.DOWN);
+					p_solver.deductionsNoCompatibleIndex(listQSEvents, x, y, x, y+1, DIRECTION.DOWN);
 				}
 				if (x <= p_solver.xLength - 2) {
-					listQSEvts = p_solver.noCompatibleIndexDeductions(listQSEvts, x, y, x+1, y, DIRECTION.RIGHT);				
+					p_solver.deductionsNoCompatibleIndex(listQSEvents, x, y, x+1, y, DIRECTION.RIGHT);				
 				}
 			}
 		}
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -370,7 +370,7 @@ quickStartEventsClosure = function(p_solver) {
 // Deductions
 
 deductionsClosure = function(p_solver) {
-	return function (p_eventsList, p_eventBeingApplied) {
+	return function (p_listEventsToApply, p_eventBeingApplied) {
 		if (p_eventBeingApplied.kind == FENCE_EVENT_KIND) {
 			// ----- Fence event
 			const x = p_eventBeingApplied.fenceX;
@@ -383,32 +383,32 @@ deductionsClosure = function(p_solver) {
 			var ok = true;
 			var ind = p_solver.choiceGalaxyArray[y][x].getValue();
 			if (ind != null) {
-				p_eventsList = p_solver.presenceSymetricOppositeFenceDeductions(p_eventsList, x, y, odir, ind, p_eventBeingApplied.state); // Do the same symetrically
-				ok = !(p_eventsList[p_eventsList.length-1].failure);
+				p_solver.deductionsPresenceSymetricOppositeFence(p_listEventsToApply, x, y, odir, ind, p_eventBeingApplied.state); // Do the same symetrically
+				ok = !isFailed(p_listEventsToApply);
 			}
 			ind = p_solver.choiceGalaxyArray[dy][dx].getValue();
 			if (ind != null) {
-				p_eventsList = p_solver.presenceSymetricOppositeFenceDeductions(p_eventsList, dx, dy, dir, ind, p_eventBeingApplied.state); // Do the same symetrically
-				ok &= !(p_eventsList[p_eventsList.length-1].failure);
+				p_solver.deductionsPresenceSymetricOppositeFence(p_listEventsToApply, dx, dy, dir, ind, p_eventBeingApplied.state); // Do the same symetrically
+				ok &= !isFailed(p_listEventsToApply);
 			}
 			if (!ok) {
-				return p_eventsList;
+				return;
 			}
 			if (p_eventBeingApplied.state == FENCE_STATE.OPEN) {
 				// If fence open
 				p_solver.choiceGalaxyArray[y][x].values().forEach(index => {
-					p_eventsList = p_solver.transferIndexChoicesToOtherSpaceDeductions(p_eventsList, x, y, dx, dy, index);
+					p_solver.deductionsTransferIndexChoicesToOtherSpace(p_listEventsToApply, x, y, dx, dy, index);
 				});
 				p_solver.choiceGalaxyArray[dy][dx].values().forEach(index => {					
-					p_eventsList = p_solver.transferIndexChoicesToOtherSpaceDeductions(p_eventsList, dx, dy, x, y, index);
+					p_solver.deductionsTransferIndexChoicesToOtherSpace(p_listEventsToApply, dx, dy, x, y, index);
 				}); // Opposite will be done on the symetric
 			} else {
 				// If fence closed
 				p_solver.choiceGalaxyArray[y][x].values().forEach(index => {					
-					p_eventsList = p_solver.barrChosenOppositeDeductions(p_eventsList, x, y, dx, dy, index);
+					p_solver.deductionsBarrChosenOpposite(p_listEventsToApply, x, y, dx, dy, index);
 				});
 				p_solver.choiceGalaxyArray[dy][dx].values().forEach(index => {					
-					p_eventsList = p_solver.barrChosenOppositeDeductions(p_eventsList, dx, dy, x, y, index);
+					p_solver.deductionsBarrChosenOpposite(p_listEventsToApply, dx, dy, x, y, index);
 				}); // Opposite will be done on the symetric
 			}
 		} else { 
@@ -417,16 +417,16 @@ deductionsClosure = function(p_solver) {
 			const x = p_eventBeingApplied.x;
 			const y = p_eventBeingApplied.y;
 			// Create symetrical choice
-			p_eventsList = p_solver.presenceSymetricOppositeSpaceDeductions(p_eventsList, x, y, index, p_eventBeingApplied.choice);
-			if (p_eventsList[p_eventsList.length-1].failure) {
-				return p_eventsList;
+			p_solver.deductionsPresenceSymetricOppositeSpace(p_listEventsToApply, x, y, index, p_eventBeingApplied.choice);
+			if (isFailed(p_listEventsToApply)) {
+				return;
 			}
 			if (p_eventBeingApplied.choice) {
 				// For each direction, check if neighbor if direction exists and if so, do many things (see below).
 				KnownDirections.forEach(dir => {
 					if (!p_solver.neighborExists(x, y, dir)) {
 						// Neighbor in a direction doesn't exist ? Add a symetrical closed fence ! Of course it must exist.
-						p_eventsList = p_solver.presenceSymetricOppositeFenceDeductions(p_eventsList, x, y, OppositeDirection[dir], index, FENCE_STATE.CLOSED);
+						p_solver.deductionsPresenceSymetricOppositeFence(p_listEventsToApply, x, y, OppositeDirection[dir], index, FENCE_STATE.CLOSED);
 					} else {
 						// Neighbor if a direction exists ? 
 						// Depending on indexes adjacent spaces, open/close fences.
@@ -434,16 +434,16 @@ deductionsClosure = function(p_solver) {
 						dy = y + DeltaY[dir];
 						const adjacentSpaceState = p_solver.choiceGalaxyArray[dy][dx].getState(index);
 						if (adjacentSpaceState == SPACE_CHOICE.YES) { 
-							p_eventsList.push(new FenceEvent(x, y, dir, FENCE_STATE.OPEN)); 
+							p_listEventsToApply.push(new FenceEvent(x, y, dir, FENCE_STATE.OPEN)); 
 						} else if (adjacentSpaceState == SPACE_CHOICE.NO) {
-							p_eventsList.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED));
+							p_listEventsToApply.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED));
 						}
 						// Depending on adjacent fences, choose/ban indexes in adjacent spaces.
 						const adjacentFenceState = p_solver.answerFenceGrid.getFence(x, y, dir);
 						if (adjacentFenceState == FENCE_STATE.OPEN) {
-							p_eventsList.push(new ChoiceEvent(dx, dy, index, true));
+							p_listEventsToApply.push(new ChoiceEvent(dx, dy, index, true));
 						} else if (adjacentFenceState == FENCE_STATE.CLOSED) {
-							p_eventsList.push(new ChoiceEvent(dx, dy, index, false));
+							p_listEventsToApply.push(new ChoiceEvent(dx, dy, index, false));
 						}
 						// Manage the state of fences at opposite space
 						if (adjacentFenceState != FENCE_STATE.UNDECIDED) {
@@ -451,14 +451,14 @@ deductionsClosure = function(p_solver) {
 							sx = coorsSym.x;
 							sy = coorsSym.y;
 							if (p_solver.areCoordinatesInPuzzle(sx, sy) && p_solver.neighborExists(sx, sy, OppositeDirection[dir])) {
-								p_eventsList.push(new FenceEvent(sx, sy, OppositeDirection[dir], adjacentFenceState));
+								p_listEventsToApply.push(new FenceEvent(sx, sy, OppositeDirection[dir], adjacentFenceState));
 							}
 						}
 					}
 					
 				});
 				// Aaand... and everything else in this space.
-				p_eventsList = deductionsExcludeOthersNumericSelect(p_eventsList, p_solver.choiceGalaxyArray, x, y, index, false);
+				deductionsExcludeOthersNumericSelect(p_listEventsToApply, p_solver.choiceGalaxyArray, x, y, index, false);
 			} else {
 				// Ban. Apply the following for the adjacent existing spaces.
 				p_solver.existingNeighborsCoorsDirections(x, y).forEach(coorsDir => {
@@ -468,74 +468,70 @@ deductionsClosure = function(p_solver) {
 					// Test adjacent space and define adjacent fences
 					const adjacentSpaceState = p_solver.choiceGalaxyArray[dy][dx].getState(index);
 					if (adjacentSpaceState == SPACE_CHOICE.YES) { 
-						p_eventsList.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED));
+						p_listEventsToApply.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED));
 					}
 					// Test adjacent fence and define adjacent spaces
 					const adjacentFenceState = p_solver.answerFenceGrid.getFence(x, y, dir);
 					if (adjacentFenceState == FENCE_STATE.OPEN) {
-						p_eventsList.push(new ChoiceEvent(x, y, index, false));
+						p_listEventsToApply.push(new ChoiceEvent(x, y, index, false));
 					}
 					// Test if both spaces have no common 'possible index' with each other. If so : close fence.
-					p_eventsList = p_solver.noCompatibleIndexDeductions(p_eventsList, x, y, coorsDir.x, coorsDir.y, dir);
+					p_solver.deductionsNoCompatibleIndex(p_listEventsToApply, x, y, coorsDir.x, coorsDir.y, dir);
 				});
 				// Aaand... check if there's only 1 index left.
-				p_eventsList = deductionsTestOneLeft(p_eventsList, p_solver.choiceGalaxyArray, x, y);
+				deductionsTestOneLeft(p_listEventsToApply, p_solver.choiceGalaxyArray, x, y);
 
 			}
 		}
-		return p_eventsList;
 	}
 }
 
 // Tells if the fence of the state opposite to (p_x, p_y) and in direction o_dir exists AND if this is the case adds it to the list of events. Causes a failure if positions/directions are invalid and an opening was planned.
-SolverGalaxies.prototype.presenceSymetricOppositeFenceDeductions = function(p_eventsList, p_x, p_y, p_odir, p_index, p_stateFence) {
+SolverGalaxies.prototype.deductionsPresenceSymetricOppositeFence = function(p_listEventsToApply, p_x, p_y, p_odir, p_index, p_stateFence) {
 	const symetric = this.getSymetricalCoordinates(p_x, p_y, p_index);
 	const sx = symetric.x;
 	const sy = symetric.y;
 	if (this.areCoordinatesInPuzzle(sx, sy) && this.neighborExists(sx, sy, p_odir)) {
-		p_eventsList.push(new FenceEvent(sx, sy, p_odir, p_stateFence));
+		p_listEventsToApply.push(new FenceEvent(sx, sy, p_odir, p_stateFence));
 	} else if (p_stateFence == FENCE_STATE.OPEN) {
-		p_eventsList.push(new FailureEvent());
+		p_listEventsToApply.push(new FailureEvent());
 	}
-	return p_eventsList;
 }
 
 // Both spaces have an open fence between : transfer a choice number from (p_x, p_y) to (p_dx, p_dy)  (it shall eventually be done for all numbers in both directions)
-SolverGalaxies.prototype.transferIndexChoicesToOtherSpaceDeductions = function(p_eventsList, p_x, p_y, p_dx, p_dy, p_index) {
+SolverGalaxies.prototype.deductionsTransferIndexChoicesToOtherSpace = function(p_listEventsToApply, p_x, p_y, p_dx, p_dy, p_index) {
 	const state = this.choiceGalaxyArray[p_y][p_x].getState(p_index);
 	if (state == SPACE_CHOICE.YES) {
-		p_eventsList.push(new ChoiceEvent(p_dx, p_dy, p_index, true));		
+		p_listEventsToApply.push(new ChoiceEvent(p_dx, p_dy, p_index, true));		
 	} else if (state == SPACE_CHOICE.NO) {
-		p_eventsList.push(new ChoiceEvent(p_dx, p_dy, p_index, false));		
+		p_listEventsToApply.push(new ChoiceEvent(p_dx, p_dy, p_index, false));		
 	}
-	return p_eventsList;
 }
 
 // If space (p_x, p_y) is 'chosen', ban the space (p_dx, p_dy)
-SolverGalaxies.prototype.barrChosenOppositeDeductions = function(p_eventsList, p_x, p_y, p_dx, p_dy, p_index) {
+SolverGalaxies.prototype.deductionsBarrChosenOpposite = function(p_listEventsToApply, p_x, p_y, p_dx, p_dy, p_index) {
 	if (this.choiceGalaxyArray[p_y][p_x].getState(p_index) == SPACE_CHOICE.YES) {
-		p_eventsList.push(new ChoiceEvent(p_dx, p_dy, p_index, false));		
+		p_listEventsToApply.push(new ChoiceEvent(p_dx, p_dy, p_index, false));		
 	}
-	return p_eventsList;
 }
 
 // Check if the symetric space exists, if so adds an event. Causes a failure if it doesn't exist and a "true" choice was planned.
-SolverGalaxies.prototype.presenceSymetricOppositeSpaceDeductions = function(p_eventsList, p_x, p_y, p_index, p_choice) {
+SolverGalaxies.prototype.deductionsPresenceSymetricOppositeSpace = function(p_listEventsToApply, p_x, p_y, p_index, p_choice) {
 	const symetric = this.getSymetricalCoordinates(p_x, p_y, p_index);
 	const sx = symetric.x;
 	const sy = symetric.y;
 	if (this.areCoordinatesInPuzzle(sx, sy)) {
-		p_eventsList.push(new ChoiceEvent(sx, sy, p_index, p_choice));
+		p_listEventsToApply.push(new ChoiceEvent(sx, sy, p_index, p_choice));
 	} else if (p_choice) {
-		p_eventsList.push(new FailureEvent());
+		p_listEventsToApply.push(new FailureEvent());
 	}
-	return p_eventsList;
 }
 
 // If there are no compatible directions between this and the neighbor directions, adds a fence.
-SolverGalaxies.prototype.noCompatibleIndexDeductions = function(p_eventsList, p_x, p_y, p_dx, p_dy, p_dir) {
+SolverGalaxies.prototype.deductionsNoCompatibleIndex = function(p_listEventsToApply, p_x, p_y, p_dx, p_dy, p_dir) {
 	if (p_dir == DIRECTION.LEFT || p_dir == DIRECTION.UP) {
-		return this.noCompatibleIndexDeductions(p_eventsList, p_dx, p_dy, p_x, p_y, OppositeDirection[p_dir]);
+		this.deductionsNoCompatibleIndex(p_listEventsToApply, p_dx, p_dy, p_x, p_y, OppositeDirection[p_dir]);
+		return;
 	}
 	var closeIt = true;
 	var state1;
@@ -558,9 +554,8 @@ SolverGalaxies.prototype.noCompatibleIndexDeductions = function(p_eventsList, p_
 		});
 	}
 	if (closeIt) {
-		p_eventsList.push(new FenceEvent(p_x, p_y, p_dir, FENCE_STATE.CLOSED));
+		p_listEventsToApply.push(new FenceEvent(p_x, p_y, p_dir, FENCE_STATE.CLOSED));
 	}
-	return p_eventsList;
 }
 
 // -------------------
@@ -570,15 +565,14 @@ SolverGalaxies.prototype.noCompatibleIndexDeductions = function(p_eventsList, p_
 // TODO : when a galaxy is determined that contains ONLY spaces with the center... the other possibilities should be closed immediately ! Right now it is pass work ! 
 function filterClustersClosure(p_solver) {
 	return function() {
-		var answer = [];
+		var listEventsToApply = [];
 		var newSpacesForCluster, x, y, newCoors, xx, yy, xxx, yyy, accessedCenterIndexNow;
 		var accessedCenterIndex = null;
 		var doubleCIAccess = false; // Double center index
 		p_solver.centerAccessCheckedThisFilter.clean(); // Must be cleaned at start of filter.
-		p_solver.centerAccessToBeChecked.list.forEach(coors => {
-			if (answer == EVENT_RESULT.FAILURE) {
-				return;
-			}
+		var coors, i;
+		for (var i = 0 ; i < p_solver.centerAccessToBeChecked.list.length ; i++) {
+			coors = p_solver.centerAccessToBeChecked.list[i];
 			// New space for a new cluster (set of spaces that aren't blocked by closed fences)
 			p_solver.currentClusterCenterAccess.clean();
 			y = coors.y;
@@ -618,7 +612,8 @@ function filterClustersClosure(p_solver) {
 					});
 				}
 				if (!okAccess) {
-					answer = EVENT_RESULT.FAILURE;
+					listEventsToApply.push(new FailureEvent());
+					return listEventsToApply;
 				}
 			} else {
 				while (!dejaVu && !doubleCIAccess && newSpacesForCluster.length > 0) {
@@ -658,7 +653,8 @@ function filterClustersClosure(p_solver) {
 				}
 				if (!doubleCIAccess && !dejaVu) {
 					if (accessedCenterIndex == null) {
-						answer = EVENT_RESULT.FAILURE;
+						listEventsToApply.push(new FailureEvent());
+						return listEventsToApply;
 					} else {
 						// Found a cluster part ! 
 						var symCoors;
@@ -666,24 +662,25 @@ function filterClustersClosure(p_solver) {
 							// But wait, what is the guarantee that all spaces admit an existing symetric part ? (crashing pass in puzzle 100 raised the concern)
 							symCoors = p_solver.getSymetricalCoordinates(coors2.x, coors2.y, accessedCenterIndex);
 							if (!p_solver.areCoordinatesInPuzzle(symCoors.x, symCoors.y)) {
-								answer = EVENT_RESULT.FAILURE;
+								listEventsToApply.push(new FailureEvent());
+								return listEventsToApply;
 							} else {								
 								p_solver.currentClusterCenterAccess.add(symCoors.x, symCoors.y);
 							}
 						});
 					}
-					if (answer != EVENT_RESULT.FAILURE) {
+					if (!isFailed(listEventsToApply)) {
 						// Prepare a list of events depending on p_solver.currentClusterCenterAccess. 
 						var listNoClusters = [];
 						p_solver.centersData[accessedCenterIndex].possibleUncenteredSpaces.forEach(coors2 => {
-							answer.push(new ChoiceEvent(coors2.x, coors2.y, accessedCenterIndex, p_solver.currentClusterCenterAccess.array[coors2.y][coors2.x]));
+							listEventsToApply.push(new ChoiceEvent(coors2.x, coors2.y, accessedCenterIndex, p_solver.currentClusterCenterAccess.array[coors2.y][coors2.x]));
 						});
 					}
 				}
 			}
-		});
+		};
 		p_solver.cleanSuspiciousForCentersAccessSpaces();
-		return answer;
+		return listEventsToApply;
 	}
 }
 
@@ -728,54 +725,54 @@ SolverGalaxies.prototype.generatePassEventsOneFence = function(p_x, p_y, p_dir) 
 SolverGalaxies.prototype.generatePassEventsCenterExpansion = function(p_index) {
 	// Important note : Only every other space is taken since events will be symetrical.
 	var i = 0;
-	var answer = [];
+	var listEventsChoice = [];
 	this.centersData[p_index].possibleUncenteredSpaces.forEach(coors => {
 		//if (i == 0) {			// If we only take half of the spaces, there's something weird with passes that are incorrect when performed manually for puzzle 100.
-			answer.push([new ChoiceEvent(coors.x, coors.y, p_index, true), new ChoiceEvent(coors.x, coors.y, p_index, false)]); 
-		//}
+			listEventsChoice.push([new ChoiceEvent(coors.x, coors.y, p_index, true), new ChoiceEvent(coors.x, coors.y, p_index, false)]); 
+		// }
 		i = 1-i;
 	});
-	return answer;
+	return listEventsChoice;
 }
 
-function namingCategoryClosure(p_solver) {
-	return function(p_index) {
-		if (p_index.categoryPass == GALAXIES_PASS_CATEGORY.AROUND_CENTER) {
-			const center = p_solver.centersData[p_index.index];
-			return "Galaxy " + p_index.index + " (" + center.realX + " " + center.realY + ")";
+function namingCategoryPassClosure(p_solver) {
+	return function(p_indexPass) {
+		if (p_indexPass.categoryPass == GALAXIES_PASS_CATEGORY.AROUND_CENTER) {
+			const center = p_solver.centersData[p_indexPass.index];
+			return "Galaxy " + p_indexPass.index + " (" + center.realX + " " + center.realY + ")";
 		} else {
-			return stringDirection(p_index.direction) + " " + p_index.x + " " + p_index.y;
+			return stringDirection(p_indexPass.direction) + " " + p_indexPass.x + " " + p_indexPass.y;
 		}
 	}
 }
 
 function generateEventsForPassClosure(p_solver) {
-	return function(p_index) {
-		if (p_index.categoryPass == GALAXIES_PASS_CATEGORY.AROUND_CENTER) {
-			return p_solver.generatePassEventsCenterExpansion(p_index.index);
+	return function(p_indexPass) {
+		if (p_indexPass.categoryPass == GALAXIES_PASS_CATEGORY.AROUND_CENTER) {
+			return p_solver.generatePassEventsCenterExpansion(p_indexPass.index);
 		} else {			
-			return [p_solver.generatePassEventsOneFence(p_index.x, p_index.y, p_index.direction)];
+			return [p_solver.generatePassEventsOneFence(p_indexPass.x, p_indexPass.y, p_indexPass.direction)];
 		}
 	}
 }
 
 function orderedListPassArgumentsClosure(p_solver) {
 	return function() {
-		var answer = [];
+		var listIndexesPass = [];
 		for (i = 0 ; i < p_solver.centersData.length ; i++) {
-			answer.push({categoryPass : GALAXIES_PASS_CATEGORY.AROUND_CENTER, index : i});
+			listIndexesPass.push({categoryPass : GALAXIES_PASS_CATEGORY.AROUND_CENTER, index : i});
 		}
 		for (var y = 0 ; y < p_solver.yLength ; y++) {
 			for (var x = 0 ; x < p_solver.xLength ; x++) {
 				if (x <= p_solver.xLength-2) {
-					answer.push({x : x, y : y, direction : DIRECTION.RIGHT, categoryPass : GALAXIES_PASS_CATEGORY.UNIQUE});
+					listIndexesPass.push({x : x, y : y, direction : DIRECTION.RIGHT, categoryPass : GALAXIES_PASS_CATEGORY.UNIQUE});
 				}
 				if (y <= p_solver.yLength-2) {
-					answer.push({x : x, y : y, direction : DIRECTION.DOWN, categoryPass : GALAXIES_PASS_CATEGORY.UNIQUE});
+					listIndexesPass.push({x : x, y : y, direction : DIRECTION.DOWN, categoryPass : GALAXIES_PASS_CATEGORY.UNIQUE});
 				}
 			}
 		}
-		return answer;
+		return listIndexesPass;
 	}
 }
 

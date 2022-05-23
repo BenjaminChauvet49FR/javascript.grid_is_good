@@ -193,20 +193,20 @@ SolverAkari.prototype.tryToAddNewNumericSpaceToSet = function(p_listCoors, p_x, 
 Gets from "sets of numeric spaces" "sets of empty spaces around numeric spaces"
 */
 SolverAkari.prototype.generateSetsAroundNumeric = function(p_listNumericSpacesCoors) {
-	var answer = [];
+	var resultCoorSets = [];
 	p_listNumericSpacesCoors.forEach(coorsNum => {
 		this.existingNeighborsCoorsDirections(coorsNum.x, coorsNum.y).forEach(aroundCoorsNum => {
 			x = aroundCoorsNum.x;
 			y = aroundCoorsNum.y;
 			if (!this.numericArray[y][x].isBlocked) {				
 				if (this.checkerSpacesAroundNumeric.add(x, y)) {
-					answer.push({x : x, y : y});
+					resultCoorSets.push({x : x, y : y});
 				}
 			}
 		});
 	});
 	this.checkerSpacesAroundNumeric.clean(); // Note : due to the nature of the algorithm, cleaning is actually useless ! (numeric spaces distant 2, then empty spaces around numeric spaces)
-	return answer;
+	return resultCoorSets;
 }
 
 //--------------------------------
@@ -261,11 +261,11 @@ SolverAkari.prototype.makeQuickStart = function() {
 SolverAkari.prototype.passSpaceOrSetNumericSpaces = function(p_x, p_y) {
 	const spaceInfos = this.numericArray[p_y][p_x];
 	if (this.getNumericValueFromSpace(spaceInfos) != null) {
-		generatedEvents = this.generateAllEventsForSetsAroundNumericSpacesPass(this.numericArray[p_y][p_x].indexSetNumeric);
-		this.passEvents(generatedEvents, {passCategory : AKARI_PASS_CATEGORY.SET_NUMERIC, index : this.numericArray[p_y][p_x].indexSetNumeric});
+		listPassNow = this.generateAllEventsForSetsAroundNumericSpacesPass(this.numericArray[p_y][p_x].indexSetNumeric);
+		this.passEvents(listPassNow, {passCategory : AKARI_PASS_CATEGORY.SET_NUMERIC, index : this.numericArray[p_y][p_x].indexSetNumeric});
 	} else if (!this.numericArray[p_y][p_x].blocked) {
-		generatedEvents = [this.generateListEventsForOneSpace(p_x, p_y)];
-		this.passEvents(generatedEvents, {passCategory : AKARI_PASS_CATEGORY.SPACE, x : x, y : y});
+		listPassNow = [this.generateListEventsForOneSpace(p_x, p_y)];
+		this.passEvents(listPassNow, {passCategory : AKARI_PASS_CATEGORY.SPACE, x : x, y : y});
 	}
 }
 
@@ -344,9 +344,9 @@ undoEventClosure = function(p_solver) {
 	}
 }
 
-SolverAkari.prototype.undoSymbolEvent = function(p_event) {
-	const x = p_event.x;
-	const y = p_event.y;
+SolverAkari.prototype.undoSymbolEvent = function(p_eventToUndo) {
+	const x = p_eventToUndo.x;
+	const y = p_eventToUndo.y;
 	const symbol = this.answerArray[y][x];
 	const spaceInfos = this.numericArray[y][x];
 	if (symbol == FILLING.YES) {
@@ -385,7 +385,7 @@ SolverAkari.prototype.undoSymbolEvent = function(p_event) {
 			this.numericArray[space.y][space.x].notPlacedEmptiesYet++;
 		});
 	}
-	this.answerArray[p_event.y][p_event.x] = FILLING.UNDECIDED;
+	this.answerArray[p_eventToUndo.y][p_eventToUndo.x] = FILLING.UNDECIDED;
 }
 
 //-------------------------------- 
@@ -393,7 +393,7 @@ SolverAkari.prototype.undoSymbolEvent = function(p_event) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Akari"}];
+		var listQSEvents = [{quickStartLabel : "Akari"}];
 		var space;
 		// TODO : a list of numeric spaces
 		var spaceInfos;
@@ -402,19 +402,19 @@ quickStartEventsClosure = function(p_solver) {
 				spaceInfos = p_solver.numericArray[iy][ix];
 				if (p_solver.getNumericValueFromSpace(spaceInfos) != null) {
 					if (spaceInfos.notPlacedBulbsYet == 0) {
-						listQSEvts = p_solver.surroundNumericSpace(listQSEvts, ix, iy, FILLING.NO);
+						p_solver.deductionsSurroundNumericSpace(listQSEvents, ix, iy, FILLING.NO);
 					}
 					if (spaceInfos.notPlacedEmptiesYet == 0) {
-						listQSEvts = p_solver.surroundNumericSpace(listQSEvts, ix, iy, FILLING.YES);
+						p_solver.deductionsSurroundNumericSpace(listQSEvents, ix, iy, FILLING.YES);
 					}
 				} else if (p_solver.answerArray[iy][ix] == FILLING.UNDECIDED) {
 					if ((spaceInfos.xMin == spaceInfos.xMax) && (spaceInfos.yMin == spaceInfos.yMax)) {
-						listQSEvts.push(new SpaceEvent(ix, iy, FILLING.YES)); // Totally isolated space (puzzle 570)
+						listQSEvents.push(new SpaceEvent(ix, iy, FILLING.YES)); // Totally isolated space (puzzle 570)
 					}
 				}					
 			}
 		}
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -429,7 +429,7 @@ deductionsClosure = function (p_solver) {
 		symbol = p_eventBeingApplied.symbol;
 		spaceInfos = p_solver.numericArray[y][x];
 		if (symbol == FILLING.YES) {
-			p_listEventsToApply = p_solver.controlAroundNumericNewLightbulb(p_listEventsToApply, x, y);
+			p_solver.deductionsControlAroundNumericNewLightbulb(p_listEventsToApply, x, y);
 			for (var xx = spaceInfos.xMin ; xx < x ; xx++) {
 				p_listEventsToApply.push(new SpaceEvent(xx, y, FILLING.NO)); 
 			}
@@ -443,9 +443,8 @@ deductionsClosure = function (p_solver) {
 				p_listEventsToApply.push(new SpaceEvent(x, yy, FILLING.NO)); 
 			}
 		} else {
-			p_listEventsToApply = p_solver.controlAroundNumericNewEmpty(p_listEventsToApply, x, y);
+			p_solver.deductionsControlAroundNumericNewEmpty(p_listEventsToApply, x, y);
 		}
-		return p_listEventsToApply;
 	}
 }
 
@@ -455,38 +454,35 @@ SolverAkari.prototype.recenseOneLighterLeft = function(p_x, p_y) {
 	}
 }
 
-SolverAkari.prototype.controlAroundNumericNewLightbulb = function(p_listEventsToApply, p_x, p_y) {
+SolverAkari.prototype.deductionsControlAroundNumericNewLightbulb = function(p_listEventsToApply, p_x, p_y) {
 	this.numericArray[p_y][p_x].numericNeighbors.forEach(coors => {
 		if (this.numericArray[coors.y][coors.x].notPlacedBulbsYet == 0) {
-			p_listEventsToApply = this.surroundNumericSpace(p_listEventsToApply, coors.x, coors.y, FILLING.NO);
+			this.deductionsSurroundNumericSpace(p_listEventsToApply, coors.x, coors.y, FILLING.NO);
 		}
 	});
-	return p_listEventsToApply;
 }
 
-SolverAkari.prototype.controlAroundNumericNewEmpty = function(p_listEventsToApply, p_x, p_y) {
+SolverAkari.prototype.deductionsControlAroundNumericNewEmpty = function(p_listEventsToApply, p_x, p_y) {
 	this.numericArray[p_y][p_x].numericNeighbors.forEach(coors => {
 		if (this.numericArray[coors.y][coors.x].notPlacedEmptiesYet == 0) {
-			p_listEventsToApply = this.surroundNumericSpace(p_listEventsToApply, coors.x, coors.y, FILLING.YES);
+			this.deductionsSurroundNumericSpace(p_listEventsToApply, coors.x, coors.y, FILLING.YES);
 		}
 	});
-	return p_listEventsToApply;
 }
 
 // When a numeric space (coors p_x, p_y) is ready to be surrounded
-SolverAkari.prototype.surroundNumericSpace = function(p_listEventsToApply, p_x, p_y, p_symbolToPut) {
+SolverAkari.prototype.deductionsSurroundNumericSpace = function(p_listEventsToApply, p_x, p_y, p_symbolToPut) {
 	this.existingNeighborsCoorsDirections(p_x, p_y).forEach(coors => {
 		if (this.answerArray[coors.y][coors.x] == FILLING.UNDECIDED) {
 			p_listEventsToApply.push(new SpaceEvent(coors.x, coors.y, p_symbolToPut));	
 		}
 	});
-	return p_listEventsToApply;
 }
 
 // Filter spaces that newly have one posible lighter left. (They may have been lit since.)
 filterClustersClosure = function(p_solver) {
 	return function() {
-		var eventsToApply = [];
+		var listEventsToApply = [];
 		var ok = true;
 		var x, y, foundBulb, spaceInfos;
 		p_solver.checkerOneLighterLeft.list.forEach(coors => {
@@ -499,13 +495,13 @@ filterClustersClosure = function(p_solver) {
 				} else {
 					foundBulb = false;
 					if (p_solver.answerArray[y][x] == FILLING.UNDECIDED) {
-						eventsToApply.push(new SpaceEvent(x, y, FILLING.YES)); 
+						listEventsToApply.push(new SpaceEvent(x, y, FILLING.YES)); 
 						foundBulb = true;
 					}
 					if (!foundBulb) {
 						for (var xx = spaceInfos.xMin ; xx < x ; xx++) {
 							if (p_solver.answerArray[y][xx] == FILLING.UNDECIDED) {
-								eventsToApply.push(new SpaceEvent(xx, y, FILLING.YES)); 
+								listEventsToApply.push(new SpaceEvent(xx, y, FILLING.YES)); 
 								foundBulb = true;
 								break;
 							}
@@ -514,7 +510,7 @@ filterClustersClosure = function(p_solver) {
 					if (!foundBulb) {
 						for (var xx = x+1 ; xx <= spaceInfos.xMax ; xx++) {
 							if (p_solver.answerArray[y][xx] == FILLING.UNDECIDED) {
-								eventsToApply.push(new SpaceEvent(xx, y, FILLING.YES)); 
+								listEventsToApply.push(new SpaceEvent(xx, y, FILLING.YES)); 
 								foundBulb = true;
 								break;
 							}
@@ -523,7 +519,7 @@ filterClustersClosure = function(p_solver) {
 					if (!foundBulb) {
 						for (var yy = spaceInfos.yMin ; yy < y ; yy++) {
 							if (p_solver.answerArray[yy][x] == FILLING.UNDECIDED) {
-								eventsToApply.push(new SpaceEvent(x, yy, FILLING.YES)); 
+								listEventsToApply.push(new SpaceEvent(x, yy, FILLING.YES)); 
 								foundBulb = true;
 								break;
 							}
@@ -532,7 +528,7 @@ filterClustersClosure = function(p_solver) {
 					if (!foundBulb) {
 						for (var yy = y+1 ; yy <= spaceInfos.yMax ; yy++) {
 							if (p_solver.answerArray[yy][x] == FILLING.UNDECIDED) {
-								eventsToApply.push(new SpaceEvent(x, yy, FILLING.YES)); 
+								listEventsToApply.push(new SpaceEvent(x, yy, FILLING.YES)); 
 								foundBulb = true;
 								break;
 							}
@@ -543,9 +539,9 @@ filterClustersClosure = function(p_solver) {
 		});
 		if (ok) {
 			p_solver.cleanOneLighterLeftSpaces();
-			return eventsToApply;
+			return listEventsToApply;
 		} else {
-			return EVENT_RESULT.FAILURE;
+			return FILTER_FAILURE;
 		}
 	}
 }
@@ -561,7 +557,7 @@ SolverAkari.prototype.cleanOneLighterLeftSpaces = function() {
 }
 
 // ---------------------
-// Pass methods
+// Passing and multipassing
 
 generateEventsForPassClosure = function(p_solver) {
 	return function(p_indexPass) {
@@ -594,34 +590,31 @@ function compareSolveEvents(p_event1, p_event2) {
 }
 
 namingSetClosure = function(p_solver) {
-	return function (p_index) {
-		if (p_index.passCategory == AKARI_PASS_CATEGORY.NUMERIC_SET) {			
-			const setCoors = p_solver.setsAroundNumericSpaces[p_index.index];
+	return function (p_indexPass) {
+		if (p_indexPass.passCategory == AKARI_PASS_CATEGORY.NUMERIC_SET) {			
+			const setCoors = p_solver.setsAroundNumericSpaces[p_indexPass.index];
 			return "Space set (" + setCoors[0].x + "," + setCoors[0].y + ", size " + setCoors.length + ")"; 
 		} else {
-			return "Space (" + p_index.x + "," + p_index.y + ")";
+			return "Space (" + p_indexPass.x + "," + p_indexPass.y + ")";
 		}
 	}
 }
 
-// ---------------------
-// Multipass methods
-
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
 		// Note : may be optimized.
-		var answer = [];
+		var listIndexesPass = [];
 		for (var i = 0; i < p_solver.setsAroundNumericSpaces.length ; i++) {
-			answer.push({passCategory : AKARI_PASS_CATEGORY.NUMERIC_SET, index : i});
+			listIndexesPass.push({passCategory : AKARI_PASS_CATEGORY.NUMERIC_SET, index : i});
 		}
 		for (var y = 0 ; y < p_solver.yLength ; y++) {
 			for (var x = 0 ; x < p_solver.xLength ; x++) {
 				if (!p_solver.numericArray[y][x].blocked && p_solver.numericArray[y][x].numericNeighbors.length == 0) {					
-					answer.push({passCategory : AKARI_PASS_CATEGORY.SPACE, x : x, y : y});
+					listIndexesPass.push({passCategory : AKARI_PASS_CATEGORY.SPACE, x : x, y : y});
 				}
 			}
 		}
-		return answer;
+		return listIndexesPass;
 	}
 }
 

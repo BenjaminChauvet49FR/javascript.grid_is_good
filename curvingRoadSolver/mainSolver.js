@@ -8,9 +8,9 @@ function main() {
 	var drawIndications;
 	var spanState = document.getElementById("span_resolution_state");
 
-	var colors = {
-		circleIn : '#ffe100',
-		circleOut : '#300000',
+	var colours = {
+		circleIn : COLOURS.CURVING_CIRCLE_IN,
+		circleOut : COLOURS.CURVING_CIRCLE_OUT,
 		openSpace : COLOURS.OPEN_SPREAD,
 		closedSpace : COLOURS.CLOSED_SPREAD
 	}
@@ -19,7 +19,7 @@ function main() {
 	//The main draw function (at start)
 	function drawCanvas() {
 		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength); 
-		drawInsideSpaces(context, drawer, colors, solver);
+		drawInsideSpaces(context, drawer, colours, solver);
 		solver.callStateForItem(spanState);
 	}
 

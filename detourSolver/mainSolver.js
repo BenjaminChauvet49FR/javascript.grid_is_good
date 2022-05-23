@@ -4,10 +4,9 @@ function main() {
 		noLink : COLOURS.NO_LINK,
 		noLinkWall : COLOURS.NO_LINK_WALL,		
 		presentLink : COLOURS.LINK,
-		numberWrite : '#008800',
-		turningSign : '#88ff88',
-		straightSign : '#8888ff',
-		standardWrite : '#000044'
+		turningSign : COLOURS.INDIC_DETOUR_PLUS,
+		straightSign : COLOURS.INDIC_DETOUR_ROUND,
+		standardWrite : COLOURS.STANDARD_NOT_CLOSED_WRITE
 	}
 
 	var drawer = new Drawer(colours);

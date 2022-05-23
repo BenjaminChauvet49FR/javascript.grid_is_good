@@ -1,7 +1,7 @@
 var solver;
 function main() {
 	const colours = {
-		openLink : COLOURS.OPEN_LINK_DOTS,
+		linkedLink : COLOURS.LINKED_LINK_DOTS,
 		undecidedLink : COLOURS.UNDECIDED_LINK_DOTS,
 		blockedLink : COLOURS.FIXED_LINK_DOTS,
 		closedLink : COLOURS.CLOSED_LINK_DOTS
@@ -39,12 +39,4 @@ function main() {
 	buildActionsGlobal("div_global_actions", ["Multipasse", "Résolution", "Annuler"], 
 		[function(event){multipassAction(solver)}, function(event){solveAction(solver)}, function(event){undoAction(solver)}] );
 	initializeItemsLoopInfos("div_common_loop_display", solver);
-}
-
-quickStartEventsClosure = function(p_solver) {
-	return function() {
-		p_solver.initiateQuickStart("Grand Tour");
-
-		p_solver.terminateQuickStart();
-	}
 }

@@ -27,7 +27,7 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 	}
 	this.otherPSAtomicDos = p_packMethods.otherPSAtomicDos;
 	if (!this.otherPSAtomicDos) {
-		this.otherPSAtomicDos = function(p_event) {} ;
+		this.otherPSAtomicDos = function(p_eventToApply) {} ;
 	}
 	
 	this.setSpaceClosedPSAtomicUndos = p_packMethods.setSpaceClosedPSAtomicUndos;
@@ -48,28 +48,28 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 	}
 	this.otherPSAtomicUndos = p_packMethods.otherPSAtomicUndos;
 	if (!this.otherPSAtomicUndos) {
-		this.otherPSAtomicUndos = function(p_event) {} ;
+		this.otherPSAtomicUndos = function(p_eventToUndo) {} ;
 	}
 	
 	this.setSpaceClosedPSDeductions = p_packMethods.setSpaceClosedPSDeductions;
 	if (!this.setSpaceClosedPSDeductions) {
-		this.setSpaceClosedPSDeductions = function(p_eventList, p_eventBeingApplied) {return p_eventList};
+		this.setSpaceClosedPSDeductions = function(p_listEventsToApply, p_eventBeingApplied) {};
 	}
 	this.setSpaceLinkedPSDeductions = p_packMethods.setSpaceLinkedPSDeductions;
 	if (!this.setSpaceLinkedPSDeductions) {
-		this.setSpaceLinkedPSDeductions = function(p_eventList, p_eventBeingApplied) {return p_eventList};
+		this.setSpaceLinkedPSDeductions = function(p_listEventsToApply, p_eventBeingApplied) {};
 	}
 	this.setEdgeClosedPSDeductions = p_packMethods.setEdgeClosedPSDeductions;
 	if (!this.setEdgeClosedPSDeductions) {
-		this.setEdgeClosedPSDeductions = function(p_eventList, p_eventBeingApplied) {return p_eventList};
+		this.setEdgeClosedPSDeductions = function(p_listEventsToApply, p_eventBeingApplied) {};
 	}
 	this.setEdgeLinkedPSDeductions = p_packMethods.setEdgeLinkedPSDeductions;
 	if (!this.setEdgeLinkedPSDeductions) {
-		this.setEdgeLinkedPSDeductions = function(p_eventList, p_eventBeingApplied) {return p_eventList};
+		this.setEdgeLinkedPSDeductions = function(p_listEventsToApply, p_eventBeingApplied) {};
 	}
 	this.otherPSDeductions = p_packMethods.otherPSDeductions;
 	if (!this.otherPSDeductions) {
-		this.otherPSDeductions = function(p_eventList, p_eventBeingApplied) {return p_eventList};
+		this.otherPSDeductions = function(p_listEventsToApply, p_eventBeingApplied) {};
 	}
 	// setSpaceClosedPSAtomicDos (2) setSpaceLinkedPSAtomicDos (2) setEdgeClosedPSAtomicDos (5) setEdgeLinkedPSAtomicDos (7)
 	// setSpaceClosedPSAtomicUndos (2) setSpaceLinkedPSAtomicUndos (2) setEdgeClosedPSAtomicUndos (5) setEdgeLinkedPSAtomicUndos (5)
@@ -80,7 +80,7 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 	// QS & filters :
 	this.quickStartEventsPS = p_packMethods.quickStartEventsPS;
 	if (!this.quickStartEventsPS) {
-		this.quickStartEventsPS = function(p_events) {return p_events}
+		this.quickStartEventsPS = function(p_listQSEvents) {return p_listQSEvents} 
 	}
 
 	this.PSFilters = p_packMethods.PSFilters;
@@ -119,7 +119,7 @@ LoopSolver.prototype.setPuzzleSpecificMethods = function(p_packMethods) {
 
 /* High conventions : 
 -properties this.xLength and this.yLength must be defined in the solver before loopSolverConstruct is called no matter what
--banned spaces and opened spaces at start (even from puzzle regions) must be handled by the solver (or by regional solver ?) ; using banSpace may help
+-banned spaces and linked spaces at start (even from puzzle regions) must be handled by the solver (or by regional solver ?) ; using banSpace may help
 */
 LoopSolver.prototype.loopSolverConstruct = function(p_puzzleSpecificMethodPack) {
 	this.generalConstruct();
@@ -131,7 +131,7 @@ LoopSolver.prototype.loopSolverConstruct = function(p_puzzleSpecificMethodPack) 
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [testLoopsClosure(this), separateEndsClosure(this)]);
+	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterTestLoopsClosure(this), filterSeparateEndsClosure(this)]);
 	this.methodsSetDeductions.addMoreFilters(this.PSFilters);
 	this.methodsSetDeductions.addMoreAborts(this.PSAbortMethods);
 	this.methodsSetDeductions.addCompoundEventMethod(compoundEventClosure(this)); // TODO Note : someday I'll want to make compound events in a sub problem (although this is whole "compound event" thing is more something for passes). I'll make the behaviour specific for sub solvers then.
@@ -188,7 +188,7 @@ LoopSolver.prototype.loopSolverConstruct = function(p_puzzleSpecificMethodPack) 
 	// Ergonomic options
 	this.ergonomicOptions = {
 		displayOtherEnds : false,
-		colorChains : false,
+		colourChains : false,
 		drawXsMyself : false
 	}
 }
@@ -277,17 +277,17 @@ LoopSolver.prototype.areActiveClosedSpaces = function() {
 	return this.ergonomicOptions.closedSpacesAreActive;
 }
 
-LoopSolver.prototype.areAllOpenSpaces = function() {
-	return this.ergonomicOptions.allOpenSpaces;
+LoopSolver.prototype.areAllLinkedSpaces = function() {
+	return this.ergonomicOptions.allLinkedSpaces;
 }
 
 LoopSolver.prototype.areXsAutomaticallyDrawed = function() {
 	return !this.ergonomicOptions.drawXsMyself;
 }
 
-LoopSolver.prototype.getColorChains = function (p_x, p_y) {
-	if (this.ergonomicOptions.colorChains == true) {
-		return this.colorChainsGrid[p_y][p_x];
+LoopSolver.prototype.getColourChains = function (p_x, p_y) {
+	if (this.ergonomicOptions.colourChains == true) {
+		return this.colourChainsGrid[p_y][p_x];
 	} else {
 		return null;
 	}
@@ -301,9 +301,9 @@ LoopSolver.prototype.declareClosedSpacesActing = function() {
 	this.ergonomicOptions.closedSpacesAreActive = true;
 }
 
-// If used, all non-banned spaces must be open for this puzzle (ex. : EntryExit) (TODO : does it manage banned spaces yet ?)
-LoopSolver.prototype.signalAllOpenSpaces = function() {
-	this.ergonomicOptions.allOpenSpaces = true;
+// If used, all non-banned spaces must be linked for this puzzle (ex. : EntryExit) (TODO : does it manage banned spaces yet ?)
+LoopSolver.prototype.signalAllLinkedSpaces = function() {
+	this.ergonomicOptions.allLinkedSpaces = true;
 }
 
 // Desactivate common drawing of closed space
@@ -323,20 +323,20 @@ copySpace = function(p_space) {
 
 LoopSolver.prototype.cleanErgonomicOptions = function() {
 	this.ergonomicOptions.displayOppositeEnds = false;
-	this.ergonomicOptions.colorChains = false;
+	this.ergonomicOptions.colourChains = false;
 }
 
-/** Colors a chain from a starting point. The starting point must have one single end.
+/** Colours a chain from a starting point. The starting point must have one single end.
 */
-LoopSolver.prototype.colorChain = function (p_x, p_y, p_number) {
-	this.colorChainsGrid[p_y][p_x] = p_number;
+LoopSolver.prototype.colourChain = function (p_x, p_y, p_number) {
+	this.colourChainsGrid[p_y][p_x] = p_number;
 	var dir = this.linksArray[p_y][p_x].linkedDirections[0];
 	var newDir;
 	var x = p_x + DeltaX[dir];
 	var y = p_y + DeltaY[dir];
 	counter = 0;
 	while (this.getLinkedEdges(x, y) == 2 && counter < 500) {
-		this.colorChainsGrid[y][x] = p_number;
+		this.colourChainsGrid[y][x] = p_number;
 		newDir = this.linksArray[y][x].linkedDirections[0];
 		if (newDir == OppositeDirection[dir]) {
 			dir = this.linksArray[y][x].linkedDirections[1];
@@ -350,7 +350,7 @@ LoopSolver.prototype.colorChain = function (p_x, p_y, p_number) {
 			alert("Congratulations, you failed your while loop !");
 		}
 	}
-	this.colorChainsGrid[y][x] = p_number;
+	this.colourChainsGrid[y][x] = p_number;
 }
 
 // -------------------
@@ -528,41 +528,41 @@ LoopSolver.prototype.undoLinkSpace = function(p_x, p_y) {
 }
 
 applyEventClosure = function(p_solver) {
-	return function(p_event) {
-		if (p_event.kind == LOOP_EVENT.STATE) {
-			return p_solver.setLinkSpace(p_event.x, p_event.y, p_event.state);
-		} else if (p_event.kind == LOOP_EVENT.LINK) {
-			if (p_event.direction == DIRECTION.UP) {
-				return p_solver.setLinkUp(p_event.linkX, p_event.linkY, p_event.state);
-			} else if (p_event.direction == DIRECTION.DOWN) {
-				return p_solver.setLinkDown(p_event.linkX, p_event.linkY, p_event.state);
-			} else if (p_event.direction == DIRECTION.LEFT) {
-				return p_solver.setLinkLeft(p_event.linkX, p_event.linkY, p_event.state);
+	return function(p_eventToApply) {
+		if (p_eventToApply.kind == LOOP_EVENT.STATE) {
+			return p_solver.setLinkSpace(p_eventToApply.x, p_eventToApply.y, p_eventToApply.state);
+		} else if (p_eventToApply.kind == LOOP_EVENT.LINK) {
+			if (p_eventToApply.direction == DIRECTION.UP) {
+				return p_solver.setLinkUp(p_eventToApply.linkX, p_eventToApply.linkY, p_eventToApply.state);
+			} else if (p_eventToApply.direction == DIRECTION.DOWN) {
+				return p_solver.setLinkDown(p_eventToApply.linkX, p_eventToApply.linkY, p_eventToApply.state);
+			} else if (p_eventToApply.direction == DIRECTION.LEFT) {
+				return p_solver.setLinkLeft(p_eventToApply.linkX, p_eventToApply.linkY, p_eventToApply.state);
 			} else {
-				return p_solver.setLinkRight(p_event.linkX, p_event.linkY, p_event.state);
+				return p_solver.setLinkRight(p_eventToApply.linkX, p_eventToApply.linkY, p_eventToApply.state);
 			}
 		} else {
-			return p_solver.otherPSAtomicDos(p_event);
+			return p_solver.otherPSAtomicDos(p_eventToApply);
 		}
 	}
 }
 
 undoEventClosure = function(p_solver) {
-	return function(p_event) {
-		if (p_event.kind == LOOP_EVENT.STATE) {
-			p_solver.undoLinkSpace(p_event.x, p_event.y);
-		} else if (p_event.kind == LOOP_EVENT.LINK) {
-			if (p_event.direction == DIRECTION.UP) {
-				p_solver.undoLinkUp(p_event.linkX, p_event.linkY);
-			} else if (p_event.direction == DIRECTION.DOWN) {
-				p_solver.undoLinkDown(p_event.linkX, p_event.linkY);
-			} else if (p_event.direction == DIRECTION.LEFT) {
-				p_solver.undoLinkLeft(p_event.linkX, p_event.linkY);
+	return function(p_eventToUndo) {
+		if (p_eventToUndo.kind == LOOP_EVENT.STATE) {
+			p_solver.undoLinkSpace(p_eventToUndo.x, p_eventToUndo.y);
+		} else if (p_eventToUndo.kind == LOOP_EVENT.LINK) {
+			if (p_eventToUndo.direction == DIRECTION.UP) {
+				p_solver.undoLinkUp(p_eventToUndo.linkX, p_eventToUndo.linkY);
+			} else if (p_eventToUndo.direction == DIRECTION.DOWN) {
+				p_solver.undoLinkDown(p_eventToUndo.linkX, p_eventToUndo.linkY);
+			} else if (p_eventToUndo.direction == DIRECTION.LEFT) {
+				p_solver.undoLinkLeft(p_eventToUndo.linkX, p_eventToUndo.linkY);
 			} else {
-				p_solver.undoLinkRight(p_event.linkX, p_event.linkY);
+				p_solver.undoLinkRight(p_eventToUndo.linkX, p_eventToUndo.linkY);
 			}
 		} else {
-			return p_solver.otherPSAtomicUndos(p_event);
+			return p_solver.otherPSAtomicUndos(p_eventToUndo);
 		}
 	}
 }
@@ -580,31 +580,31 @@ LoopSolver.prototype.seeOppositeEndsAction = function() {
 	this.ergonomicOptions.displayOppositeEnds = true;
 }
 
-LoopSolver.prototype.seeColorChainsAction = function() {
-	if (!this.ergonomicOptions.colorChains) {
-		this.colorChainsGrid = [];
+LoopSolver.prototype.seeColourChainsAction = function() {
+	if (!this.ergonomicOptions.colourChains) {
+		this.colourChainsGrid = [];
 		for (var y = 0 ; y < this.yLength ; y++) {
-			this.colorChainsGrid.push([]);
+			this.colourChainsGrid.push([]);
 			for (var x = 0 ; x < this.xLength ; x++) {
-				this.colorChainsGrid[y].push(null);
+				this.colourChainsGrid[y].push(null);
 			}
 		}
 		number = 0;
 		for (var y = 0 ; y < this.yLength ; y++) {
 			for (var x = 0 ; x < this.xLength ; x++) {
-				if (this.getLinkedEdges(x,y) == 1 && this.colorChainsGrid[y][x] == null) {
-					this.colorChain(x,y, number);
+				if (this.getLinkedEdges(x,y) == 1 && this.colourChainsGrid[y][x] == null) {
+					this.colourChain(x,y, number);
 					number++;
 				}
 			}
 		}
 	}
-	this.ergonomicOptions.colorChains = true;
+	this.ergonomicOptions.colourChains = true;
 }
 
 LoopSolver.prototype.maskChainsInformation = function() {
 	this.ergonomicOptions.displayOppositeEnds = false;
-	this.ergonomicOptions.colorChains = false;
+	this.ergonomicOptions.colourChains = false;
 }
 
 //--------------------------------
@@ -626,31 +626,30 @@ LoopSolver.prototype.tryToPutNewSpace = function (p_x, p_y, p_state) {
 // otherPSDeductions
 
 compoundEventClosure = function(p_solver) {
-	return function(p_eventList, p_compoundEventBeingApplied) {
+	return function(p_listEventsToApply, p_compoundEventBeingApplied) {
 		//if (p_eventBeingApplied.kind == LOOP_EVENT.COMPOUND_LINK) { Note : may be subject to change
-			p_eventList.push(new LinkEvent(p_compoundEventBeingApplied.linkX, p_compoundEventBeingApplied.linkY, p_compoundEventBeingApplied.direction1, p_compoundEventBeingApplied.state));
-			p_eventList.push(new LinkEvent(p_compoundEventBeingApplied.linkX, p_compoundEventBeingApplied.linkY, p_compoundEventBeingApplied.direction2, p_compoundEventBeingApplied.state));
+			p_listEventsToApply.push(new LinkEvent(p_compoundEventBeingApplied.linkX, p_compoundEventBeingApplied.linkY, p_compoundEventBeingApplied.direction1, p_compoundEventBeingApplied.state));
+			p_listEventsToApply.push(new LinkEvent(p_compoundEventBeingApplied.linkX, p_compoundEventBeingApplied.linkY, p_compoundEventBeingApplied.direction2, p_compoundEventBeingApplied.state));
 		// } 	
-		return p_eventList;
 	}
 }
 
 // Note : all events always have validate coordinates, because it is the solver + the input's responsibility to check so. 
 deductionsClosure = function(p_solver) {
-	return function(p_eventList, p_eventBeingApplied) {
+	return function(p_listEventsToApply, p_eventBeingApplied) {
 		if (p_eventBeingApplied.kind == LOOP_EVENT.STATE) {
 			const state = p_eventBeingApplied.state;
 			const x = p_eventBeingApplied.x;
 			const y = p_eventBeingApplied.y;
 			if (state == LOOP_STATE.CLOSED) {
 				p_solver.existingNeighborsDirections(x, y).forEach(dir => {
-					p_eventList.push(new LinkEvent(x, y, dir, LOOP_STATE.CLOSED));
+					p_listEventsToApply.push(new LinkEvent(x, y, dir, LOOP_STATE.CLOSED));
 				});
-				p_eventList = p_solver.setSpaceClosedPSDeductions(p_eventList, p_eventBeingApplied);
+				p_solver.setSpaceClosedPSDeductions(p_listEventsToApply, p_eventBeingApplied);
 			} else {
-				p_eventList = p_solver.setSpaceLinkedPSDeductions(p_eventList, p_eventBeingApplied);
+				p_solver.setSpaceLinkedPSDeductions(p_listEventsToApply, p_eventBeingApplied);
 			}
-			p_eventList = p_solver.deductionsSpaceAndSurrounding2v2Open(p_eventList, x, y);
+			p_solver.deductionsSpaceAndSurrounding2v2Linked(p_listEventsToApply, x, y); 
 		} else if (p_eventBeingApplied.kind == LOOP_EVENT.LINK) {
 			const state = p_eventBeingApplied.state;
 			const x = p_eventBeingApplied.linkX;
@@ -660,8 +659,8 @@ deductionsClosure = function(p_solver) {
 			const nx = neighborCoors.x;
 			const ny = neighborCoors.y;
 			if (state == LOOP_STATE.LINKED) {
-				p_eventList.push(new SpaceEvent(x, y, LOOP_STATE.LINKED));
-				p_eventList.push(new SpaceEvent(nx, ny, LOOP_STATE.LINKED));
+				p_listEventsToApply.push(new SpaceEvent(x, y, LOOP_STATE.LINKED));
+				p_listEventsToApply.push(new SpaceEvent(nx, ny, LOOP_STATE.LINKED));
 				if (! p_solver.checkNewEnds.array[ny][nx]) {
 					p_solver.checkNewEnds.array[ny][nx] = true;
 					p_solver.checkNewEnds.list.push({x : nx, y : ny});
@@ -670,17 +669,16 @@ deductionsClosure = function(p_solver) {
 					p_solver.checkNewEnds.array[y][x] = true;
 					p_solver.checkNewEnds.list.push({x : x, y : y});
 				}
-				p_eventList = p_solver.setEdgeLinkedPSDeductions(p_eventList, p_eventBeingApplied);			
+				p_solver.setEdgeLinkedPSDeductions(p_listEventsToApply, p_eventBeingApplied);			
 			} else {
-				p_eventList = p_solver.test3closed(p_eventList, x, y);
-				p_eventList = p_solver.test3closed(p_eventList, nx, ny);
-				p_eventList = p_solver.setEdgeClosedPSDeductions(p_eventList, p_eventBeingApplied);			
+				p_solver.deductionsTest3closed(p_listEventsToApply, x, y);
+				p_solver.deductionsTest3closed(p_listEventsToApply, nx, ny);
+				p_solver.setEdgeClosedPSDeductions(p_listEventsToApply, p_eventBeingApplied);			
 			}
-			p_eventList = p_solver.deductionsSpaceAndSurrounding2v2Open(p_eventList, x, y);			
+			p_solver.deductionsSpaceAndSurrounding2v2Linked(p_listEventsToApply, x, y);		
 		} else {
-			p_eventList = p_solver.otherPSDeductions(p_eventList, p_eventBeingApplied);
+			p_solver.otherPSDeductions(p_listEventsToApply, p_eventBeingApplied);
 		}
-		return p_eventList;
 	}
 }
 
@@ -696,47 +694,44 @@ function getNeighborCoors(p_x, p_y, p_direction) {
 /**
 Tests if the space in x, y has 3 edges closed. If yes, close this space (the 4th edge will close).
 */
-LoopSolver.prototype.test3closed = function(p_eventList, p_x, p_y) {
+LoopSolver.prototype.deductionsTest3closed = function(p_listEventsToApply, p_x, p_y) {
 	if (this.getClosedEdges(p_x, p_y) == 3) {
-		p_eventList.push(new SpaceEvent(p_x, p_y, LOOP_STATE.CLOSED));
+		p_listEventsToApply.push(new SpaceEvent(p_x, p_y, LOOP_STATE.CLOSED));
 	}
-	return p_eventList;
 }
 
-LoopSolver.prototype.deductionsSpaceAndSurrounding2v2Open = function(p_eventList, p_x, p_y) {
-	p_eventList = this.deductions2v2OpenSpace(p_eventList, p_x, p_y);
+LoopSolver.prototype.deductionsSpaceAndSurrounding2v2Linked = function(p_listEventsToApply, p_x, p_y) {
+	this.deductions2v2LinkedSpace(p_listEventsToApply, p_x, p_y);
 	this.existingNeighborsCoorsDirections(p_x, p_y).forEach(coors => {
-		p_eventList = this.deductions2v2OpenSpace(p_eventList, coors.x, coors.y);
+		this.deductions2v2LinkedSpace(p_listEventsToApply, coors.x, coors.y);
 	});
-	return p_eventList;
 }
 
 /**
 Tests if the space in x, y is linked and has 2 closed spaces. If yes, link the remainder. Also, if it is linked and has 2 linked edges, close the remainder.
 */
-LoopSolver.prototype.deductions2v2OpenSpace = function(p_eventList, p_x, p_y) {
+LoopSolver.prototype.deductions2v2LinkedSpace = function(p_listEventsToApply, p_x, p_y) { 
 	if (this.getLinkSpace(p_x,p_y) == LOOP_STATE.LINKED) {
 		if (this.getClosedEdges(p_x, p_y) == 2 && this.getLinkedEdges(p_x, p_y) < 2) {
 			this.existingNeighborsDirections(p_x, p_y).forEach(dir => {
 				if (this.getLink(p_x, p_y, dir) == LOOP_STATE.UNDECIDED) {					
-					p_eventList.push(new LinkEvent(p_x, p_y, dir, LOOP_STATE.LINKED));
+					p_listEventsToApply.push(new LinkEvent(p_x, p_y, dir, LOOP_STATE.LINKED));
 				}
 			});
 		}
 		if (this.getLinkedEdges(p_x,p_y) == 2 && this.getClosedEdges(p_x, p_y) < 2) {
 			this.existingNeighborsDirections(p_x, p_y).forEach(dir => {
 				if (this.getLink(p_x, p_y, dir) == LOOP_STATE.UNDECIDED) {					
-					p_eventList.push(new LinkEvent(p_x, p_y, dir, LOOP_STATE.CLOSED));
+					p_listEventsToApply.push(new LinkEvent(p_x, p_y, dir, LOOP_STATE.CLOSED));
 				}
 			});
 		}
 	}
-	return p_eventList;
 }
 
 // Tests if 2 spaces that are known to be both ends of the same chain are 1) adjacent and not directly linked together 2) separated by one space.
 // Additionally, this is not the only chain. 
-LoopSolver.prototype.testEndsClosingLoopNotOneChain = function (p_eventList, p_endSpace1, p_endSpace2) {
+LoopSolver.prototype.deductionsTestEndsClosingLoopNotOneChain = function (p_listEventsToApply, p_endSpace1, p_endSpace2) {
 	const direction1 = this.getSpace(p_endSpace1).linkedDirections[0];
 	const x1 = p_endSpace1.x;
 	const y1 = p_endSpace1.y;
@@ -745,18 +740,18 @@ LoopSolver.prototype.testEndsClosingLoopNotOneChain = function (p_eventList, p_e
 	// Adjacent and not directly linked ?
 	if (x1 == x2) {
 		if (y1 == (y2 + 1) && direction1 != DIRECTION.UP) {
-			p_eventList.push(new LinkEvent(x1, y1, DIRECTION.UP, LOOP_STATE.CLOSED));
+			p_listEventsToApply.push(new LinkEvent(x1, y1, DIRECTION.UP, LOOP_STATE.CLOSED));
 		} 
 		if (y1 == (y2 - 1) && direction1 != DIRECTION.DOWN) {
-			p_eventList.push(new LinkEvent(x1, y1, DIRECTION.DOWN, LOOP_STATE.CLOSED));
+			p_listEventsToApply.push(new LinkEvent(x1, y1, DIRECTION.DOWN, LOOP_STATE.CLOSED));
 		} 
 	}
 	if (y1 == y2) {
 		if (x1 == (x2 + 1) && direction1 != DIRECTION.LEFT) {
-			p_eventList.push(new LinkEvent(x1, y1, DIRECTION.LEFT, LOOP_STATE.CLOSED));
+			p_listEventsToApply.push(new LinkEvent(x1, y1, DIRECTION.LEFT, LOOP_STATE.CLOSED));
 		} 
 		if (x1 == (x2 - 1) && direction1 != DIRECTION.RIGHT) {
-			p_eventList.push(new LinkEvent(x1, y1, DIRECTION.RIGHT, LOOP_STATE.CLOSED));
+			p_listEventsToApply.push(new LinkEvent(x1, y1, DIRECTION.RIGHT, LOOP_STATE.CLOSED));
 		} 
 	}	
 	// Opposites are separated by one spaces that has 2 closed edges
@@ -773,11 +768,11 @@ LoopSolver.prototype.testEndsClosingLoopNotOneChain = function (p_eventList, p_e
 		//if (closedEdgesBetween == 2 && spaceStateBetween == LOOP_STATE.UNDECIDED) { 	// OK, wrong line. 
 		// Puzzle 209 Countryroad : There were indeed two closed links in 7,7 (vertical way even if we are in the horizontal way) and the space was unknown, 7,6 and 7,8 were opposite, the deductions were applied... but both closed directions were UP and RIGHT, and not LEFT and RIGHT as intended !
 		if (closedEdgesBetween == 2 && spaceStateBetween == LOOP_STATE.UNDECIDED && !this.isLinkDownAccessible(xMid, yMid) && !this.isLinkUpAccessible(xMid, yMid)) { 	
-			p_eventList.push(new SpaceEvent(xMid, yMid, LOOP_STATE.CLOSED));
+			p_listEventsToApply.push(new SpaceEvent(xMid, yMid, LOOP_STATE.CLOSED));
 		}
 		if (closedEdgesBetween == 1 && spaceStateBetween == LOOP_STATE.LINKED) {
 			dirToLink = (this.isLinkDownAccessible(xMid, yMid) ? DIRECTION.DOWN : DIRECTION.UP);
-			p_eventList.push(new LinkEvent(xMid, yMid, dirToLink, LOOP_STATE.LINKED));
+			p_listEventsToApply.push(new LinkEvent(xMid, yMid, dirToLink, LOOP_STATE.LINKED));
 		}
 	}
 	if (((yMax - yMin) == 2) && (xMax == xMin)) {
@@ -786,11 +781,11 @@ LoopSolver.prototype.testEndsClosingLoopNotOneChain = function (p_eventList, p_e
 		closedEdgesBetween = this.getClosedEdges(xMid, yMid);
 		spaceStateBetween = this.getLinkSpace(xMid, yMid);
 		if (closedEdgesBetween == 2 && spaceStateBetween == LOOP_STATE.UNDECIDED && !this.isLinkLeftAccessible(xMid, yMid) && !this.isLinkRightAccessible(xMid, yMid)) {
-			p_eventList.push(new SpaceEvent(xMid, yMid, LOOP_STATE.CLOSED));
+			p_listEventsToApply.push(new SpaceEvent(xMid, yMid, LOOP_STATE.CLOSED));
 		}
 		if (closedEdgesBetween == 1 && spaceStateBetween == LOOP_STATE.LINKED) {
 			dirToLink = (this.isLinkRightAccessible(xMid, yMid) ? DIRECTION.RIGHT : DIRECTION.LEFT);
-			p_eventList.push(new LinkEvent(xMid, yMid, dirToLink, LOOP_STATE.LINKED));
+			p_listEventsToApply.push(new LinkEvent(xMid, yMid, dirToLink, LOOP_STATE.LINKED));
 		}
 	} 
 	
@@ -799,28 +794,27 @@ LoopSolver.prototype.testEndsClosingLoopNotOneChain = function (p_eventList, p_e
 		if (isDiagLUtoRD) {
 			if (this.getClosedEdges(xMin, yMax) == 2) {
 				if ((this.getLinkRight(xMin, yMax) == LOOP_STATE.UNDECIDED) && (this.getLinkUp(xMin, yMax) == LOOP_STATE.UNDECIDED)) {
-					p_eventList.push(new SpaceEvent(xMin, yMax, LOOP_STATE.CLOSED));
+					p_listEventsToApply.push(new SpaceEvent(xMin, yMax, LOOP_STATE.CLOSED));
 				}
 			} 
 			if (this.getClosedEdges(xMax, yMin) == 2) {
 				if ((this.getLinkDown(xMax, yMin) == LOOP_STATE.UNDECIDED) && (this.getLinkLeft(xMax, yMin) == LOOP_STATE.UNDECIDED)) {
-					p_eventList.push(new SpaceEvent(xMax, yMin, LOOP_STATE.CLOSED));
+					p_listEventsToApply.push(new SpaceEvent(xMax, yMin, LOOP_STATE.CLOSED));
 				}
 			} 
 		} else {
 			if (this.getClosedEdges(xMax, yMax) == 2) {
 				if ((this.getLinkLeft(xMax, yMax) == LOOP_STATE.UNDECIDED) && (this.getLinkUp(xMax, yMax) == LOOP_STATE.UNDECIDED)) {
-					p_eventList.push(new SpaceEvent(xMax, yMax, LOOP_STATE.CLOSED));
+					p_listEventsToApply.push(new SpaceEvent(xMax, yMax, LOOP_STATE.CLOSED));
 				}
 			} 
 			if (this.getClosedEdges(xMin, yMin) == 2) {
 				if ((this.getLinkDown(xMin, yMin) == LOOP_STATE.UNDECIDED) && (this.getLinkRight(xMin, yMin) == LOOP_STATE.UNDECIDED)) {
-					p_eventList.push(new SpaceEvent(xMin, yMin, LOOP_STATE.CLOSED));
+					p_listEventsToApply.push(new SpaceEvent(xMin, yMin, LOOP_STATE.CLOSED));
 				}
 			}
 		}
 	}
-	return p_eventList;
 }
 
 // --------------------------
@@ -842,29 +836,29 @@ abortClosure = function(p_solver) {
 
 // If during the deductions, either more than one loop was made OR one loop was made but there is still an unlooped chain somewhere...
 // If there is one loop, close the spaces that don't belong to it.
-testLoopsClosure = function(p_solver) {
+filterTestLoopsClosure = function(p_solver) { 
 	return function() {
 		if ((p_solver.loopMade > 1) || (p_solver.endedChainCount > 0 && p_solver.loopMade == 1)) {
-			return EVENT_RESULT.FAILURE;
+			return FILTER_FAILURE;
 		} else {
-			var answer = [];
+			var listEventsToApply = [];
 			if (p_solver.loopMade == 1) {
 				var x, y;
 				for (y = 0 ; y < p_solver.yLength ; y++) {
 					for (x = 0 ; x < p_solver.xLength ; x++) {
 						if (p_solver.linksArray[y][x].state == LOOP_STATE.UNDECIDED) {
-							answer.push(new SpaceEvent(x, y, LOOP_STATE.CLOSED));
+							listEventsToApply.push(new SpaceEvent(x, y, LOOP_STATE.CLOSED));
 						}
 					}
 				}
 			}
 			p_solver.loopMade = 0;
-			return answer;
+			return listEventsToApply;
 		}
 	}
 }
 
-separateEndsClosure = function(p_solver) { //TODO well, this function is called after all other openings and closings have been performed, which can lead to a closed loop because all linked spaces have exactly 2 linked edges except a few ones that had one linked and had one undecided edge left...
+filterSeparateEndsClosure = function(p_solver) { //TODO well, this function is called after all other openings and closings have been performed, which can lead to a closed loop because all linked spaces have exactly 2 linked edges except a few ones that had one linked and had one undecided edge left...
 	return function() {
 		var eventList = [];
 		var ok = true;
@@ -878,7 +872,7 @@ separateEndsClosure = function(p_solver) { //TODO well, this function is called 
 				if ((opposite.x || opposite.x == 0) && p_solver.getLinkedEdges(opposite.x, opposite.y) == 1) {
 					opposite2 = p_solver.getOppositeEnd(opposite.x, opposite.y);	
 					if (p_solver.getLinkedEdges(opposite2.x, opposite2.y) == 1) {
-						eventList = p_solver.testEndsClosingLoopNotOneChain(eventList, opposite2, opposite);						
+						p_solver.deductionsTestEndsClosingLoopNotOneChain(eventList, opposite2, opposite);						
 					}
 				}
 				index++;
@@ -886,7 +880,7 @@ separateEndsClosure = function(p_solver) { //TODO well, this function is called 
 		}
 		p_solver.cleanNewEnds(); // TODO well, when we have one link and two adjacent ends and we add a chain (ie a link or a linked space) elsewhere, the close between ends is not added.
 		if (!ok) {
-			return EVENT_RESULT.FAILURE;
+			return FILTER_FAILURE;
 		} else {
 			return eventList;
 		}
@@ -902,24 +896,24 @@ LoopSolver.prototype.makeQuickStart = function() {
 
 function quickStartEventsLoopClosure(p_solver) {
 	return function () {
-		var answer = [{quickStartLabel : "Standard loop"}];
+		var listQSEvents = [{quickStartLabel : "Standard loop"}];
 		for (var y = 0 ; y < p_solver.yLength ; y++) {
 			for (var x = 0 ; x < p_solver.xLength ; x++) {
 				if (p_solver.getLinkSpace(x, y) == LOOP_STATE.LINKED && p_solver.getClosedEdges(x, y) == 2) {
 					p_solver.existingNeighborsDirections(x, y).forEach(dir => {
 						if (p_solver.getLink(x, y, dir) != LOOP_STATE.CLOSED) {
-							answer.push(new LinkEvent(x, y, dir, LOOP_STATE.LINKED));
+							listQSEvents.push(new LinkEvent(x, y, dir, LOOP_STATE.LINKED));
 						} 
 						// No more fail in quick start tolerated ! (and directions must exist)
 					});
 				}
 				if (p_solver.getClosedEdges(x, y) > 2) {
-					answer.push(new SpaceEvent(x, y, LOOP_STATE.CLOSED));
+					listQSEvents.push(new SpaceEvent(x, y, LOOP_STATE.CLOSED));
 				}
 			}
 		} 
-		answer = p_solver.quickStartEventsPS(answer);
-		return answer;
+		p_solver.quickStartEventsPS(listQSEvents); 
+		return listQSEvents;
 	}		
 }
 
@@ -935,34 +929,34 @@ LoopSolver.prototype.passLoop = function(p_argumentPass) {
  Pass absolutely any space. TODO : Really cound be optimized.
 */
 LoopSolver.prototype.standardSpacePassEvents = function(p_x, p_y) { // TODO Warning : this one uses argument coorginates instead of an argument item ! Don't get confused.
-	var answer = [new SpaceEvent(p_x, p_y, LOOP_STATE.CLOSED)];
+	var listEventsChoice = [new SpaceEvent(p_x, p_y, LOOP_STATE.CLOSED)];
 	const okLeft = (p_x >= 1);
 	const okUp = (p_y >= 1);
 	const okRight = (p_x <= this.xLength-2);
 	const okDown = (p_y <= this.yLength-2);
 	if (okLeft) {
 		if (okUp) {
-			answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.LEFT, DIRECTION.UP, LOOP_STATE.LINKED));
+			listEventsChoice.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.LEFT, DIRECTION.UP, LOOP_STATE.LINKED));
 		}
 		if (okRight) {
-			answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.LEFT, DIRECTION.RIGHT, LOOP_STATE.LINKED));
+			listEventsChoice.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.LEFT, DIRECTION.RIGHT, LOOP_STATE.LINKED));
 		}
 		if (okDown) {
-			answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.LEFT, DIRECTION.DOWN, LOOP_STATE.LINKED));
+			listEventsChoice.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.LEFT, DIRECTION.DOWN, LOOP_STATE.LINKED));
 		}
 	}
 	if (okUp) {
 		if (okRight) {
-			answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.RIGHT, DIRECTION.UP, LOOP_STATE.LINKED));
+			listEventsChoice.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.RIGHT, DIRECTION.UP, LOOP_STATE.LINKED));
 		}
 		if (okDown) {
-			answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.DOWN, DIRECTION.UP, LOOP_STATE.LINKED));
+			listEventsChoice.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.DOWN, DIRECTION.UP, LOOP_STATE.LINKED));
 		}
 	}
 	if (okRight && okDown) {
-		answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.RIGHT, DIRECTION.DOWN, LOOP_STATE.LINKED));
+		listEventsChoice.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.RIGHT, DIRECTION.DOWN, LOOP_STATE.LINKED));
 	}
-	return [answer];
+	return [listEventsChoice];
 }
 
 comparisonLoopSolverEventsClosure = function(p_PSComparisonMethod) {
@@ -1006,15 +1000,15 @@ LoopSolver.prototype.multipassLoop = function() {
 
 function orderedListpassArgumentsClosure(p_solver, p_orderedListPassArgumentsPSMethod, p_pessimistic, p_amazeing) {
 	return function() {
-		var passIndex;
-		var answer = p_orderedListPassArgumentsPSMethod();
+		var indexPass;
+		var listIndexesPass = p_orderedListPassArgumentsPSMethod();
 		if (p_pessimistic) {
 			if (p_amazeing) {
 				for (var y = 0 ; y < p_solver.yLength ; y++) {
 					for (var x = 0 ; x < p_solver.xLength ; x++) {
 						if (p_solver.linksArray[y][x].state != LOOP_STATE.CLOSED && p_solver.linksArray[y][x].closedEdges < 2) { // Any space that has 2 openings doesn't deserve to be tried. Worth checking because the solver is a maze... ing.
-							passIndex = {x : x, y : y, passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD}
-							answer.push(passIndex);
+							indexPass = {x : x, y : y, passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD}
+							listIndexesPass.push(indexPass);
 						}
 					}	
 				}
@@ -1022,71 +1016,71 @@ function orderedListpassArgumentsClosure(p_solver, p_orderedListPassArgumentsPSM
 				for (var y = 0 ; y < p_solver.yLength ; y++) {
 					for (var x = 0 ; x < p_solver.xLength ; x++) {
 						//if (p_solver.linksArray[y][x].state != CLOSED && p_solver.linksArray[y][x].linkedDirections.length != 2) { 
-						passIndex = {x : x, y : y, passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD}
-						answer.push(passIndex);
+						indexPass = {x : x, y : y, passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD}
+						listIndexesPass.push(indexPass);
 						// }
 					}	
 				}
 			}
 		}
-		return answer;
+		return listIndexesPass;
 	}
 }
 
 function generateEventsForPassLoopClosure(p_solver) {
-	return function(p_passIndex) {		
-		return p_solver.generateEventsForPassLoop(p_passIndex);
+	return function(p_indexPass) {		
+		return p_solver.generateEventsForPassLoop(p_indexPass);
 	}
 }
 
-LoopSolver.prototype.generateEventsForPassLoop = function(p_passIndex) {
-	switch(p_passIndex.passCategory) {
+LoopSolver.prototype.generateEventsForPassLoop = function(p_indexPass) {
+	switch(p_indexPass.passCategory) {
 		case LOOP_PASS_CATEGORY.SPACE_STANDARD : 
-			return this.standardSpacePassEvents(p_passIndex.x, p_passIndex.y);
+			return this.standardSpacePassEvents(p_indexPass.x, p_indexPass.y);
 		break;
 		default : 
-			return this.generateEventsForPassPS(p_passIndex);
+			return this.generateEventsForPassPS(p_indexPass);
 		break;
 	}
 }
 
 function namingCategoryLoopClosure(p_namingCategoryPSMethod) {
-	return function(p_passIndex) {
-		switch(p_passIndex.passCategory) {
+	return function(p_indexPass) {
+		switch(p_indexPass.passCategory) {
 			case LOOP_PASS_CATEGORY.SPACE_STANDARD : 
-				return "Space " + p_passIndex.x + "," + p_passIndex.y;
+				return "Space " + p_indexPass.x + "," + p_indexPass.y;
 			break;
 			default : 
-				return p_namingCategoryPSMethod(p_passIndex);
+				return p_namingCategoryPSMethod(p_indexPass);
 			break;
 		}
 	}
 }
 
 function passDefineTodoClosure(p_solver) {
-	return function(p_passIndex) {		
-		return p_solver.passDefineTodoLoop(p_passIndex);
+	return function(p_indexPass) {		
+		return p_solver.passDefineTodoLoop(p_indexPass);
 	}
 }
 
-LoopSolver.prototype.passDefineTodoLoop = function(p_passIndex) {
-	if (p_passIndex.passCategory == LOOP_PASS_CATEGORY.SPACE_STANDARD) {
-		const x = p_passIndex.x;
-		const y = p_passIndex.y;
+LoopSolver.prototype.passDefineTodoLoop = function(p_indexPass) {
+	if (p_indexPass.passCategory == LOOP_PASS_CATEGORY.SPACE_STANDARD) {
+		const x = p_indexPass.x;
+		const y = p_indexPass.y;
 		return (this.linksArray[y][x].state != LOOP_STATE.CLOSED && this.linksArray[y][x].linkedDirections.length != 2);
 	} else {
-		return this.passDefineTodoPSMethod(p_passIndex); 
+		return this.passDefineTodoPSMethod(p_indexPass); 
 	}
 }
 
 LoopSolver.prototype.lazyStandardSpacepassArgumentsClosure = function() {
-	var answer = [];
+	var listIndexesPass = [];
 	for (var y = 0 ; y < this.yLength ; y++) {
 		for (var x = 0 ; x < this.xLength ; x++) {
-			answer.push({x : x, y : y});
+			listIndexesPass.push({x : x, y : y});
 		}
 	} 
-	return answer;
+	return listIndexesPass;
 }
 
 // ----------------
@@ -1166,7 +1160,7 @@ loopNaiveSearchClosure = function(p_solver) {
 // ----------------
 // To string, for debug for instance
 LoopSolver.prototype.logOppositeEnd = function(p_xStart = 0, p_yStart = 0, p_xEnd, p_yEnd) {
-	var answer = "\n";
+	var resultLog = "\n";
 	var oppositeEndSpace;
 	var stringSpace;
 	var stringSep;
@@ -1192,9 +1186,9 @@ LoopSolver.prototype.logOppositeEnd = function(p_xStart = 0, p_yStart = 0, p_xEn
 			while(stringSpace.length < 5) {
 				stringSpace+= " ";
 			}
-			answer+=stringSpace+"|";
+			resultLog+=stringSpace+"|";
 		}
-		answer+="\n";
+		resultLog+="\n";
 	}
-	console.log(answer);
+	console.log(resultLog);
 }

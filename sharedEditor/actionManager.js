@@ -1,5 +1,4 @@
 // Manages actions that are specific to the editor
-
 function addEventListenerAndCaptionActionSubmitForEditor(p_editorCore, p_entriesManager, p_textElement, p_idSubmitElement, p_entry, p_value) {
 	const submitElement = getSubmitElementSetValue(p_idSubmitElement, p_value);
 	submitElement.addEventListener('click', function(event) {

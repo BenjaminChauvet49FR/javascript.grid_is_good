@@ -37,7 +37,7 @@ SolverMasyu.prototype.construct = function(p_symbolGrid) {
 		quickStartEventsPS : quickStartEventsClosure(this),
 		generateEventsForPassPS : generateEventsForSpacePassClosure(this),
 		orderedListPassArgumentsPS : startingOrderedListPassArgumentsMasyuClosure(this),
-		namingCategoryPS : namingCategoryClosure(this),
+		namingCategoryPS : namingCategoryPassClosure(this),
 		multipassPessimismPS : true,
 		passDefineTodoPSMethod : function(p_categoryPass) {
 			const x = p_categoryPass.x;
@@ -95,54 +95,53 @@ SolverMasyu.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 }
 
 SolverMasyu.prototype.emitPassSpace = function(p_x, p_y) {
-	var passIndex;
+	var indexPass;
 	if (this.pearlArray[p_y][p_x] != null) {		
-		passIndex = {passCategory : LOOP_PASS_CATEGORY.MASYU, x : p_x, y : p_y};
+		indexPass = {passCategory : LOOP_PASS_CATEGORY.MASYU, x : p_x, y : p_y};
 	} else {
-		passIndex = {passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
+		indexPass = {passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
 	}
-	return this.passLoop(passIndex);
+	return this.passLoop(indexPass);
 }
 
 // Correct puzzle data assumption : no white pearl should be found in a corner
 quickStartEventsClosure = function(p_solver) {
-	return function() { 
+	return function(p_listQSEvents) { 
 		const xMax = p_solver.xLength;
 		const yMax = p_solver.yLength;
-		var answer = [{quickStartLabel : "Masyu"}];
+		p_listQSEvents.push({quickStartLabel : "Masyu"});
 		for (var x = 0; x < xMax; x++) {
 			if (p_solver.pearlArray[0][x] == PEARL.WHITE && (x != 0)) {
-				answer.push(new LinkEvent(x, 0, DIRECTION.LEFT, LOOP_STATE.LINKED));
+				p_listQSEvents.push(new LinkEvent(x, 0, DIRECTION.LEFT, LOOP_STATE.LINKED));
 			} else if (p_solver.pearlArray[0][x] == PEARL.BLACK) {
-				answer.push(new LinkEvent(x, 0, DIRECTION.DOWN, LOOP_STATE.LINKED));
+				p_listQSEvents.push(new LinkEvent(x, 0, DIRECTION.DOWN, LOOP_STATE.LINKED));
 			} else if (p_solver.pearlArray[1][x] == PEARL.BLACK) {
-				answer.push(new LinkEvent(x, 1, DIRECTION.DOWN, LOOP_STATE.LINKED));
+				p_listQSEvents.push(new LinkEvent(x, 1, DIRECTION.DOWN, LOOP_STATE.LINKED));
 			}
 			if (p_solver.pearlArray[yMax-1][x] == PEARL.WHITE && (x != 0)) {
-				answer.push(new LinkEvent(x, yMax-1, DIRECTION.LEFT, LOOP_STATE.LINKED));
+				p_listQSEvents.push(new LinkEvent(x, yMax-1, DIRECTION.LEFT, LOOP_STATE.LINKED));
 			} else if (p_solver.pearlArray[yMax-1][x] == PEARL.BLACK) {                  
-				answer.push(new LinkEvent(x, yMax-1, DIRECTION.UP, LOOP_STATE.LINKED));
+				p_listQSEvents.push(new LinkEvent(x, yMax-1, DIRECTION.UP, LOOP_STATE.LINKED));
 			} else if (p_solver.pearlArray[yMax-2][x] == PEARL.BLACK) {                  
-				answer.push(new LinkEvent(x, yMax-2, DIRECTION.UP, LOOP_STATE.LINKED));
+				p_listQSEvents.push(new LinkEvent(x, yMax-2, DIRECTION.UP, LOOP_STATE.LINKED));
 			}
 		}
 		for (var y = 0 ; y < yMax; y++) {
 			if (p_solver.pearlArray[y][0] == PEARL.WHITE && (y != 0)) {
-				answer.push(new LinkEvent(0, y, DIRECTION.UP, LOOP_STATE.LINKED));
+				p_listQSEvents.push(new LinkEvent(0, y, DIRECTION.UP, LOOP_STATE.LINKED));
 			} else if (p_solver.pearlArray[y][0] == PEARL.BLACK) {
-				answer.push(new LinkEvent(0, y, DIRECTION.RIGHT, LOOP_STATE.LINKED));  
+				p_listQSEvents.push(new LinkEvent(0, y, DIRECTION.RIGHT, LOOP_STATE.LINKED));  
 			} else if (p_solver.pearlArray[y][1] == PEARL.BLACK) {
-				answer.push(new LinkEvent(1, y, DIRECTION.RIGHT, LOOP_STATE.LINKED));  
+				p_listQSEvents.push(new LinkEvent(1, y, DIRECTION.RIGHT, LOOP_STATE.LINKED));  
 			}
 			if (p_solver.pearlArray[y][xMax-1] == PEARL.WHITE && (y != 0)) {
-				answer.push(new LinkEvent(xMax-1, y, DIRECTION.UP, LOOP_STATE.LINKED));
+				p_listQSEvents.push(new LinkEvent(xMax-1, y, DIRECTION.UP, LOOP_STATE.LINKED));
 			} else if (p_solver.pearlArray[y][xMax-1] == PEARL.BLACK) {
-				answer.push(new LinkEvent(xMax-1, y, DIRECTION.LEFT, LOOP_STATE.LINKED));  
+				p_listQSEvents.push(new LinkEvent(xMax-1, y, DIRECTION.LEFT, LOOP_STATE.LINKED));  
 			} else if (p_solver.pearlArray[y][xMax-2] == PEARL.BLACK) {
-				answer.push(new LinkEvent(xMax-2, y, DIRECTION.LEFT, LOOP_STATE.LINKED)); 
+				p_listQSEvents.push(new LinkEvent(xMax-2, y, DIRECTION.LEFT, LOOP_STATE.LINKED)); 
 			}
 		}
-		return answer;
 	}
 }
 
@@ -154,7 +153,7 @@ SolverMasyu.prototype.makeMultipass = function() {
 // Closures
 
 setEdgeLinkedDeductionsClosure = function(p_solver) {
-	return function(p_eventList, p_eventBeingApplied) {
+	return function(p_listEventsToApply, p_eventBeingApplied) {
 		x = p_eventBeingApplied.linkX;
 		y = p_eventBeingApplied.linkY;
 		dir = p_eventBeingApplied.direction;
@@ -168,83 +167,83 @@ setEdgeLinkedDeductionsClosure = function(p_solver) {
 
 		ddir = p_eventBeingApplied.dual().direction;
 		antiDir = OppositeDirection[dir];
-		p_eventList = p_solver.testWhitePearlSpace(p_eventList, x, y, dir, LOOP_STATE.LINKED); // Test white pearl here
-		p_eventList = p_solver.testWhitePearlSpace(p_eventList, dx, dy, ddir, LOOP_STATE.LINKED); // Test white pearl on next space
+		p_solver.deductionsTestWhitePearlSpace(p_listEventsToApply, x, y, dir, LOOP_STATE.LINKED); // Test white pearl here
+		p_solver.deductionsTestWhitePearlSpace(p_listEventsToApply, dx, dy, ddir, LOOP_STATE.LINKED); // Test white pearl on next space
 		if (p_solver.neighborExists(dx, dy, dir) && p_solver.pearlArray[fwdY][fwdX] == PEARL.WHITE) { // Test white spaces 2 spaces forward
-			p_eventList = p_solver.testExpansionWhitePearlSpace(p_eventList, fwdX, fwdY, antiDir);
+			p_solver.deductionsTestExpansionWhitePearlSpace(p_listEventsToApply, fwdX, fwdY, antiDir);
 		}
 		if (p_solver.neighborExists(x, y, antiDir) && p_solver.pearlArray[bwdY][bwdX] == PEARL.WHITE) { // Test white spaces in the space behind
-			p_eventList = p_solver.testExpansionWhitePearlSpace(p_eventList, bwdX, bwdY, dir);
+			p_solver.deductionsTestExpansionWhitePearlSpace(p_listEventsToApply, bwdX, bwdY, dir);
 		}
 		
-		p_eventList = p_solver.testOnBlackPearlSpace(p_eventList, x, y, dir);
-		p_eventList = p_solver.testOnBlackPearlSpace(p_eventList, dx, dy, antiDir);
+		p_solver.deductionsTestOnBlackPearlSpace(p_listEventsToApply, x, y, dir);
+		p_solver.deductionsTestOnBlackPearlSpace(p_listEventsToApply, dx, dy, antiDir);
 		
 		const dirR = TurningRightDirection[dir];
 		const dirL = TurningLeftDirection[dir];
 		if (p_solver.neighborExists(x, y, dirR)) {
-			p_eventList = p_solver.testBlackPearlAsideLink(p_eventList, x, y, dirR);
-			p_eventList = p_solver.testBlackPearlAsideLink(p_eventList, dx, dy, dirR);
+			p_solver.deductionsTestBlackPearlAsideLink(p_listEventsToApply, x, y, dirR);
+			p_solver.deductionsTestBlackPearlAsideLink(p_listEventsToApply, dx, dy, dirR);
 		}
 		if (p_solver.neighborExists(x, y, dirL)) {
-			p_eventList = p_solver.testBlackPearlAsideLink(p_eventList, x, y, dirL);
-			p_eventList = p_solver.testBlackPearlAsideLink(p_eventList, dx, dy, dirL);
+			p_solver.deductionsTestBlackPearlAsideLink(p_listEventsToApply, x, y, dirL);
+			p_solver.deductionsTestBlackPearlAsideLink(p_listEventsToApply, dx, dy, dirL);
 		}
-		return p_eventList;
+		return;
 	}
 }
 
 
 
 setEdgeClosedDeductionsClosure = function(p_solver) {
-	return function(p_eventList, p_eventBeingApplied) {
+	return function(p_listEventsToApply, p_eventBeingApplied) {
 		x = p_eventBeingApplied.linkX;
 		y = p_eventBeingApplied.linkY;
 		dir = p_eventBeingApplied.direction;
 		dx = p_eventBeingApplied.dual().linkX;
 		dy = p_eventBeingApplied.dual().linkY;
 		ddir = p_eventBeingApplied.dual().direction;
-		p_eventList = p_solver.testWhitePearlSpace(p_eventList, x, y, dir, LOOP_STATE.CLOSED);
-		p_eventList = p_solver.testWhitePearlSpace(p_eventList, dx, dy, ddir, LOOP_STATE.CLOSED);
+		p_solver.deductionsTestWhitePearlSpace(p_listEventsToApply, x, y, dir, LOOP_STATE.CLOSED);
+		p_solver.deductionsTestWhitePearlSpace(p_listEventsToApply, dx, dy, ddir, LOOP_STATE.CLOSED);
 	    // Test black space for link
-		p_eventList = p_solver.testOnBlackPearlSpace(p_eventList, x, y);
-		p_eventList = p_solver.testOnBlackPearlSpace(p_eventList, dx, dy);
+		p_solver.deductionsTestOnBlackPearlSpace(p_listEventsToApply, x, y);
+		p_solver.deductionsTestOnBlackPearlSpace(p_listEventsToApply, dx, dy);
 		if (p_solver.neighborExists(x, y, ddir)) {
-			p_eventList = p_solver.testBlackPearlAsideLink(p_eventList, x, y, ddir);
+			p_solver.deductionsTestBlackPearlAsideLink(p_listEventsToApply, x, y, ddir);
 		}
 		if (p_solver.neighborExists(dx, dy, dir)) {
-			p_eventList = p_solver.testBlackPearlAsideLink(p_eventList, dx, dy, dir);
+			p_solver.deductionsTestBlackPearlAsideLink(p_listEventsToApply, dx, dy, dir);
 		}
-		return p_eventList;
+		return;
 	}
 }
 
 // Test if space orthogonally adjacent to a link and (in the same direction if link is closed or the perpendicular one if link is linked) is black and if so, close these link between
-SolverMasyu.prototype.testBlackPearlAsideLink = function(p_eventList, p_x, p_y, p_dirLateral) {
+SolverMasyu.prototype.deductionsTestBlackPearlAsideLink = function(p_listEventsToApply, p_x, p_y, p_dirLateral) {
 	if (this.pearlArray[p_y+DeltaY[p_dirLateral]][p_x+DeltaX[p_dirLateral]] == PEARL.BLACK) {
-		p_eventList.push(new LinkEvent(p_x, p_y, p_dirLateral ,LOOP_STATE.CLOSED));
+		p_listEventsToApply.push(new LinkEvent(p_x, p_y, p_dirLateral ,LOOP_STATE.CLOSED));
 	}
-	return p_eventList;
+	return;
 }
 
 // Test if we are on a white pearl space and make a link of the same state accordingly
-SolverMasyu.prototype.testWhitePearlSpace = function(p_eventList, p_x, p_y, p_dir, p_state) {
+SolverMasyu.prototype.deductionsTestWhitePearlSpace = function(p_listEventsToApply, p_x, p_y, p_dir, p_state) {
 	if (this.pearlArray[p_y][p_x] == PEARL.WHITE) {
 		if (!this.neighborExists(p_x, p_y, OppositeDirection[p_dir])) {
 			if (p_state == LOOP_STATE.LINKED) {
-				p_eventList.push(new FailureEvent());
+				p_listEventsToApply.push(new FailureEvent());
 			}
 		} else {
 			if (p_state == LOOP_STATE.LINKED) {
-				p_eventList = this.testExpansionWhitePearlSpace(p_eventList, p_x, p_y, p_dir);
+				this.deductionsTestExpansionWhitePearlSpace(p_listEventsToApply, p_x, p_y, p_dir);
 			}			
-			p_eventList.push(new LinkEvent(p_x, p_y, OppositeDirection[p_dir], p_state));
+			p_listEventsToApply.push(new LinkEvent(p_x, p_y, OppositeDirection[p_dir], p_state));
 		}
 	}
-	return p_eventList;
+	return;
 }
 
-SolverMasyu.prototype.testOnBlackPearlSpace = function(p_eventList, p_x, p_y) {
+SolverMasyu.prototype.deductionsTestOnBlackPearlSpace = function(p_listEventsToApply, p_x, p_y) { 
 	if (this.pearlArray[p_y][p_x] == PEARL.BLACK) {
 		var detectedLink;
 		KnownDirections.forEach(dir => {
@@ -256,41 +255,41 @@ SolverMasyu.prototype.testOnBlackPearlSpace = function(p_eventList, p_x, p_y) {
 			detectedLink = false;
 			if (!this.neighborExists(p_x, p_y, OppositeDirection[dir]) || this.getLink(p_x, p_y, OppositeDirection[dir]) == LOOP_STATE.CLOSED) {
 				if (this.neighborExists(p_x, p_y, dir)) {
-					p_eventList.push(new LinkEvent(p_x, p_y, dir, LOOP_STATE.LINKED));
+					p_listEventsToApply.push(new LinkEvent(p_x, p_y, dir, LOOP_STATE.LINKED));
 					detectedLink = true;
 				} else {
-					p_eventList.push(new FailureEvent());
+					p_listEventsToApply.push(new FailureEvent());
 				}
 			}
 			if (this.neighborExists(p_x, p_y, dir) && this.getLink(p_x, p_y, dir) == LOOP_STATE.LINKED) {
 				if (this.neighborExists(p_x, p_y, antiDir)) {
-					p_eventList.push(new LinkEvent(p_x, p_y, antiDir, LOOP_STATE.CLOSED));
+					p_listEventsToApply.push(new LinkEvent(p_x, p_y, antiDir, LOOP_STATE.CLOSED));
 					detectedLink = true;
 				}
 			}
 			if (this.neighborExists(p_x, p_y, antiDir) && (
 				 (!this.neighborExists(bx, by, antiDir)) ||
 				(this.getLink(bx, by, antiDir) == LOOP_STATE.CLOSED) )) {
-				p_eventList.push(new LinkEvent(p_x, p_y, antiDir, LOOP_STATE.CLOSED));
+				p_listEventsToApply.push(new LinkEvent(p_x, p_y, antiDir, LOOP_STATE.CLOSED));
 				detectedLink = true;
 			}
 			if (detectedLink) {
 				if (this.neighborExists(fx, fy, dir)) {
-					p_eventList.push(new LinkEvent(fx, fy, dir, LOOP_STATE.LINKED));
+					p_listEventsToApply.push(new LinkEvent(fx, fy, dir, LOOP_STATE.LINKED));
 				} else {
-					p_eventList.push(new FailureEvent());
+					p_listEventsToApply.push(new FailureEvent());
 				}
 			}
 		});
 	}
-	return p_eventList;
+	return;
 }
 
 // Prerequistes : p_x, p_y = coordinates of a white space + we are making deductions of a linked link (not necessarily on space p_x, p_y). 
 // Tests if 1) the pearl is taken into a straight chain of length 3. If yes, close the opposite link.
 // 2) if the pearl is taken between 2 aligned links in the geographical direction of p_dir. If yes, close a link (it will deduce everything else for the chain)
 // 3) if the pearl is taken between a pearl and a straight link. If yes, same as 2)
-SolverMasyu.prototype.testExpansionWhitePearlSpace = function(p_eventList, p_x, p_y, p_dir) {
+SolverMasyu.prototype.deductionsTestExpansionWhitePearlSpace = function(p_listEventsToApply, p_x, p_y, p_dir) {
 	const bx = p_x-DeltaX[p_dir];
 	const by = p_y-DeltaY[p_dir];
 	const x = p_x; // b = "backward", f = "forward"
@@ -303,18 +302,18 @@ SolverMasyu.prototype.testExpansionWhitePearlSpace = function(p_eventList, p_x, 
 		if (this.getLink(x, y, antiDir) == LOOP_STATE.LINKED && // Part 1
 		this.getLink(x, y, p_dir) == LOOP_STATE.LINKED ) {
 			if (this.getLink(bx, by, antiDir) == LOOP_STATE.LINKED) {
-				p_eventList.push(new LinkEvent(fx, fy, p_dir, LOOP_STATE.CLOSED));
+				p_listEventsToApply.push(new LinkEvent(fx, fy, p_dir, LOOP_STATE.CLOSED));
 			} else if (this.getLink(fx, fy, p_dir) == LOOP_STATE.LINKED) {
-				p_eventList.push(new LinkEvent(bx, by, antiDir, LOOP_STATE.CLOSED));
+				p_listEventsToApply.push(new LinkEvent(bx, by, antiDir, LOOP_STATE.CLOSED));
 			}
 		}
 		if ((this.getLink(bx, by, antiDir) == LOOP_STATE.LINKED && this.getLink(fx, fy, p_dir) == LOOP_STATE.LINKED ) || // Part 2 : white pearl taken between 2 aligned links
 		(this.getLink(bx, by, antiDir) == LOOP_STATE.LINKED && this.pearlArray[fy][fx] == PEARL.WHITE) || // Part 3 : white pearl taken between an aligned link and a white pearl
 		(this.getLink(fx, fy, p_dir) == LOOP_STATE.LINKED && this.pearlArray[by][bx] == PEARL.WHITE)) {
-			p_eventList.push(new LinkEvent(x, y, p_dir, LOOP_STATE.CLOSED));
+			p_listEventsToApply.push(new LinkEvent(x, y, p_dir, LOOP_STATE.CLOSED));
 		}
 	}
-	return p_eventList;
+	return;
 }
 
 // -------------------
@@ -337,37 +336,37 @@ function generateWhitePearlPassEvents (p_x, p_y) {
 
 // Precondition : the space has a black pearl.
 SolverMasyu.prototype.generateBlackPearlPassEvents = function(p_x, p_y) {
-	var answer = [];
+	var listEventsChoice = [];
 	var okLeft = (p_x >= 2);
 	var okUp = (p_y >= 2);
 	var okRight = (p_x <= this.xLength-3);
 	var okDown = (p_y <= this.yLength-3);
 	if (okLeft && okUp) {
-		answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.LEFT, DIRECTION.UP, LOOP_STATE.LINKED));
+		listEventsChoice.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.LEFT, DIRECTION.UP, LOOP_STATE.LINKED));
 	}
 	if (okRight && okUp) {
-		answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.RIGHT, DIRECTION.UP, LOOP_STATE.LINKED));
+		listEventsChoice.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.RIGHT, DIRECTION.UP, LOOP_STATE.LINKED));
 	}
 	if (okRight && okDown) {
-		answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.RIGHT, DIRECTION.DOWN, LOOP_STATE.LINKED));
+		listEventsChoice.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.RIGHT, DIRECTION.DOWN, LOOP_STATE.LINKED));
 	}
 	if (okLeft && okDown) {
-		answer.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.LEFT, DIRECTION.DOWN, LOOP_STATE.LINKED));
+		listEventsChoice.push(new CompoundLinkEvent(p_x, p_y, DIRECTION.LEFT, DIRECTION.DOWN, LOOP_STATE.LINKED));
 	}
-	return [answer];
+	return [listEventsChoice];
 }
 
 
-function namingCategoryClosure(p_solver) {
-	return function (p_passIndex) {
-		const x = p_passIndex.x;
-		const y = p_passIndex.y;
-		var answer = x + "," + y;
+function namingCategoryPassClosure(p_solver) {
+	return function (p_indexPass) {
+		const x = p_indexPass.x;
+		const y = p_indexPass.y;
+		var nameCatPass = x + "," + y;
 		switch (p_solver.pearlArray[y][x]) {
-			case PEARL.WHITE : answer += " (white)"; break;
-			case PEARL.BLACK : answer += " (black)"; break;
+			case PEARL.WHITE : nameCatPass += " (white)"; break;
+			case PEARL.BLACK : nameCatPass += " (black)"; break;
 		}
-		return answer;
+		return nameCatPass;
 	}
 }
 

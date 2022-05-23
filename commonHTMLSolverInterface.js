@@ -78,7 +78,7 @@ function buildInputCanvas(p_divId, p_entriesManager, p_actionText, p_entry, p_ac
 		submitId = p_divId + "_submit_" + i;
 		mainDiv.appendChild(createSubmitItem(submitId));
 		addEventListenerAndCaptionActionSubmit(p_entriesManager, spanElt, submitId, p_entry, p_actions[i]);
-	}
+	} 
 	mainDiv.appendChild(document.createElement("br"));
 	setMode(spanElt, p_entriesManager, p_entry, p_actions[0]);
 }

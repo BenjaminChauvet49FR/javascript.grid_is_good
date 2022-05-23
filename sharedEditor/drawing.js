@@ -1,5 +1,5 @@
 /**
-Draw the grid on-screen on p_context, with p_editorCore informations, with this.pix and coloursSet information for pixels and colors
+Draw the grid on-screen on p_context, with p_editorCore informations, with this.pix and coloursSet information for pixels and colours
 */
 Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	const xLength = p_editorCore.getXLength();
@@ -13,12 +13,12 @@ Drawer.prototype.drawEditableGrid = function (p_context, p_editorCore) {
 	} else {
 		if (p_editorCore.holdsLinks()) { // Note : move this away ?
 			this.drawDotsGrid(p_context, xLength, yLength, 
-			function(x, y) {return p_editorCore.getLinkR(x, y) == LINKGRID.NOT_LINKED ? COLOURS.EDITOR_CLOSED_LINK_DOTS : COLOURS.EDITOR_OPEN_LINK_DOTS},
-			function(x, y) {return p_editorCore.getLinkD(x, y) == LINKGRID.NOT_LINKED ? COLOURS.EDITOR_CLOSED_LINK_DOTS : COLOURS.EDITOR_OPEN_LINK_DOTS},
+			function(x, y) {return p_editorCore.getLinkR(x, y) == LINKGRID.NOT_LINKED ? COLOURS.EDITOR_CLOSED_LINK_DOTS : COLOURS.EDITOR_LINKED_LINK_DOTS},
+			function(x, y) {return p_editorCore.getLinkD(x, y) == LINKGRID.NOT_LINKED ? COLOURS.EDITOR_CLOSED_LINK_DOTS : COLOURS.EDITOR_LINKED_LINK_DOTS},
 			function(x, y) {return COLOURS.EDITOR_VAGUE_NODE},
 			function() {return DOTS_SIZE.MEDIUM});
 		} else {			
-			this.drawDotsGridSimple(p_context, xLength+1, yLength+1, COLOURS.OPEN_LINK_DOTS);
+			this.drawDotsGridSimple(p_context, xLength+1, yLength+1, COLOURS.LINKED_LINK_DOTS);
 		}
 	}
 
@@ -235,6 +235,6 @@ Drawer.prototype.drawSuraromuEditorGrid = function(p_context, p_grid) {
 		}
 	}
 	
-	const shapes = [DrawableHorizDots(COLOURS.SURAROMU_DOTS_GATE, 4), DrawableVertDots(COLOURS.SURAROMU_DOTS_GATE, 4), DrawableColor(COLOURS.SURAROMU_BG_BLOCKED_SPACE), DrawableCircle(COLOURS.SURAROMU_START_POINT_OUT, COLOURS.SURAROMU_START_POINT_IN)]; 
+	const shapes = [DrawableHorizDots(COLOURS.SURAROMU_DOTS_GATE, 4), DrawableVertDots(COLOURS.SURAROMU_DOTS_GATE, 4), DrawableColour(COLOURS.SURAROMU_BG_BLOCKED_SPACE), DrawableCircle(COLOURS.SURAROMU_START_POINT_OUT, COLOURS.SURAROMU_START_POINT_IN)]; 
 	this.drawSuraromuGrid(p_context, getSpaceMethod, shapes, getGateNumberMethod, p_grid.getXLength(), p_grid.getYLength());
 }

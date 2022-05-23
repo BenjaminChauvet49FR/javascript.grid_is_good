@@ -9,7 +9,7 @@ function main() {
 	var	context = canevasInteraction.getContext("2d");
 	var actionsManager  = {};
 
-	var colors = {
+	var colours = {
 		emptySpace : COLOURS.X_LIGHT,
 		selectedSpace : COLOURS.SELECTED_SPACE,
 		selectedCornerSpace : COLOURS.SELECTED_CORNER_SPACE
@@ -19,7 +19,7 @@ function main() {
 	//The main draw function (at start)
 	function drawCanvas() {
 		drawer.drawWallGrid(context, solver.gridWall, solver.xyLength, solver.xyLength); 
-		drawInsideSpaces(context, drawer, colors, solver, selectedSpacesGrid);
+		drawInsideSpaces(context, drawer, colours, solver, selectedSpacesGrid);
 		solver.callStateForItem(spanState);
 	}
 

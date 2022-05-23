@@ -52,7 +52,7 @@ SolverGappy.prototype.construct = function(p_marginLeft, p_marginUp) {
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodsSetPass = {comparisonMethod : comparing, copyMethod : copying,  argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsSetPass = {comparisonMethod : comparing, copyMethod : copying,  argumentToLabelMethod : namingCategoryPassClosure(this)};
 	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForRCPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
@@ -83,13 +83,13 @@ SolverGappy.prototype.undo = function() {
 }
 
 SolverGappy.prototype.emitPassRow = function(p_y) {
-	const generatedEvents = this.generateEventsForRowPass(p_y);
-	this.passEvents(generatedEvents, {family : GAPPY_PASS_CATEGORY.ROW, index : p_y}); 
+	const listPassNow = this.generateEventsForRowPass(p_y);
+	this.passEvents(listPassNow, {family : GAPPY_PASS_CATEGORY.ROW, index : p_y}); 
 }
 
 SolverGappy.prototype.emitPassColumn = function(p_x) {
-	const generatedEvents = this.generateEventsForColumnPass(p_x);
-	this.passEvents(generatedEvents, {family : GAPPY_PASS_CATEGORY.COLUMN, index : p_x}); 
+	const listPassNow = this.generateEventsForColumnPass(p_x);
+	this.passEvents(listPassNow, {family : GAPPY_PASS_CATEGORY.COLUMN, index : p_x}); 
 }
 
 SolverGappy.prototype.makeMultiPass = function() {	
@@ -100,7 +100,7 @@ SolverGappy.prototype.makeQuickStart = function() {
 	this.quickStart();
 }
 
-namingCategoryClosure = function(p_solver) {
+namingCategoryPassClosure = function(p_solver) {
 	return function(p_indexAndFamily) {
 		const index = p_indexAndFamily.index;
 		switch (p_indexAndFamily.family) {
@@ -115,8 +115,8 @@ namingCategoryClosure = function(p_solver) {
 // Doing and undoing
 
 applyEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		return p_solver.putNew(eventToApply.x, eventToApply.y, eventToApply.symbol);
+	return function(p_eventToApply) {
+		return p_solver.putNew(p_eventToApply.x, p_eventToApply.y, p_eventToApply.symbol);
 	}
 }
 
@@ -149,9 +149,9 @@ SolverGappy.prototype.putNew = function(p_x, p_y, p_symbol) {
 When you want to remove a symbol from a space !
 */
 undoEventClosure = function(p_solver) {
-	return function(eventToUndo) {
-		y = eventToUndo.y;
-		x = eventToUndo.x;
+	return function(p_eventToUndo) {
+		y = p_eventToUndo.y;
+		x = p_eventToUndo.x;
 		var symbol = p_solver.answerArray[y][x];
 		p_solver.answerArray[y][x] = STAR.UNDECIDED;
 		if (symbol == STAR.YES) {
@@ -201,10 +201,10 @@ deductionsClosure = function (p_solver) {
 				p_listEventsToApply.push(spaceEventToAdd);
 			});
 			if (p_solver.notPlacedYetColumns[x].Os == 0) {				
-				p_listEventsToApply = p_solver.deductionsFillingColumn(p_listEventsToApply, x, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.NO));
+				p_solver.deductionsFillingColumn(p_listEventsToApply, x, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.NO));
 			}
 			if (p_solver.notPlacedYetRows[y].Os == 0) {				
-				p_listEventsToApply = p_solver.deductionsFillingRow(p_listEventsToApply, y, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.NO));
+				p_solver.deductionsFillingRow(p_listEventsToApply, y, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.NO));
 			}
 			gap = p_solver.numbersMarginsLeft[y];
 			if (gap != null) {				
@@ -225,10 +225,10 @@ deductionsClosure = function (p_solver) {
 		}
 		if (symbol == STAR.NO) {
 			if (p_solver.notPlacedYetColumns[x].Xs == 0) {				
-				p_listEventsToApply = p_solver.deductionsFillingColumn(p_listEventsToApply, x, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.YES));
+				p_solver.deductionsFillingColumn(p_listEventsToApply, x, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.YES));
 			}
 			if (p_solver.notPlacedYetRows[y].Xs == 0) {				
-				p_listEventsToApply = p_solver.deductionsFillingRow(p_listEventsToApply, y, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.YES));
+				p_solver.deductionsFillingRow(p_listEventsToApply, y, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.YES));
 			}
 			// -smart deductions- X newly added : some stars in corresponding rows and columns cannot make a pair anymore
 			gap = p_solver.numbersMarginsLeft[y];
@@ -266,7 +266,6 @@ deductionsClosure = function (p_solver) {
 				}
 			}
 		}
-		return p_listEventsToApply;
 	}
 }
 
@@ -344,15 +343,15 @@ comparing = function(p_event1, p_event2) {
 
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		var iafList = [];
+		var listIndexesPass = [];
 		for (var i = 0; i < p_solver.xyLength ; i++) {
-			iafList.push({index : i, family : GAPPY_PASS_CATEGORY.ROW}); //, value : p_solver.notPlacedYet.rows[i]
-			iafList.push({index : i, family : GAPPY_PASS_CATEGORY.COLUMN}); //, value : p_solver.notPlacedYet.columns[i]
+			listIndexesPass.push({index : i, family : GAPPY_PASS_CATEGORY.ROW}); //, value : p_solver.notPlacedYet.rows[i]
+			listIndexesPass.push({index : i, family : GAPPY_PASS_CATEGORY.COLUMN}); //, value : p_solver.notPlacedYet.columns[i]
 		}
-		iafList.sort(function(p_iaf1, p_iaf2) {
+		listIndexesPass.sort(function(p_iaf1, p_iaf2) {
 			return p_solver.uncertainity(p_iaf1)-p_solver.uncertainity(p_iaf2); // TODO too lazy to improve it like it is on the other solvers. 
 		});
-		return iafList;
+		return listIndexesPass;
 	}
 }
 

@@ -7,30 +7,30 @@ generateEventsForPassClosure = function (p_solver) {
 }
 
 LoopSolver.prototype.passPearlDynamic = function(p_x, p_y) {
-	var answer = [];
+	var listEventsChoice = [];
 	var min, max;
 	KnownDirections.forEach(dir => {
 		min = this.getMin(p_x, p_y, dir);
 		max = this.getMax(p_x, p_y, dir);
 		for (i = min; i < max ; i++) {
-			answer.push([new LinkEvent(p_x + i*DeltaX[dir], p_y + i*DeltaY[dir], dir, LOOP_STATE.LINKED), 
+			listEventsChoice.push([new LinkEvent(p_x + i*DeltaX[dir], p_y + i*DeltaY[dir], dir, LOOP_STATE.LINKED), 
 			new LinkEvent(p_x + i*DeltaX[dir], p_y + i*DeltaY[dir], dir, LOOP_STATE.CLOSED)]);
 		}
 	});
-	return answer;
+	return listEventsChoice; 
 }
 
 orderedListPassArgumentsClosureSolverPearly = function(p_solver) {
 	return function() {
-		var answer = [];
+		var listIndexesPass = [];
 		p_solver.pearlCoors.forEach(coors => {
-			answer.push({passCategory : LOOP_PASS_CATEGORY.PEARLY, x : coors.x, y : coors.y});
+			listIndexesPass.push({passCategory : LOOP_PASS_CATEGORY.PEARLY, x : coors.x, y : coors.y});
 		});
-		return answer;
+		return listIndexesPass;
 	}
 }
 
-namingCategoryClosure = function(p_solver) {
+namingCategoryPassClosure = function(p_solver) {
 	return function(p_passIndex) {
 		const x = p_passIndex.x;
 		const y = p_passIndex.y;

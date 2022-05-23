@@ -26,7 +26,7 @@ drawInsideSpaces = function(p_context, p_drawer, p_colours, p_solver) {
 		}
 	}
 	
-	const shapes = [DrawableHorizDots(p_colours.dotsGate, 4), DrawableVertDots(p_colours.dotsGate, 4), DrawableColor(p_colours.blockedSpace), DrawableCircle(p_colours.startOut, p_colours.startIn)]; 
+	const shapes = [DrawableHorizDots(p_colours.dotsGate, 4), DrawableVertDots(p_colours.dotsGate, 4), DrawableColour(p_colours.blockedSpace), DrawableCircle(p_colours.startOut, p_colours.startIn)]; 
 	p_drawer.drawSolverLinkInsideSpaces(p_context, p_colours, p_solver); 
 	p_drawer.drawSuraromuGrid(p_context, getSpaceMethod, shapes, getDrawedGateNumberMethod, p_solver.xLength, p_solver.yLength);
 }

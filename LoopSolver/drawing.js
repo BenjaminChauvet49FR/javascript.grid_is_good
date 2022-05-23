@@ -17,9 +17,9 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_coloursSet,
 					p_context.fillStyle = p_coloursSet.noLinkState;
 					p_context.fillRect(pixInnerLeft, pixInnerUp, this.getPixInnerSide(), this.getPixInnerSide());
 				} else if (p_solver.areXsAutomaticallyDrawed()) {
-					this.drawCrossX(p_context, ix, iy, {color : p_coloursSet.noLinkState});
+					this.drawCrossX(p_context, ix, iy, {colour : p_coloursSet.noLinkState});
 				}
-            } else if (!p_solver.areAllOpenSpaces() && p_solver.getLinkSpace(ix, iy) == LOOP_STATE.LINKED) {
+            } else if (!p_solver.areAllLinkedSpaces() && p_solver.getLinkSpace(ix, iy) == LOOP_STATE.LINKED) {
                 p_context.fillStyle = p_coloursSet.presentLinkState;
                 p_context.fillRect(pixInnerLeft, pixInnerUp, this.getPixInnerSide(), this.getPixInnerSide());
             }
@@ -32,8 +32,8 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_coloursSet,
 			// Draw onto space down border
             if (iy < ( p_solver.yLength-1)) {
 				if (p_solver.getLinkDown(ix, iy) == LOOP_STATE.LINKED) {
-					if (p_solver.getColorChains(ix, iy) != null) {
-						p_context.fillStyle = COLOURS.LOOP_RAINBOW_ROADS[p_solver.getColorChains(ix, iy) % COLOURS.LOOP_RAINBOW_ROADS.length];
+					if (p_solver.getColourChains(ix, iy) != null) {
+						p_context.fillStyle = COLOURS.LOOP_RAINBOW_ROADS[p_solver.getColourChains(ix, iy) % COLOURS.LOOP_RAINBOW_ROADS.length];
 					} else {
 						p_context.fillStyle = p_coloursSet.presentLink;
 					}
@@ -50,8 +50,8 @@ Drawer.prototype.drawSolverLinkInsideSpaces = function (p_context, p_coloursSet,
 			// Drawn onto space right border
             if (ix < (p_solver.xLength-1)) {
 				if (p_solver.getLinkRight(ix, iy) == LOOP_STATE.LINKED) {
-					if (p_solver.getColorChains(ix, iy) != null) {
-						p_context.fillStyle = COLOURS.LOOP_RAINBOW_ROADS[p_solver.getColorChains(ix, iy) % COLOURS.LOOP_RAINBOW_ROADS.length];
+					if (p_solver.getColourChains(ix, iy) != null) {
+						p_context.fillStyle = COLOURS.LOOP_RAINBOW_ROADS[p_solver.getColourChains(ix, iy) % COLOURS.LOOP_RAINBOW_ROADS.length];
 					} else {
 						p_context.fillStyle = p_coloursSet.presentLink;
 					}

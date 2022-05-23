@@ -1,5 +1,4 @@
 // Note : grand part of code is shared with Shingoki solver because of similarities
-
 function SolverGeradeweg(p_valueGrid) {
 	LoopSolver.call(this);
 	this.construct(p_valueGrid);
@@ -19,7 +18,7 @@ SolverGeradeweg.prototype.construct = function(p_valueGrid) {
 	this.yLength = p_valueGrid.length;
 	this.loopSolverConstruct( 
 	{	
-		setEdgeLinkedPSAtomicDos : setEdgeLinkedPSAtomicDosClosure(this),
+		setEdgeLinkedPSAtomicDos : setEdgeLinkedPSAtomicDosClosure(this), 
 		setEdgeClosedPSAtomicDos : setEdgeClosedPSAtomicDosClosure(this),
 		setEdgeLinkedPSDeductions : setEdgeLinkedDeductionsClosure(this),
 		setEdgeClosedPSDeductions : setEdgeClosedDeductionsClosure(this),
@@ -37,7 +36,7 @@ SolverGeradeweg.prototype.construct = function(p_valueGrid) {
 		
 		generateEventsForPassPS : generateEventsForPassClosure(this),
 		orderedListPassArgumentsPS : orderedListPassArgumentsClosureSolverPearly(this),
-		namingCategoryPS : namingCategoryClosure(this),
+		namingCategoryPS : namingCategoryPassClosure(this),
 		multipassPessimismPS : true
 	});
 	this.clueGrid = Grid_data(p_valueGrid);
@@ -124,7 +123,7 @@ SolverGeradeweg.prototype.construct = function(p_valueGrid) {
 		this.setupNodesThatReachSameDir(coors.x, coors.y);
 	});
 	this.checkerMinsToUpdate = new CheckCollectionDoubleEntryDirectional(this.xLength, this.yLength);
-	this.checkerMinMaxes = new CheckCollectionDoubleEntry(this.xLength, this.yLength);
+	this.checkerMinMaxes = new CheckCollectionDoubleEntry(this.xLength, this.yLength);// 55155& cherchr tout ce quie st deductions à partir d'ici !
 }
 
 SolverGeradeweg.prototype.setupNodesThatReachSameDir = function(p_x, p_y) {
@@ -206,17 +205,17 @@ solveAction = function (p_solver) {
 // already made deductions between direct links and white/black pearls (white : one linked/closed link = deduces the 3 others, black : one linked/closed = deduces the opposite), though only at distance 0, not at distance 1, 2, 3...
 function filterPearlsClosure(p_solver) {
 	return function() {
-		var listEvents = [];
+		var listEventsToApply = [];
 		var x, y;
 		var minDir, minDir2;
 		p_solver.checkerMinMaxes.list.forEach(coors => {
 			x = coors.x;
 			y = coors.y;
-			listEvents = p_solver.pearlDeductions(listEvents, x, y);
+			p_solver.deductionsPearl(listEventsToApply, x, y);
 			
 		});
 		p_solver.cleanMinMaxes();
-		return listEvents;
+		return listEventsToApply;
 	}
 }
 
@@ -237,16 +236,16 @@ abortSolverGeradewegClosure = function(p_solver) {
 
 // Used for QS and filter
 // Not optimized at all but easily human-readable
-SolverGeradeweg.prototype.pearlDeductions = function(p_listEvents, p_x, p_y) {
+SolverGeradeweg.prototype.deductionsPearl = function(p_listEventsToApply, p_x, p_y) {
 	number = this.getNumber(p_x, p_y);
 	
 	if (number == 1) {
 		KnownDirections.forEach(dir => {
 			if (this.getMax(p_x, p_y, dir) == 0) {
-				p_listEvents.push(new MinRangeEvent(p_x, p_y, OppositeDirection[dir], 1));
+				p_listEventsToApply.push(new MinRangeEvent(p_x, p_y, OppositeDirection[dir], 1));
 			} 
 			if (this.getMin(p_x, p_y, dir) == 1) {
-				p_listEvents.push(new MaxRangeEvent(p_x, p_y, OppositeDirection[dir], 0)); // May be harmless in Quick start, hence a new event. (puzzle 43 with a max=0 on a 1. pearl)
+				p_listEventsToApply.push(new MaxRangeEvent(p_x, p_y, OppositeDirection[dir], 0)); // May be harmless in Quick start, hence a new event. (puzzle 43 with a max=0 on a 1. pearl)
 			} 
 		});
 	} else {
@@ -260,64 +259,62 @@ SolverGeradeweg.prototype.pearlDeductions = function(p_listEvents, p_x, p_y) {
 			minDir180 = this.getMin(p_x, p_y, dir180);
 			minDir = this.getMin(p_x, p_y, dir);
 			if ( (maxDir + maxDir180) < number) { // It must cross the orthogonal direction
-				p_listEvents.push(new MinRangeEvent(p_x, p_y, dir90, 1));
-				p_listEvents.push(new MinRangeEvent(p_x, p_y, dir270, 1));
-				p_listEvents.push(new MinRangeEvent(p_x, p_y, dir90, number-this.getMax(p_x, p_y, dir270) ));
-				p_listEvents.push(new MaxRangeEvent(p_x, p_y, dir90, number-this.getMin(p_x, p_y, dir270) ));
-				p_listEvents.push(new MinRangeEvent(p_x, p_y, dir270, number-this.getMax(p_x, p_y, dir90) ));
-				p_listEvents.push(new MaxRangeEvent(p_x, p_y, dir270, number-this.getMin(p_x, p_y, dir90) ));
+				p_listEventsToApply.push(new MinRangeEvent(p_x, p_y, dir90, 1));
+				p_listEventsToApply.push(new MinRangeEvent(p_x, p_y, dir270, 1));
+				p_listEventsToApply.push(new MinRangeEvent(p_x, p_y, dir90, number-this.getMax(p_x, p_y, dir270) ));
+				p_listEventsToApply.push(new MaxRangeEvent(p_x, p_y, dir90, number-this.getMin(p_x, p_y, dir270) ));
+				p_listEventsToApply.push(new MinRangeEvent(p_x, p_y, dir270, number-this.getMax(p_x, p_y, dir90) ));
+				p_listEventsToApply.push(new MaxRangeEvent(p_x, p_y, dir270, number-this.getMin(p_x, p_y, dir90) ));
 			}
 			if (maxDir < number && maxDir180 < number) { // Neither direction can fully extend, which means it will be a straight line
-				p_listEvents.push(new MaxRangeEvent(p_x, p_y, dir90, number-1));
-				p_listEvents.push(new MaxRangeEvent(p_x, p_y, dir270, number-1)); 
+				p_listEventsToApply.push(new MaxRangeEvent(p_x, p_y, dir90, number-1));
+				p_listEventsToApply.push(new MaxRangeEvent(p_x, p_y, dir270, number-1)); 
 			}
 			if (maxDir == 0 && minDir180 > 0) { // A direction is blocked and the other one isn't  
-				p_listEvents.push(new MinRangeEvent(p_x, p_y, dir180, number));
+				p_listEventsToApply.push(new MinRangeEvent(p_x, p_y, dir180, number));
 			}
 			if (maxDir180 == 0 && minDir > 0) { // Same  
-				p_listEvents.push(new MinRangeEvent(p_x, p_y, dir, number));
+				p_listEventsToApply.push(new MinRangeEvent(p_x, p_y, dir, number));
 			}
 			if (minDir + minDir180 == number) { // Straight line completed
-				p_listEvents.push(new MaxRangeEvent(p_x, p_y, dir, minDir));
-				p_listEvents.push(new MaxRangeEvent(p_x, p_y, dir180, minDir180));
+				p_listEventsToApply.push(new MaxRangeEvent(p_x, p_y, dir, minDir));
+				p_listEventsToApply.push(new MaxRangeEvent(p_x, p_y, dir180, minDir180));
 			}
 		});
 		// If two orthogonal directions are null :
 		// Or if one direction has a min > 0 and a max < number :
 		KnownDirections.forEach(dir => {
 			if (this.getMax(p_x, p_y, dir) == 0 && this.getMax(p_x, p_y, TurningLeftDirection[dir]) == 0) {  
-				p_listEvents.push(new MinRangeEvent(p_x, p_y, OppositeDirection[dir], number));
-				p_listEvents.push(new MinRangeEvent(p_x, p_y, TurningRightDirection[dir], number));
+				p_listEventsToApply.push(new MinRangeEvent(p_x, p_y, OppositeDirection[dir], number));
+				p_listEventsToApply.push(new MinRangeEvent(p_x, p_y, TurningRightDirection[dir], number));
 			}
 			if (this.getMax(p_x, p_y, dir) < number && this.getMin(p_x, p_y, dir) > 0) {
-				p_listEvents.push(new MinRangeEvent(p_x, p_y, OppositeDirection[dir], 1));
+				p_listEventsToApply.push(new MinRangeEvent(p_x, p_y, OppositeDirection[dir], 1));
 			}
 		});
 	}
-	return p_listEvents;
 }
 
 // -------------------
 // Quickstart
 
 quickStartEventsClosure = function(p_solver) {
-	return function(p_QSeventsList) { 
+	return function(p_listQSEvents) { 
 		var x, y;
-		p_QSeventsList.push({quickStartLabel : "Geradeweg"});
+		p_listQSEvents.push({quickStartLabel : "Geradeweg"});
 		p_solver.pearlCoors.forEach(coors => {
 			x = coors.x;
 			y = coors.y;
-			p_QSeventsList.push(new SpaceEvent(x, y, LOOP_STATE.LINKED));
-			p_QSeventsList = p_solver.pearlDeductions(p_QSeventsList, x, y);
+			p_listQSEvents.push(new SpaceEvent(x, y, LOOP_STATE.LINKED));
+			p_solver.deductionsPearl(p_listQSEvents, x, y);
 			if (p_solver.getNumber(x, y) == 1) {
 				// See filter to understand why this is necessary. 
 				p_solver.existingNeighborsDirections(x, y).forEach(dir => {
 					if (p_solver.getMax(x, y, dir) == 0) {						
-						p_QSeventsList.push(new LinkEvent(x, y, dir, LOOP_STATE.CLOSED));
+						p_listQSEvents.push(new LinkEvent(x, y, dir, LOOP_STATE.CLOSED));
 					}
 				});
 			}
 		});
-		return p_QSeventsList;
 	}
 }

@@ -25,7 +25,7 @@ SolverCanalView.prototype.construct = function(p_numericXArray) {
 	this.methodsSetPass = {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
-		argumentToLabelMethod : namingCategoryClosure(this)};
+		argumentToLabelMethod : namingCategoryPassClosure(this)};
 	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForSpacePassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
@@ -35,7 +35,7 @@ SolverCanalView.prototype.construct = function(p_numericXArray) {
 		quickStartEventsMethod : quickStartEventsClosure(this)
 		//searchSolutionMethod : searchClosure(this)
 	}
-	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filtersUpdateMinsFromNewlyOpenSpacesClosure(this), filtersMinMaxClosure(this)]);
+	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterUpdateMinsFromNewlyOpenSpacesClosure(this), filterMinMaxClosure(this)]);
 
 
 	this.answerArray = [];
@@ -193,11 +193,11 @@ SolverCanalView.prototype.makeQuickStart = function() {
 SolverCanalView.prototype.emitPassSpace = function(p_x, p_y) {
 	const number = this.getNumber(p_x, p_y);
 	if (number != null) {		
-		const generatedEvents = this.generateEventsRangedDynamicPass(p_x, p_y, number);
-		this.passEvents(generatedEvents, {x : p_x, y : p_y, number : number}); 
+		const listPassNow = this.generateEventsRangedDynamicPass(p_x, p_y, number);
+		this.passEvents(listPassNow, {x : p_x, y : p_y, number : number}); 
 	} else {
-		const generatedEvents = this.generateEventsSinglePass(p_x, p_y);
-		this.passEvents(generatedEvents, {x : p_x, y : p_y}); 
+		const listPassNow = this.generateEventsSinglePass(p_x, p_y);
+		this.passEvents(listPassNow, {x : p_x, y : p_y}); 
 	}
 }
 
@@ -261,33 +261,33 @@ SolverCanalView.prototype.applyRangeMax = function(p_x, p_y, p_direction, p_valu
 }
 
 applyEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		switch (eventToApply.kind) {	
-			case KIND_EVENT.SPACE :	return p_solver.applyFillSpace(eventToApply.x, eventToApply.y, eventToApply.symbol); break;
-			case KIND_EVENT.RANGE_MIN : return p_solver.applyRangeMin(eventToApply.x, eventToApply.y, eventToApply.direction, eventToApply.min); break;
-			case KIND_EVENT.RANGE_MAX : return p_solver.applyRangeMax(eventToApply.x, eventToApply.y, eventToApply.direction, eventToApply.max); break;
+	return function(p_eventToApply) {
+		switch (p_eventToApply.kind) {	
+			case KIND_EVENT.SPACE :	return p_solver.applyFillSpace(p_eventToApply.x, p_eventToApply.y, p_eventToApply.symbol); break;
+			case KIND_EVENT.RANGE_MIN : return p_solver.applyRangeMin(p_eventToApply.x, p_eventToApply.y, p_eventToApply.direction, p_eventToApply.min); break;
+			case KIND_EVENT.RANGE_MAX : return p_solver.applyRangeMax(p_eventToApply.x, p_eventToApply.y, p_eventToApply.direction, p_eventToApply.max); break;
 		}
 	}
 }
 
 undoEventClosure = function(p_solver) {
-	return function(eventToApply) {
+	return function(p_eventToUndo) {
 		var x, y, index, symbol, numericSpace;
-		switch(eventToApply.kind) {
+		switch(p_eventToUndo.kind) {
 			case KIND_EVENT.SPACE : 
-				x = eventToApply.x; 
-				y = eventToApply.y;
-				symbol = eventToApply.symbol;
+				x = p_eventToUndo.x; 
+				y = p_eventToUndo.y;
+				symbol = p_eventToUndo.symbol;
 				p_solver.answerArray[y][x] = ADJACENCY.UNDECIDED; 
 			break;
 			case KIND_EVENT.RANGE_MIN : 
-				dir = eventToApply.direction;
-				numericSpace = p_solver.numericArray[eventToApply.y][eventToApply.x];
+				dir = p_eventToUndo.direction;
+				numericSpace = p_solver.numericArray[p_eventToUndo.y][p_eventToUndo.x];
 				numericSpace.mins[dir] = numericSpace.backedMins[dir].pop();
 			break;
 			case KIND_EVENT.RANGE_MAX : 
-				dir = eventToApply.direction;
-				numericSpace = p_solver.numericArray[eventToApply.y][eventToApply.x];
+				dir = p_eventToUndo.direction;
+				numericSpace = p_solver.numericArray[p_eventToUndo.y][p_eventToUndo.x];
 				numericSpace.maxs[dir] = numericSpace.backedMaxs[dir].pop();
 			break;
 		}
@@ -299,11 +299,11 @@ undoEventClosure = function(p_solver) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Canal view"}];
+		var listQSEvents = [{quickStartLabel : "Canal view"}];
 		for (var i = 0 ; i < p_solver.rangedSpacesCoors.length ; i++) {
-			listQSEvts = p_solver.deductionsSumsMinMax(listQSEvts, p_solver.rangedSpacesCoors[i].x, p_solver.rangedSpacesCoors[i].y);
+			p_solver.deductionsSumsMinMax(listQSEvents, p_solver.rangedSpacesCoors[i].x, p_solver.rangedSpacesCoors[i].y);
 		}
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -334,7 +334,7 @@ deductionsClosure = function (p_solver) {
 			const y = p_eventBeingApplied.y;
 			const symbol = p_eventBeingApplied.symbol;
 			if (symbol == ADJACENCY.YES) {
-				p_listEventsToApply = p_solver.deductionsAlert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
+				p_solver.deductionsAlert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
 			} else {
 				var xx, yy;
 				KnownDirections.forEach(dir => {
@@ -351,13 +351,13 @@ deductionsClosure = function (p_solver) {
 			const dir = p_eventBeingApplied.direction;
 			const x = p_eventBeingApplied.x;
 			const y = p_eventBeingApplied.y;
-			p_listEventsToApply = p_solver.deductionsTestMinEqualsMax(p_listEventsToApply, x, y, dir);
+			p_solver.deductionsTestMinEqualsMax(p_listEventsToApply, x, y, dir);
 		} else if (p_eventBeingApplied.kind == KIND_EVENT.RANGE_MIN) {
 			// Test min == max
 			const dir = p_eventBeingApplied.direction;
 			const x = p_eventBeingApplied.x;
 			const y = p_eventBeingApplied.y;
-			p_listEventsToApply = p_solver.deductionsTestMinEqualsMax(p_listEventsToApply, x, y, dir);
+			p_solver.deductionsTestMinEqualsMax(p_listEventsToApply, x, y, dir);
 			// Add open spaces
 			const backedMins = p_solver.numericArray[y][x].backedMins[dir];
 			const formerMin = backedMins[backedMins.length-1];
@@ -370,7 +370,6 @@ deductionsClosure = function (p_solver) {
 				p_listEventsToApply.push(new SpaceEvent(xx, yy, ADJACENCY.YES));
 			}
 		}
-		return p_listEventsToApply;
 	}
 }
 
@@ -386,14 +385,13 @@ SolverCanalView.prototype.deductionsTestMinEqualsMax = function(p_listEventsToAp
 			p_listEventsToApply.push(new SpaceEvent(x, y, ADJACENCY.NO));
 		}
 	}
-	return p_listEventsToApply;
 }
 
 // Each space that has 'mins' that may have to be updated 
 // For each space, for each direction, count the number of open spaces in that direction without an interruption and update mins as such
-filtersUpdateMinsFromNewlyOpenSpacesClosure = function(p_solver) {
+filterUpdateMinsFromNewlyOpenSpacesClosure = function(p_solver) {
 	return function() {
-		var listEvents = [];
+		var listEventsToApply = [];
 		var coors, space;
 		p_solver.checkerNewlyOpenSpaces.list.forEach(index => {
 			coors = p_solver.rangedSpacesCoors[index];
@@ -409,11 +407,11 @@ filtersUpdateMinsFromNewlyOpenSpacesClosure = function(p_solver) {
 				}
 				xx -= DeltaX[dir];
 				yy -= DeltaY[dir];
-				listEvents.push(new MinRangeEvent(x, y, dir, Math.abs(xx - x) + Math.abs(yy - y) ));
+				listEventsToApply.push(new MinRangeEvent(x, y, dir, Math.abs(xx - x) + Math.abs(yy - y) ));
 			});
 		});
 		p_solver.clearNewlyOpenSpaces();
-		return listEvents;
+		return listEventsToApply;
 	}
 }
 
@@ -422,13 +420,13 @@ SolverCanalView.prototype.clearNewlyOpenSpaces = function() {
 }
 
 // Around a given ranged space, sums of mins in 3 directions force the 4th max and vice-versa.
-filtersMinMaxClosure = function(p_solver) {
+filterMinMaxClosure = function(p_solver) {
 	return function() {
 		var listEventsToApply = [];
 		var coors;
 		p_solver.checkerUpdatedMinMax.list.forEach(index => {
 			coors = p_solver.rangedSpacesCoors[index];
-			listEventsToApply = p_solver.deductionsSumsMinMax(listEventsToApply, coors.x, coors.y);
+			p_solver.deductionsSumsMinMax(listEventsToApply, coors.x, coors.y);
 		});
 		p_solver.clearUpdatedMinMaxes();
 		return listEventsToApply;
@@ -443,7 +441,6 @@ SolverCanalView.prototype.deductionsSumsMinMax = function(p_listEventsToApply, p
 		otherValues = space.maxs[TurningLeftDirection[dir]] + space.maxs[OppositeDirection[dir]] + space.maxs[TurningRightDirection[dir]];
 		p_listEventsToApply.push(new MinRangeEvent(p_x, p_y, dir, space.number - otherValues));
 	});
-	return p_listEventsToApply;
 }
 
 
@@ -460,13 +457,13 @@ abortClosure = function(p_solver) {
 
 
 // --------------------
-// Passing
+// Passing and multipassing
 
 generateEventsForSpacePassClosure = function(p_solver) {
-	return function(p_index) {
-		const x = p_index.x;
-		const y = p_index.y;
-		const number = p_index.number;
+	return function(p_indexPass) {
+		const x = p_indexPass.x;
+		const y = p_indexPass.y;
+		const number = p_indexPass.number;
 		if (number != null) {
 			return p_solver.generateEventsRangedDynamicPass(x, y, number);
 		} else {
@@ -476,7 +473,7 @@ generateEventsForSpacePassClosure = function(p_solver) {
 }
 
 SolverCanalView.prototype.generateEventsRangedDynamicPass = function(p_x, p_y, p_number) {
-	var answer = [];
+	var listPass = [];
 	var x, y;
 	KnownDirections.forEach(dir => {
 		x = p_x + DeltaX[dir];
@@ -484,14 +481,14 @@ SolverCanalView.prototype.generateEventsRangedDynamicPass = function(p_x, p_y, p
 		i = 1;
 		while (this.testExistingCoordinates(x, y, dir) && this.answerArray[y][x] != ADJACENCY.NO && i < p_number) {
 			if (this.answerArray[y][x] == ADJACENCY.UNDECIDED) {
-				answer.push(eventsForOneSpacePass(x, y));
+				listPass.push(eventsForOneSpacePass(x, y));
 			}
 			x += DeltaX[dir];
 			y += DeltaY[dir];
 			i++; // Without "i < p_number" we could have ~30 spaces tested at once and it seems a lot. TODO improve this !
 		}
 	});
-	return answer;
+	return listPass;
 }
 
 SolverCanalView.prototype.generateEventsSinglePass = function(p_x, p_y) {
@@ -517,22 +514,22 @@ comparison = function(p_event1, p_event2) {
 		], k1, k2);
 }
 
-namingCategoryClosure = function(p_solver) {
-	return function(p_index) {
-		if (p_index.number != null) {
-			return "Dynamic from " + p_index.x + "," + p_index.y + " (" + p_index.number + ")"; 
+namingCategoryPassClosure = function(p_solver) {
+	return function(p_indexPass) {
+		if (p_indexPass.number != null) {
+			return "Dynamic from " + p_indexPass.x + "," + p_indexPass.y + " (" + p_indexPass.number + ")"; 
 		} else {
-			return "Single " + p_index.x + "," + p_index.y;
+			return "Single " + p_indexPass.x + "," + p_indexPass.y;
 		}
 	}
 }
 
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		var indexList = [];
+		var listIndexesPass = [];
 		p_solver.rangedSpacesCoors.forEach(coors => {
-			indexList.push({x : coors.x, y : coors.y, number : p_solver.numericArray[coors.y][coors.x].number});
+			listIndexesPass.push({x : coors.x, y : coors.y, number : p_solver.numericArray[coors.y][coors.x].number});
 		}); // Note : nothing for indexed spaces
-		return indexList;
+		return listIndexesPass;
 	}
 }

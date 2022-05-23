@@ -119,7 +119,7 @@ GeneralPurificator.prototype.findMinimalPuzzles = function(p_indexList, p_solver
 	// Finally...
 	var extraString = "";
 	p_methodConstructSolver(p_solver); // Back to how it used to be.
-	// Note : display graphic bug. Purified clues (digits, arrows) disappear, only the purification marks (crosses, full-colored squares) remain.
+	// Note : display graphic bug. Purified clues (digits, arrows) disappear, only the purification marks (crosses, full-coloured squares) remain.
 	// I need to use "p_purificator.recreateOriginalData()" to correct it (see purificator symbol array) but it requires to create a method, to pass it to the input... later !
 	
 	// Now the summary (interfacing !) :

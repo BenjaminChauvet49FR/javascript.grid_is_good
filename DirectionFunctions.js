@@ -16,65 +16,65 @@ function downNeighborExists(p_y, p_limit) {
 
 // Below functions are mostly for editors and not solvers.
 existingNeighborsDirections = function(p_x, p_y, p_xLength, p_yLength) {
-	var answer = [];
+	var resultDirs = [];
 	if (leftNeighborExists(p_x)) {
-		answer.push(DIRECTION.LEFT);
+		resultDirs.push(DIRECTION.LEFT);
 	}
 	if (upNeighborExists(p_y)) {
-		answer.push(DIRECTION.UP);
+		resultDirs.push(DIRECTION.UP);
 	}
 	if (rightNeighborExists(p_x, p_xLength)) { 
-		answer.push(DIRECTION.RIGHT);
+		resultDirs.push(DIRECTION.RIGHT);
 	}
 	if (downNeighborExists(p_y, p_yLength)) {
-		answer.push(DIRECTION.DOWN);
+		resultDirs.push(DIRECTION.DOWN);
 	}
-	return answer;
+	return resultDirs;
 }
 
 existingNeighborsCoors = function(p_x, p_y, p_xLength, p_yLength) {
-	var answer = [];
+	var resultCoors = [];
 	if (leftNeighborExists(p_x)) {
-		answer = [{x : p_x-1, y : p_y}];
+		resultCoors = [{x : p_x-1, y : p_y}];
 	}
 	if (upNeighborExists(p_y)) {
-		answer.push({x : p_x, y : p_y-1});
+		resultCoors.push({x : p_x, y : p_y-1});
 	}
 	if (rightNeighborExists(p_x, p_xLength)) { // No reuse of the function below, sorry
-		answer.push({x : p_x+1, y : p_y});
+		resultCoors.push({x : p_x+1, y : p_y});
 	}
 	if (downNeighborExists(p_y, p_yLength)) {
-		answer.push({x : p_x, y : p_y+1});
+		resultCoors.push({x : p_x, y : p_y+1});
 	}
-	return answer;
+	return resultCoors;
 }
 
 existingNeighborsCoorsDirections = function(p_x, p_y, p_xLength, p_yLength) {
-	var answer = [];
+	var resultCoorsDirs = [];
 	if (leftNeighborExists(p_x)) {
-		answer = [{x : p_x-1, y : p_y, direction : DIRECTION.LEFT}];
+		resultCoorsDirs = [{x : p_x-1, y : p_y, direction : DIRECTION.LEFT}];
 	}
 	if (upNeighborExists(p_y)) {
-		answer.push({x : p_x, y : p_y-1, direction : DIRECTION.UP});
+		resultCoorsDirs.push({x : p_x, y : p_y-1, direction : DIRECTION.UP});
 	}
 	if (rightNeighborExists(p_x, p_xLength)) { // No reuse of the function below, sorry
-		answer.push({x : p_x+1, y : p_y, direction : DIRECTION.RIGHT});
+		resultCoorsDirs.push({x : p_x+1, y : p_y, direction : DIRECTION.RIGHT});
 	}
 	if (downNeighborExists(p_y, p_yLength)) {
-		answer.push({x : p_x, y : p_y+1, direction : DIRECTION.DOWN});
+		resultCoorsDirs.push({x : p_x, y : p_y+1, direction : DIRECTION.DOWN});
 	}
-	return answer;
+	return resultCoorsDirs;
 }
 
 existingRDNeighborsCoorsDirections = function(p_x, p_y, p_xLength, p_yLength) {
-	var answer = [];
+	var resultCoorsDirs = [];
 	if (rightNeighborExists(p_x, p_xLength)) {
-		answer.push({x : p_x+1, y : p_y, direction : DIRECTION.RIGHT});
+		resultCoorsDirs.push({x : p_x+1, y : p_y, direction : DIRECTION.RIGHT});
 	}
 	if (downNeighborExists(p_y, p_yLength)) {
-		answer.push({x : p_x, y : p_y+1, direction : DIRECTION.DOWN});
+		resultCoorsDirs.push({x : p_x, y : p_y+1, direction : DIRECTION.DOWN});
 	}
-	return answer;
+	return resultCoorsDirs;
 }
 
 // Now, only booleans

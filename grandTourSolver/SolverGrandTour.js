@@ -35,7 +35,7 @@ SolverGrandTour.prototype.construct = function(p_linkArray) {
 	this.linksListBlockedD = [];
 	this.setResolution.searchSolutionMethod = loopNaiveSearchClosure(this);
 	
-	this.signalAllOpenSpaces(); // Puzzle with ALL open spaces
+	this.signalAllLinkedSpaces(); 
 	for (var iy = 0 ; iy < this.yLength ; iy++) {
 		for (var ix = 0 ; ix < this.xLength ; ix++) {
 			this.setLinkSpace(ix, iy, LOOP_STATE.LINKED); // Note : no automatic deductions for puzzles
@@ -93,14 +93,13 @@ SolverGrandTour.prototype.makeResolution = function() {
 // Quick start !
 
 quickStartEventsClosure = function(p_solver) { // If no quickstart, these links don't exist ! Hence the locks on input methods provided by quickStartDone (btw mind the noun).
-	return function(p_QSeventsList) { 
-		p_QSeventsList.push({quickStartLabel : "Grand Tour"});
+	return function(p_listQSEvents) { 
+		p_listQSEvents.push({quickStartLabel : "Grand Tour"});
 		p_solver.linksListBlockedR.forEach(coorsLink => {
-			p_QSeventsList.push(new LinkEvent(coorsLink.x, coorsLink.y, DIRECTION.RIGHT, LOOP_STATE.LINKED));
+			p_listQSEvents.push(new LinkEvent(coorsLink.x, coorsLink.y, DIRECTION.RIGHT, LOOP_STATE.LINKED));
 		});
 		p_solver.linksListBlockedD.forEach(coorsLink =>{
-			p_QSeventsList.push(new LinkEvent(coorsLink.x, coorsLink.y, DIRECTION.DOWN, LOOP_STATE.LINKED));
+			p_listQSEvents.push(new LinkEvent(coorsLink.x, coorsLink.y, DIRECTION.DOWN, LOOP_STATE.LINKED));
 		});
-		return p_QSeventsList;
 	}
 }

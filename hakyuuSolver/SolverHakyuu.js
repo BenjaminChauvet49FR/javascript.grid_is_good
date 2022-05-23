@@ -21,7 +21,7 @@ SolverHakyuu.prototype.construct = function(p_wallArray, p_numberArray) {
 	this.methodsSetPass = {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
-		argumentToLabelMethod : namingCategoryClosure(this)};
+		argumentToLabelMethod : namingCategoryPassClosure(this)};
 	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
@@ -122,8 +122,8 @@ SolverHakyuu.prototype.undo = function() {
 }
 
 SolverHakyuu.prototype.passRegion = function(p_indexRegion) {
-	const generatedEvents = this.generateEventsForRegionPass(this.regions[p_indexRegion]);
-	this.passEventsSafe(generatedEvents, p_indexRegion); 
+	const listPassNow = this.generateEventsForRegionPass(this.regions[p_indexRegion]);
+	this.passEventsSafe(listPassNow, p_indexRegion); 
 }
 
 SolverHakyuu.prototype.makeMultiPass = function() {
@@ -143,9 +143,9 @@ function applyEventClosure(p_solver) {
 		const x = p_eventToApply.x;
 		const y = p_eventToApply.y;
 		const number = p_eventToApply.number;
-		const answer = testNumericSpaceChoice(p_solver.answerArray, x, y, number, choice);
-		if (answer != EVENT_RESULT.SUCCESS) {
-			return answer;
+		const resultDo = testNumericSpaceChoice(p_solver.answerArray, x, y, number, choice); 
+		if (resultDo != EVENT_RESULT.SUCCESS) {
+			return resultDo;
 		}
 		if (choice) {
 			p_solver.answerArray[y][x].choose(number);
@@ -181,9 +181,9 @@ function deductionsClosure(p_solver) {
 		if (p_eventToApply.choice) {
 			
 			// Ban events for all other values in this space
-			p_listEventsToApply = deductionsExcludeOthersNumeric(p_listEventsToApply, p_solver.answerArray, x, y, number);
+			deductionsExcludeOthersNumeric(p_listEventsToApply, p_solver.answerArray, x, y, number);
 			// Ban events for this values in all other non-occupied spaces in this region
-			p_listEventsToApply = deductionsAlertNoneLeftInSpaceSet(p_listEventsToApply, p_solver.getRegion(x, y).possibilities, number, p_solver.getRegion(x, y).spaces, p_solver.answerArray);
+			deductionsAlertNoneLeftInSpaceSet(p_listEventsToApply, p_solver.getRegion(x, y).possibilities, number, p_solver.getRegion(x, y).spaces, p_solver.answerArray);
 			
 			// Ban left/up/right/down
 			var xLimit = Math.max(0, x-number);
@@ -203,10 +203,9 @@ function deductionsClosure(p_solver) {
 				p_listEventsToApply.push(new ChoiceEvent(x, y2, number, false));
 			}
 		} else {
-			p_listEventsToApply = deductionsTestOneLeft(p_listEventsToApply, p_solver.answerArray, x, y);
-			p_listEventsToApply = deductionsAlertRemainingPossibilitiesInSpaceSet(p_listEventsToApply, p_solver.getRegion(x, y).possibilities, number, p_solver.getRegion(x, y).spaces, p_solver.answerArray);
+			deductionsTestOneLeft(p_listEventsToApply, p_solver.answerArray, x, y);
+			deductionsAlertRemainingPossibilitiesInSpaceSet(p_listEventsToApply, p_solver.getRegion(x, y).possibilities, number, p_solver.getRegion(x, y).spaces, p_solver.answerArray);
 		}
-		return p_listEventsToApply;
 	}
 }
 
@@ -215,22 +214,22 @@ function deductionsClosure(p_solver) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Hakyuu"}];
+		var listQSEvents = [{quickStartLabel : "Hakyuu"}];
 		var x, y;
 		p_solver.numericSpacesList.forEach(coors => {			
 			x = coors.x;
 			y = coors.y;
-			listQSEvts.push(new ChoiceEvent(x, y, p_solver.fixedArray[y][x], true));			
+			listQSEvents.push(new ChoiceEvent(x, y, p_solver.fixedArray[y][x], true));			
 		});
 		// Note : considering all fixed numbers as choice events is great for code smoothing, up to and including in QS... just don't remove everything
 		var coors;
 		p_solver.regions.forEach(region => {
 			if (region.size == 1) {
 				coors = region.spaces[0];
-				listQSEvts.push(new ChoiceEvent(coors.x, coors.y, 1, true));
+				listQSEvents.push(new ChoiceEvent(coors.x, coors.y, 1, true));
 			}
 		});
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -238,30 +237,30 @@ quickStartEventsClosure = function(p_solver) {
 // Pass !
 
 SolverHakyuu.prototype.generateEventsForRegionPass = function(p_region) {
-	var answer = [];
+	var listPass = [];
 	var x, y;
 	p_region.spaces.forEach(space => {
 		x = space.x;
 		y = space.y;
 		if (this.getNotFixedNumber(x, y) == null) { 
-			answer.push(this.oneSpaceEventsList(x, y, p_region.size));
+			listPass.push(this.generateEventsForSpacePass(x, y, p_region.size));
 		}			 
 	});
-	return answer;
+	return listPass;
 }
 
 function generateEventsForRegionPassClosure(p_solver) {
-	return function(p_index) {
-		return p_solver.generateEventsForRegionPass(p_solver.regions[p_index]);
+	return function(p_indexPass) {
+		return p_solver.generateEventsForRegionPass(p_solver.regions[p_indexPass]);
 	}
 }
 
-SolverHakyuu.prototype.oneSpaceEventsList = function(p_x, p_y, p_upTo) {
-	var eventsSpace = [];
+SolverHakyuu.prototype.generateEventsForSpacePass = function(p_x, p_y, p_upTo) {
+	var listEventsChoice = []; 
 	for (number = 1 ; number <= p_upTo ; number++) {
-		eventsSpace.push(new ChoiceEvent(p_x, p_y, number, true));
+		listEventsChoice.push(new ChoiceEvent(p_x, p_y, number, true));
 	}
-	return eventsSpace;
+	return listEventsChoice;
 }
 
 function comparison(p_event1, p_event2) {
@@ -274,18 +273,18 @@ function copying(p_event) {
 }
 
 // Note : Factorize
-namingCategoryClosure = function(p_solver) {
-	return function(p_index) {
-		return "Region "+ p_index + " (" + p_solver.getFirstSpaceRegion(p_index).x +","+ p_solver.getFirstSpaceRegion(p_index).y + ")"; 
+namingCategoryPassClosure = function(p_solver) {
+	return function(p_indexPass) {
+		return "Region "+ p_indexPass + " (" + p_solver.getFirstSpaceRegion(p_indexPass).x +","+ p_solver.getFirstSpaceRegion(p_indexPass).y + ")"; 
 	}
 }
 
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		var answer = [];
+		var listIndexesPass = [];
 		for (var i = 0 ; i < p_solver.regionsNumber ; i++) {
-			answer.push(i);
+			listIndexesPass.push(i);
 		}
-		return answer;
+		return listIndexesPass;
 	}
 }

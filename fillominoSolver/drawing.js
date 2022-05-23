@@ -4,7 +4,7 @@ function drawing(p_context, p_drawer, p_coloursSet, p_solver, p_selectionSet) {
 	// p_solver.getFenceRight / getFenceDown have no power here. Closures required. 	
 	p_drawer.drawFenceArray(p_context, p_solver.xLength, p_solver.yLength, getFenceRightClosure(p_solver.answerFencesGrid), getFenceDownClosure(p_solver.answerFencesGrid)); 
 	
-	const bgSelectionItems = [DrawableColor(p_coloursSet.selectedSpace), DrawableColor(p_coloursSet.selectedCornerSpace)];
+	const bgSelectionItems = [DrawableColour(p_coloursSet.selectedSpace), DrawableColour(p_coloursSet.selectedCornerSpace)];
 	bgSelectionSelection = function(x, y) {
 		return p_selectionSet.getDrawingSelectionIndex(x, y, 0, 1);
 	}

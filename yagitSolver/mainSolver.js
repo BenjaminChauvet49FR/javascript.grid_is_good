@@ -1,11 +1,11 @@
 var solver;
 
 function main() {
-	var colors = {
-		circleArea : '#bbbbff', // Note : shapes already drawn by main drawer
-		squareArea : '#bbffbb',
-		deadEndArea : '#ff8888',
-		colourBlind : '#000044'
+	var colours = {
+		circleArea : COLOURS.YAGIT_ROUND_AREA, // Note : shapes already drawn by main drawer
+		squareArea : COLOURS.YAGIT_SQUARE_AREA,
+		deadEndArea : COLOURS.DEAD_END_AREA,
+		colourBlind : COLOURS.STANDARD_COLOURBLIND_WRITE
 	}; 
 	var drawer = new Drawer();
 	solver = DummySolver();
@@ -15,12 +15,12 @@ function main() {
 	var drawIndications;
 	var spanState = document.getElementById("span_resolution_state");
 	
-	const extraIndications = {checkBoxColorDeadEnds : document.getElementById("checkbox_color_deadEnds"), checkBoxColourblindFriendly : document.getElementById("checkbox_colourblind_friendly")};
+	const extraIndications = {checkBoxColourDeadEnds : document.getElementById("checkbox_colour_deadEnds"), checkBoxColourblindFriendly : document.getElementById("checkbox_colourblind_friendly")};
 
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
-		drawing(context, drawer, colors, solver, extraIndications, );
+		drawing(context, drawer, colours, solver, extraIndications, );
 		solver.callStateForItem(spanState);
 	}
 

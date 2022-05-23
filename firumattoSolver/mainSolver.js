@@ -1,10 +1,10 @@
 var solver;
 var purificator;
 function main() {
-	var colors = {
+	var colours = {
 		numberWrite : COLOURS.WRITE_IN_FENCES,
 		purification : COLOURS.PURIFICATION_SYMBOL_GRID,
-		cluesWrite : "#ff0000"
+		cluesWrite : COLOURS.CLUE_INDICATING
 	}; 
 	purificator = DummyPurificatorSymbolArray();
 	purificator.configure({blockedSymbol : "?" , isBlockedDegradable : true}); 
@@ -22,7 +22,7 @@ function main() {
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
-		drawing(context, drawer, colors, solver, purificator, extraIndications);
+		drawing(context, drawer, colours, solver, purificator, extraIndications);
 		solver.callStateForItem(spanState);
 	}
 

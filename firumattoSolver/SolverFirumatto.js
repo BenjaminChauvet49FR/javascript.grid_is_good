@@ -30,7 +30,7 @@ SolverFirumatto.prototype.construct = function(p_numberSymbolsArray) {
 	this.methodsSetPass = {
 		comparisonMethod : comparison, 
 		copyMethod : copying, 
-		argumentToLabelMethod : namingCategoryClosure(this)
+		argumentToLabelMethod : namingCategoryPassClosure(this)
 	};
 	
 	this.methodsSetMultipass = {
@@ -109,8 +109,8 @@ SolverFirumatto.prototype.undo = function(){
 }
 
 SolverFirumatto.prototype.emitPassSpace = function(p_x, p_y) {
-	const generatedEvents = this.generateEventsPassSpace(p_x, p_y);
-	this.passEventsSafe(generatedEvents, {x : p_x, y : p_y}); 
+	const listPassNow = this.generateEventsPassSpace(p_x, p_y);
+	this.passEventsSafe(listPassNow, {x : p_x, y : p_y}); 
 }
 
 SolverFirumatto.prototype.makeMultiPass = function() {	
@@ -138,11 +138,11 @@ SolverFirumatto.prototype.tryToPutNew = function(p_x, p_y, p_direction, p_state)
 // Offensive programming : we assume x and y are consistent.
 
 applyEventClosure = function(p_solver) {
-	return function(p_event) {
-		switch (p_event.kind) {
-			case FENCE_EVENT_KIND : return p_solver.applyFenceEvent(p_event.fenceX, p_event.fenceY, p_event.direction, p_event.state); break;
-			case CHOICE_EVENT_KIND : return p_solver.applyChoiceEvent(p_event); break;
-			case CLUE_EVENT_KIND : return p_solver.applyClueEvent(p_event); break;
+	return function(p_eventToApply) {
+		switch (p_eventToApply.kind) {
+			case FENCE_EVENT_KIND : return p_solver.applyFenceEvent(p_eventToApply.fenceX, p_eventToApply.fenceY, p_eventToApply.direction, p_eventToApply.state); break;
+			case CHOICE_EVENT_KIND : return p_solver.applyChoiceEvent(p_eventToApply); break;
+			case CLUE_EVENT_KIND : return p_solver.applyClueEvent(p_eventToApply); break;
 		}
 	}
 }
@@ -187,9 +187,9 @@ SolverFirumatto.prototype.applyChoiceEvent = function(p_eventToApply) {
 	const x = p_eventToApply.x;
 	const y = p_eventToApply.y;
 	const number = p_eventToApply.number;
-	const answer = testNumericSpaceChoice(this.numericArray, x, y, number, choice);
-	if (answer != EVENT_RESULT.SUCCESS) {
-		return answer;
+	const resultDo = testNumericSpaceChoice(this.numericArray, x, y, number, choice);
+	if (resultDo != EVENT_RESULT.SUCCESS) {
+		return resultDo;
 	}
 	if (choice) {
 		this.checkerChosenSpaces.add(x, y);
@@ -222,22 +222,22 @@ SolverFirumatto.prototype.applyClueEvent = function(p_eventToApply) {
 quickStartEventsClosure = function(p_solver) {
 	return function() {
 		var x, y;
-		var listQSEvts = [{quickStartLabel : "Firumatto"}];
+		var listQSEvents = [{quickStartLabel : "Firumatto"}];
 		p_solver.numericCoordinatesList.forEach(coors => {
 			x = coors.x;
 			y = coors.y;
 			number = p_solver.getFixedNumber(x, y);
 			// Add numbers
-			listQSEvts.push(new ChoiceEvent(x, y, number, true));
+			listQSEvents.push(new ChoiceEvent(x, y, number, true));
 			// One clue
-			listQSEvts = p_solver.deductionsAssumeClueUnicity(listQSEvts, x, y, p_solver.oneClueArray[y][x]);
+			p_solver.deductionsAssumeClueUnicity(listQSEvents, x, y, p_solver.oneClueArray[y][x]);
 		});
 		p_solver.questionCoordinatesList.forEach(coors => {
 			x = coors.x;
 			y = coors.y;
-			listQSEvts = p_solver.deductionsAssumeClueUnicity(listQSEvts, x, y, p_solver.oneClueArray[y][x]);
+			p_solver.deductionsAssumeClueUnicity(listQSEvents, x, y, p_solver.oneClueArray[y][x]);
 		});
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -245,7 +245,7 @@ quickStartEventsClosure = function(p_solver) {
 // Deductions
 
 deductionsClosure = function(p_solver) {
-	return function (p_eventsList, p_eventBeingApplied) {
+	return function (p_listEventsToApply, p_eventBeingApplied) {
 		if (p_eventBeingApplied.kind == FENCE_EVENT_KIND) {
 			const x = p_eventBeingApplied.fenceX;
 			const y = p_eventBeingApplied.fenceY;
@@ -257,54 +257,54 @@ deductionsClosure = function(p_solver) {
 			const valueD = p_solver.numericArray[dy][dx].getValue();
 			if (p_eventBeingApplied.state == FENCE_STATE.OPEN) {
 				// Open fence
-				p_eventsList = p_solver.answerFencesGrid.stripBuild(p_eventsList, x, y, dx, dy, dir);
+				p_solver.answerFencesGrid.deductionsStripBuild(p_listEventsToApply, x, y, dx, dy, dir);
 				// symetrically transfer all informations
 				var choiceAway, choiceHere;
 				for (var i = 1 ; i <= FIRUMATTO_MAX_LENGTH ; i++) {
 					choiceHere = p_solver.numericArray[y][x].getState(i);
 					if (choiceHere != SPACE_CHOICE.UNDECIDED) {						
-						p_eventsList.push(new ChoiceEvent(dx, dy, i, choiceHere));
+						p_listEventsToApply.push(new ChoiceEvent(dx, dy, i, choiceHere));
 					}
 					choiceAway = p_solver.numericArray[dy][dx].getState(i);
 					if (choiceAway != SPACE_CHOICE.UNDECIDED) {						
-						p_eventsList.push(new ChoiceEvent(x, y, i, choiceAway));
+						p_listEventsToApply.push(new ChoiceEvent(x, y, i, choiceAway));
 					}
 				}
 				// Is a strip ready ?
 				if (value != null && p_solver.answerFencesGrid.isFenceRatherClosed(x, y, odir)) {
-					p_eventsList = p_solver.deductionsReadyStrip(p_eventsList, x, y, dir, value);
+					p_solver.deductionsReadyStrip(p_listEventsToApply, x, y, dir, value);
 				}
 				if (valueD != null && p_solver.answerFencesGrid.isFenceRatherClosed(dx, dy, dir)) {
-					p_eventsList = p_solver.deductionsReadyStrip(p_eventsList, dx, dy, odir, valueD);
+					p_solver.deductionsReadyStrip(p_listEventsToApply, dx, dy, odir, valueD);
 				}
 				// Clue distribution
 				const clue1 = p_solver.oneClueArray[y][x];
 				const clue2 = p_solver.oneClueArray[dy][dx];
 				if (clue1 != null) {
-					p_eventsList.push(new ClueEvent(dx, dy, clue1));
+					p_listEventsToApply.push(new ClueEvent(dx, dy, clue1));
 				}
 				if (clue2 != null) {
-					p_eventsList.push(new ClueEvent(x, y, clue2));					
+					p_listEventsToApply.push(new ClueEvent(x, y, clue2));					
 				}
 			} else {
 				// Closed fence
-				p_eventsList = p_solver.answerFencesGrid.avoidCrossBuildDeductions(p_eventsList, x, y, dx, dy, dir);
+				p_solver.answerFencesGrid.deductionsAvoidCrossBuild(p_listEventsToApply, x, y, dx, dy, dir);
 				// Symetrically prevent propagation of a number
 				if (value != null) {
-					p_eventsList.push(new ChoiceEvent(dx, dy, value, false));
+					p_listEventsToApply.push(new ChoiceEvent(dx, dy, value, false));
 					if (p_solver.answerFencesGrid.isFenceSurelyOpen(x, y, odir)) {						
-						p_eventsList = p_solver.deductionsReadyStrip(p_eventsList, x, y, odir, value);
+						p_solver.deductionsReadyStrip(p_listEventsToApply, x, y, odir, value);
 					}
 				}
 				if (valueD != null) {
-					p_eventsList.push(new ChoiceEvent(x, y, valueD, false));
+					p_listEventsToApply.push(new ChoiceEvent(x, y, valueD, false));
 					if (p_solver.answerFencesGrid.isFenceSurelyOpen(dx, dy, dir)) {						
-						p_eventsList = p_solver.deductionsReadyStrip(p_eventsList, dx, dy, dir, valueD);
+						p_solver.deductionsReadyStrip(p_listEventsToApply, dx, dy, dir, valueD);
 					}
 				}
 				// A space can find itself fully enclosed : deduce it now.
-				p_eventsList = p_solver.deductionsEnclosedSpace(p_eventsList, x, y);
-				p_eventsList = p_solver.deductionsEnclosedSpace(p_eventsList, dx, dy);
+				p_solver.deductionsEnclosedSpace(p_listEventsToApply, x, y);
+				p_solver.deductionsEnclosedSpace(p_listEventsToApply, dx, dy);
 			}
 			// Claustrophobia test in filter
 		} else if (p_eventBeingApplied.kind == CHOICE_EVENT_KIND) { 
@@ -314,10 +314,10 @@ deductionsClosure = function(p_solver) {
 			if (p_eventBeingApplied.choice) {
 				// Choice event yes
 				// Ban events for all other values in this space
-				p_eventsList = deductionsExcludeOthersNumeric(p_eventsList, p_solver.numericArray, x, y, number);
+				deductionsExcludeOthersNumeric(p_listEventsToApply, p_solver.numericArray, x, y, number);
 				// Ban number in diagonally adjacent spaces (smartness : because of the "not 4 closed fences in a point" rule) :
 				p_solver.existingDiagonalNeighborsCoors(x, y).forEach(coors => {
-					p_eventsList.push(new ChoiceEvent(coors.x, coors.y, number, false));
+					p_listEventsToApply.push(new ChoiceEvent(coors.x, coors.y, number, false));
 				});
 				// Open/close fences around 
 				// And set choices for already open and closed fences
@@ -325,128 +325,122 @@ deductionsClosure = function(p_solver) {
 				p_solver.existingNeighborsCoorsDirections(x, y).forEach(coorsDir => {
 					choice = p_solver.numericArray[coorsDir.y][coorsDir.x].getState(number);
 					if (choice == SPACE_CHOICE.YES) {
-						p_eventsList.push(new FenceEvent(x, y, coorsDir.direction, FENCE_STATE.OPEN));
+						p_listEventsToApply.push(new FenceEvent(x, y, coorsDir.direction, FENCE_STATE.OPEN));
 					}
 					if (choice == SPACE_CHOICE.NO) {
-						p_eventsList.push(new FenceEvent(x, y, coorsDir.direction, FENCE_STATE.CLOSED));						
+						p_listEventsToApply.push(new FenceEvent(x, y, coorsDir.direction, FENCE_STATE.CLOSED));						
 					}
 					fenceState = p_solver.answerFencesGrid.getFence(x, y, coorsDir.direction);
 					if (fenceState == FENCE_STATE.OPEN) {
-						p_eventsList.push(new ChoiceEvent(coorsDir.x, coorsDir.y, number, true));
+						p_listEventsToApply.push(new ChoiceEvent(coorsDir.x, coorsDir.y, number, true));
 						// Is a strip ready ? 
 						if (p_solver.answerFencesGrid.isFenceRatherClosed(coorsDir.x, coorsDir.y, OppositeDirection[coorsDir.direction]) ) {
-							p_eventsList = p_solver.deductionsReadyStrip(p_eventsList, coorsDir.x, coorsDir.y, OppositeDirection[coorsDir.direction], number);
+							p_solver.deductionsReadyStrip(p_listEventsToApply, coorsDir.x, coorsDir.y, OppositeDirection[coorsDir.direction], number);
 						}
 					}
 					if (fenceState == FENCE_STATE.CLOSED) {
-						p_eventsList.push(new ChoiceEvent(coorsDir.x, coorsDir.y, number, false));
+						p_listEventsToApply.push(new ChoiceEvent(coorsDir.x, coorsDir.y, number, false));
 					}
 				});
 				// Choice 1 : enclose it.
 				if (number == 1) {
 					p_solver.existingNeighborsDirections(x, y).forEach(dir => {
-						p_eventsList.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED));
+						p_listEventsToApply.push(new FenceEvent(x, y, dir, FENCE_STATE.CLOSED));
 					});
 				}
 			} else {
 				// Choice event no
 				// One choice left in that space ?
-				p_eventsList = deductionsTestOneLeft(p_eventsList, p_solver.numericArray, x, y);
+				deductionsTestOneLeft(p_listEventsToApply, p_solver.numericArray, x, y);
 
 				// Close fences around, and set choices for opened fences
 				p_solver.existingNeighborsCoorsDirections(x, y).forEach(coorsDir => {
 					if (p_solver.numericArray[coorsDir.y][coorsDir.x].getState(number) == SPACE_CHOICE.YES) {
-						p_eventsList.push(new FenceEvent(x, y, coorsDir.direction, FENCE_STATE.CLOSED));
+						p_listEventsToApply.push(new FenceEvent(x, y, coorsDir.direction, FENCE_STATE.CLOSED));
 					}
 					if (p_solver.answerFencesGrid.getFence(x, y, coorsDir.direction) == FENCE_STATE.OPEN) {
-						p_eventsList.push(new ChoiceEvent(x, y, number, false));
+						p_listEventsToApply.push(new ChoiceEvent(x, y, number, false));
 					}
 				});
-				p_eventsList = p_solver.deductionsTestClaustrophobia(p_eventsList, x, y); // Note : if filter done on 'no choice', put it here
+				p_solver.deductionsTestClaustrophobia(p_listEventsToApply, x, y); // Note : if filter done on 'no choice', put it here
 			}
 		} else {
 			// Clue unicity in a strip
 			const x = p_eventBeingApplied.x;
 			const y = p_eventBeingApplied.y;
 			const index = p_eventBeingApplied.index;
-			p_eventsList = p_solver.deductionsAssumeClueUnicity(p_eventsList, x, y, index);
+			p_solver.deductionsAssumeClueUnicity(p_listEventsToApply, x, y, index);
 		}
-		return p_eventsList;
 	}
 }
 
 // Checks if a strip is closed by its four sides.
-SolverFirumatto.prototype.deductionsEnclosedSpace = function(p_eventsList, p_x, p_y) {
+SolverFirumatto.prototype.deductionsEnclosedSpace = function(p_listEventsToApply, p_x, p_y) {
 	var opening = false;
 	for (dir = 0 ; dir <= 3 ; dir++) { // High convention : Directions 0123 assumption
 		if (this.neighborExists(p_x, p_y, dir) && this.answerFencesGrid.getFence(p_x, p_y, dir) != FENCE_STATE.CLOSED) {
-			return p_eventsList;
+			return;
 		}
 	};
-	p_eventsList.push(new ChoiceEvent(p_x, p_y, 1, true));
-	return p_eventsList;
+	p_listEventsToApply.push(new ChoiceEvent(p_x, p_y, 1, true));
 }
 
 // Create a strip of open fences of length equal to p_number, closed at the end.
 // Precondition : in (p_x, p_y) the fence in direction p_opendir exists, while the fence in the opposite direction either doesn't exist or is closed.
 // Also, p_number is a length of strip of desired length
-SolverFirumatto.prototype.deductionsReadyStrip = function(p_eventsList, p_x, p_y, p_openDir, p_number) {
+SolverFirumatto.prototype.deductionsReadyStrip = function(p_listEventsToApply, p_x, p_y, p_openDir, p_number) {
 	if (!this.distantNeighborExists(p_x, p_y, p_number-1, p_openDir)) {
-		p_eventsList.push(new FailureEvent());
-		return p_eventsList;
+		p_listEventsToApply.push(new FailureEvent());
+		return;
 	}
 	var x = p_x;
 	var y = p_y;
 	for (var i = 1 ; i < p_number ; i++) {
-		p_eventsList.push(new FenceEvent(x, y, p_openDir, FENCE_STATE.OPEN));
+		p_listEventsToApply.push(new FenceEvent(x, y, p_openDir, FENCE_STATE.OPEN));
 		x += DeltaX[p_openDir];
 		y += DeltaY[p_openDir];
 	}
 	if (this.neighborExists(x, y, p_openDir)) {
-		p_eventsList.push(new FenceEvent(x, y, p_openDir, FENCE_STATE.CLOSED));
-		return p_eventsList;
+		p_listEventsToApply.push(new FenceEvent(x, y, p_openDir, FENCE_STATE.CLOSED));
 	}
-	return p_eventsList;
 }
 
 // Tests if a space has 3 "rather closed" fences AND its 1 state is equal to no. If so, open the 4th fence.
-SolverFirumatto.prototype.deductionsTestClaustrophobia = function(p_eventsList, p_x, p_y) {
+SolverFirumatto.prototype.deductionsTestClaustrophobia = function(p_listEventsToApply, p_x, p_y) {
 	// High convention : directions 0, 1, 2, 3
 	var foundNClosedDir = null;
 	if (this.numericArray[p_y][p_x].getState(1) != SPACE_CHOICE.NO) {
-		return p_eventsList;
+		return;
 	}
 	for (var dir = 0 ; dir <= 3 ; dir++) {
 		if (!this.answerFencesGrid.isFenceRatherClosed(p_x, p_y, dir)) {
 			if (foundNClosedDir != null) {
-				return p_eventsList;
+				return;
 			} else {
 				foundNClosedDir = dir;
 			}
 		};
 	}
 	if (foundNClosedDir == null) {
-		p_eventsList.push(new FailureEvent());
+		p_listEventsToApply.push(new FailureEvent());
 	} else {
-		p_eventsList.push(new FenceEvent(p_x, p_y, foundNClosedDir, FENCE_STATE.OPEN));
+		p_listEventsToApply.push(new FenceEvent(p_x, p_y, foundNClosedDir, FENCE_STATE.OPEN));
 	}
-	return p_eventsList;
 }
 
-SolverFirumatto.prototype.deductionsAssumeClueUnicity = function(p_eventsList, p_x, p_y, p_index) {
+SolverFirumatto.prototype.deductionsAssumeClueUnicity = function(p_listEventsToApply, p_x, p_y, p_index) {
 	var number2;
 	// Suboptimal : could be done in filter
 	this.existingNeighborsCoorsDirections(p_x, p_y).forEach(coorsDir => {
 		if (this.answerFencesGrid.getFence(p_x, p_y, coorsDir.direction) == FENCE_STATE.OPEN) {
-			p_eventsList.push(new ClueEvent(coorsDir.x, coorsDir.y, p_index));
+			p_listEventsToApply.push(new ClueEvent(coorsDir.x, coorsDir.y, p_index));
 		}
 		number2 = this.oneClueArray[coorsDir.y][coorsDir.x];
 		// It's open fences that make clues equal, not the other way around. So no open spaces !
 		if (number2 != null && number2 != p_index) {
-			p_eventsList.push(new FenceEvent(p_x, p_y, coorsDir.direction, FENCE_STATE.CLOSED));
+			p_listEventsToApply.push(new FenceEvent(p_x, p_y, coorsDir.direction, FENCE_STATE.CLOSED));
 		}
 	});
-	return p_eventsList;
 } 
 
 // Filters
@@ -465,56 +459,52 @@ function abortClosure(p_solver) {
 function filterClosedFencesClosure(p_solver) {
 	return function() {
 		var data;
-		var answer = [];
+		var listEventsToApply = [];
 		p_solver.checkerClosedFences.listRD.forEach(coorsDir => {
 			if (coorsDir.direction == DIRECTION.DOWN) {	
-				answer = p_solver.deductionsTestClaustrophobia(answer, coorsDir.x, coorsDir.y);
-				answer = p_solver.deductionsTestClaustrophobia(answer, coorsDir.x, coorsDir.y+1);
-				answer = p_solver.deductionsChoiceClosedStrip(answer, coorsDir.x, coorsDir.y, DIRECTION.UP);
-				answer = p_solver.deductionsChoiceClosedStrip(answer, coorsDir.x, coorsDir.y+1, DIRECTION.DOWN);
+				p_solver.deductionsTestClaustrophobia(listEventsToApply, coorsDir.x, coorsDir.y);
+				p_solver.deductionsTestClaustrophobia(listEventsToApply, coorsDir.x, coorsDir.y+1);
+				p_solver.deductionsChoiceClosedStrip(listEventsToApply, coorsDir.x, coorsDir.y, DIRECTION.UP);
+				p_solver.deductionsChoiceClosedStrip(listEventsToApply, coorsDir.x, coorsDir.y+1, DIRECTION.DOWN);
 			} else {
-				answer = p_solver.deductionsTestClaustrophobia(answer, coorsDir.x, coorsDir.y);
-				answer = p_solver.deductionsTestClaustrophobia(answer, coorsDir.x+1, coorsDir.y);
-				answer = p_solver.deductionsChoiceClosedStrip(answer, coorsDir.x, coorsDir.y, DIRECTION.LEFT);
-				answer = p_solver.deductionsChoiceClosedStrip(answer, coorsDir.x+1, coorsDir.y, DIRECTION.RIGHT);
+				p_solver.deductionsTestClaustrophobia(listEventsToApply, coorsDir.x, coorsDir.y);
+				p_solver.deductionsTestClaustrophobia(listEventsToApply, coorsDir.x+1, coorsDir.y);
+				p_solver.deductionsChoiceClosedStrip(listEventsToApply, coorsDir.x, coorsDir.y, DIRECTION.LEFT);
+				p_solver.deductionsChoiceClosedStrip(listEventsToApply, coorsDir.x+1, coorsDir.y, DIRECTION.RIGHT);
 			}
 		});
 		p_solver.checkerClosedFences.clean();
-		return answer;
+		return listEventsToApply;
 	}
 }
 
 // Checks if a strip that has at least a closed fence belongs to a fully enclosed strip in given direction (and not of size one !) and if so, gives the choice of the grid
-SolverFirumatto.prototype.deductionsChoiceClosedStrip = function(p_eventsList, p_xStart, p_yStart, p_direction) {
+SolverFirumatto.prototype.deductionsChoiceClosedStrip = function(p_listEventsToApply, p_xStart, p_yStart, p_direction) {
 	const data = this.dataStripPart(p_xStart, p_yStart, p_direction);
 	if (data.blocked && data.partLength != 1) {
-		p_eventsList.push(new ChoiceEvent(p_xStart, p_yStart, data.partLength, true));
+		p_listEventsToApply.push(new ChoiceEvent(p_xStart, p_yStart, data.partLength, true));
 	}
-	return p_eventsList;
 }
 
 // Checks if a strip is closed by its 2 sides. But not for 1-long stripes already checked in deductions.
-SolverFirumatto.prototype.deductionsClosedStripFromClosedFence = function(p_eventsList, p_xStart, p_yStart, p_direction) {
+SolverFirumatto.prototype.deductionsClosedStripFromClosedFence = function(p_listEventsToApply, p_xStart, p_yStart, p_direction) {
 	const data = this.dataStripPart(p_xStart, p_yStart, p_direction);
 	if ((data.partLength != 1) && (data.blocked)) {
-		p_eventsList.push(new ChoiceEvent(p_xStart, p_yStart, data.partLength, true)); //Then, it shall propagate
+		p_listEventsToApply.push(new ChoiceEvent(p_xStart, p_yStart, data.partLength, true)); //Then, it shall propagate
 	}
-	return p_eventsList;
 }
 
 function filterOpenFencesClosure(p_solver) { 
 	return function() {
-		 var answer = [];
+		 var listEventsToApply = [];
 		// Same high convention !
 		// Check the minimal length of the strip
 		// Is strip closed ? Then add a choice
 		// Is strip closed at one part and a length is known ? Interesting...
-		var x1, y1, x2, y2, data1, data2, oneLeft, dir1, dir2, openLength, choice;
-		p_solver.checkerOpenFences.listRD.forEach(coorsDir => {
+		var x1, y1, x2, y2, data1, data2, oneLeft, dir1, dir2, openLength, choice, i, coorsDir;
+		for (i = 0 ; i < p_solver.checkerOpenFences.listRD.length ; i++) {
+			coorsDir = p_solver.checkerOpenFences.listRD[i];
 			// Bands are checked several times, but that's life ! 
-			if (answer == EVENT_RESULT.FAILURE) {
-				return;
-			}
 			x1 = coorsDir.x;
 			y1 = coorsDir.y;
 			if (coorsDir.direction == DIRECTION.DOWN) {	
@@ -534,15 +524,15 @@ function filterOpenFencesClosure(p_solver) {
 			openLength = data1.partLength + data2.partLength; 
 			choice = p_solver.numericArray[y1][x1].getValue();
 			if (openLength > FIRUMATTO_MAX_LENGTH || (choice != null && openLength > choice)) {					
-				answer = EVENT_RESULT.FAILURE;	
-				return;
+				listEventsToApply.push(new FailureEvent());	
+				return listEventsToApply;
 			}
 			// Note : choices will propagate. Validate choice if strip blocked, ban too small sizes otherwise.
 			if (data1.blocked && data2.blocked) {					
-				answer.push(new ChoiceEvent(x1, y1, openLength, true));
+				listEventsToApply.push(new ChoiceEvent(x1, y1, openLength, true));
 			} else {
-				for (var i = 1 ; i < openLength ; i++) {
-					answer.push(new ChoiceEvent(x1, y1, i, false));
+				for (var io = 1 ; io < openLength ; io++) {
+					listEventsToApply.push(new ChoiceEvent(x1, y1, io, false));
 				}
 				// Also, if desired length has been reached thanks to opening a fence, close the strip (deduction will do the rest)
 				if (openLength == choice) { // Only check on the 1st space (leftmost/upmost) of the strip
@@ -551,15 +541,15 @@ function filterOpenFencesClosure(p_solver) {
 						y1 += DeltaY[dir1];
 					} 
 					if (p_solver.neighborExists(x1, y1, dir1)) {
-						answer.push(new FenceEvent(x1, y1, dir1, FENCE_STATE.CLOSED))
+						listEventsToApply.push(new FenceEvent(x1, y1, dir1, FENCE_STATE.CLOSED))
 					} else if (p_solver.distantNeighborExists(x1, y1, openLength, dir2)) {
-						answer.push(new FenceEvent(x1 + openLength * DeltaX[dir2], y1 + openLength * DeltaY[dir2], dir1, FENCE_STATE.CLOSED)); // It's truly dir1 and not dir2. If openLength = 2, we jump 2 spaces to close a strip of length 2
+						listEventsToApply.push(new FenceEvent(x1 + openLength * DeltaX[dir2], y1 + openLength * DeltaY[dir2], dir1, FENCE_STATE.CLOSED)); // It's truly dir1 and not dir2. If openLength = 2, we jump 2 spaces to close a strip of length 2
 					}
 				}
 			}
-		}); 
+		}; 
 		p_solver.checkerOpenFences.clean();
-		return answer;
+		return listEventsToApply;
 	}
 }
 
@@ -584,12 +574,11 @@ const deltaX1 = [-1, 0, +1, 0];
 const deltaY1 = [0, -1, 0, +1];
 function filterChoiceSpacesClosure(p_solver) {
 	return function() {
-		var answer = [];
+		var listEventsToApply = [];
 		var x, y, number, dir, stripLength, dataStripPart1, dataStripPart2;
-		p_solver.checkerChosenSpaces.list.forEach(coors => {
-			if (answer == EVENT_RESULT.FAILURE) {
-				return;
-			}
+		var i, coors;
+		for (i = 0 ; i < p_solver.checkerChosenSpaces.list.length ; i++) {
+			coors = p_solver.checkerChosenSpaces.list[i];
 			// Note : spaces are checked several times but that's not a big deal... or is it ? 
 			x = coors.x;
 			y = coors.y;
@@ -612,30 +601,30 @@ function filterChoiceSpacesClosure(p_solver) {
 							x--;
 						}
 						if (x > 0) {
-							answer.push(new FenceEvent(x, y, DIRECTION.LEFT, FENCE_STATE.CLOSED));
+							listEventsToApply.push(new FenceEvent(x, y, DIRECTION.LEFT, FENCE_STATE.CLOSED));
 						} 
 						if (x + stripLength < p_solver.xLength) { // x,y = 1st position of the strip. (x+stripLength, y) = space immediately at the right of the strip.
-							answer.push(new FenceEvent(x + stripLength, y, DIRECTION.LEFT, FENCE_STATE.CLOSED));
+							listEventsToApply.push(new FenceEvent(x + stripLength, y, DIRECTION.LEFT, FENCE_STATE.CLOSED));
 						}
 					} else {
 						while(p_solver.answerFencesGrid.isFenceSurelyOpen(x, y, DIRECTION.UP)) {
 							y--;
 						}
 						if (y > 0) {
-							answer.push(new FenceEvent(x, y, DIRECTION.UP, FENCE_STATE.CLOSED));
+							listEventsToApply.push(new FenceEvent(x, y, DIRECTION.UP, FENCE_STATE.CLOSED));
 						} 
 						if (y + stripLength < p_solver.yLength) { 
-							answer.push(new FenceEvent(x, y + stripLength, DIRECTION.UP, FENCE_STATE.CLOSED));
+							listEventsToApply.push(new FenceEvent(x, y + stripLength, DIRECTION.UP, FENCE_STATE.CLOSED));
 						}						
 					}
 				} else if (stripLength > number) {
-					answer = EVENT_RESULT.FAILURE;
+					return FILTER_FAILURE;
 				}
 			}
 			// Possible bonus : enclose the extremity if relevant choice, although pass will do the work, right ?
-		});
+		};
 		p_solver.checkerChosenSpaces.clean();
-		return answer;
+		return listEventsToApply;
 	}
 }
 
@@ -666,16 +655,16 @@ function copying(p_event) {
 }
 
 SolverFirumatto.prototype.generateEventsPassSpace = function(p_x, p_y) {
-	var answer = [];
+	var listPass = [];
 	this.existingNeighborsDirections(p_x, p_y).forEach(dir => {
 		if (this.answerFencesGrid.getFence(p_x, p_y, dir) == FENCE_STATE.UNDECIDED) {			
-			answer.push([new FenceEvent(p_x, p_y, dir, FENCE_STATE.OPEN), new FenceEvent(p_x, p_y, dir, FENCE_STATE.CLOSED)]);
+			listPass.push([new FenceEvent(p_x, p_y, dir, FENCE_STATE.OPEN), new FenceEvent(p_x, p_y, dir, FENCE_STATE.CLOSED)]);
 		}
 	});
-	return answer;
+	return listPass;
 }
 
-namingCategoryClosure = function(p_solver) {
+namingCategoryPassClosure = function(p_solver) {
 	return function(p_coors) {
 		return (p_coors.x + "," + p_coors.y);
 	}
@@ -689,23 +678,23 @@ generateEventsForSpacePassClosure = function(p_solver) {
 
 multipassDefineTodoClosure = function(p_solver) {
 	return function(p_coors) {
-		var answer = false;
+		var resultToDo = false;
 		p_solver.existingNeighborsDirections(p_coors.x, p_coors.y).forEach(dir => {
-			answer = answer || p_solver.answerFencesGrid.getFence(p_coors.x, p_coors.y, dir) == FENCE_STATE.UNDECIDED;
+			resultToDo = resultToDo || p_solver.answerFencesGrid.getFence(p_coors.x, p_coors.y, dir) == FENCE_STATE.UNDECIDED;
 		});
-		return answer;
+		return resultToDo;
 	}
 }
 
 function orderedListPassArgumentsClosure(p_solver) {
 	return function() {
-		var answer = [];
+		var listIndexesPass = [];
 		for (var y = 0 ; y < p_solver.yLength ; y++) {
 			for (var x = 0 ; x < p_solver.xLength ; x++) {
-				answer.push({x : x, y : y});
+				listIndexesPass.push({x : x, y : y});
 			}	
 		}
-		return answer;
+		return listIndexesPass;
 	}
 }
 	

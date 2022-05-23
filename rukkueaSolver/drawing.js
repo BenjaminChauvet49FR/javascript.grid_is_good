@@ -4,13 +4,13 @@ Draws what's inside spaces
 */
 function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver, p_selectionSet) {
 	
-	const bgSelectionItems = [DrawableColor(p_coloursSet.selectedSpace), DrawableColor(p_coloursSet.selectedCornerSpace)];
+	const bgSelectionItems = [DrawableColour(p_coloursSet.selectedSpace), DrawableColour(p_coloursSet.selectedCornerSpace)];
 	bgSelectionSelection = function(x, y) {
 		return p_selectionSet.getDrawingSelectionIndex(x, y, 0, 1);
 	}
 	p_drawer.drawSpaceContents2Dimensions(p_context, bgSelectionItems, bgSelectionSelection, p_solver.xLength, p_solver.yLength);
 	
-	var items = [DrawableColor(p_coloursSet.filledSpace), 
+	var items = [DrawableColour(p_coloursSet.filledSpace), 
 				 DrawableX(p_coloursSet.emptySpace)];
 				
 	function selection(x, y) {

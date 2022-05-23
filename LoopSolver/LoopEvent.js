@@ -32,9 +32,10 @@ function LinkEvent(p_x, p_y, p_direction, p_state) {
 }
 
 LinkEvent.prototype.copy = function() {
-	const answer = new LinkEvent(this.linkX, this.linkY, this.directon, this.state);
-	answer.direction = this.direction; // TODO complètement con, mais sinon on peut avoir des "undefined" après recopie...
-	return answer;
+	const result = new LinkEvent(this.linkX, this.linkY, this.directon, this.state);
+	result.direction = this.direction; // TODO complètement con, mais sinon on peut avoir des "undefined" après recopie...
+	return result; 
+
 }
 
 LinkEvent.prototype.toLogString = function(){	

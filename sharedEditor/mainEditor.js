@@ -106,7 +106,7 @@ putActionElementClick("submit_new_grid", function (event) {
     restartAction(canvas, drawer, editorCore, fieldsDefiningPuzzle, true)
 });
 putActionElementClick("submit_resize_grid", function (event) {
-    resizeAction(canvas, drawer, editorCore, fieldsDefiningPuzzle/*actualFieldX.value, actualFieldY.value*/)
+    resizeAction(canvas, drawer, editorCore, fieldsDefiningPuzzle) // actualFieldX.value, actualFieldY.value
 });
 
 putActionElementClick("submit_rotate_clockwise", function (event) {
@@ -157,7 +157,7 @@ putActionElementClick("submit_popup_help_prompt", function (event) {
 function combo(p_docElt) {
 	comboChange(p_docElt, canvas, drawer, editorCore, saveLoadMode, fieldsDefiningPuzzle, actionButtons, analyzerModes);
 }
-combo(document.getElementById('select_puzzle_type')); //TODO c'est comme ça que ça se passe au démarrage, j'espère que c'est chargé. On peut le mettre directement sur la combobox ? Mais ce serait peut-être un peu lourd pour le mélange fond/forme, non ?
+combo(document.getElementById('select_puzzle_type')); //Could be put directly onto combobox, but a bit too heavy for the mix front/back. 
 
 function checkboxTransparencyChange(p_checkbox) {
 	editorCore.setTransparencyState(p_checkbox.checked);

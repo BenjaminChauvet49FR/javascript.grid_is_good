@@ -7,3 +7,4 @@ Naming constraint : a method with the exact name must (or at least should) be de
 "Revolution !" : a method that should eventually be replaced.
 High warning : when misused, bad things can happen. 
 No banned space assumption : in the current state of the solver, the puzzle cannot contain 'banned spaces', whatever it means, either because I didn't meet any or because I decided not to treat them. (for now)
+Knot vs node : A knot is supposed to be contained in a grid (Yagit and somehow Galaxies), while a node is for a specific lattice representation of a loop solver (Castle wall, Geradeweg, Grand Tour, Shingoki, Slitherlink)

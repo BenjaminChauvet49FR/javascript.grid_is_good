@@ -40,7 +40,7 @@ SolverStostone.prototype.construct = function(p_wallArray, p_indicationsRegions)
 		undoEventClosure(this)
 	);
 	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterRegionsNewNOsClosure(this), filterRegionsNewYESClosure(this), filterHeightClosure(this)]);// Two other closures !!!!!
-	this.methodsSetPass = {comparisonMethod : compareSolveEvents, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsSetPass = {comparisonMethod : compareSolveEvents, copyMethod : copying, argumentToLabelMethod : namingCategoryPassClosure(this)};
 	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)
@@ -204,13 +204,13 @@ SolverStostone.prototype.undo = function() {
 }
 
 SolverStostone.prototype.emitPassRegion = function(p_indexRegion) {
-	generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEventsSafe(generatedEvents, {passCategory : PASS_CATEGORY.REGION, index : p_indexRegion}); 
+	listPassNow = this.generateEventsForRegionPass(p_indexRegion);
+	this.passEventsSafe(listPassNow, {passCategory : PASS_CATEGORY.REGION, index : p_indexRegion}); 
 }
 
 SolverStostone.prototype.emitPassColumn = function(p_x) {
-	generatedEvents = this.generateEventsForColumnPass(p_x);
-	this.passEventsSafe(generatedEvents, {passCategory : PASS_CATEGORY.COLUMN, x : p_x}); 
+	listPassNow = this.generateEventsForColumnPass(p_x);
+	this.passEventsSafe(listPassNow, {passCategory : PASS_CATEGORY.COLUMN, x : p_x}); 
 }
 
 SolverStostone.prototype.makeMultiPass = function() {
@@ -296,26 +296,26 @@ undoEventClosure = function(p_solver) {
 	}
 }
 
-SolverStostone.prototype.undoSpaceEvent = function(p_event) {
-	const region = this.getRegion(p_event.x, p_event.y);
-	this.answerArray[p_event.y][p_event.x] = FILLING.UNDECIDED;
-	if (p_event.symbol == FILLING.YES) {
+SolverStostone.prototype.undoSpaceEvent = function(p_eventToUndo) {
+	const region = this.getRegion(p_eventToUndo.x, p_eventToUndo.y);
+	this.answerArray[p_eventToUndo.y][p_eventToUndo.x] = FILLING.UNDECIDED;
+	if (p_eventToUndo.symbol == FILLING.YES) {
 		region.placed.YES--;			
-		this.notPlacedYetColumns[p_event.x].YES++;
+		this.notPlacedYetColumns[p_eventToUndo.x].YES++;
 	} else {
 		region.placed.NOs--;
-		this.notPlacedYetColumns[p_event.x].NOs++;
+		this.notPlacedYetColumns[p_eventToUndo.x].NOs++;
 	}
 }
 
-SolverStostone.prototype.undoHeightStone = function(p_event) {
-	this.regions[p_event.index].heightStoneYHighest = null;
+SolverStostone.prototype.undoHeightStone = function(p_eventToUndo) {
+	this.regions[p_eventToUndo.index].heightStoneYHighest = null;
 }
 
-SolverStostone.prototype.undoHeightDifference = function(p_event) {
-	this.heightDiffTriangle[p_event.indexMax][p_event.indexMin] = null;
-	this.regions[p_event.indexMax].heightDifferenceDependencies.pop();
-	this.regions[p_event.indexMin].heightDifferenceDependencies.pop(); //High convention : undo in reverse order assumption
+SolverStostone.prototype.undoHeightDifference = function(p_eventToUndo) {
+	this.heightDiffTriangle[p_eventToUndo.indexMax][p_eventToUndo.indexMin] = null;
+	this.regions[p_eventToUndo.indexMax].heightDifferenceDependencies.pop();
+	this.regions[p_eventToUndo.indexMin].heightDifferenceDependencies.pop(); //High convention : undo in reverse order assumption
 }
 
 //--------------------------------
@@ -323,15 +323,15 @@ SolverStostone.prototype.undoHeightDifference = function(p_event) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Stostone"}];
+		var listQSEvents = [{quickStartLabel : "Stostone"}];
 		p_solver.regions.forEach(region => {
 			if ((region.size == region.numberStones) || (region.size == 1)) {
 				region.spaces.forEach(space =>
-					{listQSEvts.push(new SpaceEvent(space.x, space.y, FILLING.YES))}
+					{listQSEvents.push(new SpaceEvent(space.x, space.y, FILLING.YES))}
 				);
 			}
 		});		
-		return listQSEvts;	
+		return listQSEvents;	
 	}
 }
 
@@ -365,14 +365,14 @@ deductionsClosure = function (p_solver) {
 				}
 				// Same column, same region
 				if (y > 0 && p_solver.answerArray[y-1][x] == FILLING.NO && p_solver.regionArray[y-1][x] == ir) {
-					p_listEventsToApply = p_solver.deductionsWhiteColumnUpwards(p_listEventsToApply, x, y-1, ir); 	
+					p_solver.deductionsWhiteColumnUpwards(p_listEventsToApply, x, y-1, ir); 	
 				}
 				if (y <= p_solver.yLength-2 && p_solver.answerArray[y+1][x] == FILLING.NO && p_solver.regionArray[y+1][x] == ir) {
-					p_listEventsToApply = p_solver.deductionsWhiteColumnDownwards(p_listEventsToApply, x, y+1, ir);
+					p_solver.deductionsWhiteColumnDownwards(p_listEventsToApply, x, y+1, ir);
 				}
 				// Column number check
 				if (p_solver.notPlacedYetColumns[x].YES == 0) {
-					p_listEventsToApply = p_solver.deductionsFillColumnWith(p_listEventsToApply, x, FILLING.NO);
+					p_solver.deductionsFillColumnWith(p_listEventsToApply, x, FILLING.NO);
 				}
 			} else {
 				// At least one stone per region
@@ -395,14 +395,14 @@ deductionsClosure = function (p_solver) {
 				}
 				// Same column, same region
 				if (y > 0 && p_solver.answerArray[y-1][x] == FILLING.YES && p_solver.regionArray[y-1][x] == ir) {
-					p_listEventsToApply = p_solver.deductionsWhiteColumnDownwards(p_listEventsToApply, x, y, ir); 	
+					p_solver.deductionsWhiteColumnDownwards(p_listEventsToApply, x, y, ir); 	
 				}
 				if (y <= p_solver.yLength-2 && p_solver.answerArray[y+1][x] == FILLING.YES && p_solver.regionArray[y+1][x] == ir) {
-					p_listEventsToApply = p_solver.deductionsWhiteColumnUpwards(p_listEventsToApply, x, y, ir); 						
+					p_solver.deductionsWhiteColumnUpwards(p_listEventsToApply, x, y, ir); 						
 				}
 				// Column number check
 				if (p_solver.notPlacedYetColumns[x].NOs == 0) {
-					p_listEventsToApply = p_solver.deductionsFillColumnWith(p_listEventsToApply, x, FILLING.YES);
+					p_solver.deductionsFillColumnWith(p_listEventsToApply, x, FILLING.YES);
 				}
 			}
 		} else if (p_eventBeingApplied.kind == KIND.HEIGHT_STONE) { 
@@ -430,40 +430,36 @@ deductionsClosure = function (p_solver) {
 				p_listEventsToApply.push(new HeightStoneEvent(irMax, hsyhRMin + heightDifference));
 			}
 		}
-		return p_listEventsToApply;
 	}
 }
 
 // When a space in p_x, p_y is empty, the one below it is in the same region and has a stone : clear all the spaces above in the same column and region since they must be empty
-SolverStostone.prototype.deductionsWhiteColumnDownwards = function(p_listEvents, p_x, p_y, p_ir) {
+SolverStostone.prototype.deductionsWhiteColumnDownwards = function(p_listEventsToApply, p_x, p_y, p_ir) {
 	const region = this.getRegion(p_x, p_y);
 	for (var y = p_y+1 ; y <= region.yLowest ; y++) {
 		if (this.regionArray[y][x] == p_ir) {
-			p_listEvents.push(new SpaceEvent(x, y, FILLING.NO));
+			p_listEventsToApply.push(new SpaceEvent(x, y, FILLING.NO));
 		}
 	}
-	return p_listEvents;
 }
 
 // Same but upwards
-SolverStostone.prototype.deductionsWhiteColumnUpwards = function(p_listEvents, p_x, p_y, p_ir) {
+SolverStostone.prototype.deductionsWhiteColumnUpwards = function(p_listEventsToApply, p_x, p_y, p_ir) {
 	const region = this.getRegion(p_x, p_y);
 	for (var y = p_y-1 ; y >= region.yHighest ; y--) {
 		if (this.regionArray[y][x] == p_ir) {
-			p_listEvents.push(new SpaceEvent(x, y, FILLING.NO));
+			p_listEventsToApply.push(new SpaceEvent(x, y, FILLING.NO));
 		}
 	}
-	return p_listEvents;
 }
 
 // Fill a column with the missing symbols
-SolverStostone.prototype.deductionsFillColumnWith = function(p_listEvents, p_x, p_symbolToFill) {
+SolverStostone.prototype.deductionsFillColumnWith = function(p_listEventsToApply, p_x, p_symbolToFill) {
 	for (var y = 0 ; y < this.yLength ; y++) {
 		if (this.answerArray[y][p_x] == FILLING.UNDECIDED) {
-			p_listEvents.push(new SpaceEvent(p_x, y, p_symbolToFill));
+			p_listEventsToApply.push(new SpaceEvent(p_x, y, p_symbolToFill));
 		}
 	}
-	return p_listEvents;
 }
 
 // Filters :
@@ -499,25 +495,24 @@ SolverStostone.prototype.cleanHeightChecker = function() {
 // Note : What's next is copied onto Shimaguni
 function filterRegionsNewNOsClosure(p_solver) {
 	return function () {
-		var answer = [];
+		var listEventsToApply = [];
 		var region;
-		var ok = true;
 		var listCluster, ic;
-		p_solver.regionsNewNOsChecker.list.forEach(ir => {
-			if (!ok) {
-				return;
-			}
+		var i, ir;
+		for (i = 0 ; i < p_solver.regionsNewNOsChecker.list.length ; i++) {
+			ir = p_solver.regionsNewNOsChecker.list[i];
 			region = p_solver.regions[ir];
 			if (region.numberStones != null) {
 				//Updates clusters ; then ban clusters that don't contain a filled space
 				p_solver.updateClustersRegion(ir);
 				if (region.indexClusterWithFill == CLUSTER_WITH_FILL.MULTI) {
-					ok = false;
+					listEventsToApply.push(new FailureEvent());
+					return listEventsToApply;
 				} else if (region.indexClusterWithFill != CLUSTER_WITH_FILL.NOT_FOUND) {
 					for(var ic = 0;ic < region.clusters.length; ic++) {
 						if (ic != region.indexClusterWithFill) {
 							region.clusters[ic].forEach(
-								space => {answer.push(new SpaceEvent(space.x, space.y, FILLING.NO))}
+								space => {listEventsToApply.push(new SpaceEvent(space.x, space.y, FILLING.NO))}
 							);
 						}
 					}
@@ -528,18 +523,18 @@ function filterRegionsNewNOsClosure(p_solver) {
 					listCluster = region.clusters[ic];
 					if (listCluster.length < region.numberStones) {
 						if (region.indexClusterWithFill == ic) {
-							ok = false;
-							break;
+							listEventsToApply.push(new FailureEvent());
+							return listEventsToApply;
 						} else {							
-							listCluster.forEach(space => {answer.push(new SpaceEvent(space.x, space.y, FILLING.NO))});
+							listCluster.forEach(space => {listEventsToApply.push(new SpaceEvent(space.x, space.y, FILLING.NO))});
 						}
 					}
 				};
 				// Note : block cut from Shimaguni here. (copy pasting back into shimaguni will take time)
 			}
-		});
+		};
 		p_solver.regionsNewNOsChecker.clean();
-		return (ok ? answer : EVENT_RESULT.FAILURE);
+		return listEventsToApply;
 	}
 }
 
@@ -596,13 +591,10 @@ SolverStostone.prototype.fillCluster = function(p_x,p_y,p_indexRegion,p_value) {
 // Prerequiste : all clusters have their shape updated by now
 function filterRegionsNewYESClosure(p_solver) {
 	return function() {
-		var ok = true;
-		var answer = [];
-		var region, clusterBelong;
-		p_solver.regionsNewYESChecker.list.forEach(ir => {
-			if (!ok) {
-				return;
-			}
+		var listEventsToApply = [];
+		var i, ir, region, clusterBelong;
+		for (i = 0 ; i < p_solver.regionsNewYESChecker.list.length ; i++) {
+			ir = p_solver.regionsNewYESChecker.list[i];
 			region = p_solver.regions[ir];
 			// If this is our very first O placed (or several of 'em) in this region, an update is mandatory so a "cluster with fill" is found.
 			// clusterBelong = (region.indexClusterWithFill == CLUSTER_WITH_FILL.NOT_FOUND) ? p_solver.clusterArray[introduced.y][introduced.x] : region.indexClusterWithFill;
@@ -611,20 +603,20 @@ function filterRegionsNewYESClosure(p_solver) {
 			clusterBelong = (region.indexClusterWithFill == CLUSTER_WITH_FILL.NOT_FOUND) ? p_solver.clusterArray[region.lastPlacedYES.y][region.lastPlacedYES.x] : region.indexClusterWithFill;
 			// Ban clusters that don't contain a filled space
 			if (clusterBelong == CLUSTER_WITH_FILL.MULTI) {
-				ok = false;
+				return FILTER_FAILURE;
 			} else {
 				for(var ic = 0;ic < region.clusters.length; ic++) {
 					if (ic != clusterBelong) {
 						region.clusters[ic].forEach(
-							space => {answer.push(new SpaceEvent(space.x, space.y, FILLING.NO))}
+							space => {listEventsToApply.push(new SpaceEvent(space.x, space.y, FILLING.NO))}
 						);
 					}
 				}
 			} 
 			// Note : cut from Shimaguni.
-		});
+		};
 		p_solver.regionsNewYESChecker.clean();
-		return ok ? answer : EVENT_RESULT.FAILURE;
+		return listEventsToApply;
 	}
 }
 
@@ -642,10 +634,10 @@ In either case :
 */
 function filterHeightClosure(p_solver) {
 	return function() {
-		var answer = [];
+		var listEventsToApply = [];
 		var x, y, yy, upY, downY;
 		p_solver.heightCheckerYESList.forEach(coors => {
-			if (answer == EVENT_RESULT.FAILURE) {
+			if (isFailed(listEventsToApply)) {
 				return;
 			}
 			x = coors.x;
@@ -657,11 +649,11 @@ function filterHeightClosure(p_solver) {
 				yy--;
 			}
 			if (yy == -1) {
-				answer.push(HeightStoneAuxEvent(y, 0, p_solver.getRegion(x, y) ));
+				listEventsToApply.push(HeightStoneAuxEvent(y, 0, p_solver.getRegion(x, y) ));
 			} else if (p_solver.answerArray[yy][x] == FILLING.YES && (y - yy >= 2)) { 
-				answer = p_solver.deductionsBetweenTwoStones(answer, x, yy, y);
+				p_solver.deductionsBetweenTwoStones(listEventsToApply, x, yy, y);
 			}
-			if (answer == EVENT_RESULT.FAILURE) {
+			if (isFailed(listEventsToApply)) {
 				return;
 			}
 			// Downwards
@@ -672,14 +664,14 @@ function filterHeightClosure(p_solver) {
 					yy++;
 				}
 				if (yy == p_solver.yLength) {
-					answer.push(HeightStoneAuxEvent(y, p_solver.expectedStonesPerColumn-1, p_solver.getRegion(x, y) ));
+					listEventsToApply.push(HeightStoneAuxEvent(y, p_solver.expectedStonesPerColumn-1, p_solver.getRegion(x, y) ));
 				} else if (p_solver.answerArray[yy][x] == FILLING.YES && (yy - y >= 2)) {
-					answer = p_solver.deductionsBetweenTwoStones(answer, x, y, yy);
+					p_solver.deductionsBetweenTwoStones(listEventsToApply, x, y, yy);
 				}
 			}
 		});
 		p_solver.heightCheckerNOsList.forEach(coors => {
-			if (answer == EVENT_RESULT.FAILURE) {
+			if (isFailed(listEventsToApply)) {
 				return;
 			}
 			x = coors.x;
@@ -705,11 +697,11 @@ function filterHeightClosure(p_solver) {
 				}
 				if (upY != null && downY != null) {					
 					if (upY == -1) {
-						answer.push(HeightStoneAuxEvent(downY, 0, p_solver.getRegion(x, downY) ));
+						listEventsToApply.push(HeightStoneAuxEvent(downY, 0, p_solver.getRegion(x, downY) ));
 					} else if (downY == p_solver.yLength) { // Note : both upY and downY reaching their extremities is impossible due to the global check on column in main part of deductions 
-						answer.push(HeightStoneAuxEvent(upY, p_solver.expectedStonesPerColumn-1, p_solver.getRegion(x, upY) ));
+						listEventsToApply.push(HeightStoneAuxEvent(upY, p_solver.expectedStonesPerColumn-1, p_solver.getRegion(x, upY) ));
 					} else {	
-						answer = p_solver.deductionsBetweenTwoStones(answer, x, upY, downY);
+						p_solver.deductionsBetweenTwoStones(listEventsToApply, x, upY, downY);
 					}					
 				}
 			}
@@ -717,14 +709,14 @@ function filterHeightClosure(p_solver) {
 		
 		p_solver.dejaVuNOChecker.clean();
 		p_solver.cleanHeightChecker();
-		return answer;
+		return listEventsToApply;
 	}
 }
 
 
 // Prerequiste : p_y1 and p_y2 are the heights of stones. There are only empty spaces between them. p_y2 > p_y1.
 // So : both heights in columns are known ? check consistency. Neither is known ? Difference event. One is known ? HSYH event.
-SolverStostone.prototype.deductionsBetweenTwoStones = function(p_listEvents, p_x, p_y1, p_y2) {
+SolverStostone.prototype.deductionsBetweenTwoStones = function(p_listEventsToApply, p_x, p_y1, p_y2) {
 	const i1 = this.getRegionIndex(p_x, p_y1);
 	const i2 = this.getRegionIndex(p_x, p_y2);
 	const yHighest1 = this.getRegion(p_x, p_y1).yHighest;
@@ -738,18 +730,17 @@ SolverStostone.prototype.deductionsBetweenTwoStones = function(p_listEvents, p_x
 	const deltaHSYHs = (p_y1-yHighest1)-(p_y2-yHighest2)+1;
 	if (hsyh1 == null) {
 		if (hsyh2 == null) {			
-			p_listEvents.push(new HeightDifferenceEvent(i2, i1, deltaHSYHs)); // Look carefully at the order of arguments here and in the method ! 
+			p_listEventsToApply.push(new HeightDifferenceEvent(i2, i1, deltaHSYHs)); // Look carefully at the order of arguments here and in the method ! 
 		} else {
-			p_listEvents.push(new HeightStoneEvent(i1, hsyh2 - deltaHSYHs));
+			p_listEventsToApply.push(new HeightStoneEvent(i1, hsyh2 - deltaHSYHs));
 		}
  	} else {
 		if (hsyh2 == null) {
-			p_listEvents.push(new HeightStoneEvent(i2, hsyh1 + deltaHSYHs));
+			p_listEventsToApply.push(new HeightStoneEvent(i2, hsyh1 + deltaHSYHs));
 		} else if (hsyh2 - hsyh1 != deltaHSYHs) {
-			p_listEvents = EVENT_RESULT.FAILURE;
+			p_listEventsToApply.push(new FailureEvent());
 		}
 	}		
-	return p_listEvents;
 }
 
 // Note : possible but not done because pass does the job : 
@@ -768,33 +759,33 @@ function copying(p_event) {
 	return p_event.copy();
 }
 
-function namingCategoryClosure(p_solver) {
-	return function(p_index) {		
-		switch (p_index.passCategory) {
-			case PASS_CATEGORY.REGION : return "region " + logRegionInfo(p_solver, p_index.index) ; break;
-			case PASS_CATEGORY.COLUMN : return "column " + p_index.x ; break;
+function namingCategoryPassClosure(p_solver) {
+	return function(p_indexPass) {		
+		switch (p_indexPass.passCategory) {
+			case PASS_CATEGORY.REGION : return "region " + logRegionInfo(p_solver, p_indexPass.index) ; break;
+			case PASS_CATEGORY.COLUMN : return "column " + p_indexPass.x ; break;
 		}
 	}
 }
 
 SolverStostone.prototype.generateEventsForRegionPass = function(p_ir) {
-	var answer = [];
+	var listPass = [];
 	this.regions[p_ir].spaces.forEach(space => {
 		if (this.answerArray[space.y][space.x] == FILLING.UNDECIDED) {			
-			answer.push(eventsForOneSpacePass(space.x, space.y));
+			listPass.push(eventsForOneSpacePass(space.x, space.y));
 		}
 	});
-	return answer;
+	return listPass;
 }
 
 SolverStostone.prototype.generateEventsForColumnPass = function(p_x) {
-	var answer = [];
+	var listPass = [];
 	for (var y = 0 ; y < this.yLength ; y++) {
 		if (this.answerArray[y][p_x] == FILLING.UNDECIDED) {			
-			answer.push(eventsForOneSpacePass(p_x, y));
+			listPass.push(eventsForOneSpacePass(p_x, y));
 		}
 	}
-	return answer;
+	return listPass;
 }
 
 function eventsForOneSpacePass(p_x, p_y) {
@@ -805,27 +796,27 @@ function eventsForOneSpacePass(p_x, p_y) {
 // Multipass
 
 function generateEventsForPassClosure (p_solver) {
-	return function (p_index) {
-		if (p_index.passCategory == PASS_CATEGORY.COLUMN) {
-			return p_solver.generateEventsForColumnPass(p_index.x);			
+	return function (p_indexPass) {
+		if (p_indexPass.passCategory == PASS_CATEGORY.COLUMN) {
+			return p_solver.generateEventsForColumnPass(p_indexPass.x);			
 		} else {
-			return p_solver.generateEventsForRegionPass(p_index.index);
+			return p_solver.generateEventsForRegionPass(p_indexPass.index);
 		}
 	}
 }
 
 function orderedListPassArgumentsClosure  (p_solver) {
 	return function () {
-		var answer = [];
+		var listIndexesPass = [];
 		for (var x = 0 ; x < p_solver.xLength ; x++) {
-			answer.push({passCategory : PASS_CATEGORY.COLUMN, x : x});
+			listIndexesPass.push({passCategory : PASS_CATEGORY.COLUMN, x : x});
 		}
 		for (var ir = 0 ; ir < p_solver.regions.length ; ir++) {
-			answer.push({passCategory : PASS_CATEGORY.REGION, index : ir});
+			listIndexesPass.push({passCategory : PASS_CATEGORY.REGION, index : ir});
 		}			
-		return answer;
+		return listIndexesPass; 
 	}
-}
+} 
 
 // --------
 // Solution
@@ -861,14 +852,14 @@ function searchClosure(p_solver) {
 		var bestIndex = {nbD : -1};
 		var nbDeductions;
 		var event_;
-		var result;
+		var resultDeds;
 		for (solveX = 0 ; solveX < p_solver.xLength ; solveX++) { // x and y are somehow modified by tryToApplyHypothesis...
 			for (solveY = 0 ; solveY < p_solver.yLength ; solveY++) {
-				if (!p_solver.answerArray[solveY][solveX] == SPACE.UNDECIDED) {
+				if (!p_solver.answerArray[solveY][solveX] == FILLING.UNDECIDED) {
 					[FILLING.YES, FILLING.NO].forEach(value => {
 						event_ = new SpaceEvent(solveX, solveY, value);
-						result = p_solver.tryToApplyHypothesis(event_); 
-						if (result != DEDUCTIONS_RESULT.FAILURE) {							
+						resultDeds = p_solver.tryToApplyHypothesis(event_); 
+						if (resultDeds != DEDUCTIONS_RESULT.FAILURE) {							
 							nbDeductions = p_solver.numberOfRelevantDeductionsSinceLastHypothesis();
 							if (bestIndex.nbD < nbDeductions) {
 								bestIndex = {nbD : nbDeductions, x : event_.x, y : event_.y}

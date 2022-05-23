@@ -2,16 +2,16 @@
 Draws what's inside spaces 
 */
 function drawInsideSpaces(p_context, p_drawer, p_colour, p_solver, p_colourblindFriendly) {
-	const items = [DrawableColor(p_colour.openSpace),
+	const items = [DrawableColour(p_colour.openSpace),
 				DrawableX(p_colour.closedSpace),
-				DrawableColor(p_colour.LSpace), 
-				DrawableColor(p_colour.ISpace), 
-				DrawableColor(p_colour.TSpace), 
-				DrawableColor(p_colour.SSpace),
-				DrawableColor(p_colour.LSpaceLight),
-				DrawableColor(p_colour.ISpaceLight),
-				DrawableColor(p_colour.TSpaceLight),
-				DrawableColor(p_colour.SSpaceLight)];
+				DrawableColour(p_colour.LSpace), 
+				DrawableColour(p_colour.ISpace), 
+				DrawableColour(p_colour.TSpace), 
+				DrawableColour(p_colour.SSpace),
+				DrawableColour(p_colour.LSpaceLight),
+				DrawableColour(p_colour.ISpaceLight),
+				DrawableColour(p_colour.TSpaceLight),
+				DrawableColour(p_colour.SSpaceLight)];
 	const letters = [null, null, null, null, null, null, "L", "I", "T", "S"];
 	
 	function selectionShape(x,y) {

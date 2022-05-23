@@ -28,12 +28,12 @@ function geographicalEnhancedUndoClosure(p_solver, p_originalUndoMethod) {
 	}
 }
 
-function shouldBeLoggedEventEnhancedClosure(p_originalUndoMethod) {
+function shouldBeLoggedEventEnhancedClosure(p_originalLogMethod) {
 	return function(p_event, p_solver) {
 		if ((p_event.firstOpen) || (p_event.adjacency)) {
 			return false;
 		}
-		return p_originalUndoMethod(p_event, p_solver);
+		return p_originalLogMethod(p_event, p_solver); 
 	}
 }
 
@@ -55,7 +55,7 @@ GeneralSolver.prototype.declarationsOpenAndClosed = function() {
 }
 
 // Behaves like a filter, except it adds immediatly applied events
-GeneralSolver.prototype.geographicalDeductionsPseudoFilter = function(p_appliedEventsList, p_methodPack) {
+GeneralSolver.prototype.pseudoFilterGeographicalDeductions = function(p_appliedEventsList, p_methodPack) {
 	var retrieveBackedClosedSpaces = false;
 	
 	if (this.atLeastOneOpenAtSetup) {
@@ -122,17 +122,17 @@ GeneralSolver.prototype.geographicalDeductionsPseudoFilter = function(p_appliedE
 				p_appliedEventsList.push(geographicalDeduction)
 			);
 			if (geoV.listGeographicalDeductionsToApply.length == 0 && this.checkFormerLimits) { // If not for 'deductions applied' we would miss some deductions in a step with new limits and without new open spaces (Shugaku 59 manual solving)...
-				listEventsToApply = this.formerLimitsCheckPseudoFilter(p_appliedEventsList, p_methodPack);
+				listEventsToApply = this.pseudoFilterFormerLimitsCheck(p_appliedEventsList, p_methodPack);
 			}
 		} else {
-			listEventsToApply = EVENT_RESULT.FAILURE;
+			listEventsToApply.push(new FailureEvent());
 		}		
 	}
 	return listEventsToApply;
 }
 
 // Note : will eventually become a filter
-GeneralSolver.prototype.formerLimitsCheckPseudoFilter = function(p_appliedEventsList, p_methodPack) {
+GeneralSolver.prototype.pseudoFilterFormerLimitsCheck = function(p_appliedEventsList, p_methodPack) {
 	var listEventsToApply = [];
 	if (this.atLeastOneOpenTreated) { // Note : likely useless but I am paranoid
 		//Geographical verification.
@@ -146,7 +146,7 @@ GeneralSolver.prototype.formerLimitsCheckPseudoFilter = function(p_appliedEvents
 				p_appliedEventsList.push(geographicalDeduction)
 			);
 		} else {
-			listEventsToApply = EVENT_RESULT.FAILURE;
+			listEventsToApply.push(new FailureEvent());
 		}
 	}
 	return listEventsToApply;
@@ -208,9 +208,9 @@ GeneralSolver.prototype.geographicalVerification = function (p_listNewXs, p_form
 }
 
 // Note : ideally, this.checkFormerLimits is true
-function exploreFormerLimitsClosure(p_solver) {
+function exploreFormerLimitsClosure(p_solver) { 
 	return function() {				
-		const geoV = p_solver.geographicalVerification([], p_solver.adjacencyLimitSpacesList, true);
+		const geoV = p_solver.geographicalVerification([], p_solver.adjacencyLimitSpacesList, true); 
 		var ok = (geoV.result != GEOGRAPHICAL_DEDUCTION.FAILURE); // Should be true...
 		var listEventsToApply = [];
 		if (ok) {
@@ -274,50 +274,48 @@ AdjacencyShiftEvent.prototype.toLogString = function() {
 // -----------------------
 // Some deduction methods
 
-GeneralSolver.prototype.deductionsAlert2x2Areas = function(p_listEvents, p_methodSet, p_x, p_y) {
+GeneralSolver.prototype.deductionsAlert2x2Areas = function(p_listEventsToApply, p_methodSet, p_x, p_y) {
 	isOccupiedMethod = isOccupiedClosure(p_methodSet.adjacencyMethod);
 	retrieveGDMethod = p_methodSet.retrieveGeographicalDeductionMethod;
 	if (p_x > 0) {
 		if (isOccupiedMethod(p_x-1, p_y)) { // Left space occupied ? Check spaces above / below
 			if (p_y > 0) {
-				p_listEvents = duelOccupation(p_listEvents, isOccupiedMethod, retrieveGDMethod, p_x-1, p_y-1, p_x, p_y-1);
+				deductionsDuelOccupation(p_listEventsToApply, isOccupiedMethod, retrieveGDMethod, p_x-1, p_y-1, p_x, p_y-1);
 			}
 			if (p_y <= this.yLength-2) {
-				p_listEvents = duelOccupation(p_listEvents, isOccupiedMethod, retrieveGDMethod, p_x-1, p_y+1, p_x, p_y+1);
+				deductionsDuelOccupation(p_listEventsToApply, isOccupiedMethod, retrieveGDMethod, p_x-1, p_y+1, p_x, p_y+1);
 			}
 		} else { // Left space unoccupied : check if spaces above/below are occupied.
 			if (((p_y > 0) && (isOccupiedMethod(p_x-1, p_y-1)) && isOccupiedMethod(p_x, p_y-1)) ||
 				((p_y <= this.yLength-2) && (isOccupiedMethod(p_x-1, p_y+1)) && isOccupiedMethod(p_x, p_y+1))) {
-				p_listEvents.push(retrieveGDMethod({x : p_x-1, y : p_y, opening : ADJACENCY.NO}));
+				p_listEventsToApply.push(retrieveGDMethod({x : p_x-1, y : p_y, opening : ADJACENCY.NO}));
 			} 
 		}
 	}
 	if (p_x <= this.xLength-2) {
 		if (isOccupiedMethod(p_x+1, p_y)) { // Right space occupied ? Check spaces above / below
 			if (p_y > 0) {
-				p_listEvents = duelOccupation(p_listEvents, isOccupiedMethod, retrieveGDMethod, p_x+1, p_y-1, p_x, p_y-1);
+				deductionsDuelOccupation(p_listEventsToApply, isOccupiedMethod, retrieveGDMethod, p_x+1, p_y-1, p_x, p_y-1);
 			}
 			if (p_y <= this.yLength-2) {
-				p_listEvents = duelOccupation(p_listEvents, isOccupiedMethod, retrieveGDMethod, p_x+1, p_y+1, p_x, p_y+1);
+				deductionsDuelOccupation(p_listEventsToApply, isOccupiedMethod, retrieveGDMethod, p_x+1, p_y+1, p_x, p_y+1);
 			}
 		} else { // Right space unoccupied : check if spaces above/below are occupied.
 			if (((p_y > 0) && (isOccupiedMethod(p_x+1, p_y-1)) && isOccupiedMethod(p_x, p_y-1)) ||
 				((p_y <= this.yLength-2) && (isOccupiedMethod(p_x+1, p_y+1)) && isOccupiedMethod(p_x, p_y+1))) {
-				p_listEvents.push(retrieveGDMethod({x : p_x+1, y : p_y, opening : ADJACENCY.NO}));
+				p_listEventsToApply.push(retrieveGDMethod({x : p_x+1, y : p_y, opening : ADJACENCY.NO}));
 			} 
 		}
 	}
-	return p_listEvents;
 }
 
-duelOccupation = function(p_listEvents, p_isOccupiedMethod, p_retrieveGDMethod, p_x1, p_y1, p_x2, p_y2) {
+deductionsDuelOccupation = function(p_listEventsToApply, p_isOccupiedMethod, p_retrieveGDMethod, p_x1, p_y1, p_x2, p_y2) {
 	if (p_isOccupiedMethod(p_x1, p_y1)) {
-		p_listEvents.push(p_retrieveGDMethod({x : p_x2, y : p_y2, opening : ADJACENCY.NO}));
+		p_listEventsToApply.push(p_retrieveGDMethod({x : p_x2, y : p_y2, opening : ADJACENCY.NO}));
 	} 
 	if (p_isOccupiedMethod(p_x2, p_y2)) {
-		p_listEvents.push(p_retrieveGDMethod({x : p_x1, y : p_y1, opening : ADJACENCY.NO}));
+		p_listEventsToApply.push(p_retrieveGDMethod({x : p_x1, y : p_y1, opening : ADJACENCY.NO}));
 	} 
-	return p_listEvents;
 }
 
 isOccupiedClosure = function(p_methodOpening) {

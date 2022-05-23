@@ -7,7 +7,7 @@ function main() {
 	var actionsManager = {}; 
 	var drawIndications;
 
-	var colors = {
+	var colours = {
 		filledSpace : COLOURS.FILLING,
 		emptySpace : COLOURS.X_LIGHT
 	}
@@ -18,7 +18,7 @@ function main() {
 	//The main draw function (at start)
 	function drawCanvas() {
 		drawer.drawWallGrid(context, solver.gridWall, solver.xLength, solver.yLength);
-		drawInsideSpaces(context, drawer, colors, solver);
+		drawInsideSpaces(context, drawer, colours, solver);
 		solver.callStateForItem(spanState);
 	}
 	setInterval(drawCanvas, 30);

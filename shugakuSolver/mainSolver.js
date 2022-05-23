@@ -12,27 +12,27 @@ function main() {
 	var spanState = document.getElementById("span_resolution_state");
 	var actionsManagerSet = new ActionsManagersSet(2, 0); 
 
-	var colors = {
+	var colours = {
 		openSpace : COLOURS.OPEN_KABE_LIGHT,
-		closedSpace : '#88ff88',
-		numberWrite : '#440088',
-		shapeOuter : '#004488',
-		shapeInner : '#ffffff',
+		closedSpace : COLOURS.SHUGAKU_DOMINO_INNER,
+		numberWrite : COLOURS.SHUGAKU_SHAPE_OUTER,
+		shapeOuter : COLOURS.SHUGAKU_SHAPE_OUTER,
+		shapeInner : COLOURS.SHUGAKU_SHAPE_INNER,
 		purification : COLOURS.PURIFICATION_SYMBOL_GRID
 	}
 
 	const coloursFence = {
-		closed_fence: '#cc0000',
-		undecided_fence: '#cccccc',
-		open_fence: '#eeeeff'
+		closed_fence : COLOURS.SHUGAKU_DOMINO_OUTER,
+		undecided_fence : COLOURS.UNDECIDED_FENCE,
+		open_fence : COLOURS.OPEN_FENCE
 	}
-	drawer.setFenceColors(coloursFence);
+	drawer.setFenceColours(coloursFence);
 
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
 		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength); 
-		drawInsideSpaces(context, drawer, colors, solver, purificator);
+		drawInsideSpaces(context, drawer, colours, solver, purificator);
 		solver.callStateForItem(spanState);
 	}
 	setInterval(drawCanvas, 30);

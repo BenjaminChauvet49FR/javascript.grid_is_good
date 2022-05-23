@@ -94,16 +94,16 @@ SpaceNumeric.prototype.remainingSeveralPossibilitiesToString = function(p_withSp
 	if (this.value != null) {
 		return null;
 	}
-	var answer = "";
+	var result = "";
 	const potentialSpace = (p_withSpaceChar ? " " : "");
 	var activeSpace = "";
 	for (var i = this.offset ; i <= this.max ; i++) {
 		if (this.possibilities[this.selectPrivateIndex(i)]) {
-			answer += (activeSpace + i);
+			result += (activeSpace + i);
 			activeSpace = potentialSpace;
 		}	
 	}
-	return answer;
+	return result;
 }
 
 SpaceNumericSelect.prototype = Object.create(SpaceChoice.prototype);
@@ -228,26 +228,24 @@ shouldBeLoggedEvent = function(p_event) {
 
 // ------------------------
 
-deductionsTestOneLeft = function(p_eventsList, p_array, p_x, p_y) {
+deductionsTestOneLeft = function(p_listEventsToApply, p_array, p_x, p_y) {
 	const justOne = p_array[p_y][p_x].getOneLeft();
 	if (justOne != null) {
-		p_eventsList.push(new ChoiceEvent(p_x, p_y, justOne, true));
+		p_listEventsToApply.push(new ChoiceEvent(p_x, p_y, justOne, true));
 	}
-	return p_eventsList;
 }
 
-deductionsExcludeOthersNumeric = function(p_eventsList, p_numericSpaceArray, p_x, p_y, p_chosenValue) {
+deductionsExcludeOthersNumeric = function(p_listEventsToApply, p_numericSpaceArray, p_x, p_y, p_chosenValue) {
 	var numericSpace = p_numericSpaceArray[p_y][p_x];
 	for (var i = numericSpace.offset ; i <= numericSpace.max ; i++) {
 		if (p_chosenValue != i) {			
-			p_eventsList.push(new ChoiceEvent(p_x, p_y, i, false));
+			p_listEventsToApply.push(new ChoiceEvent(p_x, p_y, i, false));
 		}
 	}
-	return p_eventsList;
 }
 
 // Returns EVENT_RESULT value.
-testNumericSpaceChoice = function(p_numericSpaceArray, p_x, p_y, p_value, p_choice) {
+testNumericSpaceChoice = function(p_numericSpaceArray, p_x, p_y, p_value, p_choice) { 
 	if (p_value > p_numericSpaceArray[p_y][p_x].getMax()) {
 		return p_choice ? EVENT_RESULT.FAILURE : EVENT_RESULT.HARMLESS;
 	}
@@ -266,31 +264,29 @@ testNumericSpaceChoice = function(p_numericSpaceArray, p_x, p_y, p_value, p_choi
 
 // Tests when there is no symbol left in a space set (typically a region of grid), empty all the other possibilities.
 // Important : to be used in a deduction when a symbol is  (immediately after an application, not in a filter)
-deductionsAlertNoneLeftInSpaceSet = function(p_eventsList, p_NumericSpacesSetAccountant, p_symbol, p_spacesList, p_numericSpacesArray) {
-	return deductionsAlertLeftInSpaceSetPrivate(p_eventsList, p_symbol, p_spacesList, p_numericSpacesArray, p_NumericSpacesSetAccountant.getNotPlacedYet(p_symbol), p_NumericSpacesSetAccountant.getNotBannedYet(p_symbol), false);
+deductionsAlertNoneLeftInSpaceSet = function(p_listEventsToApply, p_NumericSpacesSetAccountant, p_symbol, p_spacesList, p_numericSpacesArray) {
+	deductionsAlertLeftInSpaceSetPrivate(p_listEventsToApply, p_symbol, p_spacesList, p_numericSpacesArray, p_NumericSpacesSetAccountant.getNotPlacedYet(p_symbol), p_NumericSpacesSetAccountant.getNotBannedYet(p_symbol), false); 
 }
 
-deductionsAlertRemainingPossibilitiesInSpaceSet = function(p_eventsList, p_NumericSpacesSetAccountant, p_symbol, p_spacesList, p_numericSpacesArray) {
-	return deductionsAlertLeftInSpaceSetPrivate(p_eventsList, p_symbol, p_spacesList, p_numericSpacesArray, p_NumericSpacesSetAccountant.getNotBannedYet(p_symbol), p_NumericSpacesSetAccountant.getNotPlacedYet(p_symbol), true);
+deductionsAlertRemainingPossibilitiesInSpaceSet = function(p_listEventsToApply, p_NumericSpacesSetAccountant, p_symbol, p_spacesList, p_numericSpacesArray) {
+	deductionsAlertLeftInSpaceSetPrivate(p_listEventsToApply, p_symbol, p_spacesList, p_numericSpacesArray, p_NumericSpacesSetAccountant.getNotBannedYet(p_symbol), p_NumericSpacesSetAccountant.getNotPlacedYet(p_symbol), true);
 }
 
-deductionsAlertLeftInSpaceSetPrivate = function(p_eventsList, p_symbol, p_spacesList, p_numericSpacesArray, p_nullVariable, p_positiveVariable, p_choiceBool) {
+deductionsAlertLeftInSpaceSetPrivate = function(p_listEventsToApply, p_symbol, p_spacesList, p_numericSpacesArray, p_nullVariable, p_positiveVariable, p_choiceBool) {
 	if ((p_nullVariable == 0) && (p_positiveVariable > 0)) {
 		var spaceCount = 0;
 		p_spacesList.forEach(coors => {
 			x = coors.x;
 			y = coors.y;
 			if (p_numericSpacesArray[y][x].getState(p_symbol) == SPACE_CHOICE.UNDECIDED) {
-				p_eventsList.push(new ChoiceEvent(x, y, p_symbol, p_choiceBool));
+				p_listEventsToApply.push(new ChoiceEvent(x, y, p_symbol, p_choiceBool));
 				spaceCount++;
 			}
 		});
 		if (spaceCount != p_positiveVariable) {
-			p_eventsList.push(new FailureEvent());
+			p_listEventsToApply.push(new FailureEvent()); 
 		}
-	}
-	return p_eventsList;
-	
+	}	
 }
 
 testNumericSelectSpaceChoice = function(p_choiceArray, p_x, p_y, p_index, p_choice) {	
@@ -306,11 +302,10 @@ testNumericSelectSpaceChoice = function(p_choiceArray, p_x, p_y, p_index, p_choi
 	return EVENT_RESULT.SUCCESS;
 }
 		
-deductionsExcludeOthersNumericSelect = function(p_eventsList, p_numericSelectArray, p_x, p_y, p_index) { 
+deductionsExcludeOthersNumericSelect = function(p_listEventsToApply, p_numericSelectArray, p_x, p_y, p_index) { 
 	p_numericSelectArray[p_y][p_x].values().forEach(index2 => { 
 		if (index2 != p_index) {
-			p_eventsList.push(new ChoiceEvent(p_x, p_y, index2, false));
+			p_listEventsToApply.push(new ChoiceEvent(p_x, p_y, index2, false));
 		}
 	});
-	return p_eventsList;
 }

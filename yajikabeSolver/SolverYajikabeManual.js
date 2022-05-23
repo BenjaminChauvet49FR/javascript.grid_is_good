@@ -8,16 +8,16 @@ SolverYajikabe.prototype.constructManual = function() {
 
 // Precondition : x, y of the event not banned !
 function applyManualClosure(p_solver) {
-	return function(p_event) {
-		const former = p_solver.answerArray[p_event.y][p_event.x];
-		if (former == p_event.symbol) {
+	return function(p_eventToApply) {
+		const former = p_solver.answerArray[p_eventToApply.y][p_eventToApply.x];
+		if (former == p_eventToApply.symbol) {
 			if (former == ADJACENCY.UNDECIDED) {
 				return EVENT_RESULT.HARMLESS;
 			}
-			p_event.symbol = ADJACENCY.UNDECIDED;
+			p_eventToApply.symbol = ADJACENCY.UNDECIDED;
 		} 			
-		p_solver.answerArray[p_event.y][p_event.x] = p_event.symbol;
-		p_event.formerSymbol = former;
+		p_solver.answerArray[p_eventToApply.y][p_eventToApply.x] = p_eventToApply.symbol;
+		p_eventToApply.formerSymbol = former;
 		return EVENT_RESULT.SUCCESS;
 	}
 }
@@ -27,8 +27,8 @@ function areOppositeEventsMethod(p_newEvent, p_previousEvent) {
 }
 
 function undoManualClosure(p_solver) {
-	return function(p_event) {
-		p_solver.answerArray[p_event.y][p_event.x] = p_event.formerSymbol;
+	return function(p_eventToUndo) {
+		p_solver.answerArray[p_eventToUndo.y][p_eventToUndo.x] = p_eventToUndo.formerSymbol;
 	}
 }
 

@@ -83,38 +83,38 @@ AdjacencyLimit.prototype.bindDirections = function (p_dir1, p_dir2) {
 }
 
 AdjacencyLimit.prototype.toString = function () {
-    var answer = "";
+    var result = "";
     var separate = "";
     var j;
     for (var i = 0; i < this.limits.length; i++) {
-        answer += separate;
+        result += separate;
         separate = "|";
         for (j = 0; j < this.limits[i].length; j++) {
-            answer += this.limits[i][j];
+            result += this.limits[i][j];
         }
     }
-    return answer;
+    return result;
 }
 
 AdjacencyLimit.prototype.copy = function () {
-    var answer = new AdjacencyLimit([]);
+    var result = new AdjacencyLimit([]);
     for (var i = 0; i < this.limits.length; i++) {
-        answer.limits.push(this.limits[i].slice());
+        result.limits.push(this.limits[i].slice());
     }
-    return answer;
+    return result;
 }
 
 AdjacencyLimit.prototype.orderedCopy = function () {
-    var answer = new AdjacencyLimit([]);
+    var result = new AdjacencyLimit([]);
     for (var i = 0; i < this.limits.length; i++) {
-        answer.limits.push(this.limits[i].slice().sort());
+        result.limits.push(this.limits[i].slice().sort());
     };
-    answer.limits.sort(function (a, b) {
+    result.limits.sort(function (a, b) {
         if (a[0] > b[0])
             return 1;
         return -1;
     });
-    return answer;
+    return result;
 }
 
 /**
@@ -143,32 +143,32 @@ AdjacencyLimit.prototype.equals = function (p_other) {
 
 function createAdjacencyLimitGrid(p_xLength, p_yLength) {
     var x;
-    var answer = [];
+    var result = [];
     for (var y = 0; y < p_yLength; y++) {
-        answer.push([]);
+        result.push([]);
         for (x = 0; x < p_xLength; x++) {
-            answer[y].push(AdjacencyLimitNew());
+            result[y].push(AdjacencyLimitNew());
         }
     }
-    return answer;
+    return result;
 }
 
 //Function for debug : better readability of an array of AdjacencyLimit
 //Example of use : arrayAdjacencyLimitToString(this.solver.adjacencyLimitGrid) OR arrayAdjacencyLimitToString(solver.adjacencyLimitGrid)
 function arrayAdjacencyLimitToString(p_array) {
-    var answer = "";
+    var result = "";
     var x;
     var i;
     var stringSpace;
     for (var y = 0; y < p_array.length; y++) {
         for (x = 0; x < p_array[0].length; x++) {
             stringSpace = p_array[y][x].toLogString();
-            answer += stringSpace;
+            result += stringSpace;
             for (i = stringSpace.length; i < 8; i++) {
-                answer += " ";
+                result += " ";
             }
         }
-        answer += "\n";
+        result += "\n";
     }
-    return answer;
+    return result;
 }

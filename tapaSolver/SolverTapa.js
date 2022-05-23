@@ -27,7 +27,7 @@ SolverTapa.prototype.construct = function(p_combinationArray) {
 	this.methodsSetPass = {
 		comparisonMethod : comparison,
 		copyMethod : copying,
-		argumentToLabelMethod : namingCategoryClosure(this)
+		argumentToLabelMethod : namingCategoryPassClosure(this)
 		};
 	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForAroundSpacePassClosure(this),
@@ -137,15 +137,15 @@ SolverTapa.prototype.putNew = function(p_x,p_y,p_symbol) {
 
 
 applyEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		return p_solver.putNew(eventToApply.x, eventToApply.y, eventToApply.symbol);
+	return function(p_eventToApply) {
+		return p_solver.putNew(p_eventToApply.x, p_eventToApply.y, p_eventToApply.symbol);
 	}
 }
 
 undoEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		const x = eventToApply.x; 
-		const y = eventToApply.y;
+	return function(p_eventToUndo) {
+		const x = p_eventToUndo.x; 
+		const y = p_eventToUndo.y;
 		p_solver.answerArray[y][x] = ADJACENCY.UNDECIDED;
 	}
 }
@@ -173,11 +173,11 @@ adjacencyClosure = function (p_solver) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Tapa"}];
+		var listQSEvents = [{quickStartLabel : "Tapa"}];
 		p_solver.numericSpacesCoorsList.forEach(coors => {
-			listQSEvts = p_solver.deductionsTapass(listQSEvts, coors.x, coors.y);
+			p_solver.deductionsTapass(listQSEvents, coors.x, coors.y);
 		});
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -190,14 +190,13 @@ deductionsClosure = function (p_solver) {
 		const y = p_eventBeingApplied.y;
 		const symbol = p_eventBeingApplied.symbol;
 		if (symbol == ADJACENCY.YES) {
-			p_listEventsToApply = p_solver.deductionsAlert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
+			p_solver.deductionsAlert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
 		} else {
 			
 		}
 		p_solver.neighboringClues[y][x].forEach(coors => {
 			p_solver.checkerNewSpaces.add(coors.x, coors.y);
 		});
-		return p_listEventsToApply;
 	}
 }
 
@@ -215,20 +214,23 @@ SolverTapa.prototype.clean = function() {
 
 function filterSpacesClosure(p_solver) {
 	return function() {
-		var eventsList = [];
-		p_solver.checkerNewSpaces.list.forEach(coors => {
-			if (eventsList != EVENT_RESULT.FAILURE) {
-				eventsList = p_solver.deductionsTapass(eventsList, coors.x, coors.y);
+		var listEventsToApply = [];
+		var i, coors;
+		for (i = 0 ; i < p_solver.checkerNewSpaces.list.length ; i++) {
+			coors = p_solver.checkerNewSpaces.list[i];
+			p_solver.deductionsTapass(listEventsToApply, coors.x, coors.y);
+			if (isFailed(listEventsToApply)) {
+				return listEventsToApply;
 			}
-		});
+		};
 		p_solver.clean();
-		return eventsList;
+		return listEventsToApply;
 	}
 }
 
 // Fills the list with tapass deductions from the index space contained in p_x, p_y. (or return failure) (see SolverTapaAnnex for more uses)
 // Convention : see SolverTapaAnnex.
-SolverTapa.prototype.deductionsTapass = function(p_listEvents, p_x, p_y) {
+SolverTapa.prototype.deductionsTapass = function(p_listEventsToApply, p_x, p_y) {
 	var taparray = [];
 	var tapaNumbers = [0, 0, 0, 0, 0]; 
 	const clue = this.clueGrid.get(p_x, p_y);
@@ -317,20 +319,20 @@ SolverTapa.prototype.deductionsTapass = function(p_listEvents, p_x, p_y) {
 	}
 	autoLogDebug("Coordinates tapass : " + p_x + " " + p_y);
 	var tapassReturn = tapass(tapaNumbers, taparray);
-	if (tapassReturn == EVENT_RESULT.FAILURE) {
-		return EVENT_RESULT.FAILURE;
+	if (tapassReturn == DEDUCTIONS_RESULT.FAILURE) {
+		p_listEventsToApply.push(new FailureEvent());
+		return;
 	} else if (tapassReturn != EVENT_RESULT.HARMLESS) {
 		for (var i = 0 ; i < tapaCoors.length ; i++) {
 			x = tapaCoors[i].x;
 			y = tapaCoors[i].y;			
 			switch(tapassReturn[i]) {
-				case TAPASS.YES : p_listEvents.push(new SpaceEvent(x, y, ADJACENCY.YES)); break;
-				case TAPASS.NO : p_listEvents.push(new SpaceEvent(x, y, ADJACENCY.NO)); break;
+				case TAPASS.YES : p_listEventsToApply.push(new SpaceEvent(x, y, ADJACENCY.YES)); break;
+				case TAPASS.NO : p_listEventsToApply.push(new SpaceEvent(x, y, ADJACENCY.NO)); break;
 				default : break;
 			}
 		}
 	}
-	return p_listEvents;
 }
 
 // --------------------
@@ -376,7 +378,7 @@ orderedListPassArgumentsClosure = function(p_solver) {
 	}
 }
 
-namingCategoryClosure = function(p_solver) {
+namingCategoryPassClosure = function(p_solver) {
 	return function (p_coors) {
 		return "Pass around " + p_coors.x + " " + p_coors.y; 
 	}

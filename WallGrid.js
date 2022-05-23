@@ -37,18 +37,18 @@ function generateWallArray(p_widthGrid, p_heightGrid) {
 }
 
 function generateSuggestedArray(p_widthGrid, p_heightGrid, p_startingStateWalls) {
-    var answer = [];
+    var result = [];
     for (var iy = 0; iy < p_heightGrid; iy++) {
-        answer.push([]);
+        result.push([]);
         for (var ix = 0; ix < p_widthGrid; ix++) {
-            answer[iy].push({
+            result[iy].push({
                 state: WALLGRID.OPEN,
                 wallD: p_startingStateWalls,
                 wallR: p_startingStateWalls
             });
         }
     }
-    return answer;
+    return result;
 }
 
 /**
@@ -472,19 +472,19 @@ WallGrid.prototype.resizeGrid = function (p_xLength, p_yLength) {
 function wallArrayToString(p_wallArray, p_parameters) {
     var xLength = p_wallArray[0].length;
     var yLength = p_wallArray.length;
-    var answer;
+    var result;
     if (p_parameters && p_parameters.isSquare) {
-        answer = xLength + " ";
+        result = xLength + " ";
     } else {
-        answer = xLength + " " + yLength + " ";
+        result = xLength + " " + yLength + " ";
     }
     var valueSpace;
     for (var iy = 0; iy < yLength; iy++) {
         for (var ix = 0; ix < xLength; ix++) {
-            answer += spaceToChar(p_wallArray[iy][ix]);
+            result += spaceToChar(p_wallArray[iy][ix]);
         }
 	}
-    return answer;
+    return result;
 }
 
 /**
@@ -503,14 +503,14 @@ function tokensToWallArray(p_tokens, p_parameters) {
         yLength = p_tokens[1];
         fieldString = p_tokens[2];
     }
-    var answer = [];
+    var result = [];
     for (iy = 0; iy < yLength; iy++) {
-        answer.push([]);
+        result.push([]);
         for (ix = 0; ix < xLength; ix++) {
-            answer[iy].push(charToSpace(fieldString.charAt(ix + iy * xLength)));
+            result[iy].push(charToSpace(fieldString.charAt(ix + iy * xLength)));
         }
     }
-    return answer;
+    return result;
 }
 
 /**
@@ -613,36 +613,36 @@ function wallArrayToString64(p_wallArray) {
 // testing : wallArrayToString64(editorCore.wallGrid.array)
 
 function string64toWallArray(p_string, p_xLength, p_yLength) {
-	var answer = [];
+	var result = [];
 	for(var y = 0; y < p_yLength; y++) {
-		answer.push([]);
+		result.push([]);
 		for (var x = 0; x < p_xLength; x++) {
-			answer[y].push(null);
+			result[y].push(null);
 		}
 	}
 	const base4StreamWalls = new StreamDecodingFullBase(4, p_string);
 	for(var y = 0; y < p_yLength-1; y++) {
 		for (var x = 0; x < p_xLength-1; x++) {
-			answer[y][x] = charToSpace(""+base4StreamWalls.decode());
+			result[y][x] = charToSpace(""+base4StreamWalls.decode());
 		}
 	}
 	
 	const binaryStreamRDEdges = new StreamDecodingFullBase(2, p_string.substring(base4StreamWalls.getConsumedCharacters()));
 	for (var y = 0; y < p_yLength-1 ; y++) {
-		answer[y][p_xLength-1] = charToSpace("0");
-		answer[y][p_xLength-1].wallD = (binaryStreamRDEdges.decode() ? WALLGRID.CLOSED : WALLGRID.OPEN);
+		result[y][p_xLength-1] = charToSpace("0");
+		result[y][p_xLength-1].wallD = (binaryStreamRDEdges.decode() ? WALLGRID.CLOSED : WALLGRID.OPEN);
 	}
 	for (var x = 0; x < p_xLength-1 ; x++) {
-		answer[p_yLength-1][x] = charToSpace("0");
-		answer[p_yLength-1][x].wallR = (binaryStreamRDEdges.decode() ? WALLGRID.CLOSED : WALLGRID.OPEN);
+		result[p_yLength-1][x] = charToSpace("0");
+		result[p_yLength-1][x].wallR = (binaryStreamRDEdges.decode() ? WALLGRID.CLOSED : WALLGRID.OPEN);
 	}
-	answer[p_yLength-1][p_xLength-1] = charToSpace("0");
+	result[p_yLength-1][p_xLength-1] = charToSpace("0");
 	const binaryStreamBan = new StreamDecodingSparseBinary(p_string.substring(binaryStreamRDEdges.getConsumedCharacters() + base4StreamWalls.getConsumedCharacters())); // When several decoding streams decode a same string, take the first index not read yet. Should be obtained through getNextIndex calls.
 	for (var y = 0; y < p_yLength; y++) {
 		for (var x = 0; x < p_xLength; x++) {
-			answer[y][x].state = ((binaryStreamBan.decode() == 1) ? WALLGRID.CLOSED : WALLGRID.OPEN); // decode can return END_OF_DECODING_STREAM.
+			result[y][x].state = ((binaryStreamBan.decode() == 1) ? WALLGRID.CLOSED : WALLGRID.OPEN); // decode can return END_OF_DECODING_STREAM.
 		}
 	} // When decoding, make sure that the streaming are the ones corresponding to the ones of encoding
 	
-	return answer;
+	return result;
 }

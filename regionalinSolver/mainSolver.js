@@ -1,6 +1,6 @@
 var solver;
 function main() {
-	const colors = {		
+	const colours = {		
 		noLink : COLOURS.NO_LINK,
 		noLinkWall : COLOURS.NO_LINK_WALL,
 		presentLink : COLOURS.LINK,
@@ -10,7 +10,7 @@ function main() {
 		reflectWrite : COLOURS.LOOP_STANDARD_CLOSED_WRITE
 	}
 
-	var drawer = new Drawer(colors);
+	var drawer = new Drawer(colours);
 	solver = DummySolver();
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
@@ -23,7 +23,7 @@ function main() {
 	//The main draw function (at start)
 	function drawCanvas() {
 		drawer.drawWallGrid(context, solver.gridWall, solver.xLength, solver.yLength);
-		drawInsideSpaces(context, drawer, colors, solver);
+		drawInsideSpaces(context, drawer, colours, solver);
 		// Note : no drawing of non-clue banned spaces
 		solver.callStateForItem(spanState);
 	}

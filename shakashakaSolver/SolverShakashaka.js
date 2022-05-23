@@ -138,11 +138,11 @@ SolverShakashaka.prototype.makeQuickStart = function() {
 SolverShakashaka.prototype.emitPassSpace = function(p_x, p_y) {
 	const space = this.numericArray[p_y][p_x];
 	if (space.value != NOT_FORCED) {
-		generatedEvents = this.generateEventsAroundNumericSpace(p_x, p_y);
-		this.passEvents(generatedEvents, {passCategory : SHAKASHAKA_PASS_CATEGORY.NUMERIC, x : p_x, y : p_y}); // Note : pass categories not undispensables, given that everything revolves around spaces...
+		listPassNow = this.generateEventsAroundNumericSpace(p_x, p_y);
+		this.passEvents(listPassNow, {passCategory : SHAKASHAKA_PASS_CATEGORY.NUMERIC, x : p_x, y : p_y}); // Note : pass categories not undispensables, given that everything revolves around spaces...
 	} else {
-		generatedEvents = this.generateEventsInSpace(p_x, p_y);
-		this.passEvents(generatedEvents, {passCategory : SHAKASHAKA_PASS_CATEGORY.SPACE, x : p_x, y : p_y});
+		listPassNow = this.generateEventsInSpace(p_x, p_y);
+		this.passEvents(listPassNow, {passCategory : SHAKASHAKA_PASS_CATEGORY.SPACE, x : p_x, y : p_y});
 	}
 }
 
@@ -198,11 +198,11 @@ undoEventClosure = function(p_solver) {
 	}
 }
 
-SolverShakashaka.prototype.undoSymbolEvent = function(p_event) {
-	if (p_event.kind == TRIANGLE_KIND) {		
-		const x = p_event.x;
-		const y = p_event.y;
-		const dir = p_event.direction;
+SolverShakashaka.prototype.undoSymbolEvent = function(p_eventToUndo) {
+	if (p_eventToUndo.kind == TRIANGLE_KIND) {		
+		const x = p_eventToUndo.x;
+		const y = p_eventToUndo.y;
+		const dir = p_eventToUndo.direction;
 		const symbol = this.answerArray[y][x][dir];
 		this.answerArray[y][x][dir] = SHAKASHAKA.UNDECIDED;
 		const dx = x + DeltaX[dir];
@@ -215,7 +215,7 @@ SolverShakashaka.prototype.undoSymbolEvent = function(p_event) {
 			}
 		}
 	} else {
-		this.straightnessArray[p_event.y][p_event.x] = false;
+		this.straightnessArray[p_eventToUndo.y][p_eventToUndo.x] = false;
 	}
 }
 
@@ -225,7 +225,7 @@ SolverShakashaka.prototype.undoSymbolEvent = function(p_event) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Shakashaka"}];
+		var listQSEvents = [{quickStartLabel : "Shakashaka"}];
 		var space;
 		var spaceInfos;
 		for (var iy = 0 ; iy < p_solver.yLength ; iy++) {
@@ -234,16 +234,16 @@ quickStartEventsClosure = function(p_solver) {
 					// Triangles opposite to walls
 					p_solver.existingNeighborsCoorsDirections(ix, iy).forEach(coorsDir => {
 						if (!p_solver.isBlockedSpace(coorsDir.x, coorsDir.y)) {						
-							listQSEvts.push(new TriangleEvent(coorsDir.x, coorsDir.y, coorsDir.direction, SHAKASHAKA.WHITE));
+							listQSEvents.push(new TriangleEvent(coorsDir.x, coorsDir.y, coorsDir.direction, SHAKASHAKA.WHITE));
 						}
 					});
 					// Numeric space
 					if (p_solver.numericArray[iy][ix].value != NOT_FORCED) {
 						if (p_solver.numericArray[iy][ix].notPlacedWhitesYet == 0) {
-							listQSEvts = p_solver.aroundSpaceNumericDeductions(listQSEvts, ix, iy, SHAKASHAKA.BLACK);
+							p_solver.deductionsAroundSpaceNumeric(listQSEvents, ix, iy, SHAKASHAKA.BLACK);
 						}
 						if (p_solver.numericArray[iy][ix].notPlacedBlacksYet == 0) {
-							listQSEvts = p_solver.aroundSpaceNumericDeductions(listQSEvts, ix, iy, SHAKASHAKA.WHITE);
+							p_solver.deductionsAroundSpaceNumeric(listQSEvents, ix, iy, SHAKASHAKA.WHITE);
 						}
 					}
 				}				
@@ -251,21 +251,21 @@ quickStartEventsClosure = function(p_solver) {
 		}
 		for (var iy = 0 ; iy < p_solver.yLength ; iy++) {
 			if (!p_solver.isBlockedSpace(0, iy)) {
-				listQSEvts.push(new TriangleEvent(0, iy, DIRECTION.RIGHT, SHAKASHAKA.WHITE));
+				listQSEvents.push(new TriangleEvent(0, iy, DIRECTION.RIGHT, SHAKASHAKA.WHITE));
 			} 
 			if (!p_solver.isBlockedSpace(p_solver.xLength-1, iy)) {
-				listQSEvts.push(new TriangleEvent(p_solver.xLength-1, iy, DIRECTION.LEFT, SHAKASHAKA.WHITE));			
+				listQSEvents.push(new TriangleEvent(p_solver.xLength-1, iy, DIRECTION.LEFT, SHAKASHAKA.WHITE));			
 			}
 		}
 		for (var ix = 0 ; ix < p_solver.xLength ; ix++) {
 			if (!p_solver.isBlockedSpace(ix, 0)) {
-				listQSEvts.push(new TriangleEvent(ix, 0, DIRECTION.DOWN, SHAKASHAKA.WHITE));
+				listQSEvents.push(new TriangleEvent(ix, 0, DIRECTION.DOWN, SHAKASHAKA.WHITE));
 			} 
 			if (!p_solver.isBlockedSpace(ix, p_solver.yLength-1)) {
-				listQSEvts.push(new TriangleEvent(ix, p_solver.yLength-1, DIRECTION.UP, SHAKASHAKA.WHITE));			
+				listQSEvents.push(new TriangleEvent(ix, p_solver.yLength-1, DIRECTION.UP, SHAKASHAKA.WHITE));			
 			}
 		}
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -289,7 +289,7 @@ deductionsClosure = function (p_solver) {
 				// Numeric deductions
 				if (p_solver.neighborExists(x, y, dir)) { 
 					if (p_solver.numericArray[pressY][pressX].value != NOT_FORCED && p_solver.numericArray[pressY][pressX].notPlacedWhitesYet == 0) {
-						p_listEventsToApply = p_solver.aroundSpaceNumericDeductions(p_listEventsToApply, pressX, pressY, SHAKASHAKA.BLACK);
+						p_solver.deductionsAroundSpaceNumeric(p_listEventsToApply, pressX, pressY, SHAKASHAKA.BLACK);
 					}
 				}
 				if (p_solver.answerArray[y][x][odir] == SHAKASHAKA.WHITE) { // Two opposite are white : whole space is white.
@@ -298,10 +298,10 @@ deductionsClosure = function (p_solver) {
 				}
 				// Black and white in adjacent directions on the same space
 				if (p_solver.answerArray[y][x][clockwiseDir] == SHAKASHAKA.BLACK) {
-					p_listEventsToApply = p_solver.blackWithWhiteCounterClockwiseDeductions(p_listEventsToApply, x, y, clockwiseDir);
+					p_solver.deductionsBlackWithWhiteCounterClockwise(p_listEventsToApply, x, y, clockwiseDir);
 				}
 				if (p_solver.answerArray[y][x][counterClockwiseDir] == SHAKASHAKA.BLACK) {					
-					p_listEventsToApply = p_solver.blackWithWhiteClockwiseDeductions(p_listEventsToApply, x, y, counterClockwiseDir);
+					p_solver.deductionsBlackWithWhiteClockwise(p_listEventsToApply, x, y, counterClockwiseDir);
 				}
 				// Aside a white in the same direction to make a diamond slide
 				var xBlack, yBlack;
@@ -315,12 +315,12 @@ deductionsClosure = function (p_solver) {
 								p_listEventsToApply.push(new FailureEvent());
 								ok = false;
 							}
-							p_listEventsToApply = p_solver.slideDeductions(p_listEventsToApply, xBlack, yBlack, dir, OppositeDirection[blackDir]);
+							p_solver.deductionsSlide(p_listEventsToApply, xBlack, yBlack, dir, OppositeDirection[blackDir]);
 						}
 					}
 				});
 				if (!ok) {
-					return p_listEventsToApply;
+					return;
 				}
 				// Continuity from a straight rectangle or birth of a straight space
 				if ( (!p_solver.neighborExists(x, y, dir)) || p_solver.straightnessArray[pressY][pressX] || p_solver.getNeighborTriangle(x, y, dir, OppositeDirection[dir]) == SHAKASHAKA.BLACK) {						
@@ -331,7 +331,7 @@ deductionsClosure = function (p_solver) {
 				// Numeric deductions
 				if (p_solver.neighborExists(x, y, dir)) { 
 					if (p_solver.numericArray[pressY][pressX].value != NOT_FORCED && p_solver.numericArray[pressY][pressX].notPlacedBlacksYet == 0) {
-						p_listEventsToApply = p_solver.aroundSpaceNumericDeductions(p_listEventsToApply, pressX, pressY, SHAKASHAKA.WHITE);
+						p_solver.deductionsAroundSpaceNumeric(p_listEventsToApply, pressX, pressY, SHAKASHAKA.WHITE);
 					}
 				}
 				if (p_solver.neighborExists(x, y, dir) && !p_solver.isBlockedSpace(pressX, pressY, dir)) { // Behind the triangle
@@ -339,22 +339,21 @@ deductionsClosure = function (p_solver) {
 				}
 				// Black and white in adjacent directions on the same space
 				if (p_solver.answerArray[y][x][clockwiseDir] == SHAKASHAKA.WHITE) {
-					p_listEventsToApply = p_solver.blackWithWhiteClockwiseDeductions(p_listEventsToApply, x, y, dir);
+					p_solver.deductionsBlackWithWhiteClockwise(p_listEventsToApply, x, y, dir);
 				}
 				if (p_solver.answerArray[y][x][counterClockwiseDir] == SHAKASHAKA.WHITE) {					
-					p_listEventsToApply = p_solver.blackWithWhiteCounterClockwiseDeductions(p_listEventsToApply, x, y, dir);
+					p_solver.deductionsBlackWithWhiteCounterClockwise(p_listEventsToApply, x, y, dir);
 				}
 				// Two blacks : 
 				// Black source AND black facing in a side space (space to its left/right)
 				[clockwiseDir, counterClockwiseDir].forEach(turningDir => {				
 					if (p_solver.neighborExists(x, y, turningDir)) {
 						if (p_solver.answerArray[y + DeltaY[turningDir]][x + DeltaX[turningDir]][odir] == SHAKASHAKA.BLACK) {
-							p_listEventsToApply = p_solver.blackWithBlackAheadSideDeductions(p_listEventsToApply, x, y, dir, turningDir); // Benefits from the fact banned spaces are all "blackened"
+							p_solver.deductionsBlackWithBlackAheadSide(p_listEventsToApply, x, y, dir, turningDir); // Benefits from the fact banned spaces are all "blackened"
 						} 
 					}
 				});
 			}
-			return p_listEventsToApply;
 		} else { // Straight space !
 			const x = p_eventBeingApplied.x;
 			const y = p_eventBeingApplied.y;
@@ -368,50 +367,48 @@ deductionsClosure = function (p_solver) {
 			// Rectangle completion
 			if (x > 0) {
 				if (y > 0) {
-					p_listEventsToApply = p_solver.straightRectangleCompletionDeductions(p_listEventsToApply, x, y, x-1, y-1);
+					p_solver.deductionsStraightRectangleCompletion(p_listEventsToApply, x, y, x-1, y-1);
 				}
 				if (y <= p_solver.yLength - 2) {
-					p_listEventsToApply = p_solver.straightRectangleCompletionDeductions(p_listEventsToApply, x, y, x-1, y+1);
+					p_solver.deductionsStraightRectangleCompletion(p_listEventsToApply, x, y, x-1, y+1);
 				}
 			}
 			if (x <= p_solver.xLength - 2) {
 				if (y > 0) {
-					p_listEventsToApply = p_solver.straightRectangleCompletionDeductions(p_listEventsToApply, x, y, x+1, y-1);					
+					p_solver.deductionsStraightRectangleCompletion(p_listEventsToApply, x, y, x+1, y-1);					
 				}
 				if (y <= p_solver.yLength - 2) {
-					p_listEventsToApply = p_solver.straightRectangleCompletionDeductions(p_listEventsToApply, x, y, x+1, y+1);
+					p_solver.deductionsStraightRectangleCompletion(p_listEventsToApply, x, y, x+1, y+1);
 				}
 			}
-			return p_listEventsToApply;
 		}
 	}
 }
 
 // Numeric deductions
-SolverShakashaka.prototype.aroundSpaceNumericDeductions = function(p_listEventsToApply, p_x, p_y, p_colorToFill) {
+SolverShakashaka.prototype.deductionsAroundSpaceNumeric = function(p_listEventsToApply, p_x, p_y, p_colourToFill) {
 	this.existingNeighborsDirections(p_x, p_y).forEach(dir => {
 		if (this.getNeighborTriangle(p_x, p_y, dir, OppositeDirection[dir]) == SHAKASHAKA.UNDECIDED) {
-			p_listEventsToApply.push(new TriangleEvent(p_x + DeltaX[dir], p_y + DeltaY[dir], OppositeDirection[dir], p_colorToFill));
+			p_listEventsToApply.push(new TriangleEvent(p_x + DeltaX[dir], p_y + DeltaY[dir], OppositeDirection[dir], p_colourToFill));
 		}
 	});
-	return p_listEventsToApply;
 }
 
 // A black near to a white
 // p_dir = direction of the white space quarter
-SolverShakashaka.prototype.blackWithWhiteClockwiseDeductions = function(p_listEventsToApply, p_x, p_y, p_dir) {
-	return this.blackWithWhiteTurningDeductions(p_listEventsToApply, p_x, p_y, p_dir, TurningRightDirection[p_dir]);
+SolverShakashaka.prototype.deductionsBlackWithWhiteClockwise = function(p_listEventsToApply, p_x, p_y, p_dir) {
+	this.deductionsBlackWithWhiteTurning(p_listEventsToApply, p_x, p_y, p_dir, TurningRightDirection[p_dir]);
 }
 
-SolverShakashaka.prototype.blackWithWhiteCounterClockwiseDeductions = function(p_listEventsToApply, p_x, p_y, p_dir) {
-	return this.blackWithWhiteTurningDeductions(p_listEventsToApply, p_x, p_y, p_dir, TurningLeftDirection[p_dir]);
+SolverShakashaka.prototype.deductionsBlackWithWhiteCounterClockwise = function(p_listEventsToApply, p_x, p_y, p_dir) {
+	this.deductionsBlackWithWhiteTurning(p_listEventsToApply, p_x, p_y, p_dir, TurningLeftDirection[p_dir]);
 }
 
-SolverShakashaka.prototype.blackWithWhiteTurningDeductions = function(p_listEventsToApply, p_x, p_y, p_dirSource, p_dirTurn) {
+SolverShakashaka.prototype.deductionsBlackWithWhiteTurning = function(p_listEventsToApply, p_x, p_y, p_dirSource, p_dirTurn) {
 	const odir = OppositeDirection[p_dirSource];
 	if (!this.neighborExists(p_x, p_y, p_dirTurn) || !(this.neighborExists(p_x, p_y, odir))) {		
 		p_listEventsToApply.push(new FailureEvent());
-		return p_listEventsToApply;
+		return;
 	}
 	const dirTurn3 = OppositeDirection[p_dirTurn];
 	const xTurn = p_x + DeltaX[p_dirTurn];
@@ -424,9 +421,9 @@ SolverShakashaka.prototype.blackWithWhiteTurningDeductions = function(p_listEven
 	if (this.answerArray[yTurn][xTurn][p_dirSource] == SHAKASHAKA.WHITE) {
 		if (!this.neighborExists(p_x, p_y, p_dirSource)) {
 			p_listEventsToApply.push(new FailureEvent());
-			return p_listEventsToApply;
+			return;
 		}
-		p_listEventsToApply = this.slideDeductions(p_listEventsToApply, p_x, p_y, p_dirSource, p_dirTurn);
+		this.deductionsSlide(p_listEventsToApply, p_x, p_y, p_dirSource, p_dirTurn);
 	}
 		
 	
@@ -443,15 +440,13 @@ SolverShakashaka.prototype.blackWithWhiteTurningDeductions = function(p_listEven
 	if (!this.neighborExists(p_x, p_y, p_dirSource) || this.answerArray[yTurn + DeltaY[p_dirSource]][xTurn + DeltaX[p_dirSource]][odir] == SHAKASHAKA.BLACK) {
 		p_listEventsToApply.push(new TriangleEvent(xTurn, yTurn, p_dirSource, SHAKASHAKA.BLACK));
 	}
-	return p_listEventsToApply;
 }
 
 // Two blacks facing each other with one which is sided from the other one :
 // p_dir = triangle source
-SolverShakashaka.prototype.blackWithBlackAheadSideDeductions = function(p_listEventsToApply, p_x, p_y, p_dir, p_dirTurning) {
+SolverShakashaka.prototype.deductionsBlackWithBlackAheadSide = function(p_listEventsToApply, p_x, p_y, p_dir, p_dirTurning) {
 	p_listEventsToApply.push(new TriangleEvent(p_x + DeltaX[p_dirTurning], p_y + DeltaY[p_dirTurning], OppositeDirection[p_dirTurning], SHAKASHAKA.BLACK));
 	p_listEventsToApply.push(new TriangleEvent(p_x, p_y, p_dirTurning, SHAKASHAKA.BLACK));
-	return p_listEventsToApply;
 }
 
 // Prerequistes (all checked) : 
@@ -460,16 +455,15 @@ SolverShakashaka.prototype.blackWithBlackAheadSideDeductions = function(p_listEv
 // White in ((p_xBlack, p_yBlack) + Delta(p_dirBlack), p_dirBlack)
 // Existing neighbor (p_xBlack, p_yBlack, p_dirBlack) otherwise failure !
 // Then the diamond already formed must slide
-SolverShakashaka.prototype.slideDeductions = function(p_listEventsToApply, p_xBlack, p_yBlack, p_dirBlack, p_dirWhite) {
+SolverShakashaka.prototype.deductionsSlide = function(p_listEventsToApply, p_xBlack, p_yBlack, p_dirBlack, p_dirWhite) {
 	const remoteX = p_xBlack + DeltaX[p_dirBlack] + DeltaX[p_dirWhite];
 	const remoteY = p_yBlack + DeltaY[p_dirBlack] + DeltaY[p_dirWhite];
 	p_listEventsToApply.push(new TriangleEvent(remoteX, remoteY, p_dirBlack, SHAKASHAKA.BLACK));
 	p_listEventsToApply.push(new TriangleEvent(remoteX, remoteY, OppositeDirection[p_dirWhite], SHAKASHAKA.BLACK)); // If not for laziness, this event would have been made useless
-	return p_listEventsToApply;
 }
 
 // If 3 spaces are "straight" in the (p_x1, p_y1 -> p_x2, p_y2) set of spaces which is supposed to be an existing 2x2 square : fill the 4th.
-SolverShakashaka.prototype.straightRectangleCompletionDeductions = function(p_listEventsToApply, p_x1, p_y1, p_x2, p_y2) {
+SolverShakashaka.prototype.deductionsStraightRectangleCompletion = function(p_listEventsToApply, p_x1, p_y1, p_x2, p_y2) {
 	const xArray = [p_x1, p_x1, p_x2, p_x2];
 	const yArray = [p_y1, p_y2, p_y1, p_y2];
 	var ai = -1; // ai for answer index
@@ -487,29 +481,28 @@ SolverShakashaka.prototype.straightRectangleCompletionDeductions = function(p_li
 	if (ai >= 0) {
 		p_listEventsToApply.push(new StraightSpaceEvent(xArray[ai], yArray[ai]));
 	}
-	return p_listEventsToApply;
 }
 
 // ---------------------
 // Pass methods
 	
 SolverShakashaka.prototype.generateEventsAroundNumericSpace = function(p_x, p_y) {
-	var answer = [];
+	var listPass = [];
 	this.existingNeighborsCoorsDirections(p_x, p_y).forEach(coorsDir => {
-		answer.push(
+		listPass.push(
 		[new TriangleEvent(coorsDir.x, coorsDir.y, OppositeDirection[coorsDir.direction], SHAKASHAKA.BLACK), 
 		new TriangleEvent(coorsDir.x, coorsDir.y, OppositeDirection[coorsDir.direction], SHAKASHAKA.WHITE)]
 		);
 	});
-	return answer;
+	return listPass;
 }
 
 SolverShakashaka.prototype.generateEventsInSpace = function(p_x, p_y) {
-	var answer = [];
-	answer.push([new TriangleEvent(p_x, p_y, DIRECTION.UP, SHAKASHAKA.BLACK), new TriangleEvent(p_x, p_y, DIRECTION.UP, SHAKASHAKA.WHITE)]);
-	answer.push([new TriangleEvent(p_x, p_y, DIRECTION.LEFT, SHAKASHAKA.BLACK), new TriangleEvent(p_x, p_y, DIRECTION.LEFT, SHAKASHAKA.WHITE)]);
-	answer.push([new TriangleEvent(p_x, p_y, DIRECTION.RIGHT, SHAKASHAKA.BLACK), new TriangleEvent(p_x, p_y, DIRECTION.RIGHT, SHAKASHAKA.WHITE)]);
-	return answer;
+	var listPass = [];
+	listPass.push([new TriangleEvent(p_x, p_y, DIRECTION.UP, SHAKASHAKA.BLACK), new TriangleEvent(p_x, p_y, DIRECTION.UP, SHAKASHAKA.WHITE)]);
+	listPass.push([new TriangleEvent(p_x, p_y, DIRECTION.LEFT, SHAKASHAKA.BLACK), new TriangleEvent(p_x, p_y, DIRECTION.LEFT, SHAKASHAKA.WHITE)]);
+	listPass.push([new TriangleEvent(p_x, p_y, DIRECTION.RIGHT, SHAKASHAKA.BLACK), new TriangleEvent(p_x, p_y, DIRECTION.RIGHT, SHAKASHAKA.WHITE)]);
+	return listPass;
 }
 
 function compareSolveEvents(p_event1, p_event2) {
@@ -525,10 +518,10 @@ function copying(p_event) {
 }
 
 function namingSetClosure(p_solver) {
-	return function(p_index) {
-		switch(p_index.passCategory) {
-			case SHAKASHAKA_PASS_CATEGORY.SPACE : return "Std.space " + p_index.x + "," + p_index.y; break; 
-			case SHAKASHAKA_PASS_CATEGORY.NUMERIC : return "Around num.space "+ p_index.x + "," + p_index.y; break;
+	return function(p_indexPass) {
+		switch(p_indexPass.passCategory) {
+			case SHAKASHAKA_PASS_CATEGORY.SPACE : return "Std.space " + p_indexPass.x + "," + p_indexPass.y; break; 
+			case SHAKASHAKA_PASS_CATEGORY.NUMERIC : return "Around num.space "+ p_indexPass.x + "," + p_indexPass.y; break;
 		}
 	}
 }
@@ -537,37 +530,37 @@ function namingSetClosure(p_solver) {
 // Multipass methods
 
 generateEventsForSpacePassClosure = function(p_solver) {
-	return function(p_index) {
-		if (p_index.passCategory == SHAKASHAKA_PASS_CATEGORY.NUMERIC) {
-			return p_solver.generateEventsAroundNumericSpace(p_index.x, p_index.y);
+	return function(p_indexPass) {
+		if (p_indexPass.passCategory == SHAKASHAKA_PASS_CATEGORY.NUMERIC) {
+			return p_solver.generateEventsAroundNumericSpace(p_indexPass.x, p_indexPass.y);
 		} else {
-			return p_solver.generateEventsInSpace(p_index.x, p_index.y);
+			return p_solver.generateEventsInSpace(p_indexPass.x, p_indexPass.y);
 		}
 	}
 }
 
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		var answer = [];
+		var listIndexesPass = [];
 		for (var iy = 0 ; iy < p_solver.yLength ; iy++) {
 			for (var ix = 0 ; ix < p_solver.xLength ; ix++) {
 				if (p_solver.numericArray[iy][ix].value != NOT_FORCED) {
-					answer.push({passCategory : SHAKASHAKA_PASS_CATEGORY.NUMERIC, x : ix, y : iy});
+					listIndexesPass.push({passCategory : SHAKASHAKA_PASS_CATEGORY.NUMERIC, x : ix, y : iy});
 				} else if (!p_solver.numericArray[iy][ix].blocked) {
-					answer.push({passCategory : SHAKASHAKA_PASS_CATEGORY.SPACE, x : ix, y : iy});
+					listIndexesPass.push({passCategory : SHAKASHAKA_PASS_CATEGORY.SPACE, x : ix, y : iy});
 				}
 			}
 		}
-		return answer;
+		return listIndexesPass;
 	}
 }
 
 multipassDefineTodoClosure = function(p_solver) {
-	return function(p_index) {
-		if (p_index.passCategory == SHAKASHAKA_PASS_CATEGORY.NUMERIC) {
+	return function(p_indexPass) {
+		if (p_indexPass.passCategory == SHAKASHAKA_PASS_CATEGORY.NUMERIC) {
 			return (p_solver.numericArray.notPlacedBlacksYet > 0);
 		} else {
-			var space = p_solver.answerArray[p_index.y][p_index.x];
+			var space = p_solver.answerArray[p_indexPass.y][p_indexPass.x];
 			return (space[DIRECTION.LEFT] == SHAKASHAKA.UNDECIDED || space[DIRECTION.UP] == SHAKASHAKA.UNDECIDED || space[DIRECTION.RIGHT] == SHAKASHAKA.UNDECIDED);
 		}
 	}

@@ -14,8 +14,8 @@ function main() {
 		numberWriteNotFixed : COLOURS.NOT_FIXED_NUMBER,
 		openSpaceFixed : COLOURS.OPEN_WILD,
 		openSpaceNotFixed : COLOURS.OPEN_WILD_LIGHT,
-		closedNearX : '#440000',
-		closedFarX : '#cc88ff',
+		closedNearX : COLOURS.X_COLOURED_DISTANCE_NEAR,
+		closedFarX : COLOURS.X_COLOURED_DISTANCE_FAR,
 		purification : COLOURS.PURIFICATION_SYMBOL_GRID
 	}
 

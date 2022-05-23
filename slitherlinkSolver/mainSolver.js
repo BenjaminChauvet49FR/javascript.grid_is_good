@@ -1,15 +1,14 @@
 var solver;
 function main() {
-	var colors = {
-		openLink : COLOURS.OPEN_LINK_DOTS,
-		openNode : COLOURS.OPEN_NODE_DOTS,
+	var colours = {
+		linkedLink : COLOURS.LINKED_LINK_DOTS,
+		linkedNode : COLOURS.LINKED_NODE_DOTS,
 		undecidedLink : COLOURS.UNDECIDED_LINK_DOTS,
 		closedLink : COLOURS.CLOSED_LINK_DOTS,
-		
-		numberWrite:'#220044'
+		numberWrite : COLOURS.WRITE_IN_FENCES
 	}
 
-	var drawer = new Drawer(colors);
+	var drawer = new Drawer(colours);
 	solver = DummySolver();
 	var canevas = document.getElementById("canevas");
 	drawer.adaptCanvasDimensions(canevas, {isDotted : true, xLength : solver.xLength, yLength : solver.yLength}); // Note : required here because of "isDotted".
@@ -23,7 +22,7 @@ function main() {
 	//--------------------
 	//The main draw function (at start)
 	function drawCanvas() {
-		draw(context, drawer, colors, solver);
+		draw(context, drawer, colours, solver);
 		solver.callStateForItem(spanState);
 	}
 	

@@ -187,15 +187,6 @@ menuSolvers.push({
 	]
 });
 
-menuSolvers.push({
-	displayName : "Théorique",
-	typeList : [
-		{name : "theoryCluster", displayName : "Clusters d'adjacence", hoverDescription : 'Solveur théorique sur les puzzles nécessitant que toutes les cases "ouvertes" doivent être adjacentes entre elles'},
-		{name : "theoryLoop", displayName : "Boucles",  hoverDescription : 'Solveur théorique sur les puzzles avec une unique boucle orthogonale'},
-		{name : "theoryLoopRegion", displayName : "Boucles à régions",  hoverDescription : 'Solveur théorique sur les puzzles avec une unique boucle orthogonale régionale'}
-	]
-});
-
 const divElement = document.getElementById("div_common_menu");
 addMenuPartEditor(divElement, menuEditor);
 divElement.appendChild(document.createElement("br"));

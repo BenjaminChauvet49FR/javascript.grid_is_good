@@ -53,7 +53,7 @@ SolverStarBattle.prototype.construct = function(p_wallArray, p_starNumber) {
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodsSetPass = {comparisonMethod : comparing, copyMethod : copying,  argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsSetPass = {comparisonMethod : comparing, copyMethod : copying,  argumentToLabelMethod : namingCategoryPassClosure(this)};
 	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForRLCPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
@@ -137,18 +137,18 @@ SolverStarBattle.prototype.undo = function() {
 }
 
 SolverStarBattle.prototype.emitPassRegion = function(p_indexRegion) {
-	const generatedEvents = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEvents(generatedEvents, {family : STAR_BATTLE_PASS_CATEGORY.REGION, index : p_indexRegion}); 
+	const listPassNow = this.generateEventsForRegionPass(p_indexRegion);
+	this.passEvents(listPassNow, {family : STAR_BATTLE_PASS_CATEGORY.REGION, index : p_indexRegion}); 
 }
 
 SolverStarBattle.prototype.emitPassRow = function(p_y) {
-	const generatedEvents = this.generateEventsForRowPass(p_y);
-	this.passEvents(generatedEvents, {family : STAR_BATTLE_PASS_CATEGORY.ROW, index : p_y}); 
+	const listPassNow = this.generateEventsForRowPass(p_y);
+	this.passEvents(listPassNow, {family : STAR_BATTLE_PASS_CATEGORY.ROW, index : p_y}); 
 }
 
 SolverStarBattle.prototype.emitPassColumn = function(p_x) {
-	const generatedEvents = this.generateEventsForColumnPass(p_x);
-	this.passEvents(generatedEvents, {family : STAR_BATTLE_PASS_CATEGORY.COLUMN, index : p_x}); 
+	const listPassNow = this.generateEventsForColumnPass(p_x);
+	this.passEvents(listPassNow, {family : STAR_BATTLE_PASS_CATEGORY.COLUMN, index : p_x}); 
 }
 
 SolverStarBattle.prototype.makeMultiPass = function() {	
@@ -161,8 +161,8 @@ SolverStarBattle.prototype.makeQuickStart = function() {
 }
 
 SolverStarBattle.prototype.passSelectedSpaces = function(p_coorsList) {
-	const eventsForPass = this.generateEventsForSpacesList(p_coorsList);
-	return this.passEvents(eventsForPass, {family : STAR_BATTLE_PASS_CATEGORY.CUSTOM, numberSpaces : eventsForPass.length});
+	const listPassNow = this.generateEventsForSpacesList(p_coorsList);
+	return this.passEvents(listPassNow, {family : STAR_BATTLE_PASS_CATEGORY.CUSTOM, numberSpaces : listPassNow.length});
 }
 
 SolverStarBattle.prototype.makeResolution = function() { 
@@ -178,8 +178,8 @@ SolverStarBattle.prototype.makeResolutionAdvanced = function() {
 // Doing and undoing
 
 applyEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		return p_solver.putNew(eventToApply.x, eventToApply.y, eventToApply.symbol);
+	return function(p_eventToApply) {
+		return p_solver.putNew(p_eventToApply.x, p_eventToApply.y, p_eventToApply.symbol);
 	}
 }
 
@@ -220,9 +220,9 @@ SolverStarBattle.prototype.putNew = function(p_x, p_y, p_symbol) {
 When you want to remove a symbol from a space !
 */
 undoEventClosure = function(p_solver) {
-	return function(eventToUndo) {
-		y = eventToUndo.y;
-		x = eventToUndo.x;
+	return function(p_eventToUndo) {
+		y = p_eventToUndo.y;
+		x = p_eventToUndo.x;
 		var indexRegion = p_solver.regionArray[y][x];
 		var symbol = p_solver.answerArray[y][x];
 		p_solver.answerArray[y][x] = STAR.UNDECIDED;
@@ -269,27 +269,26 @@ deductionsClosure = function (p_solver) {
 				autoLogDeduction("Event pushed : "+spaceEventToAdd.toLogString());
 			});
 			if (p_solver.notPlacedYet.columns[x].Os == 0) {
-				p_listEventsToApply = p_solver.deductionsFillingColumn(p_listEventsToApply, x, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.NO));
+				p_solver.deductionsFillingColumn(p_listEventsToApply, x, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.NO));
 			}
 			if (p_solver.notPlacedYet.rows[y].Os == 0) {
-				p_listEventsToApply = p_solver.deductionsFillingRow(p_listEventsToApply, y, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.NO));
+				p_solver.deductionsFillingRow(p_listEventsToApply, y, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.NO));
 			}
 			if (p_solver.notPlacedYet.regions[r].Os == 0) {
-				p_listEventsToApply = p_solver.fillingSetSpaceDeductions(p_listEventsToApply, p_solver.spacesByRegion[r], closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.NO));
+				p_solver.deductionsFillingSetSpace(p_listEventsToApply, p_solver.spacesByRegion[r], closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.NO));
 			}
 		}
 		if (symbol == STAR.NO) {
 			if (p_solver.notPlacedYet.columns[x].Xs == 0) {
-				p_listEventsToApply = p_solver.deductionsFillingColumn(p_listEventsToApply, x, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.YES));
+				p_solver.deductionsFillingColumn(p_listEventsToApply, x, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.YES));
 			}
 			if (p_solver.notPlacedYet.rows[y].Xs == 0) {
-				p_listEventsToApply = p_solver.deductionsFillingRow(p_listEventsToApply, y, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.YES));
+				p_solver.deductionsFillingRow(p_listEventsToApply, y, closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.YES));
 			}
 			if (p_solver.notPlacedYet.regions[r].Xs == 0) {
-				p_listEventsToApply = p_solver.fillingSetSpaceDeductions(p_listEventsToApply, p_solver.spacesByRegion[r], closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.YES));
+				p_solver.deductionsFillingSetSpace(p_listEventsToApply, p_solver.spacesByRegion[r], closureSpace(p_solver), STAR.UNDECIDED, closureEvent(STAR.YES));
 			}
 		}
-		return p_listEventsToApply;
 	}
 }
 
@@ -370,18 +369,18 @@ comparing = function(p_event1, p_event2) {
 
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		var iafList = [];
+		var listIndexesPass = [];
 		for (var i = 0; i < p_solver.spacesByRegion.length ; i++) {
-			iafList.push({index : i, family : STAR_BATTLE_PASS_CATEGORY.REGION}); // , value : p_solver.notPlacedYet.regions[i]
+			listIndexesPass.push({index : i, family : STAR_BATTLE_PASS_CATEGORY.REGION}); 
 		} 
 		for (var i = 0; i < p_solver.xyLength ; i++) {
-			iafList.push({index : i, family : STAR_BATTLE_PASS_CATEGORY.ROW}); //, value : p_solver.notPlacedYet.rows[i]
-			iafList.push({index : i, family : STAR_BATTLE_PASS_CATEGORY.COLUMN}); //, value : p_solver.notPlacedYet.columns[i]
+			listIndexesPass.push({index : i, family : STAR_BATTLE_PASS_CATEGORY.ROW}); 
+			listIndexesPass.push({index : i, family : STAR_BATTLE_PASS_CATEGORY.COLUMN}); 
 		}
-		iafList.sort(function(p_iaf1, p_iaf2) {
+		listIndexesPass.sort(function(p_iaf1, p_iaf2) {
 			return p_solver.uncertainity(p_iaf1)-p_solver.uncertainity(p_iaf2); // TODO too lazy to improve it like it is on the other solvers. 
 		});
-		return iafList;
+		return listIndexesPass;
 	}
 }
 
@@ -403,7 +402,7 @@ skipPassClosure = function(p_solver) {
 	}
 }
 
-namingCategoryClosure = function(p_solver) {
+namingCategoryPassClosure = function(p_solver) {
 	return function(p_indexAndFamily) {
 		var item;
 		const index = p_indexAndFamily.index;
@@ -413,17 +412,17 @@ namingCategoryClosure = function(p_solver) {
 			case STAR_BATTLE_PASS_CATEGORY.COLUMN : return "Column " + index; break;
 			case STAR_BATTLE_PASS_CATEGORY.CUSTOM : return "Selection " + p_indexAndFamily.numberSpaces + " space" + (p_indexAndFamily.numberSpaces > 1 ? "s" : ""); break;
 			case STAR_BATTLE_PASS_CATEGORY.AGGREGATED_SELECTION :
-				var answer = "Aggregated selection of spaces ";
+				var nameCatPass = "Aggregated selection of spaces ";
 				p_indexAndFamily.listSelectedIndexes.forEach(selectionElt => {
 					item = selectionElt.item;
 					switch (item.family) {
-						case STAR_BATTLE_PASS_CATEGORY.ROW : answer += "Row."+item.index;break;
-						case STAR_BATTLE_PASS_CATEGORY.REGION : answer += "Reg."+item.index+ "(" + p_solver.getFirstSpaceRegion(item.index).x +","+ p_solver.getFirstSpaceRegion(item.index).y + ")";break;
-						case STAR_BATTLE_PASS_CATEGORY.COLUMN : answer += "Col."+item.index;break;
+						case STAR_BATTLE_PASS_CATEGORY.ROW : nameCatPass += "Row."+item.index;break;
+						case STAR_BATTLE_PASS_CATEGORY.REGION : nameCatPass += "Reg."+item.index+ "(" + p_solver.getFirstSpaceRegion(item.index).x +","+ p_solver.getFirstSpaceRegion(item.index).y + ")";break;
+						case STAR_BATTLE_PASS_CATEGORY.COLUMN : nameCatPass += "Col."+item.index;break;
 					}
-					answer += "(+"+selectionElt.countNewSpaces+")" + " ";
+					nameCatPass += "(+"+selectionElt.countNewSpaces+")" + " ";
 				});
-			return answer;
+			return nameCatPass;
 			default : return "";
 		}
 	}
@@ -434,13 +433,13 @@ namingCategoryClosure = function(p_solver) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var answer = [{quickStartLabel : "Star battle"}];
+		var listQSEvents = [{quickStartLabel : "Star battle"}];
 		p_solver.spacesByRegion.forEach(sbr => {
 			if (sbr.length == 1) {			
-				answer.push(new SpaceEvent(sbr[0].x, sbr[0].y, STAR.YES));
+				listQSEvents.push(new SpaceEvent(sbr[0].x, sbr[0].y, STAR.YES));
 			}
 		});
-		return answer;
+		return listQSEvents;
 	}
 }
 
@@ -605,7 +604,7 @@ SolverStarBattle.prototype.accumulativeSolution = function() {
 	var ok = true;
 	var inProgress = false; // Should be "solved" but... 
 	var full = false;
-	var eventsForPass, p, numberNewSpaces;
+	var listPassNow, p, numberNewSpaces;
 	var minPickIndex = 1;
 	var maxPickIndex = 10;
 	var itemFewerAddedSpaces;
@@ -666,8 +665,8 @@ SolverStarBattle.prototype.accumulativeSolution = function() {
 			latestDate = new Date();
 			console.log("Number of selected spaces for aggregated pass : " + this.spacesToSelect.list.length + " ; number of successful aggregared passes : " + this.researchSuccessfulAggregatedPasses + " ; ms since the starting date : " + (latestDate - this.researchStartDate) + ")"); 
 		} // I guess this is necessary to prevent the puzzle to complain about no answer but at least it allows to give some information about the progression. And the time elapsed too. Actually, what takes the most time is a pass.
-		var eventsForPass = this.generateEventsForSpacesList(this.spacesToSelect.list);
-		p = this.passEvents(eventsForPass, {family : STAR_BATTLE_PASS_CATEGORY.AGGREGATED_SELECTION, listSelectedIndexes : listIndexes.slice()});
+		listPassNow = this.generateEventsForSpacesList(this.spacesToSelect.list);
+		p = this.passEvents(listPassNow, {family : STAR_BATTLE_PASS_CATEGORY.AGGREGATED_SELECTION, listSelectedIndexes : listIndexes.slice()});
 		if (p == PASS_RESULT.FAILURE) {
 			ok = false;
 		} else if (p == PASS_RESULT.SUCCESS) {
@@ -751,7 +750,6 @@ SolverStarBattle.prototype.newSpacesToBeAdded = function(p_checker, p_indexAndFa
 				}
 				break;
 	}
-	// console.log(" examining index " + p_indexAndFamily.family + "-" + p_indexAndFamily.index + " ; answer " + count);
 	return count;
 }
 
@@ -781,15 +779,15 @@ SolverStarBattle.prototype.newSpacesToBeAdded = function(p_checker, p_indexAndFa
 	var inProgress = false; // Should be "solved" but... 
 	var full = false;
 	var i = 2;
-	var eventsForPass, p, numberNewSpaces;
+	var listPassNow, p, numberNewSpaces;
 	do {
 		numberNewSpaces = this.addNewSpacesInSelection(this.spacesToSelect, orderedList[i]);
 		i++;
 		if (numberNewSpaces == 0) {
 			continue;
 		}
-		var eventsForPass = this.generateEventsForSpacesList(this.spacesToSelect.list);
-		p = this.passEvents(eventsForPass, {family : STAR_BATTLE_PASS_CATEGORY.CUSTOM, numberSpaces : eventsForPass.length});
+		var listPassNow = this.generateEventsForSpacesList(this.spacesToSelect.list);
+		p = this.passEvents(listPassNow, {family : STAR_BATTLE_PASS_CATEGORY.CUSTOM, numberSpaces : listPassNow.length});
 		if (p == PASS_RESULT.FAILURE) {
 			ok = false;
 		} else if (p == PASS_RESULT.SUCCESS) {

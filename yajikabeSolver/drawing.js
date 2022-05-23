@@ -2,7 +2,7 @@
 Draws what's inside spaces 
 */
 function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver, p_purificator) {
-	var itemsSolv = [DrawableColor(p_coloursSet.openSpace), DrawableX(p_coloursSet.closedSpace)];
+	var itemsSolv = [DrawableColour(p_coloursSet.openSpace), DrawableX(p_coloursSet.closedSpace)];
 	function selectionSolver(x, y) {
 		if (!p_solver.isBanned(x, y)) {
 			if (p_solver.getAnswer(x, y) == ADJACENCY.YES) {
@@ -18,7 +18,7 @@ function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver, p_purific
 	
 	if (p_purificator.isActive) {
 		// Purify mode
-		var itemsPur = [DrawableColor(p_coloursSet.purification), DrawableX(p_coloursSet.purification)]; 
+		var itemsPur = [DrawableColour(p_coloursSet.purification), DrawableX(p_coloursSet.purification)]; 
 		function selectionSolverAndPurificator(x, y) {
 			switch(p_purificator.getPurificatorSpaceIfDifferent(x, y)) {
 				case null : return 0; // Remember : 'null' is when the new value is null !

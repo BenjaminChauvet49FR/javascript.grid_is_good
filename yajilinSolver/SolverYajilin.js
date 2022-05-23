@@ -30,7 +30,7 @@ SolverYajilin.prototype.construct = function(p_valueGrid) {
 		
 		generateEventsForPassPS : generateEventsForStripesAndUnionsClosure(this),
 		orderedListPassArgumentsPS : orderedListPassArgumentsClosureYajilin(this),
-		namingCategoryPS : namingCategoryClosure(this),
+		namingCategoryPS : namingCategoryPassClosure(this),
 		multipassPessimismPS : true
 	});
 	this.declareClosedSpacesActing();
@@ -156,7 +156,7 @@ SolverYajilin.prototype.construct = function(p_valueGrid) {
 		}
 	}
 	
-	this.stripesToCheckList = [];
+	this.stripesToCheckList = []; // Note : no checker. 
 	this.stripesToCheckArray = [];
 	var coors;
 	for (var i = 0 ; i < this.cluesList.length ; i++) {
@@ -214,21 +214,21 @@ SolverYajilin.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 }
 
 SolverYajilin.prototype.passSpace = function(p_x, p_y) {
-	var passIndex;
+	var indexPass;
 	if (!this.isBanned(p_x, p_y)) {		
-		passIndex = {passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
+		indexPass = {passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
 	} else {
 		var value = this.stripesArray[p_y][p_x];
 		if (value != null) {
 			if (this.cluesList[value].union != null) {
-				passIndex = {passCategory : LOOP_PASS_CATEGORY.YAJI_UNION, index : this.cluesList[value].union};
+				indexPass = {passCategory : LOOP_PASS_CATEGORY.YAJI_UNION, index : this.cluesList[value].union};
 			} else {			
-				passIndex = {passCategory : LOOP_PASS_CATEGORY.YAJI_STRIP, index : value};
+				indexPass = {passCategory : LOOP_PASS_CATEGORY.YAJI_STRIP, index : value};
 			}
 		}
 	}
-	if (passIndex) {
-		this.passLoop(passIndex); 
+	if (indexPass) {
+		this.passLoop(indexPass); 
 	}
 }
 
@@ -285,66 +285,48 @@ function setSpaceClosedPSAtomicUndosClosure(p_solver) {
 
 // Space closed 
 function setSpaceClosedPSDeductionsClosure(p_solver) {
-	return function(p_listEvents, p_eventToApply) {
-		const x = p_eventToApply.x;
-		const y = p_eventToApply.y;
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		const x = p_eventBeingApplied.x;
+		const y = p_eventBeingApplied.y;
 		const indexStripes = p_solver.stripesArray[y][x];
 		for (var i = 0; i < indexStripes.length ; i++) {
 			if (p_solver.cluesList[indexStripes[i]].notClosedYet < 0) {
-				p_listEvents.push(new FailureEvent());
-				return p_listEvents;
+				p_listEventsToApply.push(new FailureEvent());
+				return;
 			}
 		}
 		p_solver.existingNeighborsCoors(x, y).forEach(coors => {
 			if (!p_solver.isBanned(coors.x, coors.y)) {
-				p_listEvents.push(new SpaceEvent(coors.x, coors.y, LOOP_STATE.LINKED));
+				p_listEventsToApply.push(new SpaceEvent(coors.x, coors.y, LOOP_STATE.LINKED));
 			}
 		});
-		return p_listEvents;
 	}
 }
 
 // Space linked
 function setSpaceLinkedPSDeductionsClosure(p_solver) {
-	return function(p_listEvents, p_eventToApply) {
-		const indexStripes = p_solver.stripesArray[p_eventToApply.y][p_eventToApply.x];
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		const indexStripes = p_solver.stripesArray[p_eventBeingApplied.y][p_eventBeingApplied.x];
 		for (var i = 0; i < indexStripes.length ; i++) {
 			if (p_solver.cluesList[indexStripes[i]].notLinkedYet < 0) {
-				p_listEvents.push(new FailureEvent());
-				return p_listEvents;
+				p_listEventsToApply.push(new FailureEvent());
+				return;
 			}
 		}
-		return p_listEvents;
 	}
 }
 
 // Edge closed
 function setEdgeClosedDeductionsClosure(p_solver) {
-	return function(p_listEvents, p_eventToApply) {
-		// If a space has only 2 "possible neighbors", these neighbors must be opened. (copied from Koburin)
-		const x = p_eventToApply.linkX;
-		const y = p_eventToApply.linkY;
-		const dir = p_eventToApply.direction;
-		const dx = p_eventToApply.linkX + DeltaX[dir];
-		const dy = p_eventToApply.linkY + DeltaY[dir];
-		p_listEvents = p_solver.tryAndCloseBeforeAndAfter2ClosedDeductions(p_listEvents, x, y);
-		p_listEvents = p_solver.tryAndCloseBeforeAndAfter2ClosedDeductions(p_listEvents, dx, dy);
-		return p_listEvents;
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		const x = p_eventBeingApplied.linkX;
+		const y = p_eventBeingApplied.linkY;
+		const dir = p_eventBeingApplied.direction;
+		const dx = p_eventBeingApplied.linkX + DeltaX[dir];
+		const dy = p_eventBeingApplied.linkY + DeltaY[dir];
+		p_solver.deductionsTryAndCloseBeforeAndAfter2Closed(p_listEventsToApply, x, y);
+		p_solver.deductionsTryAndCloseBeforeAndAfter2Closed(p_listEventsToApply, dx, dy);
 	}
-}
-
-/**
-Smartness of Yajilin / Koburin ! Tests if (p_x, p_y) space has exactly 2 closed neighbors : since 2 adjacent spaces cannot be closed and a loop is required to cross, the undecided spaces around must be open in any case.
-*/
-SolverYajilin.prototype.tryAndCloseBeforeAndAfter2ClosedDeductions = function(p_listEvents, p_x, p_y) {
-	KnownDirections.forEach(dir => {
-		if (this.getClosedEdges(p_x, p_y) == 2) {
-			if (this.neighborExists(p_x, p_y, dir) && this.getLink(p_x, p_y, dir) != LOOP_STATE.CLOSED) {
-				p_listEvents.push(new SpaceEvent(p_x + DeltaX[dir], p_y + DeltaY[dir], LOOP_STATE.LINKED));
-			}
-		}
-	});
-	return p_listEvents;
 }
 
 // -------------------
@@ -359,115 +341,112 @@ SolverYajilin.prototype.freshStrip = function(p_index) {
 
 function filterStripsClosure(p_solver) {
 	return function() {
-		var listEvents = [];
+		var listPass = [];
 		var strip;
 		var x, y;
 		var xOrYSpacesToCloseInOdd, xOrYSpacesToCloseInEven, currentChainLength, numberClosableSpaces;
 		for (var iCheck = 0 ; iCheck < p_solver.stripesToCheckList.length ; iCheck++) { 
-			listEvents = p_solver.testStripDeductions(listEvents, p_solver.cluesList[p_solver.stripesToCheckList[iCheck]]);
-			if (listEvents == EVENT_RESULT.FAILURE) {
-				return EVENT_RESULT.FAILURE;
+			p_solver.deductionsTestStrip(listPass, p_solver.cluesList[p_solver.stripesToCheckList[iCheck]]);
+			if (listPass == EVENT_RESULT.FAILURE) {
+				return FILTER_FAILURE;
 			}
 		};
 		p_solver.cleanCheckStrips();
-		return listEvents;
+		return listPass;
 	}
 }
 
-SolverYajilin.prototype.testStripDeductions = function(p_listEvents, p_strip) {
+SolverYajilin.prototype.deductionsTestStrip = function(p_listEventsToApply, p_strip) {
 	const direction = p_strip.direction;
 	if (direction == DIRECTION.UP || direction == DIRECTION.DOWN) {
 		if (p_strip.notClosedYet == 0) {
-			this.fillVerticalStripDeductions(p_listEvents, p_strip, LOOP_STATE.LINKED);
+			this.deductionsFillVerticalStrip(p_listEventsToApply, p_strip, LOOP_STATE.LINKED);
 		} else if (p_strip.notLinkedYet == 0) {
-			this.fillVerticalStripDeductions(p_listEvents, p_strip, LOOP_STATE.CLOSED);
+			this.deductionsFillVerticalStrip(p_listEventsToApply, p_strip, LOOP_STATE.CLOSED);
 		} else {
 			x = p_strip.x;
 			y = p_strip.yMin;
 			undecidedChainTracker = {odd : [], even : [], currentChainLength : 0, numberClosableSpaces : 0};
 			// Track all the "undecided chains", that are the chains of spaces that are not decided yet.
 			while (y <= p_strip.yMax && undecidedChainTracker.numberClosableSpaces <= p_strip.notClosedYet) {
-				undecidedChainTracker = this.sniffNewSpace(undecidedChainTracker, x, y, y);
+				this.sniffNewSpace(undecidedChainTracker, x, y, y);
 				y++;
 			} 
 			// Final chain, for when the last space of the chain is at edge of grid. Same as above.
 			if (undecidedChainTracker.currentChainLength > 0) {
-				undecidedChainTracker = pushUndecidedChain(undecidedChainTracker, y);
+				pushUndecidedChain(undecidedChainTracker, y);
 			}
 			// Great, we have the right number of spaces to close. Let's close them ! (at least the ones in the odd-length undecided chains ?)
 			if (undecidedChainTracker.numberClosableSpaces == p_strip.notClosedYet) {
 				undecidedChainTracker.odd.forEach(indicationInOdd => {
 					var y = indicationInOdd.first;
 					for (i = 0; i < indicationInOdd.number; i++) {
-						p_listEvents.push(new SpaceEvent(x, y, LOOP_STATE.CLOSED));
+						p_listEventsToApply.push(new SpaceEvent(x, y, LOOP_STATE.CLOSED));
 						y+=2;
 					}
 				});
 			}
 			// Among the undecided spaces on p_strip, we are not able to close enough spaces to meet the remaining requirement.
 			if (undecidedChainTracker.numberClosableSpaces < p_strip.notClosedYet) {
-				return EVENT_RESULT.FAILURE;
+				return FILTER_FAILURE;
 			} 
 		}
 	} 
 	if (direction == DIRECTION.LEFT || direction == DIRECTION.RIGHT) { //Copied onto vertical !
 		if (p_strip.notClosedYet == 0) {
-			this.fillHorizontalStripDeductions(p_listEvents, p_strip, LOOP_STATE.LINKED);
+			this.deductionsFillHorizontalStrip(p_listEventsToApply, p_strip, LOOP_STATE.LINKED);
 		} else if (p_strip.notLinkedYet == 0) {
-			this.fillHorizontalStripDeductions(p_listEvents, p_strip, LOOP_STATE.CLOSED);
+			this.deductionsFillHorizontalStrip(p_listEventsToApply, p_strip, LOOP_STATE.CLOSED);
 		} else {
 			x = p_strip.xMin;
 			y = p_strip.y;
 			undecidedChainTracker = {odd : [], even : [], currentChainLength : 0, numberClosableSpaces : 0};
 			// Track all the "undecided chains"
 			while (x <= p_strip.xMax && undecidedChainTracker.numberClosableSpaces <= p_strip.notClosedYet) {
-				undecidedChainTracker = this.sniffNewSpace(undecidedChainTracker, x, y, x);
+				this.sniffNewSpace(undecidedChainTracker, x, y, x);
 				x++;
 			} 
 			// Final chain
 			if (undecidedChainTracker.currentChainLength > 0) {
-				undecidedChainTracker = pushUndecidedChain(undecidedChainTracker, x);
+				pushUndecidedChain(undecidedChainTracker, x);
 			}
 			// Close them
 			if (undecidedChainTracker.numberClosableSpaces == p_strip.notClosedYet) {
 				undecidedChainTracker.odd.forEach(indicationInOdd => {
 					var x = indicationInOdd.first;
 					for (i = 0; i < indicationInOdd.number; i++) {
-						p_listEvents.push(new SpaceEvent(x, y, LOOP_STATE.CLOSED));
+						p_listEventsToApply.push(new SpaceEvent(x, y, LOOP_STATE.CLOSED));
 						x+=2;
 					}
 				});
 			}
 			// Fail
 			if (undecidedChainTracker.numberClosableSpaces < p_strip.notClosedYet) {
-				return EVENT_RESULT.FAILURE;
+				return FILTER_FAILURE;
 			} 
 		}
 	}	
-	return p_listEvents;
 }
 
 /**
 notClosedYet / notLinkedYet is at 0 in a strip, fill the events. One method per orientation.
 */
-SolverYajilin.prototype.fillVerticalStripDeductions = function(p_listEvents, p_strip, p_state) {
+SolverYajilin.prototype.deductionsFillVerticalStrip = function(p_listEventsToApply, p_strip, p_state) {
 	const x = p_strip.x;
 	for (var y = p_strip.yMin ; y <= p_strip.yMax ; y++) {
 		if (this.getLinkSpace(x, y) == LOOP_STATE.UNDECIDED) {
-			p_listEvents.push(new SpaceEvent(x, y, p_state));
+			p_listEventsToApply.push(new SpaceEvent(x, y, p_state));
 		}
 	}
-	return p_listEvents;
 }
 
-SolverYajilin.prototype.fillHorizontalStripDeductions = function(p_listEvents, p_strip, p_state) {
+SolverYajilin.prototype.deductionsFillHorizontalStrip = function(p_listEventsToApply, p_strip, p_state) {
 	const y = p_strip.y;
 	for (x = p_strip.xMin ; x <= p_strip.xMax ; x++) {
 		if (this.getLinkSpace(x, y) == LOOP_STATE.UNDECIDED) {
-			p_listEvents.push(new SpaceEvent(x, y, p_state));
+			p_listEventsToApply.push(new SpaceEvent(x, y, p_state));
 		}
 	}
-	return p_listEvents;
 }
 
 /**
@@ -483,10 +462,9 @@ SolverYajilin.prototype.sniffNewSpace = function(p_undecidedChainTracker, p_x, p
 		}
 	} else if (p_undecidedChainTracker.currentChainLength > 0) {
 		// (p_x, p_y) space is NOT undecided (it may be banned.) The first undecided space was back at (p_decidedCoordinate)-(currentChainLength) and the last one at (p_decidedCoordinate) - 1.
-		p_undecidedChainTracker = pushUndecidedChain(p_undecidedChainTracker, p_decidedCoordinate);
+		pushUndecidedChain(p_undecidedChainTracker, p_decidedCoordinate);
 		p_undecidedChainTracker.currentChainLength = 0;
 	}
-	return p_undecidedChainTracker;
 }
 
 /**
@@ -499,7 +477,6 @@ pushUndecidedChain = function(p_undecidedChainTracker, p_xOrYEnd) {
 	} else {
 		p_undecidedChainTracker.even.push({first : p_xOrYEnd - ccl, totalLength : ccl}); 
 	}
-	return p_undecidedChainTracker;
 }
 
 SolverYajilin.prototype.cleanCheckStrips = function() {
@@ -520,20 +497,12 @@ abortYajilinClosure = function(p_solver) {
 // Quickstart
 
 quickStartEventsClosure = function(p_solver) {
-	return function(p_QSeventsList) { 
-		p_QSeventsList.push({quickStartLabel : "Yajilin"});
+	return function(p_listQSEvents) { 
+		p_listQSEvents.push({quickStartLabel : "Yajilin"});
 		p_solver.cluesList.forEach(strip => {
-			p_QSeventsList = p_solver.testStripDeductions(p_QSeventsList, strip);
+			p_solver.deductionsTestStrip(p_listQSEvents, strip);
 		});
-		for (var y = 0 ; y < p_solver.yLength ; y++) {
-			for (var x = 0 ; x < p_solver.xLength ; x++) {
-				// Smartness of Yajilin
-				if (!p_solver.isBanned(x, y)) {
-					p_QSeventsList = p_solver.tryAndCloseBeforeAndAfter2ClosedDeductions(p_QSeventsList, x, y);
-				}
-			}
-		}
-		return p_QSeventsList;
+		p_solver.deductionsQSBeforeAndAfter2Closed(p_listQSEvents);
 	}
 }
 
@@ -541,82 +510,81 @@ quickStartEventsClosure = function(p_solver) {
 // Passing & multipassing (copied onto Yajikabe)
 		
 generateEventsForStripesAndUnionsClosure = function (p_solver) {
-	return function (p_indexFamily) {
-		if (p_indexFamily.passCategory == LOOP_PASS_CATEGORY.YAJI_STRIP) {
-			return p_solver.generateEventsForSingleStripPass(p_indexFamily.index);
+	return function (p_indexPass) {
+		if (p_indexPass.passCategory == LOOP_PASS_CATEGORY.YAJI_STRIP) {
+			return p_solver.generateEventsForSingleStripPass(p_indexPass.index);
 		} else {
-			return p_solver.generateEventsForUnionStripPass(p_indexFamily.index); 
+			return p_solver.generateEventsForUnionStripPass(p_indexPass.index); 
 		}
 	}
 }
 
 SolverYajilin.prototype.generateEventsForSingleStripPass = function(p_indexStrip) {
 	const clue = this.cluesList[p_indexStrip];
-	var eventList = [];
+	var listPass = [];
 	if ((clue.direction == DIRECTION.LEFT) || (clue.direction == DIRECTION.RIGHT)) {
 		const y = clue.y;
 		for (var x = clue.xMin ; x <= clue.xMax ; x++) {
-			eventList = this.spacePass(eventList, x, y);
+			this.passSpace(listPass, x, y);
 		}
 	} else {
 		const x = clue.x;
 		for (var y = clue.yMin ; y <= clue.yMax ; y++) {
-			eventList = this.spacePass(eventList, x, y);
+			this.passSpace(listPass, x, y);
 		}
 	}
-	return eventList;
+	return listPass;
 }
 
 SolverYajilin.prototype.generateEventsForUnionStripPass = function(p_indexUnion) {
 	const clue = this.unionsStripesList[p_indexUnion];
-	var eventList = [];
+	var listPass = [];
 	if ((clue.orientation == ORIENTATION.HORIZONTAL)) {
 		const y = clue.y;
 		for (var x = clue.xMin ; x <= clue.xMax ; x++) {
-			eventList = this.spacePass(eventList, x, y);
+			this.passSpace(listPass, x, y);
 		}
 	} else {
 		const x = clue.x;
 		for (var y = clue.yMin ; y <= clue.yMax ; y++) {
-			eventList = this.spacePass(eventList, x, y);
+			this.passSpace(listPass, x, y);
 		}
 	}
-	return eventList;
+	return listPass;
 }
 
-SolverYajilin.prototype.spacePass = function(p_passList, p_x, p_y) {
+SolverYajilin.prototype.passSpace = function(p_listPass, p_x, p_y) {
 	if (this.getLinkSpace(p_x, p_y) == LOOP_STATE.UNDECIDED) {
-		p_passList.push([new SpaceEvent(p_x, p_y, LOOP_STATE.LINKED), new SpaceEvent(p_x, p_y, LOOP_STATE.CLOSED)]);		
+		p_listPass.push([new SpaceEvent(p_x, p_y, LOOP_STATE.LINKED), new SpaceEvent(p_x, p_y, LOOP_STATE.CLOSED)]);		
 	}
-	return p_passList;
 }
 
 orderedListPassArgumentsClosureYajilin = function(p_solver) {
 	return function() {
-		var indexList = [];
+		var listIndexesPass = [];
 		for (var i = 0 ; i < p_solver.cluesList.length ; i++) {
 			if (p_solver.cluesList[i].union == null) {
-				indexList.push({passCategory : LOOP_PASS_CATEGORY.YAJI_STRIP, index : i}); // TODO possibility of adding more details for incertainity
+				listIndexesPass.push({passCategory : LOOP_PASS_CATEGORY.YAJI_STRIP, index : i}); // TODO possibility of adding more details for uncertainity
 			} 
 		}
 		for (var i = 0 ; i < p_solver.unionsStripesList.length ; i++) {
-			indexList.push({passCategory : LOOP_PASS_CATEGORY.YAJI_UNION, index : i});
+			listIndexesPass.push({passCategory : LOOP_PASS_CATEGORY.YAJI_UNION, index : i});
 		}
-		return indexList;
+		return listIndexesPass;
 	}
 }
 
-namingCategoryClosure = function(p_solver) {
-	return function(p_passIndex) {
-		if (p_passIndex.passCategory == LOOP_PASS_CATEGORY.YAJI_UNION) {
-			const uni = p_solver.unionsStripesList[p_passIndex.index];
+namingCategoryPassClosure = function(p_solver) {
+	return function(p_indexPass) {
+		if (p_indexPass.passCategory == LOOP_PASS_CATEGORY.YAJI_UNION) {
+			const uni = p_solver.unionsStripesList[p_indexPass.index];
 			if (uni.orientation == ORIENTATION.VERTICAL) {
 				return "(Stripes V " + uni.x + "," + uni.yMin + "-" + uni.yMax +")";
 			} else {
 				return "(Stripes H " + uni.xMin + "-" + uni.xMax + "," + uni.y +")";
 			}
 		} else {
-			const str = p_solver.cluesList[p_passIndex.index];
+			const str = p_solver.cluesList[p_indexPass.index];
 			if (str.direction == DIRECTION.UP || str.direction == DIRECTION.DOWN) {
 				return "(Strip V " + str.x + "," + str.yMin + "-" + str.yMax +")";
 			} else {

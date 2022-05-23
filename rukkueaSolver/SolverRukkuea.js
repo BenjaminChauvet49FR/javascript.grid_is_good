@@ -19,9 +19,9 @@ SolverRukkuea.prototype.construct = function(p_numbersArray) {
 		deductionsClosure(this),
 		undoEventClosure(this)
 	);
-	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [lookForSquareClosure(this)]);
+	this.methodsSetDeductions.setOneAbortAndFilters(abortClosure(this), [filterLookForSquareClosure(this)]);
 
-	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryPassClosure(this)};
 	this.methodsSetMultipass = {
 		generatePassEventsMethod : generatePassEventsClosure(this), 
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this), 
@@ -94,8 +94,8 @@ SolverRukkuea.prototype.undo = function() {
 }
 
 SolverRukkuea.prototype.emitPassRowColumn = function(p_x, p_y) {
-	const generatedEvents = this.generatePassEventsMethod(p_x, p_y);
-	this.passEvents(generatedEvents, {x : p_x, y : p_y}); 
+	const listPassNow = this.generatePassEventsMethod(p_x, p_y);
+	this.passEvents(listPassNow, {x : p_x, y : p_y}); 
 }
 
 SolverRukkuea.prototype.makeMultiPass = function() {	
@@ -103,13 +103,13 @@ SolverRukkuea.prototype.makeMultiPass = function() {
 }
 
 SolverRukkuea.prototype.makeTotalPass = function() {	
-	const eventsForPass = this.generateTotalPassEventsMethod();
-	return this.passEvents(eventsForPass, {totalPass : true, numberSpaces : eventsForPass.length});
+	const listPassNow = this.generateTotalPassEventsMethod();
+	return this.passEvents(listPassNow, {totalPass : true, numberSpaces : listPassNow.length});
 }
 
 SolverRukkuea.prototype.passSelectedSpaces = function(p_coorsList) {
-	const eventsForPass = this.generateEventsForSpacesList(p_coorsList);
-	return this.passEvents(eventsForPass, {isCustom : true, numberSpaces : eventsForPass.length});
+	const listPassNow = this.generateEventsForSpacesList(p_coorsList);
+	return this.passEvents(listPassNow, {isCustom : true, numberSpaces : listPassNow.length});
 }
 
 SolverRukkuea.prototype.makeQuickStart = function() {
@@ -120,12 +120,12 @@ SolverRukkuea.prototype.makeQuickStart = function() {
 // Doing and undoing
 
 applyEventClosure = function(p_solver) {
-	return function(p_event) {
-		const x = p_event.x;
-		const y = p_event.y;
-		switch (p_event.kind) {
+	return function(p_eventToApply) { 
+		const x = p_eventToApply.x;
+		const y = p_eventToApply.y;
+		switch (p_eventToApply.kind) {
 			case SPACE_KIND :
-				const symbol = p_event.symbol
+				const symbol = p_eventToApply.symbol
 				if (p_solver.answerArray[y][x] == symbol) {
 					return EVENT_RESULT.HARMLESS;
 				}
@@ -153,33 +153,33 @@ applyEventClosure = function(p_solver) {
 			break;
 			case SIZE_KIND :
 				const formerSize = p_solver.squareSizeArray[y][x];
-				if (formerSize == p_event.size) {
+				if (formerSize == p_eventToApply.size) {
 					return EVENT_RESULT.HARMLESS;
 				} else if (formerSize != null) {
 					return EVENT_RESULT.FAILURE; // Should not happen as size is defined when a square is closed but who knows
 				} else {
 					for (var dirV = 0 ; dirV <= 3 ; dirV ++) {
-						if (p_solver.viewArray[y][x][dirV] == p_event.size) { //Direction supposition
+						if (p_solver.viewArray[y][x][dirV] == p_eventToApply.size) { //Direction supposition
 							return EVENT_RESULT.FAILURE;
 						}
 					};
 				}
-				p_solver.squareSizeArray[y][x] = p_event.size;
+				p_solver.squareSizeArray[y][x] = p_eventToApply.size;
 				return EVENT_RESULT.SUCCESS;
 			break;
 			case VIEW_KIND :
-				const dir = p_event.direction;
+				const dir = p_eventToApply.direction;
 				const formerSizeV = p_solver.viewArray[y][x][dir]; // "Identifier 'formerSize' has already been declared ... "
-				if (formerSizeV == p_event.size) {
+				if (formerSizeV == p_eventToApply.size) {
 					return EVENT_RESULT.HARMLESS;
 				} else if (formerSizeV != null) {
 					return EVENT_RESULT.FAILURE; // Should not happen as size is defined when a square is closed but who knows
 				} else {
-					if (p_solver.squareSizeArray[y][x] == p_event.size) { // If it is seen by a square with the same size : fail HERE !
+					if (p_solver.squareSizeArray[y][x] == p_eventToApply.size) { // If it is seen by a square with the same size : fail HERE !
 						return EVENT_RESULT.FAILURE;
 					}
 				}
-				p_solver.viewArray[y][x][dir] = p_event.size;
+				p_solver.viewArray[y][x][dir] = p_eventToApply.size;
 				return EVENT_RESULT.SUCCESS;
 			break;
 		}
@@ -187,11 +187,11 @@ applyEventClosure = function(p_solver) {
 }
 
 undoEventClosure = function(p_solver) {
-	return function(p_event) {
-		const x = p_event.x;
-		const y = p_event.y;
-		const symbol = p_event.symbol;
-		switch (p_event.kind) {
+	return function(p_eventToUndo) { 
+		const x = p_eventToUndo.x;
+		const y = p_eventToUndo.y;
+		const symbol = p_eventToUndo.symbol;
+		switch (p_eventToUndo.kind) {
 			case SPACE_KIND :
 				var discardedSymbol = p_solver.answerArray[y][x]; 
 				p_solver.answerArray[y][x] = FILLING.UNDECIDED;
@@ -209,7 +209,7 @@ undoEventClosure = function(p_solver) {
 				p_solver.squareSizeArray[y][x] = null;
 			break;
 			case VIEW_KIND :
-				p_solver.viewArray[y][x][p_event.direction] = null;
+				p_solver.viewArray[y][x][p_eventToUndo.direction] = null;
 			break;
 		}
 	} 
@@ -224,46 +224,46 @@ function isSpaceEvent(p_event) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Rukkuea"}];
+		var listQSEvents = [{quickStartLabel : "Rukkuea"}];
 		var x, y;
 		p_solver.numberedSpacesCoors.forEach(coors => {
 			x = coors.x;
 			y = coors.y;
-			listQSEvts = p_solver.checkZeroNosDeductions(listQSEvts, x, y);
-			listQSEvts = p_solver.checkZeroYesDeductions(listQSEvts, x, y);
+			p_solver.deductionsCheckZeroNos(listQSEvents, x, y);
+			p_solver.deductionsCheckZeroYes(listQSEvents, x, y);
 			if (p_solver.numericArray[y][x].value == 2) {
-				listQSEvts.push(new SpaceEvent(x, y, FILLING.NO));
+				listQSEvents.push(new SpaceEvent(x, y, FILLING.NO));
 			}
 			if (p_solver.numericArray[y][x].value == 4) {
-				listQSEvts.push(new SpaceEvent(x, y, FILLING.YES));
+				listQSEvents.push(new SpaceEvent(x, y, FILLING.YES));
 			}
 		});
 		for (x = 0 ; x < p_solver.xLength ; x++) {
 			if (p_solver.numericArray[0][x].value == 3) {
-				listQSEvts.push(new SpaceEvent(x, 0, FILLING.YES)); // Note : xLength and yLength >= 2
-				listQSEvts.push(new SpaceEvent(x, 1, FILLING.YES));
+				listQSEvents.push(new SpaceEvent(x, 0, FILLING.YES)); // Note : xLength and yLength >= 2
+				listQSEvents.push(new SpaceEvent(x, 1, FILLING.YES));
 			}
 			if (p_solver.numericArray[p_solver.yLength-1][x].value == 3) {
-				listQSEvts.push(new SpaceEvent(x, p_solver.yLength-1, FILLING.YES));
-				listQSEvts.push(new SpaceEvent(x, p_solver.yLength-2, FILLING.YES));
+				listQSEvents.push(new SpaceEvent(x, p_solver.yLength-1, FILLING.YES));
+				listQSEvents.push(new SpaceEvent(x, p_solver.yLength-2, FILLING.YES));
 			}
 		}
 		for (y = 0 ; y < p_solver.yLength ; y++) {
 			if (p_solver.numericArray[y][0].value == 3) {
-				listQSEvts.push(new SpaceEvent(0, y, FILLING.YES));
-				listQSEvts.push(new SpaceEvent(1, y, FILLING.YES));
+				listQSEvents.push(new SpaceEvent(0, y, FILLING.YES));
+				listQSEvents.push(new SpaceEvent(1, y, FILLING.YES));
 			}
 			if (p_solver.numericArray[y][p_solver.xLength-1].value == 3) {
-				listQSEvts.push(new SpaceEvent(p_solver.xLength-1, y, FILLING.YES));
-				listQSEvts.push(new SpaceEvent(p_solver.xLength-2, y, FILLING.YES));
+				listQSEvents.push(new SpaceEvent(p_solver.xLength-1, y, FILLING.YES));
+				listQSEvents.push(new SpaceEvent(p_solver.xLength-2, y, FILLING.YES));
 			}
 		}
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
 //--------------------------------
-// Intelligence
+// Deductions
 
 deductionsClosure = function (p_solver) {
 	return function(p_listEventsToApply, p_eventBeingApplied) {
@@ -273,7 +273,7 @@ deductionsClosure = function (p_solver) {
 			case SPACE_KIND :
 				// Numbers
 				p_solver.existingNeighborsCoorsWithDiagonals(x, y).forEach(coors => {		
-					p_solver.deductionsLastUndecided2x2(p_listEventsToApply, coors.x, coors.y);
+					p_solver.deductionsLastUndecided2x2ForRectangle(p_listEventsToApply, coors.x, coors.y, FILLING.UNDECIDED, FILLING.NO, FILLING.YES, answerValueClosure(p_solver.answerArray), methodEventForSpaceFill);
 				});
 				if (p_eventBeingApplied.symbol == FILLING.NO) {
 					// Propagate visions !
@@ -294,19 +294,19 @@ deductionsClosure = function (p_solver) {
 						}
 					}) 
 					p_solver.numericArray[y][x].numberedNeighborsCoors.forEach(coors => {						
-						p_listEventsToApply = p_solver.checkZeroNosDeductions(p_listEventsToApply, coors.x, coors.y);
+						p_solver.deductionsCheckZeroNos(p_listEventsToApply, coors.x, coors.y);
 					});
 					//  Note : lazy to be added (always in FILLING.NO case) : if among spaces unknown adjacent & diagonal one of them is constraint to 1 BUT is in the sight of 1, make it white (doing work of space)
 				} else {
 					p_solver.numericArray[y][x].numberedNeighborsCoors.forEach(coors => {						
-						p_listEventsToApply = p_solver.checkZeroYesDeductions(p_listEventsToApply, coors.x, coors.y);
+						p_solver.deductionsCheckZeroYes(p_listEventsToApply, coors.x, coors.y);
 					});
 				}
-				return p_listEventsToApply;
+				return;
 			break;
 			case SIZE_KIND :
 				// Nothing to do : visions are already created, and incorrect visions are already dealt with in applying
-				return p_listEventsToApply;
+				return;
 			break;
 			case VIEW_KIND :
 				// Test if another view in the opposite direction in this space.
@@ -317,13 +317,13 @@ deductionsClosure = function (p_solver) {
 					if (sight == p_solver.viewArray[y][x][runDir]) {
 						if (sight == 1) {
 							p_listEventsToApply.push(new FailureEvent());
-							return p_listEventsToApply;
+							return;
 						} else {
 							p_listEventsToApply.push(new SpaceEvent(x, y, FILLING.YES));
 						}
 					}
 				} else { 
-					// Note : lazy to be added "If the vision is 1 and the space would only lead to a square size 1 if blackened, color it white" (doing work of the pass)
+					// Note : lazy to be added "If the vision is 1 and the space would only lead to a square size 1 if blackened, colour it white" (doing work of the pass)
 					if (p_solver.answerArray[y][x] == FILLING.NO) {					
 						// Propagate view / stop until a wiew is met in the opposite direction !
 						sightDir = p_eventBeingApplied.direction;
@@ -340,7 +340,7 @@ deductionsClosure = function (p_solver) {
 								if (sight == p_solver.viewArray[yy][xx][runDir]) { // C/P from the 'if' counterpart of this separation, which maybe could have been avoided
 									if (sight == 1) {
 										p_listEventsToApply.push(new FailureEvent());
-										return p_listEventsToApply;
+										return;
 									} else {
 										p_listEventsToApply.push(new SpaceEvent(xx, yy, FILLING.YES));
 									}
@@ -352,105 +352,49 @@ deductionsClosure = function (p_solver) {
 						}
 					}
 				}
-				return p_listEventsToApply;
+				return;
 			break;
 		}
 
 	}
 }
 
-SolverRukkuea.prototype.checkZeroNosDeductions = function(p_listEvents, p_x, p_y) {
+SolverRukkuea.prototype.deductionsCheckZeroNos = function(p_listEventsToApply, p_x, p_y) {
 	if (this.numericArray[p_y][p_x].notPlacedXsYet == 0) {
 		if (this.answerArray[p_y][p_x] == FILLING.UNDECIDED) {
-			p_listEvents.push(new SpaceEvent(p_x, p_y, FILLING.YES));
+			p_listEventsToApply.push(new SpaceEvent(p_x, p_y, FILLING.YES));
 		}
 		this.existingNeighborsCoors(p_x, p_y).forEach(coors => {
 			if (this.answerArray[coors.y][coors.x] == FILLING.UNDECIDED) {
-				p_listEvents.push(new SpaceEvent(coors.x, coors.y, FILLING.YES));
+				p_listEventsToApply.push(new SpaceEvent(coors.x, coors.y, FILLING.YES));
 			}
 		});
 	}
-	return p_listEvents;
 }
 
-SolverRukkuea.prototype.checkZeroYesDeductions = function(p_listEvents, p_x, p_y) {
+SolverRukkuea.prototype.deductionsCheckZeroYes = function(p_listEventsToApply, p_x, p_y) {
 	if (this.numericArray[p_y][p_x].notPlacedOsYet == 0) {
 		if (this.answerArray[p_y][p_x] == FILLING.UNDECIDED) {
-			p_listEvents.push(new SpaceEvent(p_x, p_y, FILLING.NO));
+			p_listEventsToApply.push(new SpaceEvent(p_x, p_y, FILLING.NO));
 		}
 		this.existingNeighborsCoors(p_x, p_y).forEach(coors => {
 			if (this.answerArray[coors.y][coors.x] == FILLING.UNDECIDED) {
-				p_listEvents.push(new SpaceEvent(coors.x, coors.y, FILLING.NO));
+				p_listEventsToApply.push(new SpaceEvent(coors.x, coors.y, FILLING.NO));
 			}
 		});
 	}
-	return p_listEvents;
 }
 
-SolverRukkuea.prototype.deductionsLastUndecided2x2 = function(p_listEvents, p_x, p_y) {
-	if (this.getAnswer(p_x, p_y) == FILLING.UNDECIDED) {
-		conclusions = [FILLING.UNDECIDED, FILLING.UNDECIDED, FILLING.UNDECIDED, FILLING.UNDECIDED];
-		if (leftNeighborExists(p_x)) {
-			if (upNeighborExists(p_y)) {
-				conclusions[0] = this.conclusionLastUndecided2x2(p_x-1, p_y-1, p_x, p_y);
-			}
-			if (downNeighborExists(p_y, this.yLength)) {
-				conclusions[1] = this.conclusionLastUndecided2x2(p_x-1, p_y+1, p_x, p_y);
-			}
-		}
-		if (rightNeighborExists(p_x, this.xLength)) {
-			if (upNeighborExists(p_y)) {
-				conclusions[2] = this.conclusionLastUndecided2x2(p_x+1, p_y-1, p_x, p_y);
-			}
-			if (downNeighborExists(p_y, this.yLength)) {
-				conclusions[3] = this.conclusionLastUndecided2x2(p_x+1, p_y+1, p_x, p_y);
-			}
-		}
-		var result = conclusions[0];
-		var ok = true;
-		var i = 1;
-		// All 4 conclusions can be UNDECIDED, YES or NO. There mustn't be both YES and NO among the 4, and if successful either YES or NO is chosen in priority over UNDECIDED.
-		while (ok && i < 4) {
-			ok = (result == FILLING.UNDECIDED) || (conclusions[i] == FILLING.UNDECIDED) || (conclusions[i] == result);
-			if (conclusions[i] != FILLING.UNDECIDED) {
-				result = conclusions[i];				
-			}
-			i++;
-		}
-		if (ok) {
-			if (result != FILLING.UNDECIDED) {
-				p_listEvents.push(new SpaceEvent(p_x, p_y, result)); 
-			}
-		} else {
-			p_listEvents.push({failure : true});
-		}
-	}
+// For deductions too
+
+methodEventForSpaceFill = function(p_x, p_y, p_value) {
+	return new SpaceEvent(p_x, p_y, p_value);
 }
 
-// Tests how should be filled the last square (x2, y2) in a 2x2 square from the remaining 3 ones (x1y1, x1y2, x2y1) (all 4 squares exist in the grid - the x2, y2 is in an unknown state)
-SolverRukkuea.prototype.conclusionLastUndecided2x2 = function(p_x1, p_y1, p_x2, p_y2) {
-	var count = 0;
-	var atLeastOneUndecided = false; 
-	var space1 = this.answerArray[p_y1][p_x1];
-	var space2 = this.answerArray[p_y1][p_x2];
-	var space3 = this.answerArray[p_y2][p_x1];
-	[space1, space2, space3].forEach(state => {// Possible optimization that involves removing "atLeastOneUndecided"
-		if (state == FILLING.UNDECIDED) {
-			//return FILLING.UNDECIDED; // A "=> expression" is NOT a good place to write a return that should be the return of the function.
-			atLeastOneUndecided = true;
-		}
-		if (state == FILLING.YES) {
-			count++;
-		}
-	});
-	if (!atLeastOneUndecided) {
-		if (count == 3) {
-			return FILLING.YES;
-		} else if (count == 2) {
-			return FILLING.NO;
-		}
+answerValueClosure = function(p_array) { // No needs to generalize this method. For now.
+	return function(p_x, p_y) {
+		return p_array[p_y][p_x];
 	}
-	return FILLING.UNDECIDED;
 }
 
 // Filters
@@ -468,16 +412,15 @@ SolverRukkuea.prototype.cleanSquareChecker = function() {
 // So far : all filled spaces form rectangles with correct white borders.
 // All spaces in newlyAffectedRectChecker are either newly added black spaces OR black spaces adjacent to newly added white ones. Either one, it's about black rectangles affected since last filter.
 // Lazy deductions notes : if a filled space is added after crosses, this filter applies, but if a cross is added after filled squares and it is not added orthogonally next to filled squares, this filter doesn't apply.
-function lookForSquareClosure(p_solver) {
+function filterLookForSquareClosure(p_solver) { 
 	return function() {
-		var eventList = [];
+		var listEventsToApply = [];
 		p_solver.squareCheckedChecker.clean();
 		var x, y, stillLU, inedit;
 		var xMin, yMin, xMax, yMax;
-		p_solver.newlyAffectedRectChecker.list.forEach(coors => {
-			if (eventList == EVENT_RESULT.FAILURE) {
-				return;
-			}
+		var i, coors;
+		for (var i = 0 ; i < p_solver.newlyAffectedRectChecker.list.length ; i++) {
+			coors = p_solver.newlyAffectedRectChecker.list[i];
 			x = coors.x;
 			y = coors.y;
 			inedit = p_solver.squareCheckedChecker.add(x, y);
@@ -540,16 +483,17 @@ function lookForSquareClosure(p_solver) {
 					// If the difference is 4, there is 1 freedom left, 2 freedom right : not enough gap to compensate 
 					// If the difference is 4, there is 3 freedom left, 2 freedom right : we need to complete 2 columns left (4 - 2) and 1 column right (4 - 3)
 					if ((freedoms[0] + freedoms[1]) < vMinusH) {
-						eventList = EVENT_RESULT.FAILURE;
+						listEventsToApply.push(new FailureEvent());
+						return listEventsToApply;
 					} else {						
 						if (freedoms[1] < vMinusH) { 
 							for (var x = xMin-1 ; x >= xMin - (vMinusH - freedoms[1]) ; x--) {
-								eventList.push(new SpaceEvent(x, yMin, FILLING.YES));
+								listEventsToApply.push(new SpaceEvent(x, yMin, FILLING.YES));
 							}
 						} 
 						if (freedoms[0] < vMinusH) { 
 							for (var x = xMax+1 ; x <= xMax + (vMinusH - freedoms[0]) ; x++) {
-								eventList.push(new SpaceEvent(x, yMin, FILLING.YES));
+								listEventsToApply.push(new SpaceEvent(x, yMin, FILLING.YES));
 							}
 						} 
 					}
@@ -578,16 +522,17 @@ function lookForSquareClosure(p_solver) {
 						freedoms.push(Math.abs(startCoors[dirSearch] - ySearch)); 							
 					});
 					if ((freedoms[0] + freedoms[1]) < (-vMinusH)) {
-						eventList = EVENT_RESULT.FAILURE;
+						listEventsToApply.push(new FailureEvent());
+						return listEventsToApply;
 					} else {						
 						if (freedoms[1] < (-vMinusH)) { 
 							for (var y = yMin-1 ; y >= yMin - ((-vMinusH) - freedoms[1]) ; y--) {
-								eventList.push(new SpaceEvent(xMin, y, FILLING.YES));
+								listEventsToApply.push(new SpaceEvent(xMin, y, FILLING.YES));
 							}
 						} 
 						if (freedoms[0] < (-vMinusH)) { 
 							for (var y = yMax+1 ; y <= yMax + ((-vMinusH) - freedoms[0]) ; y++) {
-								eventList.push(new SpaceEvent(xMax, y, FILLING.YES));
+								listEventsToApply.push(new SpaceEvent(xMax, y, FILLING.YES));
 							}
 						} 
 					}
@@ -603,7 +548,7 @@ function lookForSquareClosure(p_solver) {
 					const blockedUp = (!upExists || p_solver.answerArray[yMin-1][xMin] == FILLING.NO);
 					const blockedDown = (!downExists || p_solver.answerArray[yMax+1][xMax] == FILLING.NO);
 					if ((blockedLeft && blockedRight) || (blockedUp && blockedDown)) {
-						eventList = p_solver.deductionsCloseSquare(eventList, xMin, yMin, xMax, yMax);
+						p_solver.deductionsCloseSquare(listEventsToApply, xMin, yMin, xMax, yMax);
 					} else {
 						const blockedLU = (!leftExists || !upExists || (p_solver.answerArray[yMin-1][xMin-1] == FILLING.NO));
 						const blockedRU = (!rightExists || !upExists || (p_solver.answerArray[yMin-1][xMax+1] == FILLING.NO));
@@ -611,52 +556,49 @@ function lookForSquareClosure(p_solver) {
 						const blockedLD = (!leftExists || !downExists || (p_solver.answerArray[yMax+1][xMin-1] == FILLING.NO));
 						if ((blockedLU && blockedRU && blockedRD && blockedLD) || (blockedLeft && blockedRD && blockedRU) || (blockedUp && blockedRD && blockedLD) ||
 						(blockedRight && blockedLU && blockedLD) || (blockedDown && blockedLU && blockedRU)) {
-							eventList = p_solver.deductionsCloseSquare(eventList, xMin, yMin, xMax, yMax);							
+							p_solver.deductionsCloseSquare(listEventsToApply, xMin, yMin, xMax, yMax);							
 						}
 					}
 				}
-				// For each unknown border, if it MUST be blackened for view reasons, open it (check near the edges of the rectangle) 
+				// For each unknown border, if it MUST be blackened for view reasons, blacken it (check near the edges of the rectangle) 
 			} 
-		});
+		};
 		p_solver.cleanSquareChecker();
-		return eventList;
+		return listEventsToApply;
 	}
 }
 
-SolverRukkuea.prototype.deductionsCloseSquare = function(p_eventList, p_xMin, p_yMin, p_xMax, p_yMax) {
+SolverRukkuea.prototype.deductionsCloseSquare = function(p_listEventsToApply, p_xMin, p_yMin, p_xMax, p_yMax) {
 	const size = p_xMax - p_xMin + 1;
 	if (p_xMin > 0) { // Left
-		p_eventList.push(new SpaceEvent(p_xMin - 1, p_yMin, FILLING.NO));
+		p_listEventsToApply.push(new SpaceEvent(p_xMin - 1, p_yMin, FILLING.NO));
 		// Now, the Rukkuea part !
 		for (var y = p_yMin ; y <= p_yMax ; y++) {
-			p_eventList.push(new SizeEvent(p_xMin, y, size));
-			p_eventList.push(new ViewEvent(p_xMin-1, y, DIRECTION.RIGHT, size));
+			p_listEventsToApply.push(new SizeEvent(p_xMin, y, size));
+			p_listEventsToApply.push(new ViewEvent(p_xMin-1, y, DIRECTION.RIGHT, size));
 		}
 	}
 	if (p_xMax <= this.xLength - 2) { // Right
-		p_eventList.push(new SpaceEvent(p_xMax + 1, p_yMin, FILLING.NO));
+		p_listEventsToApply.push(new SpaceEvent(p_xMax + 1, p_yMin, FILLING.NO));
 		for (var y = p_yMin ; y <= p_yMax ; y++) {
-			p_eventList.push(new SizeEvent(p_xMax, y, size));
-			p_eventList.push(new ViewEvent(p_xMax+1, y, DIRECTION.LEFT, size));
+			p_listEventsToApply.push(new SizeEvent(p_xMax, y, size));
+			p_listEventsToApply.push(new ViewEvent(p_xMax+1, y, DIRECTION.LEFT, size));
 		}
 	}
 	if (p_yMin > 0) { // Up
-		p_eventList.push(new SpaceEvent(p_xMin, p_yMin - 1, FILLING.NO));
+		p_listEventsToApply.push(new SpaceEvent(p_xMin, p_yMin - 1, FILLING.NO));
 		for (var x = p_xMin ; x <= p_xMax ; x++) {
-			p_eventList.push(new SizeEvent(x, p_yMin, size));
-			p_eventList.push(new ViewEvent(x, p_yMin-1, DIRECTION.DOWN, size));
+			p_listEventsToApply.push(new SizeEvent(x, p_yMin, size));
+			p_listEventsToApply.push(new ViewEvent(x, p_yMin-1, DIRECTION.DOWN, size));
 		}
 	}
 	if (p_yMax <= this.yLength - 2) { // Down
-		p_eventList.push(new SpaceEvent(p_xMin, p_yMax + 1, FILLING.NO));
+		p_listEventsToApply.push(new SpaceEvent(p_xMin, p_yMax + 1, FILLING.NO));
 		for (var x = p_xMin ; x <= p_xMax ; x++) {
-			p_eventList.push(new SizeEvent(x, p_yMax, size));
-			p_eventList.push(new ViewEvent(x, p_yMax+1, DIRECTION.UP, size));
+			p_listEventsToApply.push(new SizeEvent(x, p_yMax, size));
+			p_listEventsToApply.push(new ViewEvent(x, p_yMax+1, DIRECTION.UP, size));
 		}
 	}
-	
-	
-	return p_eventList;
 }
 
 //--------------------
@@ -670,51 +612,51 @@ comparison = function(p_event1, p_event2) {
 	return commonComparison([[p_event1.y, p_event1.x, p_event1.symbol], [p_event2.y, p_event2.x, p_event2.symbol]]);
 }
 
-namingCategoryClosure = function(p_solver) {
-	return function (p_index) {
-		if (p_index.isCustom) { // For custom passing... 
-			return "Selection " + p_index.numberSpaces + " space" + (p_index.numberSpaces > 1 ? "s" : "");
+namingCategoryPassClosure = function(p_solver) {
+	return function (p_indexPass) {
+		if (p_indexPass.isCustom) { // For custom passing... 
+			return "Selection " + p_indexPass.numberSpaces + " space" + (p_indexPass.numberSpaces > 1 ? "s" : "");
 		}
-		if (p_index.totalPass) {
-			return "Total pass ! Nb.spaces : " + p_index.numberSpaces;
+		if (p_indexPass.totalPass) {
+			return "Total pass ! Nb.spaces : " + p_indexPass.numberSpaces;
 		}
-		return "Col/row " + p_index.x + "," + p_index.y;
+		return "Col/row " + p_indexPass.x + "," + p_indexPass.y;
 	}
 }
 
 SolverRukkuea.prototype.generatePassEventsMethod = function(p_x, p_y) { 
-	var answer = [];
+	var listPass = [];
 	for (x = 0 ; x < this.xLength ; x++) {
-		answer.push(this.generateEventsForOneSpace(x, p_y));
+		listPass.push(this.generateEventsForOneSpace(x, p_y));
 	}
 	for (y = 0 ; y < p_y ; y++) {
-		answer.push(this.generateEventsForOneSpace(p_x, y));
+		listPass.push(this.generateEventsForOneSpace(p_x, y));
 	}
 	for (y = p_y+1 ; y < this.yLength ; y++) {
-		answer.push(this.generateEventsForOneSpace(p_x, y));
+		listPass.push(this.generateEventsForOneSpace(p_x, y));
 	}
-	return answer;
+	return listPass;
 }
 
 SolverRukkuea.prototype.generateTotalPassEventsMethod = function() { 
-	var answer = [];
+	var listPass = []; 
 	for (y = 0 ; y < this.yLength ; y++) {
 		for (x = 0 ; x < this.xLength ; x++) {
 			if (this.answerArray[y][x] == FILLING.UNDECIDED) {				
-				answer.push(this.generateEventsForOneSpace(x, y));
+				listPass.push(this.generateEventsForOneSpace(x, y));
 			}
 		}
 	}
-	return answer;
+	return listPass;
 }
 
 // Custom passing...
 SolverRukkuea.prototype.generateEventsForSpacesList = function(p_coors) {
-	var answer = [];
+	var listPass = [];
 	p_coors.forEach(coors => {
-		answer.push(this.generateEventsForOneSpace(coors.x, coors.y));
+		listPass.push(this.generateEventsForOneSpace(coors.x, coors.y));
 	});
-	return answer;
+	return listPass;
 }
 
 SolverRukkuea.prototype.generateEventsForOneSpace = function(p_x, p_y) {
@@ -725,11 +667,11 @@ SolverRukkuea.prototype.generateEventsForOneSpace = function(p_x, p_y) {
 // Multipassing
 
 generatePassEventsClosure = function(p_solver) {
-	return function(p_index) {
-		if (p_index.totalPass) {
+	return function(p_indexPass) {
+		if (p_indexPass.totalPass) {
 			return p_solver.generateTotalPassEventsMethod();
 		}
-		return p_solver.generatePassEventsMethod(p_index.x, p_index.y);
+		return p_solver.generatePassEventsMethod(p_indexPass.x, p_indexPass.y);
 	}
 }
 
@@ -764,9 +706,9 @@ orderedListPassArgumentsClosure = function(p_solver) {
 			}
 		}
 		
-		var answer = [];
+		var listIndexesPass = [];
 		if (total <= p_solver.xLength + p_solver.yLength-1 ) {
-			answer.push({totalPass : true, numberSpaces : total});
+			listIndexesPass.push({totalPass : true, numberSpaces : total});
 		} else {
 			var numberFirstXIndexes = gcd(atLeast2UnknownColumnIndexes.length, atLeast2UnknownRowIndexes.length);
 			var yIndex = 0;
@@ -777,7 +719,7 @@ orderedListPassArgumentsClosure = function(p_solver) {
 					do {
 						x = atLeast2UnknownColumnIndexes[xIndex];
 						y = atLeast2UnknownRowIndexes[yIndex];
-						answer.push({x : x, y : y});
+						listIndexesPass.push({x : x, y : y});
 						xIndex++;
 						yIndex++;
 						if (yIndex == atLeast2UnknownRowIndexes.length) {
@@ -791,15 +733,15 @@ orderedListPassArgumentsClosure = function(p_solver) {
 			// WARNING : In very peculiar cases, a few spaces that are alone on their row and column are NOT passed. I think they should eventually get deducted by other passes anyway, or fall into the total pass.
 			
 		}
-		return answer;
+		return listIndexesPass;
 	}
 }
 
 multipassDefineTodoClosure = function(p_solver) {
-	return function(p_index) {
-		var todo = p_solver.answerArray[p_index.y][p_index.x] == FILLING.UNDECIDED;
-		if (!todo && p_solver.numericArray[p_index.y][p_index.x].value != null) {
-			p_solver.existingNeighborsCoors(p_index.x, p_index.y).forEach(coors => {
+	return function(p_indexPass) {
+		var todo = p_solver.answerArray[p_indexPass.y][p_indexPass.x] == FILLING.UNDECIDED;
+		if (!todo && p_solver.numericArray[p_indexPass.y][p_indexPass.x].value != null) {
+			p_solver.existingNeighborsCoors(p_indexPass.x, p_indexPass.y).forEach(coors => {
 				todo &= (p_solver.answerArray[coors.y][coors.x] == FILLING.UNDECIDED);
 			});
 		}

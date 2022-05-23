@@ -1,6 +1,6 @@
 function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver) {
 	
-	var items = [DrawableColor(p_coloursSet.openSpace), DrawableColor(p_coloursSet.closedSpace)];
+	var items = [DrawableColour(p_coloursSet.openSpace), DrawableColour(p_coloursSet.closedSpace)];
 	function selection(x, y) {
 		if(p_solver.getAnswer(x, y) == ADJACENCY.YES) {
 			return 0;

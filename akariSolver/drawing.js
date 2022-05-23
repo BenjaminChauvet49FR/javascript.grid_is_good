@@ -18,10 +18,10 @@ function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver) {
 		if (p_solver.getFixedSpace(p_x, p_y) != null) {
 			return -1;
 		}
-		const answer = p_solver.getAnswer(p_x, p_y);
-		if (answer == FILLING.YES) {
+		const answerElt = p_solver.getAnswer(p_x, p_y); 
+		if (answerElt == FILLING.YES) {
 			return 0;
-		} else if (!p_solver.isLighted(p_x, p_y) && (answer == FILLING.NO)) {
+		} else if (!p_solver.isLighted(p_x, p_y) && (answerElt == FILLING.NO)) {
 			return 1;
 		}
 		return -1;
@@ -37,7 +37,7 @@ function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver) {
 		}
 	} 
 	
-	const spacesBG = [DrawableColor(p_coloursSet.wallSpace), DrawableColor(p_coloursSet.litSpace)];
+	const spacesBG = [DrawableColour(p_coloursSet.wallSpace), DrawableColour(p_coloursSet.litSpace)];
 	const shapesFG = [DrawableCircle(p_coloursSet.line, p_coloursSet.lightbulb), DrawableLittleX(p_coloursSet.line)];
 	p_drawer.drawSpaceContents2Dimensions(p_context, spacesBG, getSpaceBackground, p_solver.xLength, p_solver.yLength);
 	p_drawer.drawSpaceContents2Dimensions(p_context, shapesFG, getEmptySpaceElement, p_solver.xLength, p_solver.yLength);

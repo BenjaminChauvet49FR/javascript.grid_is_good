@@ -34,7 +34,7 @@ SolverCurvingRoad.prototype.construct = function (p_symbolArray) {
 			adjacencyClosure(this), 
 			transformClosure(this), 
 			undoEventClosure(this)));
-	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryPassClosure(this)};
 	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForSpacePassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this),
@@ -352,8 +352,8 @@ SolverCurvingRoad.prototype.makeQuickStart = function () {
 }
 
 SolverCurvingRoad.prototype.passSpace = function(p_x, p_y) {
-	const generatedEvents = this.generateEventsForSpacePass({x : p_x, y : p_y});
-	this.passEvents(generatedEvents, {x : p_x, y : p_y}); 
+	const listPassNow = this.generateEventsForSpacePass({x : p_x, y : p_y});
+	this.passEvents(listPassNow, {x : p_x, y : p_y}); 
 }
 
 SolverCurvingRoad.prototype.makeMultiPass = function() {	
@@ -386,8 +386,8 @@ SolverCurvingRoad.prototype.putNew = function (p_x, p_y, p_symbol) {
 }
 
 applyEventClosure = function(p_solver) {
-	return function(eventToApply) {
-		return p_solver.putNew(eventToApply.x, eventToApply.y, eventToApply.symbol);
+	return function(p_eventToApply) {
+		return p_solver.putNew(p_eventToApply.x, p_eventToApply.y, p_eventToApply.symbol);
 	}
 }
 
@@ -428,13 +428,13 @@ transformClosure = function (p_solver) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Curving road"}];		
+		var listQSEvents = [{quickStartLabel : "Curving road"}];		
 		p_solver.curvingLinkList.forEach(curvingLink => {
 			if (curvingLink.valid && (curvingLink.point != null)) {
-				listQSEvts.push(new SpaceEvent(curvingLink.point.x, curvingLink.point.y, ADJACENCY.NO));
+				listQSEvents.push(new SpaceEvent(curvingLink.point.x, curvingLink.point.y, ADJACENCY.NO));
 			}
 		});
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -451,14 +451,13 @@ deductionsClosure = function (p_solver) {
 			});
 		} else {
 			p_solver.curvingLinkArray[y][x].forEach(index => {
-				p_listEventsToApply = p_solver.testAlertCurvingListDeductions(p_listEventsToApply, index); 
+				p_solver.deductionsTestAlertCurvingList(p_listEventsToApply, index); 
 			});
 		}
-		return p_listEventsToApply
 	}	
 }
 
-SolverCurvingRoad.prototype.testAlertCurvingListDeductions = function (p_listEvents, p_index) {
+SolverCurvingRoad.prototype.deductionsTestAlertCurvingList = function (p_listEventsToApply, p_index) {
     const curvingLink = this.curvingLinkList[p_index];
     if (curvingLink.undecided == 1 && curvingLink.closeds == 0) {
         var xSpot,
@@ -486,13 +485,12 @@ SolverCurvingRoad.prototype.testAlertCurvingListDeductions = function (p_listEve
                 }
             }
         }
-        p_listEvents.push(new SpaceEvent(xSpot, ySpot, ADJACENCY.NO));
+        p_listEventsToApply.push(new SpaceEvent(xSpot, ySpot, ADJACENCY.NO));
     }
-    return p_listEvents;
 }
 
 //--------------------------------
-// Pass
+// Passing and multipassing
 
 copying = function(p_event) {
 	return p_event.copy();
@@ -502,7 +500,7 @@ comparison = function(p_event1, p_event2) {
 	return this.commonComparison([p_event1.y, p_event1.x, p_event1.symbol], [p_event2.y, p_event2.x, p_event2.symbol]);
 }
 
-namingCategoryClosure = function(p_solver) {
+namingCategoryPassClosure = function(p_solver) {
 	return function (p_space) {
 		return "Space ("+p_space.x+","+p_space.y+")"; 
 	}
@@ -520,14 +518,14 @@ SolverCurvingRoad.prototype.generateEventsForSpacePass = function(p_space) {
 
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		answer = [];
+		listIndexesPass = [];
 		for(var iy = 0; iy < p_solver.yLength ; iy++) { // WARNING : putting "this" instead of "p_solver" leads to the expression in the "if" being false, but not crashing, which can lead to a quite fun debugging time !
 			for(var ix = 0; ix < p_solver.xLength ; ix++) {
 				if (p_solver.answerArray[iy][ix] == ADJACENCY.UNDECIDED) {
-					answer.push({x : ix, y : iy});
+					listIndexesPass.push({x : ix, y : iy});
 				}
 			}
 		}
-		return answer;
+		return listIndexesPass;
 	}
 }

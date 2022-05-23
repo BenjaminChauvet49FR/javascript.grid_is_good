@@ -23,7 +23,7 @@ SolverHakoiri.prototype.construct = function(p_wallArray, p_symbolsArray) {
 		transformClosure(this),
 		undoEventClosure(this)
 	));
-	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryClosure(this)};
+	this.methodsSetPass = {comparisonMethod : comparison, copyMethod : copying, argumentToLabelMethod : namingCategoryPassClosure(this)};
 	this.methodsSetMultipass = {
 		generatePassEventsMethod : generateEventsForRegionPassClosure(this),
 		orderPassArgumentsMethod : orderedListPassArgumentsClosure(this)//,
@@ -132,8 +132,8 @@ SolverHakoiri.prototype.emitHypothesisSpace = function(p_x, p_y, p_value, p_ok) 
 SolverHakoiri.prototype.emitPassRegion = function(p_x, p_y) {
 	const index = this.regionArray[p_y][p_x]; 
 	if (index != WALLGRID.OUT_OF_REGIONS) {
-		const generatedEvents = this.generateEventsForRegionPass(index);
-		this.passEvents(generatedEvents, index); 
+		const listPassNow = this.generateEventsForRegionPass(index);
+		this.passEvents(listPassNow, index); 
 	}
 }
 
@@ -153,9 +153,9 @@ applyEventClosure = function(p_solver) {
 
 // Offensive programming : x and y are within bounds (and that's it, block spaces are checked first. Because beware of intrusions... looking at you, 2x2 square checker.)
 SolverHakoiri.prototype.putNewInSpace = function(p_x, p_y, p_symbol, p_choice) {
-	const answer = testNumericSpaceChoice(this.answerArray, p_x, p_y, p_symbol, p_choice);
-	if (answer != EVENT_RESULT.SUCCESS) {
-		return answer;
+	const resultDo = testNumericSpaceChoice(this.answerArray, p_x, p_y, p_symbol, p_choice);
+	if (resultDo != EVENT_RESULT.SUCCESS) {
+		return resultDo;
 	}
 	const region = this.regions[this.regionArray[p_y][p_x]];
 	if (p_choice) {
@@ -189,23 +189,23 @@ undoEventClosure = function(p_solver) {
 
 quickStartEventsClosure = function(p_solver) {
 	return function() {
-		var listQSEvts = [{quickStartLabel : "Hakoiri"}];
+		var listQSEvents = [{quickStartLabel : "Hakoiri"}];
 		var x, y;
 		p_solver.numericSpacesList.forEach(coors => {
 			x = coors.x;
 			y = coors.y;
 			if (p_solver.fixedSpacesArray[y][x] != null) { 
-				listQSEvts.push(new ChoiceEvent(x, y, p_solver.fixedSpacesArray[y][x], true));
+				listQSEvents.push(new ChoiceEvent(x, y, p_solver.fixedSpacesArray[y][x], true));
 			}
 		});
 		p_solver.regions.forEach(region => {
 			if (region.size == 3) {
 				region.spaces.forEach(coors => {
-					listQSEvts.push(new ChoiceEvent(coors.x, coors.y, SPACE_HAKOIRI.EMPTY, false));
+					listQSEvents.push(new ChoiceEvent(coors.x, coors.y, SPACE_HAKOIRI.EMPTY, false));
 				});
 			}
 		});
-		return listQSEvts;
+		return listQSEvents;
 	}
 }
 
@@ -247,9 +247,9 @@ deductionsClosure = function (p_solver) {
 		const symbol = p_eventBeingApplied.getSymbol();
 		const region = p_solver.regions[p_solver.regionArray[y][x]];
 		if (p_eventBeingApplied.choice) {
-			p_listEventsToApply = deductionsExcludeOthersNumeric(p_listEventsToApply, p_solver.answerArray, x, y, symbol);
+			deductionsExcludeOthersNumeric(p_listEventsToApply, p_solver.answerArray, x, y, symbol);
 			// Last symbol ? Ban this shape for all other shapes for this region
-			p_listEventsToApply = deductionsAlertNoneLeftInSpaceSet(p_listEventsToApply, region.possibilities, symbol, region.spaces, p_solver.answerArray);
+			deductionsAlertNoneLeftInSpaceSet(p_listEventsToApply, region.possibilities, symbol, region.spaces, p_solver.answerArray);
 			// If shape, ban diagonally
 			if (symbol != SPACE_HAKOIRI.EMPTY) {
 				p_solver.existingNeighborsCoorsWithDiagonals(x, y).forEach(coors => {
@@ -262,63 +262,43 @@ deductionsClosure = function (p_solver) {
 			} 
 		} else {
 			// Only one possibility left in this space ?
-			p_listEventsToApply = deductionsTestOneLeft(p_listEventsToApply, p_solver.answerArray, x, y);
+			deductionsTestOneLeft(p_listEventsToApply, p_solver.answerArray, x, y);
 			// Only one possible place in this region ?
-			p_listEventsToApply = deductionsAlertRemainingPossibilitiesInSpaceSet(p_listEventsToApply, region.possibilities, symbol, region.spaces, p_solver.answerArray);
+			deductionsAlertRemainingPossibilitiesInSpaceSet(p_listEventsToApply, region.possibilities, symbol, region.spaces, p_solver.answerArray);
 			if (symbol == SPACE_HAKOIRI.EMPTY) {
 				// Good ol' 2x2 check, although circumstancial (if diagonal contact of 2 identical shapes was allowed or there were a 4th form, it wouldn't apply)
-				p_listEventsToApply = p_solver.deductionsAlert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
+				p_solver.deductionsAlert2x2Areas(p_listEventsToApply, p_solver.methodsSetDeductions, x, y); 
 			}
 		}
-		return p_listEventsToApply;
 	}
 }
-
-SolverHakoiri.prototype.alertOneLeftInRegionDeductions = function(p_eventList, p_region, p_symbol) {
-	if ((p_region.possibilities.getNotBannedYet(p_symbol) == 0) && (p_region.possibilities.getNotPlacedYet(p_symbol) > 0)) {
-		var spaceCount = 0;
-		p_region.spaces.forEach(coors => {
-			x = coors.x;
-			y = coors.y;
-			if ((this.getFixedShape(x, y) == null) && this.answerArray[y][x].getState(p_symbol) == SPACE_CHOICE.UNDECIDED) {
-				p_eventList.push(new ChoiceEvent(x, y, p_symbol, true));
-				spaceCount++;
-			}
-		});
-		if (spaceCount != p_region.possibilities.getNotPlacedYet(p_symbol)) {
-			p_eventList.push(new FailureEvent());
-		}
-	}
-	return p_eventList;
-}
-
 
 // --------------------
 // Passes & multipasses
 
 generateEventsForRegionPassClosure = function(p_solver) {
-	return function(p_index) {
-		return p_solver.generateEventsForRegionPass(p_index);
+	return function(p_indexPass) {
+		return p_solver.generateEventsForRegionPass(p_indexPass);
 	}
 }
 
-SolverHakoiri.prototype.generateEventsForRegionPass = function(p_index) {
-	var answer = [];
-	this.regions[p_index].spaces.forEach(coors => {
-		answer.push(
+SolverHakoiri.prototype.generateEventsForRegionPass = function(p_indexPass) {
+	var listPass = [];
+	this.regions[p_indexPass].spaces.forEach(coors => {
+		listPass.push(
 		[new ChoiceEvent(coors.x, coors.y, SPACE_HAKOIRI.EMPTY, true), 
 		new ChoiceEvent(coors.x, coors.y, SPACE_HAKOIRI.ROUND, true),
 		new ChoiceEvent(coors.x, coors.y, SPACE_HAKOIRI.SQUARE, true),
 		new ChoiceEvent(coors.x, coors.y, SPACE_HAKOIRI.TRIANGLE, true)]
 		);
 	});
-	return answer;
+	return listPass;
 }
 
-namingCategoryClosure = function(p_solver) {
-	return function (p_index) {
-		const coors1st = p_solver.regions[p_index].spaces[0];
-		return "Region " + p_index + " (" + coors1st.x + "," + coors1st.y + ")"; 
+namingCategoryPassClosure = function(p_solver) {
+	return function (p_indexPass) {
+		const coors1st = p_solver.regions[p_indexPass].spaces[0];
+		return "Region " + p_indexPass + " (" + coors1st.x + "," + coors1st.y + ")"; 
 	}
 }
 
@@ -333,28 +313,28 @@ comparison = function(p_event1, p_event2) {
 
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		var indexList = [];
+		var listIndexesPass = [];
 		var valueList = []; 
 		var indexPass;
 		var x, y;
 		for (var i = 0; i < p_solver.regions.length ; i++) {
-			incertain = 0;
+			uncertain = 0;
 			p_solver.regions[i].spaces.forEach(coors => {
 				x = coors.x;
 				y = coors.y;
 				if (p_solver.answerArray[y][x].getValue() != null) {
-					incertain++;
+					uncertain++;
 				}
 			});
-			//if (incertain > 0) {
-				indexList.push(i); 
-				valueList.push(incertain);
+			//if (uncertain > 0) {
+				listIndexesPass.push(i); 
+				valueList.push(uncertain);
 			/*
 			} else {
 				valueList.push(-1); // There MUST be one of these per region.
 			}*/
 		}
-		indexList.sort(function(p_index1, p_index2) {
+		listIndexesPass.sort(function(p_index1, p_index2) {
 			const val1 = valueList[p_index1] - valueList[p_index2];
 			if (val1 == 0) {
 				return p_index1 - p_index2;
@@ -362,6 +342,6 @@ orderedListPassArgumentsClosure = function(p_solver) {
 				return val1;
 			}
 		});
-		return indexList;
+		return listIndexesPass;
 	}
 }

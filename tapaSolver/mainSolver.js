@@ -7,7 +7,7 @@ function main() {
 	var	context = canevas.getContext("2d");
 	var actionsManager = {}; 
 
-	var colors = {
+	var colours = {
 		openSpace : COLOURS.OPEN_KABE,
 		closedSpace : COLOURS.CLOSED_WILD
 	}
@@ -17,7 +17,7 @@ function main() {
 	function drawCanvas() {
 		drawer.drawEmptyGrid(context, solver.xLength, solver.yLength);
 		drawer.drawTapaGrid(context, solver.clueGrid);
-		drawInsideSpaces(context, drawer, colors, solver);
+		drawInsideSpaces(context, drawer, colours, solver);
 		solver.callStateForItem(spanState);
 	}
 

@@ -389,10 +389,10 @@ function adjacencyCheck(p_listNewBARRIER, p_limitArray, p_formerLimitSpaceList) 
 		}
 	});
 	
-	answerAC = exploreLimits(spacesWithLimits, p_limitArray);
-	answerAC.newBARRIER = listSpacesClustersBarriered;
-	answerAC.success = true;
-	return answerAC;
+	var resultAC = exploreLimits(spacesWithLimits, p_limitArray);
+	resultAC.newBARRIER = listSpacesClustersBarriered;
+	resultAC.success = true;
+	return resultAC;
 }
 
 function noSpacesToExplore(p_dir, p_exploLists) {

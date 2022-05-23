@@ -131,13 +131,13 @@ EditorCore.prototype.setVisibleGrids = function(p_list) {
 }
 
 EditorCore.prototype.getVisibleGridIDs = function(p_list) { // Not the same naming as setVisibleGrids : actually good.
-	var answer = [];
+	var result = [];
 	Object.keys(GRID_ID).forEach(id => {
 		if (this.visibleGrids[GRID_ID[id]]) {
-			answer.push(GRID_ID[id]);
+			result.push(GRID_ID[id]);
 		}
 	});
-	return answer;
+	return result;
 }
 
 EditorCore.prototype.setVisibleWildcardGrid = function() {
@@ -837,15 +837,15 @@ EditorCore.prototype.buildWallsAroundSelection = function () {
 }
 
 EditorCore.prototype.countSpacesSelection = function() {
-	var answer = 0;
+	var result = 0;
 	for (var y = 0; y < this.getYLength(); y++) {
         for (var x = 0; x < this.getXLength(); x++) {
 			if (this.selectedArray[y][x] == SELECTED.YES) {
-				answer ++;
+				result ++;
 			}
 		}
 	}
-	return answer;
+	return result;
 }
 
 EditorCore.prototype.moveCopySelection = function(p_deltaX, p_deltaY, p_move, p_transparencyNull) { // Note : Is everything okay ? I wrote "traquer ça"

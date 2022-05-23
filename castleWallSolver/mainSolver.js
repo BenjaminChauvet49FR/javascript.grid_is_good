@@ -1,10 +1,10 @@
 var solver;
 function main() {
 	const colours = {
-		openLink : COLOURS.OPEN_LINK_DOTS,
-		openNode : COLOURS.OPEN_NODE_DOTS,
+		linkedLink : COLOURS.LINKED_LINK_DOTS,
+		linkedNode : COLOURS.LINKED_NODE_DOTS,
 		undecidedLink : COLOURS.UNDECIDED_LINK_DOTS,
-		closedLink : '#f8f0ff',
+		closedLink : COLOURS.CLOSED_LINK_DOTS,
 		
 		obstacleInnerBG : COLOURS.LIGHT_DOT_BG,
 		obstacleInnerWrite : COLOURS.LIGHT_DOT_WRITE,

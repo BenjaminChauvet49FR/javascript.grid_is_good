@@ -38,7 +38,7 @@ function stringToMonoValue(p_string) {
 
 function symbolsArrayToString(p_symbolsArray, p_symbolsList) {
 	var separator = "";
-	var answer = "";
+	var resultAS = "";
 	const streamValues = new StreamEncodingSparseBinary();
 	p_symbolsList.forEach(symbol => {
 		for(var iy = 0 ; iy < p_symbolsArray.length ; iy++) {
@@ -46,21 +46,21 @@ function symbolsArrayToString(p_symbolsArray, p_symbolsList) {
 				streamValues.encode(p_symbolsArray[iy][ix] == symbol);
 			}
 		}
-		answer += separator + streamValues.getString();
+		resultAS += separator + streamValues.getString();
 		separator = "#";
 	});
-	return answer;
+	return resultAS;
 }
 
 function stringToSymbolsArray(p_string, p_xLength, p_yLength, p_symbolsList) {
-	const answer = [];
+	const resultSA = [];
 	for(var iy = 0 ; iy < p_yLength ; iy++) {
-		answer.push([]);
+		resultSA.push([]);
 		for(var ix = 0 ; ix < p_xLength ; ix++) {
-			answer[iy].push(null);
+			resultSA[iy].push(null);
 		}
 	}
-	return fillArrayWithSymbols(answer, p_string, p_xLength, p_yLength, p_symbolsList);
+	return fillArrayWithSymbols(resultSA, p_string, p_xLength, p_yLength, p_symbolsList);
 }
 
 function fillArrayWithSymbols(p_array, p_string, p_xLength, p_yLength, p_symbolsList) {
@@ -119,27 +119,27 @@ function numberAndIgnoreClosedArraysToString(p_numbersArray, p_wallArray, p_numb
 
 function stringToNumberArrayWithSomeSpacesIgnored(p_string, p_xLength, p_yLength, p_wallArray, p_numbersAreStrings) {
 	const streamValues = new StreamDecodingSparseAny(p_string);
-	var answer = [];
+	var resultSA = [];
 	for(var iy = 0 ; iy < p_yLength ; iy++) {
-		answer.push([]);
+		resultSA.push([]);
 		for(var ix = 0 ; ix < p_xLength ; ix++) {
 			if ((p_wallArray == null || p_wallArray[iy][ix].state != WALLGRID.CLOSED)) {
 				decode = streamValues.decode();
 				if ((decode != null) && (!isNaN(decode)) && decode != END_OF_DECODING_STREAM) { // Well, isNan(null) = true
 					if (p_numbersAreStrings) {
-						answer[iy].push(""+decode);
+						resultSA[iy].push(""+decode);
 					} else {
-						answer[iy].push(decode);
+						resultSA[iy].push(decode);
 					}
 				}  else {
-					answer[iy].push(null);
+					resultSA[iy].push(null);
 				}
 			} else {
-				answer[iy].push(null);
+				resultSA[iy].push(null);
 			}
 		}
 	}
-	return answer;
+	return resultSA;
 }
 
 // array of numbers / null corresponding to indications in region <=> string
@@ -198,51 +198,51 @@ function numericBeltToString (p_arrayLeft, p_arrayUp, p_arrayRight, p_arrayDown)
 // All arrays are top to bottom or left to right
 function stringToNumericBelt (p_string, p_xLength, p_yLength, p_leftAvailable, p_upAvailable, p_rightAvailable, p_downAvailable) {
 	const streamBelt = new StreamDecodingSparseAny(p_string);
-	var answerLeft, answerUp, answerRight, answerDown;
+	var resultLeft, resultUp, resultRight, resultDown;
 	var val;
 	if (p_leftAvailable) {
-		answerLeft = [];
+		resultLeft = [];
 		for (var i = 0 ; i < p_yLength ; i++) {		
 			val = streamBelt.decode();
 			if (val == END_OF_DECODING_STREAM) { val = null; }
-			answerLeft.push(val);
+			resultLeft.push(val);
 		}
-		answerLeft.reverse(); // Credits for reversing an array : https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Array/reverse
+		resultLeft.reverse(); // Credits for reversing an array : https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Array/reverse
 	} else {
-		answerLeft = null;
+		resultLeft = null;
 	}
 	if (p_upAvailable) {
-		answerUp = [];
+		resultUp = [];
 		for (var i = 0 ; i < p_xLength ; i++) {		
 			val = streamBelt.decode();
 			if (val == END_OF_DECODING_STREAM) { val = null; }
-			answerUp.push(val); // TODO too bad (answerLeft.push(streamBelt.decode())) has a risk of END_OF_DECODING_STREAM... change that !
+			resultUp.push(val); // TODO too bad (resultLeft.push(streamBelt.decode())) has a risk of END_OF_DECODING_STREAM... change that !
 		}
 	} else {
-		answerUp = null;
+		resultUp = null;
 	}
 	if (p_rightAvailable) {
-		answerRight = [];
+		resultRight = [];
 		for (var i = 0 ; i < p_yLength ; i++) {		
 			val = streamBelt.decode();
 			if (val == END_OF_DECODING_STREAM) { val = null; }
-			answerRight.push(val);
+			resultRight.push(val);
 		}
 	} else {
-		answerRight = null;
+		resultRight = null;
 	}
 	if (p_downAvailable) {
-		answerDown = [];
+		resultDown = [];
 		for (var i = 0 ; i < p_xLength ; i++) {		
 			val = streamBelt.decode();
 			if (val == END_OF_DECODING_STREAM) { val = null; }
-			answerDown.push(val); 
+			resultDown.push(val); 
 		}
-		answerDown.reverse();
+		resultDown.reverse();
 	} else {
-		answerDown = null;
+		resultDown = null;
 	}
-	return {left : answerLeft, up : answerUp, right : answerRight, down : answerDown}
+	return {left : resultLeft, up : resultUp, right : resultRight, down : resultDown}
 }
 
 //----------------------------------------------------------------------------------------------------------------
@@ -853,8 +853,8 @@ function linksOnlyPuzzleToString(p_linksArray) {
 }
 
 function stringToLinksOnlyPuzzle(p_string) {
-	const answer = stringToWallsOnlyPuzzle(p_string);
-	return {linkArray : answer.wallArray}; // Subterfuge bureaucracy !
+	const resultSP = stringToWallsOnlyPuzzle(p_string);
+	return {linkArray : resultSP.wallArray}; // Subterfuge bureaucracy !
 }
 
 // --------------------
