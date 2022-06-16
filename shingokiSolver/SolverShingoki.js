@@ -247,9 +247,9 @@ SolverShingoki.prototype.emitHypothesisNode = function(p_x, p_y, p_state) {
 
 SolverShingoki.prototype.emitPassNode = function(p_x, p_y) {
 	if (this.getColourPearl(p_x, p_y) == null) {
-		return this.passLoop({passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
+		return this.passLoop({category : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
 	} else {
-		return this.passLoop({passCategory : LOOP_PASS_CATEGORY.PEARLY, x : p_x, y : p_y});
+		return this.passLoop({category : LOOP_PASS_CATEGORY.PEARLY, x : p_x, y : p_y});
 	}
 }
 
@@ -257,8 +257,8 @@ SolverShingoki.prototype.makeMultipass = function() {
 	this.multipassLoop();
 }
 
-solveAction = function (p_solver) {
-	p_solver.resolve();
+SolverShingoki.prototype.makeResolution = function (p_solver) {
+	this.resolve();
 }
 
 // -------------------

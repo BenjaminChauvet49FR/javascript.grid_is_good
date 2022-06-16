@@ -187,7 +187,7 @@ SolverYajikabe.prototype.isBanned = function(p_x, p_y) {
 
 SolverYajikabe.prototype.isNumeric = function(p_x, p_y) {
 	const num = this.clueGrid.get(p_x, p_y);
-	return (num != null && num.charAt(0) != "X");
+	return (num != null && num.charAt(0) != SYMBOL_ID.X);
 }
 
 SolverYajikabe.prototype.makeResolution = function() { 
@@ -218,7 +218,7 @@ SolverYajikabe.prototype.getNumber = function(p_x, p_y) {
 // Input methods
 SolverYajikabe.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
 	if (!this.isBanned(p_x, p_y)) {
-		this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
+		this.tryToApplyHypothesisSafe(new SpaceEvent(p_x, p_y, p_symbol));
 	}
 }
 
@@ -241,16 +241,16 @@ SolverYajikabe.prototype.passStripFromSpace = function(p_x, p_y) {
 		var listPassNow;
 		if (unionIndex != null) {
 			listPassNow = this.generateEventsForUnionStripPass(unionIndex);
-			this.passEvents(listPassNow, {category : YAJIKABE_CATEGORY.UNION, index : unionIndex}); 
+			this.passEventsSafe(listPassNow, {category : YAJIKABE_CATEGORY.UNION, index : unionIndex}); 
 		} else {
 			listPassNow = this.generateEventsForSingleStripPass(index);
-			this.passEvents(listPassNow, {category : YAJIKABE_CATEGORY.STRIP, index : index}); 
+			this.passEventsSafe(listPassNow, {category : YAJIKABE_CATEGORY.STRIP, index : index}); 
 		}
 	}
 }
 
 SolverYajikabe.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 //--------------------------------
@@ -475,7 +475,7 @@ orderedListPassArgumentsClosure = function(p_solver) {
 
 namingCategoryPassClosure = function(p_solver) {
 	return function(p_indexPass) {
-		if (p_indexPass.passCategory == YAJIKABE_CATEGORY.UNION) {
+		if (p_indexPass.category == YAJIKABE_CATEGORY.UNION) {
 			const uni = p_solver.unionsStripesList[p_indexPass.index];
 			if (uni.orientation == ORIENTATION.VERTICAL) {
 				return "(Stripes V " + uni.x + "," + uni.yMin + "-" + uni.yMax +")";

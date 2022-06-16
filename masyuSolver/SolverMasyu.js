@@ -97,9 +97,9 @@ SolverMasyu.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 SolverMasyu.prototype.emitPassSpace = function(p_x, p_y) {
 	var indexPass;
 	if (this.pearlArray[p_y][p_x] != null) {		
-		indexPass = {passCategory : LOOP_PASS_CATEGORY.MASYU, x : p_x, y : p_y};
+		indexPass = {category : LOOP_PASS_CATEGORY.MASYU, x : p_x, y : p_y};
 	} else {
-		indexPass = {passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
+		indexPass = {category : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
 	}
 	return this.passLoop(indexPass);
 }

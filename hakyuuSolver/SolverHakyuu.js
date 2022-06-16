@@ -174,11 +174,11 @@ function undoEventClosure(p_solver) {
 // Deductions
 
 function deductionsClosure(p_solver) {
-	return function(p_listEventsToApply, p_eventToApply) {
-		const x = p_eventToApply.x;
-		const y = p_eventToApply.y;
-		const number = p_eventToApply.number;
-		if (p_eventToApply.choice) {
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		const x = p_eventBeingApplied.x;
+		const y = p_eventBeingApplied.y;
+		const number = p_eventBeingApplied.number;
+		if (p_eventBeingApplied.choice) {
 			
 			// Ban events for all other values in this space
 			deductionsExcludeOthersNumeric(p_listEventsToApply, p_solver.answerArray, x, y, number);

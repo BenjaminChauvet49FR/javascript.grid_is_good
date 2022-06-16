@@ -163,7 +163,7 @@ function canGoThereClosure(p_solver, p_islandIndex) {
 // Input methods
 SolverNurikabe.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
 	if (!this.islandGrid.get(p_x, p_y)) {
-		this.tryToApplyHypothesis(new ChoiceEvent(p_x, p_y, NURIKABE_SEA, p_symbol));
+		this.tryToApplyHypothesisSafe(new ChoiceEvent(p_x, p_y, NURIKABE_SEA, p_symbol));
 	}
 }
 
@@ -179,12 +179,12 @@ SolverNurikabe.prototype.emitPassSpace = function(p_x, p_y) {
 	if (this.islandGrid.get(p_x, p_y) != null) {		
 		const ixi = this.answerChoiceArray[p_y][p_x].getOneLeft();
 		const listPassNow = this.generateEventsIslandPass(ixi); 
-		this.passEvents(listPassNow, ixi); 
+		this.passEventsSafe(listPassNow, ixi); 
 	}
 }
 
 SolverNurikabe.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 SolverNurikabe.prototype.makePurge = function() {
@@ -548,7 +548,7 @@ function banInaccessibleIslandsClosure(p_solver) {
 				});
 				for (var j = 0 ; j < spacesToDiscard.length ; j++) {
 					coors = spacesToDiscard[j];
-					state = p_solver.tryToApplyHypothesis(new ChoiceEvent(coors.x, coors.y, island.index, false));
+					state = p_solver.tryToApplyHypothesisSafe(new ChoiceEvent(coors.x, coors.y, island.index, false));
 					ok &= (state != DEDUCTIONS_RESULT.FAILURE);
 					if (!ok) {
 						return GLOBAL_DEDUCTIONS_RESULT.FAILURE;

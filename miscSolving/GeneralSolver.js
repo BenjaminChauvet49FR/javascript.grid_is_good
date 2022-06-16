@@ -529,9 +529,9 @@ GeneralSolver.prototype.quickStart = function() {
 		}
 	}
 	// Quick start not parasital if list in happenedEventsSeries is empty.
-	if (this.happenedEventsSeries[this.happenedEventsSeries.length-1].list.length == 0) {
+	/*if (this.happenedEventsSeries[this.happenedEventsSeries.length-1].list.length == 0) {
 		this.happenedEventsSeries.pop();
-	}
+	}*/ // NOPE, deleted since we decided inputs must be backed by Quickstart.
 	this.separatelyStackDeductions = true;
 	if (ok) {
 		this.quickStartDone = true;

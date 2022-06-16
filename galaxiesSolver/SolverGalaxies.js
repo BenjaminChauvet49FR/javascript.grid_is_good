@@ -239,29 +239,29 @@ SolverGalaxies.prototype.commonPossibilities = function(p_x, p_y, p_dx, p_dy) {
 // Input methods
 
 SolverGalaxies.prototype.emitHypothesisRight = function(p_x, p_y, p_state) {
-	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, DIRECTION.RIGHT, p_state));
+	this.tryToApplyHypothesisSafe(new FenceEvent(p_x, p_y, DIRECTION.RIGHT, p_state));
 }
 
 SolverGalaxies.prototype.emitHypothesisDown = function(p_x, p_y, p_state) {
-	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, DIRECTION.DOWN, p_state));
+	this.tryToApplyHypothesisSafe(new FenceEvent(p_x, p_y, DIRECTION.DOWN, p_state));
 }
 
 SolverGalaxies.prototype.emitPassRight = function(p_x, p_y) {
 	const listPassNow = [this.generatePassEventsOneFence(p_x, p_y, DIRECTION.RIGHT)];
-	return this.passEvents(listPassNow, {x : p_x, y : p_y, direction : DIRECTION.RIGHT, categoryPass : GALAXIES_PASS_CATEGORY.UNIQUE}); 
+	return this.passEventsSafe(listPassNow, {x : p_x, y : p_y, direction : DIRECTION.RIGHT, category : GALAXIES_PASS_CATEGORY.UNIQUE}); 
 }
 
 SolverGalaxies.prototype.emitPassCenterForSpace = function(p_x, p_y) {
 	const index = this.centersInArray[p_y][p_x];
 	if (index != null) {
 		const listPassNow = this.generatePassEventsCenterExpansion(index);
-		this.passEvents(listPassNow, {categoryPass : GALAXIES_PASS_CATEGORY.AROUND_CENTER, index : index});
+		this.passEventsSafe(listPassNow, {category : GALAXIES_PASS_CATEGORY.AROUND_CENTER, index : index});
 	}
 }
 
 SolverGalaxies.prototype.emitPassDown = function(p_x, p_y) {
 	const listPassNow = [this.generatePassEventsOneFence(p_x, p_y, DIRECTION.DOWN)];
-	return this.passEvents(listPassNow, {x : p_x, y : p_y, direction : DIRECTION.DOWN, categoryPass : GALAXIES_PASS_CATEGORY.UNIQUE}); 
+	return this.passEventsSafe(listPassNow, {x : p_x, y : p_y, direction : DIRECTION.DOWN, category : GALAXIES_PASS_CATEGORY.UNIQUE}); 
 }
 
 SolverGalaxies.prototype.undo = function(){
@@ -269,7 +269,7 @@ SolverGalaxies.prototype.undo = function(){
 }
 
 SolverGalaxies.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 // In this puzzle, quickstart is vital for the separation of centers
@@ -657,8 +657,9 @@ function filterClustersClosure(p_solver) {
 						return listEventsToApply;
 					} else {
 						// Found a cluster part ! 
-						var symCoors;
-						p_solver.currentClusterCenterAccess.list.forEach(coors2 => {
+						var symCoors, coors2;
+						for (var i2 = 0 ; i2 < p_solver.currentClusterCenterAccess.list.length ; i2++) {
+							coors2 = p_solver.currentClusterCenterAccess.list[i2];
 							// But wait, what is the guarantee that all spaces admit an existing symetric part ? (crashing pass in puzzle 100 raised the concern)
 							symCoors = p_solver.getSymetricalCoordinates(coors2.x, coors2.y, accessedCenterIndex);
 							if (!p_solver.areCoordinatesInPuzzle(symCoors.x, symCoors.y)) {
@@ -667,7 +668,7 @@ function filterClustersClosure(p_solver) {
 							} else {								
 								p_solver.currentClusterCenterAccess.add(symCoors.x, symCoors.y);
 							}
-						});
+						};
 					}
 					if (!isFailed(listEventsToApply)) {
 						// Prepare a list of events depending on p_solver.currentClusterCenterAccess. 
@@ -737,7 +738,7 @@ SolverGalaxies.prototype.generatePassEventsCenterExpansion = function(p_index) {
 
 function namingCategoryPassClosure(p_solver) {
 	return function(p_indexPass) {
-		if (p_indexPass.categoryPass == GALAXIES_PASS_CATEGORY.AROUND_CENTER) {
+		if (p_indexPass.category == GALAXIES_PASS_CATEGORY.AROUND_CENTER) {
 			const center = p_solver.centersData[p_indexPass.index];
 			return "Galaxy " + p_indexPass.index + " (" + center.realX + " " + center.realY + ")";
 		} else {
@@ -748,7 +749,7 @@ function namingCategoryPassClosure(p_solver) {
 
 function generateEventsForPassClosure(p_solver) {
 	return function(p_indexPass) {
-		if (p_indexPass.categoryPass == GALAXIES_PASS_CATEGORY.AROUND_CENTER) {
+		if (p_indexPass.category == GALAXIES_PASS_CATEGORY.AROUND_CENTER) {
 			return p_solver.generatePassEventsCenterExpansion(p_indexPass.index);
 		} else {			
 			return [p_solver.generatePassEventsOneFence(p_indexPass.x, p_indexPass.y, p_indexPass.direction)];
@@ -760,15 +761,15 @@ function orderedListPassArgumentsClosure(p_solver) {
 	return function() {
 		var listIndexesPass = [];
 		for (i = 0 ; i < p_solver.centersData.length ; i++) {
-			listIndexesPass.push({categoryPass : GALAXIES_PASS_CATEGORY.AROUND_CENTER, index : i});
+			listIndexesPass.push({category : GALAXIES_PASS_CATEGORY.AROUND_CENTER, index : i});
 		}
 		for (var y = 0 ; y < p_solver.yLength ; y++) {
 			for (var x = 0 ; x < p_solver.xLength ; x++) {
 				if (x <= p_solver.xLength-2) {
-					listIndexesPass.push({x : x, y : y, direction : DIRECTION.RIGHT, categoryPass : GALAXIES_PASS_CATEGORY.UNIQUE});
+					listIndexesPass.push({x : x, y : y, direction : DIRECTION.RIGHT, category : GALAXIES_PASS_CATEGORY.UNIQUE});
 				}
 				if (y <= p_solver.yLength-2) {
-					listIndexesPass.push({x : x, y : y, direction : DIRECTION.DOWN, categoryPass : GALAXIES_PASS_CATEGORY.UNIQUE});
+					listIndexesPass.push({x : x, y : y, direction : DIRECTION.DOWN, category : GALAXIES_PASS_CATEGORY.UNIQUE});
 				}
 			}
 		}

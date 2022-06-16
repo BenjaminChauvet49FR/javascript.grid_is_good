@@ -439,7 +439,7 @@ function lexicalSpacesValuesToString(p_valuesArray) {
 				} else if (skippedSpaces >= 3) {
 					result += " X"+skippedSpaces;
 				}
-				result += " " + ((typeof(value) == "string" && value.charAt(0) == 'X') ? ('x' + value) : value); // No parentheses to circle the whole ternary (from "(typeof"  to ": value)" ) = small cap Xs everywhere.
+				result += " " + ((typeof(value) == "string" && value.charAt(0) == SYMBOL_ID.X) ? (SYMBOL_ID.X + value) : value); // No parentheses to circle the whole ternary (from "(typeof"  to ": value)" ) = small cap Xs everywhere.
 				skippedSpaces = 0;
 			} else {
 				skippedSpaces++;

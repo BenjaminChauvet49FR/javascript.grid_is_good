@@ -57,7 +57,7 @@ SolverAkari.prototype.construct = function(p_numberSymbolArray) {
 			symbolOrNumber = p_numberSymbolArray[iy][ix];
 			if (symbolOrNumber != null) {
 				this.answerArray[iy].push(FILLING.NO); // Optional but I kinda like this
-				if (symbolOrNumber == "X") {
+				if (symbolOrNumber == SYMBOL_ID.X) {
 					this.numericArray[iy].push({blocked : true, value : NOT_FORCED});
 				} else {
 					this.numericSpacesList.push({x : ix, y : iy});
@@ -247,7 +247,7 @@ SolverAkari.prototype.isLighted = function(p_x, p_y) {
 // Input
 
 SolverAkari.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	return this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
+	return this.tryToApplyHypothesisSafe(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverAkari.prototype.undo = function() {
@@ -262,15 +262,15 @@ SolverAkari.prototype.passSpaceOrSetNumericSpaces = function(p_x, p_y) {
 	const spaceInfos = this.numericArray[p_y][p_x];
 	if (this.getNumericValueFromSpace(spaceInfos) != null) {
 		listPassNow = this.generateAllEventsForSetsAroundNumericSpacesPass(this.numericArray[p_y][p_x].indexSetNumeric);
-		this.passEvents(listPassNow, {passCategory : AKARI_PASS_CATEGORY.SET_NUMERIC, index : this.numericArray[p_y][p_x].indexSetNumeric});
+		this.passEventsSafe(listPassNow, {category : AKARI_PASS_CATEGORY.SET_NUMERIC, index : this.numericArray[p_y][p_x].indexSetNumeric});
 	} else if (!this.numericArray[p_y][p_x].blocked) {
 		listPassNow = [this.generateListEventsForOneSpace(p_x, p_y)];
-		this.passEvents(listPassNow, {passCategory : AKARI_PASS_CATEGORY.SPACE, x : x, y : y});
+		this.passEventsSafe(listPassNow, {category : AKARI_PASS_CATEGORY.SPACE, x : x, y : y});
 	}
 }
 
 SolverAkari.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 //--------------------------------
@@ -485,7 +485,7 @@ filterClustersClosure = function(p_solver) {
 		var listEventsToApply = [];
 		var ok = true;
 		var x, y, foundBulb, spaceInfos;
-		p_solver.checkerOneLighterLeft.list.forEach(coors => {
+		p_solver.checkerOneLighterLeft.list.forEach(coors => { 
 			x = coors.x;
 			y = coors.y;
 			spaceInfos = p_solver.numericArray[y][x];
@@ -561,7 +561,7 @@ SolverAkari.prototype.cleanOneLighterLeftSpaces = function() {
 
 generateEventsForPassClosure = function(p_solver) {
 	return function(p_indexPass) {
-		if (p_indexPass.passCategory == AKARI_PASS_CATEGORY.NUMERIC_SET) {			
+		if (p_indexPass.category == AKARI_PASS_CATEGORY.NUMERIC_SET) {			
 			return p_solver.generateAllEventsForSetsAroundNumericSpacesPass(p_indexPass.index);
 		} else {
 			return [p_solver.generateListEventsForOneSpace(p_indexPass.x, p_indexPass.y)];
@@ -591,7 +591,7 @@ function compareSolveEvents(p_event1, p_event2) {
 
 namingSetClosure = function(p_solver) {
 	return function (p_indexPass) {
-		if (p_indexPass.passCategory == AKARI_PASS_CATEGORY.NUMERIC_SET) {			
+		if (p_indexPass.category == AKARI_PASS_CATEGORY.NUMERIC_SET) {			
 			const setCoors = p_solver.setsAroundNumericSpaces[p_indexPass.index];
 			return "Space set (" + setCoors[0].x + "," + setCoors[0].y + ", size " + setCoors.length + ")"; 
 		} else {
@@ -605,12 +605,12 @@ orderedListPassArgumentsClosure = function(p_solver) {
 		// Note : may be optimized.
 		var listIndexesPass = [];
 		for (var i = 0; i < p_solver.setsAroundNumericSpaces.length ; i++) {
-			listIndexesPass.push({passCategory : AKARI_PASS_CATEGORY.NUMERIC_SET, index : i});
+			listIndexesPass.push({category : AKARI_PASS_CATEGORY.NUMERIC_SET, index : i});
 		}
 		for (var y = 0 ; y < p_solver.yLength ; y++) {
 			for (var x = 0 ; x < p_solver.xLength ; x++) {
 				if (!p_solver.numericArray[y][x].blocked && p_solver.numericArray[y][x].numericNeighbors.length == 0) {					
-					listIndexesPass.push({passCategory : AKARI_PASS_CATEGORY.SPACE, x : x, y : y});
+					listIndexesPass.push({category : AKARI_PASS_CATEGORY.SPACE, x : x, y : y});
 				}
 			}
 		}

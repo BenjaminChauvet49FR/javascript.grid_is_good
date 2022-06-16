@@ -150,15 +150,15 @@ SolverStitches.prototype.isExistingDifferentRegion = function(p_x, p_y, p_dir) {
 
 // Input methods
 SolverStitches.prototype.emitHypothesisSpace = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol), this.methodsSetDeductions); // General solver call
+	this.tryToApplyHypothesisSafe(new SpaceEvent(p_x, p_y, p_symbol), this.methodsSetDeductions); // General solver call
 }
 
 SolverStitches.prototype.emitHypothesisDown = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, DIRECTION.DOWN, p_symbol), this.methodsSetDeductions); // General solver call
+	this.tryToApplyHypothesisSafe(new LinkEvent(p_x, p_y, DIRECTION.DOWN, p_symbol), this.methodsSetDeductions); // General solver call
 }
 
 SolverStitches.prototype.emitHypothesisRight = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new LinkEvent(p_x, p_y, DIRECTION.RIGHT, p_symbol), this.methodsSetDeductions); // General solver call
+	this.tryToApplyHypothesisSafe(new LinkEvent(p_x, p_y, DIRECTION.RIGHT, p_symbol), this.methodsSetDeductions); // General solver call
 }
 
 SolverStitches.prototype.undo = function() {
@@ -173,7 +173,7 @@ SolverStitches.prototype.emitPassBorderRight = function(p_x, p_y) {
 	if (this.isExistingDifferentRegion(p_x, p_y, DIRECTION.RIGHT)) {
 		const index1 = this.regionArray[p_y][p_x];
 		const index2 = this.regionArray[p_y + 1][p_x];
-		this.passEvents(this.generateEventsForBorderPass(index1, index2), {family : STITCHES_PASS_KIND.BORDER, index1 : index1, index2 : index2});
+		this.passEventsSafe(this.generateEventsForBorderPass(index1, index2), {category : STITCHES_PASS_KIND.BORDER, index1 : index1, index2 : index2});
 	}
 }
 
@@ -182,20 +182,20 @@ SolverStitches.prototype.emitPassBorderDown = function(p_x, p_y) {
 	if (this.isExistingDifferentRegion(p_x, p_y, DIRECTION.DOWN)) {
 		const index1 = this.regionArray[p_y][p_x];
 		const index2 = this.regionArray[p_y + 1][p_x];
-		this.passEvents(this.generateEventsForBorderPass(index1, index2), {family : STITCHES_PASS_KIND.BORDER, index1 : index1, index2 : index2});
+		this.passEventsSafe(this.generateEventsForBorderPass(index1, index2), {category : STITCHES_PASS_KIND.BORDER, index1 : index1, index2 : index2});
 	}
 }
 
 SolverStitches.prototype.emitPassRow = function(p_y) {
-	this.passEvents(this.generateEventsForRowPass(p_y), {family : STITCHES_PASS_KIND.ROW, y : p_y});
+	this.passEventsSafe(this.generateEventsForRowPass(p_y), {category : STITCHES_PASS_KIND.ROW, y : p_y});
 }
 
 SolverStitches.prototype.emitPassColumn = function(p_x) {
-	this.passEvents(this.generateEventsForColumnPass(p_x), {family : STITCHES_PASS_KIND.COLUMN, x : p_x});
+	this.passEventsSafe(this.generateEventsForColumnPass(p_x), {category : STITCHES_PASS_KIND.COLUMN, x : p_x});
 }
 
 SolverStitches.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 //--------------------------------
@@ -463,7 +463,7 @@ SolverStitches.prototype.deductionsFillBorder = function(p_listEventsToApply, p_
 
 generateEventsForPassClosure = function(p_solver) {
 	return function(p_indexPass) {
-		switch (p_indexPass.family) {
+		switch (p_indexPass.category) {
 			case STITCHES_PASS_KIND.BORDER : return p_solver.generateEventsForBorderPass(p_indexPass.index1, p_indexPass.index2);
 			case STITCHES_PASS_KIND.ROW : return p_solver.generateEventsForRowPass(p_indexPass.y);
 			case STITCHES_PASS_KIND.COLUMN : return p_solver.generateEventsForColumnPass(p_indexPass.x);
@@ -513,7 +513,7 @@ copying = function(p_event) {
 
 namingCategoryPassClosure = function(p_solver) {
 	return function(p_indexPass) {
-		switch (p_indexPass.family) {
+		switch (p_indexPass.category) {
 			case STITCHES_PASS_KIND.BORDER : return "Border between " + p_indexPass.index1 + " and " + p_indexPass.index2 ; break;
 			case STITCHES_PASS_KIND.ROW : return "Row " + p_indexPass.y; break;
 			case STITCHES_PASS_KIND.COLUMN : return "Column " + p_indexPass.x; break;
@@ -539,15 +539,15 @@ orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
 		var listIndexesPass = [];
 		for (var y = 0 ; y < p_solver.yLength ; y++) {
-			listIndexesPass.push({family : STITCHES_PASS_KIND.ROW, y : y});
+			listIndexesPass.push({category : STITCHES_PASS_KIND.ROW, y : y});
 		}
 		for (var x = 0 ; x < p_solver.xLength ; x++) {
-			listIndexesPass.push({family : STITCHES_PASS_KIND.COLUMN, x : x});
+			listIndexesPass.push({category : STITCHES_PASS_KIND.COLUMN, x : x});
 		}
 		for (var ir = 0 ; ir < p_solver.regionsNumber ; ir++) {
 			for (var ir2 = 0 ; ir2 < ir ; ir2++) {
 				if (p_solver.getBorder(ir, ir2) != null) {					
-					listIndexesPass.push({family : STITCHES_PASS_KIND.BORDER, index1 : ir, index2 : ir2});
+					listIndexesPass.push({category : STITCHES_PASS_KIND.BORDER, index1 : ir, index2 : ir2});
 				}
 			}
 		}

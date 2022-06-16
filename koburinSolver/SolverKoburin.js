@@ -128,9 +128,9 @@ SolverKoburin.prototype.emitPassSpace = function(p_x, p_y) {
 	var indexPass;
 	const number = this.numericArray[p_y][p_x].number;
 	if (number != null && number != NOT_FORCED) {		
-		indexPass = {passCategory : LOOP_PASS_CATEGORY.NUMBER_KOBURIN, x : p_x, y : p_y};
+		indexPass = {category : LOOP_PASS_CATEGORY.NUMBER_KOBURIN, x : p_x, y : p_y};
 	} else {
-		indexPass = {passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
+		indexPass = {category : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
 	}
 	return this.passLoop(indexPass);
 }

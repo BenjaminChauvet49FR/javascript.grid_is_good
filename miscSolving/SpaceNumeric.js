@@ -2,8 +2,8 @@ const CHOICE_EVENT_KIND = 'kc';
 
 const SPACE_CHOICE = {
 	YES : 2,
-	NO : 0,
-	UNDECIDED : 1
+	NO : 1,
+	UNDECIDED : 0
 }
 
 function SpaceChoice() {
@@ -288,6 +288,53 @@ deductionsAlertLeftInSpaceSetPrivate = function(p_listEventsToApply, p_symbol, p
 		}
 	}	
 }
+
+// Row and column
+// Assumes that all spaces in row/column are choices.
+deductionsAlertAllPlacedInColumn = function(p_listEventsToApply, p_NumericSpacesSetAccountant, p_symbol, p_x, p_numericSpacesArray) {
+	if (p_NumericSpacesSetAccountant.getNotPlacedYet(p_symbol) == 0) {
+		deductionsAlertAllInColumnPrivate(p_listEventsToApply, p_symbol, p_x, p_numericSpacesArray, false);
+	}
+}
+
+deductionsAlertAllPlacedInRow = function(p_listEventsToApply, p_NumericSpacesSetAccountant, p_symbol, p_y, p_numericSpacesArray) {
+	if (p_NumericSpacesSetAccountant.getNotPlacedYet(p_symbol) == 0) {
+		deductionsAlertAllInRowPrivate(p_listEventsToApply, p_symbol, p_y, p_numericSpacesArray, false);
+	}
+}
+
+deductionsAlertAllBannedInColumn = function(p_listEventsToApply, p_NumericSpacesSetAccountant, p_symbol, p_x, p_numericSpacesArray) {
+	if (p_NumericSpacesSetAccountant.getNotBannedYet(p_symbol) == 0) {
+		deductionsAlertAllInColumnPrivate(p_listEventsToApply, p_symbol, p_x, p_numericSpacesArray, true);
+	}
+}
+
+deductionsAlertAllBannedInRow = function(p_listEventsToApply, p_NumericSpacesSetAccountant, p_symbol, p_y, p_numericSpacesArray) {
+	if (p_NumericSpacesSetAccountant.getNotBannedYet(p_symbol) == 0) {
+		deductionsAlertAllInRowPrivate(p_listEventsToApply, p_symbol, p_y, p_numericSpacesArray, true);
+	}
+}
+
+deductionsAlertAllInColumnPrivate = function(p_listEventsToApply, p_symbol, p_x, p_numericSpacesArray, p_choiceToBeMade) {
+	for (var y2 = 0 ; y2 < p_numericSpacesArray.length ; y2++) {
+		if (p_numericSpacesArray[y2][p_x].getState(p_symbol) == SPACE_CHOICE.UNDECIDED) {
+			p_listEventsToApply.push(new ChoiceEvent(p_x, y2, p_symbol, p_choiceToBeMade));
+		}
+	}
+}
+
+deductionsAlertAllInRowPrivate = function(p_listEventsToApply, p_symbol, p_y, p_numericSpacesArray, p_choiceToBeMade) {
+	for (var x2 = 0 ; x2 < p_numericSpacesArray[p_y].length ; x2++) {
+		if (p_numericSpacesArray[p_y][x2].getState(p_symbol) == SPACE_CHOICE.UNDECIDED) {
+			p_listEventsToApply.push(new ChoiceEvent(x2, p_y, p_symbol, p_choiceToBeMade));
+		}
+	}
+}
+
+
+
+// -------------
+// Select version
 
 testNumericSelectSpaceChoice = function(p_choiceArray, p_x, p_y, p_index, p_choice) {	
 	if (!p_choiceArray[p_y][p_x].contains(p_index)) {

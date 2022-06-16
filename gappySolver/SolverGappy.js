@@ -75,7 +75,7 @@ SolverGappy.prototype.getAnswer = function(p_x, p_y){return this.answerArray[p_y
 // Input methods 
 
 SolverGappy.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
+	this.tryToApplyHypothesisSafe(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverGappy.prototype.undo = function() {
@@ -84,16 +84,16 @@ SolverGappy.prototype.undo = function() {
 
 SolverGappy.prototype.emitPassRow = function(p_y) {
 	const listPassNow = this.generateEventsForRowPass(p_y);
-	this.passEvents(listPassNow, {family : GAPPY_PASS_CATEGORY.ROW, index : p_y}); 
+	this.passEventsSafe(listPassNow, {category : GAPPY_PASS_CATEGORY.ROW, index : p_y}); 
 }
 
 SolverGappy.prototype.emitPassColumn = function(p_x) {
 	const listPassNow = this.generateEventsForColumnPass(p_x);
-	this.passEvents(listPassNow, {family : GAPPY_PASS_CATEGORY.COLUMN, index : p_x}); 
+	this.passEventsSafe(listPassNow, {category : GAPPY_PASS_CATEGORY.COLUMN, index : p_x}); 
 }
 
 SolverGappy.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 SolverGappy.prototype.makeQuickStart = function() { 
@@ -101,9 +101,9 @@ SolverGappy.prototype.makeQuickStart = function() {
 }
 
 namingCategoryPassClosure = function(p_solver) {
-	return function(p_indexAndFamily) {
-		const index = p_indexAndFamily.index;
-		switch (p_indexAndFamily.family) {
+	return function(p_indexPass) {
+		const index = p_indexPass.index;
+		switch (p_indexPass.category) {
 			case GAPPY_PASS_CATEGORY.ROW : return "Row " + index; break;
 			case GAPPY_PASS_CATEGORY.COLUMN : return "Column " + index; break;
 			default : return "";
@@ -303,10 +303,10 @@ generateEventsForRegionColumnClosure = function(p_solver) {
 }
 
 generateEventsForRCPassClosure = function(p_solver) {
-	return function(p_indexAndFamily) {
-		switch (p_indexAndFamily.family) {
-			case GAPPY_PASS_CATEGORY.COLUMN : return p_solver.generateEventsForColumnPass(p_indexAndFamily.index); break;
-			case GAPPY_PASS_CATEGORY.REGION : return p_solver.generateEventsForRegionPass(p_indexAndFamily.index); break;
+	return function(p_indexPass) {
+		switch (p_indexPass.category) {
+			case GAPPY_PASS_CATEGORY.COLUMN : return p_solver.generateEventsForColumnPass(p_indexPass.index); break;
+			case GAPPY_PASS_CATEGORY.REGION : return p_solver.generateEventsForRegionPass(p_indexPass.index); break;
 		}
 		return [];
 	}
@@ -345,8 +345,8 @@ orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
 		var listIndexesPass = [];
 		for (var i = 0; i < p_solver.xyLength ; i++) {
-			listIndexesPass.push({index : i, family : GAPPY_PASS_CATEGORY.ROW}); //, value : p_solver.notPlacedYet.rows[i]
-			listIndexesPass.push({index : i, family : GAPPY_PASS_CATEGORY.COLUMN}); //, value : p_solver.notPlacedYet.columns[i]
+			listIndexesPass.push({index : i, category : GAPPY_PASS_CATEGORY.ROW}); //, value : p_solver.notPlacedYet.rows[i]
+			listIndexesPass.push({index : i, category : GAPPY_PASS_CATEGORY.COLUMN}); //, value : p_solver.notPlacedYet.columns[i]
 		}
 		listIndexesPass.sort(function(p_iaf1, p_iaf2) {
 			return p_solver.uncertainity(p_iaf1)-p_solver.uncertainity(p_iaf2); // TODO too lazy to improve it like it is on the other solvers. 
@@ -355,10 +355,10 @@ orderedListPassArgumentsClosure = function(p_solver) {
 	}
 }
 
-SolverGappy.prototype.getNotPlacedYetSet = function(p_indexAndFamily) {
-	switch (p_indexAndFamily.family) {
-		case GAPPY_PASS_CATEGORY.COLUMN : return this.notPlacedYetColumns[p_indexAndFamily.index];
-		case GAPPY_PASS_CATEGORY.ROW : return this.notPlacedYetRows[p_indexAndFamily.index];
+SolverGappy.prototype.getNotPlacedYetSet = function(p_indexPass) {
+	switch (p_indexPass.category) {
+		case GAPPY_PASS_CATEGORY.COLUMN : return this.notPlacedYetColumns[p_indexPass.index];
+		case GAPPY_PASS_CATEGORY.ROW : return this.notPlacedYetRows[p_indexPass.index];
 	}
 }
 

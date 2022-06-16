@@ -129,7 +129,7 @@ SolverStarBattle.prototype.getFirstSpaceRegion = function(p_i){return this.space
 // Input methods 
 
 SolverStarBattle.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
+	this.tryToApplyHypothesisSafe(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverStarBattle.prototype.undo = function() {
@@ -138,21 +138,21 @@ SolverStarBattle.prototype.undo = function() {
 
 SolverStarBattle.prototype.emitPassRegion = function(p_indexRegion) {
 	const listPassNow = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEvents(listPassNow, {family : STAR_BATTLE_PASS_CATEGORY.REGION, index : p_indexRegion}); 
+	this.passEventsSafe(listPassNow, {category : STAR_BATTLE_PASS_CATEGORY.REGION, index : p_indexRegion}); 
 }
 
 SolverStarBattle.prototype.emitPassRow = function(p_y) {
 	const listPassNow = this.generateEventsForRowPass(p_y);
-	this.passEvents(listPassNow, {family : STAR_BATTLE_PASS_CATEGORY.ROW, index : p_y}); 
+	this.passEventsSafe(listPassNow, {category : STAR_BATTLE_PASS_CATEGORY.ROW, index : p_y}); 
 }
 
 SolverStarBattle.prototype.emitPassColumn = function(p_x) {
 	const listPassNow = this.generateEventsForColumnPass(p_x);
-	this.passEvents(listPassNow, {family : STAR_BATTLE_PASS_CATEGORY.COLUMN, index : p_x}); 
+	this.passEventsSafe(listPassNow, {category : STAR_BATTLE_PASS_CATEGORY.COLUMN, index : p_x}); 
 }
 
 SolverStarBattle.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 // The quickstart is truly quick since it consists of filling 1-size regions with stars. 
@@ -162,7 +162,7 @@ SolverStarBattle.prototype.makeQuickStart = function() {
 
 SolverStarBattle.prototype.passSelectedSpaces = function(p_coorsList) {
 	const listPassNow = this.generateEventsForSpacesList(p_coorsList);
-	return this.passEvents(listPassNow, {family : STAR_BATTLE_PASS_CATEGORY.CUSTOM, numberSpaces : listPassNow.length});
+	return this.passEventsSafe(listPassNow, {category : STAR_BATTLE_PASS_CATEGORY.CUSTOM, numberSpaces : listPassNow.length});
 }
 
 SolverStarBattle.prototype.makeResolution = function() { 
@@ -314,11 +314,11 @@ generateEventsForRegionColumnClosure = function(p_solver) {
 }
 
 generateEventsForRLCPassClosure = function(p_solver) {
-	return function(p_indexAndFamily) {
-		switch (p_indexAndFamily.family) {
-			case STAR_BATTLE_PASS_CATEGORY.ROW : return p_solver.generateEventsForRowPass(p_indexAndFamily.index); break;
-			case STAR_BATTLE_PASS_CATEGORY.COLUMN : return p_solver.generateEventsForColumnPass(p_indexAndFamily.index); break;
-			case STAR_BATTLE_PASS_CATEGORY.REGION : return p_solver.generateEventsForRegionPass(p_indexAndFamily.index); break;
+	return function(p_indexPass) {
+		switch (p_indexPass.category) {
+			case STAR_BATTLE_PASS_CATEGORY.ROW : return p_solver.generateEventsForRowPass(p_indexPass.index); break;
+			case STAR_BATTLE_PASS_CATEGORY.COLUMN : return p_solver.generateEventsForColumnPass(p_indexPass.index); break;
+			case STAR_BATTLE_PASS_CATEGORY.REGION : return p_solver.generateEventsForRegionPass(p_indexPass.index); break;
 		}
 		return [];
 	}
@@ -371,11 +371,11 @@ orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
 		var listIndexesPass = [];
 		for (var i = 0; i < p_solver.spacesByRegion.length ; i++) {
-			listIndexesPass.push({index : i, family : STAR_BATTLE_PASS_CATEGORY.REGION}); 
+			listIndexesPass.push({index : i, category : STAR_BATTLE_PASS_CATEGORY.REGION}); 
 		} 
 		for (var i = 0; i < p_solver.xyLength ; i++) {
-			listIndexesPass.push({index : i, family : STAR_BATTLE_PASS_CATEGORY.ROW}); 
-			listIndexesPass.push({index : i, family : STAR_BATTLE_PASS_CATEGORY.COLUMN}); 
+			listIndexesPass.push({index : i, category : STAR_BATTLE_PASS_CATEGORY.ROW}); 
+			listIndexesPass.push({index : i, category : STAR_BATTLE_PASS_CATEGORY.COLUMN}); 
 		}
 		listIndexesPass.sort(function(p_iaf1, p_iaf2) {
 			return p_solver.uncertainity(p_iaf1)-p_solver.uncertainity(p_iaf2); // TODO too lazy to improve it like it is on the other solvers. 
@@ -384,11 +384,11 @@ orderedListPassArgumentsClosure = function(p_solver) {
 	}
 }
 
-SolverStarBattle.prototype.getNotPlacedYetSet = function(p_indexAndFamily) {
-	switch (p_indexAndFamily.family) {
-		case STAR_BATTLE_PASS_CATEGORY.ROW : return this.notPlacedYet.rows[p_indexAndFamily.index];
-		case STAR_BATTLE_PASS_CATEGORY.COLUMN : return this.notPlacedYet.columns[p_indexAndFamily.index];
-		case STAR_BATTLE_PASS_CATEGORY.REGION : return this.notPlacedYet.regions[p_indexAndFamily.index];
+SolverStarBattle.prototype.getNotPlacedYetSet = function(p_indexPass) {
+	switch (p_indexPass.category) {
+		case STAR_BATTLE_PASS_CATEGORY.ROW : return this.notPlacedYet.rows[p_indexPass.index];
+		case STAR_BATTLE_PASS_CATEGORY.COLUMN : return this.notPlacedYet.columns[p_indexPass.index];
+		case STAR_BATTLE_PASS_CATEGORY.REGION : return this.notPlacedYet.regions[p_indexPass.index];
 	}
 }
 
@@ -403,19 +403,19 @@ skipPassClosure = function(p_solver) {
 }
 
 namingCategoryPassClosure = function(p_solver) {
-	return function(p_indexAndFamily) {
+	return function(p_indexPass) {
 		var item;
-		const index = p_indexAndFamily.index;
-		switch (p_indexAndFamily.family) {
+		const index = p_indexPass.index;
+		switch (p_indexPass.category) {
 			case STAR_BATTLE_PASS_CATEGORY.REGION : return "Region "+ index + " (" + p_solver.getFirstSpaceRegion(index).x +","+ p_solver.getFirstSpaceRegion(index).y + ")"; break;
 			case STAR_BATTLE_PASS_CATEGORY.ROW : return "Row " + index; break;
 			case STAR_BATTLE_PASS_CATEGORY.COLUMN : return "Column " + index; break;
-			case STAR_BATTLE_PASS_CATEGORY.CUSTOM : return "Selection " + p_indexAndFamily.numberSpaces + " space" + (p_indexAndFamily.numberSpaces > 1 ? "s" : ""); break;
+			case STAR_BATTLE_PASS_CATEGORY.CUSTOM : return "Selection " + p_indexPass.numberSpaces + " space" + (p_indexPass.numberSpaces > 1 ? "s" : ""); break;
 			case STAR_BATTLE_PASS_CATEGORY.AGGREGATED_SELECTION :
 				var nameCatPass = "Aggregated selection of spaces ";
-				p_indexAndFamily.listSelectedIndexes.forEach(selectionElt => {
+				p_indexPass.listSelectedIndexes.forEach(selectionElt => {
 					item = selectionElt.item;
-					switch (item.family) {
+					switch (item.category) {
 						case STAR_BATTLE_PASS_CATEGORY.ROW : nameCatPass += "Row."+item.index;break;
 						case STAR_BATTLE_PASS_CATEGORY.REGION : nameCatPass += "Reg."+item.index+ "(" + p_solver.getFirstSpaceRegion(item.index).x +","+ p_solver.getFirstSpaceRegion(item.index).y + ")";break;
 						case STAR_BATTLE_PASS_CATEGORY.COLUMN : nameCatPass += "Col."+item.index;break;
@@ -646,9 +646,9 @@ SolverStarBattle.prototype.accumulativeSolution = function() {
 				}
 				// Item selected. Let's aggregate into selection.		
 				listIndexes.push({item : orderedList[itemFewerAddedSpaces.index], countNewSpaces : itemFewerAddedSpaces.countNewSpaces});
-				console.log(itemFewerAddedSpaces.index);
+				//console.log(itemFewerAddedSpaces.index);
 				this.addNewSpacesInSelection(this.spacesToSelect, orderedList[itemFewerAddedSpaces.index]); 
-				//console.log(" eventually selected --- " + orderedList[itemFewerAddedSpaces.index].family + "-" + orderedList[itemFewerAddedSpaces.index].index + " ; answer " + itemFewerAddedSpaces.countNewSpaces);
+				//console.log(" eventually selected --- " + orderedList[itemFewerAddedSpaces.index].category + "-" + orderedList[itemFewerAddedSpaces.index].index + " ; answer " + itemFewerAddedSpaces.countNewSpaces);
 				// Note : Difficulty I met = what it took to have the correct "count" value (now stored in countNewSpaces). In reality, some variables were misnamed -names were really confusing, and were likely reinitialized in the wrong place within this method.
 				// Yet, the correct item was picked, or seemed to be. Anyway, it works fine now.
 				consecutiveIncreases++;
@@ -666,7 +666,7 @@ SolverStarBattle.prototype.accumulativeSolution = function() {
 			console.log("Number of selected spaces for aggregated pass : " + this.spacesToSelect.list.length + " ; number of successful aggregared passes : " + this.researchSuccessfulAggregatedPasses + " ; ms since the starting date : " + (latestDate - this.researchStartDate) + ")"); 
 		} // I guess this is necessary to prevent the puzzle to complain about no answer but at least it allows to give some information about the progression. And the time elapsed too. Actually, what takes the most time is a pass.
 		listPassNow = this.generateEventsForSpacesList(this.spacesToSelect.list);
-		p = this.passEvents(listPassNow, {family : STAR_BATTLE_PASS_CATEGORY.AGGREGATED_SELECTION, listSelectedIndexes : listIndexes.slice()});
+		p = this.passEvents(listPassNow, {category : STAR_BATTLE_PASS_CATEGORY.AGGREGATED_SELECTION, listSelectedIndexes : listIndexes.slice()});
 		if (p == PASS_RESULT.FAILURE) {
 			ok = false;
 		} else if (p == PASS_RESULT.SUCCESS) {
@@ -686,21 +686,21 @@ SolverStarBattle.prototype.accumulativeSolution = function() {
 	}
 } 
 
-SolverStarBattle.prototype.addNewSpacesInSelection = function(p_checker, p_indexAndFamily) {
-	this.newSpacesToBeAdded(p_checker, p_indexAndFamily, true);
+SolverStarBattle.prototype.addNewSpacesInSelection = function(p_checker, p_indexPass) {
+	this.newSpacesToBeAdded(p_checker, p_indexPass, true);
 }
 
-SolverStarBattle.prototype.countNewSpacesInSelection = function(p_checker, p_indexAndFamily) {
-	return this.newSpacesToBeAdded(p_checker, p_indexAndFamily, false);
+SolverStarBattle.prototype.countNewSpacesInSelection = function(p_checker, p_indexPass) {
+	return this.newSpacesToBeAdded(p_checker, p_indexPass, false);
 }
 
-SolverStarBattle.prototype.newSpacesToBeAdded = function(p_checker, p_indexAndFamily, p_addMode) {
+SolverStarBattle.prototype.newSpacesToBeAdded = function(p_checker, p_indexPass, p_addMode) {
 	var x, y;
 	var count = 0;
-	switch (p_indexAndFamily.family) {
+	switch (p_indexPass.category) {
 			case STAR_BATTLE_PASS_CATEGORY.REGION : 
 				if (p_addMode) {
-					this.spacesByRegion[p_indexAndFamily.index].forEach(coors => {
+					this.spacesByRegion[p_indexPass.index].forEach(coors => {
 						x = coors.x;
 						y = coors.y;
 						if (this.answerArray[y][x] == STAR.UNDECIDED) {						
@@ -708,7 +708,7 @@ SolverStarBattle.prototype.newSpacesToBeAdded = function(p_checker, p_indexAndFa
 						}
 					});
 				} else {					
-					this.spacesByRegion[p_indexAndFamily.index].forEach(coors => {
+					this.spacesByRegion[p_indexPass.index].forEach(coors => {
 						x = coors.x;
 						y = coors.y;
 						if (!p_checker.array[y][x] && this.answerArray[y][x] == STAR.UNDECIDED) {						
@@ -718,7 +718,7 @@ SolverStarBattle.prototype.newSpacesToBeAdded = function(p_checker, p_indexAndFa
 				}
 				break;
 			case STAR_BATTLE_PASS_CATEGORY.ROW : 
-				y = p_indexAndFamily.index;
+				y = p_indexPass.index;
 				if (p_addMode) {
 					for (var x = 0 ; x < this.xyLength ; x++) {					
 						if (this.answerArray[y][x] == STAR.UNDECIDED) {						
@@ -734,7 +734,7 @@ SolverStarBattle.prototype.newSpacesToBeAdded = function(p_checker, p_indexAndFa
 				}
 				break;
 			case STAR_BATTLE_PASS_CATEGORY.COLUMN :
-				x = p_indexAndFamily.index;
+				x = p_indexPass.index;
 				if (p_addMode) {
 					for (var y = 0 ; y < this.xyLength ; y++) {					
 						if (this.answerArray[y][x] == STAR.UNDECIDED) {						
@@ -787,7 +787,7 @@ SolverStarBattle.prototype.newSpacesToBeAdded = function(p_checker, p_indexAndFa
 			continue;
 		}
 		var listPassNow = this.generateEventsForSpacesList(this.spacesToSelect.list);
-		p = this.passEvents(listPassNow, {family : STAR_BATTLE_PASS_CATEGORY.CUSTOM, numberSpaces : listPassNow.length});
+		p = this.passEvents(listPassNow, {category : STAR_BATTLE_PASS_CATEGORY.CUSTOM, numberSpaces : listPassNow.length});
 		if (p == PASS_RESULT.FAILURE) {
 			ok = false;
 		} else if (p == PASS_RESULT.SUCCESS) {

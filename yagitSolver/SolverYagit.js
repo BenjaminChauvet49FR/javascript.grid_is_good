@@ -230,13 +230,13 @@ SolverYagit.prototype.emitHypothesisDown = function(p_x, p_y, p_state) {
 
 SolverYagit.prototype.emitPassAroundSpace = function(p_x, p_y) {
 	const listPassNow = this.generateEventsAroundSpacePass(p_x, p_y);
-	this.passEvents(listPassNow, {passCategory : PASS_CATEGORY.SPACE, x : p_x, y : p_y}); 
+	this.passEventsSafe(listPassNow, {category : PASS_CATEGORY.SPACE, x : p_x, y : p_y}); 
 }
 
 SolverYagit.prototype.emitPassNodeRD = function(p_x, p_y) {
 	if (this.nodesOccupationRDArray[p_y][p_x] != null) {
 		const listPassNow = this.generateEventsAroundNodePass(p_x, p_y);
-		this.passEvents(listPassNow, {passCategory : PASS_CATEGORY.CORNER, x : p_x, y : p_y}); 
+		this.passEventsSafe(listPassNow, {category : PASS_CATEGORY.CORNER, x : p_x, y : p_y}); 
 	}
 }
 
@@ -245,7 +245,7 @@ SolverYagit.prototype.undo = function(){
 }
 
 SolverYagit.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 // In this puzzle, quickstart is vital for the separation of centers
@@ -254,7 +254,7 @@ SolverYagit.prototype.makeQuickStart = function(p_x, p_y) {
 }
 
 SolverYagit.prototype.tryToPutNewFence = function(p_x, p_y, p_directionFromSpace, p_state) {
-	this.tryToApplyHypothesis(new YagitFenceEvent(OrthogonalOrientationDirection[p_directionFromSpace], 
+	this.tryToApplyHypothesisSafe(new YagitFenceEvent(OrthogonalOrientationDirection[p_directionFromSpace], 
 	this.getIndexFence(p_x, p_y, p_directionFromSpace), 
 	p_state), 
 	this.methodsSetDeductions); // Unlike other solvers, this one is quite needed
@@ -873,7 +873,7 @@ SolverYagit.prototype.generateEventsAroundSpacePass = function(p_x, p_y) {
 
 namingCategoryPassClosure = function(p_solver) {
 	return function(p_indexPass) {
-		switch (p_indexPass.passCategory) {
+		switch (p_indexPass.category) {
 			case PASS_CATEGORY.NODE : 
 				return ("Node " + p_indexPass.x + "," + p_indexPass.y); break;
 			case PASS_CATEGORY.SPACE : 
@@ -884,7 +884,7 @@ namingCategoryPassClosure = function(p_solver) {
 
 generateEventsForPassClosure = function(p_solver) {
 	return function(p_indexPass) {
-		switch (p_indexPass.passCategory) {
+		switch (p_indexPass.category) {
 			case PASS_CATEGORY.NODE : 
 				return p_solver.generateEventsAroundNodePass(p_indexPass.x, p_indexPass.y); break;
 			case PASS_CATEGORY.SPACE : 
@@ -902,14 +902,14 @@ orderedListPassArgumentsClosure = function(p_solver) {
 			y = coors.y;
 			node = p_solver.nodesOccupationRDArray[y][x];
 			if (node != null && node.stillUnknownYet > 0) {
-				listIndexesPass.push({passCategory : PASS_CATEGORY.NODE, x : x, y : y});
+				listIndexesPass.push({category : PASS_CATEGORY.NODE, x : x, y : y});
 			}
 		});
 		// TODO : okay, can be optimized !
 		for(y = 0 ; y < p_solver.yLength ; y++) {			
 			for (x = 0; x < p_solver.xLength ; x++) {
 				if (p_solver.shapeAreaArray[y][x] == YAGIT_SHAPE.UNDECIDED) {
-					listIndexesPass.push({passCategory : PASS_CATEGORY.SPACE, x : x, y : y});
+					listIndexesPass.push({category : PASS_CATEGORY.SPACE, x : x, y : y});
 				}
 			}
 		}

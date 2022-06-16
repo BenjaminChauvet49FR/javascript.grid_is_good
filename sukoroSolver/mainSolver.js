@@ -52,7 +52,7 @@ function main() {
 	// Solver mode
 	buildInputCanvas("div_solving_canvas_buttons", actionsManagersSet.getActionsManager(0), "case", ENTRY.SPACE, [ACTION_OPEN_SPACE, ACTION_CLOSE_SPACE, ACTION_ENTER_NUMBER, ACTION_PASS_SPACE]);
 	buildActionsGlobal("div_solving_global_actions", ["Démarrage rapide", "Multipasse", "Résolution", "Annuler"], 
-		[function(event){quickStartAction(solver)}, function(event){multiPassAction(solver)}, function(event){resolveAction(solver)}, function(event){undoAction(solver)}] );
+		[function(event){quickStartAction(solver)}, function(event){multiPassAction(solver)}, function(event){solveAction(solver)}, function(event){undoAction(solver)}] );
 
 	// Purificator mode
 	buildInputCanvas("div_cleaning_canvas_buttons", actionsManagersSet.getActionsManager(1), "case", ENTRY.SPACE, [ACTION_PURIFY_SPACE, ACTION_UNPURIFY_SPACE]);

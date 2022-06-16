@@ -109,7 +109,7 @@ SolverChocona.prototype.getRegion = function(p_x, p_y) {
 
 // Input methods
 SolverChocona.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
+	this.tryToApplyHypothesisSafe(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverChocona.prototype.undo = function() {
@@ -118,11 +118,11 @@ SolverChocona.prototype.undo = function() {
 
 SolverChocona.prototype.passRegion = function(p_indexRegion) {
 	const listPassNow = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEvents(listPassNow, p_indexRegion); 
+	this.passEventsSafe(listPassNow, p_indexRegion); 
 }
 
 SolverChocona.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 SolverChocona.prototype.makeQuickStart = function() {

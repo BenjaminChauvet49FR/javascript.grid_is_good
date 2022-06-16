@@ -15,3 +15,7 @@ const LabelDirection = ['l', 'u', 'r', 'd'];
 function stringDirection(p_dir) {
 	return LabelDirection[p_dir];
 }
+const LabelOrientation = ['h', 'v'];
+function stringOrientation(p_dir) {
+	return LabelOrientation[p_dir];
+}

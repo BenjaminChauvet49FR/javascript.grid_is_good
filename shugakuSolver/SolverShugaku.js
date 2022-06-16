@@ -52,7 +52,7 @@ SolverShugaku.prototype.construct = function(p_numberSymbolsArray) {
 			symbolOrNumber = p_numberSymbolsArray[y][x];
 			if (symbolOrNumber != null) {
 				this.edgesArray[y].push(null);
-				if (symbolOrNumber == "X") { // Totally blocking space
+				if (symbolOrNumber == SYMBOL_ID.X) { // Totally blocking space
 					this.answerArray[y].push({block : true, value : SPACE_CROSS});
 					this.squareCountingArray[y].push(null);
 					this.xCoordinatesList.push({x : x, y : y});
@@ -170,25 +170,25 @@ SolverShugaku.prototype.makeQuickStart = function() {
 
 SolverShugaku.prototype.emitHypothesisSpace = function(p_x, p_y, p_value, p_ok) {
 	if (!this.answerArray[p_y][p_x].block) {
-		this.tryToApplyHypothesis(new ChoiceEvent(p_x, p_y, p_value, p_ok));
+		this.tryToApplyHypothesisSafe(new ChoiceEvent(p_x, p_y, p_value, p_ok));
 	}
 }
 
 SolverShugaku.prototype.emitHypothesisRight = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new FenceShugakuEvent(p_x, p_y, DIRECTION.RIGHT, p_symbol));
+	this.tryToApplyHypothesisSafe(new FenceShugakuEvent(p_x, p_y, DIRECTION.RIGHT, p_symbol));
 }
 
 SolverShugaku.prototype.emitHypothesisDown = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new FenceShugakuEvent(p_x, p_y, DIRECTION.DOWN, p_symbol));
+	this.tryToApplyHypothesisSafe(new FenceShugakuEvent(p_x, p_y, DIRECTION.DOWN, p_symbol));
 }
 
 SolverShugaku.prototype.emitPassSpace = function(p_x, p_y) {
 	const listPassNow = this.generateEventsForSpacePass({x : p_x, y : p_y});
-	this.passEvents(listPassNow, {x : p_x, y : p_y}); 
+	this.passEventsSafe(listPassNow, {x : p_x, y : p_y}); 
 }
 
 SolverShugaku.prototype.makeMultiPass = function() {
-	return this.multiPass(this.methodsSetMultipass);
+	return this.multiPassSafe(this.methodsSetMultipass);
 }
 
 SolverShugaku.prototype.makeResolution = function() { 

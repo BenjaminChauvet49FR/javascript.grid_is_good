@@ -180,9 +180,9 @@ SolverGeradeweg.prototype.emitHypothesisNode = function(p_x, p_y, p_state) {
 
 SolverGeradeweg.prototype.emitPassNode = function(p_x, p_y) {
 	if (this.getNumber(p_x, p_y) == null) {
-		return this.passLoop({passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
+		return this.passLoop({category : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
 	} else {
-		return this.passLoop({passCategory : LOOP_PASS_CATEGORY.PEARLY, x : p_x, y : p_y});
+		return this.passLoop({category : LOOP_PASS_CATEGORY.PEARLY, x : p_x, y : p_y});
 	}
 }
 
@@ -190,8 +190,8 @@ SolverGeradeweg.prototype.makeMultipass = function() {
 	this.multipassLoop();
 }
 
-solveAction = function (p_solver) {
-	p_solver.resolve();
+SolverGeradeweg.prototype.makeResolution = function () {
+	this.resolve();
 }
 
 // -------------------

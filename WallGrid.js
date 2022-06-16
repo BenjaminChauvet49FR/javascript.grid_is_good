@@ -559,7 +559,7 @@ function charToSpace(p_char) {
 
 function spaceToChar(p_space) {
 	if (p_space.state == WALLGRID.CLOSED) {
-		return 'X';		
+		return SYMBOL_ID.X;		
 	}
 	var valueSpace = 0;
 	if (p_space.wallR == WALLGRID.CLOSED) {

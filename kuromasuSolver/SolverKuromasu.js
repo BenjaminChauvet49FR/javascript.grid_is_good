@@ -162,7 +162,7 @@ SolverKuromasu.prototype.getRangedSpace = function(p_index) {
 
 // Input methods
 SolverKuromasu.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
+	this.tryToApplyHypothesisSafe(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverKuromasu.prototype.undo = function() {
@@ -177,15 +177,15 @@ SolverKuromasu.prototype.emitPassSpace = function(p_x, p_y) {
 	const number = this.getNumber(p_x, p_y);
 	if (number != null) {		
 		const listPassNow = this.generateEventsRangedDynamicPass(p_x, p_y, number);
-		this.passEvents(listPassNow, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y, number : number}); 
+		this.passEventsSafe(listPassNow, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y, number : number}); 
 	} else {
 		const listPassNow = this.generateEventsSinglePass(p_x, p_y);
-		this.passEvents(listPassNow, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y}); 
+		this.passEventsSafe(listPassNow, this.methodsSetDeductions, this.methodsSetPass, {x : p_x, y : p_y}); 
 	}
 }
 
 SolverKuromasu.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 //--------------------------------

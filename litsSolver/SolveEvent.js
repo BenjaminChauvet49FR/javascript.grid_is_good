@@ -5,6 +5,8 @@ const KIND_EVENT = {
 	BAN_SHAPE_REGION : 3
 }
 
+const LITSLettersArray = ['-','L','I','T','S'];
+
 function SpaceEvent(p_x, p_y, p_symbol) {
 	this.kind = KIND_EVENT.SPACE;
 	this.symbol = p_symbol;
@@ -45,7 +47,7 @@ ShapeEvent.prototype.copy = function() {
 }
 
 ShapeEvent.prototype.toLogString = function() {	
-	return "[S"+this.shape+" "+this.x+","+this.y+"]";
+	return "[S "+logShape(this.shape)+" "+this.x+","+this.y+"]";
 }
 
 ShapeEvent.prototype.evolveIntoSpaceEvent = function() {
@@ -74,7 +76,7 @@ function ShapeRegionEvent(p_ir, p_shape) {
 }
 
 ShapeRegionEvent.prototype.toLogString = function() {	
-	return "[SR "+this.shape+" "+this.region+"]";
+	return "[SR "+logShape(this.shape)+" "+this.region+"]";
 }
 
 ShapeRegionEvent.prototype.copy = function() {
@@ -94,4 +96,9 @@ BanShapeRegionEvent.prototype.toLogString = function() {
 
 BanShapeRegionEvent.prototype.copy = function() {
 	return new BanShapeRegionEvent(this.region, this.shape);
+}
+
+// -----------
+function logShape(p_shape) {
+	return LITSLettersArray[p_shape + 1];
 }

@@ -133,7 +133,7 @@ SolverHakoiri.prototype.emitPassRegion = function(p_x, p_y) {
 	const index = this.regionArray[p_y][p_x]; 
 	if (index != WALLGRID.OUT_OF_REGIONS) {
 		const listPassNow = this.generateEventsForRegionPass(index);
-		this.passEvents(listPassNow, index); 
+		this.passEventsSafe(listPassNow, index); 
 	}
 }
 

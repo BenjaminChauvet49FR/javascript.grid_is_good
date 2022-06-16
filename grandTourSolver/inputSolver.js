@@ -56,12 +56,12 @@ multipassAction = function(p_solver){
 	p_solver.makeMultipass();
 }
 
-undoAction = function(p_solver,p_textArea){
+undoAction = function(p_solver){
 	p_solver.undo();
 }
 
 solveAction = function (p_solver) {
-	p_solver.resolve();
+	p_solver.makeResolution();
 }
 
 //--------------------------

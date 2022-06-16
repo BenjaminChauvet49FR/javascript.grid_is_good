@@ -148,7 +148,7 @@ SolverPutteria.prototype.construct = function(p_wallArray, p_symbolArray) {
 SolverPutteria.prototype.getXOrNumber = function(p_x, p_y) {
 	switch(this.answerArray[p_y][p_x]) {
 		case FILLING.YES : return this.sizesArray[p_y][p_x];
-		case FILLING.NO : return (this.regionArray[p_y][p_x] != WALLGRID.OUT_OF_REGIONS) ? "X" : null;
+		case FILLING.NO : return (this.regionArray[p_y][p_x] != WALLGRID.OUT_OF_REGIONS) ? SYMBOL_ID.X : null;
 		default : return null;
 	}
 }
@@ -168,7 +168,7 @@ SolverPutteria.prototype.getRegion = function(p_x, p_y) {
 
 // Input methods
 SolverPutteria.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	return this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
+	return this.tryToApplyHypothesisSafe(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverPutteria.prototype.undo = function() {
@@ -182,11 +182,11 @@ SolverPutteria.prototype.makeQuickStart = function() {
 SolverPutteria.prototype.emitPassAllRegionsSize = function(p_x, p_y) {
 	const size = this.getRegion(p_x, p_y).size;
 	const listPassNow = this.generateEventsChoicesForAllRegionsWithThisSize(size);
-	this.passEvents(listPassNow, this.methodsSetDeductions, this.methodsSetPass, size); 
+	this.passEventsSafe(listPassNow, this.methodsSetDeductions, this.methodsSetPass, size); 
 }
 
 SolverPutteria.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 //--------------------------------
@@ -270,10 +270,10 @@ quickStartEventsClosure = function(p_solver) {
 // Deductions
 
 function deductionsClosure(p_solver) {
-	return function(p_listEventsToApply, p_eventToApply) {
-		const x = p_eventToApply.x;
-		const y = p_eventToApply.y;
-		if (p_eventToApply.symbol == FILLING.YES) {
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		const x = p_eventBeingApplied.x;
+		const y = p_eventBeingApplied.y;
+		if (p_eventBeingApplied.symbol == FILLING.YES) {
 			// Adjacency
 			p_solver.existingNeighborsCoorsDirections(x, y).forEach(coorsDir => {
 				p_listEventsToApply.push(new SpaceEvent(coorsDir.x, coorsDir.y, FILLING.NO)); 

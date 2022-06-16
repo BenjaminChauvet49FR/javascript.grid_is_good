@@ -14,7 +14,7 @@
 // ---------------------
 // Setup
 // p_symbolArray : the symbol array. Loaded at each new puzzle
-// Think about using "configure" method with {blockedSymbol : "X" , isBlockedDegradable : true} for instance. Otherwise it won't work.
+// Think about using "configure" method with {blockedSymbol : SYMBOL_ID.X , isBlockedDegradable : true} for instance. Otherwise it won't work.
 
 function PurificatorSymbolArray(p_symbolArray) {
 	GeneralPurificator.call(this);

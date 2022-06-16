@@ -75,6 +75,7 @@ const PUZZLES_KIND = {
 	NUMBER_BLACK_WHITE : {id:19},
 	DIGITS_QUESTION_ONLY : {id:20},
 	SURAROMU : {id:21},
+	SYMBOLS_IN_SQUARE : {id:22, squareGrid : true},
 }
 
 const MARGIN_KIND = {

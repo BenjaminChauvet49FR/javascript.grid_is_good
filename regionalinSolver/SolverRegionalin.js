@@ -120,15 +120,19 @@ SolverRegionalin.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 SolverRegionalin.prototype.emitPassRegionOrSpace = function(p_x, p_y) {
 	var indexPass;
 	if (this.getRegion(p_x, p_y).expectedNumberOfTurningsInRegion != NOT_FORCED) { 		
-		indexPass = {passCategory : LOOP_PASS_CATEGORY.REGION_REGIONALIN, index : this.regionArray[p_y][p_x]};
+		indexPass = {category : LOOP_PASS_CATEGORY.REGION_REGIONALIN, index : this.regionArray[p_y][p_x]};
 	} else {
-		indexPass = {passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
+		indexPass = {category : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
 	}
 	return this.passLoop(indexPass);
 }
 
 SolverRegionalin.prototype.makeMultipass = function() {
 	this.multipassLoop();
+}
+
+SolverRegionalin.prototype.makeResolution = function () {
+	this.resolve();
 }
 
 // -------------------
@@ -257,7 +261,7 @@ function startingOrderedListPassArgumentsRegionalinClosure(p_solver) {
 		var listIndexesPass = [];
 		for (var i = 0 ; i < p_solver.regionsNumber ; i++) {
 			if (p_solver.regions[i].notClosedYet) {				
-				listIndexesPass.push({passCategory : LOOP_PASS_CATEGORY.REGION_REGIONALIN, index : i}); 
+				listIndexesPass.push({category : LOOP_PASS_CATEGORY.REGION_REGIONALIN, index : i}); 
 			}
 		}
 		listIndexesPass.sort(function(indexPass1, indexPass2) {

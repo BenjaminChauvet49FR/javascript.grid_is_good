@@ -266,11 +266,11 @@ function undoEventClosure(p_solver) {
 // Deductions
 
 function deductionsClosure(p_solver) {
-	return function(p_listEventsToApply, p_eventToApply) {
-		const x = p_eventToApply.x;
-		const y = p_eventToApply.y;
-		const number = p_eventToApply.number;
-		if (p_eventToApply.choice) {
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		const x = p_eventBeingApplied.x;
+		const y = p_eventBeingApplied.y;
+		const number = p_eventBeingApplied.number;
+		if (p_eventBeingApplied.choice) {
 			// Ban events for all other values in this space
 			deductionsExcludeOthersNumeric(p_listEventsToApply, p_solver.answerArray, x, y, number);
 			// Ban events for this values in all other non-occupied spaces in this region / row / column
@@ -435,11 +435,11 @@ function copying(p_event) {
 }
 
 namingCategoryPassClosure = function(p_solver) {
-	return function(p_indexAndFamily) {
-		const index = p_indexAndFamily.index;
-		switch (p_indexAndFamily.family) {
-			case SUDOKU_PASS_CATEGORY.CUSTOM : return "Selection " + p_indexAndFamily.numberSpaces + " space" + (p_indexAndFamily.numberSpaces > 1 ? "s" : ""); break;
-			case SUDOKU_PASS_CATEGORY.GRIDS : return p_solver.gridIndexesToString(p_indexAndFamily.gridIndexes);
+	return function(p_indexPass) {
+		const index = p_indexPass.index;
+		switch (p_indexPass.family) {
+			case SUDOKU_PASS_CATEGORY.CUSTOM : return "Selection " + p_indexPass.numberSpaces + " space" + (p_indexPass.numberSpaces > 1 ? "s" : ""); break;
+			case SUDOKU_PASS_CATEGORY.GRIDS : return p_solver.gridIndexesToString(p_indexPass.gridIndexes);
 			case SUDOKU_PASS_CATEGORY.ALL : return "Everything";
 			default : return "";
 		}

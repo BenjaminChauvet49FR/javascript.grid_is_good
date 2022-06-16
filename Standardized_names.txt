@@ -16,8 +16,8 @@ listPassNow : in input methods, list that should be passed in a near future.
 
 Other lists :
 listIndexesPass : indexes list for the pass, should be ordonnated by the end.
-indexPass / p_indexPass : argument for the pass. Given to a method of "list of events to be chosen from". May have a category. May be logged. 
-May be remplaced if there is no category of events, for example if only regions or only spaces are passed (p_indexRegion or p_coors).
+indexPass / p_indexPass : argument for the pass. Given to a method of "list of events to be chosen from". May have a XKategory. May be logged. 
+May be remplaced if there is no XKategory of events, for example if only regions or only spaces are passed (p_indexRegion or p_coors).
 
 List of events to be chosen from :
 listEventsChoice / p_listEventsChoice : List of events one must be chosen from ([FILLING.YES 1,0 , FILLING.NO 1,0] par exemple)

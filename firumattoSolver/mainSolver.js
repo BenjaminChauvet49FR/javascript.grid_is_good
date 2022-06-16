@@ -7,7 +7,7 @@ function main() {
 		cluesWrite : COLOURS.CLUE_INDICATING
 	}; 
 	purificator = DummyPurificatorSymbolArray();
-	purificator.configure({blockedSymbol : "?" , isBlockedDegradable : true}); 
+	purificator.configure({blockedSymbol : SYMBOL_ID.QUESTION , isBlockedDegradable : true}); 
 	var drawer = new Drawer();
 	solver = DummySolver();
 	var canevas = document.getElementById("canevas");

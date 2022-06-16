@@ -64,7 +64,7 @@ multiPassAction = function(p_solver) {
 	p_solver.makeMultiPass();
 }
 
-resolveAction = function(p_solver) {
+solveAction = function(p_solver) {
 	p_solver.makeResolution();
 }
 
@@ -91,7 +91,7 @@ Transforms a loaded string into the appropriate item (see common save and load),
 Called from outside !
 */
 loadPuzzleCOMPLETE = function(p_canvas, p_drawer, p_items, p_loadedString) {
-	var loadedItem = stringToNumbersSymbolsPuzzle(p_loadedString, ["X"]);
+	var loadedItem = stringToNumbersSymbolsPuzzle(p_loadedString, [SYMBOL_ID.X]);
 	p_items.purificator.construct(loadedItem.numbersSymbolsArray);
 	p_items.solver.construct(loadedItem.numbersSymbolsArray);
 	p_drawer.adaptCanvasDimensions(p_canvas,{xLength : p_items.solver.xLength, yLength : p_items.solver.yLength});
@@ -100,5 +100,5 @@ loadPuzzleCOMPLETE = function(p_canvas, p_drawer, p_items, p_loadedString) {
 /** String to save the purified data.  
 Also called from outside, and the same method as in editor save.*/
 purifiedPuzzleToString = function(p_purificator) {
-	return puzzleNumbersSymbolsToString(p_purificator.recreateNewData(), ["X"]);
+	return puzzleNumbersSymbolsToString(p_purificator.recreateNewData(), [SYMBOL_ID.X]);
 }

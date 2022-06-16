@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+		<meta charset="utf-8"/>
+		<link rel="icon" type="image/png" href="../resources/star.png">
+        <title>Raitonanba solver !!!</title>
+		<link rel="stylesheet" type="text/css" href="../style.css">
+    </head>
+    <body>
+		<div id="div_common_menu"></div>
+		<img id="img_star" src="../resources/star.png" style="display:none">
+		<canvas id="canevas" width="800" height="500">
+            Message pour les navigateurs ne supportant pas encore canvas.
+        </canvas></br>
+		<div id="div_puzzle_management"></div>		
+		<div id="div_quickStart"></div>		
+		<div id="div_canvas_buttons"></div>
+		<div id="div_global_actions"></div>
+		<span id="span_resolution_state"></span></br>
+		<input type="checkbox" id="checkbox_lateral_lights">Lumières latérales</input>		
+		<script src="../Importation.js"></script>
+		<script>
+		"use strict";
+		window.onload = function() {
+			addScriptsSolving();
+			addScriptsDirections();
+			addScriptsGeneric();
+			addScriptsLocal();
+			addScriptConstants();
+			addScriptCheckCollection();
+			addScriptNonBinarySpaces();
+			addScriptInputSpacesSelection();
+			addScriptMisc();
+			addScript("SpaceEvent.js");
+			addScript("SolverRaitonanba.js");
+			startScriptLoading();
+		}		 
+		</script>
+	</body>
+</html>

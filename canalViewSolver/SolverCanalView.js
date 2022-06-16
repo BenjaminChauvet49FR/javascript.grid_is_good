@@ -166,7 +166,7 @@ SolverCanalView.prototype.isBanned = function(p_x, p_y) {
 
 SolverCanalView.prototype.isNumeric = function(p_x, p_y) {
 	const num = this.rangeGrid.get(p_x, p_y);
-	return (num != null && num.charAt(0) != "X");
+	return (num != null && num.charAt(0) != SYMBOL_ID.X);
 }
 
 SolverCanalView.prototype.getNumber = function(p_x, p_y) {
@@ -178,7 +178,7 @@ SolverCanalView.prototype.getNumber = function(p_x, p_y) {
 // Input methods
 SolverCanalView.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
 	if (!this.isBanned(p_x, p_y)) {
-		this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
+		this.tryToApplyHypothesisSafe(new SpaceEvent(p_x, p_y, p_symbol));
 	}
 }
 
@@ -194,15 +194,15 @@ SolverCanalView.prototype.emitPassSpace = function(p_x, p_y) {
 	const number = this.getNumber(p_x, p_y);
 	if (number != null) {		
 		const listPassNow = this.generateEventsRangedDynamicPass(p_x, p_y, number);
-		this.passEvents(listPassNow, {x : p_x, y : p_y, number : number}); 
+		this.passEventsSafe(listPassNow, {x : p_x, y : p_y, number : number}); 
 	} else {
 		const listPassNow = this.generateEventsSinglePass(p_x, p_y);
-		this.passEvents(listPassNow, {x : p_x, y : p_y}); 
+		this.passEventsSafe(listPassNow, {x : p_x, y : p_y}); 
 	}
 }
 
 SolverCanalView.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 //--------------------------------

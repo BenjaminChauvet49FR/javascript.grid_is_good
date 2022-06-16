@@ -138,7 +138,7 @@ SolverLITS.prototype.getFirstSpaceRegion = function(p_i) {
 // Input methods
 
 SolverLITS.prototype.emitHypothesis = function(p_x, p_y, p_symbol){
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
+	this.tryToApplyHypothesisSafe(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverLITS.prototype.undo = function() {
@@ -156,18 +156,18 @@ SolverLITS.prototype.passRegionAndAdjacentSpaces = function(p_indexRegion) {
 			listPassNow.push([new SpaceEvent(space.x, space.y, ADJACENCY.YES), new SpaceEvent(space.x, space.y, ADJACENCY.NO)]);
 		}	
 	});
-	this.passEvents(listPassNow, p_indexRegion); 
+	this.passEventsSafe(listPassNow, p_indexRegion); 
 }
 
 SolverLITS.prototype.passRegion = function(p_indexRegion) {
 	const listPassNow = this.generateEventsForRegionPass(p_indexRegion);
 	this.methodsSetPass.argumentToLabelMethod = namingRegionClosure(this);
-	this.passEvents(listPassNow, p_indexRegion); 
+	this.passEventsSafe(listPassNow, p_indexRegion); 
 }
 
 SolverLITS.prototype.makeMultiPass = function() {
 	this.methodsSetPass.argumentToLabelMethod = namingRegionClosure(this);
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 namingRegionClosure = function(p_solver) {

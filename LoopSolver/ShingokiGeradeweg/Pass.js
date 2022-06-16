@@ -24,7 +24,7 @@ orderedListPassArgumentsClosureSolverPearly = function(p_solver) {
 	return function() {
 		var listIndexesPass = [];
 		p_solver.pearlCoors.forEach(coors => {
-			listIndexesPass.push({passCategory : LOOP_PASS_CATEGORY.PEARLY, x : coors.x, y : coors.y});
+			listIndexesPass.push({category : LOOP_PASS_CATEGORY.PEARLY, x : coors.x, y : coors.y});
 		});
 		return listIndexesPass;
 	}

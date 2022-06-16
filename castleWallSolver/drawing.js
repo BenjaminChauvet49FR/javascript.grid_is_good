@@ -109,13 +109,11 @@ Drawer.prototype.drawCastleWallObstacle = function(p_context, p_coloursSet, p_x,
 	p_context.strokeStyle = colourWrite; 
 	if (drawArrowPart) {
 		// Draw arrow and text
-		p_context.beginPath(); // Note : mandatory because of what roundRect uses.		
-		p_context.moveTo(pixX1, pixY1);
-		p_context.lineTo(pixX2, pixY2);
-		p_context.lineTo(pixX3, pixY3);
-		p_context.lineTo(pixX1, pixY1);
-		p_context.closePath();
-		p_context.fill();
+		drawPolygon(p_context, NO_COLOUR_CHANGE, NO_COLOUR_CHANGE, 
+		[{pixX : pixX1, pixY : pixY1}, 
+		{pixX : pixX2, pixY : pixY2}, 
+		{pixX : pixX3, pixY : pixY3}
+		]);
 		p_context.fillText(p_number, pixTextX, pixTextY);
 	}
 }

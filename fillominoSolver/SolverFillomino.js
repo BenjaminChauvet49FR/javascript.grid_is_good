@@ -91,15 +91,15 @@ SolverFillomino.prototype.isFixed = function(p_x, p_y) {
 // Input methods
 
 SolverFillomino.prototype.emitHypothesisRight = function(p_x, p_y, p_state) {
-	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, DIRECTION.RIGHT, p_state));
+	this.tryToApplyHypothesisSafe(new FenceEvent(p_x, p_y, DIRECTION.RIGHT, p_state));
 }
 
 SolverFillomino.prototype.emitHypothesisDown = function(p_x, p_y, p_state) {
-	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, DIRECTION.DOWN, p_state));
+	this.tryToApplyHypothesisSafe(new FenceEvent(p_x, p_y, DIRECTION.DOWN, p_state));
 }
 
 SolverFillomino.prototype.emitHypothesisNumber = function(p_x, p_y, p_number) {
-	this.tryToApplyHypothesis(new NumberEvent(p_x, p_y, p_number));	
+	this.tryToApplyHypothesisSafe(new NumberEvent(p_x, p_y, p_number));	
 }
 
 SolverFillomino.prototype.undo = function(){
@@ -108,11 +108,11 @@ SolverFillomino.prototype.undo = function(){
 
 SolverFillomino.prototype.emitPassSpace = function(p_x, p_y, p_number) {
 	const listPassNow = this.generateEventsPassDiamondSpace(p_x, p_y, p_number);
-	this.passEvents(listPassNow, {passCategory : PASS_CATEGORY.DIAMOND, x : p_x, y : p_y, strength : p_number}); 
+	this.passEventsSafe(listPassNow, {category : PASS_CATEGORY.DIAMOND, x : p_x, y : p_y, strength : p_number}); 
 }
 
 SolverFillomino.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 // In this puzzle, quickstart is vital for the separation of numbers
@@ -126,7 +126,7 @@ SolverFillomino.prototype.makeResolution = function() {
 
 SolverFillomino.prototype.emitPassSelection = function(p_selectionSet) {
 	const listPassNow = this.answerFencesGrid.getFencePassEventsForSpacesList(p_selectionSet.getSelectedSpacesList(), p_selectionSet.array);
-	return this.passEventsSafe(listPassNow, {passCategory : PASS_CATEGORY.CUSTOM, numberSpaces : listPassNow.length});
+	return this.passEventsSafe(listPassNow, {category : PASS_CATEGORY.CUSTOM, numberSpaces : listPassNow.length});
 }
 
 //--------------------------------
@@ -495,7 +495,7 @@ SolverFillomino.prototype.generateEventsPassFence = function(p_x, p_y, p_directi
 
 namingCategoryPassClosure = function(p_solver) {
 	return function(p_indexPass) {
-		switch (p_indexPass.passCategory) {
+		switch (p_indexPass.category) {
 			case PASS_CATEGORY.DIAMOND :
 				return "Diamond pass strength (" + p_indexPass.strength + ") " + p_indexPass.x + "," + p_indexPass.y;
 			break;
@@ -508,7 +508,7 @@ namingCategoryPassClosure = function(p_solver) {
 
 function generateEventsForPassClosure(p_solver) {
 	return function(p_indexPass) { // Note : remember, it's only relevant for orderedListPassArgumentsClosure.
-		switch (p_indexPass.passCategory) {
+		switch (p_indexPass.category) {
 			case PASS_CATEGORY.DIAMOND :
 				return p_solver.generateEventsPassDiamondSpace(p_indexPass.x, p_indexPass.y, p_indexPass.strength);
 			break;
@@ -522,7 +522,7 @@ function orderedListPassArgumentsClosure(p_solver) {
 		var x, y;
 		for (y = 0 ; y < p_solver.yLength; y++) {
 			for (x = 0 ; x < p_solver.xLength; x++) {
-				listIndexesPass.push({passCategory : PASS_CATEGORY.DIAMOND, x : x, y : y, strength : 1});
+				listIndexesPass.push({category : PASS_CATEGORY.DIAMOND, x : x, y : y, strength : 1});
 			}
 		}
 		return listIndexesPass;

@@ -561,7 +561,7 @@ function generateEventsForPassRegionLoopClosure(p_solver, p_methodPS) {
 }
 
 RegionLoopSolver.prototype.generateEventsForRegionPass = function(p_indexPass, p_methodPS) {
-	switch(p_indexPass.passCategory) {
+	switch(p_indexPass.category) {
 		case LOOP_PASS_CATEGORY.REGION : 
 			return this.generateEventsForRegionPassStandard(p_indexPass.index);
 		break;
@@ -620,7 +620,7 @@ RegionLoopSolver.prototype.orderedListPassArgumentsRegionLoop = function(p_metho
 RegionLoopSolver.prototype.orderedListPassArgumentsRegionLoopStandard = function() { // Shouldn't have any level below. 
 	var listIndexesPass = [];
 	for (var i = 0 ; i < this.regions.length ; i++) {
-		listIndexesPass.push({passCategory : LOOP_PASS_CATEGORY.REGION, index : i});
+		listIndexesPass.push({category : LOOP_PASS_CATEGORY.REGION, index : i});
 	}
 	var regions = this.regions; 
 	listIndexesPass.sort(function(i1, i2) {
@@ -632,7 +632,7 @@ RegionLoopSolver.prototype.orderedListPassArgumentsRegionLoopStandard = function
 
 function namingCategoryRegionLoopClosure (p_solver, p_namingCategoryPSMethod) { // Should also not have any level below, but...
 	return function(p_indexPass) {
-		switch(p_indexPass.passCategory) {
+		switch(p_indexPass.category) {
 			case LOOP_PASS_CATEGORY.REGION : 
 				const regionSpace = p_solver.regions[p_indexPass.index].spaces[0];
 				return "Region " + p_indexPass.index + " (" + regionSpace.x + "," + regionSpace.y + ")";

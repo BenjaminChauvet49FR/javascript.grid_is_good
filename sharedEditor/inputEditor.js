@@ -69,7 +69,7 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			descriptionPromptMono : "Entrer un chiffre entre " + inputOptions.minNumber + " et " + inputOptions.maxNumber + " ou X",
 			defaultToken : "1",
 			gridId : GRID_ID.DIGIT_X_SPACE,
-			validityTokenMethod : validityNumberRangeOrSymbolClosure(0, inputOptions.maxNumber, ["X"]),
+			validityTokenMethod : validityNumberRangeOrSymbolClosure(0, inputOptions.maxNumber, [SYMBOL_ID.X]),
 			parameters : {emptySpaceChar : " ", isMonoChar : true, isNumeric : false}
 		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.DIGIT_QUESTION_SPACE)) {
@@ -78,7 +78,7 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			descriptionPromptMono : "Entrer un chiffre entre " + inputOptions.minNumber + " et " + inputOptions.maxNumber + " ou ?",
 			defaultToken : "1",
 			gridId : GRID_ID.DIGIT_QUESTION_SPACE,
-			validityTokenMethod : validityNumberRangeOrSymbolClosure(0, inputOptions.maxNumber, ["?"]),
+			validityTokenMethod : validityNumberRangeOrSymbolClosure(0, inputOptions.maxNumber, [SYMBOL_ID.QUESTION]),
 			parameters : {emptySpaceChar : " ", isMonoChar : true, isNumeric : false}
 		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_X_SPACE)) {
@@ -87,7 +87,7 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			descriptionPromptMono : "Entrer valeur numérique " + stringRange(inputOptions.minNumber, inputOptions.maxNumber) + " ou X",
 			defaultToken : "1",
 			gridId : GRID_ID.NUMBER_X_SPACE,
-			validityTokenMethod : validityNumberRangeOrSymbolClosure(inputOptions.minNumber, inputOptions.maxNumber, ["X"]),
+			validityTokenMethod : validityNumberRangeOrSymbolClosure(inputOptions.minNumber, inputOptions.maxNumber, [SYMBOL_ID.X]),
 			parameters : {emptySpaceChar : EMPTINESS_CHARACTER, isMonoChar : false, isNumeric : false}
 		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.NUMBER_REGION)) {
@@ -105,16 +105,16 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			descriptionPromptMono : "Entrer lettre de perle (B|W)",
 			defaultToken : "W",
 			gridId : GRID_ID.PEARL,
-			validityTokenMethod : validityTokenCharacterSelectionClosure(['B', 'W']),
+			validityTokenMethod : validityTokenCharacterSelectionClosure([SYMBOL_ID.BLACK, SYMBOL_ID.WHITE]),
 			parameters : {emptySpaceChar : " ", isMonoChar : true}
 		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.OX)) {
 		return {
 			descriptionPrompt : "Entrer suite de X ou O (X|O)",
 			descriptionPromptMono : "Entrer X ou O (X|O)",
-			defaultToken : "X",
+			defaultToken : SYMBOL_ID.X,
 			gridId : GRID_ID.OX,
-			validityTokenMethod : validityTokenCharacterSelectionClosure(['O', 'X']),
+			validityTokenMethod : validityTokenCharacterSelectionClosure([SYMBOL_ID.O, SYMBOL_ID.X]),
 			parameters : {emptySpaceChar : " ", isMonoChar : true}
 		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.PLAYSTATION_SHAPES)) {
@@ -123,7 +123,7 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			descriptionPromptMono : "Entrer lettre de forme (R|S|T)",
 			defaultToken : "R",
 			gridId : GRID_ID.PLAYSTATION_SHAPES,
-			validityTokenMethod : validityTokenCharacterSelectionClosure(['R', 'S', 'T']),
+			validityTokenMethod : validityTokenCharacterSelectionClosure([SYMBOL_ID.ROUND, SYMBOL_ID.SQUARE, SYMBOL_ID.TRIANGLE]),
 			parameters : {emptySpaceChar : " ", isMonoChar : true}
 		}
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.YAJILIN_LIKE)) {
@@ -168,7 +168,7 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 			descriptionPromptMono : "Entrer astre (S|M)",
 			defaultToken : "S",
 			gridId : GRID_ID.MOONSUN,
-			validityTokenMethod : validityTokenCharacterSelectionClosure(['M', 'S']),
+			validityTokenMethod : validityTokenCharacterSelectionClosure([SYMBOL_ID.MOON, SYMBOL_ID.SUN]),
 			parameters : {emptySpaceChar : " ", isMonoChar : true}
 		}		
 	} else if (p_editorCore.isVisibleGrid(GRID_ID.YAGIT)) {
@@ -192,7 +192,7 @@ getPromptElementsFromVisibleGrid = function(p_editorCore) {
 	}
 } 
 
-
+// Don't forget break !
 clickSpaceAction = function (p_editorCore, p_x, p_y, p_modes) {
     mode = p_modes.clickSpace;
 	var promptElements;
@@ -346,7 +346,7 @@ validityTokenCharacterSelectionClosure = function(p_array) {
 
 validityTokenYajilin = function(p_clue) {
 	const charClue = p_clue.charAt(0);
-	if (charClue == 'X') {
+	if (charClue == SYMBOL_ID.X) {
 		return true;
 	}
 	if (charClue == CHAR_DIRECTION.LEFT || charClue == CHAR_DIRECTION.UP || charClue == CHAR_DIRECTION.RIGHT || charClue == CHAR_DIRECTION.DOWN) {
@@ -699,11 +699,11 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
 		} else if (p_saveLoadMode.id == PUZZLES_KIND.NUMBERS_ONLY.id) {
             puzzleToSaveString = numbersOnlyPuzzleToString(p_editorCore.getArray(GRID_ID.NUMBER_SPACE));
         } else if (p_saveLoadMode.id == PUZZLES_KIND.DIGITS_X_ONLY.id) {
-            puzzleToSaveString = puzzleNumbersSymbolsToString(p_editorCore.getArray(GRID_ID.DIGIT_X_SPACE), ["X"]);
+            puzzleToSaveString = puzzleNumbersSymbolsToString(p_editorCore.getArray(GRID_ID.DIGIT_X_SPACE), [SYMBOL_ID.X]);
         } else if (p_saveLoadMode.id == PUZZLES_KIND.DIGITS_QUESTION_ONLY.id) {
-            puzzleToSaveString = puzzleNumbersSymbolsToString(p_editorCore.getArray(GRID_ID.DIGIT_QUESTION_SPACE), ["?"]);
+            puzzleToSaveString = puzzleNumbersSymbolsToString(p_editorCore.getArray(GRID_ID.DIGIT_QUESTION_SPACE), [SYMBOL_ID.QUESTION]);
         } else if (p_saveLoadMode.id == PUZZLES_KIND.NUMBERS_X_ONLY.id) {
-            puzzleToSaveString = puzzleNumbersSymbolsToString(p_editorCore.getArray(GRID_ID.NUMBER_X_SPACE), ["X"]);
+            puzzleToSaveString = puzzleNumbersSymbolsToString(p_editorCore.getArray(GRID_ID.NUMBER_X_SPACE), [SYMBOL_ID.X]);
         } else if (p_saveLoadMode.id == PUZZLES_KIND.YAJILIN_LIKE.id) {
             puzzleToSaveString = arrowNumberCombinationsPuzzleToString(p_editorCore.getArray(GRID_ID.YAJILIN_LIKE));
         } else if (p_saveLoadMode.id == PUZZLES_KIND.YAJILIN_BLACK_WHITE.id) {
@@ -738,7 +738,9 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
 		} else if (p_saveLoadMode.id == PUZZLES_KIND.SURAROMU.id) {
 			editorCore.cleanRedundantGates();
 			puzzleToSaveString = suraromuPuzzleToString(p_editorCore.getArray(GRID_ID.SURAROMU));
-		} else {
+		} else if (p_saveLoadMode.id == PUZZLES_KIND.SYMBOLS_IN_SQUARE.id) {
+            puzzleToSaveString = limitedSymbolsWalllessPuzzleToString(p_editorCore.getArray(GRID_ID.DIGIT_X_SPACE), [SYMBOL_ID.X, 0, 1, 2], {isSquare : true}); 
+        } else {
 			puzzleToSaveString = wallsOnlyPuzzleToString(p_editorCore.getWallArray());
 		}
         localStorage.setItem(localStorageName, puzzleToSaveString);
@@ -750,116 +752,145 @@ saveAction = function (p_editorCore, p_puzzleName, p_detachedName, p_saveLoadMod
     }
 }
 
-function getLoadedStuff(p_kindId, p_localStorageName, p_externalOptions) { // Not the load action ! 
+function getLoadedStuff(p_kindId, p_localStorageName, p_externalOptions) { // Not the load action !
+	const stringToLoadFrom = localStorage.getItem(p_localStorageName);
 	switch(p_kindId) {
 		case PUZZLES_KIND.STAR_BATTLE.id : // Note : some arrays in loadedItem are written several times. But is it a problem as the array is not sliced ?
-			return stringToStarBattlePuzzle(localStorage.getItem(p_localStorageName)); break;
+			return stringToStarBattlePuzzle(stringToLoadFrom);
+			break;
 		case PUZZLES_KIND.MASYU.id :
-			var loadedItem = stringToLimitedSymbolsWalllessPuzzle(localStorage.getItem(p_localStorageName), [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK]);
+			var loadedItem = stringToLimitedSymbolsWalllessPuzzle(stringToLoadFrom, [SYMBOL_ID.WHITE, SYMBOL_ID.BLACK]);
 			loadedItem.desiredIDs = [GRID_ID.PEARL];
 			loadedItem.desiredArrays = [loadedItem.symbolArray];
-			return loadedItem; break;
+			return loadedItem; 
+			break;
 		case PUZZLES_KIND.CURVING_ROAD.id : 
-			var loadedItem = stringToLimitedSymbolsWalllessPuzzle(localStorage.getItem(p_localStorageName), [SYMBOL_ID.WHITE]);
+			var loadedItem = stringToLimitedSymbolsWalllessPuzzle(stringToLoadFrom, [SYMBOL_ID.WHITE]);
 			loadedItem.desiredIDs = [GRID_ID.PEARL];
 			loadedItem.desiredArrays = [loadedItem.symbolArray];
-			return loadedItem; break;
+			return loadedItem; 
+			break;
 		case PUZZLES_KIND.NUMBERS_ONLY.id :
-			var loadedItem = stringToNumbersOnlyPuzzle(localStorage.getItem(p_localStorageName));
+			var loadedItem = stringToNumbersOnlyPuzzle(stringToLoadFrom);
 			loadedItem.desiredIDs = [GRID_ID.NUMBER_SPACE];
 			loadedItem.desiredArrays = [loadedItem.numberArray];
-			return loadedItem; break;
+			return loadedItem; 
+			break;
 		case PUZZLES_KIND.SUDOKU.id :
 			const wallArray = getSudokuWallGrid(p_externalOptions.sudokuMode).array;
-			var loadedItem = stringToSudokuPuzzle(localStorage.getItem(p_localStorageName), wallArray);
+			var loadedItem = stringToSudokuPuzzle(stringToLoadFrom, wallArray);
 			loadedItem.wallArray = wallArray;
 			loadedItem.desiredIDs = [GRID_ID.NUMBER_SPACE];
 			loadedItem.desiredArrays = [loadedItem.numberArray];
-			return loadedItem; break;
+			return loadedItem; 
+			break;
 		case PUZZLES_KIND.DIGITS_X_ONLY.id :
-			var loadedItem = stringToNumbersSymbolsPuzzle(localStorage.getItem(p_localStorageName), ["X"]);
+			var loadedItem = stringToNumbersSymbolsPuzzle(stringToLoadFrom, [SYMBOL_ID.X]);
 			loadedItem.desiredIDs = [GRID_ID.DIGIT_X_SPACE];
 			loadedItem.desiredArrays = [loadedItem.numbersSymbolsArray];
-			return loadedItem; break;
+			return loadedItem; 
+			break;
 		case PUZZLES_KIND.DIGITS_QUESTION_ONLY.id :
-			var loadedItem = stringToNumbersSymbolsPuzzle(localStorage.getItem(p_localStorageName), ["?"]);
+			var loadedItem = stringToNumbersSymbolsPuzzle(stringToLoadFrom, [SYMBOL_ID.QUESTION]);
 			loadedItem.desiredIDs = [GRID_ID.DIGIT_QUESTION_SPACE];
 			loadedItem.desiredArrays = [loadedItem.numbersSymbolsArray];
-			return loadedItem; break;
+			return loadedItem; 
+			break;
 		case PUZZLES_KIND.NUMBERS_X_ONLY.id :
-			var loadedItem = stringToNumbersSymbolsPuzzle(localStorage.getItem(p_localStorageName), ["X"]);
+			var loadedItem = stringToNumbersSymbolsPuzzle(stringToLoadFrom, [SYMBOL_ID.X]);
 			loadedItem.desiredIDs = [GRID_ID.NUMBER_X_SPACE];
 			loadedItem.desiredArrays = [loadedItem.numbersSymbolsArray];
-			return loadedItem; break;
+			return loadedItem; 
+			break;
 		case PUZZLES_KIND.YAJILIN_LIKE.id :
-			var loadedItem = stringToArrowNumberCombinationsPuzzle(localStorage.getItem(p_localStorageName));
+			var loadedItem = stringToArrowNumberCombinationsPuzzle(stringToLoadFrom);
 			loadedItem.desiredIDs = [GRID_ID.YAJILIN_LIKE];
 			loadedItem.desiredArrays = [loadedItem.combinationsArray];
-			return loadedItem; break;
+			return loadedItem; 
+			break;
 		case PUZZLES_KIND.YAJILIN_BLACK_WHITE.id :
-			var loadedItem = stringToArrowNumberCombinationsBWPuzzle(localStorage.getItem(p_localStorageName));
+			var loadedItem = stringToArrowNumberCombinationsBWPuzzle(stringToLoadFrom);
 			loadedItem.desiredIDs = [GRID_ID.YAJILIN_BLACK_WHITE];
 			loadedItem.desiredArrays = [loadedItem.combinationsArray];
-			return loadedItem; break;
+			return loadedItem; 
+			break;
 		case PUZZLES_KIND.NUMBER_BLACK_WHITE.id :
-			var loadedItem = stringToNumbersBWPuzzle(localStorage.getItem(p_localStorageName));
+			var loadedItem = stringToNumbersBWPuzzle(stringToLoadFrom);
 			loadedItem.desiredIDs = [GRID_ID.NUMBER_BLACK_WHITE];
 			loadedItem.desiredArrays = [loadedItem.numbersBWArray];
-			return loadedItem; break;				
+			return loadedItem; 
+			break;				
 		case PUZZLES_KIND.REGIONS_NUMBERS.id :
-			var loadedItem = stringToWallsNumbersPuzzle(localStorage.getItem(p_localStorageName));
+			var loadedItem = stringToWallsNumbersPuzzle(stringToLoadFrom);
 			loadedItem.desiredIDs = [GRID_ID.NUMBER_SPACE];
 			loadedItem.desiredArrays = [loadedItem.numberArray];
-			return loadedItem; break;
+			return loadedItem; 
+			break;
 		case PUZZLES_KIND.REGIONS_PLAYSTATION_SHAPES.id :
-			var loadedItem = stringToLimitedSymbolsWallsPuzzle(localStorage.getItem(p_localStorageName), [SYMBOL_ID.ROUND, SYMBOL_ID.SQUARE, SYMBOL_ID.TRIANGLE]);
+			var loadedItem = stringToLimitedSymbolsWallsPuzzle(stringToLoadFrom, [SYMBOL_ID.ROUND, SYMBOL_ID.SQUARE, SYMBOL_ID.TRIANGLE]);
 			loadedItem.desiredIDs = [GRID_ID.PLAYSTATION_SHAPES];
 			loadedItem.desiredArrays = [loadedItem.symbolArray];
-			return loadedItem; break;
+			return loadedItem; 
+			break;
 		case PUZZLES_KIND.MOONSUN.id :
-			var loadedItem = stringToMoonsunPuzzle(localStorage.getItem(p_localStorageName));
+			var loadedItem = stringToMoonsunPuzzle(stringToLoadFrom);
 			loadedItem.desiredIDs = [GRID_ID.MOONSUN];
 			loadedItem.desiredArrays = [loadedItem.symbolArray];
-			return loadedItem; break;
+			return loadedItem; 
+			break;
 		case PUZZLES_KIND.REGIONS_NUMERICAL_INDICATIONS.id :
-			var loadedItem = stringToRegionsNumericIndicationsPuzzle(localStorage.getItem(p_localStorageName));
+			var loadedItem = stringToRegionsNumericIndicationsPuzzle(stringToLoadFrom);
 			loadedItem.desiredIDs = [GRID_ID.NUMBER_REGION];
 			loadedItem.desiredArrays = [getRegionIndicArray(loadedItem)];
-			return loadedItem; break;
+			return loadedItem; 
+			break;
 		case PUZZLES_KIND.TAPA.id :
-			var loadedItem = stringToTapaPuzzle(localStorage.getItem(p_localStorageName)); 
+			var loadedItem = stringToTapaPuzzle(stringToLoadFrom); 
 			loadedItem.desiredIDs = [GRID_ID.TAPA];
 			loadedItem.desiredArrays = [loadedItem.combinationsArray];
-			return loadedItem; break;
+			return loadedItem; 
+			break;
 		case PUZZLES_KIND.STITCHES.id :
-			return stringToStitchesPuzzle (localStorage.getItem(p_localStorageName)); break;
+			return stringToStitchesPuzzle (stringToLoadFrom); 
+			break;
 		case PUZZLES_KIND.ONLY_ONE_NUMBER_LEFT_UP_SQUARE.id :
-			return stringToMarginOneLeftUpNumbersSquarePuzzle(localStorage.getItem(p_localStorageName)); break;
+			return stringToMarginOneLeftUpNumbersSquarePuzzle(stringToLoadFrom); 
+			break;
 		case PUZZLES_KIND.GALAXIES.id :
-			var loadedItem = stringToLimitedSymbolsWalllessPuzzle(localStorage.getItem(p_localStorageName), [GALAXIES_POSITION.CENTER, GALAXIES_POSITION.RIGHT, GALAXIES_POSITION.DOWN, GALAXIES_POSITION.RIGHT_DOWN]);
+			var loadedItem = stringToLimitedSymbolsWalllessPuzzle(stringToLoadFrom, [GALAXIES_POSITION.CENTER, GALAXIES_POSITION.RIGHT, GALAXIES_POSITION.DOWN, GALAXIES_POSITION.RIGHT_DOWN]);
 			loadedItem.desiredIDs = [GRID_ID.GALAXIES];
 			loadedItem.desiredArrays = [loadedItem.symbolArray];
-			return loadedItem; break;		
+			return loadedItem; 
+			break;		
 		case PUZZLES_KIND.YAGIT.id :
-			var loadedItem = stringToYagitPuzzle(localStorage.getItem(p_localStorageName));
+			var loadedItem = stringToYagitPuzzle(stringToLoadFrom);
 			loadedItem.desiredIDs = [GRID_ID.YAGIT, GRID_ID.KNOTS];
 			loadedItem.desiredArrays = [loadedItem.symbolArray, loadedItem.knotsArray];
-			return loadedItem; break;
+			return loadedItem; 
+			break;
 		case PUZZLES_KIND.XS_AND_ONE_O_PER_REGION.id :
-			var loadedItem = stringToXsAndOneOPerRegionPuzzle(localStorage.getItem(p_localStorageName));
+			var loadedItem = stringToXsAndOneOPerRegionPuzzle(stringToLoadFrom);
 			loadedItem.desiredIDs = [GRID_ID.OX];
 			loadedItem.desiredArrays = [loadedItem.symbolArray];
-			return loadedItem; break;
+			return loadedItem; 
+			break;
 		case PUZZLES_KIND.LINKS_ONLY.id :
-			return stringToLinksOnlyPuzzle(localStorage.getItem(p_localStorageName)); break; // Contains "linkArray"
+			return stringToLinksOnlyPuzzle(stringToLoadFrom); // Contains "linkArray"
+			break; 
 		case PUZZLES_KIND.SURAROMU.id : 
-			var loadedItem = stringToSuraromuPuzzle(localStorage.getItem(p_localStorageName));
+			var loadedItem = stringToSuraromuPuzzle(stringToLoadFrom);
 			loadedItem.desiredIDs = [GRID_ID.SURAROMU];
 			loadedItem.desiredArrays = [loadedItem.array];
 			return loadedItem;
 			break;
+		case PUZZLES_KIND.SYMBOLS_IN_SQUARE.id :
+			var loadedItem = stringToLimitedSymbolsWalllessPuzzle(stringToLoadFrom, [SYMBOL_ID.X, 0, 1, 2], {isSquare : true});  
+			loadedItem.desiredIDs = [GRID_ID.DIGIT_X_SPACE];
+			loadedItem.desiredArrays = [loadedItem.symbolArray];
+			return loadedItem; 
+			break;
 		default :
-			return stringToWallsOnlyPuzzle(localStorage.getItem(p_localStorageName));
+			return stringToWallsOnlyPuzzle(stringToLoadFrom);
 	}
 }
 

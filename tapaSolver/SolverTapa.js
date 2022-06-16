@@ -99,12 +99,12 @@ function testExistingCoordinate(coor, dir, xMax, yMax) {
 
 // Input methods
 SolverTapa.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
+	this.tryToApplyHypothesisSafe(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverTapa.prototype.emitPass = function(p_x, p_y) {
 	if (this.isNumeric(p_x, p_y)) {
-		this.passEvents(this.generateEventsForAroundSpacePass(p_x, p_y), {x : x, y : y});
+		this.passEventsSafe(this.generateEventsForAroundSpacePass(p_x, p_y), {x : x, y : y});
 	}
 }
 
@@ -117,7 +117,7 @@ SolverTapa.prototype.makeQuickStart = function() {
 }
 
 SolverTapa.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 //--------------------------------

@@ -20,7 +20,7 @@ function massConversionLocalStorageString(p_puzzleName) {
 				stringPuzzleOld = localStorage.getItem(name); 	// Copy-paste these lines into the if block of the for loop when ready
 				loadedItemOld = stringToNumbersOnlyPuzzle(stringPuzzleOld); // former (string -> puzzle) method
 				loadedItemOld.numberArray = numericToStringArray(loadedItemOld.numberArray); // Convert item if needed
-				puzzleString = puzzleNumbersSymbolsToString(loadedItemOld.numberArray, ["X"]); // new (puzzle -> string) method (in order to save)
+				puzzleString = puzzleNumbersSymbolsToString(loadedItemOld.numberArray, [SYMBOL_ID.X]); // new (puzzle -> string) method (in order to save)
 				localStorage.setItem(newName, puzzleString);
 			} 
 		}
@@ -35,7 +35,7 @@ function massConversionLocalStorageString(p_puzzleName) {
 	stringPuzzleOld = localStorage.getItem(name); 	// Copy-paste these lines into the if block of the for loop when ready
 	loadedItemOld = stringToNumbersOnlyPuzzle(stringPuzzleOld); // former (string -> puzzle) method
 	loadedItemOld.numberArray = numericToStringArray(loadedItemOld.numberArray); // Convert item if needed
-	puzzleString = puzzleNumbersSymbolsToString(loadedItemOld.numberArray, ["X"]); // new (puzzle -> string) method (in order to save)
+	puzzleString = puzzleNumbersSymbolsToString(loadedItemOld.numberArray, [SYMBOL_ID.X]); // new (puzzle -> string) method (in order to save)
 	localStorage.setItem(newName, puzzleString);
 	*/
 	

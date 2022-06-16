@@ -74,7 +74,7 @@ undoAction = function(p_solver, p_textArea) {
 }
 
 solveAction = function (p_solver) {
-	p_solver.resolve();
+	p_solver.makeResolution();
 }
 
 //--------------------------

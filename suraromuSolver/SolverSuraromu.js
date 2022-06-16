@@ -47,7 +47,7 @@ SolverSuraromu.prototype.construct = function(p_valueArray) {
 	});
 	this.dataArray = p_valueArray;
 	
-	// Extend gates to horizontal and vertical walls (big convention AND Correct puzzle data assumption : only the left/topmost part of the gate is given. They must not cross each other !)
+	// Extend gates to horizontal and vertical walls (High convention : Correct puzzle data assumption (and somehow data assumption) : only the left/topmost part of the gate is given. They must not cross each other !)
 	this.gatesList = [];
 	this.gatesIdArray = generateValueArray(this.xLength, this.yLength, null); // Used at start and for drawing.
 	this.closestGateArray = []; // Used in-game. When a link end is closer to a space, it is deduced by atomic dos.
@@ -209,9 +209,9 @@ SolverSuraromu.prototype.passSpace = function(p_x, p_y) {
 	var indexPass;
 	const indexGate = this.gatesIdArray[p_y][p_x];
 	if (indexGate != null) {
-		indexPass = {passCategory : PASS_GATE, index : indexGate}
+		indexPass = {category : PASS_GATE, index : indexGate}
 	} else if (!this.isBanned(p_x, p_y)) {		
-		indexPass = {passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
+		indexPass = {category : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
 	} 
 	if (indexPass) {
 		this.passLoop(indexPass); 
@@ -222,8 +222,8 @@ SolverSuraromu.prototype.makeMultipass = function() {
 	this.multipassLoop();
 }
 
-solveAction = function (p_solver) {
-	p_solver.resolve();
+SolverSuraromu.prototype.makeResolution = function (p_solver) {
+	this.resolve();
 }
 
 // -------------------
@@ -383,9 +383,9 @@ function otherAtomicUndosClosure(p_solver) {
 
 // Space closed 
 function setSpaceClosedPSDeductionsClosure(p_solver) {
-	return function(p_listEventsToApply, p_eventToApply) {
-		const x = p_eventToApply.x;
-		const y = p_eventToApply.y;
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		const x = p_eventBeingApplied.x;
+		const y = p_eventBeingApplied.y;
 		const gate = p_solver.getGate(x, y);
 		// One linked space per gate
 		if (gate != null) {			
@@ -411,9 +411,9 @@ function setSpaceClosedPSDeductionsClosure(p_solver) {
 
 // Space linked
 function setSpaceLinkedPSDeductionsClosure(p_solver) {
-	return function(p_listEventsToApply, p_eventToApply) {
-		const x = p_eventToApply.x;
-		const y = p_eventToApply.y;
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		const x = p_eventBeingApplied.x;
+		const y = p_eventBeingApplied.y;
 		const gate = p_solver.getGate(x, y);
 		// One linked space per gate
 		if (gate != null) {	
@@ -438,12 +438,12 @@ function setSpaceLinkedPSDeductionsClosure(p_solver) {
 
 // Edge linked
 function setEdgeLinkedDeductionsClosure(p_solver) {
-	return function(p_listEventsToApply, p_eventToApply) {
-		const x = p_eventToApply.linkX;
-		const y = p_eventToApply.linkY;
-		const dir = p_eventToApply.direction;
-		const dx = p_eventToApply.linkX + DeltaX[dir];
-		const dy = p_eventToApply.linkY + DeltaY[dir];
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		const x = p_eventBeingApplied.linkX;
+		const y = p_eventBeingApplied.linkY;
+		const dir = p_eventBeingApplied.direction;
+		const dx = p_eventBeingApplied.linkX + DeltaX[dir];
+		const dy = p_eventBeingApplied.linkY + DeltaY[dir];
 		const id1 = p_solver.closestGateArray[y][x];
 		const id2 = p_solver.closestGateArray[dy][dx];
 		const lastLinkingEvent = p_solver.listMarkersOnLinkingEvents[p_solver.listMarkersOnLinkingEvents.length-1];
@@ -487,35 +487,38 @@ SolverSuraromu.prototype.deductionsLookAroundGateNumbers = function(p_listEvents
 }
 
 function otherDeductionsClosure(p_solver) {
-	return function(p_listEventsToApply, p_eventToApply) {
-		if (p_eventToApply.kind == GATE_NUMBER_EVENT) {
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		if (p_eventBeingApplied.kind == GATE_NUMBER_EVENT) {
 			// Try to propagade the bind
-
-			ids = p_solver.gatesList[p_eventToApply.id].bounds;
+			const evtNumber = p_eventBeingApplied.number;
+			const evtId = p_eventBeingApplied.id;
+			ids = p_solver.gatesList[evtId].bounds;
 			if (ids.length > 0) {				
-				p_solver.deductionsBinding(p_listEventsToApply, p_eventToApply.id, ids[0]);
+				p_solver.deductionsBinding(p_listEventsToApply, evtId, ids[0]);
 				if (ids.length > 1) {					
-					p_solver.deductionsBinding(p_listEventsToApply, p_eventToApply.id, ids[1]);
+					p_solver.deductionsBinding(p_listEventsToApply, evtId, ids[1]);
 				}
 			}
 			// let N the current number ; i a possible gate for N ;  gate i had possibilites N (= (N+p)-p) and (N+p)+p ; but N is already taken, so affect N+2p to i. At least, no loopings around 0 should be involved. Well, actually 0 may be the center...
 			var twoPos, numberDeduced;
-			p_solver.numberPossibleGateIDs[p_eventToApply.number].forEach(id => {
-				if (id != p_eventToApply.id) {					
+			p_solver.numberPossibleGateIDs[evtNumber].forEach(id => {
+				if (id != evtId) {					
 					twoPos = p_solver.gatesList[id].twoPossibilities;
-					numberDeduced = ( (twoPos.center + twoPos.delta) == p_eventToApply.number) ? p_solver.modulus(twoPos.center - twoPos.delta) : (twoPos.center + twoPos.delta);
+					numberDeduced = ( (twoPos.center + twoPos.delta) == evtNumber) ? p_solver.modulus(twoPos.center - twoPos.delta) : (twoPos.center + twoPos.delta);
 					p_listEventsToApply.push(new GateNumberEvent(id, numberDeduced));
 				}
 			});
-		} else if (p_eventToApply.kind == GATE_BIND_EVENT) {
+		} else if (p_eventBeingApplied.kind == GATE_BIND_EVENT) {
 			// If one of the gate is numbered and the other isn't : 
 				// Propagate a "CanBe" event to both numbers (gate (id 10, nb 7) is linked with (gate (id 11, nb ??)) )
 				// id 11 can be number 6 or number 8.
 				// 
 			
 			// If both gates are numbered : propagate in both directions
-			const gate1 = p_solver.gatesList[p_eventToApply.id1];
-			const gate2 = p_solver.gatesList[p_eventToApply.id2];
+			const evtId1 = p_eventBeingApplied.id1;
+			const evtId2 = p_eventBeingApplied.id2;
+			const gate1 = p_solver.gatesList[evtId1];
+			const gate2 = p_solver.gatesList[evtId2];
 			const number1 = gate1.number;
 			const number2 = gate2.number;
 			if (number1 != null && number2 != null) {
@@ -526,9 +529,9 @@ function otherDeductionsClosure(p_solver) {
 				}
 			} 
 			if (number1 == null && number2 != null) {
-				p_solver.deductionsBinding(p_listEventsToApply, p_eventToApply.id2, p_eventToApply.id1);
+				p_solver.deductionsBinding(p_listEventsToApply, evtId2, evtId1);
 			} else if (number1 != null && number2 == null) {
-				p_solver.deductionsBinding(p_listEventsToApply, p_eventToApply.id1, p_eventToApply.id2);
+				p_solver.deductionsBinding(p_listEventsToApply, evtId1, evtId2);
 			} else {
 				// Neither gate is numbered : check their takeTwos.
 				// Both have a takeTwo : see their compatibility.
@@ -537,13 +540,13 @@ function otherDeductionsClosure(p_solver) {
 					// Zero may be the center ! 
 					const bindWithCenterGate1Above = gate1.twoPossibilities.center - gate1.twoPossibilities.delta - (gate2.twoPossibilities.center + gate2.twoPossibilities.delta);
 					if (bindWithCenterGate1Above == 1 || bindWithCenterGate1Above == (1-p_solver.gatesNumber)) {
-							p_listEventsToApply.push(new GateNumberEvent(p_eventToApply.id1, p_solver.modulus(gate1.twoPossibilities.center - gate1.twoPossibilities.delta) ));
-							p_listEventsToApply.push(new GateNumberEvent(p_eventToApply.id2, p_solver.modulus(gate2.twoPossibilities.center + gate2.twoPossibilities.delta) ));
+							p_listEventsToApply.push(new GateNumberEvent(evtId1, p_solver.modulus(gate1.twoPossibilities.center - gate1.twoPossibilities.delta) ));
+							p_listEventsToApply.push(new GateNumberEvent(evtId2, p_solver.modulus(gate2.twoPossibilities.center + gate2.twoPossibilities.delta) ));
 					} else {
 						const bindWithCenterGate2Above = gate2.twoPossibilities.center - gate2.twoPossibilities.delta - (gate1.twoPossibilities.center + gate1.twoPossibilities.delta);
 						if (bindWithCenterGate2Above == 1 || bindWithCenterGate2Above == (1-p_solver.gatesNumber)) {
-								p_listEventsToApply.push(new GateNumberEvent(p_eventToApply.id1, p_solver.modulus(gate1.twoPossibilities.center + gate1.twoPossibilities.delta) ));
-								p_listEventsToApply.push(new GateNumberEvent(p_eventToApply.id2, p_solver.modulus(gate2.twoPossibilities.center - gate2.twoPossibilities.delta) )); // Note : not optimal.
+								p_listEventsToApply.push(new GateNumberEvent(evtId1, p_solver.modulus(gate1.twoPossibilities.center + gate1.twoPossibilities.delta) ));
+								p_listEventsToApply.push(new GateNumberEvent(evtId2, p_solver.modulus(gate2.twoPossibilities.center - gate2.twoPossibilities.delta) )); // Note : not optimal.
 						} else {
 								p_listEventsToApply.push(new FailureEvent());
 								return;
@@ -551,11 +554,11 @@ function otherDeductionsClosure(p_solver) {
 						
 					}
 				} else {
-					p_solver.deductionsBindingAdvanced(p_listEventsToApply, p_eventToApply.id1, p_eventToApply.id2);
+					p_solver.deductionsBindingAdvanced(p_listEventsToApply, evtId1, evtId2);
 				}
 			}
 			
-		} else if (p_eventToApply.kind == TAKE_TWO_EVENT) {
+		} else if (p_eventBeingApplied.kind == TAKE_TWO_EVENT) {
 			
 		}
 	}
@@ -744,7 +747,7 @@ orderedListPassArgumentsClosureSuraromu = function(p_solver) {
 	return function() {
 		var listIndexesPass = [];
 		for (var i = 1 ; i < p_solver.gatesNumber ; i++) { // Gate 0 is excluded.
-			listIndexesPass.push({passCategory : PASS_GATE, index : i});
+			listIndexesPass.push({category : PASS_GATE, index : i});
 		}
 		return listIndexesPass;
 	}
@@ -756,7 +759,7 @@ comparisonSuraromuMethod = function(p_event1, p_event2) {
 
 namingCategoryPassClosure = function(p_solver) {
 	return function(p_indexPass) {
-		if (p_indexPass.passCategory == PASS_GATE) {	
+		if (p_indexPass.category == PASS_GATE) {	
 			return "Gate " + logGate(p_solver.gatesList[p_indexPass.index]);
 		}
 	}

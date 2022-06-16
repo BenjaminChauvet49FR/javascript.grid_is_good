@@ -12,18 +12,25 @@ function getLocalStorageName(p_puzzleName, p_name) {
 // All "new" (as to beginning March 2021) puzzle save and load methods
 
 // First, some functions used several times
-function dimensionsToString(p_array) {
+function dimensionsToString(p_array, p_extraOptions) {
 	const streamDim = new StreamEncodingString64();
 	streamDim.encode(p_array[0].length);
-	streamDim.encode(p_array.length);
+	if (!p_extraOptions || !p_extraOptions.isSquare) {		
+		streamDim.encode(p_array.length);
+	}
 	return streamDim.getString();
 }
 
-function stringToDimensions(p_string) {
+function stringToDimensions(p_string, p_extraOptions) {
 	const streamDim = new StreamDecodingString64(p_string);
 	const xLength = streamDim.decode();
-	const yLength = streamDim.decode();
-	return {xLength : xLength, yLength : yLength}
+	var yLength;
+	if (!p_extraOptions || !p_extraOptions.isSquare) {		
+		yLength = streamDim.decode();
+	} else {
+		yLength = xLength;
+	}
+	return {xLength : xLength, yLength : yLength};
 }
 
 function monoValueToString(p_value) {
@@ -114,7 +121,7 @@ function numberAndIgnoreClosedArraysToString(p_numbersArray, p_wallArray, p_numb
 			}
 		}
 	}
-	return streamValues.getString();
+	return streamValues.getString(); 
 }
 
 function stringToNumberArrayWithSomeSpacesIgnored(p_string, p_xLength, p_yLength, p_wallArray, p_numbersAreStrings) {
@@ -314,13 +321,13 @@ function stringToNumbersOnlyPuzzle(p_string) {
 
 //----
 // Wall-less and limited different symbols
-function limitedSymbolsWalllessPuzzleToString(p_symbolsArray, p_symbolsList) {
-	return dimensionsToString(p_symbolsArray) + " " + symbolsArrayToString(p_symbolsArray, p_symbolsList);
+function limitedSymbolsWalllessPuzzleToString(p_symbolsArray, p_symbolsList, p_extraOptions) {
+	return dimensionsToString(p_symbolsArray, p_extraOptions) + " " + symbolsArrayToString(p_symbolsArray, p_symbolsList);
 }
 
-function stringToLimitedSymbolsWalllessPuzzle(p_string, p_symbolsList) {
+function stringToLimitedSymbolsWalllessPuzzle(p_string, p_symbolsList, p_extraOptions) {
 	const tokens = p_string.split(" ");
-	const dims = stringToDimensions(tokens[0]);
+	const dims = stringToDimensions(tokens[0], p_extraOptions);
 	return {symbolArray : stringToSymbolsArray(tokens[1], dims.xLength, dims.yLength, p_symbolsList)};
 }
 
@@ -416,7 +423,7 @@ function arrowNumberCombinationsPuzzleToString(p_symbolsArray) {
 			if (null == p_symbolsArray[y][x]) {
 				value = null;
 			} else switch(p_symbolsArray[y][x].charAt(0)) {
-				case "X" : value = 0; break;
+				case SYMBOL_ID.X : value = 0; break;
 				case CHAR_DIRECTION.LEFT : mod = 1; break;
 				case CHAR_DIRECTION.UP : mod = 2; break;
 				case CHAR_DIRECTION.RIGHT : mod = 3; break;
@@ -447,7 +454,7 @@ function stringToArrowNumberCombinationsPuzzle(p_string) {
 			if (decode == null || decode == END_OF_DECODING_STREAM) {
 				array[y].push(null);
 			} else if (decode == 0) {
-				array[y].push("X");
+				array[y].push(SYMBOL_ID.X);
 			} else {
 				switch (decode % 4) {
 					case 1 : character = CHAR_DIRECTION.LEFT; break;

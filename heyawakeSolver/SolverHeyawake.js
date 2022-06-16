@@ -257,7 +257,7 @@ SolverHeyawake.prototype.modifyVerticalStrip = function(p_index, p_symbol, p_mod
 // Input methods
 
 SolverHeyawake.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
+	this.tryToApplyHypothesisSafe(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverHeyawake.prototype.undo = function() {
@@ -271,7 +271,7 @@ SolverHeyawake.prototype.makeQuickStart = function() {
 SolverHeyawake.prototype.emitPassRegion = function(p_indexRegion) {
 	const listPassNow = this.generateEventsForRegionPass(p_indexRegion);
 	const index = {category : HEYAWAKE_PASS_CATEGORY, value : p_indexRegion};
-	this.passEvents(listPassNow, index); 
+	this.passEventsSafe(listPassNow, index); 
 }
 
 SolverHeyawake.prototype.emitSmartPassRegion = function(p_indexRegion) {
@@ -279,14 +279,14 @@ SolverHeyawake.prototype.emitSmartPassRegion = function(p_indexRegion) {
 }
 
 SolverHeyawake.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 SolverHeyawake.prototype.smartPassRegion = function(p_indexRegion) {
 	const indexes = this.findTightRegionsAdjacentFromRegion(p_indexRegion);
 	const listPassNow = this.generateEventsForRegionSmartPass(indexes);
 	const indexGroup = {category : HEYAWAKE_PASS_CATEGORY.BLOCK_REGION, value : indexes};
-	this.passEvents(listPassNow, indexGroup);
+	this.passEventsSafe(listPassNow, indexGroup);
 }
 
 SolverHeyawake.prototype.makeResolution = function() { 

@@ -160,3 +160,74 @@ GeneralSolver.prototype.conclusionLastUndecided2x2 = function(p_x1, p_y1, p_x2, 
 	return p_valueUndecided;
 }
 
+// ---
+
+// Select in the right order coordinates so that two consecutive spaces are not, by default, on the same row nor on the same column. Should be used for passes.
+// WARNING : In very peculiar cases, a few spaces that are alone on their row and column are NOT passed. I think they should eventually get deducted by other passes anyway, or fall into the total pass.
+// Note : either returns a list of coordinates or a "total pass". They should be used afterwards. 
+function listCoordinatesPassRowColumnWithGCD(p_isSpaceUndecidedMethod, p_xLength, p_yLength) {		
+	var unknownRows = [];
+	var unknownColumns = [];
+	var x, y;
+	for (x = 0 ; x < p_xLength ; x++) {
+		unknownColumns.push(0);
+	}			
+	var atLeast2UnknownColumnIndexes = [];
+	var atLeast2UnknownRowIndexes = [];
+	var total = 0;
+	for (y = 0 ; y < p_yLength ; y++) {
+		unknownRows.push(0);
+		for (x = 0 ; x < p_xLength ; x++) {
+			if (p_isSpaceUndecidedMethod(x, y)) {
+				unknownColumns[x]++;
+				unknownRows[y]++;
+				total++;
+			}
+		}
+		if (unknownRows[y] >= 2) {				
+			atLeast2UnknownRowIndexes.push(y);
+		}
+	}
+	for (x = 0 ; x < p_xLength ; x++) {
+		if (unknownColumns[x] >= 2) {				
+			atLeast2UnknownColumnIndexes.push(x);
+		}
+	}
+	
+	var listIndexesPass = [];
+	if (total <= p_xLength + p_yLength - 1 ) {
+		listIndexesPass.push(new PassCategoryTotal(total)); // Note : no event needed on "total pass". If I want a total pass for a puzzle, I'll make one. But if the total pass must be given by this method, then use these methods.
+	} else {
+		var numberFirstXIndexes = gcd(atLeast2UnknownColumnIndexes.length, atLeast2UnknownRowIndexes.length);
+		var yIndex = 0;
+		for (firstXIndex = 0 ; firstXIndex < numberFirstXIndexes ; firstXIndex++) {
+			 // Torsade indexes : in a (20, 18) puzzle, it gives : (0, 0) (1, 1) ... (17, 17) (1, 18) (2, 19) (3, 0) ... 
+				yIndex = 0;
+				xIndex = firstXIndex;
+				do {
+					x = atLeast2UnknownColumnIndexes[xIndex];
+					y = atLeast2UnknownRowIndexes[yIndex];
+					listIndexesPass.push({x : x, y : y});
+					xIndex++;
+					yIndex++;
+					if (yIndex == atLeast2UnknownRowIndexes.length) {
+						yIndex = 0;
+					}
+					if (xIndex == atLeast2UnknownColumnIndexes.length) {
+						xIndex = 0;
+					}
+				} while (yIndex != 0 && xIndex != firstXIndex);		
+		}
+	}
+	return listIndexesPass;
+
+}
+
+function hasTotalPass(p_passCategory) {
+	return p_passCategory.totalPass;
+}
+
+function PassCategoryTotal(p_count) {
+	this.totalPass = true;
+	this.numberSpaces = p_count;
+}

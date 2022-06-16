@@ -217,10 +217,10 @@ Drawer.prototype.drawSuraromuEditorGrid = function(p_context, p_grid) {
 		chain = p_grid.get(x, y);
 		if (chain != null) {			
 			switch(chain.charAt(0)) {
-				case "H" : return 0; break;
-				case "V" : return 1; break;
-				case "X" : return 2; break;
-				case "S" : return 3; break;
+				case SYMBOL_ID.HORIZONTAL_DOTS : return 0; break;
+				case SYMBOL_ID.VERTICAL_DOTS : return 1; break;
+				case SYMBOL_ID.X : return 2; break;
+				case SYMBOL_ID.START_POINT : return 3; break;
 			}
 		}
 		return -1;

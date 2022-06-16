@@ -1007,7 +1007,7 @@ function orderedListpassArgumentsClosure(p_solver, p_orderedListPassArgumentsPSM
 				for (var y = 0 ; y < p_solver.yLength ; y++) {
 					for (var x = 0 ; x < p_solver.xLength ; x++) {
 						if (p_solver.linksArray[y][x].state != LOOP_STATE.CLOSED && p_solver.linksArray[y][x].closedEdges < 2) { // Any space that has 2 openings doesn't deserve to be tried. Worth checking because the solver is a maze... ing.
-							indexPass = {x : x, y : y, passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD}
+							indexPass = {x : x, y : y, category : LOOP_PASS_CATEGORY.SPACE_STANDARD}
 							listIndexesPass.push(indexPass);
 						}
 					}	
@@ -1016,7 +1016,7 @@ function orderedListpassArgumentsClosure(p_solver, p_orderedListPassArgumentsPSM
 				for (var y = 0 ; y < p_solver.yLength ; y++) {
 					for (var x = 0 ; x < p_solver.xLength ; x++) {
 						//if (p_solver.linksArray[y][x].state != CLOSED && p_solver.linksArray[y][x].linkedDirections.length != 2) { 
-						indexPass = {x : x, y : y, passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD}
+						indexPass = {x : x, y : y, category : LOOP_PASS_CATEGORY.SPACE_STANDARD}
 						listIndexesPass.push(indexPass);
 						// }
 					}	
@@ -1034,7 +1034,7 @@ function generateEventsForPassLoopClosure(p_solver) {
 }
 
 LoopSolver.prototype.generateEventsForPassLoop = function(p_indexPass) {
-	switch(p_indexPass.passCategory) {
+	switch(p_indexPass.category) {
 		case LOOP_PASS_CATEGORY.SPACE_STANDARD : 
 			return this.standardSpacePassEvents(p_indexPass.x, p_indexPass.y);
 		break;
@@ -1046,7 +1046,7 @@ LoopSolver.prototype.generateEventsForPassLoop = function(p_indexPass) {
 
 function namingCategoryLoopClosure(p_namingCategoryPSMethod) {
 	return function(p_indexPass) {
-		switch(p_indexPass.passCategory) {
+		switch(p_indexPass.category) {
 			case LOOP_PASS_CATEGORY.SPACE_STANDARD : 
 				return "Space " + p_indexPass.x + "," + p_indexPass.y;
 			break;
@@ -1064,7 +1064,7 @@ function passDefineTodoClosure(p_solver) {
 }
 
 LoopSolver.prototype.passDefineTodoLoop = function(p_indexPass) {
-	if (p_indexPass.passCategory == LOOP_PASS_CATEGORY.SPACE_STANDARD) {
+	if (p_indexPass.category == LOOP_PASS_CATEGORY.SPACE_STANDARD) {
 		const x = p_indexPass.x;
 		const y = p_indexPass.y;
 		return (this.linksArray[y][x].state != LOOP_STATE.CLOSED && this.linksArray[y][x].linkedDirections.length != 2);

@@ -101,7 +101,7 @@ SolverMoonsun.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 SolverMoonsun.prototype.emitPassRegionFromSpace = function(p_x, p_y) {
 	const index = this.regionArray[p_y][p_x];
 	if (index != WALLGRID.OUT_OF_REGIONS) {
-		this.passLoop({passCategory : LOOP_PASS_CATEGORY.REGION, index : index}); 
+		this.passLoop({category : LOOP_PASS_CATEGORY.REGION, index : index}); 
 	}
 }
 

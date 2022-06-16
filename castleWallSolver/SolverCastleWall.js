@@ -5,8 +5,12 @@ function SolverCastleWall(p_valueGrid) {
 
 const CW_POSITION = {
 	INNER : 1,
-	OUTER : 0,
-	UNDECIDED : -1
+	OUTER : 2,
+	UNDECIDED : 0
+}
+
+function otherCWPosition(p_position) {
+	return 3-p_position;
 }
 
 const NOT_YET = {
@@ -16,10 +20,6 @@ const NOT_YET = {
 
 LOOP_PASS_CATEGORY.CW_HORIZ = -1;
 LOOP_PASS_CATEGORY.CW_VERT = -2;
-
-function otherCWPosition(p_position) {
-	return 1-p_position;
-}
 
 SolverCastleWall.prototype = Object.create(LoopSolver.prototype);
 SolverCastleWall.prototype.constructor = SolverCastleWall;
@@ -91,7 +91,7 @@ SolverCastleWall.prototype.construct = function(p_valueGrid) {
 				number -= this.getNumber(lx, y);
 			}
 			// Now, lx = xLength-1 so can't be left link, or (lx, y) has an obstacle that looks right
-			this.horizLinesList.push({notYet : [number, amount-number], // Note : assumes that "linked = 0 and closed = 1 or something like this"; maybe a big convention for later ?
+			this.horizLinesList.push({notYet : [number, amount-number], // Note : refer to NOT_YET const defined above, where NOT_YET.LINKED = 0 and NOT_YET.CLOSED = 1
 				firstXLeftLink : x+1, lastXLeftLink : lx-1, y : y}); 
 		} else if (dir == DIRECTION.LEFT) {
 			amount = 0;
@@ -275,12 +275,12 @@ SolverCastleWall.prototype.emitHypothesisNode = function(p_x, p_y, p_state) {
 
 SolverCastleWall.prototype.emitPassNode = function(p_x, p_y) {
 	if (!this.isBanned(p_x, p_y)) {			
-		return this.passLoop({passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
+		return this.passLoop({category : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
 	} else if (this.unionsOriginsArray[p_y][p_x] != null) {
 		if (OrientationDirection[this.getDirection(p_x, p_y)] == ORIENTATION.HORIZONTAL) {
-			return this.passLoop({passCategory : LOOP_PASS_CATEGORY.CW_HORIZ, index : this.unionsOriginsArray[p_y][p_x]});
+			return this.passLoop({category : LOOP_PASS_CATEGORY.CW_HORIZ, index : this.unionsOriginsArray[p_y][p_x]});
 		} else {
-			return this.passLoop({passCategory : LOOP_PASS_CATEGORY.CW_VERT, index : this.unionsOriginsArray[p_y][p_x]});
+			return this.passLoop({category : LOOP_PASS_CATEGORY.CW_VERT, index : this.unionsOriginsArray[p_y][p_x]});
 		}
 	} 
 }
@@ -289,8 +289,8 @@ SolverCastleWall.prototype.makeMultipass = function() {
 	this.multipassLoop();
 }
 
-solveAction = function (p_solver) {
-	p_solver.resolve();
+SolverCastleWall.prototype.makeResolution = function () {
+	this.resolve();
 }
 
 // -------------------
@@ -709,7 +709,7 @@ generateEventsForPassClosure = function (p_solver) {
 SolverCastleWall.prototype.passLine = function(p_indexPass) {
 	var union, x, y;
 	var listPass = [];
-	if (p_indexPass.passCategory == LOOP_PASS_CATEGORY.CW_HORIZ) {
+	if (p_indexPass.category == LOOP_PASS_CATEGORY.CW_HORIZ) {
 		union = this.horizUnions[p_indexPass.index];
 		y = union.y;
 		for (x = union.xMin ; x <= union.xMax; x++) {
@@ -733,10 +733,10 @@ orderedListPassArgumentsClosureCastleWall = function(p_solver) {
 	return function() {
 		var listIndexesPass = [];
 		for (var i = 0 ; i < p_solver.horizUnions.length ; i++) {
-			listIndexesPass.push({passCategory : LOOP_PASS_CATEGORY.CW_HORIZ, index : i});
+			listIndexesPass.push({category : LOOP_PASS_CATEGORY.CW_HORIZ, index : i});
 		}
 		for (var i = 0 ; i < p_solver.vertUnions.length ; i++) {
-			listIndexesPass.push({passCategory : LOOP_PASS_CATEGORY.CW_VERT, index : i});
+			listIndexesPass.push({category : LOOP_PASS_CATEGORY.CW_VERT, index : i});
 		}
 		return listIndexesPass;
 	}
@@ -744,7 +744,7 @@ orderedListPassArgumentsClosureCastleWall = function(p_solver) {
 
 namingCategoryPassClosure = function(p_solver) {
 	return function(p_indexPass) {
-		if (p_indexPass.passCategory == LOOP_PASS_CATEGORY.CW_HORIZ) {
+		if (p_indexPass.category == LOOP_PASS_CATEGORY.CW_HORIZ) {
 			var item = p_solver.horizUnions[p_indexPass.index];
 			return "Horiz.line " + item.xMin + "-" + item.xMax + "," + item.y;
 		} else {

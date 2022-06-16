@@ -205,12 +205,12 @@ SolverStostone.prototype.undo = function() {
 
 SolverStostone.prototype.emitPassRegion = function(p_indexRegion) {
 	listPassNow = this.generateEventsForRegionPass(p_indexRegion);
-	this.passEventsSafe(listPassNow, {passCategory : PASS_CATEGORY.REGION, index : p_indexRegion}); 
+	this.passEventsSafe(listPassNow, {category : PASS_CATEGORY.REGION, index : p_indexRegion}); 
 }
 
 SolverStostone.prototype.emitPassColumn = function(p_x) {
 	listPassNow = this.generateEventsForColumnPass(p_x);
-	this.passEventsSafe(listPassNow, {passCategory : PASS_CATEGORY.COLUMN, x : p_x}); 
+	this.passEventsSafe(listPassNow, {category : PASS_CATEGORY.COLUMN, x : p_x}); 
 }
 
 SolverStostone.prototype.makeMultiPass = function() {
@@ -761,7 +761,7 @@ function copying(p_event) {
 
 function namingCategoryPassClosure(p_solver) {
 	return function(p_indexPass) {		
-		switch (p_indexPass.passCategory) {
+		switch (p_indexPass.category) {
 			case PASS_CATEGORY.REGION : return "region " + logRegionInfo(p_solver, p_indexPass.index) ; break;
 			case PASS_CATEGORY.COLUMN : return "column " + p_indexPass.x ; break;
 		}
@@ -797,7 +797,7 @@ function eventsForOneSpacePass(p_x, p_y) {
 
 function generateEventsForPassClosure (p_solver) {
 	return function (p_indexPass) {
-		if (p_indexPass.passCategory == PASS_CATEGORY.COLUMN) {
+		if (p_indexPass.category == PASS_CATEGORY.COLUMN) {
 			return p_solver.generateEventsForColumnPass(p_indexPass.x);			
 		} else {
 			return p_solver.generateEventsForRegionPass(p_indexPass.index);
@@ -809,10 +809,10 @@ function orderedListPassArgumentsClosure  (p_solver) {
 	return function () {
 		var listIndexesPass = [];
 		for (var x = 0 ; x < p_solver.xLength ; x++) {
-			listIndexesPass.push({passCategory : PASS_CATEGORY.COLUMN, x : x});
+			listIndexesPass.push({category : PASS_CATEGORY.COLUMN, x : x});
 		}
 		for (var ir = 0 ; ir < p_solver.regions.length ; ir++) {
-			listIndexesPass.push({passCategory : PASS_CATEGORY.REGION, index : ir});
+			listIndexesPass.push({category : PASS_CATEGORY.REGION, index : ir});
 		}			
 		return listIndexesPass; 
 	}

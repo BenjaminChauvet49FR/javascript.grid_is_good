@@ -133,7 +133,7 @@ SolverAqre.prototype.getRegionSpacesFromSpace = function(p_x, p_y) {
 // Input methods
 
 SolverAqre.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
+	this.tryToApplyHypothesisSafe(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverAqre.prototype.undo = function() {
@@ -147,28 +147,28 @@ SolverAqre.prototype.makeQuickStart = function() {
 SolverAqre.prototype.emitPassRegion = function(p_indexRegion) {
 	const listPassNow = this.generateEventsForRegionPass(p_indexRegion);
 	const index = {category : AQRE_PASS_CATEGORY.REGION, value : p_indexRegion};
-	this.passEvents(listPassNow, index); 
+	this.passEventsSafe(listPassNow, index); 
 }
 
 SolverAqre.prototype.emitPassRow = function(p_y) {
 	const listPassNow = this.generateEventsForRowPass(p_y);
 	const index = {category : AQRE_PASS_CATEGORY.ROW, y : p_y};
-	this.passEvents(listPassNow, index); 
+	this.passEventsSafe(listPassNow, index); 
 }
 
 SolverAqre.prototype.emitPassColumn = function(p_x) {
 	const listPassNow = this.generateEventsForColumnPass(p_x);
 	const index = {category : AQRE_PASS_CATEGORY.COLUMN, x : p_x};
-	this.passEvents(listPassNow, index); 
+	this.passEventsSafe(listPassNow, index); 
 }
 
 SolverAqre.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 SolverAqre.prototype.passSelectedSpaces = function(p_coorsList) {
 	const listPassNow = this.generateEventsForSpacesList(p_coorsList);
-	return this.passEvents(listPassNow, {family : AQRE_PASS_CATEGORY.CUSTOM, numberSpaces : listPassNow.length});
+	return this.passEventsSafe(listPassNow, {family : AQRE_PASS_CATEGORY.CUSTOM, numberSpaces : listPassNow.length});
 }
 
 SolverAqre.prototype.makeResolution = function() { 
@@ -526,7 +526,7 @@ namingCategoryPassClosure = function(p_solver) {
 				return "Region "+ p_indexPass.value + " (" + p_solver.getFirstSpaceRegion(p_indexPass.value).x +" "+ p_solver.getFirstSpaceRegion(p_indexPass.value).y + ")"; break;
 			case AQRE_PASS_CATEGORY.ROW : return "Row " + p_indexPass.y; break;
 			case AQRE_PASS_CATEGORY.COLUMN : return "Column " + p_indexPass.x; break;
-			case AQRE_PASS_CATEGORY.CUSTOM : return "Selection " + p_indexPass.numberSpaces + " space" + (p_indexAndFamily.numberSpaces > 1 ? "s" : ""); break;
+			case AQRE_PASS_CATEGORY.CUSTOM : return "Selection " + p_indexPass.numberSpaces + " space" + (p_indexPass.numberSpaces > 1 ? "s" : ""); break;
 			
 		} 
 	}

@@ -181,6 +181,13 @@ menuSolvers.push({
 });
 
 menuSolvers.push({
+	displayName : "Carrés magiques",
+	typeList : [
+		{name : "raitonanba", displayName : "Raitonanba", hoverDescription : "Un bloc et une lampe par ligne et colonne, les numéros indiquent le nombre de cases éclairantes"}
+	]
+});
+
+menuSolvers.push({
 	displayName : "Sudokus",
 	typeList : [
 		{name : "sudoku", displayName : "Sudoku", hoverDescription : "Sudoku classique ; peut avoir plusieurs grilles imbriquées"}

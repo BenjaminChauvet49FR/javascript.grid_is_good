@@ -1,6 +1,7 @@
 Big possible change : Notes that a big change is possible in the conception of the solver or a tool, and it was noticed when writing a new function
 Correct puzzle data assumption : Assumes that the data provided for the puzzle allow us to solve it, with a description of how it should be correct
 Directions 0123 assumption : Assumes that the array of known directions is [0, 1, 2, 3] and these are the values of respectively DIRECTION.LEFT, DIRECTION.UP, DIRECTION.RIGHT, DIRECTION.DOWN
+Orientations 01 assumption : same.
 Sub-optimization : Thing that is not optimized.
 Undo in reverse order assumption : Assumes that any events are undone in reverse order they were applied. For code that is implicitely done in an undo context.
 Naming constraint : a method with the exact name must (or at least should) be defined
@@ -8,3 +9,4 @@ Naming constraint : a method with the exact name must (or at least should) be de
 High warning : when misused, bad things can happen. 
 No banned space assumption : in the current state of the solver, the puzzle cannot contain 'banned spaces', whatever it means, either because I didn't meet any or because I decided not to treat them. (for now)
 Knot vs node : A knot is supposed to be contained in a grid (Yagit and somehow Galaxies), while a node is for a specific lattice representation of a loop solver (Castle wall, Geradeweg, Grand Tour, Shingoki, Slitherlink)
+Linked/Closed 0,1

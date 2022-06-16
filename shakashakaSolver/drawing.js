@@ -3,7 +3,7 @@
 function drawInsideSpacesAutonomous(p_context, p_drawer, p_coloursSet, p_solver) {
 	const pixInnerSide = p_drawer.getPixInnerSide();
 	setupFont(p_context, pixInnerSide*4/5, FONTS.ARIAL);
-	var x, y, hasOne;
+	var x, y, colour;
 	var pixXL, pixXR, pixYU, pixYD, pixXCenter, pixYCenter;
 	p_context.textAlign = "center"; // Credits : https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/textAlign
 	p_context.textBaseline = "middle";
@@ -26,21 +26,15 @@ function drawInsideSpacesAutonomous(p_context, p_drawer, p_coloursSet, p_solver)
 				pixXR = p_drawer.getPixInnerXRight(x);
 				pixXStart = [pixXL, pixXL, pixXR, pixXR, pixXL];			
 				KnownDirections.forEach(dir => {
-					hasOne = true;
+					colour = null;
 					switch (p_solver.getAnswer(x, y, dir)) {
-						case SHAKASHAKA.WHITE : p_context.fillStyle = p_coloursSet.whiteTriangle; break;
-						case SHAKASHAKA.BLACK : p_context.fillStyle = p_coloursSet.blackTriangle; break;
-						default : hasOne = false; break;
+						case SHAKASHAKA.WHITE : colour = p_coloursSet.whiteTriangle; break;
+						case SHAKASHAKA.BLACK : colour = p_coloursSet.blackTriangle; break;
 					}
-					if (hasOne) {
-						p_context.beginPath();
-						p_context.moveTo(pixXStart[dir], pixYStart[dir]);
-						p_context.lineTo(pixXStart[dir + 1], pixYStart[dir + 1]);
-						p_context.lineTo(pixXCenter, pixYCenter);
-						p_context.lineTo(pixXStart[dir], pixYStart[dir]);
-						p_context.closePath();
-						p_context.fill();
-					}
+					drawPolygon(p_context, null, colour,
+						[{pixX : pixXStart[dir], pixY : pixYStart[dir]},
+						{pixX : pixXStart[dir+1], pixY : pixYStart[dir+1]},
+						{pixX : pixXCenter, pixY : pixYCenter}])
 				});
 			}		
 		}

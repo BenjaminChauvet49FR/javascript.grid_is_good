@@ -59,8 +59,8 @@ SolverFirumatto.prototype.construct = function(p_numberSymbolsArray) {
 		for (var x = 0 ; x < this.xLength ; x++) {
 			this.numericArray[y].push(new SpaceNumeric(1, FIRUMATTO_MAX_LENGTH)); 
 			symbolOrNumber = p_numberSymbolsArray[y][x];
-			if (symbolOrNumber == "?") { // Never used "fake clue" spaces, but since there is only one clue in a region...
-				this.fixedArray[y].push("?"); 
+			if (symbolOrNumber == SYMBOL_ID.QUESTION) { // Never used "fake clue" spaces, but since there is only one clue in a region...
+				this.fixedArray[y].push(SYMBOL_ID.QUESTION); 
 				this.questionCoordinatesList.push({x : x, y : y}); 
 				this.oneClueArray[y].push(clueCount++);
 			} else if (symbolOrNumber != null) { // Numeric spaces

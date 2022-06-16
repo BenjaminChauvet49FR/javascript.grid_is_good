@@ -157,6 +157,15 @@ pillarToColourFenceClosure = function(p_drawer, p_fenceMethodRight, p_fenceMetho
 	}
 }
 
+// With fences
+Drawer.prototype.fenceToColour = function (p_fenceState) {
+    switch (p_fenceState) {
+		case (FENCE_STATE.OPEN): return (this.fenceColourSet.open_fence); break;
+		case (FENCE_STATE.CLOSED): return (this.fenceColourSet.closed_fence); break;
+		default : return this.fenceColourSet.undecided_fence;
+    }
+}
+
 Drawer.prototype.drawWallGrid = function (p_context, p_wallGrid, p_xLength, p_yLength) {
 	this.drawEdgesGrid(p_context, p_xLength, p_yLength, 
 	wallRightToColourClosure(this, p_wallGrid), wallDownToColourClosure(this, p_wallGrid), 
@@ -899,7 +908,7 @@ Drawer.prototype.drawCombinedArrowGridIndicationsPrivate = function (p_context, 
 								pixTextY = (pixY2 + this.getPixInnerYUp(iy)) / 2;
 							}
 						break;
-						case 'X': {
+						case SYMBOL_ID.X: {
 							isX = true;
 						}
 					} 
@@ -919,13 +928,8 @@ Drawer.prototype.drawCombinedArrowGridIndicationsPrivate = function (p_context, 
 						} 
 						if (drawArrowPart) {	
 							// Draw arrow and text
-							p_context.moveTo(pixX1, pixY1);
-							p_context.lineTo(pixX2, pixY2);
-							p_context.lineTo(pixX3, pixY3);
-							p_context.lineTo(pixX1, pixY1);
+							drawPolygon(p_context, NO_COLOUR_CHANGE, NO_COLOUR_CHANGE, [{pixX : pixX1, pixY : pixY1}, {pixX : pixX2, pixY : pixY2}, {pixX : pixX3, pixY : pixY3}]);
 							p_context.fillText(clue.substring(indexCoD+1), pixTextX, pixTextY);
-							p_context.closePath();
-							p_context.fill();
 						}
 					}
 				}
@@ -1149,48 +1153,24 @@ Drawer.prototype.drawCrossXInner = function(p_context, p_xSpace, p_ySpace, p_ite
 }
 
 Drawer.prototype.drawSquare = function(p_context, p_xSpace, p_ySpace, p_item) {
-	p_context.beginPath();
-	p_context.strokeStyle = p_item.colourBorder; 
-	p_context.fillStyle = p_item.colourInner; 
 	p_context.lineWidth = Math.max(Math.floor(this.getPixInnerSide()/10, 2));
-	
 	const pixAway = Math.floor(this.getPixInnerSide()/5);
 	const pixLeft = this.getPixInnerXLeft(p_xSpace) + pixAway;
 	const pixRight = this.getPixInnerXRight(p_xSpace) - pixAway;
 	const pixUp = this.getPixInnerYUp(p_ySpace) + pixAway;
 	const pixDown = this.getPixInnerYDown(p_ySpace) - pixAway;
-	p_context.moveTo(pixLeft, pixUp);
-	p_context.lineTo(pixRight, pixUp);
-	p_context.lineTo(pixRight, pixDown);
-	p_context.lineTo(pixLeft, pixDown);
-	p_context.lineTo(pixLeft, pixUp);
-	p_context.lineTo(pixRight, pixUp);
-	if (p_item.colourBorder != null) {		
-		p_context.stroke();
-	}
-	p_context.fill();
+	drawPolygon(p_context, p_item.colourBorder, p_item.colourInner, [{pixX : pixLeft, pixY : pixUp}, {pixX : pixRight, pixY : pixUp}, {pixX : pixRight, pixY : pixDown}, {pixX : pixLeft, pixY : pixDown}]);
 }
 
 Drawer.prototype.drawTriangle = function(p_context, p_xSpace, p_ySpace, p_item) {
-	p_context.beginPath();
-	p_context.strokeStyle = p_item.colourBorder; 
-	p_context.fillStyle = p_item.colourInner; 
 	p_context.lineWidth = Math.max(Math.floor(this.getPixInnerSide()/10, 2));
-	
 	const pixAway = Math.floor(this.getPixInnerSide()/6);
 	const pixLeft = this.getPixInnerXLeft(p_xSpace) + pixAway;
 	const pixRight = this.getPixInnerXRight(p_xSpace) - pixAway;
 	const pixMid = (pixLeft + pixRight) / 2;
 	const pixUp = this.getPixInnerYUp(p_ySpace) + pixAway;
 	const pixDown = this.getPixInnerYDown(p_ySpace) - pixAway;
-	p_context.moveTo(pixMid , pixUp);
-	p_context.lineTo(pixRight, pixDown);
-	p_context.lineTo(pixLeft, pixDown);
-	p_context.lineTo(pixMid, pixUp);
-	if (p_item.colourBorder != null) {
-		p_context.stroke();
-	}
-	p_context.fill();
+	drawPolygon(p_context, p_item.colourBorder, p_item.colourInner, [{pixX : pixMid, pixY : pixUp}, {pixX : pixRight, pixY : pixDown}, {pixX : pixLeft, pixY : pixDown}]);
 }
 
 // Draw li'l shapes
@@ -1223,12 +1203,64 @@ Drawer.prototype.drawLittleSquareUpperRight = function(p_context, p_xSpace, p_yS
 	const pixRadius = this.pix.sideSpace / 6;
 	const pixXCenter = this.getPixXRight(p_xSpace) - 1 - pixRadius;
 	const pixYCenter = this.getPixYUp(p_ySpace) + 1 + pixRadius;
-	p_context.moveTo(pixXCenter - pixRadius, pixYCenter - pixRadius);
-	p_context.lineTo(pixXCenter - pixRadius, pixYCenter + pixRadius);
-	p_context.lineTo(pixXCenter + pixRadius, pixYCenter + pixRadius);
-	p_context.lineTo(pixXCenter + pixRadius, pixYCenter - pixRadius);
-	p_context.lineTo(pixXCenter - pixRadius, pixYCenter - pixRadius);
-	p_context.stroke();
+	drawPolygon(p_context, p_item.colour, null, 
+	[{pixX : pixXCenter - pixRadius, pixY : pixYCenter - pixRadius}, {pixX : pixXCenter - pixRadius, pixY : pixYCenter + pixRadius}, 
+	{pixX : pixXCenter + pixRadius, pixY : pixYCenter + pixRadius}, {pixX : pixXCenter + pixRadius, pixY : pixYCenter - pixRadius} 
+	]);
+}
+
+// Draw more shapes :
+Drawer.prototype.drawRectangleStripHorizontal = function(p_context, p_colourSpan, p_xMin, p_xMax, p_y) { 
+    var pixDrawX = this.getPixInnerXLeft(p_xMin);
+	const pixWidth = this.getPixInnerSide();
+	const pixHeight = pixWidth*0.6;
+	const pixDrawY = this.getPixCenterY(p_y)-pixHeight/2;
+	p_context.fillStyle = p_colourSpan;
+	for (ix = p_xMin ; ix <= p_xMax ; ix++) {
+		p_context.fillRect(pixDrawX, pixDrawY, pixWidth, pixHeight);
+		pixDrawX += this.pix.sideSpace;		
+	}	
+}
+
+Drawer.prototype.drawRectangleStripVertical = function(p_context, p_colourSpan, p_x, p_yMin, p_yMax) { 
+    var pixDrawY = this.getPixInnerYUp(p_yMin);
+	const pixHeight = this.getPixInnerSide();
+	const pixWidth = pixHeight*0.6;
+	const pixDrawX = this.getPixCenterX(p_x)-pixWidth/2;
+	p_context.fillStyle = p_colourSpan;
+	for (iy = p_yMin ; iy <= p_yMax ; iy++) {
+		p_context.fillRect(pixDrawX, pixDrawY, pixWidth, pixHeight);
+		pixDrawY += this.pix.sideSpace;		
+	}	
+}
+
+// High convention : Directions 0123 assumption
+// p_coloursArrayFunction = function that takes x,y and returns 4 colours, one per direction. [colour for direction left, cfd up, cfd right, cfd down]
+Drawer.prototype.drawTrapezesInsideCoorsList = function(p_context, p_coloursArrayFunction, p_listCoors) {
+	var x, y, colour;
+	var pixXL, pixYU, pixXR, pixYD, pixPenetrate;
+	p_listCoors.forEach(coors => {
+		x = coors.x;
+		y = coors.y;
+		colourArray = p_coloursArrayFunction(x, y);
+		pixPenetrate = this.getPixInnerSide()*0.15;
+		pixOutXL = this.getPixInnerXLeft(x);
+		pixOutYU = this.getPixInnerYUp(y);
+		pixOutXR = this.getPixInnerXRight(x);
+		pixOutYD = this.getPixInnerYDown(y);
+		pixInXL = pixOutXL + pixPenetrate;
+		pixInYU = pixOutYU + pixPenetrate;
+		pixInXR = pixOutXR - pixPenetrate;
+		pixInYD = pixOutYD - pixPenetrate;
+			drawPolygon(p_context, colourArray[DIRECTION.LEFT], colourArray[DIRECTION.LEFT], 
+				[{pixX : pixOutXL, pixY : pixOutYU}, {pixX : pixOutXL, pixY : pixOutYD}, {pixX : pixInXL, pixY : pixInYD}, {pixX : pixInXL, pixY : pixInYU}]);
+			drawPolygon(p_context, colourArray[DIRECTION.UP], colourArray[DIRECTION.UP], 
+				[{pixX : pixOutXL, pixY : pixOutYU}, {pixX : pixOutXR, pixY : pixOutYU}, {pixX : pixInXR, pixY : pixInYU}, {pixX : pixInXL, pixY : pixInYU}]);
+			drawPolygon(p_context, colourArray[DIRECTION.RIGHT], colourArray[DIRECTION.RIGHT],
+				[{pixX : pixOutXR, pixY : pixOutYU}, {pixX : pixOutXR, pixY : pixOutYD}, {pixX : pixInXR, pixY : pixInYD}, {pixX : pixInXR, pixY : pixInYU}]);
+			drawPolygon(p_context, colourArray[DIRECTION.DOWN], colourArray[DIRECTION.DOWN],
+				[{pixX : pixOutXL, pixY : pixOutYD}, {pixX : pixOutXR, pixY : pixOutYD}, {pixX : pixInXR, pixY : pixInYD}, {pixX : pixInXL, pixY : pixInYD}]);
+	});
 }
 
 // ------------------
@@ -1653,6 +1685,36 @@ CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
   return this;
 }
 
+const NO_COLOUR_CHANGE = ""; 
+
+function drawPolygon(p_context, p_colourStroke, p_colourFill, p_pixCoors) {
+	var ok = false;
+	if (p_colourStroke != null) {	
+		if (p_colourStroke != NO_COLOUR_CHANGE) {			
+			p_context.strokeStyle = p_colourStroke;
+		}
+		ok = true;
+	}
+	if (p_colourFill != null) {		
+		if (p_colourFill != NO_COLOUR_CHANGE) {			
+			p_context.fillStyle = p_colourFill;
+		}
+		ok = true;
+	}
+	if (ok) {		
+		p_context.beginPath();
+		p_context.moveTo(p_pixCoors[p_pixCoors.length-1].pixX, p_pixCoors[p_pixCoors.length-1].pixY);
+		p_pixCoors.forEach(pixCoors => { // note : pixCoors, pixX, pixY : a lot of "pix". But it's used elsewhere. (in Tapa clue drawing)
+			p_context.lineTo(pixCoors.pixX, pixCoors.pixY);
+		});
+		if (p_colourStroke != null) {
+			p_context.stroke();
+		}
+		if (p_colourFill != null) {
+			p_context.fill();
+		}
+	}
+}
 
 //--------------------
 // Private functions
@@ -1690,11 +1752,3 @@ Drawer.prototype.wallToColour = function (p_wallType) {
     return '#ffffff'; // Should not happen
 }
 
-// With fences
-Drawer.prototype.fenceToColour = function (p_fenceState) {
-    switch (p_fenceState) {
-		case (FENCE_STATE.OPEN): return (this.fenceColourSet.open_fence); break;
-		case (FENCE_STATE.CLOSED): return (this.fenceColourSet.closed_fence); break;
-		default : return this.fenceColourSet.undecided_fence;
-    }
-}

@@ -183,11 +183,11 @@ SolverUsotatami.prototype.setRange = function(p_x, p_y, p_dir, p_value) {
 // Input methods
 
 SolverUsotatami.prototype.emitHypothesisRight = function(p_x, p_y, p_state) {
-	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, DIRECTION.RIGHT, p_state));
+	this.tryToApplyHypothesisSafe(new FenceEvent(p_x, p_y, DIRECTION.RIGHT, p_state));
 }
 
 SolverUsotatami.prototype.emitHypothesisDown = function(p_x, p_y, p_state) {
-	this.tryToApplyHypothesis(new FenceEvent(p_x, p_y, DIRECTION.DOWN, p_state));
+	this.tryToApplyHypothesisSafe(new FenceEvent(p_x, p_y, DIRECTION.DOWN, p_state));
 }
 
 SolverUsotatami.prototype.undo = function(){
@@ -196,11 +196,11 @@ SolverUsotatami.prototype.undo = function(){
 
 SolverUsotatami.prototype.emitPassSpace = function(p_x, p_y) {
 	const listPassNow = this.generateEventsPassNumericSpace(p_x, p_y);
-	this.passEvents(listPassNow, {x : p_x, y : p_y}); 
+	this.passEventsSafe(listPassNow, {x : p_x, y : p_y}); 
 }
 
 SolverUsotatami.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 // In this puzzle, quickstart is vital for the separation of numbers

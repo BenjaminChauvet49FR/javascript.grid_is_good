@@ -52,7 +52,7 @@ selectionOpeningClosure = function(p_solver) {
 drawNumberOrXClosure = function(p_solver) {
 	return function(p_x, p_y) {
 		switch(p_solver.getFixedSpace(p_x, p_y)) {
-			case SPACE_CROSS : return "X"; break;
+			case SPACE_CROSS : return SYMBOL_ID.X; break;
 			case null : return null; break;
 			default : return p_solver.getFixedSpace(p_x, p_y); break;
 		}

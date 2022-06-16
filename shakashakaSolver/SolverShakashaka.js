@@ -66,7 +66,7 @@ SolverShakashaka.prototype.construct = function(p_numberSymbolArray) {
 			symbolOrNumber = p_numberSymbolArray[iy][ix];
 			if (symbolOrNumber != null) {
 				this.answerArray[iy].push([SHAKASHAKA.BLACK, SHAKASHAKA.BLACK, SHAKASHAKA.BLACK, SHAKASHAKA.BLACK]); // Optional but I kinda like this
-				if (symbolOrNumber == "X") {
+				if (symbolOrNumber == SYMBOL_ID.X) {
 					this.numericArray[iy].push({blocked : true, value : NOT_FORCED});
 				} else {
 					number = parseInt(symbolOrNumber, 10);
@@ -124,7 +124,7 @@ SolverShakashaka.prototype.getNeighborTriangle = function(p_x, p_y, p_dirPosTria
 // Input
 
 SolverShakashaka.prototype.emitHypothesis = function(p_x, p_y, p_dir, p_symbol) {
-	return this.tryToApplyHypothesis(new TriangleEvent(p_x, p_y, p_dir, p_symbol));
+	return this.tryToApplyHypothesisSafe(new TriangleEvent(p_x, p_y, p_dir, p_symbol));
 }
 
 SolverShakashaka.prototype.undo = function() {
@@ -139,15 +139,15 @@ SolverShakashaka.prototype.emitPassSpace = function(p_x, p_y) {
 	const space = this.numericArray[p_y][p_x];
 	if (space.value != NOT_FORCED) {
 		listPassNow = this.generateEventsAroundNumericSpace(p_x, p_y);
-		this.passEvents(listPassNow, {passCategory : SHAKASHAKA_PASS_CATEGORY.NUMERIC, x : p_x, y : p_y}); // Note : pass categories not undispensables, given that everything revolves around spaces...
+		this.passEventsSafe(listPassNow, {category : SHAKASHAKA_PASS_CATEGORY.NUMERIC, x : p_x, y : p_y}); // Note : pass categories not undispensables, given that everything revolves around spaces...
 	} else {
 		listPassNow = this.generateEventsInSpace(p_x, p_y);
-		this.passEvents(listPassNow, {passCategory : SHAKASHAKA_PASS_CATEGORY.SPACE, x : p_x, y : p_y});
+		this.passEventsSafe(listPassNow, {category : SHAKASHAKA_PASS_CATEGORY.SPACE, x : p_x, y : p_y});
 	}
 }
 
 SolverShakashaka.prototype.makeMultiPass = function() {
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 //--------------------------------
@@ -519,7 +519,7 @@ function copying(p_event) {
 
 function namingSetClosure(p_solver) {
 	return function(p_indexPass) {
-		switch(p_indexPass.passCategory) {
+		switch(p_indexPass.category) {
 			case SHAKASHAKA_PASS_CATEGORY.SPACE : return "Std.space " + p_indexPass.x + "," + p_indexPass.y; break; 
 			case SHAKASHAKA_PASS_CATEGORY.NUMERIC : return "Around num.space "+ p_indexPass.x + "," + p_indexPass.y; break;
 		}
@@ -531,7 +531,7 @@ function namingSetClosure(p_solver) {
 
 generateEventsForSpacePassClosure = function(p_solver) {
 	return function(p_indexPass) {
-		if (p_indexPass.passCategory == SHAKASHAKA_PASS_CATEGORY.NUMERIC) {
+		if (p_indexPass.category == SHAKASHAKA_PASS_CATEGORY.NUMERIC) {
 			return p_solver.generateEventsAroundNumericSpace(p_indexPass.x, p_indexPass.y);
 		} else {
 			return p_solver.generateEventsInSpace(p_indexPass.x, p_indexPass.y);
@@ -545,9 +545,9 @@ orderedListPassArgumentsClosure = function(p_solver) {
 		for (var iy = 0 ; iy < p_solver.yLength ; iy++) {
 			for (var ix = 0 ; ix < p_solver.xLength ; ix++) {
 				if (p_solver.numericArray[iy][ix].value != NOT_FORCED) {
-					listIndexesPass.push({passCategory : SHAKASHAKA_PASS_CATEGORY.NUMERIC, x : ix, y : iy});
+					listIndexesPass.push({category : SHAKASHAKA_PASS_CATEGORY.NUMERIC, x : ix, y : iy});
 				} else if (!p_solver.numericArray[iy][ix].blocked) {
-					listIndexesPass.push({passCategory : SHAKASHAKA_PASS_CATEGORY.SPACE, x : ix, y : iy});
+					listIndexesPass.push({category : SHAKASHAKA_PASS_CATEGORY.SPACE, x : ix, y : iy});
 				}
 			}
 		}
@@ -557,7 +557,7 @@ orderedListPassArgumentsClosure = function(p_solver) {
 
 multipassDefineTodoClosure = function(p_solver) {
 	return function(p_indexPass) {
-		if (p_indexPass.passCategory == SHAKASHAKA_PASS_CATEGORY.NUMERIC) {
+		if (p_indexPass.category == SHAKASHAKA_PASS_CATEGORY.NUMERIC) {
 			return (p_solver.numericArray.notPlacedBlacksYet > 0);
 		} else {
 			var space = p_solver.answerArray[p_indexPass.y][p_indexPass.x];

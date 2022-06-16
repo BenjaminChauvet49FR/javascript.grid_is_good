@@ -1,11 +1,3 @@
-const NOT_FORCED = -1;
-
-const TURNING = {
-	YES : 2,
-	NO : 1,
-	UNDECIDED : 0
-}
-
 LOOP_PASS_CATEGORY.REGION_GrandTour = -1;
 
 function SolverGrandTour(p_linkGrid) {
@@ -78,7 +70,7 @@ SolverGrandTour.prototype.emitHypothesisRight = function(p_x, p_y, p_state) {
 }
 
 SolverGrandTour.prototype.emitPassNode = function(p_x, p_y) {
-	return this.passLoop({passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
+	return this.passLoop({category : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y});
 }
 
 SolverGrandTour.prototype.makeMultipass = function() {

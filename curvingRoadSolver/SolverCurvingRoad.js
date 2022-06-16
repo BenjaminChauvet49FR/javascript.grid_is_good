@@ -344,7 +344,7 @@ SolverCurvingRoad.prototype.getPearl = function (p_x, p_y) {
 // Input methods
 
 SolverCurvingRoad.prototype.emitHypothesis = function (p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
+	this.tryToApplyHypothesisSafe(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverCurvingRoad.prototype.makeQuickStart = function () {
@@ -353,11 +353,11 @@ SolverCurvingRoad.prototype.makeQuickStart = function () {
 
 SolverCurvingRoad.prototype.passSpace = function(p_x, p_y) {
 	const listPassNow = this.generateEventsForSpacePass({x : p_x, y : p_y});
-	this.passEvents(listPassNow, {x : p_x, y : p_y}); 
+	this.passEventsSafe(listPassNow, {x : p_x, y : p_y}); 
 }
 
 SolverCurvingRoad.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 SolverCurvingRoad.prototype.undo = function() {

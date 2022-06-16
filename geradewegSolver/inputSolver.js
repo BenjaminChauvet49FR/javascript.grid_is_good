@@ -76,7 +76,7 @@ undoAction = function(p_solver,p_textArea) {
 }
 
 solveAction = function (p_solver) {
-	p_solver.resolve();
+	p_solver.makeResolution();
 }
 
 //--------------------------
@@ -86,7 +86,7 @@ Transforms a loaded string into the appropriate item (see common save and load),
 Called from outside !
 */
 loadPuzzle = function(p_canvas, p_drawer, p_solver, p_loadedString) {
-	const loadedItem = stringToNumbersSymbolsPuzzle(p_loadedString, ["X"]);
+	const loadedItem = stringToNumbersSymbolsPuzzle(p_loadedString, [SYMBOL_ID.X]);
 	p_solver.construct(loadedItem.numbersSymbolsArray);
 	p_drawer.adaptCanvasDimensions(p_canvas, {isDotted : true, xLength : p_solver.xLength, yLength : p_solver.yLength});
 }	

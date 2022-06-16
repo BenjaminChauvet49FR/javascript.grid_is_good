@@ -109,7 +109,7 @@ SolverUsoone.prototype.getTruth = function(p_x, p_y) {
 //--------------------------------
 
 SolverUsoone.prototype.emitHypothesis = function (p_x, p_y, p_symbol) {
-    this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
+    this.tryToApplyHypothesisSafe(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverUsoone.prototype.makeQuickStart = function () {
@@ -120,12 +120,12 @@ SolverUsoone.prototype.emitPass = function(p_x, p_y) {
 	if (this.getNumber(p_x, p_y) != null) {
 		const index = this.numberManagementArray[p_y][p_x].index;
 		const listPassNow = this.generateEventsForNumbersSets(index);
-		this.passEvents(listPassNow, index); 
+		this.passEventsSafe(listPassNow, index); 
 	}
 }
 
 SolverUsoone.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 SolverUsoone.prototype.undo = function() {

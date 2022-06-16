@@ -4,7 +4,7 @@ function main() {
 	var drawer = new Drawer();
 	solver = DummySolver();
 	purificator = DummyPurificatorSymbolArray(); 
-	purificator.configure({blockedSymbol : "X" , isBlockedDegradable : false});
+	purificator.configure({blockedSymbol : SYMBOL_ID.X , isBlockedDegradable : false});
 	var canevas = document.getElementById("canevas");
 	var	context = canevas.getContext("2d");
 	var actionsManager = {}; 

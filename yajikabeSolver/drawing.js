@@ -22,7 +22,7 @@ function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver, p_purific
 		function selectionSolverAndPurificator(x, y) {
 			switch(p_purificator.getPurificatorSpaceIfDifferent(x, y)) {
 				case null : return 0; // Remember : 'null' is when the new value is null !
-				case "X" : return 1;
+				case SYMBOL_ID.X : return 1;
 				default : return -1; // The value EQUAL_TO_SOLVER.
 			}
 		}

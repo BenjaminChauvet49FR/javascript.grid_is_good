@@ -86,7 +86,7 @@ SolverRukkuea.prototype.getNumber = function(p_x, p_y) {
 // Input methods
 
 SolverRukkuea.prototype.emitHypothesis = function(p_x, p_y, p_symbol) {
-	this.tryToApplyHypothesis(new SpaceEvent(p_x, p_y, p_symbol));
+	this.tryToApplyHypothesisSafe(new SpaceEvent(p_x, p_y, p_symbol));
 }
 
 SolverRukkuea.prototype.undo = function() {
@@ -95,21 +95,21 @@ SolverRukkuea.prototype.undo = function() {
 
 SolverRukkuea.prototype.emitPassRowColumn = function(p_x, p_y) {
 	const listPassNow = this.generatePassEventsMethod(p_x, p_y);
-	this.passEvents(listPassNow, {x : p_x, y : p_y}); 
+	this.passEventsSafe(listPassNow, {x : p_x, y : p_y}); 
 }
 
 SolverRukkuea.prototype.makeMultiPass = function() {	
-	this.multiPass(this.methodsSetMultipass);
+	this.multiPassSafe(this.methodsSetMultipass);
 }
 
 SolverRukkuea.prototype.makeTotalPass = function() {	
 	const listPassNow = this.generateTotalPassEventsMethod();
-	return this.passEvents(listPassNow, {totalPass : true, numberSpaces : listPassNow.length});
+	return this.passEventsSafe(listPassNow, new PassCategoryTotal(listPassNow.length));
 }
 
 SolverRukkuea.prototype.passSelectedSpaces = function(p_coorsList) {
 	const listPassNow = this.generateEventsForSpacesList(p_coorsList);
-	return this.passEvents(listPassNow, {isCustom : true, numberSpaces : listPassNow.length});
+	return this.passEventsSafe(listPassNow, {isCustom : true, numberSpaces : listPassNow.length});
 }
 
 SolverRukkuea.prototype.makeQuickStart = function() {
@@ -617,7 +617,7 @@ namingCategoryPassClosure = function(p_solver) {
 		if (p_indexPass.isCustom) { // For custom passing... 
 			return "Selection " + p_indexPass.numberSpaces + " space" + (p_indexPass.numberSpaces > 1 ? "s" : "");
 		}
-		if (p_indexPass.totalPass) {
+		if (hasTotalPass(p_indexPass)) {
 			return "Total pass ! Nb.spaces : " + p_indexPass.numberSpaces;
 		}
 		return "Col/row " + p_indexPass.x + "," + p_indexPass.y;
@@ -668,7 +668,7 @@ SolverRukkuea.prototype.generateEventsForOneSpace = function(p_x, p_y) {
 
 generatePassEventsClosure = function(p_solver) {
 	return function(p_indexPass) {
-		if (p_indexPass.totalPass) {
+		if (hasTotalPass(p_indexPass)) {
 			return p_solver.generateTotalPassEventsMethod();
 		}
 		return p_solver.generatePassEventsMethod(p_indexPass.x, p_indexPass.y);
@@ -677,63 +677,7 @@ generatePassEventsClosure = function(p_solver) {
 
 orderedListPassArgumentsClosure = function(p_solver) {
 	return function() {
-		
-		var unknownRows = [];
-		var unknownColumns = [];
-		var x, y;
-		for (x = 0 ; x < p_solver.xLength ; x++) {
-			unknownColumns.push(0);
-		}			
-		var atLeast2UnknownColumnIndexes = [];
-		var atLeast2UnknownRowIndexes = [];
-		var total = 0;
-		for (y = 0 ; y < p_solver.yLength ; y++) {
-			unknownRows.push(0);
-			for (x = 0 ; x < p_solver.xLength ; x++) {
-				if (p_solver.answerArray[y][x] == FILLING.UNDECIDED) {
-					unknownColumns[x]++;
-					unknownRows[y]++;
-					total++;
-				}
-			}
-			if (unknownRows[y] >= 2) {				
-				atLeast2UnknownRowIndexes.push(y);
-			}
-		}
-		for (x = 0 ; x < p_solver.xLength ; x++) {
-			if (unknownColumns[x] >= 2) {				
-				atLeast2UnknownColumnIndexes.push(x);
-			}
-		}
-		
-		var listIndexesPass = [];
-		if (total <= p_solver.xLength + p_solver.yLength-1 ) {
-			listIndexesPass.push({totalPass : true, numberSpaces : total});
-		} else {
-			var numberFirstXIndexes = gcd(atLeast2UnknownColumnIndexes.length, atLeast2UnknownRowIndexes.length);
-			var yIndex = 0;
-			for (firstXIndex = 0 ; firstXIndex < numberFirstXIndexes ; firstXIndex++) {
-				 // Torsade indexes : in a (20, 18) puzzle, it gives : (0, 0) (1, 1) ... (17, 17) (1, 18) (2, 19) (3, 0) ... 
-					yIndex = 0;
-					xIndex = firstXIndex;
-					do {
-						x = atLeast2UnknownColumnIndexes[xIndex];
-						y = atLeast2UnknownRowIndexes[yIndex];
-						listIndexesPass.push({x : x, y : y});
-						xIndex++;
-						yIndex++;
-						if (yIndex == atLeast2UnknownRowIndexes.length) {
-							yIndex = 0;
-						}
-						if (xIndex == atLeast2UnknownColumnIndexes.length) {
-							xIndex = 0;
-						}
-					} while (yIndex != 0 && xIndex != firstXIndex);		
-			}
-			// WARNING : In very peculiar cases, a few spaces that are alone on their row and column are NOT passed. I think they should eventually get deducted by other passes anyway, or fall into the total pass.
-			
-		}
-		return listIndexesPass;
+		return listCoordinatesPassRowColumnWithGCD(function(p_x, p_y) {return p_solver.answerArray[p_y][p_x] == FILLING.UNDECIDED}, p_solver.xLength, p_solver.yLength);
 	}
 }
 

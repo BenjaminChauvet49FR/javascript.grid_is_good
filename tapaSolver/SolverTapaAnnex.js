@@ -24,7 +24,7 @@ function logTapaResult(p_array) {
 	autoLogDebug(resultLog);
 }
 
-function stringToTaparray(p_string) {
+function stringToTaparray(p_string) { // Interfacing !
 	var resultLog = [];
 	for (var i = 0; i < p_string.length ; i++) {
 		switch(p_string.charAt(i)) {

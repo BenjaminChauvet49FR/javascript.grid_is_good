@@ -6,7 +6,7 @@ function drawInsideSpaces(p_context, p_drawer, p_coloursSet, p_solver) {
 drawNumberClosure = function(p_solver) {
 	return function(p_x, p_y) {
 		switch(p_solver.getNumber(p_x, p_y)) {
-			case NOT_FORCED : return "X"; break;
+			case NOT_FORCED : return SYMBOL_ID.X; break;
 			case null : return null; break;
 			default : return p_solver.getNumber(p_x, p_y); break;
 		}

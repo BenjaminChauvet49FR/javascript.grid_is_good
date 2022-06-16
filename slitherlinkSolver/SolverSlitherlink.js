@@ -41,7 +41,7 @@ SolverSlitherlink.prototype.construct = function(p_numberMeshGrid) {
 		for (var ix = 0 ; ix <= this.xLength-2 ; ix++) {
 			value = p_numberMeshGrid[iy][ix];
 			if (value != null) {
-				this.numericMeshCoordinatesListAndPassArguments.push({passCategory : LOOP_PASS_CATEGORY.MESH, x : ix, y : iy});
+				this.numericMeshCoordinatesListAndPassArguments.push({category : LOOP_PASS_CATEGORY.MESH, x : ix, y : iy});
 				this.numericMeshCoordinatesList.push({x : ix, y : iy});
 				this.numericMeshArray[iy].push({number : value, notLinkedCirclingEdgesYet : value, notClosedCirclingEdgesYet : 4 - value});
             } else {
@@ -108,14 +108,14 @@ SolverSlitherlink.prototype.emitHypothesisNode = function(p_x, p_y, p_state) {
 
 SolverSlitherlink.prototype.emitPassMesh = function(p_xSpace, p_ySpace) {
 	if (this.numericMeshArray[p_ySpace][p_xSpace].number != null) {		// Note : we don't want an arbitrary set of spaces to be passed, even though it is possible...
-		return this.passLoop({passCategory : LOOP_PASS_CATEGORY.MESH, x : p_xSpace, y : p_ySpace}); 
+		return this.passLoop({category : LOOP_PASS_CATEGORY.MESH, x : p_xSpace, y : p_ySpace}); 
 	} else {
 		return null;
 	}
 }
 
 SolverSlitherlink.prototype.emitPassNode = function(p_x, p_y) {
-	return this.passLoop({passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y}); 
+	return this.passLoop({category : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y}); 
 }
 
 SolverSlitherlink.prototype.makeMultipass = function() {
@@ -165,16 +165,16 @@ function setEdgeClosedPSAtomicUndosClosure(p_solver) {
 // Closure deduction
 
 function setEdgeClosedDeductionsClosure(p_solver) {
-	return function(p_listEventsToApply, p_eventToApply) {
-		p_solver.getXYMeshesSidesLink(p_eventToApply.linkX, p_eventToApply.linkY, p_eventToApply.direction).forEach(coors => {
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		p_solver.getXYMeshesSidesLink(p_eventBeingApplied.linkX, p_eventBeingApplied.linkY, p_eventBeingApplied.direction).forEach(coors => {
 			p_solver.deductionsTestLinkAllAround(p_listEventsToApply, coors.x, coors.y);
 		});
 	}
 }
 
 function setEdgeLinkedDeductionsClosure(p_solver) {
-	return function(p_listEventsToApply, p_eventToApply) {
-		p_solver.getXYMeshesSidesLink(p_eventToApply.linkX, p_eventToApply.linkY, p_eventToApply.direction).forEach(coors => {
+	return function(p_listEventsToApply, p_eventBeingApplied) {
+		p_solver.getXYMeshesSidesLink(p_eventBeingApplied.linkX, p_eventBeingApplied.linkY, p_eventBeingApplied.direction).forEach(coors => {
 			p_solver.deductionsTestCloseAllAround(p_listEventsToApply, coors.x, coors.y);
 		});		
 	}

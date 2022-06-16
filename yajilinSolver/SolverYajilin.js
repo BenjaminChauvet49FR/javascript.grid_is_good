@@ -191,7 +191,7 @@ SolverYajilin.prototype.isNotEmpty = function(p_x, p_y) { // "isBanned" is reser
 
 SolverYajilin.prototype.isNumeric = function(p_x, p_y) {
 	const num = this.clueGrid.get(p_x, p_y);
-	return (num != null && num.charAt(0) != "X");
+	return (num != null && num.charAt(0) != SYMBOL_ID.X);
 }
 
 // -------------------
@@ -216,14 +216,14 @@ SolverYajilin.prototype.emitHypothesisSpace = function(p_x, p_y, p_state) {
 SolverYajilin.prototype.passSpace = function(p_x, p_y) {
 	var indexPass;
 	if (!this.isBanned(p_x, p_y)) {		
-		indexPass = {passCategory : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
+		indexPass = {category : LOOP_PASS_CATEGORY.SPACE_STANDARD, x : p_x, y : p_y};
 	} else {
 		var value = this.stripesArray[p_y][p_x];
 		if (value != null) {
 			if (this.cluesList[value].union != null) {
-				indexPass = {passCategory : LOOP_PASS_CATEGORY.YAJI_UNION, index : this.cluesList[value].union};
+				indexPass = {category : LOOP_PASS_CATEGORY.YAJI_UNION, index : this.cluesList[value].union};
 			} else {			
-				indexPass = {passCategory : LOOP_PASS_CATEGORY.YAJI_STRIP, index : value};
+				indexPass = {category : LOOP_PASS_CATEGORY.YAJI_STRIP, index : value};
 			}
 		}
 	}
@@ -236,8 +236,8 @@ SolverYajilin.prototype.makeMultipass = function() {
 	this.multipassLoop();
 }
 
-solveAction = function (p_solver) {
-	p_solver.resolve();
+SolverYajilin.prototype.makeResolution = function (p_solver) {
+	this.resolve();
 }
 
 // -------------------
@@ -511,7 +511,7 @@ quickStartEventsClosure = function(p_solver) {
 		
 generateEventsForStripesAndUnionsClosure = function (p_solver) {
 	return function (p_indexPass) {
-		if (p_indexPass.passCategory == LOOP_PASS_CATEGORY.YAJI_STRIP) {
+		if (p_indexPass.category == LOOP_PASS_CATEGORY.YAJI_STRIP) {
 			return p_solver.generateEventsForSingleStripPass(p_indexPass.index);
 		} else {
 			return p_solver.generateEventsForUnionStripPass(p_indexPass.index); 
@@ -564,11 +564,11 @@ orderedListPassArgumentsClosureYajilin = function(p_solver) {
 		var listIndexesPass = [];
 		for (var i = 0 ; i < p_solver.cluesList.length ; i++) {
 			if (p_solver.cluesList[i].union == null) {
-				listIndexesPass.push({passCategory : LOOP_PASS_CATEGORY.YAJI_STRIP, index : i}); // TODO possibility of adding more details for uncertainity
+				listIndexesPass.push({category : LOOP_PASS_CATEGORY.YAJI_STRIP, index : i}); // TODO possibility of adding more details for uncertainity
 			} 
 		}
 		for (var i = 0 ; i < p_solver.unionsStripesList.length ; i++) {
-			listIndexesPass.push({passCategory : LOOP_PASS_CATEGORY.YAJI_UNION, index : i});
+			listIndexesPass.push({category : LOOP_PASS_CATEGORY.YAJI_UNION, index : i});
 		}
 		return listIndexesPass;
 	}
@@ -576,7 +576,7 @@ orderedListPassArgumentsClosureYajilin = function(p_solver) {
 
 namingCategoryPassClosure = function(p_solver) {
 	return function(p_indexPass) {
-		if (p_indexPass.passCategory == LOOP_PASS_CATEGORY.YAJI_UNION) {
+		if (p_indexPass.category == LOOP_PASS_CATEGORY.YAJI_UNION) {
 			const uni = p_solver.unionsStripesList[p_indexPass.index];
 			if (uni.orientation == ORIENTATION.VERTICAL) {
 				return "(Stripes V " + uni.x + "," + uni.yMin + "-" + uni.yMax +")";
